@@ -1,0 +1,34 @@
+{
+	"schemaVersion": 1,
+	"id": "attuned",
+	"version": "${version}",
+	"name": "Attuned",
+	"description": "An attunement-economy accessory framework. Equip Foci into inventory slots and spend a limited attunement budget on their effects.",
+	"authors": [
+		"defnotean"
+	],
+	"license": "MIT",
+	"icon": "assets/attuned/icon.png",
+	"environment": "*",
+	"entrypoints": {
+		"main": [
+			"dev.attuned.Attuned"
+		],
+		"client": [
+			"dev.attuned.client.AttunedClient"
+		]
+	},
+	"mixins": [
+		"attuned.mixins.json",
+		{
+			"config": "attuned.client.mixins.json",
+			"environment": "client"
+		}
+	],
+	"depends": {
+		"fabricloader": ">=0.19.2",
+		"minecraft": "~26.1.2",
+		"java": ">=25",
+		"fabric-api": "*"
+	}
+}

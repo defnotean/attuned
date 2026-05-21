@@ -1,0 +1,11 @@
+{
+	"item": "attuned:vital_focus",
+	"cost": 4,
+	"modifiers": [
+		{
+			"attribute": "minecraft:max_health",
+			"amount": 4.0,
+			"operation": "add_value"
+		}
+	]
+}

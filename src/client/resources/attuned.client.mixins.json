@@ -1,0 +1,14 @@
+{
+	"required": true,
+	"package": "dev.attuned.client.mixin",
+	"compatibilityLevel": "JAVA_25",
+	"client": [
+		"InventoryScreenMixin"
+	],
+	"injectors": {
+		"defaultRequire": 1
+	},
+	"overwrites": {
+		"requireAnnotations": true
+	}
+}

@@ -1,0 +1,11 @@
+{
+	"item": "attuned:iron_focus",
+	"cost": 3,
+	"modifiers": [
+		{
+			"attribute": "minecraft:armor",
+			"amount": 4.0,
+			"operation": "add_value"
+		}
+	]
+}

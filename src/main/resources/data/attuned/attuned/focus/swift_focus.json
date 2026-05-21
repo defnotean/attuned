@@ -1,0 +1,11 @@
+{
+	"item": "attuned:swift_focus",
+	"cost": 2,
+	"modifiers": [
+		{
+			"attribute": "minecraft:movement_speed",
+			"amount": 0.15,
+			"operation": "add_multiplied_base"
+		}
+	]
+}

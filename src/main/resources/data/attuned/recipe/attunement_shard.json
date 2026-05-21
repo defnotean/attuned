@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "A": "minecraft:amethyst_shard",
+    "D": "minecraft:diamond"
+  },
+  "pattern": [
+    " A ",
+    "ADA",
+    " A "
+  ],
+  "result": {
+    "id": "attuned:attunement_shard"
+  }
+}
