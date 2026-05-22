@@ -99,12 +99,15 @@ modrinth {
 	token = providers.environmentVariable("MODRINTH_TOKEN")
 	projectId = "attuned-mod"
 	versionNumber = project.version
-	versionType = "beta"
+	versionType = "release"
 	versionName = "Attuned ${project.version}"
 	// Changelog for the current release — refresh this each time mod_version bumps.
 	changelog = """\
-- Foci can now be found in survival: a spread of structure chests have a chance to hold one.
-- An Apex capstone now announces itself with a sound and a message when it activates, and the Focus panel tooltip explains what it does.
+- The Attunement Altar and a progression overhaul: milestones, and richer tiered structure loot.
+- Discord, a fourth affinity path that opens builds to mixed affinities.
+- A generic active-ability system for Foci.
+- Core-loop polish: sounds, a stance aura, and clearer feedback when a Focus goes dormant.
+- A hardened foundation: a config file, unit tests, and assorted fixes.
 """
 	uploadFile = file("build/libs/${project.name}-${project.version}.jar")
 	gameVersions = ["26.1.2"]
