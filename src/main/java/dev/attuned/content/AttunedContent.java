@@ -12,6 +12,7 @@ import dev.attuned.content.behavior.LodestoneBehavior;
 import dev.attuned.content.behavior.NightgazeBehavior;
 import dev.attuned.content.behavior.StormcallBehavior;
 import dev.attuned.content.behavior.TideBehavior;
+import java.util.List;
 import java.util.function.Function;
 import net.fabricmc.fabric.api.creativetab.v1.FabricCreativeModeTab;
 import net.minecraft.core.Registry;
@@ -64,6 +65,14 @@ public final class AttunedContent {
 
 	/** A consumable that permanently raises attunement capacity. Stacks normally. */
 	public static final Item ATTUNEMENT_SHARD = register("attunement_shard", AttunementShardItem::new);
+
+	/** Every Focus item, in display order — the single source for the creative tab and survival loot. */
+	public static final List<Item> FOCI = List.of(
+		SWIFT_FOCUS, VITAL_FOCUS, IRON_FOCUS, LEAP_FOCUS, EDGE_FOCUS, FRENZY_FOCUS,
+		BULWARK_FOCUS, DRIFT_FOCUS, TIDE_FOCUS, EMBERWARD_FOCUS, AEGIS_FOCUS,
+		NIGHTGAZE_FOCUS, DELVER_FOCUS, LODESTONE_FOCUS, THORNWARD_FOCUS, LEECH_FOCUS,
+		STORMCALL_FOCUS, GRAVEBIND_FOCUS, BLOODFURY_FOCUS, VOIDSTEP_FOCUS,
+		HARVEST_FOCUS, BEACON_FOCUS);
 
 	private static Item register(String name) {
 		ResourceKey<Item> key = ResourceKey.create(
@@ -120,28 +129,9 @@ public final class AttunedContent {
 			.title(Component.translatable("itemGroup.attuned"))
 			.icon(() -> new ItemStack(ATTUNEMENT_SHARD))
 			.displayItems((parameters, output) -> {
-				output.accept(SWIFT_FOCUS);
-				output.accept(VITAL_FOCUS);
-				output.accept(IRON_FOCUS);
-				output.accept(LEAP_FOCUS);
-				output.accept(EDGE_FOCUS);
-				output.accept(FRENZY_FOCUS);
-				output.accept(BULWARK_FOCUS);
-				output.accept(DRIFT_FOCUS);
-				output.accept(TIDE_FOCUS);
-				output.accept(EMBERWARD_FOCUS);
-				output.accept(AEGIS_FOCUS);
-				output.accept(NIGHTGAZE_FOCUS);
-				output.accept(DELVER_FOCUS);
-				output.accept(LODESTONE_FOCUS);
-				output.accept(THORNWARD_FOCUS);
-				output.accept(LEECH_FOCUS);
-				output.accept(STORMCALL_FOCUS);
-				output.accept(GRAVEBIND_FOCUS);
-				output.accept(BLOODFURY_FOCUS);
-				output.accept(VOIDSTEP_FOCUS);
-				output.accept(HARVEST_FOCUS);
-				output.accept(BEACON_FOCUS);
+				for (Item focus : FOCI) {
+					output.accept(focus);
+				}
 				output.accept(ATTUNEMENT_SHARD);
 			})
 			.build();

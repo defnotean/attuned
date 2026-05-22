@@ -7,6 +7,7 @@ import dev.attuned.combat.AttunedCombat;
 import dev.attuned.combat.GravebindSave;
 import dev.attuned.command.AttunedCommands;
 import dev.attuned.content.AttunedContent;
+import dev.attuned.content.AttunedLoot;
 import dev.attuned.effect.AttunedEffects;
 import dev.attuned.network.AttunedNetworking;
 import net.fabricmc.api.ModInitializer;
@@ -23,6 +24,7 @@ public class Attuned implements ModInitializer {
 		DynamicRegistries.registerSynced(AttunedRegistries.FOCUS_DEFINITIONS, FocusDefinition.CODEC);
 		AttunedAttachments.init();
 		AttunedContent.init();
+		AttunedLoot.init();
 		AttunedEffects.init();
 		AttunedCommands.init();
 		AttunedCombat.init();
