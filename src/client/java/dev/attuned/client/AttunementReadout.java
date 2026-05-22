@@ -2,11 +2,13 @@ package dev.attuned.client;
 
 import dev.attuned.api.focus.Affinity;
 import dev.attuned.attunement.Attunement;
+import dev.attuned.combat.Apex;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.world.entity.player.Player;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -40,24 +42,26 @@ public final class AttunementReadout {
 			.withStyle(rankColor(used));
 	}
 
-	/** Lines for the Focus-panel hover tooltip: the title, then budget and affinity. */
+	/** Lines for the Focus-panel hover tooltip: title, budget, affinity, and Apex. */
 	public static List<Component> tooltip(Player player) {
 		int used = Attunement.used(player);
 		int capacity = Attunement.capacity(player);
 		Optional<Affinity> affinity = Attunement.committedAffinity(player);
 
-		MutableComponent budget = Component.literal("Attunement: ")
-			.withStyle(ChatFormatting.GRAY)
-			.append(Component.literal(used + " / " + capacity).withStyle(ChatFormatting.AQUA));
-		MutableComponent affinityLine = Component.literal("Affinity: ")
-			.withStyle(ChatFormatting.GRAY)
-			.append(Component.literal(affinityName(affinity)).withStyle(affinityTextColor(affinity)));
+		List<Component> lines = new ArrayList<>();
+		lines.add(title(player).withStyle(ChatFormatting.BOLD));
+		lines.add(Component.empty());
+		lines.add(Component.literal("Attunement: ").withStyle(ChatFormatting.GRAY)
+			.append(Component.literal(used + " / " + capacity).withStyle(ChatFormatting.AQUA)));
+		lines.add(Component.literal("Affinity: ").withStyle(ChatFormatting.GRAY)
+			.append(Component.literal(affinityName(affinity)).withStyle(affinityTextColor(affinity))));
 
-		return List.<Component>of(
-			title(player).withStyle(ChatFormatting.BOLD),
-			Component.empty(),
-			budget,
-			affinityLine);
+		Optional<Affinity> apex = Apex.affinityOf(player);
+		if (apex.isPresent()) {
+			lines.add(Component.literal("Apex: " + Apex.capstoneName(apex.get()))
+				.withStyle(affinityTextColor(apex), ChatFormatting.BOLD));
+		}
+		return lines;
 	}
 
 	/** ARGB colour for the affinity gem and budget-bar fill. */

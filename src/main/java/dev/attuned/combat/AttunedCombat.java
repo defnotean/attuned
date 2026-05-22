@@ -145,7 +145,7 @@ public final class AttunedCombat {
 	 * The living attacker behind a damage source, or {@code null}. Prefers the
 	 * responsible entity (e.g. the shooter) and falls back to the direct entity.
 	 */
-	private static LivingEntity attackerOf(DamageSource source) {
+	static LivingEntity attackerOf(DamageSource source) {
 		Entity entity = source.getEntity();
 		if (entity instanceof LivingEntity living) {
 			return living;

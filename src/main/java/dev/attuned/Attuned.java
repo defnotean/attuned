@@ -2,6 +2,7 @@ package dev.attuned;
 
 import dev.attuned.api.focus.FocusDefinition;
 import dev.attuned.attunement.AttunedAttachments;
+import dev.attuned.combat.Apex;
 import dev.attuned.combat.AttunedCombat;
 import dev.attuned.combat.GravebindSave;
 import dev.attuned.command.AttunedCommands;
@@ -25,6 +26,7 @@ public class Attuned implements ModInitializer {
 		AttunedEffects.init();
 		AttunedCommands.init();
 		AttunedCombat.init();
+		Apex.init();
 		AttunedNetworking.init();
 		GravebindSave.init();
 		LOGGER.info("Attuned initializing");

@@ -5,6 +5,7 @@
 	"mixins": [
 		"InventoryMenuMixin",
 		"LivingEntityHurtMixin",
+		"LivingEntityKnockbackMixin",
 		"ServerGamePacketListenerImplMixin"
 	],
 	"injectors": {
