@@ -1,5 +1,7 @@
 package dev.attuned.combat;
 
+import dev.attuned.AttunedConfig;
+import dev.attuned.AttunedPlayerCleanup;
 import dev.attuned.attunement.AttunedAttachments;
 import dev.attuned.attunement.AttunedInv;
 import dev.attuned.attunement.Attunement;
@@ -27,9 +29,6 @@ import net.minecraft.world.effect.MobEffects;
 public final class GravebindSave {
 	private GravebindSave() {}
 
-	/** Cooldown between saves, in ticks (60 seconds). */
-	private static final int COOLDOWN_TICKS = 1200;
-
 	/** Per-player game-time of the last save. */
 	private static final Map<UUID, Long> lastSave = new HashMap<>();
 
@@ -41,13 +40,14 @@ public final class GravebindSave {
 			}
 			long now = player.level().getGameTime();
 			Long last = lastSave.get(player.getUUID());
-			if (last != null && now - last < COOLDOWN_TICKS) {
+			if (last != null && now - last < AttunedConfig.get().gravebindCooldownTicks()) {
 				return true;
 			}
 			lastSave.put(player.getUUID(), now);
 			rescue(player);
 			return false;
 		});
+		AttunedPlayerCleanup.onForget(lastSave::remove);
 	}
 
 	private static boolean hasGravebindActive(ServerPlayer player) {

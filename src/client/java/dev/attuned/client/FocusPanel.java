@@ -7,6 +7,8 @@ import dev.attuned.menu.FocusLayout;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.world.entity.player.Player;
 
+import java.util.List;
+
 /**
  * Draws the Focus side panel: a vanilla-coloured extension of the inventory with
  * six recessed slot wells, a committed-affinity gem above them and an
@@ -49,6 +51,7 @@ public final class FocusPanel {
 		graphics.fill(x0, y0, x1, y1, PANEL_FACE);
 
 		AttunedInv inv = AttunedAttachments.getInventory(player);
+		List<Integer> active = Attunement.activeSlots(player);
 		for (int i = 0; i < AttunedInv.SIZE; i++) {
 			int sx = leftPos + slotX;
 			int sy = topPos + slotY + i * FocusLayout.SLOT;
@@ -57,7 +60,7 @@ public final class FocusPanel {
 			graphics.fill(sx + 1, sy + 1, sx + FocusLayout.SLOT, sy + FocusLayout.SLOT, WELL_HIGHLIGHT);
 			graphics.fill(sx + 1, sy + 1, sx + FocusLayout.SLOT - 1, sy + FocusLayout.SLOT - 1, WELL_FACE);
 			// Dim only an equipped-but-dormant Focus (over budget) — empty wells stay clean.
-			if (!inv.get(i).isEmpty() && !Attunement.isActive(player, i)) {
+			if (!inv.get(i).isEmpty() && !active.contains(i)) {
 				graphics.fill(sx + 1, sy + 1, sx + FocusLayout.SLOT - 1, sy + FocusLayout.SLOT - 1, DORMANT_DIM);
 			}
 		}

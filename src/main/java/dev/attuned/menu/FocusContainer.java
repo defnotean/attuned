@@ -19,6 +19,11 @@ public final class FocusContainer implements Container {
 		this.player = player;
 	}
 
+	/** The player whose Focus slots this container exposes. */
+	public Player player() {
+		return player;
+	}
+
 	private AttunedInv inv() {
 		return AttunedAttachments.getInventory(player);
 	}

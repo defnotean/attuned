@@ -1,5 +1,6 @@
 package dev.attuned.content.behavior;
 
+import dev.attuned.AttunedPlayerCleanup;
 import dev.attuned.api.focus.FocusBehavior;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -33,6 +34,10 @@ public final class StormcallBehavior implements FocusBehavior {
 	private static final int BOLTS = 2;
 
 	private final Map<UUID, Integer> ticks = new HashMap<>();
+
+	public StormcallBehavior() {
+		AttunedPlayerCleanup.onForget(ticks::remove);
+	}
 
 	@Override
 	public void onTick(ServerPlayer player, ItemStack focus) {

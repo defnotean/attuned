@@ -1,5 +1,6 @@
 package dev.attuned.content;
 
+import dev.attuned.AttunedConfig;
 import dev.attuned.attunement.AttunedAttachments;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
@@ -10,13 +11,10 @@ import net.minecraft.world.level.Level;
 
 /**
  * A consumable item that permanently raises the holder's attunement capacity.
- * Each shard used grants +2 capacity, up to the cap of {@value #CAPACITY_CAP}.
+ * Each shard raises capacity by {@code capacity_per_shard} up to
+ * {@code capacity_cap}, both set in {@code config/attuned.json}.
  */
 public class AttunementShardItem extends Item {
-	/** Hard ceiling on attunement capacity reachable via shards. */
-	public static final int CAPACITY_CAP = 20;
-	/** Capacity granted per shard consumed. */
-	public static final int CAPACITY_PER_SHARD = 2;
 
 	public AttunementShardItem(Item.Properties properties) {
 		super(properties);
@@ -32,13 +30,14 @@ public class AttunementShardItem extends Item {
 			return InteractionResult.SUCCESS;
 		}
 
+		int cap = AttunedConfig.get().capacityCap();
 		int capacity = AttunedAttachments.getCapacity(player);
-		if (capacity >= CAPACITY_CAP) {
+		if (capacity >= cap) {
 			// Already at the cap: do nothing and don't consume the shard.
 			return InteractionResult.FAIL;
 		}
 
-		int raised = Math.min(CAPACITY_CAP, capacity + CAPACITY_PER_SHARD);
+		int raised = Math.min(cap, capacity + AttunedConfig.get().capacityPerShard());
 		AttunedAttachments.setCapacity(player, raised);
 		stack.shrink(1);
 		return InteractionResult.SUCCESS_SERVER;

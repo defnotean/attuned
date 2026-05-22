@@ -1,5 +1,6 @@
 package dev.attuned.content.behavior;
 
+import dev.attuned.AttunedPlayerCleanup;
 import dev.attuned.api.focus.FocusBehavior;
 import java.util.HashMap;
 import java.util.Map;
@@ -30,6 +31,10 @@ public final class HarvestBehavior implements FocusBehavior {
 	private static final int MAX_PER_PASS = 3;
 
 	private final Map<UUID, Integer> ticks = new HashMap<>();
+
+	public HarvestBehavior() {
+		AttunedPlayerCleanup.onForget(ticks::remove);
+	}
 
 	@Override
 	public void onTick(ServerPlayer player, ItemStack focus) {

@@ -1,5 +1,6 @@
 package dev.attuned.content;
 
+import dev.attuned.AttunedConfig;
 import java.util.Set;
 import net.fabricmc.fabric.api.loot.v3.LootTableEvents;
 import net.minecraft.resources.Identifier;
@@ -16,9 +17,6 @@ import net.minecraft.world.level.storage.loot.providers.number.ConstantValue;
  */
 public final class AttunedLoot {
 	private AttunedLoot() {}
-
-	/** Roughly how often a targeted chest yields a Focus. */
-	private static final float FOCUS_CHANCE = 0.25F;
 
 	/** Vanilla structure chest loot tables that gain a chance at a Focus. */
 	private static final Set<Identifier> TARGETS = Set.of(
@@ -48,7 +46,7 @@ public final class AttunedLoot {
 			}
 			LootPool.Builder pool = LootPool.lootPool()
 				.setRolls(ConstantValue.exactly(1.0F))
-				.when(LootItemRandomChanceCondition.randomChance(FOCUS_CHANCE));
+				.when(LootItemRandomChanceCondition.randomChance(AttunedConfig.get().focusLootChance()));
 			for (Item focus : AttunedContent.FOCI) {
 				pool.add(LootItem.lootTableItem(focus));
 			}

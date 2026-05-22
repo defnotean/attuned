@@ -1,6 +1,7 @@
 package dev.attuned.effect;
 
 import dev.attuned.Attuned;
+import dev.attuned.AttunedPlayerCleanup;
 import dev.attuned.AttunedRegistries;
 import dev.attuned.api.focus.FocusBehavior;
 import dev.attuned.api.focus.FocusDefinition;
@@ -64,6 +65,10 @@ public final class AttunedEffects {
 		// tracked state so the next tick reapplies every active Focus from scratch.
 		ServerPlayerEvents.AFTER_RESPAWN.register((oldPlayer, newPlayer, alive) ->
 			ACTIVE.remove(newPlayer.getUUID()));
+
+		// Drop a disconnecting player's snapshot too — like respawn, a reconnecting
+		// player is a fresh entity whose active Foci must be reapplied from scratch.
+		AttunedPlayerCleanup.onForget(ACTIVE::remove);
 	}
 
 	private static void tickPlayer(ServerPlayer player) {

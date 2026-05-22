@@ -11,6 +11,7 @@ Lives in `src/main/resources/data/attuned/attuned/focus/<name>.json`.
 |-------------|---------|----------|---------|
 | `item`      | text    | yes      | The item id, always `attuned:<name>`. |
 | `cost`      | number  | no (1)   | Attunement points the Focus uses. Usually 2–6. |
+| `unique`    | boolean | no (false) | If true, only one copy of this Focus can be active at once; a duplicate stays dormant. |
 | `affinity`  | text    | no       | `fury`, `bastion`, or `zephyr`. Omit for a neutral Focus. |
 | `modifiers` | list    | no ([])  | Stat changes — see [Attribute modifiers](#attribute-modifiers). |
 | `behavior`  | text    | no       | A registered behavior id, e.g. `attuned:stormcall`. |
@@ -122,11 +123,23 @@ their own classes — read these if your idea resembles them:
 
 ## Numbers you can tune
 
+Server-side settings live in `config/attuned.json`, written on first launch.
+Every key is optional and falls back to a built-in default:
+
+| Key | Default | Meaning |
+|-----|---------|---------|
+| `starting_capacity` | 0 | Attunement capacity a new player begins with. |
+| `capacity_cap` | 20 | Highest capacity an Attunement Shard can reach. |
+| `capacity_per_shard` | 2 | Capacity each Attunement Shard grants. |
+| `focus_loot_chance` | 0.25 | Chance a targeted structure chest yields a Focus. |
+| `voidstep_cooldown_ticks` | 200 | Cooldown of the Voidstep blink, in ticks. |
+| `gravebind_cooldown_ticks` | 1200 | Cooldown of the Gravebind death-save, in ticks. |
+
+A couple of values are still set in code:
+
 | Number | Where |
 |--------|-------|
 | A Focus's cost | the `cost` field in its `data/.../focus/<name>.json` |
-| Max attunement capacity (20) | `CAPACITY_CAP` in `content/AttunementShardItem.java` |
-| Capacity gained per shard (2) | `CAPACITY_PER_SHARD` in the same file |
 | Number of Focus slots (6) | `SIZE` in `attunement/AttunedInv.java` — the inventory UI assumes 6, so changing this is involved |
 
 The `/attuned capacity` command reads or sets a player's capacity for testing.

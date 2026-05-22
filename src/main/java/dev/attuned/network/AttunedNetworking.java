@@ -1,5 +1,7 @@
 package dev.attuned.network;
 
+import dev.attuned.AttunedConfig;
+import dev.attuned.AttunedPlayerCleanup;
 import dev.attuned.attunement.AttunedAttachments;
 import dev.attuned.attunement.AttunedInv;
 import dev.attuned.attunement.Attunement;
@@ -27,8 +29,6 @@ import net.minecraft.world.phys.Vec3;
 public final class AttunedNetworking {
 	private AttunedNetworking() {}
 
-	/** Voidstep cooldown, in ticks (10 seconds). */
-	private static final int COOLDOWN_TICKS = 200;
 	/** Maximum blink distance, in blocks. */
 	private static final int MAX_DISTANCE = 8;
 
@@ -42,6 +42,7 @@ public final class AttunedNetworking {
 			ServerPlayer player = context.player();
 			((ServerLevel) player.level()).getServer().execute(() -> voidstep(player));
 		});
+		AttunedPlayerCleanup.onForget(lastStep::remove);
 	}
 
 	private static void voidstep(ServerPlayer player) {
@@ -50,7 +51,7 @@ public final class AttunedNetworking {
 		}
 		long now = player.level().getGameTime();
 		Long last = lastStep.get(player.getUUID());
-		if (last != null && now - last < COOLDOWN_TICKS) {
+		if (last != null && now - last < AttunedConfig.get().voidstepCooldownTicks()) {
 			return;
 		}
 

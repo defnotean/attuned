@@ -1,6 +1,6 @@
 package dev.attuned.menu;
 
-import net.minecraft.world.Container;
+import dev.attuned.attunement.Attunement;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 
@@ -25,8 +25,12 @@ public class FocusSlot extends Slot {
 		suppressed = value;
 	}
 
-	public FocusSlot(Container container, int index, int x, int y) {
+	/** The container backing this slot, typed for the {@link #mayPlace} check. */
+	private final FocusContainer focusContainer;
+
+	public FocusSlot(FocusContainer container, int index, int x, int y) {
 		super(container, index, x, y);
+		this.focusContainer = container;
 	}
 
 	@Override
@@ -36,8 +40,8 @@ public class FocusSlot extends Slot {
 
 	@Override
 	public boolean mayPlace(ItemStack stack) {
-		// v1: accept any item. Focus-item validation can tighten this later.
-		return true;
+		// Only a registered Focus may occupy a Focus slot.
+		return Attunement.definitionFor(focusContainer.player(), stack).isPresent();
 	}
 
 	@Override

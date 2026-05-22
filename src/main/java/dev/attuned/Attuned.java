@@ -21,8 +21,10 @@ public class Attuned implements ModInitializer {
 
 	@Override
 	public void onInitialize() {
+		AttunedConfig.load();
 		DynamicRegistries.registerSynced(AttunedRegistries.FOCUS_DEFINITIONS, FocusDefinition.CODEC);
 		AttunedAttachments.init();
+		AttunedPlayerCleanup.init();
 		AttunedContent.init();
 		AttunedLoot.init();
 		AttunedEffects.init();

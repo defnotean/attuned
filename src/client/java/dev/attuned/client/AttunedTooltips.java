@@ -4,6 +4,7 @@ import dev.attuned.Attuned;
 import dev.attuned.AttunedRegistries;
 import dev.attuned.api.focus.Affinity;
 import dev.attuned.api.focus.FocusDefinition;
+import dev.attuned.attunement.FocusLookup;
 import net.fabricmc.fabric.api.client.item.v1.ItemTooltipCallback;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
@@ -16,7 +17,7 @@ import net.minecraft.world.item.ItemStack;
 /**
  * Appends Attuned flavour and stats to item tooltips: two lines of lore and a
  * green feature description on every Attuned item, then the colour-coded affinity
- * and attunement cost on items that are registered Foci.
+ * and attunement cost on registered Foci, plus a Unique tag where it applies.
  */
 public final class AttunedTooltips {
 	private AttunedTooltips() {}
@@ -53,6 +54,12 @@ public final class AttunedTooltips {
 					.withStyle(ChatFormatting.GRAY)
 					.append(Component.literal(Integer.toString(definition.cost()))
 						.withStyle(ChatFormatting.AQUA)));
+				if (definition.unique()) {
+					lines.add(Component.literal("Unique")
+						.withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD)
+						.append(Component.literal(" — only one can be active")
+							.withStyle(ChatFormatting.GRAY)));
+				}
 			}
 		});
 	}
@@ -64,12 +71,7 @@ public final class AttunedTooltips {
 		}
 		Registry<FocusDefinition> registry =
 			minecraft.level.registryAccess().lookupOrThrow(AttunedRegistries.FOCUS_DEFINITIONS);
-		for (FocusDefinition definition : registry) {
-			if (definition.item().value() == stack.getItem()) {
-				return definition;
-			}
-		}
-		return null;
+		return FocusLookup.forItem(registry, stack.getItem()).orElse(null);
 	}
 
 	private static String affinityName(Affinity affinity) {

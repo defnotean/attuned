@@ -1,5 +1,6 @@
 package dev.attuned.content.behavior;
 
+import dev.attuned.AttunedPlayerCleanup;
 import dev.attuned.api.focus.FocusBehavior;
 import java.util.HashMap;
 import java.util.Map;
@@ -27,6 +28,10 @@ public final class AegisBehavior implements FocusBehavior {
 
 	/** Per-player count of active ticks since the last absorption top-up. */
 	private final Map<UUID, Integer> ticksSinceGrant = new HashMap<>();
+
+	public AegisBehavior() {
+		AttunedPlayerCleanup.onForget(ticksSinceGrant::remove);
+	}
 
 	@Override
 	public void onActivate(ServerPlayer player, ItemStack focus) {

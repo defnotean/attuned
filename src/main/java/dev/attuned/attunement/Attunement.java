@@ -5,6 +5,7 @@ import dev.attuned.api.focus.Affinity;
 import dev.attuned.api.focus.FocusDefinition;
 import net.minecraft.core.Registry;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 
 import java.util.ArrayList;
@@ -34,41 +35,28 @@ public final class Attunement {
 		}
 		Registry<FocusDefinition> registry =
 			player.level().registryAccess().lookupOrThrow(AttunedRegistries.FOCUS_DEFINITIONS);
-		for (FocusDefinition def : registry) {
-			if (def.item().value() == stack.getItem()) {
-				return Optional.of(def);
-			}
-		}
-		return Optional.empty();
+		return FocusLookup.forItem(registry, stack.getItem());
 	}
 
-	/** Slot indices whose Focus is active — within budget and on the committed affinity. */
+	/**
+	 * Slot indices whose Focus is active — within budget, on the committed
+	 * affinity, and (for a {@code unique} Focus) the first copy in slot order.
+	 * Gathers the occupied slots and delegates the decision to the pure
+	 * {@link BudgetResolver#resolve}.
+	 */
 	public static List<Integer> activeSlots(Player player) {
 		AttunedInv inv = AttunedAttachments.getInventory(player);
-		int budget = capacity(player);
-		int used = 0;
-		Affinity committed = null;
-		List<Integer> active = new ArrayList<>();
+		List<BudgetResolver.Candidate<Affinity, Item>> candidates = new ArrayList<>();
 		for (int slot = 0; slot < AttunedInv.SIZE; slot++) {
-			Optional<FocusDefinition> definition = definitionFor(player, inv.get(slot));
-			if (definition.isEmpty()) {
-				continue;
-			}
-			FocusDefinition def = definition.get();
-			Optional<Affinity> affinity = def.affinity();
-			// Affinity restriction: once committed, a mismatched affinity stays dormant.
-			if (affinity.isPresent() && committed != null && committed != affinity.get()) {
-				continue;
-			}
-			if (used + def.cost() <= budget) {
-				used += def.cost();
-				active.add(slot);
-				if (affinity.isPresent() && committed == null) {
-					committed = affinity.get();
-				}
+			ItemStack stack = inv.get(slot);
+			Optional<FocusDefinition> definition = definitionFor(player, stack);
+			if (definition.isPresent()) {
+				FocusDefinition def = definition.get();
+				candidates.add(new BudgetResolver.Candidate<>(
+					slot, def.cost(), def.affinity().orElse(null), def.unique(), stack.getItem()));
 			}
 		}
-		return active;
+		return BudgetResolver.resolve(candidates, capacity(player));
 	}
 
 	/** Whether the Focus in the given slot is currently active. */

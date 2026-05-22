@@ -1,0 +1,39 @@
+package dev.attuned;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
+import java.util.function.Consumer;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
+
+/**
+ * Coordinates teardown of transient per-player state when a player disconnects.
+ *
+ * <p>Several Attuned systems cache per-player data in {@code Map<UUID, ?>}
+ * fields — tick counters, cooldown timestamps, the active-Focus snapshot. None
+ * of it needs to persist, and a player who logs out while a Focus is active is
+ * never ticked again, so the matching {@code onDeactivate} never runs and the
+ * entries would linger for the lifetime of the server. Each owner registers a
+ * cleanup callback through {@link #onForget}; every callback runs when a
+ * player's play connection closes.
+ */
+public final class AttunedPlayerCleanup {
+	private AttunedPlayerCleanup() {}
+
+	private static final List<Consumer<UUID>> CALLBACKS = new ArrayList<>();
+
+	/** Registers a callback that drops the given player's cached transient state. */
+	public static void onForget(Consumer<UUID> cleanup) {
+		CALLBACKS.add(cleanup);
+	}
+
+	/** Registers the disconnect hook. Called from the mod initializer. */
+	public static void init() {
+		ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> {
+			UUID id = handler.player.getUUID();
+			for (Consumer<UUID> cleanup : CALLBACKS) {
+				cleanup.accept(id);
+			}
+		});
+	}
+}

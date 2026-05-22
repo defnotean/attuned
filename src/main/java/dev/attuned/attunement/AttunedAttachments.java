@@ -2,6 +2,7 @@ package dev.attuned.attunement;
 
 import com.mojang.serialization.Codec;
 import dev.attuned.Attuned;
+import dev.attuned.AttunedConfig;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentRegistry;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentSyncPredicate;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentType;
@@ -20,7 +21,7 @@ public final class AttunedAttachments {
 	public static final AttachmentType<Integer> CAPACITY = AttachmentRegistry.create(
 		Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "capacity"),
 		builder -> builder
-			.initializer(() -> 0)
+			.initializer(() -> AttunedConfig.get().startingCapacity())
 			.persistent(Codec.INT)
 			.syncWith(ByteBufCodecs.VAR_INT, AttachmentSyncPredicate.targetOnly())
 			.copyOnDeath()

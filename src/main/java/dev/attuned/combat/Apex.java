@@ -1,5 +1,6 @@
 package dev.attuned.combat;
 
+import dev.attuned.AttunedPlayerCleanup;
 import dev.attuned.api.focus.Affinity;
 import dev.attuned.api.focus.FocusDefinition;
 import dev.attuned.attunement.AttunedAttachments;
@@ -87,6 +88,7 @@ public final class Apex {
 	public static void init() {
 		ServerLivingEntityEvents.ALLOW_DAMAGE.register(Apex::allowDamage);
 		ServerTickEvents.END_SERVER_TICK.register(Apex::tick);
+		AttunedPlayerCleanup.onForget(apexState::remove);
 	}
 
 	/**
