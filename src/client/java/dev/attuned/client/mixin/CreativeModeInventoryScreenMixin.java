@@ -61,6 +61,9 @@ public abstract class CreativeModeInventoryScreenMixin
 
 	@Inject(method = "extractBackground", at = @At("TAIL"))
 	private void attuned$drawFocusPanel(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick, CallbackInfo ci) {
+		// The Focus-slot suppression flag is a survival-only, recipe-book concern;
+		// clear it so the creative slots are never left hidden by a stale value.
+		FocusSlot.setSuppressed(false);
 		if (!this.isInventoryOpen()) {
 			return;
 		}

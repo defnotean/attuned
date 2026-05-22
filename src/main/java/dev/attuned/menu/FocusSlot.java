@@ -10,6 +10,21 @@ import net.minecraft.world.item.ItemStack;
  * it is backed by.
  */
 public class FocusSlot extends Slot {
+
+	/**
+	 * When true, every Focus slot is suppressed: the survival inventory's recipe
+	 * book is open across the side panel, so the slots must neither render nor
+	 * accept clicks. Only client screen code writes this while a screen is shown;
+	 * a dedicated server never touches it, and {@code AbstractContainerMenu} never
+	 * reads {@link #isActive()}, so menu logic is unaffected on either side.
+	 */
+	private static boolean suppressed = false;
+
+	/** Hides ({@code true}) or restores ({@code false}) every Focus slot. */
+	public static void setSuppressed(boolean value) {
+		suppressed = value;
+	}
+
 	public FocusSlot(Container container, int index, int x, int y) {
 		super(container, index, x, y);
 	}
@@ -23,5 +38,12 @@ public class FocusSlot extends Slot {
 	public boolean mayPlace(ItemStack stack) {
 		// v1: accept any item. Focus-item validation can tighten this later.
 		return true;
+	}
+
+	@Override
+	public boolean isActive() {
+		// An inactive slot is neither drawn nor hovered — exactly how the panel
+		// steps aside while the recipe book is open over it.
+		return !suppressed;
 	}
 }

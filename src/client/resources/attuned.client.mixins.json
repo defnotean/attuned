@@ -3,7 +3,8 @@
 	"package": "dev.attuned.client.mixin",
 	"compatibilityLevel": "JAVA_25",
 	"client": [
-		"AbstractContainerScreenMixin",
+		"AbstractRecipeBookScreenAccessor",
+		"AbstractRecipeBookScreenMixin",
 		"CreativeModeInventoryScreenMixin",
 		"InventoryScreenMixin"
 	],

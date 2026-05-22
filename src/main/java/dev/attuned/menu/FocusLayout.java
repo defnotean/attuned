@@ -20,8 +20,14 @@ public final class FocusLayout {
 	 */
 	public static final int SLOT_INSET = 1;
 
-	/** Top-left of the Focus well column in the survival inventory screen. */
-	public static final int INVENTORY_X = 180;
+	/**
+	 * Top-left of the Focus well column in the survival inventory screen,
+	 * relative to the window's top-left corner. Like the creative column it sits
+	 * to the <em>left</em> of the window (a negative X), clear of the potion
+	 * effects the screen draws down its right edge. The recipe book can also
+	 * claim this side, so the survival screen hides the panel while it is open.
+	 */
+	public static final int INVENTORY_X = -22;
 	public static final int INVENTORY_Y = 30;
 
 	/**
