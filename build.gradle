@@ -90,7 +90,7 @@ publishing {
 // variable set; the Modrinth project must already exist under the slug below.
 modrinth {
 	token = providers.environmentVariable("MODRINTH_TOKEN")
-	projectId = "attuned"
+	projectId = "attuned-mod"
 	versionNumber = project.version
 	versionType = "beta"
 	versionName = "Attuned ${project.version}"
