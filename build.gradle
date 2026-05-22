@@ -1,6 +1,7 @@
 plugins {
 	id 'net.fabricmc.fabric-loom' version "${loom_version}"
 	id 'maven-publish'
+	id 'com.modrinth.minotaur' version '2.+'
 }
 
 version = project.mod_version
@@ -83,4 +84,25 @@ publishing {
 		// The repositories here will be used for publishing your artifact, not for
 		// retrieving dependencies.
 	}
+}
+
+// Modrinth publishing. Run `./gradlew modrinth` with a MODRINTH_TOKEN environment
+// variable set; the Modrinth project must already exist under the slug below.
+modrinth {
+	token = providers.environmentVariable("MODRINTH_TOKEN")
+	projectId = "attuned"
+	versionNumber = project.version
+	versionType = "beta"
+	versionName = "Attuned ${project.version}"
+	uploadFile = file("build/libs/${project.name}-${project.version}.jar")
+	gameVersions = ["26.1.2"]
+	loaders = ["fabric"]
+	dependencies {
+		required.project "fabric-api"
+	}
+}
+
+// `./gradlew modrinth` builds the remapped jar first, then uploads it.
+tasks.named("modrinth") {
+	dependsOn tasks.named("build")
 }
