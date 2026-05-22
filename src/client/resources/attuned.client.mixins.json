@@ -3,6 +3,8 @@
 	"package": "dev.attuned.client.mixin",
 	"compatibilityLevel": "JAVA_25",
 	"client": [
+		"AbstractContainerScreenMixin",
+		"CreativeModeInventoryScreenMixin",
 		"InventoryScreenMixin"
 	],
 	"injectors": {

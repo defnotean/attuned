@@ -1,4 +1,6 @@
 {
+	"itemGroup.attuned": "Attuned",
+
 	"item.attuned.swift_focus": "Swift Focus",
 	"item.attuned.vital_focus": "Vital Focus",
 	"item.attuned.iron_focus": "Iron Focus",

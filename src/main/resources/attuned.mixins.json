@@ -4,7 +4,8 @@
 	"compatibilityLevel": "JAVA_25",
 	"mixins": [
 		"InventoryMenuMixin",
-		"LivingEntityHurtMixin"
+		"LivingEntityHurtMixin",
+		"ServerGamePacketListenerImplMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1
