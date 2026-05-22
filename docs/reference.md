@@ -128,7 +128,7 @@ Every key is optional and falls back to a built-in default:
 
 | Key | Default | Meaning |
 |-----|---------|---------|
-| `starting_capacity` | 0 | Attunement capacity a new player begins with. |
+| `starting_capacity` | 4 | Attunement capacity a new player begins with. |
 | `capacity_cap` | 20 | Highest capacity an Attunement Shard can reach. |
 | `capacity_per_shard` | 2 | Capacity each Attunement Shard grants. |
 | `focus_loot_chance` | 0.25 | Chance a targeted structure chest yields a Focus. |

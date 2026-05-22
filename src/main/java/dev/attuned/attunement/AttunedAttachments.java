@@ -11,6 +11,9 @@ import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Per-player attunement state: the attunement capacity and the six Focus slots.
  * Both are persistent across restarts and synced to the owning client.
@@ -36,6 +39,15 @@ public final class AttunedAttachments {
 			.copyOnDeath()
 	);
 
+	/** Ids of the progression milestones a player has already claimed. */
+	public static final AttachmentType<List<String>> MILESTONES = AttachmentRegistry.create(
+		Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "milestones"),
+		builder -> builder
+			.initializer(() -> List.of())
+			.persistent(Codec.STRING.listOf())
+			.copyOnDeath()
+	);
+
 	/** Forces this class to load so the attachment types register during mod init. */
 	public static void init() {}
 
@@ -56,5 +68,21 @@ public final class AttunedAttachments {
 		// then replace the whole value. Do not use modifyAttached here: it passes
 		// null to its operator when the attachment has never been set.
 		player.setAttached(INVENTORY, getInventory(player).with(slot, stack));
+	}
+
+	/** Whether the player has already claimed the milestone with the given id. */
+	public static boolean hasMilestone(Player player, String id) {
+		return player.getAttachedOrElse(MILESTONES, List.of()).contains(id);
+	}
+
+	/** Records a milestone id as claimed. A no-op if it was already claimed. */
+	public static void addMilestone(Player player, String id) {
+		List<String> claimed = player.getAttachedOrElse(MILESTONES, List.of());
+		if (claimed.contains(id)) {
+			return;
+		}
+		List<String> updated = new ArrayList<>(claimed);
+		updated.add(id);
+		player.setAttached(MILESTONES, updated);
 	}
 }

@@ -21,9 +21,13 @@ import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
+import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.SoundType;
+import net.minecraft.world.level.block.state.BlockBehaviour;
 
 /**
  * The bundled Focus items shipped with Attuned. Each item's accessory behaviour
@@ -66,6 +70,9 @@ public final class AttunedContent {
 	/** A consumable that permanently raises attunement capacity. Stacks normally. */
 	public static final Item ATTUNEMENT_SHARD = register("attunement_shard", AttunementShardItem::new);
 
+	/** The Attunement Altar — the home block where shards are bound into capacity. */
+	public static final Block ATTUNEMENT_ALTAR = registerAltar();
+
 	/** Every Focus item, in display order — the single source for the creative tab and survival loot. */
 	public static final List<Item> FOCI = List.of(
 		SWIFT_FOCUS, VITAL_FOCUS, IRON_FOCUS, LEAP_FOCUS, EDGE_FOCUS, FRENZY_FOCUS,
@@ -90,6 +97,24 @@ public final class AttunedContent {
 			Registries.ITEM, Identifier.fromNamespaceAndPath(Attuned.MOD_ID, name));
 		Item item = factory.apply(new Item.Properties().setId(key));
 		return Registry.register(BuiltInRegistries.ITEM, key, item);
+	}
+
+	/** Registers the Attunement Altar block and its matching block item. */
+	private static Block registerAltar() {
+		Identifier id = Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "attunement_altar");
+		ResourceKey<Block> blockKey = ResourceKey.create(Registries.BLOCK, id);
+		Block block = new AttunementAltarBlock(BlockBehaviour.Properties.of()
+			.setId(blockKey)
+			.strength(3.5F, 6.0F)
+			.sound(SoundType.DEEPSLATE)
+			.lightLevel(state -> 7)
+			.noOcclusion());
+		Registry.register(BuiltInRegistries.BLOCK, blockKey, block);
+
+		ResourceKey<Item> itemKey = ResourceKey.create(Registries.ITEM, id);
+		Registry.register(BuiltInRegistries.ITEM, itemKey,
+			new BlockItem(block, new Item.Properties().setId(itemKey)));
+		return block;
 	}
 
 	/**
@@ -133,6 +158,7 @@ public final class AttunedContent {
 					output.accept(focus);
 				}
 				output.accept(ATTUNEMENT_SHARD);
+				output.accept(ATTUNEMENT_ALTAR);
 			})
 			.build();
 		Registry.register(BuiltInRegistries.CREATIVE_MODE_TAB,

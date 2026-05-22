@@ -1,18 +1,18 @@
 package dev.attuned.content;
 
-import dev.attuned.AttunedConfig;
-import dev.attuned.attunement.AttunedAttachments;
+import net.minecraft.ChatFormatting;
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
-import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 
 /**
- * A consumable item that permanently raises the holder's attunement capacity.
- * Each shard raises capacity by {@code capacity_per_shard} up to
- * {@code capacity_cap}, both set in {@code config/attuned.json}.
+ * The Attunement Shard — the consumable that raises attunement capacity. A shard
+ * is not spent from the hand; it is bound at an {@link AttunementAltarBlock},
+ * which consumes it and raises the binder's capacity. Using one in the hand only
+ * points the player toward an Altar.
  */
 public class AttunementShardItem extends Item {
 
@@ -22,24 +22,11 @@ public class AttunementShardItem extends Item {
 
 	@Override
 	public InteractionResult use(Level level, Player player, InteractionHand hand) {
-		ItemStack stack = player.getItemInHand(hand);
-
-		// Capacity is server-authoritative state; only mutate it on the server.
-		// The client still needs a consuming result so the swing/animation plays.
-		if (level.isClientSide()) {
-			return InteractionResult.SUCCESS;
+		if (!level.isClientSide()) {
+			player.sendSystemMessage(Component.literal(
+					"Bind this at an Attunement Altar to raise your capacity.")
+				.withStyle(ChatFormatting.GRAY));
 		}
-
-		int cap = AttunedConfig.get().capacityCap();
-		int capacity = AttunedAttachments.getCapacity(player);
-		if (capacity >= cap) {
-			// Already at the cap: do nothing and don't consume the shard.
-			return InteractionResult.FAIL;
-		}
-
-		int raised = Math.min(cap, capacity + AttunedConfig.get().capacityPerShard());
-		AttunedAttachments.setCapacity(player, raised);
-		stack.shrink(1);
-		return InteractionResult.SUCCESS_SERVER;
+		return InteractionResult.PASS;
 	}
 }

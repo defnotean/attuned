@@ -1,0 +1,5 @@
+{
+	"variants": {
+		"": { "model": "attuned:block/attunement_altar" }
+	}
+}

@@ -3,6 +3,7 @@ package dev.attuned;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.JsonOps;
@@ -31,7 +32,7 @@ public record AttunedConfig(
 
 	/** The built-in defaults — also the fallback for any missing key. */
 	public static final AttunedConfig DEFAULT =
-		new AttunedConfig(0, 20, 2, 0.25F, 200, 1200);
+		new AttunedConfig(4, 20, 2, 0.25F, 200, 1200);
 
 	public static final Codec<AttunedConfig> CODEC = RecordCodecBuilder.create(in -> in.group(
 		Codec.intRange(0, 256).optionalFieldOf("starting_capacity", DEFAULT.startingCapacity())
@@ -77,8 +78,17 @@ public record AttunedConfig(
 	}
 
 	private static void save() {
+		// Written field-by-field rather than through the CODEC: optionalFieldOf
+		// omits any field still at its default when encoding, which would leave a
+		// fresh config file empty ({}). Listing the keys keeps the file complete.
+		JsonObject json = new JsonObject();
+		json.addProperty("starting_capacity", current.startingCapacity());
+		json.addProperty("capacity_cap", current.capacityCap());
+		json.addProperty("capacity_per_shard", current.capacityPerShard());
+		json.addProperty("focus_loot_chance", current.focusLootChance());
+		json.addProperty("voidstep_cooldown_ticks", current.voidstepCooldownTicks());
+		json.addProperty("gravebind_cooldown_ticks", current.gravebindCooldownTicks());
 		try {
-			JsonElement json = CODEC.encodeStart(JsonOps.INSTANCE, current).getOrThrow();
 			Files.createDirectories(PATH.getParent());
 			Files.writeString(PATH, GSON.toJson(json));
 		} catch (Exception e) {

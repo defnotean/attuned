@@ -24,6 +24,7 @@
 	"item.attuned.harvest_focus": "Harvest Focus",
 	"item.attuned.beacon_focus": "Beacon Focus",
 	"item.attuned.attunement_shard": "Attunement Shard",
+	"block.attuned.attunement_altar": "Attunement Altar",
 
 	"item.attuned.swift_focus.lore": "Tuned to the wind's own hurry.",
 	"item.attuned.swift_focus.lore2": "The ground forgets to hold you.",
@@ -75,7 +76,7 @@
 	"item.attuned.leech_focus.effect": "Heals you for 20% of the melee damage you deal.",
 	"item.attuned.attunement_shard.lore": "Bind it close, and the soul makes a little more room.",
 	"item.attuned.attunement_shard.lore2": "Each shard carves the well a span deeper.",
-	"item.attuned.attunement_shard.effect": "Permanently raises attunement capacity by 2.",
+	"item.attuned.attunement_shard.effect": "Bind at an Attunement Altar to raise your attunement capacity.",
 
 	"item.attuned.stormcall_focus.lore": "The sky lends its voice; you need only run.",
 	"item.attuned.stormcall_focus.lore2": "Thunder follows where haste leads.",
@@ -94,5 +95,9 @@
 	"item.attuned.harvest_focus.effect": "Nearby crops ripen faster while you stand among them.",
 	"item.attuned.beacon_focus.lore": "Home pulls, even through stone.",
 	"item.attuned.beacon_focus.lore2": "Lost is a direction, not a place.",
-	"item.attuned.beacon_focus.effect": "Aims a held compass at your last bed."
+	"item.attuned.beacon_focus.effect": "Aims a held compass at your last bed.",
+
+	"item.attuned.attunement_altar.lore": "Worked stone, and a hollow that remembers.",
+	"item.attuned.attunement_altar.lore2": "What you bind here, the soul keeps.",
+	"item.attuned.attunement_altar.effect": "Bind Attunement Shards at the Altar to raise your capacity."
 }

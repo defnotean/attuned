@@ -33,6 +33,7 @@ public class Attuned implements ModInitializer {
 		Apex.init();
 		AttunedNetworking.init();
 		GravebindSave.init();
+		Milestones.init();
 		LOGGER.info("Attuned initializing");
 	}
 }
