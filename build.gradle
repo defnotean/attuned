@@ -94,6 +94,12 @@ modrinth {
 	versionNumber = project.version
 	versionType = "beta"
 	versionName = "Attuned ${project.version}"
+	// Changelog for the current release — refresh this each time mod_version bumps.
+	changelog = """\
+- Focus tooltips now spell out what each Focus does.
+- Creative inventory: the Focus panel no longer overlaps the potion effects display.
+- Survival inventory: the Focus slots now sit in a proper side panel, and a bug that kept them from being clickable is fixed.
+"""
 	uploadFile = file("build/libs/${project.name}-${project.version}.jar")
 	gameVersions = ["26.1.2"]
 	loaders = ["fabric"]
