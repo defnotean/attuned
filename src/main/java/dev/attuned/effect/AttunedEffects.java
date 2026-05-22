@@ -3,6 +3,7 @@ package dev.attuned.effect;
 import dev.attuned.Attuned;
 import dev.attuned.AttunedPlayerCleanup;
 import dev.attuned.AttunedRegistries;
+import dev.attuned.api.focus.Affinity;
 import dev.attuned.api.focus.FocusBehavior;
 import dev.attuned.api.focus.FocusDefinition;
 import dev.attuned.api.focus.ModifierEntry;
@@ -11,10 +12,14 @@ import dev.attuned.attunement.AttunedAttachments;
 import dev.attuned.attunement.Attunement;
 import net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
+import net.minecraft.core.particles.DustParticleOptions;
+import net.minecraft.core.particles.ParticleOptions;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.item.ItemStack;
@@ -74,6 +79,7 @@ public final class AttunedEffects {
 	private static void tickPlayer(ServerPlayer player) {
 		AttunedInv inv = AttunedAttachments.getInventory(player);
 		List<Integer> currentActive = Attunement.activeSlots(player);
+		boolean wasTracked = ACTIVE.containsKey(player.getUUID());
 		Map<Integer, ItemStack> tracked =
 			ACTIVE.computeIfAbsent(player.getUUID(), id -> new HashMap<>());
 
@@ -88,6 +94,9 @@ public final class AttunedEffects {
 			nextState.put(slot, inv.get(slot));
 		}
 
+		boolean anyActivated = false;
+		boolean anyDeactivated = false;
+
 		// Removals: slots that were active last tick but are no longer active, or
 		// whose stack changed (the old stack must be torn down with its own data).
 		for (Map.Entry<Integer, ItemStack> entry : tracked.entrySet()) {
@@ -96,6 +105,7 @@ public final class AttunedEffects {
 			ItemStack now = nextState.get(slot);
 			if (now == null || !ItemStack.matches(previous, now)) {
 				removeFocus(player, slot, previous);
+				anyDeactivated = true;
 			}
 		}
 
@@ -109,6 +119,7 @@ public final class AttunedEffects {
 			} else {
 				// Newly active, or the stack in this slot changed.
 				applyFocus(player, slot, now);
+				anyActivated = true;
 			}
 		}
 
@@ -117,6 +128,23 @@ public final class AttunedEffects {
 		for (Map.Entry<Integer, ItemStack> entry : nextState.entrySet()) {
 			tracked.put(entry.getKey(), entry.getValue().copy());
 		}
+
+		// Chime for real activation changes — but stay silent on the first-tick
+		// reapply after a login or respawn, when every active Focus reads as new.
+		if (wasTracked) {
+			if (anyActivated) {
+				playAttuneSound(player, 1.2F);
+			}
+			if (anyDeactivated) {
+				playAttuneSound(player, 0.7F);
+			}
+		}
+	}
+
+	/** A soft chime when a Focus changes activation — pitched up to attune, down to lapse. */
+	private static void playAttuneSound(ServerPlayer player, float pitch) {
+		((ServerLevel) player.level()).playSound(null, player.blockPosition(),
+			SoundEvents.AMETHYST_BLOCK_CHIME, SoundSource.PLAYERS, 0.6F, pitch);
 	}
 
 	/** Stable, per-slot, per-modifier-index id so modifiers can be removed precisely. */
@@ -187,8 +215,28 @@ public final class AttunedEffects {
 	/** A subtle ambient particle aura shown while the player has any active Focus. */
 	private static void spawnAura(ServerPlayer player) {
 		ServerLevel level = (ServerLevel) player.level();
-		level.sendParticles(ParticleTypes.WITCH,
+		level.sendParticles(auraParticle(player),
 			player.getX(), player.getY() + 1.0, player.getZ(),
 			6, 0.4, 0.9, 0.4, 0.05);
+	}
+
+	/** The aura particle for a player's stance: affinity-coloured, Discord magenta, or neutral. */
+	private static ParticleOptions auraParticle(ServerPlayer player) {
+		if (Attunement.isDiscord(player)) {
+			return new DustParticleOptions(0xCC44FF, 1.0F);
+		}
+		Optional<Affinity> affinity = Attunement.committedAffinity(player);
+		if (affinity.isPresent()) {
+			return new DustParticleOptions(affinityColor(affinity.get()), 1.0F);
+		}
+		return ParticleTypes.WITCH;
+	}
+
+	private static int affinityColor(Affinity affinity) {
+		return switch (affinity) {
+			case FURY -> 0xFF5555;
+			case BASTION -> 0xFFAA00;
+			case ZEPHYR -> 0x55FFFF;
+		};
 	}
 }

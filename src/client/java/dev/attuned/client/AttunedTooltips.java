@@ -4,6 +4,9 @@ import dev.attuned.Attuned;
 import dev.attuned.AttunedRegistries;
 import dev.attuned.api.focus.Affinity;
 import dev.attuned.api.focus.FocusDefinition;
+import dev.attuned.attunement.AttunedAttachments;
+import dev.attuned.attunement.AttunedInv;
+import dev.attuned.attunement.Attunement;
 import dev.attuned.attunement.FocusLookup;
 import net.fabricmc.fabric.api.client.item.v1.ItemTooltipCallback;
 import net.minecraft.ChatFormatting;
@@ -59,6 +62,22 @@ public final class AttunedTooltips {
 						.withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD)
 						.append(Component.literal(" — only one can be active")
 							.withStyle(ChatFormatting.GRAY)));
+				}
+
+				// Dormant marker — when this exact stack occupies an inactive Focus slot.
+				var player = Minecraft.getInstance().player;
+				if (player != null) {
+					AttunedInv inv = AttunedAttachments.getInventory(player);
+					for (int slot = 0; slot < AttunedInv.SIZE; slot++) {
+						if (inv.get(slot) == stack && !Attunement.isActive(player, slot)) {
+							lines.add(Component.empty());
+							lines.add(Component.literal("Dormant")
+								.withStyle(ChatFormatting.DARK_RED, ChatFormatting.BOLD));
+							lines.add(Component.literal("Raise your capacity or remove a Focus.")
+								.withStyle(ChatFormatting.GRAY));
+							break;
+						}
+					}
 				}
 			}
 		});
