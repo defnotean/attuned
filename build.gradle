@@ -96,9 +96,8 @@ modrinth {
 	versionName = "Attuned ${project.version}"
 	// Changelog for the current release — refresh this each time mod_version bumps.
 	changelog = """\
-- New Apex capstones: a maxed, single-affinity build unlocks a powerful passive ability.
-- Fury executes low-health foes; Bastion caps how hard any hit lands; Zephyr dodges attacks while sprinting.
-- Each capstone respects the affinity cycle, so a maxed build still wins and loses the matchups it should.
+- Foci can now be found in survival: a spread of structure chests have a chance to hold one.
+- An Apex capstone now announces itself with a sound and a message when it activates, and the Focus panel tooltip explains what it does.
 """
 	uploadFile = file("build/libs/${project.name}-${project.version}.jar")
 	gameVersions = ["26.1.2"]
