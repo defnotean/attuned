@@ -65,7 +65,7 @@ public final class FocusPanel {
 			}
 		}
 
-		int affinityColor = AttunementReadout.affinityArgb(Attunement.committedAffinity(player));
+		int affinityColor = AttunementReadout.stanceArgb(player);
 
 		// Affinity gem, centred in the panel's top padding band: a colour chip set
 		// in a dark bezel that matches the slot wells.

@@ -134,8 +134,8 @@ public class AttunementAltarBlock extends Block {
 			.withStyle(ChatFormatting.GRAY)
 			.append(Component.literal(Attunement.used(player) + " / " + Attunement.capacity(player))
 				.withStyle(ChatFormatting.AQUA))
-			.append(Component.literal("    Affinity: ").withStyle(ChatFormatting.GRAY))
-			.append(affinityLabel(Attunement.committedAffinity(player))));
+			.append(Component.literal("    Stance: ").withStyle(ChatFormatting.GRAY))
+			.append(stanceLabel(player)));
 		Apex.affinityOf(player).ifPresent(apex ->
 			player.sendSystemMessage(Component.literal("Apex: " + Apex.capstoneName(apex))
 				.withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD)));
@@ -175,7 +175,11 @@ public class AttunementAltarBlock extends Block {
 		};
 	}
 
-	private static Component affinityLabel(Optional<Affinity> affinity) {
+	private static Component stanceLabel(Player player) {
+		if (Attunement.isDiscord(player)) {
+			return Component.literal("Discord").withStyle(ChatFormatting.LIGHT_PURPLE);
+		}
+		Optional<Affinity> affinity = Attunement.committedAffinity(player);
 		if (affinity.isEmpty()) {
 			return Component.literal("None").withStyle(ChatFormatting.GRAY);
 		}

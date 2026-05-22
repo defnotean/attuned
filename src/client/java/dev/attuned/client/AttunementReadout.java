@@ -30,6 +30,8 @@ public final class AttunementReadout {
 	private static final int ZEPHYR_ARGB = 0xFF55FFFF;
 	/** Used when no affinity is committed — a neutral, unlit grey. */
 	private static final int NEUTRAL_ARGB = 0xFF8B8B8B;
+	/** Used for the Discord stance — a clashing magenta. */
+	private static final int DISCORD_ARGB = 0xFFCC44FF;
 
 	/** The player's build title, coloured by rank tier. */
 	public static MutableComponent title(Player player) {
@@ -42,19 +44,27 @@ public final class AttunementReadout {
 			.withStyle(rankColor(used));
 	}
 
-	/** Lines for the Focus-panel hover tooltip: title, budget, affinity, and Apex. */
+	/** Lines for the Focus-panel hover tooltip: title, budget, stance, and Apex. */
 	public static List<Component> tooltip(Player player) {
 		int used = Attunement.used(player);
 		int capacity = Attunement.capacity(player);
-		Optional<Affinity> affinity = Attunement.committedAffinity(player);
 
 		List<Component> lines = new ArrayList<>();
 		lines.add(title(player).withStyle(ChatFormatting.BOLD));
 		lines.add(Component.empty());
 		lines.add(Component.literal("Attunement: ").withStyle(ChatFormatting.GRAY)
 			.append(Component.literal(used + " / " + capacity).withStyle(ChatFormatting.AQUA)));
-		lines.add(Component.literal("Affinity: ").withStyle(ChatFormatting.GRAY)
-			.append(Component.literal(affinityName(affinity)).withStyle(affinityTextColor(affinity))));
+
+		if (Attunement.isDiscord(player)) {
+			lines.add(Component.literal("Stance: ").withStyle(ChatFormatting.GRAY)
+				.append(Component.literal("Discord").withStyle(ChatFormatting.LIGHT_PURPLE)));
+			lines.add(Component.literal("Clashing affinities — you deal and take extra damage.")
+				.withStyle(ChatFormatting.GRAY));
+		} else {
+			Optional<Affinity> affinity = Attunement.committedAffinity(player);
+			lines.add(Component.literal("Affinity: ").withStyle(ChatFormatting.GRAY)
+				.append(Component.literal(affinityName(affinity)).withStyle(affinityTextColor(affinity))));
+		}
 
 		Optional<Affinity> apex = Apex.affinityOf(player);
 		if (apex.isPresent()) {
@@ -67,8 +77,12 @@ public final class AttunementReadout {
 		return lines;
 	}
 
-	/** ARGB colour for the affinity gem and budget-bar fill. */
-	public static int affinityArgb(Optional<Affinity> affinity) {
+	/** ARGB colour for the affinity gem and budget-bar fill — the player's stance. */
+	public static int stanceArgb(Player player) {
+		if (Attunement.isDiscord(player)) {
+			return DISCORD_ARGB;
+		}
+		Optional<Affinity> affinity = Attunement.committedAffinity(player);
 		if (affinity.isEmpty()) {
 			return NEUTRAL_ARGB;
 		}

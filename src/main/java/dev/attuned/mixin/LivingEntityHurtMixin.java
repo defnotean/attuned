@@ -28,7 +28,7 @@ public abstract class LivingEntityHurtMixin {
 			return amount;
 		}
 		LivingEntity self = (LivingEntity) (Object) this;
-		float scaled = amount * AttunedCombat.affinityMultiplier(self, source);
+		float scaled = AttunedCombat.applyAffinity(level, self, source, amount);
 		return Apex.adjustDamage(self, source, scaled);
 	}
 }

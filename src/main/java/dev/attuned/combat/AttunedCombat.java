@@ -5,8 +5,13 @@ import dev.attuned.attunement.AttunedAttachments;
 import dev.attuned.attunement.AttunedInv;
 import dev.attuned.attunement.Attunement;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
+import net.minecraft.core.particles.DustParticleOptions;
+import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.Identifier;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
@@ -23,7 +28,7 @@ import java.util.Optional;
  * <ol>
  *   <li><b>Affinity matchup</b> — damage is scaled when one combatant's
  *       {@link Affinity} counters the other's. Applied inside
- *       {@code LivingEntityHurtMixin}, which calls {@link #affinityMultiplier}.</li>
+ *       {@code LivingEntityHurtMixin}, which calls {@link #applyAffinity}.</li>
  *   <li><b>Focus procs</b> — the Thornward and Leech Foci have no attribute
  *       modifiers; their entire effect (reflect / lifesteal) fires from the
  *       {@code AFTER_DAMAGE} event handler registered in {@link #init()}.</li>
@@ -42,6 +47,9 @@ public final class AttunedCombat {
 	private static final float ADVANTAGE_MULTIPLIER = 1.33F;
 	/** Damage multiplier when the defender counters the attacker. */
 	private static final float DISADVANTAGE_MULTIPLIER = 0.75F;
+
+	/** Feedback colour for a Discord combatant — a clashing magenta. */
+	private static final int DISCORD_COLOR = 0xCC44FF;
 
 	/** Fraction of incoming damage a Thornward defender reflects to the attacker. */
 	private static final float THORNWARD_REFLECT = 0.25F;
@@ -62,18 +70,32 @@ public final class AttunedCombat {
 	}
 
 	/**
+	 * Scales one incoming hit by the affinity matchup and shows feedback for it.
+	 * Invoked by {@code LivingEntityHurtMixin} before armour and absorption.
+	 */
+	public static float applyAffinity(ServerLevel level, LivingEntity defender,
+			DamageSource source, float amount) {
+		float multiplier = affinityMultiplier(defender, source);
+		if (multiplier != 1.0F) {
+			matchupFeedback(level, defender, source, multiplier);
+		}
+		return amount * multiplier;
+	}
+
+	/**
 	 * The affinity-matchup damage multiplier for one attacker→defender exchange.
-	 * Returns {@code 1.0} unless both combatants carry an affinity and one
-	 * counters the other. Invoked by {@code LivingEntityHurtMixin}.
-	 *
-	 * @param defender the entity being hurt
-	 * @param source   the damage source (its attacking entity is the attacker)
-	 * @return the factor to multiply the raw damage amount by
+	 * A combatant in Discord both deals and takes the advantage multiplier
+	 * against anyone; otherwise the rock-paper-scissors cycle applies, and a
+	 * matchup with no counter (or an unattuned combatant) leaves damage at 1.0.
 	 */
 	public static float affinityMultiplier(LivingEntity defender, DamageSource source) {
 		LivingEntity attacker = attackerOf(source);
 		if (attacker == null || attacker == defender) {
 			return 1.0F;
+		}
+		// Discord — clashing affinities — is a glass cannon on both ends.
+		if (isDiscord(attacker) || isDiscord(defender)) {
+			return ADVANTAGE_MULTIPLIER;
 		}
 		Optional<Affinity> attackerAffinity = affinityOf(attacker);
 		Optional<Affinity> defenderAffinity = affinityOf(defender);
@@ -89,6 +111,50 @@ public final class AttunedCombat {
 			return DISADVANTAGE_MULTIPLIER;
 		}
 		return 1.0F;
+	}
+
+	/** Whether a combatant is a player in the Discord stance. */
+	private static boolean isDiscord(LivingEntity entity) {
+		return entity instanceof Player player && Attunement.isDiscord(player);
+	}
+
+	/**
+	 * Shows the rock-paper-scissors outcome of a hit: an affinity-coloured spark
+	 * and a sharp sound on an advantage, a dull puff and a weak sound on a
+	 * disadvantage — so players can read the cycle.
+	 */
+	private static void matchupFeedback(ServerLevel level, LivingEntity defender,
+			DamageSource source, float multiplier) {
+		double x = defender.getX();
+		double y = defender.getY() + defender.getBbHeight() * 0.6;
+		double z = defender.getZ();
+		if (multiplier > 1.0F) {
+			LivingEntity attacker = attackerOf(source);
+			int color = attacker != null ? matchupColor(attacker) : 0xFFFFFF;
+			level.sendParticles(new DustParticleOptions(color, 1.0F), x, y, z, 10, 0.3, 0.3, 0.3, 0.0);
+			level.playSound(null, defender.blockPosition(),
+				SoundEvents.PLAYER_ATTACK_CRIT, SoundSource.PLAYERS, 0.7F, 1.2F);
+		} else {
+			level.sendParticles(ParticleTypes.POOF, x, y, z, 8, 0.25, 0.25, 0.25, 0.0);
+			level.playSound(null, defender.blockPosition(),
+				SoundEvents.PLAYER_ATTACK_WEAK, SoundSource.PLAYERS, 0.8F, 1.0F);
+		}
+	}
+
+	/** The feedback colour for an attacker — its affinity's colour, or the Discord magenta. */
+	private static int matchupColor(LivingEntity attacker) {
+		if (isDiscord(attacker)) {
+			return DISCORD_COLOR;
+		}
+		return affinityOf(attacker).map(AttunedCombat::affinityColor).orElse(0xFFFFFF);
+	}
+
+	private static int affinityColor(Affinity affinity) {
+		return switch (affinity) {
+			case FURY -> 0xFF5555;
+			case BASTION -> 0xFFAA00;
+			case ZEPHYR -> 0x55FFFF;
+		};
 	}
 
 	/**

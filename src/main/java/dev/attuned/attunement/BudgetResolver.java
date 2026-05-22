@@ -13,17 +13,13 @@ import java.util.Set;
  * so it can be reasoned about and unit-tested in isolation. {@link Attunement}
  * gathers the candidates from a player and delegates the decision here.
  *
- * <p>Walking the candidates in priority order, a Focus activates when:
- * <ul>
- *   <li>its cost still fits the remaining budget;</li>
- *   <li>its affinity matches the committed one — the affinity of the first
- *       affinity-bearing Focus to activate (a {@code null} affinity is neutral
- *       and always eligible);</li>
- *   <li>and, if it is unique, no copy with the same identity is active yet.</li>
- * </ul>
- * A candidate that fails any check is dormant and consumes no budget.
+ * <p>Walking the candidates in priority order, a Focus activates when its cost
+ * still fits the remaining budget and — if it is unique — no copy with the same
+ * identity is active yet. A candidate that fails either check is dormant and
+ * consumes no budget. Affinity does not gate activation: a build spanning
+ * several affinities simply resolves to Discord, which {@link Attunement}
+ * derives from the active set.
  *
- * @param <A> the affinity token type — compared only for equality
  * @param <I> the identity token type used to detect duplicate unique Foci
  */
 public final class BudgetResolver {
@@ -34,32 +30,25 @@ public final class BudgetResolver {
 	 *
 	 * @param slot     the slot index this candidate occupies
 	 * @param cost     attunement points the Focus consumes when active
-	 * @param affinity the Focus affinity, or {@code null} if affinity-neutral
 	 * @param unique   whether at most one copy of this Focus may be active
 	 * @param identity the token identifying "the same Focus" for the unique rule
 	 */
-	public record Candidate<A, I>(int slot, int cost, A affinity, boolean unique, I identity) {}
+	public record Candidate<I>(int slot, int cost, boolean unique, I identity) {}
 
 	/**
 	 * Resolves which candidates are active. {@code candidates} must be in
 	 * priority order; the returned slot indices preserve that order.
 	 */
-	public static <A, I> List<Integer> resolve(List<Candidate<A, I>> candidates, int budget) {
+	public static <I> List<Integer> resolve(List<Candidate<I>> candidates, int budget) {
 		int used = 0;
-		A committed = null;
 		Set<I> activeUnique = new HashSet<>();
 		List<Integer> active = new ArrayList<>();
-		for (Candidate<A, I> candidate : candidates) {
+		for (Candidate<I> candidate : candidates) {
 			// A later copy of a unique Focus stays dormant.
 			if (candidate.unique() && activeUnique.contains(candidate.identity())) {
 				continue;
 			}
-			// Once an affinity is committed, a mismatched one stays dormant.
-			if (candidate.affinity() != null && committed != null
-					&& !committed.equals(candidate.affinity())) {
-				continue;
-			}
-			// An over-budget Focus is dormant and commits nothing.
+			// An over-budget Focus is dormant and consumes nothing.
 			if (used + candidate.cost() > budget) {
 				continue;
 			}
@@ -67,9 +56,6 @@ public final class BudgetResolver {
 			active.add(candidate.slot());
 			if (candidate.unique()) {
 				activeUnique.add(candidate.identity());
-			}
-			if (candidate.affinity() != null && committed == null) {
-				committed = candidate.affinity();
 			}
 		}
 		return active;

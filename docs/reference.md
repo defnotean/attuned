@@ -27,10 +27,14 @@ Three affinities form a rock-paper-scissors cycle:
 Fury  beats  Bastion  beats  Zephyr  beats  Fury
 ```
 
-- A Focus with an `affinity` commits its wearer to that lane: **all active Foci
-  must share one affinity.** The first affinity-bearing Focus to activate (in
-  slot order) sets the lane; mismatched Foci below it stay dormant.
-- A Focus with **no** `affinity` is *neutral* — it works alongside any lane.
+- A Focus with an `affinity` pulls its wearer toward that lane. When every
+  active affinity-bearing Focus shares one affinity, the wearer is **committed**
+  to it — counter-combat and the Apex capstone apply.
+- Running active Foci of **two or more** affinities is **Discord**: every Focus
+  still works, but the wearer is a glass cannon — dealing and taking extra
+  damage — and cannot reach Apex.
+- A Focus with **no** `affinity` is *neutral* — it never triggers Discord and
+  fits any committed lane.
 - Pick an affinity for combat-flavoured Foci; leave it off for utility Foci.
 
 ## Attribute modifiers

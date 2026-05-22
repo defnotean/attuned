@@ -1,0 +1,20 @@
+{
+	"values": [
+		"minecraft:skeleton",
+		"minecraft:stray",
+		"minecraft:bogged",
+		"minecraft:wither_skeleton",
+		"minecraft:phantom",
+		"minecraft:spider",
+		"minecraft:cave_spider",
+		"minecraft:blaze",
+		"minecraft:breeze",
+		"minecraft:pillager",
+		"minecraft:witch",
+		"minecraft:evoker",
+		"minecraft:vex",
+		"minecraft:ghast",
+		"minecraft:guardian",
+		"minecraft:ender_dragon"
+	]
+}

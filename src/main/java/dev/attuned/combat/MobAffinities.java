@@ -1,73 +1,51 @@
 package dev.attuned.combat;
 
+import dev.attuned.Attuned;
 import dev.attuned.api.focus.Affinity;
+import java.util.Optional;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.Identifier;
+import net.minecraft.tags.TagKey;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 
-import java.util.Map;
-import java.util.Optional;
-
 /**
- * Assigns hostile {@link EntityType}s an {@link Affinity} so they participate in
- * the rock-paper-scissors counter-combat cycle alongside attuned players.
+ * Assigns hostile entity types an {@link Affinity} so they participate in the
+ * rock-paper-scissors counter-combat cycle alongside attuned players.
  *
- * <p>The mapping follows combat archetype rather than mob lore:
- * <ul>
- *   <li>{@link Affinity#FURY} — aggressive melee bruisers (zombies, illager
- *       axemen, ravager).</li>
- *   <li>{@link Affinity#BASTION} — durable, heavily-armoured threats (warden,
- *       hoglin, piglin brute).</li>
- *   <li>{@link Affinity#ZEPHYR} — ranged or fast skirmishers (skeletons,
- *       phantom, spider, blaze, breeze).</li>
- * </ul>
- * Any entity type not listed has no affinity and takes/deals normal damage.
+ * <p>Membership is datapack-driven: an entity type's affinity is whichever of
+ * the three {@code attuned:*_mobs} entity-type tags it belongs to. The tags
+ * shipped with the mod follow combat archetype rather than mob lore — Fury for
+ * aggressive bruisers, Bastion for durable threats, Zephyr for ranged, fast or
+ * flying skirmishers — and a datapack may retag freely. An untagged entity has
+ * no affinity and deals and takes normal damage.
  */
 public final class MobAffinities {
 	private MobAffinities() {}
 
-	private static final Map<EntityType<?>, Affinity> AFFINITIES = buildMap();
+	private static final TagKey<EntityType<?>> FURY_MOBS = tag("fury_mobs");
+	private static final TagKey<EntityType<?>> BASTION_MOBS = tag("bastion_mobs");
+	private static final TagKey<EntityType<?>> ZEPHYR_MOBS = tag("zephyr_mobs");
 
-	private static Map<EntityType<?>, Affinity> buildMap() {
-		// Aggressive melee mobs.
-		// Husk/Drowned/ZombieVillager are Zombie subclasses but distinct
-		// EntityTypes, so each must be listed explicitly.
-		Map<EntityType<?>, Affinity> map = new java.util.IdentityHashMap<>();
-		map.put(EntityType.ZOMBIE, Affinity.FURY);
-		map.put(EntityType.HUSK, Affinity.FURY);
-		map.put(EntityType.DROWNED, Affinity.FURY);
-		map.put(EntityType.ZOMBIE_VILLAGER, Affinity.FURY);
-		map.put(EntityType.ZOMBIFIED_PIGLIN, Affinity.FURY);
-		map.put(EntityType.ZOGLIN, Affinity.FURY);
-		map.put(EntityType.RAVAGER, Affinity.FURY);
-		map.put(EntityType.VINDICATOR, Affinity.FURY);
-
-		// Durable / heavy mobs.
-		map.put(EntityType.WARDEN, Affinity.BASTION);
-		map.put(EntityType.HOGLIN, Affinity.BASTION);
-		map.put(EntityType.PIGLIN_BRUTE, Affinity.BASTION);
-		// Iron golem is the canonical heavy bruiser; included so a golem-vs-mob
-		// or golem-vs-player exchange respects the cycle.
-		map.put(EntityType.IRON_GOLEM, Affinity.BASTION);
-
-		// Ranged / fast mobs.
-		map.put(EntityType.SKELETON, Affinity.ZEPHYR);
-		map.put(EntityType.STRAY, Affinity.ZEPHYR);
-		map.put(EntityType.BOGGED, Affinity.ZEPHYR);
-		map.put(EntityType.WITHER_SKELETON, Affinity.ZEPHYR);
-		map.put(EntityType.PHANTOM, Affinity.ZEPHYR);
-		map.put(EntityType.SPIDER, Affinity.ZEPHYR);
-		map.put(EntityType.CAVE_SPIDER, Affinity.ZEPHYR);
-		map.put(EntityType.BLAZE, Affinity.ZEPHYR);
-		map.put(EntityType.BREEZE, Affinity.ZEPHYR);
-		map.put(EntityType.PILLAGER, Affinity.ZEPHYR);
-		return java.util.Collections.unmodifiableMap(map);
+	private static TagKey<EntityType<?>> tag(String name) {
+		return TagKey.create(Registries.ENTITY_TYPE, Identifier.fromNamespaceAndPath(Attuned.MOD_ID, name));
 	}
 
-	/** The combat affinity of a living entity by its {@link EntityType}, if mapped. */
+	/** The combat affinity of a living entity by its entity-type tag, if any. */
 	public static Optional<Affinity> of(LivingEntity entity) {
 		if (entity == null) {
 			return Optional.empty();
 		}
-		return Optional.ofNullable(AFFINITIES.get(entity.getType()));
+		EntityType<?> type = entity.getType();
+		if (type.builtInRegistryHolder().is(FURY_MOBS)) {
+			return Optional.of(Affinity.FURY);
+		}
+		if (type.builtInRegistryHolder().is(BASTION_MOBS)) {
+			return Optional.of(Affinity.BASTION);
+		}
+		if (type.builtInRegistryHolder().is(ZEPHYR_MOBS)) {
+			return Optional.of(Affinity.ZEPHYR);
+		}
+		return Optional.empty();
 	}
 }
