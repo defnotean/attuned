@@ -24,8 +24,14 @@ public final class FocusLayout {
 	public static final int INVENTORY_X = 180;
 	public static final int INVENTORY_Y = 30;
 
-	/** Top-left of the Focus column in the creative inventory screen. */
-	public static final int CREATIVE_X = 199;
+	/**
+	 * Top-left of the Focus column in the creative inventory screen, relative to
+	 * the window's top-left corner. The column sits to the <em>left</em> of the
+	 * window — hence the negative X — because the creative screen renders the
+	 * player's active potion effects down its right edge, exactly where a
+	 * right-hand panel would collide with them.
+	 */
+	public static final int CREATIVE_X = -22;
 	public static final int CREATIVE_Y = 14;
 
 	/**
