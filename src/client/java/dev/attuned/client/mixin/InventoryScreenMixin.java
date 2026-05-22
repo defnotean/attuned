@@ -1,5 +1,6 @@
 package dev.attuned.client.mixin;
 
+import dev.attuned.client.AttunementReadout;
 import dev.attuned.client.FocusPanel;
 import dev.attuned.menu.FocusLayout;
 import dev.attuned.menu.FocusSlot;
@@ -15,11 +16,13 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import java.util.Optional;
+
 /**
  * Draws Attuned's six Focus slots as a side panel on the left of the survival
  * inventory screen — clear of the potion effects vanilla draws down the right
  * edge. The drawing itself lives in {@link FocusPanel}, shared with the creative
- * inventory screen.
+ * inventory screen; hovering the panel frame shows the attunement readout.
  *
  * <p>The recipe book opens across that same left side, so whenever it is showing
  * the panel and its slots are suppressed, then restored once it closes.</p>
@@ -41,9 +44,15 @@ public abstract class InventoryScreenMixin extends AbstractContainerScreen<Inven
 			return;
 		}
 		Player player = Minecraft.getInstance().player;
-		if (player != null) {
-			FocusPanel.draw(graphics, this.leftPos, this.topPos,
-				FocusLayout.INVENTORY_X, FocusLayout.INVENTORY_Y, player);
+		if (player == null) {
+			return;
+		}
+		FocusPanel.draw(graphics, this.leftPos, this.topPos,
+			FocusLayout.INVENTORY_X, FocusLayout.INVENTORY_Y, player);
+		if (FocusPanel.overReadout(FocusLayout.INVENTORY_X, FocusLayout.INVENTORY_Y,
+				mouseX - this.leftPos, mouseY - this.topPos)) {
+			graphics.setTooltipForNextFrame(this.font, AttunementReadout.tooltip(player),
+				Optional.empty(), mouseX, mouseY);
 		}
 	}
 

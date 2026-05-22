@@ -1,5 +1,6 @@
 package dev.attuned.client.mixin;
 
+import dev.attuned.client.AttunementReadout;
 import dev.attuned.client.FocusPanel;
 import dev.attuned.menu.FocusLayout;
 import dev.attuned.menu.FocusSlot;
@@ -16,6 +17,8 @@ import org.spongepowered.asm.mixin.injection.ModifyArgs;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import org.spongepowered.asm.mixin.injection.invoke.arg.Args;
+
+import java.util.Optional;
 
 /**
  * Brings the six Focus slots into the creative inventory's Survival Inventory
@@ -68,14 +71,20 @@ public abstract class CreativeModeInventoryScreenMixin
 			return;
 		}
 		Player player = Minecraft.getInstance().player;
-		if (player != null) {
-			FocusPanel.draw(graphics, this.leftPos, this.topPos,
-				FocusLayout.CREATIVE_X, FocusLayout.CREATIVE_Y, player);
+		if (player == null) {
+			return;
+		}
+		FocusPanel.draw(graphics, this.leftPos, this.topPos,
+			FocusLayout.CREATIVE_X, FocusLayout.CREATIVE_Y, player);
+		if (FocusPanel.overReadout(FocusLayout.CREATIVE_X, FocusLayout.CREATIVE_Y,
+				mouseX - this.leftPos, mouseY - this.topPos)) {
+			graphics.setTooltipForNextFrame(this.font, AttunementReadout.tooltip(player),
+				Optional.empty(), mouseX, mouseY);
 		}
 	}
 
 	/**
-	 * The Focus panel sits past the creative window's right edge, which {@code
+	 * The Focus panel sits past the creative window's left edge, which {@code
 	 * hasClickedOutside} would otherwise flag as outside the GUI — turning a
 	 * place/take on a Focus slot into a drop. Veto that flag over the panel.
 	 */
