@@ -12,7 +12,7 @@ bonus at once.
 
 - **Six Focus slots** built directly into the inventory screen — and the
   creative inventory — with drag-and-drop and shift-click to equip.
-- **16 Foci** spanning mobility, defense, combat, and utility, plus the
+- **22 Foci** spanning mobility, defense, combat, and utility, plus the
   **Attunement Shard**, a consumable that permanently raises your budget.
 - **Affinities** — every combat-leaning Focus carries one of three affinities
   (Fury, Bastion, Zephyr) locked in a counter cycle. Your active Foci must all
@@ -26,6 +26,12 @@ bonus at once.
 ## Affinity cycle
 
 Fury beats Bastion · Bastion beats Zephyr · Zephyr beats Fury
+
+## Adding or changing content
+
+Want to add a Focus or tweak the numbers? The [`docs/`](docs/) folder has
+plain-English, step-by-step guides written for non-experts — start with
+[docs/README.md](docs/README.md).
 
 ## Requirements
 
