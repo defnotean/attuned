@@ -58,8 +58,11 @@ public final class AttunementReadout {
 
 		Optional<Affinity> apex = Apex.affinityOf(player);
 		if (apex.isPresent()) {
-			lines.add(Component.literal("Apex: " + Apex.capstoneName(apex.get()))
+			Affinity capstone = apex.get();
+			lines.add(Component.literal("Apex: " + Apex.capstoneName(capstone))
 				.withStyle(affinityTextColor(apex), ChatFormatting.BOLD));
+			lines.add(Component.literal(Apex.capstoneDescription(capstone))
+				.withStyle(ChatFormatting.GRAY));
 		}
 		return lines;
 	}

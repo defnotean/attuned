@@ -5,10 +5,17 @@ import dev.attuned.api.focus.FocusDefinition;
 import dev.attuned.attunement.AttunedAttachments;
 import dev.attuned.attunement.AttunedInv;
 import dev.attuned.attunement.Attunement;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
+import net.minecraft.ChatFormatting;
 import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
@@ -41,9 +48,8 @@ import net.minecraft.world.entity.player.Player;
  *       Higher against Fury attackers; nil against Bastion.</li>
  * </ul>
  *
- * <p>The damage effects are applied from {@code LivingEntityHurtMixin} via
- * {@link #adjustDamage}; the dodge is an {@code ALLOW_DAMAGE} veto registered in
- * {@link #init}.
+ * <p>A per-tick check announces to the player — with a sound and a chat line —
+ * when a capstone switches on or off, so the passive is never silent.
  */
 public final class Apex {
 	private Apex() {}
@@ -71,12 +77,16 @@ public final class Apex {
 	/** Zephyr dodge chance against the affinity Zephyr beats. */
 	private static final float DODGE_EMPOWERED = 0.65F;
 
+	/** Per-player Apex affinity as of last tick, for spotting on/off changes. */
+	private static final Map<UUID, Affinity> apexState = new HashMap<>();
+
 	/** How a capstone fares against another combatant's affinity. */
 	private enum Matchup { EMPOWERED, NORMAL, NEUTRALIZED }
 
-	/** Registers the Zephyr dodge veto. Called from the mod initializer. */
+	/** Registers the Zephyr dodge veto and the activation watcher. */
 	public static void init() {
 		ServerLivingEntityEvents.ALLOW_DAMAGE.register(Apex::allowDamage);
+		ServerTickEvents.END_SERVER_TICK.register(Apex::tick);
 	}
 
 	/**
@@ -123,6 +133,15 @@ public final class Apex {
 			case FURY -> "Execute";
 			case BASTION -> "Unyielding";
 			case ZEPHYR -> "Untouchable";
+		};
+	}
+
+	/** A one-line description of what an affinity's capstone does. */
+	public static String capstoneDescription(Affinity affinity) {
+		return switch (affinity) {
+			case FURY -> "Your strikes finish off low-health foes.";
+			case BASTION -> "No single blow can land hard, and knockback is ignored.";
+			case ZEPHYR -> "A chance to dodge attacks outright while sprinting.";
 		};
 	}
 
@@ -216,6 +235,42 @@ public final class Apex {
 		return Matchup.NORMAL;
 	}
 
+	/** Each tick, announce any player whose Apex capstone has switched on or off. */
+	private static void tick(MinecraftServer server) {
+		for (ServerPlayer player : server.getPlayerList().getPlayers()) {
+			Affinity now = affinityOf(player).orElse(null);
+			Affinity was = apexState.get(player.getUUID());
+			if (now == was) {
+				continue;
+			}
+			if (now != null) {
+				apexState.put(player.getUUID(), now);
+				announceGained(player, now);
+			} else {
+				apexState.remove(player.getUUID());
+				announceLost(player);
+			}
+		}
+	}
+
+	private static void announceGained(ServerPlayer player, Affinity affinity) {
+		((ServerLevel) player.level()).playSound(null, player.blockPosition(),
+			SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, SoundSource.PLAYERS, 0.7F, 1.0F);
+		player.sendSystemMessage(Component.literal("Apex active: ")
+			.withStyle(ChatFormatting.GRAY)
+			.append(Component.literal(capstoneName(affinity))
+				.withStyle(affinityColor(affinity), ChatFormatting.BOLD))
+			.append(Component.literal(". " + capstoneDescription(affinity))
+				.withStyle(ChatFormatting.GRAY)));
+	}
+
+	private static void announceLost(ServerPlayer player) {
+		((ServerLevel) player.level()).playSound(null, player.blockPosition(),
+			SoundEvents.BEACON_DEACTIVATE, SoundSource.PLAYERS, 0.6F, 1.0F);
+		player.sendSystemMessage(Component.literal("Your Apex has faded.")
+			.withStyle(ChatFormatting.GRAY));
+	}
+
 	private static void onDodge(ServerPlayer player) {
 		player.addEffect(new MobEffectInstance(MobEffects.SPEED, 40, 1, true, false, true));
 		ServerLevel level = (ServerLevel) player.level();
@@ -223,5 +278,13 @@ public final class Apex {
 			player.getX(), player.getY() + 1.0, player.getZ(), 12, 0.3, 0.5, 0.3, 0.02);
 		level.playSound(null, player.blockPosition(),
 			SoundEvents.PLAYER_ATTACK_SWEEP, SoundSource.PLAYERS, 0.7F, 1.7F);
+	}
+
+	private static ChatFormatting affinityColor(Affinity affinity) {
+		return switch (affinity) {
+			case FURY -> ChatFormatting.RED;
+			case BASTION -> ChatFormatting.GOLD;
+			case ZEPHYR -> ChatFormatting.AQUA;
+		};
 	}
 }
