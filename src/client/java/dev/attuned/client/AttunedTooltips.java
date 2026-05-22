@@ -1,5 +1,6 @@
 package dev.attuned.client;
 
+import dev.attuned.Attuned;
 import dev.attuned.AttunedRegistries;
 import dev.attuned.api.focus.Affinity;
 import dev.attuned.api.focus.FocusDefinition;
@@ -13,8 +14,9 @@ import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.ItemStack;
 
 /**
- * Appends Attuned flavour and stats to item tooltips: a lore line on every
- * Attuned item, plus the affinity (colour-coded) and attunement cost on Foci.
+ * Appends Attuned flavour and stats to item tooltips: two lines of lore on every
+ * Attuned item, then — for Foci — a spacer and the colour-coded affinity and
+ * attunement cost.
  */
 public final class AttunedTooltips {
 	private AttunedTooltips() {}
@@ -22,22 +24,30 @@ public final class AttunedTooltips {
 	public static void init() {
 		ItemTooltipCallback.EVENT.register((stack, context, type, lines) -> {
 			Identifier id = BuiltInRegistries.ITEM.getKey(stack.getItem());
-			if (id == null || !id.getNamespace().equals("attuned")) {
+			if (id == null || !id.getNamespace().equals(Attuned.MOD_ID)) {
 				return;
 			}
+			String path = id.getPath();
 
-			// Flavour line on every Attuned item.
-			lines.add(Component.translatable("item.attuned." + id.getPath() + ".lore")
+			// Two lines of flavour lore on every Attuned item.
+			lines.add(Component.translatable("item.attuned." + path + ".lore")
+				.withStyle(ChatFormatting.DARK_GRAY, ChatFormatting.ITALIC));
+			lines.add(Component.translatable("item.attuned." + path + ".lore2")
 				.withStyle(ChatFormatting.DARK_GRAY, ChatFormatting.ITALIC));
 
 			// Affinity and attunement cost on items that are registered Foci.
 			FocusDefinition definition = definitionFor(stack);
 			if (definition != null) {
 				Affinity affinity = definition.affinity().orElse(null);
-				lines.add(Component.literal("Affinity: " + affinityName(affinity))
-					.withStyle(affinityColor(affinity)));
-				lines.add(Component.literal("Attunement Cost: " + definition.cost())
-					.withStyle(ChatFormatting.AQUA));
+				lines.add(Component.empty());
+				lines.add(Component.literal("Affinity: ")
+					.withStyle(ChatFormatting.GRAY)
+					.append(Component.literal(affinityName(affinity))
+						.withStyle(affinityColor(affinity), ChatFormatting.BOLD)));
+				lines.add(Component.literal("Attunement Cost: ")
+					.withStyle(ChatFormatting.GRAY)
+					.append(Component.literal(Integer.toString(definition.cost()))
+						.withStyle(ChatFormatting.AQUA)));
 			}
 		});
 	}

@@ -7,6 +7,11 @@
 	"authors": [
 		"defnotean"
 	],
+	"contact": {
+		"homepage": "https://github.com/defnotean/attuned",
+		"sources": "https://github.com/defnotean/attuned",
+		"issues": "https://github.com/defnotean/attuned/issues"
+	},
 	"license": "MIT",
 	"icon": "assets/attuned/icon.png",
 	"environment": "*",
