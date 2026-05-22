@@ -1,6 +1,8 @@
 {
 	"itemGroup.attuned": "Attuned",
 
+	"key.attuned.ability": "Activate Focus Ability",
+
 	"item.attuned.swift_focus": "Swift Focus",
 	"item.attuned.vital_focus": "Vital Focus",
 	"item.attuned.iron_focus": "Iron Focus",
@@ -89,7 +91,7 @@
 	"item.attuned.bloodfury_focus.effect": "Attack speed climbs as your health falls, up to 40% faster.",
 	"item.attuned.voidstep_focus.lore": "Space folds where you will it.",
 	"item.attuned.voidstep_focus.lore2": "The gap closes before you leap.",
-	"item.attuned.voidstep_focus.effect": "Double-tap jump while sneaking to blink 8 blocks forward.",
+	"item.attuned.voidstep_focus.effect": "Press the Focus-ability key to blink 8 blocks forward.",
 	"item.attuned.harvest_focus.lore": "Growth hears your patience.",
 	"item.attuned.harvest_focus.lore2": "Seasons lean toward your hand.",
 	"item.attuned.harvest_focus.effect": "Nearby crops ripen faster while you stand among them.",

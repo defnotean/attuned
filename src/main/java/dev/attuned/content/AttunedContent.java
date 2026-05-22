@@ -12,6 +12,7 @@ import dev.attuned.content.behavior.LodestoneBehavior;
 import dev.attuned.content.behavior.NightgazeBehavior;
 import dev.attuned.content.behavior.StormcallBehavior;
 import dev.attuned.content.behavior.TideBehavior;
+import dev.attuned.content.behavior.VoidstepBehavior;
 import java.util.List;
 import java.util.function.Function;
 import net.fabricmc.fabric.api.creativetab.v1.FabricCreativeModeTab;
@@ -142,6 +143,8 @@ public final class AttunedContent {
 			Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "harvest"), new HarvestBehavior());
 		AttunedRegistries.registerBehavior(
 			Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "beacon"), new BeaconBehavior());
+		AttunedRegistries.registerBehavior(
+			Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "voidstep"), new VoidstepBehavior());
 		registerCreativeTab();
 	}
 

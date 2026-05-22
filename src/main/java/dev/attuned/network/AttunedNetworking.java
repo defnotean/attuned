@@ -1,98 +1,48 @@
 package dev.attuned.network;
 
-import dev.attuned.AttunedConfig;
-import dev.attuned.AttunedPlayerCleanup;
+import dev.attuned.AttunedRegistries;
+import dev.attuned.api.focus.FocusBehavior;
+import dev.attuned.api.focus.FocusDefinition;
 import dev.attuned.attunement.AttunedAttachments;
 import dev.attuned.attunement.AttunedInv;
 import dev.attuned.attunement.Attunement;
-import dev.attuned.content.AttunedContent;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
-import net.minecraft.core.particles.ParticleTypes;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.sounds.SoundEvents;
-import net.minecraft.sounds.SoundSource;
-import net.minecraft.world.phys.AABB;
-import net.minecraft.world.phys.Vec3;
+import net.minecraft.world.item.ItemStack;
 
 /**
- * Attuned networking: registers the Voidstep teleport payload and resolves the
- * teleport server-side.
+ * Attuned networking: the Focus-ability channel.
  *
- * <p>The teleport is always validated on the server — the Focus must be active
- * and off cooldown — so a forged payload achieves nothing.
+ * <p>When a player presses the ability keybind the client sends an
+ * {@link AbilityPayload}; the server then triggers {@link FocusBehavior#onAbility}
+ * on every one of that player's active Foci. The payload carries no data and all
+ * validation is server-side, so a forged payload only ever fires the abilities
+ * the player legitimately has.
  */
 public final class AttunedNetworking {
 	private AttunedNetworking() {}
 
-	/** Maximum blink distance, in blocks. */
-	private static final int MAX_DISTANCE = 8;
-
-	/** Per-player game-time of the last Voidstep. */
-	private static final Map<UUID, Long> lastStep = new HashMap<>();
-
-	/** Registers the Voidstep payload type and its server-side receiver. */
+	/** Registers the ability payload type and its server-side receiver. */
 	public static void init() {
-		PayloadTypeRegistry.serverboundPlay().register(VoidstepPayload.TYPE, VoidstepPayload.CODEC);
-		ServerPlayNetworking.registerGlobalReceiver(VoidstepPayload.TYPE, (payload, context) -> {
+		PayloadTypeRegistry.serverboundPlay().register(AbilityPayload.TYPE, AbilityPayload.CODEC);
+		ServerPlayNetworking.registerGlobalReceiver(AbilityPayload.TYPE, (payload, context) -> {
 			ServerPlayer player = context.player();
-			((ServerLevel) player.level()).getServer().execute(() -> voidstep(player));
+			player.level().getServer().execute(() -> triggerAbilities(player));
 		});
-		AttunedPlayerCleanup.onForget(lastStep::remove);
 	}
 
-	private static void voidstep(ServerPlayer player) {
-		if (!hasVoidstepActive(player)) {
-			return;
-		}
-		long now = player.level().getGameTime();
-		Long last = lastStep.get(player.getUUID());
-		if (last != null && now - last < AttunedConfig.get().voidstepCooldownTicks()) {
-			return;
-		}
-
-		ServerLevel level = (ServerLevel) player.level();
-		Vec3 origin = player.position();
-		Vec3 look = player.getLookAngle();
-		Vec3 destination = null;
-		// Walk inward from the full distance to the first spot the player fits.
-		for (int dist = MAX_DISTANCE; dist >= 1; dist--) {
-			Vec3 candidate = origin.add(look.scale(dist));
-			AABB box = player.getBoundingBox().move(candidate.subtract(origin));
-			if (level.noCollision(player, box)) {
-				destination = candidate;
-				break;
-			}
-		}
-		if (destination == null) {
-			return;
-		}
-
-		lastStep.put(player.getUUID(), now);
-		spawnTrail(level, origin);
-		player.connection.teleport(destination.x, destination.y, destination.z,
-			player.getYRot(), player.getXRot());
-		player.resetFallDistance();
-		spawnTrail(level, destination);
-		level.playSound(null, player.blockPosition(),
-			SoundEvents.ENDERMAN_TELEPORT, SoundSource.PLAYERS, 1.0F, 1.0F);
-	}
-
-	private static boolean hasVoidstepActive(ServerPlayer player) {
+	private static void triggerAbilities(ServerPlayer player) {
 		AttunedInv inv = AttunedAttachments.getInventory(player);
 		for (int slot : Attunement.activeSlots(player)) {
-			if (inv.get(slot).is(AttunedContent.VOIDSTEP_FOCUS)) {
-				return true;
+			ItemStack stack = inv.get(slot);
+			FocusBehavior behavior = Attunement.definitionFor(player, stack)
+				.flatMap(FocusDefinition::behavior)
+				.map(AttunedRegistries::getBehavior)
+				.orElse(null);
+			if (behavior != null) {
+				behavior.onAbility(player, stack);
 			}
 		}
-		return false;
-	}
-
-	private static void spawnTrail(ServerLevel level, Vec3 at) {
-		level.sendParticles(ParticleTypes.PORTAL, at.x, at.y + 1.0, at.z, 30, 0.3, 0.6, 0.3, 0.4);
 	}
 }

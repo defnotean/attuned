@@ -85,7 +85,7 @@ Any vanilla player attribute works — these are just the common ones.
 ## Behaviors
 
 A behavior is a Java class for a Focus power that a stat cannot express. It
-implements `FocusBehavior`, which has three hooks — all run on the server, and
+implements `FocusBehavior`, which has four hooks — all run on the server, and
 all are optional:
 
 | Hook            | When it runs |
@@ -93,6 +93,7 @@ all are optional:
 | `onActivate`    | Once, when the Focus becomes active. |
 | `onTick`        | Every server tick (20×/second) while active. |
 | `onDeactivate`  | Once, when the Focus stops being active. Undo things here. |
+| `onAbility`     | When the player presses the Focus-ability keybind, if active. |
 
 "Active" means equipped **and** within the attunement budget. A Focus pushed
 over budget goes dormant and counts as deactivated.
@@ -113,6 +114,7 @@ examples to copy from:
 | `attuned:lodestone`  | `LodestoneBehavior`      | Pulls nearby dropped items in. |
 | `attuned:beacon`     | `BeaconBehavior`         | Points a held compass at your bed. |
 | `attuned:stormcall`  | `StormcallBehavior`      | Lightning while sprinting in rain. |
+| `attuned:voidstep`   | `VoidstepBehavior`       | Blinks forward on the Focus-ability keybind. |
 
 ### When a power is not a behavior
 
@@ -120,8 +122,6 @@ A few effects are too special for the tick-based behavior hooks and live in
 their own classes — read these if your idea resembles them:
 
 - **Death effects** — `combat/GravebindSave.java` hooks the death event.
-- **Teleports / inputs** — `network/AttunedNetworking.java` and the client-side
-  `client/VoidstepInput.java` handle Voidstep's double-tap and blink.
 - **Affinity combat** — `combat/AttunedCombat.java` handles damage between
   affinities (Thornward, Leech).
 

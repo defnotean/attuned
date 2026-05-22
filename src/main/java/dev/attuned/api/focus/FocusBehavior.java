@@ -20,4 +20,7 @@ public interface FocusBehavior {
 
 	/** Called every server tick while the Focus is active. */
 	default void onTick(ServerPlayer player, ItemStack focus) {}
+
+	/** Called when the player triggers the Focus-ability keybind, for each active Focus. */
+	default void onAbility(ServerPlayer player, ItemStack focus) {}
 }

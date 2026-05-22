@@ -1,4 +1,5 @@
 {
 	"item": "attuned:voidstep_focus",
-	"cost": 3
+	"cost": 3,
+	"behavior": "attuned:voidstep"
 }
