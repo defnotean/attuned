@@ -14,9 +14,9 @@ import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.ItemStack;
 
 /**
- * Appends Attuned flavour and stats to item tooltips: two lines of lore on every
- * Attuned item, then — for Foci — a spacer and the colour-coded affinity and
- * attunement cost.
+ * Appends Attuned flavour and stats to item tooltips: two lines of lore and a
+ * green feature description on every Attuned item, then the colour-coded affinity
+ * and attunement cost on items that are registered Foci.
  */
 public final class AttunedTooltips {
 	private AttunedTooltips() {}
@@ -34,6 +34,11 @@ public final class AttunedTooltips {
 				.withStyle(ChatFormatting.DARK_GRAY, ChatFormatting.ITALIC));
 			lines.add(Component.translatable("item.attuned." + path + ".lore2")
 				.withStyle(ChatFormatting.DARK_GRAY, ChatFormatting.ITALIC));
+
+			// Feature description on every Attuned item.
+			lines.add(Component.empty());
+			lines.add(Component.translatable("item.attuned." + path + ".effect")
+				.withStyle(ChatFormatting.GREEN));
 
 			// Affinity and attunement cost on items that are registered Foci.
 			FocusDefinition definition = definitionFor(stack);
