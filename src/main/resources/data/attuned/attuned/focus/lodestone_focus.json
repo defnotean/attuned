@@ -1,0 +1,5 @@
+{
+	"item": "attuned:lodestone_focus",
+	"cost": 3,
+	"behavior": "attuned:lodestone"
+}

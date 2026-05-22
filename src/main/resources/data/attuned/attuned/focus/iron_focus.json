@@ -1,6 +1,7 @@
 {
 	"item": "attuned:iron_focus",
 	"cost": 3,
+	"affinity": "bastion",
 	"modifiers": [
 		{
 			"attribute": "minecraft:armor",

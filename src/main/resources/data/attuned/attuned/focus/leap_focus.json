@@ -1,11 +1,11 @@
 {
-	"item": "attuned:swift_focus",
+	"item": "attuned:leap_focus",
 	"cost": 2,
 	"affinity": "zephyr",
 	"modifiers": [
 		{
-			"attribute": "minecraft:movement_speed",
-			"amount": 0.15,
+			"attribute": "minecraft:jump_strength",
+			"amount": 0.3,
 			"operation": "add_multiplied_base"
 		}
 	]

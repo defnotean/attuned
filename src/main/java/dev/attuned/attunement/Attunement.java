@@ -1,6 +1,7 @@
 package dev.attuned.attunement;
 
 import dev.attuned.AttunedRegistries;
+import dev.attuned.api.focus.Affinity;
 import dev.attuned.api.focus.FocusDefinition;
 import net.minecraft.core.Registry;
 import net.minecraft.world.entity.player.Player;
@@ -11,9 +12,13 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * Read-side computation over a player's attunement state: the budget, and which
- * equipped Foci are active vs. dormant. Slot order is activation priority — the
- * lower slot index wins when the budget is tight; Foci that do not fit go dormant.
+ * Read-side computation over a player's attunement state: the budget, the
+ * committed affinity, and which equipped Foci are active vs. dormant.
+ *
+ * <p>Slot order is activation priority. A Focus is active when it is within the
+ * attunement budget AND its affinity matches the player's committed affinity —
+ * the affinity of the first affinity-bearing Focus to activate. Affinity-neutral
+ * Foci are eligible regardless of the committed affinity.
  */
 public final class Attunement {
 	private Attunement() {}
@@ -37,21 +42,30 @@ public final class Attunement {
 		return Optional.empty();
 	}
 
-	/** Slot indices whose Focus is active (equipped and within budget), in priority order. */
+	/** Slot indices whose Focus is active — within budget and on the committed affinity. */
 	public static List<Integer> activeSlots(Player player) {
 		AttunedInv inv = AttunedAttachments.getInventory(player);
 		int budget = capacity(player);
 		int used = 0;
+		Affinity committed = null;
 		List<Integer> active = new ArrayList<>();
 		for (int slot = 0; slot < AttunedInv.SIZE; slot++) {
-			Optional<FocusDefinition> def = definitionFor(player, inv.get(slot));
-			if (def.isEmpty()) {
+			Optional<FocusDefinition> definition = definitionFor(player, inv.get(slot));
+			if (definition.isEmpty()) {
 				continue;
 			}
-			int cost = def.get().cost();
-			if (used + cost <= budget) {
-				used += cost;
+			FocusDefinition def = definition.get();
+			Optional<Affinity> affinity = def.affinity();
+			// Affinity restriction: once committed, a mismatched affinity stays dormant.
+			if (affinity.isPresent() && committed != null && committed != affinity.get()) {
+				continue;
+			}
+			if (used + def.cost() <= budget) {
+				used += def.cost();
 				active.add(slot);
+				if (affinity.isPresent() && committed == null) {
+					committed = affinity.get();
+				}
 			}
 		}
 		return active;
@@ -70,5 +84,18 @@ public final class Attunement {
 			total += definitionFor(player, inv.get(slot)).map(FocusDefinition::cost).orElse(0);
 		}
 		return total;
+	}
+
+	/** The affinity the player is currently committed to, if any active Focus carries one. */
+	public static Optional<Affinity> committedAffinity(Player player) {
+		AttunedInv inv = AttunedAttachments.getInventory(player);
+		for (int slot : activeSlots(player)) {
+			Optional<Affinity> affinity =
+				definitionFor(player, inv.get(slot)).flatMap(FocusDefinition::affinity);
+			if (affinity.isPresent()) {
+				return affinity;
+			}
+		}
+		return Optional.empty();
 	}
 }

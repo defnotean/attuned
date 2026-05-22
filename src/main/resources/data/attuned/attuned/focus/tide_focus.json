@@ -1,0 +1,13 @@
+{
+	"item": "attuned:tide_focus",
+	"cost": 3,
+	"affinity": "zephyr",
+	"modifiers": [
+		{
+			"attribute": "minecraft:water_movement_efficiency",
+			"amount": 1.0,
+			"operation": "add_value"
+		}
+	],
+	"behavior": "attuned:tide"
+}

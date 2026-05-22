@@ -2,6 +2,7 @@ package dev.attuned;
 
 import dev.attuned.api.focus.FocusDefinition;
 import dev.attuned.attunement.AttunedAttachments;
+import dev.attuned.combat.AttunedCombat;
 import dev.attuned.command.AttunedCommands;
 import dev.attuned.content.AttunedContent;
 import dev.attuned.effect.AttunedEffects;
@@ -21,6 +22,7 @@ public class Attuned implements ModInitializer {
 		AttunedContent.init();
 		AttunedEffects.init();
 		AttunedCommands.init();
+		AttunedCombat.init();
 		LOGGER.info("Attuned initializing");
 	}
 }

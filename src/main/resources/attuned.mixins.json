@@ -3,7 +3,8 @@
 	"package": "dev.attuned.mixin",
 	"compatibilityLevel": "JAVA_25",
 	"mixins": [
-		"InventoryMenuMixin"
+		"InventoryMenuMixin",
+		"LivingEntityHurtMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1

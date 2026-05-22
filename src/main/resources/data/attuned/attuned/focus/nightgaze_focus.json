@@ -1,0 +1,5 @@
+{
+	"item": "attuned:nightgaze_focus",
+	"cost": 2,
+	"behavior": "attuned:nightgaze"
+}

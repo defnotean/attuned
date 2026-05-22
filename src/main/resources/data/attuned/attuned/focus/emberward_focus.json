@@ -1,0 +1,6 @@
+{
+	"item": "attuned:emberward_focus",
+	"cost": 3,
+	"affinity": "bastion",
+	"behavior": "attuned:emberward"
+}

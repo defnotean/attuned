@@ -12,13 +12,15 @@ import java.util.Optional;
 
 /**
  * Data-driven definition of a Focus accessory — which item it is, its attunement
- * cost, the modifiers it grants, and an optional code behaviour. Loaded from
- * datapack JSON at {@code data/<namespace>/attuned/focus/<name>.json}.
+ * cost, its affinity, the modifiers it grants, and an optional code behaviour.
+ * Loaded from datapack JSON at {@code data/<namespace>/attuned/focus/<name>.json}.
+ * An empty {@code affinity} means the Focus is affinity-neutral.
  */
 public record FocusDefinition(
 		Holder<Item> item,
 		int cost,
 		boolean unique,
+		Optional<Affinity> affinity,
 		List<ModifierEntry> modifiers,
 		Optional<Identifier> behavior) {
 
@@ -26,6 +28,7 @@ public record FocusDefinition(
 		BuiltInRegistries.ITEM.holderByNameCodec().fieldOf("item").forGetter(FocusDefinition::item),
 		Codec.intRange(0, 64).optionalFieldOf("cost", 1).forGetter(FocusDefinition::cost),
 		Codec.BOOL.optionalFieldOf("unique", false).forGetter(FocusDefinition::unique),
+		Affinity.CODEC.optionalFieldOf("affinity").forGetter(FocusDefinition::affinity),
 		ModifierEntry.CODEC.listOf().optionalFieldOf("modifiers", List.of()).forGetter(FocusDefinition::modifiers),
 		Identifier.CODEC.optionalFieldOf("behavior").forGetter(FocusDefinition::behavior)
 	).apply(instance, FocusDefinition::new));
