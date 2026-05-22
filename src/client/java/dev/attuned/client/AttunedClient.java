@@ -6,5 +6,6 @@ public class AttunedClient implements ClientModInitializer {
 	@Override
 	public void onInitializeClient() {
 		AttunedTooltips.init();
+		VoidstepInput.init();
 	}
 }

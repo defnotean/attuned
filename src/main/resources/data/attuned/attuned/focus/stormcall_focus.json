@@ -1,0 +1,6 @@
+{
+	"item": "attuned:stormcall_focus",
+	"cost": 4,
+	"affinity": "zephyr",
+	"behavior": "attuned:stormcall"
+}

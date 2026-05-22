@@ -3,10 +3,14 @@ package dev.attuned.content;
 import dev.attuned.Attuned;
 import dev.attuned.AttunedRegistries;
 import dev.attuned.content.behavior.AegisBehavior;
+import dev.attuned.content.behavior.BeaconBehavior;
+import dev.attuned.content.behavior.BloodfuryBehavior;
 import dev.attuned.content.behavior.DelverBehavior;
 import dev.attuned.content.behavior.EmberwardBehavior;
+import dev.attuned.content.behavior.HarvestBehavior;
 import dev.attuned.content.behavior.LodestoneBehavior;
 import dev.attuned.content.behavior.NightgazeBehavior;
+import dev.attuned.content.behavior.StormcallBehavior;
 import dev.attuned.content.behavior.TideBehavior;
 import java.util.function.Function;
 import net.fabricmc.fabric.api.creativetab.v1.FabricCreativeModeTab;
@@ -50,6 +54,14 @@ public final class AttunedContent {
 	public static final Item THORNWARD_FOCUS = register("thornward_focus");
 	public static final Item LEECH_FOCUS = register("leech_focus");
 
+	// Expansion Foci — driven by a code behaviour, a death hook, or a teleport packet.
+	public static final Item STORMCALL_FOCUS = register("stormcall_focus");
+	public static final Item GRAVEBIND_FOCUS = register("gravebind_focus");
+	public static final Item BLOODFURY_FOCUS = register("bloodfury_focus");
+	public static final Item VOIDSTEP_FOCUS = register("voidstep_focus");
+	public static final Item HARVEST_FOCUS = register("harvest_focus");
+	public static final Item BEACON_FOCUS = register("beacon_focus");
+
 	/** A consumable that permanently raises attunement capacity. Stacks normally. */
 	public static final Item ATTUNEMENT_SHARD = register("attunement_shard", AttunementShardItem::new);
 
@@ -88,6 +100,14 @@ public final class AttunedContent {
 			Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "delver"), new DelverBehavior());
 		AttunedRegistries.registerBehavior(
 			Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "lodestone"), new LodestoneBehavior());
+		AttunedRegistries.registerBehavior(
+			Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "stormcall"), new StormcallBehavior());
+		AttunedRegistries.registerBehavior(
+			Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "bloodfury"), new BloodfuryBehavior());
+		AttunedRegistries.registerBehavior(
+			Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "harvest"), new HarvestBehavior());
+		AttunedRegistries.registerBehavior(
+			Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "beacon"), new BeaconBehavior());
 		registerCreativeTab();
 	}
 
@@ -116,6 +136,12 @@ public final class AttunedContent {
 				output.accept(LODESTONE_FOCUS);
 				output.accept(THORNWARD_FOCUS);
 				output.accept(LEECH_FOCUS);
+				output.accept(STORMCALL_FOCUS);
+				output.accept(GRAVEBIND_FOCUS);
+				output.accept(BLOODFURY_FOCUS);
+				output.accept(VOIDSTEP_FOCUS);
+				output.accept(HARVEST_FOCUS);
+				output.accept(BEACON_FOCUS);
 				output.accept(ATTUNEMENT_SHARD);
 			})
 			.build();

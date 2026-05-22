@@ -3,9 +3,11 @@ package dev.attuned;
 import dev.attuned.api.focus.FocusDefinition;
 import dev.attuned.attunement.AttunedAttachments;
 import dev.attuned.combat.AttunedCombat;
+import dev.attuned.combat.GravebindSave;
 import dev.attuned.command.AttunedCommands;
 import dev.attuned.content.AttunedContent;
 import dev.attuned.effect.AttunedEffects;
+import dev.attuned.network.AttunedNetworking;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.event.registry.DynamicRegistries;
 import org.slf4j.Logger;
@@ -23,6 +25,8 @@ public class Attuned implements ModInitializer {
 		AttunedEffects.init();
 		AttunedCommands.init();
 		AttunedCombat.init();
+		AttunedNetworking.init();
+		GravebindSave.init();
 		LOGGER.info("Attuned initializing");
 	}
 }

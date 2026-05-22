@@ -17,6 +17,12 @@
 	"item.attuned.lodestone_focus": "Lodestone Focus",
 	"item.attuned.thornward_focus": "Thornward Focus",
 	"item.attuned.leech_focus": "Leech Focus",
+	"item.attuned.stormcall_focus": "Stormcall Focus",
+	"item.attuned.gravebind_focus": "Gravebind Focus",
+	"item.attuned.bloodfury_focus": "Bloodfury Focus",
+	"item.attuned.voidstep_focus": "Voidstep Focus",
+	"item.attuned.harvest_focus": "Harvest Focus",
+	"item.attuned.beacon_focus": "Beacon Focus",
 	"item.attuned.attunement_shard": "Attunement Shard",
 
 	"item.attuned.swift_focus.lore": "Tuned to the wind's own hurry.",
@@ -69,5 +75,24 @@
 	"item.attuned.leech_focus.effect": "Heals you for 20% of the melee damage you deal.",
 	"item.attuned.attunement_shard.lore": "Bind it close, and the soul makes a little more room.",
 	"item.attuned.attunement_shard.lore2": "Each shard carves the well a span deeper.",
-	"item.attuned.attunement_shard.effect": "Permanently raises attunement capacity by 2."
+	"item.attuned.attunement_shard.effect": "Permanently raises attunement capacity by 2.",
+
+	"item.attuned.stormcall_focus.lore": "The sky lends its voice; you need only run.",
+	"item.attuned.stormcall_focus.lore2": "Thunder follows where haste leads.",
+	"item.attuned.stormcall_focus.effect": "Calls lightning down on nearby foes while you sprint through rain.",
+	"item.attuned.gravebind_focus.lore": "Death finds its grip slipping.",
+	"item.attuned.gravebind_focus.lore2": "You left before the door could close.",
+	"item.attuned.gravebind_focus.effect": "Once a minute, a fatal blow leaves you standing at half health instead.",
+	"item.attuned.bloodfury_focus.lore": "Wounds sing louder than peace.",
+	"item.attuned.bloodfury_focus.lore2": "Each cut sharpens the hunger.",
+	"item.attuned.bloodfury_focus.effect": "Attack speed climbs as your health falls, up to 40% faster.",
+	"item.attuned.voidstep_focus.lore": "Space folds where you will it.",
+	"item.attuned.voidstep_focus.lore2": "The gap closes before you leap.",
+	"item.attuned.voidstep_focus.effect": "Double-tap jump while sneaking to blink 8 blocks forward.",
+	"item.attuned.harvest_focus.lore": "Growth hears your patience.",
+	"item.attuned.harvest_focus.lore2": "Seasons lean toward your hand.",
+	"item.attuned.harvest_focus.effect": "Nearby crops ripen faster while you stand among them.",
+	"item.attuned.beacon_focus.lore": "Home pulls, even through stone.",
+	"item.attuned.beacon_focus.lore2": "Lost is a direction, not a place.",
+	"item.attuned.beacon_focus.effect": "Aims a held compass at your last bed."
 }

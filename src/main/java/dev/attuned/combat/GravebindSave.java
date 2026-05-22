@@ -1,0 +1,77 @@
+package dev.attuned.combat;
+
+import dev.attuned.attunement.AttunedAttachments;
+import dev.attuned.attunement.AttunedInv;
+import dev.attuned.attunement.Attunement;
+import dev.attuned.content.AttunedContent;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
+import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
+import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
+
+/**
+ * Gravebind Focus: a fatal blow is refused once a minute.
+ *
+ * <p>When a player with an active Gravebind Focus would die and the save is off
+ * cooldown, the death is cancelled, the player is restored to half health with a
+ * brief regeneration and resistance, and a totem-like flourish plays. The
+ * per-player cooldown lives only in memory — it need not survive a restart.
+ */
+public final class GravebindSave {
+	private GravebindSave() {}
+
+	/** Cooldown between saves, in ticks (60 seconds). */
+	private static final int COOLDOWN_TICKS = 1200;
+
+	/** Per-player game-time of the last save. */
+	private static final Map<UUID, Long> lastSave = new HashMap<>();
+
+	/** Registers the death hook that drives the Gravebind save. */
+	public static void init() {
+		ServerLivingEntityEvents.ALLOW_DEATH.register((entity, source, amount) -> {
+			if (!(entity instanceof ServerPlayer player) || !hasGravebindActive(player)) {
+				return true;
+			}
+			long now = player.level().getGameTime();
+			Long last = lastSave.get(player.getUUID());
+			if (last != null && now - last < COOLDOWN_TICKS) {
+				return true;
+			}
+			lastSave.put(player.getUUID(), now);
+			rescue(player);
+			return false;
+		});
+	}
+
+	private static boolean hasGravebindActive(ServerPlayer player) {
+		AttunedInv inv = AttunedAttachments.getInventory(player);
+		for (int slot : Attunement.activeSlots(player)) {
+			if (inv.get(slot).is(AttunedContent.GRAVEBIND_FOCUS)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private static void rescue(ServerPlayer player) {
+		player.setHealth(player.getMaxHealth() * 0.5F);
+		player.removeAllEffects();
+		player.clearFire();
+		player.addEffect(new MobEffectInstance(MobEffects.REGENERATION, 100, 1));
+		player.addEffect(new MobEffectInstance(MobEffects.RESISTANCE, 100, 1));
+
+		ServerLevel level = (ServerLevel) player.level();
+		level.sendParticles(ParticleTypes.TOTEM_OF_UNDYING,
+			player.getX(), player.getY() + 1.0, player.getZ(),
+			40, 0.5, 0.6, 0.5, 0.25);
+		level.playSound(null, player.blockPosition(),
+			SoundEvents.TOTEM_USE, SoundSource.PLAYERS, 1.0F, 1.0F);
+	}
+}
