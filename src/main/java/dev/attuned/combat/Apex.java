@@ -25,16 +25,20 @@ import net.minecraft.world.entity.player.Player;
  * all sharing one affinity (no neutral Foci), with the attunement budget so
  * nearly spent that no further Focus could fit.
  *
+ * <p>Every capstone is wired into the Fury &gt; Bastion &gt; Zephyr &gt; Fury
+ * counter-cycle: it is <b>empowered</b> against the affinity it beats, behaves
+ * <b>normally</b> against the unaffiliated, and is <b>neutralized</b> by the
+ * affinity that beats it — so even a maxed build still answers to
+ * rock-paper-scissors.
+ *
  * <ul>
- *   <li><b>Fury — Execute:</b> the wearer's hits finish any mob already at or
- *       below {@link #EXECUTE_THRESHOLD} of its health.</li>
- *   <li><b>Bastion — Unyielding:</b> no single hit can take more than
- *       {@link #DAMAGE_CAP_FRACTION} of the wearer's max health, and knockback
- *       is ignored entirely (the knockback half lives in
- *       {@code LivingEntityKnockbackMixin}).</li>
- *   <li><b>Zephyr — Untouchable:</b> while sprinting, an incoming attack has a
- *       {@link #DODGE_CHANCE} chance to be dodged outright, with a burst of
- *       speed on the dodge.</li>
+ *   <li><b>Fury — Execute:</b> finishes a low-health mob. Empowered against
+ *       Bastion mobs (higher health threshold); neutralized against Zephyr.</li>
+ *   <li><b>Bastion — Unyielding:</b> caps how much one hit can remove. The cap
+ *       tightens against Zephyr attackers and is pierced entirely by Fury.
+ *       Knockback is always ignored ({@code LivingEntityKnockbackMixin}).</li>
+ *   <li><b>Zephyr — Untouchable:</b> a chance to dodge attacks while sprinting.
+ *       Higher against Fury attackers; nil against Bastion.</li>
  * </ul>
  *
  * <p>The damage effects are applied from {@code LivingEntityHurtMixin} via
@@ -49,14 +53,26 @@ public final class Apex {
 	/** Apex requires the budget within this many points of full. */
 	private static final int BUDGET_SLACK = 1;
 
-	/** Fury: mobs at or below this fraction of health are executed. */
-	private static final float EXECUTE_THRESHOLD = 0.20F;
 	/** Damage used to finish an executed mob — lethal through any armour. */
 	private static final float EXECUTE_DAMAGE = 100000.0F;
-	/** Bastion: the most of a player's max health one hit may remove. */
-	private static final float DAMAGE_CAP_FRACTION = 0.15F;
-	/** Zephyr: chance to dodge an attack while sprinting. */
-	private static final float DODGE_CHANCE = 0.45F;
+
+	/** Fury execute health threshold against a neutral target. */
+	private static final float EXECUTE_NORMAL = 0.20F;
+	/** Fury execute threshold against the affinity Fury beats — devastating. */
+	private static final float EXECUTE_EMPOWERED = 0.35F;
+
+	/** Bastion's per-hit damage cap (fraction of max health) vs a neutral attacker. */
+	private static final float CAP_NORMAL = 0.15F;
+	/** Bastion's cap against the affinity Bastion beats — tighter. */
+	private static final float CAP_EMPOWERED = 0.10F;
+
+	/** Zephyr dodge chance against a neutral attacker. */
+	private static final float DODGE_NORMAL = 0.40F;
+	/** Zephyr dodge chance against the affinity Zephyr beats. */
+	private static final float DODGE_EMPOWERED = 0.65F;
+
+	/** How a capstone fares against another combatant's affinity. */
+	private enum Matchup { EMPOWERED, NORMAL, NEUTRALIZED }
 
 	/** Registers the Zephyr dodge veto. Called from the mod initializer. */
 	public static void init() {
@@ -111,27 +127,39 @@ public final class Apex {
 	}
 
 	/**
-	 * Applies the damage-shaping capstones to one hit: the Bastion cap on a
-	 * defending player, and the Fury execute when an Apex player strikes a
-	 * low-health mob. Called from {@code LivingEntityHurtMixin}.
+	 * Applies the damage-shaping capstones to one hit — the Bastion cap on a
+	 * defending player and the Fury execute on a low-health mob — each scaled by
+	 * the affinity matchup. Called from {@code LivingEntityHurtMixin}.
 	 */
 	public static float adjustDamage(LivingEntity defender, DamageSource source, float amount) {
 		if (amount <= 0.0F) {
 			return amount;
 		}
-		// Bastion — Unyielding: cap how much one hit can remove.
+		LivingEntity attacker = AttunedCombat.attackerOf(source);
+
+		// Bastion — Unyielding: cap one hit, unless a Fury attacker pierces it.
 		if (defender instanceof Player defenderPlayer && isAt(defenderPlayer, Affinity.BASTION)) {
-			float cap = defenderPlayer.getMaxHealth() * DAMAGE_CAP_FRACTION;
-			if (amount > cap) {
-				amount = cap;
+			Matchup matchup = matchupAgainst(Affinity.BASTION, attacker);
+			if (matchup != Matchup.NEUTRALIZED) {
+				float fraction = matchup == Matchup.EMPOWERED ? CAP_EMPOWERED : CAP_NORMAL;
+				float cap = defenderPlayer.getMaxHealth() * fraction;
+				if (amount > cap) {
+					amount = cap;
+				}
 			}
 		}
-		// Fury — Execute: an Apex wearer finishes a low-health mob.
+
+		// Fury — Execute: finish a low-health mob, unless its affinity counters Fury.
 		if (!(defender instanceof Player) && defender.getMaxHealth() > 0.0F
-				&& defender.getHealth() / defender.getMaxHealth() <= EXECUTE_THRESHOLD
-				&& AttunedCombat.attackerOf(source) instanceof Player attacker
-				&& isAt(attacker, Affinity.FURY)) {
-			amount = Math.max(amount, EXECUTE_DAMAGE);
+				&& attacker instanceof Player attackerPlayer
+				&& isAt(attackerPlayer, Affinity.FURY)) {
+			Matchup matchup = matchupAgainst(Affinity.FURY, defender);
+			if (matchup != Matchup.NEUTRALIZED) {
+				float threshold = matchup == Matchup.EMPOWERED ? EXECUTE_EMPOWERED : EXECUTE_NORMAL;
+				if (defender.getHealth() / defender.getMaxHealth() <= threshold) {
+					amount = Math.max(amount, EXECUTE_DAMAGE);
+				}
+			}
 		}
 		return amount;
 	}
@@ -149,15 +177,43 @@ public final class Apex {
 		if (!isAt(player, Affinity.ZEPHYR)) {
 			return true;
 		}
-		// Only dodge attacks from something — never fall, fire, drowning or the void.
-		if (source.getEntity() == null && source.getDirectEntity() == null) {
+		// Only a blow from a combatant can be dodged — never fall, fire or the void.
+		LivingEntity attacker = AttunedCombat.attackerOf(source);
+		if (attacker == null) {
 			return true;
 		}
-		if (player.getRandom().nextFloat() >= DODGE_CHANCE) {
+		Matchup matchup = matchupAgainst(Affinity.ZEPHYR, attacker);
+		if (matchup == Matchup.NEUTRALIZED) {
+			return true; // Bastion's blows always land.
+		}
+		float chance = matchup == Matchup.EMPOWERED ? DODGE_EMPOWERED : DODGE_NORMAL;
+		if (player.getRandom().nextFloat() >= chance) {
 			return true;
 		}
 		onDodge(player);
 		return false;
+	}
+
+	/**
+	 * How an Apex capstone of {@code capstone} affinity fares against another
+	 * combatant: empowered when the capstone's affinity counters theirs,
+	 * neutralized when theirs counters the capstone, normal otherwise (an
+	 * unaffiliated combatant, or a mirror match).
+	 */
+	private static Matchup matchupAgainst(Affinity capstone, LivingEntity other) {
+		Optional<Affinity> otherAffinity =
+			other == null ? Optional.empty() : AttunedCombat.affinityOf(other);
+		if (otherAffinity.isEmpty()) {
+			return Matchup.NORMAL;
+		}
+		Affinity o = otherAffinity.get();
+		if (o.beats(capstone)) {
+			return Matchup.NEUTRALIZED;
+		}
+		if (capstone.beats(o)) {
+			return Matchup.EMPOWERED;
+		}
+		return Matchup.NORMAL;
 	}
 
 	private static void onDodge(ServerPlayer player) {

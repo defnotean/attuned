@@ -134,7 +134,7 @@ public final class AttunedCombat {
 	}
 
 	/** The committed affinity of a living entity — player attunement or mob mapping. */
-	private static Optional<Affinity> affinityOf(LivingEntity entity) {
+	static Optional<Affinity> affinityOf(LivingEntity entity) {
 		if (entity instanceof Player player) {
 			return Attunement.committedAffinity(player);
 		}
