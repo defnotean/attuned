@@ -96,9 +96,9 @@ modrinth {
 	versionName = "Attuned ${project.version}"
 	// Changelog for the current release — refresh this each time mod_version bumps.
 	changelog = """\
-- Focus tooltips now spell out what each Focus does.
-- Creative inventory: the Focus panel no longer overlaps the potion effects display.
-- Survival inventory: the Focus slots now sit in a proper side panel, and a bug that kept them from being clickable is fixed.
+- Six new Foci: Stormcall, Gravebind, Bloodfury, Voidstep, Harvest, and Beacon.
+- New attunement readout on the Focus panel: a budget bar, an affinity gem, and a hover tooltip with a build Title.
+- Every item texture is now animated.
 """
 	uploadFile = file("build/libs/${project.name}-${project.version}.jar")
 	gameVersions = ["26.1.2"]
