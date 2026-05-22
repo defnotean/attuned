@@ -96,9 +96,9 @@ modrinth {
 	versionName = "Attuned ${project.version}"
 	// Changelog for the current release — refresh this each time mod_version bumps.
 	changelog = """\
-- Six new Foci: Stormcall, Gravebind, Bloodfury, Voidstep, Harvest, and Beacon.
-- New attunement readout on the Focus panel: a budget bar, an affinity gem, and a hover tooltip with a build Title.
-- Every item texture is now animated.
+- New Apex capstones: a maxed, single-affinity build unlocks a powerful passive ability.
+- Fury executes low-health foes; Bastion caps how hard any hit lands; Zephyr dodges attacks while sprinting.
+- Each capstone respects the affinity cycle, so a maxed build still wins and loses the matchups it should.
 """
 	uploadFile = file("build/libs/${project.name}-${project.version}.jar")
 	gameVersions = ["26.1.2"]
