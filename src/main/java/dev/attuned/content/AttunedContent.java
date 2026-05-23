@@ -2,6 +2,8 @@ package dev.attuned.content;
 
 import dev.attuned.Attuned;
 import dev.attuned.AttunedRegistries;
+import dev.attuned.api.focus.Affinity;
+import dev.attuned.api.focus.FocusDefinition;
 import dev.attuned.content.behavior.AegisBehavior;
 import dev.attuned.content.behavior.BeaconBehavior;
 import dev.attuned.content.behavior.BloodfuryBehavior;
@@ -13,9 +15,15 @@ import dev.attuned.content.behavior.NightgazeBehavior;
 import dev.attuned.content.behavior.StormcallBehavior;
 import dev.attuned.content.behavior.TideBehavior;
 import dev.attuned.content.behavior.VoidstepBehavior;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.IdentityHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.function.Function;
 import net.fabricmc.fabric.api.creativetab.v1.FabricCreativeModeTab;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
@@ -151,13 +159,19 @@ public final class AttunedContent {
 	/**
 	 * Registers the Attuned creative-inventory tab — every Focus and the
 	 * Attunement Shard, so the mod's items are reachable without {@code /give}.
+	 *
+	 * <p>Foci are grouped by affinity (Fury, Bastion, Zephyr, then neutral)
+	 * and sorted within each group by attunement cost, so players can scan the
+	 * tab by build identity rather than registration order.
 	 */
 	private static void registerCreativeTab() {
 		CreativeModeTab tab = FabricCreativeModeTab.builder()
 			.title(Component.translatable("itemGroup.attuned"))
 			.icon(() -> new ItemStack(ATTUNEMENT_SHARD))
 			.displayItems((parameters, output) -> {
-				for (Item focus : FOCI) {
+				HolderLookup.RegistryLookup<FocusDefinition> lookup =
+					parameters.holders().lookupOrThrow(AttunedRegistries.FOCUS_DEFINITIONS);
+				for (Item focus : fociInDisplayOrder(lookup)) {
 					output.accept(focus);
 				}
 				output.accept(ATTUNEMENT_SHARD);
@@ -166,5 +180,45 @@ public final class AttunedContent {
 			.build();
 		Registry.register(BuiltInRegistries.CREATIVE_MODE_TAB,
 			Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "attuned"), tab);
+	}
+
+	/**
+	 * Returns the Foci in display order for the creative tab: grouped by
+	 * affinity (Fury, then Bastion, then Zephyr, then neutral), and sorted
+	 * within each group by attunement cost ascending, then by registry id
+	 * alphabetically as a tiebreak. A Focus whose definition is missing from
+	 * the supplied lookup falls into the neutral group at the maximum cost so
+	 * it sorts to the very end.
+	 */
+	private static List<Item> fociInDisplayOrder(HolderLookup.RegistryLookup<FocusDefinition> lookup) {
+		Map<Item, FocusDefinition> byItem = new IdentityHashMap<>();
+		lookup.listElements().forEach(holder -> byItem.put(holder.value().item().value(), holder.value()));
+		Comparator<Item> byAffinity = Comparator.comparingInt(item -> {
+			FocusDefinition def = byItem.get(item);
+			return affinityOrder(def == null ? Optional.empty() : def.affinity());
+		});
+		Comparator<Item> byCost = Comparator.comparingInt(item -> {
+			FocusDefinition def = byItem.get(item);
+			return def == null ? Integer.MAX_VALUE : def.cost();
+		});
+		Comparator<Item> byKey = Comparator.comparing(item -> BuiltInRegistries.ITEM.getKey(item).toString());
+		List<Item> sorted = new ArrayList<>(FOCI);
+		sorted.sort(byAffinity.thenComparing(byCost).thenComparing(byKey));
+		return sorted;
+	}
+
+	/**
+	 * Stable sort key for the affinity grouping: Fury, Bastion, Zephyr, then
+	 * affinity-neutral last.
+	 */
+	private static int affinityOrder(Optional<Affinity> affinity) {
+		if (affinity.isEmpty()) {
+			return 3;
+		}
+		return switch (affinity.get()) {
+			case FURY -> 0;
+			case BASTION -> 1;
+			case ZEPHYR -> 2;
+		};
 	}
 }

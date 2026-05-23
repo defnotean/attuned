@@ -1,6 +1,7 @@
 package dev.attuned.combat;
 
 import dev.attuned.api.focus.Affinity;
+import dev.attuned.api.focus.AffinityColors;
 import dev.attuned.attunement.AttunedAttachments;
 import dev.attuned.attunement.AttunedInv;
 import dev.attuned.attunement.Attunement;
@@ -47,9 +48,6 @@ public final class AttunedCombat {
 	private static final float ADVANTAGE_MULTIPLIER = 1.33F;
 	/** Damage multiplier when the defender counters the attacker. */
 	private static final float DISADVANTAGE_MULTIPLIER = 0.75F;
-
-	/** Feedback colour for a Discord combatant — a clashing magenta. */
-	private static final int DISCORD_COLOR = 0xCC44FF;
 
 	/** Fraction of incoming damage a Thornward defender reflects to the attacker. */
 	private static final float THORNWARD_REFLECT = 0.25F;
@@ -141,20 +139,17 @@ public final class AttunedCombat {
 		}
 	}
 
-	/** The feedback colour for an attacker — its affinity's colour, or the Discord magenta. */
+	/** The feedback colour for an attacker: its affinity colour, or the Discord magenta. */
 	private static int matchupColor(LivingEntity attacker) {
 		if (isDiscord(attacker)) {
-			return DISCORD_COLOR;
+			return AffinityColors.DISCORD_RGB;
 		}
 		return affinityOf(attacker).map(AttunedCombat::affinityColor).orElse(0xFFFFFF);
 	}
 
+	/** The 24-bit RGB form of an affinity's display colour, for {@code DustParticleOptions}. */
 	private static int affinityColor(Affinity affinity) {
-		return switch (affinity) {
-			case FURY -> 0xFF5555;
-			case BASTION -> 0xFFAA00;
-			case ZEPHYR -> 0x55FFFF;
-		};
+		return affinity.argb() & 0x00FFFFFF;
 	}
 
 	/**
@@ -211,7 +206,7 @@ public final class AttunedCombat {
 	 * The living attacker behind a damage source, or {@code null}. Prefers the
 	 * responsible entity (e.g. the shooter) and falls back to the direct entity.
 	 */
-	static LivingEntity attackerOf(DamageSource source) {
+	public static LivingEntity attackerOf(DamageSource source) {
 		Entity entity = source.getEntity();
 		if (entity instanceof LivingEntity living) {
 			return living;

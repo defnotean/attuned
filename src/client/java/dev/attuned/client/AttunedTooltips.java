@@ -17,6 +17,8 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.ItemStack;
 
+import java.util.Locale;
+
 /**
  * Appends Attuned flavour and stats to item tooltips: two lines of lore and a
  * green feature description on every Attuned item, then the colour-coded affinity
@@ -97,7 +99,7 @@ public final class AttunedTooltips {
 		if (affinity == null) {
 			return "Neutral";
 		}
-		String lower = affinity.name().toLowerCase();
+		String lower = affinity.name().toLowerCase(Locale.ROOT);
 		return Character.toUpperCase(lower.charAt(0)) + lower.substring(1);
 	}
 

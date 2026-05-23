@@ -15,10 +15,14 @@ import net.minecraft.world.entity.LivingEntity;
  *
  * <p>Membership is datapack-driven: an entity type's affinity is whichever of
  * the three {@code attuned:*_mobs} entity-type tags it belongs to. The tags
- * shipped with the mod follow combat archetype rather than mob lore — Fury for
+ * shipped with the mod follow combat archetype rather than mob lore: Fury for
  * aggressive bruisers, Bastion for durable threats, Zephyr for ranged, fast or
- * flying skirmishers — and a datapack may retag freely. An untagged entity has
- * no affinity and deals and takes normal damage.
+ * flying skirmishers. A datapack may retag freely. An untagged entity has no
+ * affinity and deals and takes normal damage.
+ *
+ * <p>Tag membership is read through {@link LivingEntity#typeHolder()}, which
+ * is the non-deprecated path to the entity's {@code Holder<EntityType<?>>} in
+ * MC 26.1.2.
  */
 public final class MobAffinities {
 	private MobAffinities() {}
@@ -36,14 +40,13 @@ public final class MobAffinities {
 		if (entity == null) {
 			return Optional.empty();
 		}
-		EntityType<?> type = entity.getType();
-		if (type.builtInRegistryHolder().is(FURY_MOBS)) {
+		if (entity.typeHolder().is(FURY_MOBS)) {
 			return Optional.of(Affinity.FURY);
 		}
-		if (type.builtInRegistryHolder().is(BASTION_MOBS)) {
+		if (entity.typeHolder().is(BASTION_MOBS)) {
 			return Optional.of(Affinity.BASTION);
 		}
-		if (type.builtInRegistryHolder().is(ZEPHYR_MOBS)) {
+		if (entity.typeHolder().is(ZEPHYR_MOBS)) {
 			return Optional.of(Affinity.ZEPHYR);
 		}
 		return Optional.empty();

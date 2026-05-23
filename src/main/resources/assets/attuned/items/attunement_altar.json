@@ -1,6 +1,6 @@
 {
 	"model": {
 		"type": "minecraft:model",
-		"model": "attuned:block/attunement_altar"
+		"model": "attuned:item/attunement_altar"
 	}
 }

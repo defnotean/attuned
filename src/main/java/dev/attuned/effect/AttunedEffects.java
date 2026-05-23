@@ -4,6 +4,7 @@ import dev.attuned.Attuned;
 import dev.attuned.AttunedPlayerCleanup;
 import dev.attuned.AttunedRegistries;
 import dev.attuned.api.focus.Affinity;
+import dev.attuned.api.focus.AffinityColors;
 import dev.attuned.api.focus.FocusBehavior;
 import dev.attuned.api.focus.FocusDefinition;
 import dev.attuned.api.focus.ModifierEntry;
@@ -223,20 +224,12 @@ public final class AttunedEffects {
 	/** The aura particle for a player's stance: affinity-coloured, Discord magenta, or neutral. */
 	private static ParticleOptions auraParticle(ServerPlayer player) {
 		if (Attunement.isDiscord(player)) {
-			return new DustParticleOptions(0xCC44FF, 1.0F);
+			return new DustParticleOptions(AffinityColors.DISCORD_RGB, 1.0F);
 		}
 		Optional<Affinity> affinity = Attunement.committedAffinity(player);
 		if (affinity.isPresent()) {
-			return new DustParticleOptions(affinityColor(affinity.get()), 1.0F);
+			return new DustParticleOptions(affinity.get().argb() & 0x00FFFFFF, 1.0F);
 		}
 		return ParticleTypes.WITCH;
-	}
-
-	private static int affinityColor(Affinity affinity) {
-		return switch (affinity) {
-			case FURY -> 0xFF5555;
-			case BASTION -> 0xFFAA00;
-			case ZEPHYR -> 0x55FFFF;
-		};
 	}
 }

@@ -1,5 +1,8 @@
 {
 	"variants": {
-		"": { "model": "attuned:block/attunement_altar" }
+		"affinity=none": { "model": "attuned:block/attunement_altar_none" },
+		"affinity=fury": { "model": "attuned:block/attunement_altar_fury" },
+		"affinity=bastion": { "model": "attuned:block/attunement_altar_bastion" },
+		"affinity=zephyr": { "model": "attuned:block/attunement_altar_zephyr" }
 	}
 }

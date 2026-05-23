@@ -48,6 +48,30 @@ public final class AttunedAttachments {
 			.copyOnDeath()
 	);
 
+	/**
+	 * Combat resonance, the {@code [0, 1]} gauge that gates Apex. Persists
+	 * across death so a player who has earned their way up to the Apex
+	 * threshold keeps it after respawning; otherwise dying inside an empowered
+	 * fight would silently strip the capstone the player just earned.
+	 */
+	public static final AttachmentType<Float> RESONANCE = AttachmentRegistry.create(
+		Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "resonance"),
+		builder -> builder
+			.initializer(() -> 0.0F)
+			.persistent(Codec.FLOAT)
+			.syncWith(ByteBufCodecs.FLOAT, AttachmentSyncPredicate.targetOnly())
+			.copyOnDeath()
+	);
+
+	/** Ids of one-time onboarding toasts a player has already seen. */
+	public static final AttachmentType<List<String>> ONBOARDING = AttachmentRegistry.create(
+		Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "onboarding"),
+		builder -> builder
+			.initializer(() -> List.of())
+			.persistent(Codec.STRING.listOf())
+			.copyOnDeath()
+	);
+
 	/** Forces this class to load so the attachment types register during mod init. */
 	public static void init() {}
 
@@ -84,5 +108,29 @@ public final class AttunedAttachments {
 		List<String> updated = new ArrayList<>(claimed);
 		updated.add(id);
 		player.setAttached(MILESTONES, updated);
+	}
+
+	public static float getResonance(Player player) {
+		return player.getAttachedOrElse(RESONANCE, 0.0F);
+	}
+
+	public static void setResonance(Player player, float value) {
+		player.setAttached(RESONANCE, value);
+	}
+
+	/** Whether this player has already seen the onboarding toast with the given id. */
+	public static boolean sawOnboarding(Player player, String id) {
+		return player.getAttachedOrElse(ONBOARDING, List.of()).contains(id);
+	}
+
+	/** Records an onboarding toast id as seen. A no-op if it was already seen. */
+	public static void markOnboarding(Player player, String id) {
+		List<String> seen = player.getAttachedOrElse(ONBOARDING, List.of());
+		if (seen.contains(id)) {
+			return;
+		}
+		List<String> updated = new ArrayList<>(seen);
+		updated.add(id);
+		player.setAttached(ONBOARDING, updated);
 	}
 }

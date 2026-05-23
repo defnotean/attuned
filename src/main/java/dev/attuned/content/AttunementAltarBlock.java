@@ -5,7 +5,8 @@ import dev.attuned.AttunedConfig;
 import dev.attuned.api.focus.Affinity;
 import dev.attuned.attunement.AttunedAttachments;
 import dev.attuned.attunement.Attunement;
-import dev.attuned.combat.Apex;
+import dev.attuned.menu.AltarMenuType;
+import dev.attuned.onboarding.Onboarding;
 import java.util.Optional;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
@@ -14,6 +15,7 @@ import net.minecraft.core.particles.ParticleOptions;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.RandomSource;
@@ -65,10 +67,20 @@ public class AttunementAltarBlock extends Block {
 
 	public static final MapCodec<AttunementAltarBlock> CODEC = simpleCodec(AttunementAltarBlock::new);
 
-	// A wide base under a narrower column — an altar/pedestal silhouette.
+	// Mirrors the 3D block model element-for-element so the raytrace hits every
+	// visible surface — the stepped base/capital, the central pillar, the top
+	// plate, and the four corner gems. A simpler bounding box would let clicks
+	// on the gems or the top plate's edges fall through and miss the block.
 	private static final VoxelShape SHAPE = Shapes.or(
-		Block.box(0.0, 0.0, 0.0, 16.0, 4.0, 16.0),
-		Block.box(3.0, 4.0, 3.0, 13.0, 16.0, 13.0));
+		Block.box(0.0, 0.0, 0.0, 16.0, 2.0, 16.0),    // base slab
+		Block.box(2.0, 2.0, 2.0, 14.0, 4.0, 14.0),    // stepped base
+		Block.box(4.0, 4.0, 4.0, 12.0, 14.0, 12.0),   // central pillar
+		Block.box(2.0, 14.0, 2.0, 14.0, 15.0, 14.0),  // stepped capital
+		Block.box(1.0, 15.0, 1.0, 15.0, 16.0, 15.0),  // top plate
+		Block.box(1.0, 2.0, 1.0, 3.0, 8.0, 3.0),      // gem NW
+		Block.box(13.0, 2.0, 1.0, 15.0, 8.0, 3.0),    // gem NE
+		Block.box(1.0, 2.0, 13.0, 3.0, 8.0, 15.0),    // gem SW
+		Block.box(13.0, 2.0, 13.0, 15.0, 8.0, 15.0)); // gem SE
 
 	public AttunementAltarBlock(Properties properties) {
 		super(properties);
@@ -94,22 +106,67 @@ public class AttunementAltarBlock extends Block {
 	@Override
 	protected InteractionResult useItemOn(ItemStack stack, BlockState state, Level level, BlockPos pos,
 			Player player, InteractionHand hand, BlockHitResult hitResult) {
+		// When the held stack isn't a shard (including the empty hand), defer to
+		// the empty-hand path so {@link #useWithoutItem} gets a chance to fire. In
+		// 26.1.2 the dispatcher in ServerPlayerGameMode only calls useWithoutItem
+		// when useItemOn returns TRY_WITH_EMPTY_HAND — returning PASS here would
+		// swallow the click and never open the altar GUI.
 		if (!stack.is(AttunedContent.ATTUNEMENT_SHARD)) {
-			return InteractionResult.PASS;
+			return InteractionResult.TRY_WITH_EMPTY_HAND;
 		}
 		if (level.isClientSide()) {
 			return InteractionResult.SUCCESS;
 		}
+		if (bindShard(level, pos, state, player, stack)) {
+			if (player instanceof ServerPlayer serverPlayer) {
+				Onboarding.tryAltarHint(serverPlayer);
+			}
+		}
+		return InteractionResult.SUCCESS_SERVER;
+	}
+
+	/** Right-click empty-handed: open the Altar GUI so the player can bind shards visually. */
+	@Override
+	protected InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos,
+			Player player, BlockHitResult hitResult) {
+		if (level.isClientSide()) {
+			return InteractionResult.SUCCESS;
+		}
+		player.openMenu(AltarMenuType.provider(level, pos));
+		if (player instanceof ServerPlayer serverPlayer) {
+			Onboarding.tryAltarHint(serverPlayer);
+		}
+		return InteractionResult.SUCCESS_SERVER;
+	}
+
+	/**
+	 * Consumes one shard from {@code stack} and raises the binder's attunement
+	 * capacity, mirroring the side effects of an in-hand right-click bind: the
+	 * Altar's affinity blockstate is updated, particles and a chime are emitted
+	 * server-side, and the player receives the same chat confirmation.
+	 *
+	 * <p>Returns {@code true} when a shard was actually bound, {@code false} if
+	 * capacity was already at the cap (in which case the shard is left alone and
+	 * the player is told their attunement is full).
+	 *
+	 * <p>Used by the in-hand bind flow and by the Altar GUI's "Bind" button.
+	 */
+	public static boolean bindShard(Level level, BlockPos pos, BlockState state,
+			Player player, ItemStack stack) {
 		int cap = AttunedConfig.get().capacityCap();
 		int capacity = AttunedAttachments.getCapacity(player);
 		if (capacity >= cap) {
 			player.sendSystemMessage(Component.literal("Your attunement is already at its fullest.")
 				.withStyle(ChatFormatting.GRAY));
-			return InteractionResult.SUCCESS_SERVER;
+			return false;
 		}
 		int raised = Math.min(cap, capacity + AttunedConfig.get().capacityPerShard());
 		AttunedAttachments.setCapacity(player, raised);
-		stack.shrink(1);
+		// Creative players keep their shard, the same way vanilla skips item
+		// consumption in creative across furnaces, brewing stands, and so on.
+		if (!player.getAbilities().instabuild) {
+			stack.shrink(1);
+		}
 		level.setBlock(pos, state.setValue(AFFINITY, altarAffinityOf(Attunement.committedAffinity(player))),
 			Block.UPDATE_CLIENTS);
 
@@ -117,29 +174,40 @@ public class AttunementAltarBlock extends Block {
 		server.sendParticles(ParticleTypes.ENCHANT,
 			pos.getX() + 0.5, pos.getY() + 1.1, pos.getZ() + 0.5, 24, 0.4, 0.4, 0.4, 0.1);
 		server.playSound(null, pos, SoundEvents.AMETHYST_BLOCK_CHIME, SoundSource.BLOCKS, 0.8F, 1.0F);
+		if (player instanceof ServerPlayer serverPlayer) {
+			AltarAnimations.begin(server, pos, serverPlayer, stanceRgb(player));
+		}
 		player.sendSystemMessage(Component.literal("The Altar binds the shard — capacity ")
 			.withStyle(ChatFormatting.GRAY)
 			.append(Component.literal(raised + " / " + cap).withStyle(ChatFormatting.AQUA)));
-		return InteractionResult.SUCCESS_SERVER;
+		return true;
 	}
 
-	/** Right-click empty-handed: report the player's attunement state. */
-	@Override
-	protected InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos,
-			Player player, BlockHitResult hitResult) {
-		if (level.isClientSide()) {
-			return InteractionResult.SUCCESS;
+	/**
+	 * The player's stance colour as a 24-bit RGB suitable for
+	 * {@code DustParticleOptions}: their committed affinity's colour with the
+	 * alpha byte stripped, or a neutral grey when no affinity is committed.
+	 */
+	private static int stanceRgb(Player player) {
+		return Attunement.committedAffinity(player)
+			.map(a -> a.argb() & 0x00FFFFFF)
+			.orElse(0x8B8B8B);
+	}
+
+	/** The stance label for {@code player} — Discord, a committed affinity, or None. */
+	public static Component stanceLabel(Player player) {
+		if (Attunement.isDiscord(player)) {
+			return Component.literal("Discord").withStyle(ChatFormatting.LIGHT_PURPLE);
 		}
-		player.sendSystemMessage(Component.literal("Attunement: ")
-			.withStyle(ChatFormatting.GRAY)
-			.append(Component.literal(Attunement.used(player) + " / " + Attunement.capacity(player))
-				.withStyle(ChatFormatting.AQUA))
-			.append(Component.literal("    Stance: ").withStyle(ChatFormatting.GRAY))
-			.append(stanceLabel(player)));
-		Apex.affinityOf(player).ifPresent(apex ->
-			player.sendSystemMessage(Component.literal("Apex: " + Apex.capstoneName(apex))
-				.withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD)));
-		return InteractionResult.SUCCESS;
+		Optional<Affinity> affinity = Attunement.committedAffinity(player);
+		if (affinity.isEmpty()) {
+			return Component.literal("None").withStyle(ChatFormatting.GRAY);
+		}
+		return switch (affinity.get()) {
+			case FURY -> Component.literal("Fury").withStyle(ChatFormatting.RED);
+			case BASTION -> Component.literal("Bastion").withStyle(ChatFormatting.GOLD);
+			case ZEPHYR -> Component.literal("Zephyr").withStyle(ChatFormatting.AQUA);
+		};
 	}
 
 	/** A particle drifting up from the Altar — affinity-coloured once it has been attuned. */
@@ -172,21 +240,6 @@ public class AttunementAltarBlock extends Block {
 			case BASTION -> 0xFFAA00;
 			case ZEPHYR -> 0x55FFFF;
 			case NONE -> 0xFFFFFF;
-		};
-	}
-
-	private static Component stanceLabel(Player player) {
-		if (Attunement.isDiscord(player)) {
-			return Component.literal("Discord").withStyle(ChatFormatting.LIGHT_PURPLE);
-		}
-		Optional<Affinity> affinity = Attunement.committedAffinity(player);
-		if (affinity.isEmpty()) {
-			return Component.literal("None").withStyle(ChatFormatting.GRAY);
-		}
-		return switch (affinity.get()) {
-			case FURY -> Component.literal("Fury").withStyle(ChatFormatting.RED);
-			case BASTION -> Component.literal("Bastion").withStyle(ChatFormatting.GOLD);
-			case ZEPHYR -> Component.literal("Zephyr").withStyle(ChatFormatting.AQUA);
 		};
 	}
 }

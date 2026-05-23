@@ -1,6 +1,7 @@
 package dev.attuned.client;
 
 import dev.attuned.api.focus.Affinity;
+import dev.attuned.api.focus.AffinityColors;
 import dev.attuned.attunement.Attunement;
 import dev.attuned.combat.Apex;
 import net.minecraft.ChatFormatting;
@@ -10,6 +11,7 @@ import net.minecraft.world.entity.player.Player;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 
 /**
@@ -23,15 +25,6 @@ import java.util.Optional;
  */
 public final class AttunementReadout {
 	private AttunementReadout() {}
-
-	// ARGB colours for the affinity gem and budget-bar fill.
-	private static final int FURY_ARGB = 0xFFFF5555;
-	private static final int BASTION_ARGB = 0xFFFFAA00;
-	private static final int ZEPHYR_ARGB = 0xFF55FFFF;
-	/** Used when no affinity is committed — a neutral, unlit grey. */
-	private static final int NEUTRAL_ARGB = 0xFF8B8B8B;
-	/** Used for the Discord stance — a clashing magenta. */
-	private static final int DISCORD_ARGB = 0xFFCC44FF;
 
 	/** The player's build title, coloured by rank tier. */
 	public static MutableComponent title(Player player) {
@@ -77,20 +70,20 @@ public final class AttunementReadout {
 		return lines;
 	}
 
-	/** ARGB colour for the affinity gem and budget-bar fill — the player's stance. */
+	/** ARGB colour for the affinity gem and budget-bar fill, the player's stance. */
 	public static int stanceArgb(Player player) {
-		if (Attunement.isDiscord(player)) {
-			return DISCORD_ARGB;
-		}
-		Optional<Affinity> affinity = Attunement.committedAffinity(player);
-		if (affinity.isEmpty()) {
-			return NEUTRAL_ARGB;
-		}
-		return switch (affinity.get()) {
-			case FURY -> FURY_ARGB;
-			case BASTION -> BASTION_ARGB;
-			case ZEPHYR -> ZEPHYR_ARGB;
-		};
+		return AffinityColors.argbOf(Attunement.committedAffinity(player), Attunement.isDiscord(player));
+	}
+
+	/**
+	 * ARGB colour for the affinity gem and budget-bar fill, computed from
+	 * pre-resolved stance inputs. Lets per-frame callers cache the discord and
+	 * committed-affinity reads once and reuse them without re-walking the player's
+	 * Focus slots through {@link Attunement#isDiscord(Player)} and
+	 * {@link Attunement#committedAffinity(Player)}.
+	 */
+	public static int stanceArgb(boolean discord, Optional<Affinity> committed) {
+		return AffinityColors.argbOf(committed, discord);
 	}
 
 	// How many Foci are active: one, a few, many, or the full six.
@@ -138,7 +131,7 @@ public final class AttunementReadout {
 		if (affinity.isEmpty()) {
 			return "None";
 		}
-		String lower = affinity.get().name().toLowerCase();
+		String lower = affinity.get().name().toLowerCase(Locale.ROOT);
 		return Character.toUpperCase(lower.charAt(0)) + lower.substring(1);
 	}
 

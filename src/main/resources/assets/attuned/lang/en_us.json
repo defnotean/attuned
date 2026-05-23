@@ -27,6 +27,34 @@
 	"item.attuned.beacon_focus": "Beacon Focus",
 	"item.attuned.attunement_shard": "Attunement Shard",
 	"block.attuned.attunement_altar": "Attunement Altar",
+	"item.attuned.attunement_altar": "Attunement Altar",
+	"container.attuned.altar": "Attunement Altar",
+
+	"pact.attuned.pyresworn.name": "Pyresworn",
+	"pact.attuned.pyresworn.description": "Your melee hits set foes alight.",
+	"pact.attuned.stoneheart.name": "Stoneheart",
+	"pact.attuned.stoneheart.description": "All incoming damage is dulled by a tenth.",
+	"pact.attuned.windrunner.name": "Windrunner",
+	"pact.attuned.windrunner.description": "You sprint faster and step over short rises.",
+	"pact.attuned.untethered.name": "Untethered",
+	"pact.attuned.untethered.description": "You hit affinity-bearing foes for fifteen percent more.",
+	"pact.attuned.awakened": "Pact awakened: ",
+	"pact.attuned.fades": "%s fades.",
+	"pact.attuned.fades.generic": "your pact",
+	"pact.attuned.first_pact": "A first pact awakens.",
+	"pact.attuned.death.pyresworn": "%1$s was undone by a %2$s.",
+	"pact.attuned.death.stoneheart": "%1$s was shattered by a %2$s.",
+	"pact.attuned.death.windrunner": "%1$s was outpaced by a %2$s.",
+	"pact.attuned.death.untethered": "%1$s was unmade by a %2$s.",
+
+	"apex.attuned.unlocked_dormant": "Apex unlocked: %s. Build resonance to half full to wake it.",
+
+	"screen.attuned.altar.bind": "Bind",
+	"screen.attuned.altar.attunement": "Attunement: ",
+	"screen.attuned.altar.stance": "Stance: ",
+	"screen.attuned.altar.hint.empty": "Place an Attunement Shard in the slot.",
+	"screen.attuned.altar.hint.cap": "Attunement at the cap (%s).",
+	"screen.attuned.altar.hint.ready": "Bind one of %s shard(s) to raise capacity to %s / %s.",
 
 	"item.attuned.swift_focus.lore": "Tuned to the wind's own hurry.",
 	"item.attuned.swift_focus.lore2": "The ground forgets to hold you.",
@@ -101,5 +129,11 @@
 
 	"item.attuned.attunement_altar.lore": "Worked stone, and a hollow that remembers.",
 	"item.attuned.attunement_altar.lore2": "What you bind here, the soul keeps.",
-	"item.attuned.attunement_altar.effect": "Bind Attunement Shards at the Altar to raise your capacity."
+	"item.attuned.attunement_altar.effect": "Bind Attunement Shards at the Altar to raise your capacity.",
+
+	"onboarding.attuned.first_shard.found": "You found an Attunement Shard. ",
+	"onboarding.attuned.first_shard.detail": "Bring it to an Attunement Altar to raise your capacity.",
+	"onboarding.attuned.first_altar.bind_here": "Bind shards here ",
+	"onboarding.attuned.first_altar.detail": "to grow your soul's capacity.",
+	"onboarding.attuned.altar_sight": "An Altar waits. Right-click empty-handed to open it, or with a shard to bind directly."
 }

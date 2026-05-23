@@ -103,11 +103,19 @@ modrinth {
 	versionName = "Attuned ${project.version}"
 	// Changelog for the current release — refresh this each time mod_version bumps.
 	changelog = """\
-- The Attunement Altar and a progression overhaul: milestones, and richer tiered structure loot.
-- Discord, a fourth affinity path that opens builds to mixed affinities.
-- A generic active-ability system for Foci.
-- Core-loop polish: sounds, a stance aura, and clearer feedback when a Focus goes dormant.
-- A hardened foundation: a config file, unit tests, and assorted fixes.
+The Pacts Update.
+
+- Pacts: named set bonuses that wake when you commit to an affinity. Pyresworn ignites foes on melee. Stoneheart dampens incoming damage. Windrunner makes you sprint faster and step over short rises. Untethered amplifies your hits against any affinity-bearing foe and paints an impact sparkle.
+- Resonance: a new combat gauge that fills as you fight matchup-favored foes and drains when neutralized hits land. Apex capstones only fire while resonance is at or above the half-full threshold.
+- Combat HUD: an affinity gem and resonance bar above the hotbar. The gem glows gold when empowered against the foe you are aiming at, dims red when neutralized. Each affinity has its own glyph (flame, shield, wing) so you read at a glance.
+- Altar GUI: right-click the Attunement Altar empty-handed to open a clean shard-binding screen with a stance-tinted well, corner brackets, accent line, and a Bind button.
+- Altar overhaul: a fresh 3D model with affinity-themed crystals, four animated variants per stance, and a converging-particle bind animation.
+- New art for every original Focus and the Attunement Shard.
+- Pact-themed death messages: be undone by a Pyresworn, shattered by a Stoneheart, outpaced by a Windrunner, unmade by an Untethered. Toggle via attuned.json.
+- Onboarding: short one-time hints on first shard pickup, first altar interaction, and first altar approach so new players know where to go.
+- First-pact fanfare the first time you wake each pact on a character.
+- /attuned status: a debug command that prints your active foci, pact, resonance, and apex state.
+- A long list of polish and fixes: resonance persists across death, locale-safe lang keys, cached per-frame HUD lookups, altar GUI auto-closes on walk-away or dimension change, Pyresworn now respects PvP and friendly-fire rules, Apex Execute no longer triggers on damage-over-time, and much more.
 """
 	uploadFile = file("build/libs/${project.name}-${project.version}.jar")
 	gameVersions = ["26.1.2"]

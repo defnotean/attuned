@@ -25,6 +25,8 @@ import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.TamableAnimal;
+import net.minecraft.world.entity.npc.villager.AbstractVillager;
 import net.minecraft.world.entity.player.Player;
 
 /**
@@ -80,6 +82,14 @@ public final class Apex {
 
 	/** Per-player Apex affinity as of last tick, for spotting on/off changes. */
 	private static final Map<UUID, Affinity> apexState = new HashMap<>();
+	/**
+	 * Per-player armed flag as of last tick. A capstone is <em>armed</em> when
+	 * the player's Foci qualify for Apex <em>and</em> resonance is at or above
+	 * the gating threshold. Tracking arming separately from affinity lets us
+	 * announce the dormant / rearmed transitions that happen when resonance
+	 * crosses the threshold without the Foci changing.
+	 */
+	private static final Map<UUID, Boolean> armedState = new HashMap<>();
 
 	/** How a capstone fares against another combatant's affinity. */
 	private enum Matchup { EMPOWERED, NORMAL, NEUTRALIZED }
@@ -88,7 +98,10 @@ public final class Apex {
 	public static void init() {
 		ServerLivingEntityEvents.ALLOW_DAMAGE.register(Apex::allowDamage);
 		ServerTickEvents.END_SERVER_TICK.register(Apex::tick);
-		AttunedPlayerCleanup.onForget(apexState::remove);
+		AttunedPlayerCleanup.onForget(uuid -> {
+			apexState.remove(uuid);
+			armedState.remove(uuid);
+		});
 	}
 
 	/**
@@ -150,7 +163,8 @@ public final class Apex {
 	/**
 	 * Applies the damage-shaping capstones to one hit — the Bastion cap on a
 	 * defending player and the Fury execute on a low-health mob — each scaled by
-	 * the affinity matchup. Called from {@code LivingEntityHurtMixin}.
+	 * the affinity matchup. The capstone only fires while the player's Resonance
+	 * is at or above the Apex threshold. Called from {@code LivingEntityHurtMixin}.
 	 */
 	public static float adjustDamage(LivingEntity defender, DamageSource source, float amount) {
 		if (amount <= 0.0F) {
@@ -159,7 +173,9 @@ public final class Apex {
 		LivingEntity attacker = AttunedCombat.attackerOf(source);
 
 		// Bastion — Unyielding: cap one hit, unless a Fury attacker pierces it.
-		if (defender instanceof Player defenderPlayer && isAt(defenderPlayer, Affinity.BASTION)) {
+		if (defender instanceof Player defenderPlayer
+				&& isAt(defenderPlayer, Affinity.BASTION)
+				&& Resonance.atApex(defenderPlayer)) {
 			Matchup matchup = matchupAgainst(Affinity.BASTION, attacker);
 			if (matchup != Matchup.NEUTRALIZED) {
 				float fraction = matchup == Matchup.EMPOWERED ? CAP_EMPOWERED : CAP_NORMAL;
@@ -171,9 +187,16 @@ public final class Apex {
 		}
 
 		// Fury — Execute: finish a low-health mob, unless its affinity counters Fury.
+		// Restricted to direct melee from the Apex player and never against their
+		// own tamed pets or villagers. Fire ticks, drowning and friendly fire
+		// must not one-shot something just because the player has Fury Apex.
 		if (!(defender instanceof Player) && defender.getMaxHealth() > 0.0F
 				&& attacker instanceof Player attackerPlayer
-				&& isAt(attackerPlayer, Affinity.FURY)) {
+				&& isAt(attackerPlayer, Affinity.FURY)
+				&& Resonance.atApex(attackerPlayer)
+				&& source.getDirectEntity() == attackerPlayer
+				&& !isOwnPet(defender, attackerPlayer)
+				&& !(defender instanceof AbstractVillager)) {
 			Matchup matchup = matchupAgainst(Affinity.FURY, defender);
 			if (matchup != Matchup.NEUTRALIZED) {
 				float threshold = matchup == Matchup.EMPOWERED ? EXECUTE_EMPOWERED : EXECUTE_NORMAL;
@@ -185,9 +208,24 @@ public final class Apex {
 		return amount;
 	}
 
-	/** Whether knockback against this entity should be ignored (Bastion Apex). */
+	/**
+	 * Whether {@code defender} is a {@link TamableAnimal} owned by
+	 * {@code attacker}. Used to make sure a player's own wolves, cats and
+	 * parrots are never the target of an Apex finisher.
+	 */
+	private static boolean isOwnPet(LivingEntity defender, Player attacker) {
+		if (!(defender instanceof TamableAnimal pet)) {
+			return false;
+		}
+		var ownerRef = pet.getOwnerReference();
+		return ownerRef != null && attacker.getUUID().equals(ownerRef.getUUID());
+	}
+
+	/** Whether knockback against this entity should be ignored (Bastion Apex at Resonance). */
 	public static boolean ignoresKnockback(LivingEntity entity) {
-		return entity instanceof Player player && isAt(player, Affinity.BASTION);
+		return entity instanceof Player player
+			&& isAt(player, Affinity.BASTION)
+			&& Resonance.atApex(player);
 	}
 
 	/** {@code ALLOW_DAMAGE} veto implementing the Zephyr dodge. */
@@ -195,7 +233,7 @@ public final class Apex {
 		if (!(entity instanceof ServerPlayer player) || !player.isSprinting()) {
 			return true;
 		}
-		if (!isAt(player, Affinity.ZEPHYR)) {
+		if (!isAt(player, Affinity.ZEPHYR) || !Resonance.atApex(player)) {
 			return true;
 		}
 		// Only a blow from a combatant can be dodged — never fall, fire or the void.
@@ -237,20 +275,78 @@ public final class Apex {
 		return Matchup.NORMAL;
 	}
 
-	/** Each tick, announce any player whose Apex capstone has switched on or off. */
+	/**
+	 * Each tick, watch every player for four distinct Apex transitions and
+	 * narrate each one to the player so the capstone is never silent.
+	 *
+	 * <p>The capstone has two independent inputs, the player's Foci layout
+	 * and their resonance, and either can flip the capstone on or off. The
+	 * transitions are:</p>
+	 *
+	 * <ul>
+	 *   <li><b>gained</b>: a player who had no Apex affinity now does and is at
+	 *       or above the resonance threshold.</li>
+	 *   <li><b>dormant</b>: a player who was armed still has the same Apex
+	 *       affinity but resonance has fallen below the threshold.</li>
+	 *   <li><b>rearmed</b>: a player who went dormant has crossed resonance
+	 *       back over the threshold with the same Apex affinity.</li>
+	 *   <li><b>lost</b>: a player no longer qualifies for any Apex (their Foci
+	 *       layout has changed).</li>
+	 * </ul>
+	 */
 	private static void tick(MinecraftServer server) {
 		for (ServerPlayer player : server.getPlayerList().getPlayers()) {
+			UUID id = player.getUUID();
 			Affinity now = affinityOf(player).orElse(null);
-			Affinity was = apexState.get(player.getUUID());
-			if (now == was) {
+			Affinity was = apexState.get(id);
+			boolean armedNow = now != null && Resonance.atApex(player);
+			boolean armedWas = Boolean.TRUE.equals(armedState.get(id));
+
+			if (now == null && was == null) {
 				continue;
 			}
-			if (now != null) {
-				apexState.put(player.getUUID(), now);
-				announceGained(player, now);
-			} else {
-				apexState.remove(player.getUUID());
+			if (now == null) {
+				// Foci no longer qualify, so the capstone is lost outright.
+				apexState.remove(id);
+				armedState.remove(id);
 				announceLost(player);
+				continue;
+			}
+			if (was == null) {
+				// Fresh Apex affinity. Announce that the capstone has unlocked
+				// either way so the player learns about the qualification; if
+				// resonance is too low we follow with a dormant flavor so they
+				// know the effect is gated on Resonance, not on their Foci.
+				apexState.put(id, now);
+				armedState.put(id, armedNow);
+				if (armedNow) {
+					announceGained(player, now);
+				} else {
+					announceGainedDormant(player, now);
+				}
+				continue;
+			}
+			if (was != now) {
+				// Affinity itself changed without dropping through null. Treat it
+				// as a lost-and-gained pair so each capstone gets its own beat.
+				apexState.put(id, now);
+				armedState.put(id, armedNow);
+				announceLost(player);
+				if (armedNow) {
+					announceGained(player, now);
+				} else {
+					announceGainedDormant(player, now);
+				}
+				continue;
+			}
+			// Same Apex affinity as last tick, so only the armed flag can flip.
+			if (armedNow != armedWas) {
+				armedState.put(id, armedNow);
+				if (armedNow) {
+					announceRearmed(player, now);
+				} else {
+					announceDormant(player);
+				}
 			}
 		}
 	}
@@ -264,6 +360,40 @@ public final class Apex {
 				.withStyle(affinityColor(affinity), ChatFormatting.BOLD))
 			.append(Component.literal(". " + capstoneDescription(affinity))
 				.withStyle(ChatFormatting.GRAY)));
+	}
+
+	/**
+	 * Announces that a capstone has just qualified but resonance is below the
+	 * Apex threshold, so the effect itself is still asleep. The player has done
+	 * the work of stacking the Foci — we should not leave them in silence
+	 * wondering whether anything happened, but we also should not claim the
+	 * capstone is "active".
+	 */
+	private static void announceGainedDormant(ServerPlayer player, Affinity affinity) {
+		((ServerLevel) player.level()).playSound(null, player.blockPosition(),
+			SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, SoundSource.PLAYERS, 0.6F, 0.8F);
+		player.sendSystemMessage(Component.translatable(
+				"apex.attuned.unlocked_dormant",
+				Component.literal(capstoneName(affinity))
+					.withStyle(affinityColor(affinity), ChatFormatting.BOLD))
+			.withStyle(ChatFormatting.GRAY));
+	}
+
+	private static void announceRearmed(ServerPlayer player, Affinity affinity) {
+		((ServerLevel) player.level()).playSound(null, player.blockPosition(),
+			SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, SoundSource.PLAYERS, 0.7F, 1.3F);
+		player.sendSystemMessage(Component.literal("Apex active again: ")
+			.withStyle(ChatFormatting.GRAY)
+			.append(Component.literal(capstoneName(affinity))
+				.withStyle(affinityColor(affinity), ChatFormatting.BOLD))
+			.append(Component.literal(".").withStyle(ChatFormatting.GRAY)));
+	}
+
+	private static void announceDormant(ServerPlayer player) {
+		((ServerLevel) player.level()).playSound(null, player.blockPosition(),
+			SoundEvents.AMETHYST_BLOCK_HIT, SoundSource.PLAYERS, 0.6F, 0.6F);
+		player.sendSystemMessage(Component.literal("Your Apex sleeps. Resonance is too low.")
+			.withStyle(ChatFormatting.GRAY));
 	}
 
 	private static void announceLost(ServerPlayer player) {

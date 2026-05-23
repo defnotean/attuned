@@ -28,11 +28,12 @@ public record AttunedConfig(
 		int capacityPerShard,
 		float focusLootChance,
 		int voidstepCooldownTicks,
-		int gravebindCooldownTicks) {
+		int gravebindCooldownTicks,
+		boolean broadcastPactDeaths) {
 
 	/** The built-in defaults — also the fallback for any missing key. */
 	public static final AttunedConfig DEFAULT =
-		new AttunedConfig(4, 20, 2, 0.25F, 200, 1200);
+		new AttunedConfig(4, 20, 2, 0.25F, 200, 1200, true);
 
 	public static final Codec<AttunedConfig> CODEC = RecordCodecBuilder.create(in -> in.group(
 		Codec.intRange(0, 256).optionalFieldOf("starting_capacity", DEFAULT.startingCapacity())
@@ -46,7 +47,9 @@ public record AttunedConfig(
 		Codec.intRange(0, 1728000).optionalFieldOf("voidstep_cooldown_ticks", DEFAULT.voidstepCooldownTicks())
 			.forGetter(AttunedConfig::voidstepCooldownTicks),
 		Codec.intRange(0, 1728000).optionalFieldOf("gravebind_cooldown_ticks", DEFAULT.gravebindCooldownTicks())
-			.forGetter(AttunedConfig::gravebindCooldownTicks)
+			.forGetter(AttunedConfig::gravebindCooldownTicks),
+		Codec.BOOL.optionalFieldOf("broadcast_pact_deaths", DEFAULT.broadcastPactDeaths())
+			.forGetter(AttunedConfig::broadcastPactDeaths)
 	).apply(in, AttunedConfig::new));
 
 	private static final Path PATH =
@@ -88,6 +91,7 @@ public record AttunedConfig(
 		json.addProperty("focus_loot_chance", current.focusLootChance());
 		json.addProperty("voidstep_cooldown_ticks", current.voidstepCooldownTicks());
 		json.addProperty("gravebind_cooldown_ticks", current.gravebindCooldownTicks());
+		json.addProperty("broadcast_pact_deaths", current.broadcastPactDeaths());
 		try {
 			Files.createDirectories(PATH.getParent());
 			Files.writeString(PATH, GSON.toJson(json));
