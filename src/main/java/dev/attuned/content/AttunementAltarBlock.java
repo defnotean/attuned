@@ -67,20 +67,20 @@ public class AttunementAltarBlock extends Block {
 
 	public static final MapCodec<AttunementAltarBlock> CODEC = simpleCodec(AttunementAltarBlock::new);
 
-	// Mirrors the 3D block model element-for-element so the raytrace hits every
-	// visible surface — the stepped base/capital, the central pillar, the top
-	// plate, and the four corner gems. A simpler bounding box would let clicks
-	// on the gems or the top plate's edges fall through and miss the block.
+	// Mirrors the solid-block monument 3D model element-for-element so the
+	// raytrace hits every visible surface — full 16x1 base slab and top plate,
+	// 14x14 stepped base and capital, the 12x10x12 solid core, and the four
+	// full-height 2x10x2 corner gem columns that protrude beyond the core.
 	private static final VoxelShape SHAPE = Shapes.or(
-		Block.box(0.0, 0.0, 0.0, 16.0, 2.0, 16.0),    // base slab
-		Block.box(2.0, 2.0, 2.0, 14.0, 4.0, 14.0),    // stepped base
-		Block.box(4.0, 4.0, 4.0, 12.0, 14.0, 12.0),   // central pillar
-		Block.box(2.0, 14.0, 2.0, 14.0, 15.0, 14.0),  // stepped capital
-		Block.box(1.0, 15.0, 1.0, 15.0, 16.0, 15.0),  // top plate
-		Block.box(1.0, 2.0, 1.0, 3.0, 8.0, 3.0),      // gem NW
-		Block.box(13.0, 2.0, 1.0, 15.0, 8.0, 3.0),    // gem NE
-		Block.box(1.0, 2.0, 13.0, 3.0, 8.0, 15.0),    // gem SW
-		Block.box(13.0, 2.0, 13.0, 15.0, 8.0, 15.0)); // gem SE
+		Block.box(0.0, 0.0, 0.0, 16.0, 2.0, 16.0),    // base slab (full footprint)
+		Block.box(1.0, 2.0, 1.0, 15.0, 4.0, 15.0),    // stepped base (14x2x14)
+		Block.box(2.0, 4.0, 2.0, 14.0, 14.0, 14.0),   // solid core (12x10x12)
+		Block.box(1.0, 4.0, 1.0, 3.0, 14.0, 3.0),     // gem NW (2x10x2 column)
+		Block.box(13.0, 4.0, 1.0, 15.0, 14.0, 3.0),   // gem NE
+		Block.box(1.0, 4.0, 13.0, 3.0, 14.0, 15.0),   // gem SW
+		Block.box(13.0, 4.0, 13.0, 15.0, 14.0, 15.0), // gem SE
+		Block.box(1.0, 14.0, 1.0, 15.0, 15.0, 15.0),  // stepped capital (14x1x14)
+		Block.box(0.0, 15.0, 0.0, 16.0, 16.0, 16.0)); // top plate (full 16x1x16)
 
 	public AttunementAltarBlock(Properties properties) {
 		super(properties);

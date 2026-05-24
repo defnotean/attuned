@@ -1,6 +1,3 @@
 {
-	"parent": "minecraft:item/generated",
-	"textures": {
-		"layer0": "attuned:item/attunement_altar"
-	}
+    "parent": "attuned:block/attunement_altar_none"
 }

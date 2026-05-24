@@ -39,8 +39,8 @@ public final class CombatHud {
 	private static final double TARGET_RANGE_BLOCKS = 12.0;
 
 	// Gem and bar dimensions, in GUI pixels.
-	private static final int PLAYER_GEM_SIZE = 10;
-	private static final int TARGET_GEM_SIZE = 8;
+	private static final int PLAYER_GEM_SIZE = 20;
+	private static final int TARGET_GEM_SIZE = 16;
 	private static final int RESONANCE_BAR_W = 24;
 	private static final int RESONANCE_BAR_H = 2;
 
@@ -75,10 +75,24 @@ public final class CombatHud {
 	// Glyph bitmasks: 8 rows of 8 bits each, MSB of byte = column 0, row 0 lives
 	// in the top byte. Decoded by drawGlyph below. Tweak a glyph by editing the
 	// hex literal — the draw loop is identity for any 8x8 sprite.
-	private static final long FURY_GLYPH    = 0x1038549244380000L;
-	private static final long BASTION_GLYPH = 0xFF81999942241800L;
-	private static final long ZEPHYR_GLYPH  = 0x0102060C183060C0L;
-	private static final long DISCORD_GLYPH = 0x8142241818244281L;
+	private static final long FURY_GLYPH    = 0x10183C747EFF7E3CL;
+	private static final long BASTION_GLYPH = 0xFFFFE77E7E3C3C18L;
+	private static final long ZEPHYR_GLYPH  = 0x1F3E7C78FC6C0602L;
+	private static final long DISCORD_GLYPH = 0xC3E77E3C3C7EE7C3L;
+
+	// Apex glyph bitmasks (8x8)
+	private static final long EXECUTE_GLYPH     = 0x3C7EDBFF6C7E2800L; // Skull (Fury Apex)
+	private static final long UNYIELDING_GLYPH  = 0xFFDBDB7E5A3C1818L; // Reinforced shield (Bastion Apex)
+	private static final long UNTOUCHABLE_GLYPH = 0x3078CCC67C3E0602L; // Swirling wind wisp (Zephyr Apex)
+
+	// Apex sprite identifiers — resolved against the GUI sprite atlas at
+	// {@code assets/attuned/textures/gui/sprites/hud/<name>.png}. Routing through
+	// the sprite atlas (same path vanilla heart/hunger icons use) gets us proper
+	// filtering and mipmapping at any HUD render size, so the gem face and the
+	// centred icon stay readable when the gem is downscaled to 16-20 px.
+	private static final Identifier EXECUTE_SPRITE = Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "hud/execute");
+	private static final Identifier UNYIELDING_SPRITE = Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "hud/unyielding");
+	private static final Identifier UNTOUCHABLE_SPRITE = Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "hud/untouchable");
 
 	// Empowered halo: a gold ring traced one pixel outside the player gem whose
 	// alpha breathes between the two bounds.
@@ -153,7 +167,7 @@ public final class CombatHud {
 
 		// Player gem with a dark bezel — same construction as the Focus panel gem.
 		// The player's own gem is never "targeted" — that flag is for the mob gem.
-		drawGem(graphics, rowX, rowY, PLAYER_GEM_SIZE, playerAffinity.orElse(null), discord, false);
+		drawGem(graphics, rowX, rowY, PLAYER_GEM_SIZE, playerAffinity.orElse(null), discord, false, apexArmed);
 
 		// Matchup state markers — gold pulse halo for empowered, red dim overlay
 		// for neutralized. Neutral and "no target" cases leave the gem plain.
@@ -167,7 +181,7 @@ public final class CombatHud {
 		if (hasTarget) {
 			int targetX = rowX + PLAYER_GEM_SIZE + GEM_GAP;
 			int targetY = rowY + (PLAYER_GEM_SIZE - TARGET_GEM_SIZE) / 2;
-			drawGem(graphics, targetX, targetY, TARGET_GEM_SIZE, targetAffinity.get(), false, true);
+			drawGem(graphics, targetX, targetY, TARGET_GEM_SIZE, targetAffinity.get(), false, true, false);
 		}
 	}
 
@@ -198,18 +212,77 @@ public final class CombatHud {
 	 * @param discord  whether the gem represents the Discord stance (overrides {@code affinity})
 	 * @param targeted whether to add the bright outline that marks the crosshair-picked mob
 	 */
-	private static void drawGem(GuiGraphicsExtractor graphics, int x, int y, int size,
-			@Nullable Affinity affinity, boolean discord, boolean targeted) {
+	public static void drawGem(GuiGraphicsExtractor graphics, int x, int y, int size,
+			@Nullable Affinity affinity, boolean discord, boolean targeted, boolean atApex) {
+		// Texture-backed gem path. Any committed affinity (player or target) uses
+		// the cut-gem art from the GUI sprite atlas so the combat HUD reads as a
+		// single design language instead of swapping between procedural squares
+		// and textured gems. Discord and neutral keep the procedural bezel +
+		// glyph because there is no painted asset for them yet.
+		if (affinity != null && !discord) {
+			Identifier sprite = switch (affinity) {
+				case FURY -> EXECUTE_SPRITE;
+				case BASTION -> UNYIELDING_SPRITE;
+				case ZEPHYR -> UNTOUCHABLE_SPRITE;
+			};
+			// blitSprite goes through the GUI sprite atlas the same way vanilla
+			// heart/hunger icons do, so the gem face and its centred icon stay
+			// readable when the gem is downscaled from the 32x32 source.
+			graphics.blitSprite(net.minecraft.client.renderer.RenderPipelines.GUI_TEXTURED,
+				sprite, x, y, size, size);
+
+			if (targeted) {
+				// Bright ring one pixel outside the bezel — marks the crosshair-picked
+				// mob without overlapping the gem face.
+				int rx0 = x - 1;
+				int ry0 = y - 1;
+				int rx1 = x + size + 1;
+				int ry1 = y + size + 1;
+				graphics.fill(rx0, ry0, rx1, ry0 + 1, TARGETED_RING_ARGB);
+				graphics.fill(rx0, ry1 - 1, rx1, ry1, TARGETED_RING_ARGB);
+				graphics.fill(rx0, ry0 + 1, rx0 + 1, ry1 - 1, TARGETED_RING_ARGB);
+				graphics.fill(rx1 - 1, ry0 + 1, rx1, ry1 - 1, TARGETED_RING_ARGB);
+			}
+			return;
+		}
+
 		int colorArgb = AffinityColors.argbOf(Optional.ofNullable(affinity), discord);
-		// 1px dark bezel for contrast against the world behind the HUD, then the
-		// stance-coloured face inset by one pixel on every side.
+		// 1px dark bezel for contrast against the world behind the HUD.
 		graphics.fill(x, y, x + size, y + size, BEZEL_ARGB);
+
+		// 3D cut gemstone shading: calculate highlight and shadow tint layers based on the stance color
+		int r = (colorArgb >> 16) & 255;
+		int g = (colorArgb >> 8) & 255;
+		int b = colorArgb & 255;
+		int a = (colorArgb >> 24) & 255;
+		int highlightColor = (a << 24) | (Math.min(255, r + 45) << 16) | (Math.min(255, g + 45) << 8) | Math.min(255, b + 45);
+		int shadowColor = (a << 24) | (Math.max(0, r - 45) << 16) | (Math.max(0, g - 45) << 8) | Math.max(0, b - 45);
+
+		// Fill the inner face base
 		graphics.fill(x + 1, y + 1, x + size - 1, y + size - 1, colorArgb);
+		// Bevel highlights (top and left inner borders)
+		graphics.fill(x + 1, y + 1, x + size - 1, y + 2, highlightColor);
+		graphics.fill(x + 1, y + 1, x + 2, y + size - 1, highlightColor);
+		// Bevel shadows (bottom and right inner borders)
+		graphics.fill(x + 1, y + size - 2, x + size - 1, y + size - 1, shadowColor);
+		graphics.fill(x + size - 2, y + 1, x + size - 1, y + size - 1, shadowColor);
 
 		// Glyph stage: the bitmap sprite goes on top of the face, white-on-colour
 		// so silhouette plus hue both contribute to readability. Discord wins over
 		// affinity to match the colour-routing rule in AffinityColors#argbOf.
-		long bits = discord ? DISCORD_GLYPH : glyphFor(affinity);
+		long bits;
+		if (discord) {
+			bits = DISCORD_GLYPH;
+		} else if (atApex && affinity != null) {
+			bits = switch (affinity) {
+				case FURY -> EXECUTE_GLYPH;
+				case BASTION -> UNYIELDING_GLYPH;
+				case ZEPHYR -> UNTOUCHABLE_GLYPH;
+			};
+		} else {
+			bits = glyphFor(affinity);
+		}
+
 		if (bits != 0L) {
 			int glyphX = x + (size - 8) / 2;
 			int glyphY = y + (size - 8) / 2;

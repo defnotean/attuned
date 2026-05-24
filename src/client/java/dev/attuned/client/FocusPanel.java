@@ -7,6 +7,8 @@ import dev.attuned.attunement.AttunedAttachments;
 import dev.attuned.attunement.AttunedInv;
 import dev.attuned.attunement.Attunement;
 import dev.attuned.combat.Resonance;
+import dev.attuned.combat.Apex;
+import dev.attuned.client.hud.CombatHud;
 import dev.attuned.menu.FocusLayout;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
@@ -112,7 +114,8 @@ public final class FocusPanel {
 		Optional<Affinity> committed = activeAffinities.size() == 1
 			? Optional.of(activeAffinities.iterator().next())
 			: Optional.empty();
-		int affinityColor = AttunementReadout.stanceArgb(discord, committed);
+		Optional<Affinity> playerAffinity = committed.isPresent() ? committed : Apex.affinityOf(player);
+		int affinityColor = AttunementReadout.stanceArgb(discord, playerAffinity);
 
 		for (int i = 0; i < AttunedInv.SIZE; i++) {
 			int sx = leftPos + slotX;
@@ -145,11 +148,10 @@ public final class FocusPanel {
 			}
 		}
 
-		// Affinity gem, centred in the panel's top padding band: a colour chip set
-		// in a dark bezel that matches the slot wells.
+		// Affinity gem, centred in the panel's top padding band: a 3D cut gemstone
+		// with a custom status glyph inside it.
 		int gemX0 = leftPos + slotX + FocusLayout.SLOT / 2 - GEM_SIZE / 2;
-		graphics.fill(gemX0, y0, gemX0 + GEM_SIZE, y0 + GEM_SIZE, WELL_SHADOW);
-		graphics.fill(gemX0 + 1, y0 + 1, gemX0 + GEM_SIZE - 1, y0 + GEM_SIZE - 1, affinityColor);
+		CombatHud.drawGem(graphics, gemX0, y0, GEM_SIZE, playerAffinity.orElse(null), discord, false, Resonance.atApex(player));
 
 		// Resonance ring: a 1-pixel square border traced one pixel outside the
 		// gem's bezel. The full ring is laid down as a faint track, then overlaid

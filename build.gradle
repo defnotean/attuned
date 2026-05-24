@@ -103,19 +103,15 @@ modrinth {
 	versionName = "Attuned ${project.version}"
 	// Changelog for the current release — refresh this each time mod_version bumps.
 	changelog = """\
-The Pacts Update.
+A polish pass on top of the Pacts Update.
 
-- Pacts: named set bonuses that wake when you commit to an affinity. Pyresworn ignites foes on melee. Stoneheart dampens incoming damage. Windrunner makes you sprint faster and step over short rises. Untethered amplifies your hits against any affinity-bearing foe and paints an impact sparkle.
-- Resonance: a new combat gauge that fills as you fight matchup-favored foes and drains when neutralized hits land. Apex capstones only fire while resonance is at or above the half-full threshold.
-- Combat HUD: an affinity gem and resonance bar above the hotbar. The gem glows gold when empowered against the foe you are aiming at, dims red when neutralized. Each affinity has its own glyph (flame, shield, wing) so you read at a glance.
-- Altar GUI: right-click the Attunement Altar empty-handed to open a clean shard-binding screen with a stance-tinted well, corner brackets, accent line, and a Bind button.
-- Altar overhaul: a fresh 3D model with affinity-themed crystals, four animated variants per stance, and a converging-particle bind animation.
-- New art for every original Focus and the Attunement Shard.
-- Pact-themed death messages: be undone by a Pyresworn, shattered by a Stoneheart, outpaced by a Windrunner, unmade by an Untethered. Toggle via attuned.json.
-- Onboarding: short one-time hints on first shard pickup, first altar interaction, and first altar approach so new players know where to go.
-- First-pact fanfare the first time you wake each pact on a character.
-- /attuned status: a debug command that prints your active foci, pact, resonance, and apex state.
-- A long list of polish and fixes: resonance persists across death, locale-safe lang keys, cached per-frame HUD lookups, altar GUI auto-closes on walk-away or dimension change, Pyresworn now respects PvP and friendly-fire rules, Apex Execute no longer triggers on damage-over-time, and much more.
+- Apex capstone icons on the combat HUD: a red skull for Fury Execute, a gold shield for Bastion Unyielding, a cyan swirl for Zephyr Untouchable. The icons render through the GUI sprite atlas so they stay crisp at any HUD size and on any GUI scale.
+- The Attunement Altar got a full visual rebuild: a solid-block 3D monument with affinity-themed crystals at the corners, animated runic plates per stance, and a 3D inventory render so the item icon matches what you place.
+- The Altar GUI now opens reliably on empty-hand right-click. Fixed the interaction chain that was silently swallowing the click in 26.1.2, sized the click hitbox to match the new 3D model, and synced the player inventory grid layout so its slot wells render correctly under a texture-less screen.
+- The Altar's Bind GUI shows a stance gem next to the affinity name so a player at Apex sees their Execute / Unyielding / Untouchable icon in the GUI too, not just in chat.
+- Per-stance gem rendering in the Focus panel and the Altar GUI uses the same sprite path as the HUD, so all surfaces of the mod read as one design language.
+- BlockItem display-name lang key wired so the Altar shows as "Attunement Altar" in tooltips instead of the raw translation key.
+- Many smaller fixes: VoxelShape now mirrors the new altar model element for element, the corner-coord blit signature is documented in code, the HUD halo pulses on game-tick time so it freezes with a paused single-player game, and the Focus panel's idle glow does too.
 """
 	uploadFile = file("build/libs/${project.name}-${project.version}.jar")
 	gameVersions = ["26.1.2"]

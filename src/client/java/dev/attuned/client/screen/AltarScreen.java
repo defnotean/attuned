@@ -1,11 +1,14 @@
 package dev.attuned.client.screen;
 
 import dev.attuned.AttunedConfig;
+import dev.attuned.api.focus.Affinity;
 import dev.attuned.attunement.Attunement;
 import dev.attuned.client.AttunementReadout;
+import dev.attuned.client.hud.CombatHud;
 import dev.attuned.content.AttunementAltarBlock;
 import dev.attuned.menu.AltarMenu;
 import dev.attuned.menu.BindShardPayload;
+import java.util.Optional;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
@@ -340,9 +343,20 @@ public class AltarScreen extends AbstractContainerScreen<AltarMenu> {
 			.append(Component.literal(used + " / " + capacity));
 		graphics.text(this.font, readout, 8, 18, LABEL_DARK, false);
 
-		Component stance = Component.translatable("screen.attuned.altar.stance")
-			.append(AttunementAltarBlock.stanceLabel(player));
-		graphics.text(this.font, stance, 8, 30, LABEL_DARK, false);
+		// Stance row: a small textured gem prefix that visually says "this is your
+		// stance," followed only by the affinity name in its colour. Dropping the
+		// "Stance:" label keeps the row clear of the shard slot at x=80 — with a
+		// 10-pixel gem and the affinity name at most ~30 pixels wide, the whole
+		// row fits comfortably in the left half of the panel.
+		Optional<Affinity> committed = Attunement.committedAffinity(player);
+		boolean discord = Attunement.isDiscord(player);
+		int stanceGemSize = 10;
+		int stanceGemX = 8;
+		int stanceGemY = 28;
+		CombatHud.drawGem(graphics, stanceGemX, stanceGemY, stanceGemSize,
+			committed.orElse(null), discord, false, false);
+		graphics.text(this.font, AttunementAltarBlock.stanceLabel(player),
+			stanceGemX + stanceGemSize + 3, 30, LABEL_DARK, false);
 
 		// Hint text under the slot, swapped out when capacity is full or empty.
 		Component hint;
