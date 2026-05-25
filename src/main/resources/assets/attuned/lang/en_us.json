@@ -175,6 +175,8 @@
 	"item.attuned.attunement_journal.effect": "Use to open a field guide to Foci, affinity, Pacts and Apex.",
 
 	"journal.attuned.title": "Attunement Journal",
+	"journal.attuned.screen.title": "Attunement Codex",
+	"journal.attuned.screen.subtitle": "Foci, pacts, altar craft",
 	"journal.attuned.line1": "Foci work only while equipped and inside your capacity.",
 	"journal.attuned.line2": "Slot order is priority: higher slots wake first when capacity is tight.",
 	"journal.attuned.line3": "Fury beats Bastion, Bastion beats Zephyr, and Zephyr beats Fury.",

@@ -15,6 +15,7 @@ import dev.attuned.effect.AttunedEffects;
 import dev.attuned.menu.AltarMenuType;
 import dev.attuned.menu.AltarNetworking;
 import dev.attuned.network.AttunedNetworking;
+import dev.attuned.network.JournalNetworking;
 import dev.attuned.onboarding.Onboarding;
 import dev.attuned.pacts.PactDeathMessages;
 import dev.attuned.pacts.Pacts;
@@ -45,6 +46,7 @@ public class Attuned implements ModInitializer {
 		Pacts.init();
 		PactDeathMessages.init();
 		AttunedNetworking.init();
+		JournalNetworking.init();
 		AltarMenuType.init();
 		AltarNetworking.init();
 		GravebindSave.init();

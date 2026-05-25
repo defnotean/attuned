@@ -1,9 +1,12 @@
 package dev.attuned.content;
 
+import dev.attuned.network.OpenJournalPayload;
 import java.util.List;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.network.Filterable;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
@@ -14,9 +17,9 @@ import net.minecraft.world.item.component.WrittenBookContent;
 import net.minecraft.world.level.Level;
 
 /**
- * A compact in-game guide to Attuned's core rules. It behaves like a vanilla
- * written book so right-clicking opens Minecraft's normal page-turning book UI,
- * while the item texture and contents stay custom to the mod.
+ * A compact in-game guide to Attuned's core rules. It keeps written-book content
+ * on the stack for data compatibility, but right-clicking opens Attuned's custom
+ * client screen instead of Minecraft's vanilla written-book screen.
  */
 public class AttunementJournalItem extends WrittenBookItem {
 	private static final WrittenBookContent GUIDE_CONTENT = createGuideContent();
@@ -32,7 +35,10 @@ public class AttunementJournalItem extends WrittenBookItem {
 		if (!stack.has(DataComponents.WRITTEN_BOOK_CONTENT)) {
 			stack.set(DataComponents.WRITTEN_BOOK_CONTENT, GUIDE_CONTENT);
 		}
-		return super.use(level, player, hand);
+		if (!level.isClientSide() && player instanceof ServerPlayer serverPlayer) {
+			ServerPlayNetworking.send(serverPlayer, new OpenJournalPayload());
+		}
+		return InteractionResult.SUCCESS;
 	}
 
 	public static void showGuide(Player player) {
