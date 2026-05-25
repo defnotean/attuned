@@ -15,6 +15,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.ItemStack;
 
@@ -72,21 +73,26 @@ public final class AttunedTooltips {
 							.withStyle(ChatFormatting.GRAY)));
 				}
 
-				// Dormant marker — when this exact stack occupies an inactive Focus slot.
+				// Equipped status: only when this exact stack occupies a Focus slot.
 				var player = Minecraft.getInstance().player;
 				if (player != null) {
 					AttunedInv inv = AttunedAttachments.getInventory(player);
 					for (int slot = 0; slot < AttunedInv.SIZE; slot++) {
 						if (inv.get(slot) == stack) {
-							var dormantReason = Attunement.dormantReason(player, slot);
-							if (dormantReason.isEmpty()) {
-								continue;
-							}
 							lines.add(Component.empty());
-							lines.add(Component.literal("Dormant: " + dormantSummary(dormantReason.get()))
-								.withStyle(ChatFormatting.DARK_RED, ChatFormatting.BOLD));
-							lines.add(Component.literal(dormantAdvice(dormantReason.get()))
-								.withStyle(ChatFormatting.GRAY));
+							lines.add(Component.translatable("tooltip.attuned.equipped_slot", slot + 1)
+								.withStyle(ChatFormatting.AQUA));
+							var dormantReason = Attunement.dormantReason(player, slot);
+							if (dormantReason.isPresent()) {
+								lines.add(Component.translatable("tooltip.attuned.status.dormant",
+										dormantSummary(dormantReason.get()))
+									.withStyle(ChatFormatting.DARK_RED, ChatFormatting.BOLD));
+								lines.add(dormantAdvice(dormantReason.get())
+									.withStyle(ChatFormatting.GRAY));
+							} else {
+								lines.add(Component.translatable("tooltip.attuned.status.active")
+									.withStyle(ChatFormatting.GREEN, ChatFormatting.BOLD));
+							}
 							break;
 						}
 					}
@@ -124,17 +130,17 @@ public final class AttunedTooltips {
 		};
 	}
 
-	private static String dormantSummary(BudgetResolver.DormantReason reason) {
+	private static MutableComponent dormantSummary(BudgetResolver.DormantReason reason) {
 		return switch (reason) {
-			case NOT_ENOUGH_CAPACITY -> "Not enough remaining capacity.";
-			case DUPLICATE_UNIQUE -> "Duplicate unique Focus.";
+			case NOT_ENOUGH_CAPACITY -> Component.translatable("tooltip.attuned.dormant.capacity.summary");
+			case DUPLICATE_UNIQUE -> Component.translatable("tooltip.attuned.dormant.duplicate.summary");
 		};
 	}
 
-	private static String dormantAdvice(BudgetResolver.DormantReason reason) {
+	private static MutableComponent dormantAdvice(BudgetResolver.DormantReason reason) {
 		return switch (reason) {
-			case NOT_ENOUGH_CAPACITY -> "Move it higher, bind shards, or lower total cost.";
-			case DUPLICATE_UNIQUE -> "Only the first copy can be active.";
+			case NOT_ENOUGH_CAPACITY -> Component.translatable("tooltip.attuned.dormant.capacity.advice");
+			case DUPLICATE_UNIQUE -> Component.translatable("tooltip.attuned.dormant.duplicate.advice");
 		};
 	}
 }

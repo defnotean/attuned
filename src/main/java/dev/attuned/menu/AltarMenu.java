@@ -2,6 +2,7 @@ package dev.attuned.menu;
 
 import dev.attuned.AttunedConfig;
 import dev.attuned.content.AttunedContent;
+import dev.attuned.content.AttunementAltarBlock;
 import net.minecraft.world.Container;
 import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.entity.player.Inventory;
@@ -37,6 +38,7 @@ public class AltarMenu extends AbstractContainerMenu {
 	private final Container input;
 	private int capacityCap = AttunedConfig.DEFAULT.capacityCap();
 	private int capacityPerShard = AttunedConfig.DEFAULT.capacityPerShard();
+	private int altarMemory = AttunementAltarBlock.AltarAffinity.NONE.ordinal();
 
 	/**
 	 * Reachability accessor anchored to the Altar block. On the server this is
@@ -116,6 +118,15 @@ public class AltarMenu extends AbstractContainerMenu {
 		return capacityPerShard;
 	}
 
+	/** Server-synced affinity the Altar blockstate currently remembers. */
+	public AttunementAltarBlock.AltarAffinity altarMemory() {
+		AttunementAltarBlock.AltarAffinity[] values = AttunementAltarBlock.AltarAffinity.values();
+		if (altarMemory < 0 || altarMemory >= values.length) {
+			return AttunementAltarBlock.AltarAffinity.NONE;
+		}
+		return values[altarMemory];
+	}
+
 	private void addConfigDataSlots() {
 		this.addDataSlot(new DataSlot() {
 			@Override
@@ -137,6 +148,23 @@ public class AltarMenu extends AbstractContainerMenu {
 			@Override
 			public void set(int value) {
 				capacityPerShard = value;
+			}
+		});
+		this.addDataSlot(new DataSlot() {
+			@Override
+			public int get() {
+				return access.evaluate((level, pos) -> {
+					var state = level.getBlockState(pos);
+					if (!state.hasProperty(AttunementAltarBlock.AFFINITY)) {
+						return AttunementAltarBlock.AltarAffinity.NONE.ordinal();
+					}
+					return state.getValue(AttunementAltarBlock.AFFINITY).ordinal();
+				}, AttunementAltarBlock.AltarAffinity.NONE.ordinal());
+			}
+
+			@Override
+			public void set(int value) {
+				altarMemory = value;
 			}
 		});
 	}

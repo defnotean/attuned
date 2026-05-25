@@ -13,7 +13,9 @@ import dev.attuned.menu.AltarMenu;
 import dev.attuned.menu.BindShardPayload;
 import dev.attuned.pacts.Pact;
 import dev.attuned.pacts.Pacts;
+import java.util.HashSet;
 import java.util.Optional;
+import java.util.Set;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
@@ -268,7 +270,8 @@ public class AltarScreen extends AbstractContainerScreen<AltarMenu> {
 			committed.orElse(null), discord, false, false);
 		graphics.text(this.font, AttunementAltarBlock.stanceLabel(player),
 			stanceGemX + stanceGemSize + 4, 41, BODY_TEXT, false);
-		graphics.text(this.font, forecastLine(player, active, dormant), 14, 55, BODY_TEXT, false);
+		graphics.text(this.font, forecastLine(player, active, dormant, this.menu.altarMemory()),
+			14, 55, BODY_TEXT, false);
 
 		// Hint text under the slot, swapped out when capacity is full or empty.
 		Component hint;
@@ -286,10 +289,33 @@ public class AltarScreen extends AbstractContainerScreen<AltarMenu> {
 		}
 		graphics.text(this.font, hint, 14, HINT_Y, BODY_TEXT, false);
 
-		Component forecast = capacityForecast(capacity, cap, perShard);
+		Component wakePreview = this.menu.inputStack().isEmpty()
+			? null
+			: dormantWakePreview(player, capacity, cap, perShard);
+		Component forecast = wakePreview != null ? wakePreview : capacityForecast(capacity, cap, perShard);
 		if (forecast != null) {
 			graphics.text(this.font, forecast, 14, FORECAST_Y, MUTED_TEXT, false);
 		}
+	}
+
+	private static Component dormantWakePreview(Player player, int capacity, int cap, int perShard) {
+		if (capacity >= cap) {
+			return null;
+		}
+		int next = Math.min(capacity + Math.max(1, perShard), cap);
+		Set<Integer> activeNow = new HashSet<>(Attunement.activeSlots(player));
+		int newlyAwake = 0;
+		for (int slot : Attunement.activeSlots(player, next)) {
+			if (!activeNow.contains(slot) && Attunement.dormantReason(player, slot).isPresent()) {
+				newlyAwake++;
+			}
+		}
+		if (newlyAwake <= 0) {
+			return null;
+		}
+		return newlyAwake == 1
+			? Component.translatable("screen.attuned.altar.forecast.wakes.one")
+			: Component.translatable("screen.attuned.altar.forecast.wakes.many", newlyAwake);
 	}
 
 	private static Component capacityForecast(int capacity, int cap, int perShard) {
@@ -315,7 +341,8 @@ public class AltarScreen extends AbstractContainerScreen<AltarMenu> {
 		return dormant;
 	}
 
-	private static Component forecastLine(Player player, int active, int dormant) {
+	private static Component forecastLine(Player player, int active, int dormant,
+			AttunementAltarBlock.AltarAffinity memory) {
 		Component line = Component.literal(active + " active / " + dormant + " dormant");
 		Optional<Pact> pact = Pacts.activeOf(player);
 		if (pact.isPresent()) {
@@ -326,7 +353,21 @@ public class AltarScreen extends AbstractContainerScreen<AltarMenu> {
 		if (Apex.affinityOf(player).isPresent()) {
 			return line.copy().append(Component.literal(" / Apex ready"));
 		}
+		if (memory != AttunementAltarBlock.AltarAffinity.NONE) {
+			return line.copy()
+				.append(Component.literal(" / "))
+				.append(Component.translatable("screen.attuned.altar.memory.short", memoryName(memory)));
+		}
 		return line;
+	}
+
+	private static Component memoryName(AttunementAltarBlock.AltarAffinity memory) {
+		return switch (memory) {
+			case NONE -> Component.translatable("screen.attuned.altar.memory.none");
+			case FURY -> Component.translatable("screen.attuned.altar.memory.fury");
+			case BASTION -> Component.translatable("screen.attuned.altar.memory.bastion");
+			case ZEPHYR -> Component.translatable("screen.attuned.altar.memory.zephyr");
+		};
 	}
 
 	private static final class BindButton extends Button {

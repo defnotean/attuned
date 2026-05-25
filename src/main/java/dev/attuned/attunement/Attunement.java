@@ -50,6 +50,14 @@ public final class Attunement {
 		return BudgetResolver.resolve(candidates(player), capacity(player));
 	}
 
+	/**
+	 * Slot indices that would be active if {@code hypotheticalCapacity} were the
+	 * player's current capacity. Used by previews; it does not mutate the player.
+	 */
+	public static List<Integer> activeSlots(Player player, int hypotheticalCapacity) {
+		return BudgetResolver.resolve(candidates(player), hypotheticalCapacity);
+	}
+
 	private static List<BudgetResolver.Candidate<Item>> candidates(Player player) {
 		AttunedInv inv = AttunedAttachments.getInventory(player);
 		List<BudgetResolver.Candidate<Item>> candidates = new ArrayList<>();

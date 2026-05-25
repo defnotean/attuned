@@ -3,10 +3,13 @@ package dev.attuned.content;
 import com.mojang.serialization.MapCodec;
 import dev.attuned.AttunedConfig;
 import dev.attuned.api.focus.Affinity;
+import dev.attuned.api.focus.AffinityColors;
 import dev.attuned.attunement.AttunedAttachments;
 import dev.attuned.attunement.Attunement;
 import dev.attuned.menu.AltarMenuType;
 import dev.attuned.onboarding.Onboarding;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
@@ -14,6 +17,7 @@ import net.minecraft.core.particles.DustParticleOptions;
 import net.minecraft.core.particles.ParticleOptions;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
@@ -72,6 +76,10 @@ public class AttunementAltarBlock extends Block {
 		EnumProperty.create("affinity", AltarAffinity.class);
 
 	public static final MapCodec<AttunementAltarBlock> CODEC = simpleCodec(AttunementAltarBlock::new);
+	private static final double PROXIMITY_PULSE_RADIUS = 5.0;
+	private static final long PROXIMITY_PULSE_COOLDOWN_TICKS = 100L;
+	private static final long PROXIMITY_PULSE_RETENTION_TICKS = PROXIMITY_PULSE_COOLDOWN_TICKS * 4;
+	private static final Map<ProximityPulseKey, Long> PROXIMITY_PULSE_TICKS = new HashMap<>();
 
 	// Mirrors the solid-block monument 3D model element-for-element so the
 	// raytrace hits every visible surface — full 16x1 base slab and top plate,
@@ -288,7 +296,77 @@ public class AttunementAltarBlock extends Block {
 			? ParticleTypes.ENCHANT
 			: new DustParticleOptions(affinityColor(affinity), 1.0F);
 		level.addParticle(particle, x, y, z, 0.0, 0.03, 0.0);
+		tryProximityPulse(level, pos, random);
 	}
+
+	private static void tryProximityPulse(Level level, BlockPos pos, RandomSource random) {
+		long now = level.getGameTime();
+		ProximityPulseKey key = new ProximityPulseKey(level.dimension(), pos.asLong());
+		pruneProximityPulseCooldowns(now);
+		if (proximityPulseOnCooldown(key, now)) {
+			return;
+		}
+		Player player = nearbyActiveFocusPlayer(level, pos);
+		if (player == null) {
+			return;
+		}
+		PROXIMITY_PULSE_TICKS.put(key, now);
+		spawnProximityPulse(level, pos, random, proximityPulseParticle(player));
+	}
+
+	private static boolean proximityPulseOnCooldown(ProximityPulseKey key, long now) {
+		Long lastPulse = PROXIMITY_PULSE_TICKS.get(key);
+		return lastPulse != null
+			&& now >= lastPulse
+			&& now - lastPulse < PROXIMITY_PULSE_COOLDOWN_TICKS;
+	}
+
+	private static void pruneProximityPulseCooldowns(long now) {
+		PROXIMITY_PULSE_TICKS.entrySet().removeIf(entry ->
+			now < entry.getValue() || now - entry.getValue() > PROXIMITY_PULSE_RETENTION_TICKS);
+	}
+
+	private static Player nearbyActiveFocusPlayer(Level level, BlockPos pos) {
+		double x = pos.getX() + 0.5;
+		double y = pos.getY() + 0.5;
+		double z = pos.getZ() + 0.5;
+		double radiusSqr = PROXIMITY_PULSE_RADIUS * PROXIMITY_PULSE_RADIUS;
+		for (Player player : level.players()) {
+			if (player.isLocalPlayer()
+					&& player.distanceToSqr(x, y, z) <= radiusSqr
+					&& !Attunement.activeSlots(player).isEmpty()) {
+				return player;
+			}
+		}
+		return null;
+	}
+
+	private static void spawnProximityPulse(Level level, BlockPos pos, RandomSource random,
+			ParticleOptions particle) {
+		double centerX = pos.getX() + 0.5;
+		double y = pos.getY() + 1.1;
+		double centerZ = pos.getZ() + 0.5;
+		double start = random.nextDouble() * Math.PI * 2.0;
+		for (int i = 0; i < 10; i++) {
+			double angle = start + (Math.PI * 2.0 * i / 10.0);
+			double radius = 0.58 + random.nextDouble() * 0.08;
+			level.addParticle(particle,
+				centerX + Math.cos(angle) * radius,
+				y + (random.nextDouble() - 0.5) * 0.08,
+				centerZ + Math.sin(angle) * radius,
+				0.0, 0.012, 0.0);
+		}
+		level.addParticle(ParticleTypes.ENCHANT, centerX, y + 0.12, centerZ, 0.0, 0.02, 0.0);
+	}
+
+	private static ParticleOptions proximityPulseParticle(Player player) {
+		int rgb = AffinityColors.argbOf(
+			Attunement.committedAffinity(player),
+			Attunement.isDiscord(player)) & 0x00FFFFFF;
+		return new DustParticleOptions(rgb, 1.0F);
+	}
+
+	private record ProximityPulseKey(ResourceKey<Level> dimension, long pos) {}
 
 	private static AltarAffinity altarAffinityOf(Optional<Affinity> affinity) {
 		if (affinity.isEmpty()) {
