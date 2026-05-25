@@ -145,6 +145,9 @@
 	"journal.attuned.page8": "Shards and Altars\n\nFour Shard Fragments craft into one Attunement Shard.\n\nPlace a shard in the Altar and press Bind.",
 	"journal.attuned.page9": "The Unseen\n\nThese Foci favor quiet movement, smoke, veils, and ambush openings.\n\nThey are a faction, not a fourth affinity.",
 	"journal.attuned.page10": "Finding Foci\n\nAttuned adds Foci and shard fragments to vanilla structure loot.\n\nLootr per-player chests can roll the same tables.",
+	"journal.attuned.page11": "First Builds\n\nAt capacity 4, keep it plain.\n\nSwift and Leap make a travel kit. Harvest and Nightgaze make a calm work kit. Vital can stand alone.",
+	"journal.attuned.page12": "Capacity 6\n\nTry Iron and Emberward for a Bastion guard.\n\nEdge and Frenzy favor Fury raids.\n\nSwift, Leap, and Softstep suit Zephyr roads.",
+	"journal.attuned.page13": "Adjusting\n\nIf a Focus sleeps, move it to a higher slot or lower the cost.\n\nBind shards for more capacity. Neutral Foci are easiest to fit.",
 
 	"item.attuned.stormcall_focus.lore": "The sky lends its voice; you need only run.",
 	"item.attuned.stormcall_focus.lore2": "Thunder follows where haste leads.",

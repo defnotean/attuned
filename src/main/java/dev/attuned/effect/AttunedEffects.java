@@ -1,6 +1,7 @@
 package dev.attuned.effect;
 
 import dev.attuned.Attuned;
+import dev.attuned.AttunedAdvancements;
 import dev.attuned.AttunedPlayerCleanup;
 import dev.attuned.AttunedRegistries;
 import dev.attuned.api.focus.Affinity;
@@ -104,6 +105,15 @@ public final class AttunedEffects {
 			nextState.put(slot, inv.get(slot));
 		}
 		Map<Integer, BudgetResolver.DormantReason> dormantReasons = Attunement.dormantReasons(player);
+		if (!currentActive.isEmpty()) {
+			AttunedAdvancements.award(player, "attunement/first_focus");
+		}
+		if (!dormantReasons.isEmpty()) {
+			AttunedAdvancements.award(player, "attunement/first_dormant_focus");
+		}
+		if (Attunement.isDiscord(player)) {
+			AttunedAdvancements.award(player, "attunement/first_discord");
+		}
 		announceNewDormantSlots(player, dormantReasons, wasTracked);
 
 		boolean anyActivated = false;

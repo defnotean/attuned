@@ -37,16 +37,28 @@ public final class AttunementReadout {
 			.withStyle(rankColor(used));
 	}
 
-	/** Lines for the Focus-panel hover tooltip: title, budget, stance, and Apex. */
+	/** Lines for the Focus-panel hover tooltip: title, budget, slot state, stance, and Apex. */
 	public static List<Component> tooltip(Player player) {
+		int active = Attunement.activeSlots(player).size();
 		int used = Attunement.used(player);
 		int capacity = Attunement.capacity(player);
+		int remaining = Math.max(0, capacity - used);
+		int dormant = Attunement.dormantReasons(player).size();
 
 		List<Component> lines = new ArrayList<>();
 		lines.add(title(player).withStyle(ChatFormatting.BOLD));
 		lines.add(Component.empty());
-		lines.add(Component.literal("Attunement: ").withStyle(ChatFormatting.GRAY)
+		lines.add(Component.literal("Budget: ").withStyle(ChatFormatting.GRAY)
 			.append(Component.literal(used + " / " + capacity).withStyle(ChatFormatting.AQUA)));
+		lines.add(Component.literal("Remaining: ").withStyle(ChatFormatting.GRAY)
+			.append(Component.literal(Integer.toString(remaining))
+				.withStyle(remaining > 0 ? ChatFormatting.GREEN : ChatFormatting.DARK_GRAY)));
+		lines.add(Component.literal("Active: ").withStyle(ChatFormatting.GRAY)
+			.append(Component.literal(Integer.toString(active))
+				.withStyle(active > 0 ? ChatFormatting.GREEN : ChatFormatting.DARK_GRAY))
+			.append(Component.literal("  Dormant: ").withStyle(ChatFormatting.GRAY))
+			.append(Component.literal(Integer.toString(dormant))
+				.withStyle(dormant > 0 ? ChatFormatting.YELLOW : ChatFormatting.DARK_GRAY)));
 
 		if (Attunement.isDiscord(player)) {
 			lines.add(Component.literal("Stance: ").withStyle(ChatFormatting.GRAY)
