@@ -613,6 +613,19 @@ Implementation details:
   - Size: 16x16 pixels.
   - Style: Minecraft-readable pixel art matching the existing Attuned Focus
     icons.
+  - Aesthetic match is required. Before finalizing, compare it beside several
+    shipped Focus icons such as `swift_focus.png`, `leap_focus.png`,
+    `drift_focus.png`, `stormcall_focus.png`, and `softstep_focus.png`.
+  - It should share the existing Focus asset language:
+    - compact centered object
+    - readable dark outline
+    - limited high-contrast palette
+    - hand-painted pixel highlights
+    - vanilla-friendly 16x16 proportions
+    - no smooth gradients, anti-aliased illustration look, or high-resolution
+      icon style
+  - The icon must not stand out as a different asset pack when viewed in the
+    Attuned creative tab next to the other Foci.
   - Visual brief: a small wind-charged riding spur or bridle charm, with Zephyr
     cyan/white motion streaks and a metallic silver/gold body.
   - Keep the silhouette readable at inventory scale.
@@ -621,6 +634,8 @@ Implementation details:
     animated texture metadata pattern as the existing Foci.
   - After generating the asset, inspect it in-game in the inventory and creative
     tab; do not rely only on the raw PNG.
+  - If the generated asset looks too modern, too smooth, too detailed, too
+    bright, or off-palette beside the existing Foci, revise it before shipping.
   - If content contract tests are expanded first, make sure they explicitly
     require this texture path to exist.
 - [ ] Track the boosted vehicle per player so the modifier can be removed when:
