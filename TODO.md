@@ -30,6 +30,11 @@ make every feature useful without becoming mandatory.
 - [ ] Phase 3: Expand content contract tests before adding more Foci.
 - [ ] Phase 4: Add a short "first builds" section to the Attunement Journal.
 - [ ] Phase 5: Add two to four vanilla-feeling utility Foci.
+- [ ] Phase 6: Implement world-integration loot expansion while keeping every
+  Focus globally eligible.
+- [ ] Phase 7: Add lightweight milestone advancements.
+- [ ] Phase 8: Add altar memory, shard forecasts, and cosmetic ritual polish.
+- [ ] Phase 9: Add Pact previews and UI clarity improvements.
 
 ## Phase 1 - Altar Readability And Capacity Preview
 
@@ -84,6 +89,11 @@ the shard-binding outcome obvious before the player presses Bind.
   - Ready: `Bind: 8 -> 10 / 20 (3 shards)`
   - Capacity full: `Capacity full (20).`
   - If there is only one shard, use `1 shard`; otherwise use `%s shards`.
+- [ ] Add a cap forecast when useful.
+  - If capacity is not full, show remaining capacity to cap somewhere compact:
+    `6 capacity to cap` or `3 shards to cap`.
+  - Prefer one short line, not a paragraph.
+  - Do not show this if it would collide with the ready-bind preview.
 - [ ] Use `this.menu.capacityPerShard()` and `this.menu.capacityCap()` for the
   preview. Do not hard-code the default `+2` or cap `20`.
 - [ ] In `extractLabels`, compute:
@@ -97,6 +107,8 @@ the shard-binding outcome obvious before the player presses Bind.
   - `screen.attuned.altar.hint.cap`: `Capacity full (%s).`
   - `screen.attuned.altar.hint.ready.one`: `Bind: %s -> %s / %s (1 shard).`
   - `screen.attuned.altar.hint.ready.many`: `Bind: %s -> %s / %s (%s shards).`
+  - `screen.attuned.altar.forecast.capacity_left`: `%s capacity to cap.`
+  - `screen.attuned.altar.forecast.shards_left`: `%s shard(s) to cap.`
 - [ ] Keep all slot coordinates unchanged:
   - `AltarMenu.INPUT_SLOT_X`
   - `AltarMenu.INPUT_SLOT_Y`
@@ -583,28 +595,144 @@ Implementation details:
   - Compass-style recovery utility for last death, bed, or bound altar.
   - Compare against Beacon Focus before implementing so the two do not overlap.
 
-## Phase 6 - Loot And Balance Config
+## Phase 6 - World Integration And Loot Balance
 
 ### Goal
 
-Make loot progression tunable without changing the default feel.
+Make Foci and shard fragments feel more naturally woven into vanilla exploration
+without turning any biome, structure, or activity into the only correct source.
+Every shipped Focus should remain possible anywhere Attuned Focus loot can roll.
 
 ### Files
 
 - `src/main/java/dev/attuned/AttunedConfig.java`
 - `src/main/java/dev/attuned/content/AttunedLoot.java`
 - `docs/reference.md`
+- `README.md` if the public loot description changes
+- `src/test/java/dev/attuned/content/AttunedLootCompatibilityTest.java`
 - tests if config parsing or loot weights become more complex
 
-### Implementation Steps
+### Current Loot Model To Preserve
+
+- `AttunedLoot` injects one Focus pool and one shard-fragment pool into targeted
+  vanilla loot tables.
+- Default Focus chances:
+  - common: 17.5%
+  - rich: 25%
+  - treasure: 45%
+- Default shard-fragment chances are double the Focus chance.
+- Each Focus receives a positive weight in every Focus pool.
+- Theme weights bias results but never exclude off-theme Foci.
+
+### Refactor Before Adding More Tables
+
+- [ ] Rename comments and tests that imply all targets are chest-only.
+  - Current compatibility test requires `table.getPath().startsWith("chests/")`.
+  - After adding fishing/archaeology targets, update the assertion to allow
+    approved vanilla target families instead of only chest paths.
+- [ ] Keep the `minecraft` namespace requirement.
+- [ ] Replace or supplement `chest(String name)` with helpers:
+
+```java
+private static Identifier chest(String name) {
+	return vanilla("chests/" + name);
+}
+
+private static Identifier vanilla(String path) {
+	return Identifier.fromNamespaceAndPath("minecraft", path);
+}
+```
+
+- [ ] Add comments that distinguish:
+  - vanilla containers, compatible with Lootr-style per-player table resolution
+  - vanilla non-container loot, such as fishing or archaeology
+- [ ] Update `docs/reference.md` so it no longer says rewards are only found in
+  structure chests after this phase.
+
+### World Integration Targets
+
+- [ ] Add fishing treasure integration.
+  - Verify the exact table id in the target Minecraft/Fabric mappings before
+    coding. Likely family: `minecraft:gameplay/fishing/treasure`.
+  - Recommended tier: `COMMON`.
+  - Recommended theme: neutral.
+  - Recommended fragment chance: enabled through the same fragment pool, but
+    monitor pacing because fishing can be repeated indefinitely.
+  - If fishing makes shard farming too easy, add a config multiplier for
+    non-structure sources.
+
+- [ ] Add archaeology integration if the target Minecraft version has stable
+  archaeology loot tables.
+  - Verify exact ids before coding.
+  - Candidate families to check:
+    - desert pyramid archaeology
+    - desert well archaeology
+    - trail ruins archaeology
+    - ocean ruin archaeology
+  - Recommended tier: `COMMON` or a new very-low tier if repeated brushing feels
+    too generous.
+  - Recommended theme:
+    - desert sources: neutral or Fury
+    - ocean sources: Zephyr
+    - ruins: neutral or Unseen
+  - Keep every Focus eligible in each table.
+
+- [ ] Add trial/challenge loot if available in this version.
+  - Verify exact table ids for trial chamber containers, vaults, ominous vaults,
+    or reward tables before coding.
+  - Recommended tier:
+    - regular trial rewards: `RICH`
+    - ominous/high-risk rewards: `TREASURE`
+  - Recommended theme: mixed or neutral unless the structure itself strongly
+    suggests an affinity.
+
+- [ ] Add stronger structure flavor without exclusivity.
+  - Mineshafts: keep or strengthen Unseen/utility bias.
+  - Villages: neutral/survival bias through toolsmith, armorer, weaponsmith,
+    and temple tables.
+  - Nether fortress: Fury bias.
+  - Bastions and ancient cities: Bastion bias.
+  - Shipwrecks, buried treasure, and end cities: Zephyr bias.
+  - Desert pyramid and ruined portal: Unseen or mixed mystery bias.
+
+### Implementation Steps - Table Additions
+
+- [ ] Expand `AttunedLoot.TARGETS` with the new verified table ids.
+- [ ] If non-container sources need gentler rates, add a new tier:
+
+```java
+LOW(0.35F)
+```
+
+  - Use it for fishing or archaeology if repeated access is too strong.
+- [ ] Keep `Drop` as the single target metadata record unless more detail is
+  truly needed.
+- [ ] If a source should not roll shard fragments, do not special-case that in
+  an ad hoc way. Add a field to `Drop`, for example:
+
+```java
+record Drop(Tier tier, Affinity theme, boolean unseenTheme, boolean fragments) {}
+```
+
+  - Default existing targets to `fragments = true`.
+  - Only turn it off after playtesting shows a source is too farmable.
+- [ ] Preserve the invariant tested by `AttunedLootCompatibilityTest`: every
+  shipped Focus has positive weight in every target.
+
+### Balance Config Steps
 
 - [ ] Preserve `focus_loot_chance` as the base default for compatibility.
 - [ ] Add optional tier multipliers:
   - `common_focus_loot_multiplier`, default `0.7`
   - `rich_focus_loot_multiplier`, default `1.0`
   - `treasure_focus_loot_multiplier`, default `1.8`
+- [ ] If `LOW` is added, add:
+  - `low_focus_loot_multiplier`, default `0.35`
 - [ ] Add optional fragment multiplier:
   - `shard_fragment_loot_multiplier`, default `2.0`
+- [ ] Consider a separate multiplier for repeatable non-structure loot:
+  - `repeatable_loot_multiplier`, default `1.0`
+  - Apply only if fishing/archaeology/trials make progression too fast in tests.
 - [ ] In `AttunedLoot`, replace hard-coded enum multipliers only after config
   values exist.
 - [ ] Clamp all final chances to `[0.0, 1.0]`.
@@ -618,6 +746,9 @@ Make loot progression tunable without changing the default feel.
   - treasure Focus: 45%
   - fragments: double each Focus chance
 - [ ] Malformed config still falls back safely, matching current behavior.
+- [ ] New non-chest targets are verified in-game or through generated loot table
+  inspection before release.
+- [ ] Lootr remains optional. Do not add a direct Lootr dependency.
 
 ## Phase 7 - Advancement Hooks
 
@@ -662,28 +793,333 @@ Reward players for discovering the system without adding quests.
 
 ### Goal
 
-Make the altar feel alive without tying power progression to decorative block
-placement.
+Make the altar feel like the center of the attunement loop without tying power
+progression to decorative block placement. Altar extras should be readable,
+cosmetic, or informational unless a later design pass explicitly approves
+mechanical power.
 
-### Cosmetic Hooks
+### Files
 
-- [ ] Nearby candles and amethyst clusters may alter particles/sound only.
-- [ ] Committed affinity may tint particles more strongly.
-- [ ] Decorative blocks must not increase capacity, reduce cost, or change loot.
+- `src/main/java/dev/attuned/content/AttunementAltarBlock.java`
+- `src/main/java/dev/attuned/content/AltarAnimations.java`
+- `src/client/java/dev/attuned/client/screen/AltarScreen.java`
+- `src/main/java/dev/attuned/menu/AltarMenu.java` only if more synced data is
+  needed
+- `src/main/resources/assets/attuned/lang/en_us.json`
+- Potentially a new block entity class only for persistent altar memory
 
-### Implementation Path
+### Memory Altar
 
-- [ ] Keep this in `AttunementAltarBlock` or `AltarAnimations`.
-- [ ] For passive ambience, prefer `animateTick`.
-- [ ] For bind-time flourish, use `AltarAnimations.begin(...)`.
-- [ ] Scan only a small radius, such as 3 blocks, and only occasionally.
-- [ ] Avoid expensive per-tick world scans on the server.
+- [ ] Decide whether altar memory must persist.
+  - If memory only means "the altar glows with the last binder's affinity," this
+    already exists through the `AFFINITY` blockstate. Do not add storage.
+  - If memory must remember the last player's name/UUID across world reloads,
+    add a block entity. Do not store this in a global map.
+- [ ] Lightweight version, preferred first:
+  - Treat the existing `AFFINITY` blockstate as the altar's memory.
+  - Add GUI/status copy that says what the altar last remembers:
+    - `Memory: Fury`
+    - `Memory: Bastion`
+    - `Memory: Zephyr`
+    - `Memory: Unbound`
+  - Pull this from the altar blockstate through the menu only if the GUI needs
+    it. Otherwise keep it as world visual state only.
+- [ ] Persistent player-name version, later if still desired:
+  - Add `AttunementAltarBlockEntity`.
+  - Store `lastBinderUuid` and `lastBinderName`.
+  - Register a block entity type in `AttunedContent`.
+  - Make `AttunementAltarBlock` implement the block-entity provider pattern.
+  - Update `bindShard` to write last binder data when a shard is bound.
+  - Sync minimal display data to the client if the GUI shows the name.
+  - Keep saved NBT small and optional. Broken/missing data should not block
+    shard binding.
+
+### Affinity Chime
+
+- [ ] In `AttunementAltarBlock.bindShard`, vary the bind sound pitch by the
+  player's committed affinity.
+  - None/Discord: keep current neutral chime.
+  - Fury: slightly lower, sharper pitch.
+  - Bastion: lower, steadier pitch.
+  - Zephyr: slightly higher pitch.
+- [ ] Keep vanilla sounds. Prefer `AMETHYST_BLOCK_CHIME`, `NOTE_BLOCK_CHIME`,
+  or other existing soft sounds.
+- [ ] Do not add a loud or repeated sound loop.
+- [ ] Validate binding several shards in a row does not become annoying.
+
+### Candle Ring Cosmetic
+
+- [ ] Nearby candles should alter particles/sound only.
+- [ ] Scan within radius 3 of the altar.
+- [ ] Count lit candles, not unlit candles.
+- [ ] Do not scan every server tick.
+  - For passive client ambience, use `animateTick`.
+  - For bind-time flourish, scan once inside `bindShard` or
+    `AltarAnimations.begin`.
+- [ ] Suggested behavior:
+  - 1-3 lit candles: add a few extra warm particles.
+  - 4+ lit candles: add a slightly fuller ring during binding.
+  - Candle color can be ignored at first.
+- [ ] Do not let candles increase capacity, reduce cost, speed cooldowns, or
+  change loot.
+
+### Amethyst Cluster Cosmetic
+
+- [ ] Nearby amethyst clusters may add sparkle particles or a slightly brighter
+  bind pulse.
+- [ ] Scan radius 3.
+- [ ] Include budding amethyst or clusters only if mappings are straightforward.
+- [ ] Keep the effect visual/audio only.
+- [ ] If both candles and amethyst are nearby, combine them gently rather than
+  stacking into visual noise.
+
+### Attuned Player Proximity Pulse
+
+- [ ] When a player with at least one active Focus walks near an altar, the altar
+  may emit one quiet particle pulse.
+- [ ] Implementation path:
+  - Prefer client-side `animateTick` if the pulse can be inferred locally.
+  - If player state is required server-side, use a low-frequency server tick
+    helper rather than scanning every altar every tick.
+- [ ] Recommended behavior:
+  - radius 5 blocks
+  - cooldown at least 80 ticks per altar position
+  - particle color follows the player's committed affinity, Discord, or neutral
+  - no sound unless testing shows the visual is too subtle
+- [ ] This must be ambience only. It should not reveal hidden players, change
+  capacity, or activate Foci.
+
+### Shard Forecast
+
+- [ ] Extend the Phase 1 altar preview with one extra compact forecast:
+  - `2 shards to cap`
+  - `6 capacity remaining`
+- [ ] Use `capacityPerShard` and `capacityCap`.
+- [ ] Rounding rule:
+  - `shardsToCap = ceil((cap - capacity) / (double) capacityPerShard)`
+  - if capacity is already full, show `Capacity full`.
+- [ ] Do not show both a long ready-bind line and a long forecast line if they
+  compete for space. Prefer the ready-bind line when a shard is inserted.
+
+### Dormant Preview
+
+- [ ] When a shard is inserted, preview whether binding it would wake dormant
+  Foci.
+- [ ] Implementation path:
+  - Add an overload or helper in `Attunement` that can resolve active slots with
+    a hypothetical capacity:
+
+```java
+public static List<Integer> activeSlots(Player player, int hypotheticalCapacity)
+```
+
+  - Current active: `Attunement.activeSlots(player)`
+  - Future active: `Attunement.activeSlots(player, nextCapacity)`
+  - Newly awake count: future active slots minus current active slots.
+- [ ] GUI copy:
+  - `Binding wakes 1 dormant Focus.`
+  - `Binding wakes %s dormant Foci.`
+  - If none wake: omit this line or keep the normal forecast.
+- [ ] Do not promise that a specific Focus wakes unless the UI has enough room
+  and can show the item name without overlap.
+- [ ] Add tests around the hypothetical-capacity resolver if this helper is
+  added.
 
 ### Altar Status Feedback
 
 - [ ] If adding empty-hand status text, keep it short:
   - `Capacity 8 / 20. 3 active, 1 dormant. Stance: Bastion.`
 - [ ] Do not replace the GUI. The GUI remains the main binding surface.
+- [ ] Best implementation:
+  - Empty hand right-click still opens the GUI as it does now.
+  - Put status text in the GUI rather than chat to avoid a noisy interaction.
+  - If chat status is added later, gate it behind crouch-right-click so normal
+    use does not spam messages.
+
+### Altar Recall Journal Page
+
+- [ ] Add a journal page explaining:
+  - Altars bind shards.
+  - Altars do not store items after the GUI closes.
+  - The altar glow remembers the last bound affinity.
+  - Decorative candles/amethyst are cosmetic if implemented.
+- [ ] Files:
+  - `AttunementJournalItem.java`
+  - `en_us.json`
+- [ ] Keep it short enough for one vanilla book page.
+
+### Validation
+
+- [ ] Bind a shard with no decorative blocks nearby.
+- [ ] Bind a shard with lit candles nearby.
+- [ ] Bind a shard with unlit candles nearby.
+- [ ] Bind a shard with amethyst nearby.
+- [ ] Confirm decorations do not affect capacity, cost, loot, cooldown, or
+  active Focus resolution.
+- [ ] Confirm altar blockstate affinity still updates correctly after binding
+  with no committed affinity, each committed affinity, and Discord.
+
+## Phase 9 - Pact Preview And UI Clarity
+
+### Goal
+
+Make the player understand what their build is doing now and what one small
+change would unlock next. The UI should clarify, not tutor through paragraphs.
+
+### Files
+
+- `src/client/java/dev/attuned/client/AttunementReadout.java`
+- `src/client/java/dev/attuned/client/AttunedTooltips.java`
+- `src/client/java/dev/attuned/client/FocusPanel.java` only for visual cues
+- `src/client/java/dev/attuned/client/hud/CombatHud.java` if Pact/Apex HUD cues
+  need adjustment
+- `src/main/java/dev/attuned/pacts/Pacts.java`
+- `src/main/resources/assets/attuned/lang/en_us.json`
+- `src/main/resources/assets/attuned/textures/gui/*.png` only if art is needed
+
+### Focus Panel Tooltip Clarity
+
+- [ ] Expand `AttunementReadout.tooltip(player)` to show compact build facts:
+  - title
+  - `Budget: used / capacity`
+  - `Remaining: capacity - used`
+  - `Active: count`
+  - `Dormant: count`
+  - stance or affinity
+  - Pact status if active or close
+  - Apex status if unlocked/ready
+- [ ] Suggested layout:
+
+```text
+Bound Adept
+
+Budget: 8 / 10
+Remaining: 2
+Active: 3
+Dormant: 1
+Affinity: Bastion
+Pact: Stoneheart
+```
+
+- [ ] If dormant count is greater than zero, add one short hint:
+  - `Hover a dormant Focus for details.`
+- [ ] Do not add individual Focus names to the panel tooltip. Item tooltips own
+  per-slot details.
+
+### Equipped Focus Tooltip Clarity
+
+- [ ] In `AttunedTooltips`, when the hovered stack is one of the player's Focus
+  slots, add:
+  - `Equipped: Slot %s`
+  - `Status: Active`
+  - or `Status: Dormant - <reason>`
+- [ ] Slot numbers should be player-facing 1-6, not zero-based.
+- [ ] If the stack is not equipped in a Focus slot, do not show equipped/status
+  lines.
+- [ ] Reuse the Phase 2 dormant reason helper.
+- [ ] Keep metadata order consistent:
+  - affinity
+  - faction
+  - cost
+  - unique
+  - equipped/status
+  - dormant reason if applicable
+- [ ] Preserve lore and effect lines.
+
+### Capacity Remaining Line
+
+- [ ] Add a `Remaining` line anywhere budget is shown as a summary:
+  - Focus panel tooltip
+  - optional altar readout
+  - `/attuned status` only if command output needs parity
+- [ ] Compute as `Math.max(0, Attunement.capacity(player) - Attunement.used(player))`.
+- [ ] Do not call this "free slots"; it is remaining budget, not slot count.
+
+### Pact Preview
+
+- [ ] Add a preview helper, preferably in `Pacts`.
+- [ ] Goal: tell the player when they are one active matching Focus away from a
+  Pact.
+- [ ] Existing rule to verify before coding:
+  - Pacts wake when the player has enough matching active Foci/pattern for that
+    affinity.
+  - Read `Pacts.activeOf(player)` and the existing activation logic before
+    adding preview code.
+- [ ] Suggested helper:
+
+```java
+public static Optional<Component> previewOf(Player player)
+```
+
+  - Return empty if a Pact is already active.
+  - Return empty if player is in Discord.
+  - Count active affinity-bearing Foci by affinity.
+  - If exactly one more matching Focus would wake a Pact, return a short line:
+    `1 more Bastion Focus can awaken Stoneheart.`
+- [ ] Keep preview conservative.
+  - If the rules are more complex than "three matching active Foci," only show
+    preview when the condition is certain.
+  - Do not overpromise if capacity would prevent the next Focus from activating.
+- [ ] Add this preview to `AttunementReadout.tooltip(player)`, not as persistent
+  HUD text.
+- [ ] Possible translations:
+  - `screen.attuned.readout.pact_preview.bastion`
+  - `screen.attuned.readout.pact_preview.fury`
+  - `screen.attuned.readout.pact_preview.zephyr`
+
+### Soft Pact Feedback
+
+- [ ] Review current Pact awaken/fade messages in `Pacts.java`.
+- [ ] Keep one clean moment when a Pact awakens:
+  - one short chat/system message
+  - one sound
+  - one small particle burst
+- [ ] Avoid repeated reminders every tick or every combat event.
+- [ ] If adding particles:
+  - use affinity color
+  - emit around the player once
+  - keep count low enough for servers
+- [ ] Confirm Pact fade remains understandable but not noisy.
+
+### Discord Identity
+
+- [ ] Add a journal page explaining when Discord is useful.
+  - It deals more damage and takes more damage.
+  - It is a risky stance, not a mistake state.
+  - It can be useful for short fights or aggressive builds.
+- [ ] Add one tooltip line in `AttunementReadout.tooltip(player)` when Discord:
+  - `Discord: higher damage dealt and taken.`
+- [ ] Keep Discord visually distinct through existing magenta/gem language.
+- [ ] Do not punish Discord beyond existing damage tradeoff unless a balance
+  pass proves it is too strong.
+
+### Combat HUD Clarity
+
+- [ ] Review `CombatHud` after Pact/Apex preview work.
+- [ ] HUD should answer only immediate combat questions:
+  - my stance
+  - target stance
+  - resonance/Apex readiness
+- [ ] Do not add long Pact preview text to the combat HUD.
+- [ ] If a Pact icon is added later, use a tiny symbol/gem-style cue with a
+  hover tooltip elsewhere, not readable prose in the HUD.
+
+### Validation
+
+- [ ] Hover Focus panel with:
+  - no active Foci
+  - active neutral Foci
+  - one committed affinity
+  - Discord
+  - one dormant Focus
+  - active Pact
+  - one Focus away from Pact
+  - Apex unlocked but dormant
+  - Apex firing
+- [ ] Hover equipped Focus stacks in every slot and confirm slot number/status.
+- [ ] Confirm non-equipped Attuned items do not claim they are equipped.
+- [ ] Confirm Pact preview disappears once the Pact is active.
+- [ ] Confirm Discord preview/journal text does not imply Discord is always bad.
 
 ## Manual QA Checklist
 
@@ -698,7 +1134,13 @@ placement.
   only when the recipe book is open.
 - [ ] Open creative survival tab and verify Focus panel placement.
 - [ ] Loot a targeted vanilla structure chest and verify Foci/fragments can roll.
+- [ ] If Phase 6 is implemented, verify fishing treasure, archaeology, and
+  trial/challenge targets only after their exact vanilla table ids are confirmed.
 - [ ] Test with Lootr if available.
+- [ ] Hover the Focus panel and equipped Foci to confirm UI clarity lines.
+- [ ] Check Pact preview with a build that is one Focus away from a Pact.
+- [ ] Bind at an altar with candles/amethyst nearby and confirm cosmetic-only
+  behavior.
 
 ## Release Checklist
 
