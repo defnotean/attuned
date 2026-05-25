@@ -270,6 +270,7 @@ class FocusDataConsistencyTest {
 		assertNotNull(image, "Focus texture should be a readable PNG: " + texture);
 		assertEquals(64, image.getWidth(), "Focus texture width should stay standardized: " + texture);
 		assertEquals(512, image.getHeight(), "Focus texture should contain eight 64px frames: " + texture);
+		assertAnimatedFramesDiffer(image, texture);
 
 		Path metadata = ITEM_TEXTURE_DIR.resolve(name + ".png.mcmeta");
 		JsonObject animation = JsonParser.parseString(Files.readString(metadata, StandardCharsets.UTF_8))
@@ -280,6 +281,33 @@ class FocusDataConsistencyTest {
 			"Focus texture animation frametime should stay consistent: " + metadata);
 		assertTrue(animation.get("interpolate").getAsBoolean(),
 			"Focus texture animation should stay interpolated: " + metadata);
+	}
+
+	private static void assertAnimatedFramesDiffer(BufferedImage image, Path texture) {
+		int changedFrames = 0;
+		for (int frame = 1; frame < 8; frame++) {
+			if (frameDiffersFromFirst(image, frame)) {
+				changedFrames++;
+			}
+		}
+		assertEquals(7, changedFrames,
+			"Focus texture should have visible frame-to-frame animation: " + texture);
+	}
+
+	private static boolean frameDiffersFromFirst(BufferedImage image, int frame) {
+		int changedPixels = 0;
+		int frameY = frame * 64;
+		for (int y = 0; y < 64; y++) {
+			for (int x = 0; x < 64; x++) {
+				if (image.getRGB(x, y) != image.getRGB(x, frameY + y)) {
+					changedPixels++;
+					if (changedPixels >= 16) {
+						return true;
+					}
+				}
+			}
+		}
+		return false;
 	}
 
 	private static void assertLanguageKey(JsonObject lang, String key) {
