@@ -1,0 +1,11 @@
+{
+	"gives": {
+		"id": "attuned:attunement_shard_fragment"
+	},
+	"max_uses": 1,
+	"reputation_discount": 0.05,
+	"wants": {
+		"count": 9,
+		"id": "minecraft:emerald"
+	}
+}

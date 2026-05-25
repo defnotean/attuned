@@ -1,0 +1,7 @@
+{
+	"replace": false,
+	"values": [
+		"attuned:wandering_trader/emerald_attunement_journal",
+		"attuned:wandering_trader/emerald_attunement_shard_fragment"
+	]
+}
