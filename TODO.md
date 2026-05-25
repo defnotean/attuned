@@ -3,6 +3,13 @@
 This list is for the next development pass. Keep the first pass focused on
 player clarity and tuning before adding more systems.
 
+## Recommended Next Pass
+
+- [ ] Fix altar readability and add a capacity preview.
+- [ ] Add dormant Focus reason tooltips.
+- [ ] Add two to four vanilla-feeling utility Foci from the backlog below.
+- [ ] Add a short "first builds" journal page after the new Foci are settled.
+
 ## High Priority
 
 - [ ] Improve Attunement Altar text readability.
@@ -34,6 +41,12 @@ player clarity and tuning before adding more systems.
     and combat examples.
   - Keep the examples tied to actual Focus names and capacity costs so players
     can copy them directly.
+
+- [ ] Add a compact altar preview for the next capacity increase.
+  - Show current capacity, next capacity, cap, and shard count in one readable
+    line or icon-backed row.
+  - Example target state: `Capacity 8 -> 10 / 20` when a shard is inserted.
+  - Avoid crowding the shard slot and Bind button.
 
 ## Balance and Config
 
@@ -71,14 +84,85 @@ player clarity and tuning before adding more systems.
     texture, language name, lore, and effect text.
   - Ensure every behavior id referenced by data is registered in code.
 
+## Vanilla-Esque Expansion Backlog
+
+- [ ] Keep new systems inside vanilla-style guardrails.
+  - Prefer existing Minecraft actions: mining, sleeping, eating, blocking,
+    sneaking, sprinting, bells, campfires, beds, compasses, and weather.
+  - Avoid new ores, currencies, dimensions, or large crafting chains unless a
+    later design pass proves they are necessary.
+  - Keep each Focus narrow: one readable fantasy, one tradeoff, one obvious
+    trigger.
+  - Make additions useful but not mandatory for vanilla survival.
+  - Let the altar stay a ritual/workbench/feedback object, not a quest hub.
+
+- [ ] Prototype a Campfire or Hearth Focus.
+  - Campfire version: while near a lit campfire, natural regeneration or food
+    sustain is slightly better.
+  - Hearth version: after sleeping, gain a short defensive or movement buff
+    based on committed affinity.
+  - Keep the effect gentle so it feels like survival flavor, not a required
+    buff station.
+
+- [ ] Prototype an Anchor or Ward Focus.
+  - Anchor version: while sneaking, blocking, or using a shield, gain knockback
+    resistance.
+  - Ward version: after taking damage, briefly reduce the next hit only.
+  - Best fit: Bastion, defensive, reactive, easy to read.
+
+- [ ] Prototype a Lantern Focus.
+  - In darkness, holding a torch or lantern briefly reveals nearby hostile mobs
+    with a subtle Glowing effect or particles.
+  - Keep range short and avoid wallhack-style behavior.
+  - Best fit: neutral utility or Bastion support.
+
+- [ ] Prototype a Rainstep Focus.
+  - Move slightly faster in rain, shallow water, or waterlogged terrain.
+  - Best fit: Zephyr or neutral mobility.
+  - Keep it situational so it does not replace Swift Focus.
+
+- [ ] Prototype a Cinder Focus.
+  - Melee hits against burning enemies deal slightly more damage.
+  - Best fit: Fury synergy with fire, lava, Flame, Fire Aspect, or Pyresworn.
+  - Avoid adding another always-on raw damage Focus.
+
+- [ ] Prototype a Forager Focus.
+  - Leaves, grass, crops, or berry bushes have a tiny chance to provide extra
+    seeds/food while the Focus is active.
+  - Best fit: neutral exploration and early survival.
+  - Keep output low to avoid replacing farms.
+
+- [ ] Prototype a Tremor Focus.
+  - Mining stone occasionally emits a nearby ore hint through sound or particles.
+  - Do not draw outlines, reveal exact blocks, or behave like x-ray.
+  - Best fit: neutral utility or Bastion earth flavor.
+
+- [ ] Prototype a Waystone-style recovery Focus.
+  - Compass behavior could point toward the last bed, last death location, or a
+    recently bound altar.
+  - Compare against Beacon Focus first so the two do not overlap too much.
+  - Keep recovery useful without trivializing exploration risk.
+
+- [ ] Add altar cosmetic ritual hooks.
+  - Nearby candles, amethyst clusters, or committed affinity could alter
+    particles and sound only.
+  - Avoid tying power progression to decorative block placement.
+
+- [ ] Add altar status feedback.
+  - Empty-hand interaction or GUI text can summarize capacity, active Foci, and
+    stance.
+  - Keep it short enough for a chat line or compact panel row.
+
+- [ ] Add advancement hooks for core milestones.
+  - First Focus equipped.
+  - First dormant Focus.
+  - First Pact.
+  - First Discord build.
+  - First Apex state.
+
 ## Later Ideas
 
 - [ ] Consider optional per-world or per-player discovery tracking.
   - This could support journal entries that unlock after finding a Focus, shard,
     Pact, or Apex state.
   - Keep it optional; do not block core mechanics behind discovery state.
-
-- [ ] Consider a compact altar preview for the next capacity increase.
-  - Show current capacity, next capacity, cap, and shard count in one readable
-    line or icon-backed row.
-  - Avoid crowding the shard slot and Bind button.
