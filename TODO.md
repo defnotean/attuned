@@ -566,6 +566,117 @@ Implementation details:
   - It should not replace Swift Focus in dry terrain.
   - It should feel good during rain, rivers, swamps, and caves with water.
 
+### Priority Focus 5 - Tailwind Focus
+
+Purpose: Zephyr mount mobility. While the player is riding, the mount moves at
+about twice its normal speed. Target examples: happy ghasts, horses, pigs,
+striders, camels, donkeys, mules, and other rideable entities.
+
+Recommended design:
+
+- Name: `tailwind_focus`
+- Cost: `4` or `5`; start at `4` for testing, raise to `5` if 2x mount speed is
+  too strong.
+- Affinity: `zephyr`
+- Unique: `true`
+- Behavior id: `attuned:tailwind`
+- Effect: `Doubles the speed of creatures and vehicles you ride.`
+
+Implementation details:
+
+- [ ] Create `TailwindBehavior`.
+- [ ] Add Focus data at
+  `src/main/resources/data/attuned/attuned/focus/tailwind_focus.json`:
+
+```json
+{
+	"item": "attuned:tailwind_focus",
+	"cost": 4,
+	"unique": true,
+	"affinity": "zephyr",
+	"behavior": "attuned:tailwind"
+}
+```
+
+- [ ] Register item and behavior in `AttunedContent`.
+- [ ] Add item definition, model, texture, mcmeta, and language keys following
+  the shared checklist above.
+- [ ] Suggested lore/effect copy:
+  - Name: `Tailwind Focus`
+  - Lore 1: `A bridle for the wind itself.`
+  - Lore 2: `Every road arrives sooner beneath you.`
+  - Effect: `Doubles the speed of creatures and vehicles you ride.`
+- [ ] Track the boosted vehicle per player so the modifier can be removed when:
+  - the player dismounts
+  - the player switches mounts
+  - the Focus goes dormant
+  - the player disconnects
+  - the mount dies or unloads
+- [ ] Use `AttunedPlayerCleanup.onForget(...)` for per-player tracking maps.
+
+Living mount path, first implementation:
+
+- [ ] In `onTick`, get the player's vehicle:
+  - `Entity vehicle = player.getVehicle();`
+  - if `vehicle == null`, remove any previous boost for that player and return.
+- [ ] Only boost the vehicle the player is actually riding.
+  - Prefer checking the player is the controlling passenger if the mapped API is
+    available.
+  - If the controlling-passenger helper is not available, require
+    `vehicle.hasPassenger(player)` as the fallback.
+- [ ] If `vehicle instanceof LivingEntity living`, apply transient attribute
+  modifiers:
+  - `Attributes.MOVEMENT_SPEED`: amount `1.0`, operation
+    `ADD_MULTIPLIED_BASE`, which targets 2x base ground speed.
+  - Also check for a flying-speed attribute if the mapped API exposes one, so
+    happy ghasts/flying mounts can be covered without velocity hacks.
+- [ ] Use stable modifier ids, for example:
+  - `attuned:tailwind_mount_speed`
+  - `attuned:tailwind_mount_flying_speed`
+- [ ] Before applying to a new vehicle, remove modifiers from the previously
+  tracked vehicle.
+- [ ] In `onDeactivate`, always remove modifiers from the tracked vehicle.
+- [ ] If the vehicle does not have the relevant attribute instance, skip that
+  modifier cleanly.
+
+Generic vehicle path, second implementation:
+
+- [ ] For non-living vehicles such as boats or minecarts, do not blindly multiply
+  velocity every tick with no cap. That can explode physics.
+- [ ] If generic vehicles are supported, implement a cautious horizontal velocity
+  assist:
+  - only while the vehicle has player input or is already moving
+  - multiply horizontal velocity toward a 2x target
+  - clamp the final horizontal speed to a sane maximum per vehicle family
+  - never multiply vertical velocity
+  - never boost falling, launched, or collision-resolving motion
+- [ ] If the generic path is too unstable, ship the first version for living
+  mounts only and make the tooltip say `Doubles the speed of creatures you ride.`
+
+Balance notes:
+
+- [ ] Because the requested target is 2x normal speed, keep the Focus unique.
+- [ ] Test whether cost 4 is fair beside other Zephyr mobility Foci:
+  - Swift cost 2
+  - Leap cost 2
+  - Drift cost 2
+  - Tide cost 3
+  - Stormcall cost 4
+- [ ] Tailwind should be powerful for mounted travel but do nothing on foot.
+- [ ] It should not stack with duplicate Tailwind Foci.
+- [ ] It should not permanently alter a mount after dismounting.
+
+Validation:
+
+- [ ] Test with horse, pig, strider, camel, donkey/mule, and any available happy
+  ghast mount in the target Minecraft version.
+- [ ] Confirm speed returns to normal after dismounting.
+- [ ] Confirm speed returns to normal when the Focus goes dormant.
+- [ ] Confirm switching mounts removes the modifier from the old mount.
+- [ ] Confirm duplicate Tailwind Focus copies do not stack.
+- [ ] Confirm non-living vehicle support is either stable or intentionally not
+  shipped in the first pass.
+
 ### Later Focus Ideas
 
 - [ ] Cinder Focus
