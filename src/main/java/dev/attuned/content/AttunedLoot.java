@@ -35,7 +35,7 @@ public final class AttunedLoot {
 	private AttunedLoot() {}
 
 	/** How rich a structure's Focus drop is — a multiplier on the configured base chance. */
-	private enum Tier {
+	enum Tier {
 		COMMON(0.7F),
 		RICH(1.0F),
 		TREASURE(1.8F);
@@ -48,7 +48,7 @@ public final class AttunedLoot {
 	}
 
 	/** A targeted loot table: how rich it is, which affinity and faction it favours. */
-	private record Drop(Tier tier, Affinity theme, boolean unseenTheme) {}
+	record Drop(Tier tier, Affinity theme, boolean unseenTheme) {}
 
 	// Pool weights: a Focus matching the structure's theme is favoured, neutral Foci
 	// fit anywhere, and off-theme Foci are still possible but rarer.
@@ -101,6 +101,10 @@ public final class AttunedLoot {
 		return Identifier.fromNamespaceAndPath("minecraft", "chests/" + name);
 	}
 
+	static Map<Identifier, Drop> targetDrops() {
+		return TARGETS;
+	}
+
 	/** Registers the loot-table injection. Called from the mod initializer. */
 	public static void init() {
 		LootTableEvents.MODIFY.register((key, tableBuilder, source, registries) -> {
@@ -143,7 +147,13 @@ public final class AttunedLoot {
 	/** The pool weight for a Focus in a structure with the given affinity theme. */
 	private static int weightFor(Item focus, Drop drop, Map<Item, FocusMeta> focusMetadata) {
 		FocusMeta meta = focusMetadata.get(focus);
-		Affinity affinity = meta == null ? null : meta.affinity();
+		return weightForMeta(
+			meta == null ? null : meta.affinity(),
+			meta == null ? null : meta.faction(),
+			drop);
+	}
+
+	static int weightForMeta(Affinity affinity, Identifier faction, Drop drop) {
 		int weight;
 		if (affinity == null) {
 			weight = WEIGHT_NEUTRAL;
@@ -152,7 +162,7 @@ public final class AttunedLoot {
 		} else {
 			weight = WEIGHT_OFF_THEME;
 		}
-		if (drop.unseenTheme() && meta != null && UNSEEN_FACTION.equals(meta.faction())) {
+		if (drop.unseenTheme() && UNSEEN_FACTION.equals(faction)) {
 			weight += WEIGHT_UNSEEN_THEME_BONUS;
 		}
 		return weight;

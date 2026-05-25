@@ -183,9 +183,19 @@ Attuned injects Foci and shard fragments into vanilla structure loot tables in
 works with Lootr-style per-player chests because those mods resolve the same
 loot tables for each player instead of needing custom Attuned chest blocks.
 
+Every shipped Focus is added to every Attuned Focus loot pool with a positive
+weight. Theme weights bias the roll; they never remove a Focus from the pool.
+That means adding a new Focus to `AttunedContent.FOCI` and its definition data
+keeps it findable anywhere Attuned Focus loot can roll, including Lootr
+per-player containers.
+
 The Unseen Foci are weighted a little higher in stealth-flavoured structures
 such as mineshafts, strongholds, outposts, ancient cities, and end cities, but
 they remain possible anywhere Attuned Focus loot can roll.
+
+Lootr stays an optional/suggested dependency in `fabric.mod.json`. Attuned only
+needs Lootr's native behavior for vanilla loot-table containers; a direct Lootr
+API dependency would only be needed if Attuned added custom loot containers.
 
 ## Commands
 
