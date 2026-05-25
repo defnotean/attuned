@@ -1,11 +1,13 @@
 package dev.attuned.content;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -19,6 +21,7 @@ import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
+import javax.imageio.ImageIO;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -87,6 +90,7 @@ class FocusDataConsistencyTest {
 				"Registered Focus should have an item texture asset: " + itemId);
 			assertTrue(Files.isRegularFile(ITEM_TEXTURE_DIR.resolve(name + ".png.mcmeta")),
 				"Registered Focus should have animated item texture metadata: " + itemId);
+			assertAnimatedFocusTexture(name);
 			assertLanguageKey(lang, "item.attuned." + name);
 			assertLanguageKey(lang, "item.attuned." + name + ".lore");
 			assertLanguageKey(lang, "item.attuned." + name + ".lore2");
@@ -258,6 +262,24 @@ class FocusDataConsistencyTest {
 
 	private static JsonObject languageRoot() throws IOException {
 		return JsonParser.parseString(Files.readString(LANG_FILE, StandardCharsets.UTF_8)).getAsJsonObject();
+	}
+
+	private static void assertAnimatedFocusTexture(String name) throws IOException {
+		Path texture = ITEM_TEXTURE_DIR.resolve(name + ".png");
+		BufferedImage image = ImageIO.read(texture.toFile());
+		assertNotNull(image, "Focus texture should be a readable PNG: " + texture);
+		assertEquals(64, image.getWidth(), "Focus texture width should stay standardized: " + texture);
+		assertEquals(512, image.getHeight(), "Focus texture should contain eight 64px frames: " + texture);
+
+		Path metadata = ITEM_TEXTURE_DIR.resolve(name + ".png.mcmeta");
+		JsonObject animation = JsonParser.parseString(Files.readString(metadata, StandardCharsets.UTF_8))
+			.getAsJsonObject()
+			.getAsJsonObject("animation");
+		assertNotNull(animation, "Focus texture metadata should declare animation settings: " + metadata);
+		assertEquals(2, animation.get("frametime").getAsInt(),
+			"Focus texture animation frametime should stay consistent: " + metadata);
+		assertTrue(animation.get("interpolate").getAsBoolean(),
+			"Focus texture animation should stay interpolated: " + metadata);
 	}
 
 	private static void assertLanguageKey(JsonObject lang, String key) {
