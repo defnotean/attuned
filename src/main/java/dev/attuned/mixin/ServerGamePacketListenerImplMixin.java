@@ -49,6 +49,7 @@ public abstract class ServerGamePacketListenerImplMixin {
 			// Not one of our slots — let vanilla handle it.
 			return;
 		}
+		FocusSlot slot = (FocusSlot) menu.getSlot(slotNum);
 		ci.cancel();
 		if (!this.player.hasInfiniteMaterials()) {
 			return;
@@ -57,10 +58,13 @@ public abstract class ServerGamePacketListenerImplMixin {
 		if (!stack.isItemEnabled(this.player.level().enabledFeatures())) {
 			return;
 		}
+		if (!stack.isEmpty() && !slot.mayPlace(stack)) {
+			return;
+		}
 		if (stack.isEmpty() || stack.getCount() <= stack.getMaxStackSize()) {
 			// Mirrors vanilla's own slot-1-to-45 path: write the slot, keep the
 			// remote-slot mirror in step, and flush.
-			menu.getSlot(slotNum).setByPlayer(stack);
+			slot.setByPlayer(stack);
 			menu.setRemoteSlot(slotNum, stack);
 			menu.broadcastChanges();
 		}

@@ -80,11 +80,6 @@ public final class CombatHud {
 	private static final long ZEPHYR_GLYPH  = 0x1F3E7C78FC6C0602L;
 	private static final long DISCORD_GLYPH = 0xC3E77E3C3C7EE7C3L;
 
-	// Apex glyph bitmasks (8x8)
-	private static final long EXECUTE_GLYPH     = 0x3C7EDBFF6C7E2800L; // Skull (Fury Apex)
-	private static final long UNYIELDING_GLYPH  = 0xFFDBDB7E5A3C1818L; // Reinforced shield (Bastion Apex)
-	private static final long UNTOUCHABLE_GLYPH = 0x3078CCC67C3E0602L; // Swirling wind wisp (Zephyr Apex)
-
 	// Apex sprite identifiers — resolved against the GUI sprite atlas at
 	// {@code assets/attuned/textures/gui/sprites/hud/<name>.png}. Routing through
 	// the sprite atlas (same path vanilla heart/hunger icons use) gets us proper
@@ -214,12 +209,10 @@ public final class CombatHud {
 	 */
 	public static void drawGem(GuiGraphicsExtractor graphics, int x, int y, int size,
 			@Nullable Affinity affinity, boolean discord, boolean targeted, boolean atApex) {
-		// Texture-backed gem path. Any committed affinity (player or target) uses
-		// the cut-gem art from the GUI sprite atlas so the combat HUD reads as a
-		// single design language instead of swapping between procedural squares
-		// and textured gems. Discord and neutral keep the procedural bezel +
-		// glyph because there is no painted asset for them yet.
-		if (affinity != null && !discord) {
+		// Texture-backed capstone path. Apex gems use the cut-gem art from the GUI
+		// sprite atlas; ordinary affinity, Discord and neutral states keep the
+		// procedural bezel + glyph so they do not masquerade as capstones.
+		if (atApex && affinity != null && !discord) {
 			Identifier sprite = switch (affinity) {
 				case FURY -> EXECUTE_SPRITE;
 				case BASTION -> UNYIELDING_SPRITE;
@@ -273,12 +266,6 @@ public final class CombatHud {
 		long bits;
 		if (discord) {
 			bits = DISCORD_GLYPH;
-		} else if (atApex && affinity != null) {
-			bits = switch (affinity) {
-				case FURY -> EXECUTE_GLYPH;
-				case BASTION -> UNYIELDING_GLYPH;
-				case ZEPHYR -> UNTOUCHABLE_GLYPH;
-			};
 		} else {
 			bits = glyphFor(affinity);
 		}
