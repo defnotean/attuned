@@ -13,6 +13,7 @@ import dev.attuned.attunement.AttunedInv;
 import dev.attuned.attunement.AttunedAttachments;
 import dev.attuned.attunement.Attunement;
 import dev.attuned.attunement.BudgetResolver;
+import dev.attuned.onboarding.Onboarding;
 import net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.minecraft.core.particles.DustParticleOptions;
@@ -176,6 +177,7 @@ public final class AttunedEffects {
 						.append(AttunedAttachments.getInventory(player).get(slot).getHoverName())
 						.append(Component.literal(". " + dormantChatMessage(entry.getValue()))
 							.withStyle(ChatFormatting.DARK_GRAY)));
+					Onboarding.tryDormantHint(player);
 					break;
 				}
 			}

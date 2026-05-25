@@ -33,6 +33,7 @@ public final class Onboarding {
 	private static final String HINT_FIRST_FRAGMENT = "first_fragment";
 	private static final String HINT_FIRST_ALTAR = "first_altar";
 	private static final String HINT_ALTAR_SIGHT = "altar_sight";
+	private static final String HINT_FIRST_DORMANT = "first_dormant";
 
 	/**
 	 * How often the shard-presence and altar-sight polls run, in server ticks.
@@ -117,6 +118,19 @@ public final class Onboarding {
 	public static void tryAltarSightHint(ServerPlayer player) {
 		fireHint(player, HINT_ALTAR_SIGHT,
 			Component.translatable("onboarding.attuned.altar_sight").withStyle(ChatFormatting.AQUA));
+	}
+
+	/**
+	 * Fires the first-dormant-Focus hint once. A no-op if the player has already
+	 * seen it.
+	 *
+	 * @param player the player to nudge
+	 */
+	public static void tryDormantHint(ServerPlayer player) {
+		fireHint(player, HINT_FIRST_DORMANT,
+			Component.translatable("onboarding.attuned.first_dormant.found").withStyle(ChatFormatting.AQUA)
+				.append(Component.translatable("onboarding.attuned.first_dormant.detail")
+					.withStyle(ChatFormatting.GRAY)));
 	}
 
 	/** Whether the player is carrying at least one Attunement Shard in their main inventory. */

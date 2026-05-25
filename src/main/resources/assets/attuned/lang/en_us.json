@@ -46,7 +46,12 @@
 	"pact.attuned.untethered.name": "Untethered",
 	"pact.attuned.untethered.description": "You hit affinity-bearing foes for fifteen percent more.",
 	"pact.attuned.awakened": "Pact awakened: ",
-	"pact.attuned.fades": "%s fades.",
+	"pact.attuned.fades": "%s fades as your active pattern changes.",
+	"pact.attuned.fades.empty": "%s fades: no active affinity Foci remain.",
+	"pact.attuned.fades.short": "%s fades: not enough active %s Foci.",
+	"pact.attuned.fades.discord": "%s fades: Discord breaks the pattern.",
+	"pact.attuned.fades.affinities": "%s fades: not enough active affinities remain.",
+	"pact.attuned.fades.replaced": "%1$s fades as %2$s takes shape.",
 	"pact.attuned.fades.generic": "your pact",
 	"pact.attuned.first_pact": "A first pact awakens.",
 	"pact.attuned.death.pyresworn": "%1$s was undone by a %2$s.",
@@ -194,5 +199,7 @@
 	"onboarding.attuned.first_fragment.detail": "Collect four, then craft them into a full shard.",
 	"onboarding.attuned.first_altar.bind_here": "Bind shards here ",
 	"onboarding.attuned.first_altar.detail": "to grow your soul's capacity.",
-	"onboarding.attuned.altar_sight": "An Altar waits. Right-click empty-handed to open it, or with a shard to bind directly."
+	"onboarding.attuned.altar_sight": "An Altar waits. Right-click empty-handed to open it, or with a shard to bind directly.",
+	"onboarding.attuned.first_dormant.found": "Dormant Foci stay equipped but inactive. ",
+	"onboarding.attuned.first_dormant.detail": "Move them higher, bind shards, or hover for details."
 }

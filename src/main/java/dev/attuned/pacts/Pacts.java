@@ -30,6 +30,7 @@ import net.minecraft.resources.Identifier;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.damagesource.DamageSource;
@@ -315,7 +316,7 @@ public final class Pacts {
 					// player who reshuffles their Foci hears the old pact fade before
 					// the new one wakes, rather than the old message being swallowed.
 					pactState.put(player.getUUID(), now);
-					announceLost(player, was);
+					announceLost(player, was, now);
 					announceGained(player, now);
 					maybeFanfare(player, now);
 					// Windrunner's step-height modifier follows the affinity: pull
@@ -335,7 +336,7 @@ public final class Pacts {
 					}
 				} else {
 					pactState.remove(player.getUUID());
-					announceLost(player, was);
+					announceLost(player, was, null);
 					if (was == Pact.WINDRUNNER) {
 						removeWindrunnerStepHeight(player);
 					}
@@ -415,8 +416,7 @@ public final class Pacts {
 	}
 
 	private static void announceGained(ServerPlayer player, Pact pact) {
-		((ServerLevel) player.level()).playSound(null, player.blockPosition(),
-			SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, SoundSource.PLAYERS, 0.6F, 1.3F);
+		playPactSound(player, pact, true);
 		player.sendSystemMessage(Component.translatable("pact.attuned.awakened")
 			.withStyle(ChatFormatting.GRAY)
 			.append(pact.displayName().withStyle(pact.chatColor(), ChatFormatting.BOLD))
@@ -425,15 +425,70 @@ public final class Pacts {
 		AttunedAdvancements.award(player, "attunement/pact_" + pact.name().toLowerCase(Locale.ROOT));
 	}
 
-	private static void announceLost(ServerPlayer player, Pact pact) {
-		((ServerLevel) player.level()).playSound(null, player.blockPosition(),
-			SoundEvents.AMETHYST_BLOCK_BREAK, SoundSource.PLAYERS, 0.5F, 0.9F);
+	private static void announceLost(ServerPlayer player, Pact pact, Pact replacement) {
+		if (pact != null) {
+			playPactSound(player, pact, false);
+		}
 		Component name = pact == null
 			? Component.translatable("pact.attuned.fades.generic")
-			: pact.displayName();
-		player.sendSystemMessage(Component.translatable("pact.attuned.fades", name)
+			: pact.displayName().withStyle(pact.chatColor(), ChatFormatting.BOLD);
+		player.sendSystemMessage(fadeMessage(player, pact, replacement, name).copy()
 			.withStyle(ChatFormatting.GRAY));
 	}
+
+	private static Component fadeMessage(ServerPlayer player, Pact pact, Pact replacement, Component name) {
+		if (replacement != null) {
+			return Component.translatable("pact.attuned.fades.replaced", name,
+				replacement.displayName().withStyle(replacement.chatColor(), ChatFormatting.BOLD));
+		}
+		if (pact == null) {
+			return Component.translatable("pact.attuned.fades", name);
+		}
+		EnumMap<Affinity, Integer> counts = activeAffinityCounts(player);
+		if (counts.isEmpty()) {
+			return Component.translatable("pact.attuned.fades.empty", name);
+		}
+		if (pact == Pact.UNTETHERED) {
+			return counts.size() < UNTETHERED_AFFINITY_COUNT
+				? Component.translatable("pact.attuned.fades.affinities", name)
+				: Component.translatable("pact.attuned.fades", name);
+		}
+		if (counts.size() >= 2) {
+			return Component.translatable("pact.attuned.fades.discord", name);
+		}
+		Affinity affinity = pact.affinity().orElse(null);
+		if (affinity != null && counts.getOrDefault(affinity, 0) < SINGLE_AFFINITY_THRESHOLD) {
+			return Component.translatable("pact.attuned.fades.short", name, affinityName(affinity));
+		}
+		return Component.translatable("pact.attuned.fades", name);
+	}
+
+	private static void playPactSound(ServerPlayer player, Pact pact, boolean awakening) {
+		ServerLevel level = (ServerLevel) player.level();
+		PactSound sound = awakening ? awakenSound(pact) : fadeSound(pact);
+		level.playSound(null, player.blockPosition(), sound.event(),
+			SoundSource.PLAYERS, sound.volume(), sound.pitch());
+	}
+
+	private static PactSound awakenSound(Pact pact) {
+		return switch (pact) {
+			case PYRESWORN -> new PactSound(SoundEvents.FLINTANDSTEEL_USE, 0.45F, 1.25F);
+			case STONEHEART -> new PactSound(SoundEvents.TUFF_PLACE, 0.45F, 0.85F);
+			case WINDRUNNER -> new PactSound(SoundEvents.WIND_CHARGE_THROW, 0.35F, 1.55F);
+			case UNTETHERED -> new PactSound(SoundEvents.ENCHANTMENT_TABLE_USE, 0.45F, 1.15F);
+		};
+	}
+
+	private static PactSound fadeSound(Pact pact) {
+		return switch (pact) {
+			case PYRESWORN -> new PactSound(SoundEvents.FIRE_EXTINGUISH, 0.35F, 1.35F);
+			case STONEHEART -> new PactSound(SoundEvents.TUFF_HIT, 0.4F, 0.7F);
+			case WINDRUNNER -> new PactSound(SoundEvents.WOOL_STEP, 0.35F, 1.6F);
+			case UNTETHERED -> new PactSound(SoundEvents.AMETHYST_BLOCK_HIT, 0.4F, 0.8F);
+		};
+	}
+
+	private record PactSound(SoundEvent event, float volume, float pitch) {}
 
 	/**
 	 * If this is the first time the player has woken {@code pact} on this

@@ -18,6 +18,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
+import net.minecraft.tags.BlockTags;
 import net.minecraft.util.RandomSource;
 import net.minecraft.util.StringRepresentable;
 import net.minecraft.world.InteractionHand;
@@ -28,7 +29,10 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.AbstractCandleBlock;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.CandleBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.EnumProperty;
@@ -175,15 +179,18 @@ public class AttunementAltarBlock extends Block {
 		if (!player.getAbilities().instabuild) {
 			stack.shrink(1);
 		}
-		level.setBlock(pos, state.setValue(AFFINITY, altarAffinityOf(Attunement.committedAffinity(player))),
-			Block.UPDATE_CLIENTS);
+		Optional<Affinity> affinity = Attunement.committedAffinity(player);
+		boolean discord = Attunement.isDiscord(player);
+		level.setBlock(pos, state.setValue(AFFINITY, altarAffinityOf(affinity)), Block.UPDATE_CLIENTS);
 
 		ServerLevel server = (ServerLevel) level;
+		AltarAnimations.RitualFlair flair = scanRitualFlair(server, pos);
 		server.sendParticles(ParticleTypes.ENCHANT,
 			pos.getX() + 0.5, pos.getY() + 1.1, pos.getZ() + 0.5, 24, 0.4, 0.4, 0.4, 0.1);
-		server.playSound(null, pos, SoundEvents.AMETHYST_BLOCK_CHIME, SoundSource.BLOCKS, 0.8F, 1.0F);
+		server.playSound(null, pos, SoundEvents.AMETHYST_BLOCK_CHIME, SoundSource.BLOCKS,
+			0.8F, bindChimePitch(affinity, discord));
 		if (player instanceof ServerPlayer serverPlayer) {
-			AltarAnimations.begin(server, pos, serverPlayer, stanceRgb(player));
+			AltarAnimations.begin(server, pos, serverPlayer, stanceRgb(affinity), flair);
 			applyBindingPerk(serverPlayer);
 		}
 		player.sendSystemMessage(Component.literal("The Altar binds the shard — capacity ")
@@ -208,10 +215,50 @@ public class AttunementAltarBlock extends Block {
 	 * {@code DustParticleOptions}: their committed affinity's colour with the
 	 * alpha byte stripped, or a neutral grey when no affinity is committed.
 	 */
-	private static int stanceRgb(Player player) {
-		return Attunement.committedAffinity(player)
+	private static int stanceRgb(Optional<Affinity> affinity) {
+		return affinity
 			.map(a -> a.argb() & 0x00FFFFFF)
 			.orElse(0x8B8B8B);
+	}
+
+	private static float bindChimePitch(Optional<Affinity> affinity, boolean discord) {
+		if (discord || affinity.isEmpty()) {
+			return 1.0F;
+		}
+		return switch (affinity.get()) {
+			case FURY -> 0.88F;
+			case BASTION -> 0.76F;
+			case ZEPHYR -> 1.18F;
+		};
+	}
+
+	private static AltarAnimations.RitualFlair scanRitualFlair(ServerLevel level, BlockPos pos) {
+		int litCandles = 0;
+		int amethyst = 0;
+		for (BlockPos scanPos : BlockPos.betweenClosed(pos.offset(-3, -3, -3), pos.offset(3, 3, 3))) {
+			BlockState scanState = level.getBlockState(scanPos);
+			if (isLitCandle(scanState)) {
+				litCandles += scanState.hasProperty(CandleBlock.CANDLES)
+					? scanState.getValue(CandleBlock.CANDLES)
+					: 1;
+			}
+			if (isAmethystAccent(scanState)) {
+				amethyst++;
+			}
+		}
+		return new AltarAnimations.RitualFlair(litCandles, amethyst);
+	}
+
+	private static boolean isLitCandle(BlockState state) {
+		return state.is(BlockTags.CANDLES) && AbstractCandleBlock.isLit(state);
+	}
+
+	private static boolean isAmethystAccent(BlockState state) {
+		return state.is(Blocks.BUDDING_AMETHYST)
+			|| state.is(Blocks.AMETHYST_CLUSTER)
+			|| state.is(Blocks.LARGE_AMETHYST_BUD)
+			|| state.is(Blocks.MEDIUM_AMETHYST_BUD)
+			|| state.is(Blocks.SMALL_AMETHYST_BUD);
 	}
 
 	/** The stance label for {@code player} — Discord, a committed affinity, or None. */
