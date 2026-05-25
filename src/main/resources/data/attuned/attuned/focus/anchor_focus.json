@@ -1,0 +1,6 @@
+{
+	"item": "attuned:anchor_focus",
+	"cost": 3,
+	"affinity": "bastion",
+	"behavior": "attuned:anchor"
+}

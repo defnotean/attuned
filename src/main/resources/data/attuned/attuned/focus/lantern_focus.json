@@ -1,0 +1,5 @@
+{
+	"item": "attuned:lantern_focus",
+	"cost": 2,
+	"behavior": "attuned:lantern"
+}

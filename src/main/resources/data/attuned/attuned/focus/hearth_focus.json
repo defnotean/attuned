@@ -1,0 +1,5 @@
+{
+	"item": "attuned:hearth_focus",
+	"cost": 2,
+	"behavior": "attuned:hearth"
+}

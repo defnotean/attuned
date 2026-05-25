@@ -1,0 +1,6 @@
+{
+	"item": "attuned:rainstep_focus",
+	"cost": 2,
+	"affinity": "zephyr",
+	"behavior": "attuned:rainstep"
+}

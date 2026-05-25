@@ -5,14 +5,18 @@ import dev.attuned.AttunedRegistries;
 import dev.attuned.api.focus.Affinity;
 import dev.attuned.api.focus.FocusDefinition;
 import dev.attuned.content.behavior.AegisBehavior;
+import dev.attuned.content.behavior.AnchorBehavior;
 import dev.attuned.content.behavior.BeaconBehavior;
 import dev.attuned.content.behavior.BloodfuryBehavior;
 import dev.attuned.content.behavior.DelverBehavior;
 import dev.attuned.content.behavior.EmberwardBehavior;
 import dev.attuned.content.behavior.GalespurBehavior;
 import dev.attuned.content.behavior.HarvestBehavior;
+import dev.attuned.content.behavior.HearthBehavior;
+import dev.attuned.content.behavior.LanternBehavior;
 import dev.attuned.content.behavior.LodestoneBehavior;
 import dev.attuned.content.behavior.NightgazeBehavior;
+import dev.attuned.content.behavior.RainstepBehavior;
 import dev.attuned.content.behavior.SmokeBehavior;
 import dev.attuned.content.behavior.SoftstepBehavior;
 import dev.attuned.content.behavior.StormcallBehavior;
@@ -63,9 +67,13 @@ public final class AttunedContent {
 	// Behaviour Foci — datapack modifiers plus a registered code behaviour.
 	public static final Item TIDE_FOCUS = register("tide_focus");
 	public static final Item GALESPUR_FOCUS = register("galespur_focus");
+	public static final Item RAINSTEP_FOCUS = register("rainstep_focus");
 	public static final Item EMBERWARD_FOCUS = register("emberward_focus");
+	public static final Item ANCHOR_FOCUS = register("anchor_focus");
 	public static final Item AEGIS_FOCUS = register("aegis_focus");
 	public static final Item NIGHTGAZE_FOCUS = register("nightgaze_focus");
+	public static final Item HEARTH_FOCUS = register("hearth_focus");
+	public static final Item LANTERN_FOCUS = register("lantern_focus");
 	public static final Item DELVER_FOCUS = register("delver_focus");
 	public static final Item LODESTONE_FOCUS = register("lodestone_focus");
 
@@ -102,7 +110,8 @@ public final class AttunedContent {
 	public static final List<Item> FOCI = List.of(
 		SWIFT_FOCUS, VITAL_FOCUS, IRON_FOCUS, LEAP_FOCUS, EDGE_FOCUS, FRENZY_FOCUS,
 		BULWARK_FOCUS, DRIFT_FOCUS, TIDE_FOCUS, EMBERWARD_FOCUS, AEGIS_FOCUS,
-		GALESPUR_FOCUS, NIGHTGAZE_FOCUS, DELVER_FOCUS, LODESTONE_FOCUS, THORNWARD_FOCUS,
+		GALESPUR_FOCUS, RAINSTEP_FOCUS, ANCHOR_FOCUS, NIGHTGAZE_FOCUS, HEARTH_FOCUS,
+		LANTERN_FOCUS, DELVER_FOCUS, LODESTONE_FOCUS, THORNWARD_FOCUS,
 		LEECH_FOCUS, STORMCALL_FOCUS, GRAVEBIND_FOCUS, BLOODFURY_FOCUS, VOIDSTEP_FOCUS,
 		HARVEST_FOCUS, BEACON_FOCUS, SOFTSTEP_FOCUS, VEIL_FOCUS, NEEDLE_FOCUS, SMOKE_FOCUS);
 
@@ -152,11 +161,19 @@ public final class AttunedContent {
 		AttunedRegistries.registerBehavior(
 			Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "galespur"), new GalespurBehavior());
 		AttunedRegistries.registerBehavior(
+			Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "rainstep"), new RainstepBehavior());
+		AttunedRegistries.registerBehavior(
 			Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "emberward"), new EmberwardBehavior());
+		AttunedRegistries.registerBehavior(
+			Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "anchor"), new AnchorBehavior());
 		AttunedRegistries.registerBehavior(
 			Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "aegis"), new AegisBehavior());
 		AttunedRegistries.registerBehavior(
 			Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "nightgaze"), new NightgazeBehavior());
+		AttunedRegistries.registerBehavior(
+			Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "hearth"), new HearthBehavior());
+		AttunedRegistries.registerBehavior(
+			Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "lantern"), new LanternBehavior());
 		AttunedRegistries.registerBehavior(
 			Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "delver"), new DelverBehavior());
 		AttunedRegistries.registerBehavior(

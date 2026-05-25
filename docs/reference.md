@@ -124,6 +124,10 @@ examples to copy from:
 | `attuned:emberward`  | `EmberwardBehavior`      | Fire immunity. |
 | `attuned:tide`       | `TideBehavior`           | Underwater breathing. |
 | `attuned:galespur`   | `GalespurBehavior`       | Doubles the speed of living mounts while riding. |
+| `attuned:rainstep`   | `RainstepBehavior`       | Movement speed in rain, water, or waterlogged blocks. |
+| `attuned:anchor`     | `AnchorBehavior`         | Knockback resistance while sneaking or blocking. |
+| `attuned:hearth`     | `HearthBehavior`         | Campfire-adjacent regeneration while well fed. |
+| `attuned:lantern`    | `LanternBehavior`        | Briefly marks visible hostile mobs in darkness while holding a torch or lantern. |
 | `attuned:bloodfury`  | `BloodfuryBehavior`      | Attack speed scaled by missing health. |
 | `attuned:harvest`    | `HarvestBehavior`        | Speeds up nearby crops. |
 | `attuned:aegis`      | `AegisBehavior`          | Periodic absorption shield (uses a cooldown). |
@@ -181,9 +185,11 @@ The `/attuned capacity` command reads or sets a player's capacity for testing.
 
 Attuned injects Foci and shard fragments into reviewed vanilla loot tables in
 `content/AttunedLoot.java`: structure chests, fishing treasure, archaeology, and
-trial rewards. That keeps the rewards vanilla-friendly and also works with
-Lootr-style per-player chests because those mods resolve the same chest loot
-tables for each player instead of needing custom Attuned chest blocks.
+trial rewards. It also adds rare data-driven wandering trader offers for the
+Attunement Journal and shard fragments, but not full Foci or full shards. That
+keeps the rewards vanilla-friendly and also works with Lootr-style per-player
+chests because those mods resolve the same chest loot tables for each player
+instead of needing custom Attuned chest blocks.
 
 Every shipped Focus is added to every Attuned Focus loot pool with a positive
 weight. Theme weights bias the roll; they never remove a Focus from the pool.
