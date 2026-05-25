@@ -16,6 +16,7 @@ import java.util.UUID;
 import net.minecraft.core.GlobalPos;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
@@ -29,6 +30,8 @@ import net.minecraft.world.item.component.LodestoneTracker;
 public final class WaystoneBehavior implements FocusBehavior {
 	private static final Identifier BEACON_FOCUS =
 		Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "beacon_focus");
+	private static final Component WAYSTONE_COMPASS_NAME =
+		Component.translatable("item.attuned.waystone_compass");
 
 	private final Map<UUID, Map<ItemStack, TrackerSnapshot>> changedCompasses = new HashMap<>();
 
@@ -77,21 +80,25 @@ public final class WaystoneBehavior implements FocusBehavior {
 		LodestoneTracker current = compass.get(DataComponents.LODESTONE_TRACKER);
 		TrackerSnapshot snapshot = snapshotFor(playerId, compass);
 		if (snapshot != null && !Objects.equals(current, snapshot.focusTracker)) {
+			restoreNameIfStillFocusName(compass, snapshot);
 			forget(playerId, compass);
 			snapshot = null;
 		}
 		if (snapshot == null) {
-			if (Objects.equals(current, tracker)) {
-				return;
-			}
+			Component originalName = compass.get(DataComponents.CUSTOM_NAME);
 			changedCompasses
 				.computeIfAbsent(playerId, id -> new IdentityHashMap<>())
-				.put(compass, new TrackerSnapshot(current, current != null, tracker));
+				.put(compass, new TrackerSnapshot(
+					current, current != null, originalName, originalName != null, tracker));
 			compass.set(DataComponents.LODESTONE_TRACKER, tracker);
+			compass.set(DataComponents.CUSTOM_NAME, WAYSTONE_COMPASS_NAME);
 			return;
 		}
 		if (!Objects.equals(current, tracker)) {
 			compass.set(DataComponents.LODESTONE_TRACKER, tracker);
+		}
+		if (!Objects.equals(compass.get(DataComponents.CUSTOM_NAME), WAYSTONE_COMPASS_NAME)) {
+			compass.set(DataComponents.CUSTOM_NAME, WAYSTONE_COMPASS_NAME);
 		}
 		snapshot.focusTracker = tracker;
 	}
@@ -150,8 +157,11 @@ public final class WaystoneBehavior implements FocusBehavior {
 	}
 
 	private void restoreIfStillFocusTracker(ItemStack compass, TrackerSnapshot snapshot) {
-		if (!compass.is(Items.COMPASS)
-				|| !Objects.equals(compass.get(DataComponents.LODESTONE_TRACKER), snapshot.focusTracker)) {
+		if (!compass.is(Items.COMPASS)) {
+			return;
+		}
+		if (!Objects.equals(compass.get(DataComponents.LODESTONE_TRACKER), snapshot.focusTracker)) {
+			restoreNameIfStillFocusName(compass, snapshot);
 			return;
 		}
 		if (snapshot.hadOriginal) {
@@ -159,21 +169,44 @@ public final class WaystoneBehavior implements FocusBehavior {
 		} else {
 			compass.remove(DataComponents.LODESTONE_TRACKER);
 		}
+		restoreName(compass, snapshot);
 	}
 
 	private static boolean canTrack(ItemStack stack) {
 		return stack.is(Items.COMPASS);
 	}
 
+	private static void restoreNameIfStillFocusName(ItemStack compass, TrackerSnapshot snapshot) {
+		if (Objects.equals(compass.get(DataComponents.CUSTOM_NAME), WAYSTONE_COMPASS_NAME)) {
+			restoreName(compass, snapshot);
+		}
+	}
+
+	private static void restoreName(ItemStack compass, TrackerSnapshot snapshot) {
+		if (snapshot.hadOriginalName) {
+			compass.set(DataComponents.CUSTOM_NAME, snapshot.originalName);
+		} else {
+			compass.remove(DataComponents.CUSTOM_NAME);
+		}
+	}
+
 	private static final class TrackerSnapshot {
 		private final LodestoneTracker originalTracker;
 		private final boolean hadOriginal;
+		private final Component originalName;
+		private final boolean hadOriginalName;
 		private LodestoneTracker focusTracker;
 
 		private TrackerSnapshot(
-				LodestoneTracker originalTracker, boolean hadOriginal, LodestoneTracker focusTracker) {
+				LodestoneTracker originalTracker,
+				boolean hadOriginal,
+				Component originalName,
+				boolean hadOriginalName,
+				LodestoneTracker focusTracker) {
 			this.originalTracker = originalTracker;
 			this.hadOriginal = hadOriginal;
+			this.originalName = originalName;
+			this.hadOriginalName = hadOriginalName;
 			this.focusTracker = focusTracker;
 		}
 	}

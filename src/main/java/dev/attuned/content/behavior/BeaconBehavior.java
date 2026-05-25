@@ -11,6 +11,7 @@ import java.util.UUID;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.minecraft.core.GlobalPos;
 import net.minecraft.core.component.DataComponents;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.item.ItemStack;
@@ -27,6 +28,8 @@ import net.minecraft.world.item.component.LodestoneTracker;
  * real lodestone compass keeps its own binding when the Focus deactivates.
  */
 public final class BeaconBehavior implements FocusBehavior {
+	private static final Component BEACON_COMPASS_NAME =
+		Component.translatable("item.attuned.beacon_compass");
 
 	private final Map<UUID, Map<ItemStack, TrackerSnapshot>> changedCompasses = new HashMap<>();
 
@@ -62,21 +65,25 @@ public final class BeaconBehavior implements FocusBehavior {
 		LodestoneTracker current = compass.get(DataComponents.LODESTONE_TRACKER);
 		TrackerSnapshot snapshot = snapshotFor(playerId, compass);
 		if (snapshot != null && !Objects.equals(current, snapshot.beaconTracker)) {
+			restoreNameIfStillBeaconName(compass, snapshot);
 			forget(playerId, compass);
 			snapshot = null;
 		}
 		if (snapshot == null) {
-			if (Objects.equals(current, tracker)) {
-				return;
-			}
+			Component originalName = compass.get(DataComponents.CUSTOM_NAME);
 			changedCompasses
 				.computeIfAbsent(playerId, id -> new IdentityHashMap<>())
-				.put(compass, new TrackerSnapshot(current, current != null, tracker));
+				.put(compass, new TrackerSnapshot(
+					current, current != null, originalName, originalName != null, tracker));
 			compass.set(DataComponents.LODESTONE_TRACKER, tracker);
+			compass.set(DataComponents.CUSTOM_NAME, BEACON_COMPASS_NAME);
 			return;
 		}
 		if (!Objects.equals(current, tracker)) {
 			compass.set(DataComponents.LODESTONE_TRACKER, tracker);
+		}
+		if (!Objects.equals(compass.get(DataComponents.CUSTOM_NAME), BEACON_COMPASS_NAME)) {
+			compass.set(DataComponents.CUSTOM_NAME, BEACON_COMPASS_NAME);
 		}
 		snapshot.beaconTracker = tracker;
 	}
@@ -136,8 +143,11 @@ public final class BeaconBehavior implements FocusBehavior {
 	}
 
 	private void restoreIfStillBeaconTracker(ItemStack compass, TrackerSnapshot snapshot) {
-		if (!compass.is(Items.COMPASS)
-				|| !Objects.equals(compass.get(DataComponents.LODESTONE_TRACKER), snapshot.beaconTracker)) {
+		if (!compass.is(Items.COMPASS)) {
+			return;
+		}
+		if (!Objects.equals(compass.get(DataComponents.LODESTONE_TRACKER), snapshot.beaconTracker)) {
+			restoreNameIfStillBeaconName(compass, snapshot);
 			return;
 		}
 		if (snapshot.hadOriginal) {
@@ -145,17 +155,40 @@ public final class BeaconBehavior implements FocusBehavior {
 		} else {
 			compass.remove(DataComponents.LODESTONE_TRACKER);
 		}
+		restoreName(compass, snapshot);
+	}
+
+	private static void restoreNameIfStillBeaconName(ItemStack compass, TrackerSnapshot snapshot) {
+		if (Objects.equals(compass.get(DataComponents.CUSTOM_NAME), BEACON_COMPASS_NAME)) {
+			restoreName(compass, snapshot);
+		}
+	}
+
+	private static void restoreName(ItemStack compass, TrackerSnapshot snapshot) {
+		if (snapshot.hadOriginalName) {
+			compass.set(DataComponents.CUSTOM_NAME, snapshot.originalName);
+		} else {
+			compass.remove(DataComponents.CUSTOM_NAME);
+		}
 	}
 
 	private static final class TrackerSnapshot {
 		private final LodestoneTracker originalTracker;
 		private final boolean hadOriginal;
+		private final Component originalName;
+		private final boolean hadOriginalName;
 		private LodestoneTracker beaconTracker;
 
 		private TrackerSnapshot(
-				LodestoneTracker originalTracker, boolean hadOriginal, LodestoneTracker beaconTracker) {
+				LodestoneTracker originalTracker,
+				boolean hadOriginal,
+				Component originalName,
+				boolean hadOriginalName,
+				LodestoneTracker beaconTracker) {
 			this.originalTracker = originalTracker;
 			this.hadOriginal = hadOriginal;
+			this.originalName = originalName;
+			this.hadOriginalName = hadOriginalName;
 			this.beaconTracker = beaconTracker;
 		}
 	}
