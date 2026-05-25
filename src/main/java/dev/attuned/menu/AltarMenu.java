@@ -1,5 +1,6 @@
 package dev.attuned.menu;
 
+import dev.attuned.AttunedConfig;
 import dev.attuned.content.AttunedContent;
 import net.minecraft.world.Container;
 import net.minecraft.world.SimpleContainer;
@@ -7,6 +8,7 @@ import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.ContainerLevelAccess;
+import net.minecraft.world.inventory.DataSlot;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 
@@ -23,8 +25,18 @@ public class AltarMenu extends AbstractContainerMenu {
 	public static final int INPUT_SIZE = 1;
 	/** Index of the shard input slot within {@link #slots}. */
 	public static final int INPUT_SLOT = 0;
+	/** GUI X-coordinate for the shard input slot. */
+	public static final int INPUT_SLOT_X = 128;
+	/** GUI Y-coordinate for the shard input slot. */
+	public static final int INPUT_SLOT_Y = 34;
+	/** GUI X-coordinate for the player inventory grid. */
+	public static final int INVENTORY_X = 27;
+	/** GUI Y-coordinate for the player inventory grid. */
+	public static final int INVENTORY_Y = 108;
 
 	private final Container input;
+	private int capacityCap = AttunedConfig.DEFAULT.capacityCap();
+	private int capacityPerShard = AttunedConfig.DEFAULT.capacityPerShard();
 
 	/**
 	 * Reachability accessor anchored to the Altar block. On the server this is
@@ -61,19 +73,18 @@ public class AltarMenu extends AbstractContainerMenu {
 
 		// Shard input slot — only Attunement Shards are accepted, and it stacks
 		// to a full shard pile so a player can dump a stack in if they want.
-		this.addSlot(new Slot(input, 0, 80, 22) {
+		this.addSlot(new Slot(input, 0, INPUT_SLOT_X, INPUT_SLOT_Y) {
 			@Override
 			public boolean mayPlace(ItemStack stack) {
 				return stack.is(AttunedContent.ATTUNEMENT_SHARD);
 			}
 		});
 
-		// Player inventory (3 rows) + hotbar, placed below the Altar's window at
-		// the vanilla y-position for a 166-tall GUI — the inventory label sits at
-		// imageHeight-94 = y=72 and the first row of slots starts twelve pixels
-		// below it. Keeping these in sync prevents the altar section's hint text
-		// from overlapping the inventory grid.
-		this.addStandardInventorySlots(inventory, 8, 84);
+		// Player inventory (3 rows) + hotbar, centered under the wider Altar header.
+		// Keeping these coordinates shared with the screen prevents drawn wells and
+		// clickable slots from drifting apart.
+		this.addStandardInventorySlots(inventory, INVENTORY_X, INVENTORY_Y);
+		addConfigDataSlots();
 	}
 
 	/** The shard currently held in the input slot, possibly empty. */
@@ -93,6 +104,41 @@ public class AltarMenu extends AbstractContainerMenu {
 	/** The input container, exposed for server-side handlers that need to mutate it. */
 	public Container inputContainer() {
 		return this.input;
+	}
+
+	/** Server-synced capacity cap used by the Altar screen. */
+	public int capacityCap() {
+		return capacityCap;
+	}
+
+	/** Server-synced capacity gain per bound shard used by the Altar screen. */
+	public int capacityPerShard() {
+		return capacityPerShard;
+	}
+
+	private void addConfigDataSlots() {
+		this.addDataSlot(new DataSlot() {
+			@Override
+			public int get() {
+				return AttunedConfig.get().capacityCap();
+			}
+
+			@Override
+			public void set(int value) {
+				capacityCap = value;
+			}
+		});
+		this.addDataSlot(new DataSlot() {
+			@Override
+			public int get() {
+				return AttunedConfig.get().capacityPerShard();
+			}
+
+			@Override
+			public void set(int value) {
+				capacityPerShard = value;
+			}
+		});
 	}
 
 	@Override

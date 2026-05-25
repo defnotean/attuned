@@ -1,13 +1,17 @@
 package dev.attuned.client.screen;
 
-import dev.attuned.AttunedConfig;
 import dev.attuned.api.focus.Affinity;
+import dev.attuned.attunement.AttunedAttachments;
+import dev.attuned.attunement.AttunedInv;
 import dev.attuned.attunement.Attunement;
 import dev.attuned.client.AttunementReadout;
 import dev.attuned.client.hud.CombatHud;
+import dev.attuned.combat.Apex;
 import dev.attuned.content.AttunementAltarBlock;
 import dev.attuned.menu.AltarMenu;
 import dev.attuned.menu.BindShardPayload;
+import dev.attuned.pacts.Pact;
+import dev.attuned.pacts.Pacts;
 import java.util.Optional;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
@@ -27,16 +31,20 @@ import net.minecraft.world.item.ItemStack;
  */
 public class AltarScreen extends AbstractContainerScreen<AltarMenu> {
 
-	// Window dimensions, in GUI pixels — sized to match a vanilla single-row chest
-	// so the inventory grid below it has its usual proportions.
-	private static final int IMAGE_WIDTH = 176;
-	private static final int IMAGE_HEIGHT = 166;
+	// Window dimensions, in GUI pixels. Wider and taller than a vanilla chest row
+	// so the altar readout can breathe above the centered player inventory.
+	private static final int IMAGE_WIDTH = 216;
+	private static final int IMAGE_HEIGHT = 190;
 
 	// Colour palette — the same vanilla-inventory grey used by FocusPanel, so the
 	// Altar screen reads as a sibling of the inventory GUI rather than a stranger.
 	private static final int PANEL_FACE = 0xFFC6C6C6;
 	private static final int PANEL_SHADOW = 0xFF555555;
 	private static final int PANEL_HIGHLIGHT = 0xFFFFFFFF;
+	private static final int SECTION_FACE = 0xFFD0D0D0;
+	private static final int SECTION_SHADOW = 0xFF777777;
+	private static final int SECTION_HIGHLIGHT = 0xFFE7E7E7;
+	private static final int STATUS_FACE = 0xFFB9B9B9;
 	private static final int WELL_SHADOW = 0xFF373737;
 	private static final int WELL_HIGHLIGHT = 0xFFFFFFFF;
 	private static final int WELL_FACE = 0xFF8B8B8B;
@@ -57,34 +65,31 @@ public class AltarScreen extends AbstractContainerScreen<AltarMenu> {
 	// the stance ARGB after its alpha has been masked off.
 	private static final int WELL_TINT_ALPHA = 0x80000000;
 
-	// Slot geometry — keep in sync with the {@code addSlot(input, …, 80, 22)} call
-	// in {@link AltarMenu}: the well is drawn one pixel outside the slot bounds.
-	private static final int SLOT_X = 80;
-	private static final int SLOT_Y = 22;
+	// Slot geometry — keep in sync with the {@link AltarMenu} slot positions.
+	private static final int SLOT_X = AltarMenu.INPUT_SLOT_X;
+	private static final int SLOT_Y = AltarMenu.INPUT_SLOT_Y;
 	private static final int SLOT_SIZE = 18;
 
 	// Bind button geometry, positioned to the right of the shard slot.
-	private static final int BUTTON_W = 60;
+	private static final int BUTTON_W = 54;
 	private static final int BUTTON_H = 20;
-	private static final int BUTTON_X = 105;
-	private static final int BUTTON_Y = 21;
+	private static final int BUTTON_X = 153;
+	private static final int BUTTON_Y = 33;
 
-	// Budget bar, drawn under the readout text. Sits just below the slot/Bind
-	// row at y=22-40 with room for the hint underneath, all above the inventory
-	// label at y=72.
-	private static final int BAR_X = 8;
-	private static final int BAR_Y = 46;
-	private static final int BAR_W = IMAGE_WIDTH - 16;
+	// Budget bar, drawn under the forecast line with room for the status strip.
+	private static final int BAR_X = 14;
+	private static final int BAR_Y = 67;
+	private static final int BAR_W = IMAGE_WIDTH - 28;
 	private static final int BAR_H = 3;
 
-	/** Y-coordinate for the hint label, sitting above the inventory label at y=72. */
-	private static final int HINT_Y = 58;
+	/** Y-coordinate for the hint label, sitting in the altar status strip. */
+	private static final int HINT_Y = 78;
 	/**
 	 * Horizontal divider between the altar section and the player inventory. A
 	 * dark hairline anchored just above the inventory label so the two sections
 	 * read as distinct without commissioning a full texture.
 	 */
-	private static final int DIVIDER_Y = 70;
+	private static final int DIVIDER_Y = 94;
 
 	private Button bindButton;
 
@@ -121,7 +126,7 @@ public class AltarScreen extends AbstractContainerScreen<AltarMenu> {
 			return;
 		}
 		boolean hasShard = !this.menu.inputStack().isEmpty();
-		boolean roomLeft = Attunement.capacity(player) < AttunedConfig.get().capacityCap();
+		boolean roomLeft = Attunement.capacity(player) < this.menu.capacityCap();
 		this.bindButton.active = hasShard && roomLeft;
 	}
 
@@ -143,6 +148,13 @@ public class AltarScreen extends AbstractContainerScreen<AltarMenu> {
 		// tone as the slot well shadow so the four corners read as part of one frame.
 		drawCornerBrackets(graphics, x, y);
 
+		// Altar section inset: a shallow vanilla-style well behind the readout,
+		// shard slot and Bind button.
+		graphics.fill(x + 7, y + 17, x + IMAGE_WIDTH - 7, y + 91, SECTION_SHADOW);
+		graphics.fill(x + 8, y + 18, x + IMAGE_WIDTH - 7, y + 91, SECTION_HIGHLIGHT);
+		graphics.fill(x + 8, y + 18, x + IMAGE_WIDTH - 8, y + 90, SECTION_FACE);
+		graphics.fill(x + 10, y + 74, x + IMAGE_WIDTH - 10, y + 89, STATUS_FACE);
+
 		// Horizontal hairline divider between the altar section and the player
 		// inventory grid below. Keeps the eye from reading the two sections as
 		// one cramped block of text and slots.
@@ -159,15 +171,18 @@ public class AltarScreen extends AbstractContainerScreen<AltarMenu> {
 		// Player-inventory and hotbar slot wells. Vanilla containers paint these as
 		// part of their background texture; with a texture-less screen we have to
 		// draw them ourselves or the inventory area renders as blank grey. Positions
-		// match {@code AltarMenu.addStandardInventorySlots(inventory, 8, 84)} —
-		// three 9-slot rows at y=84/102/120 and a 9-slot hotbar at y=142.
+		// match {@link AltarMenu#INVENTORY_X}/{@link AltarMenu#INVENTORY_Y}.
 		for (int row = 0; row < 3; row++) {
 			for (int col = 0; col < 9; col++) {
-				drawInventoryWell(graphics, x + 8 + col * 18, y + 84 + row * 18);
+				drawInventoryWell(graphics,
+					x + AltarMenu.INVENTORY_X + col * 18,
+					y + AltarMenu.INVENTORY_Y + row * 18);
 			}
 		}
 		for (int col = 0; col < 9; col++) {
-			drawInventoryWell(graphics, x + 8 + col * 18, y + 142);
+			drawInventoryWell(graphics,
+				x + AltarMenu.INVENTORY_X + col * 18,
+				y + AltarMenu.INVENTORY_Y + 58);
 		}
 
 		// Player-dependent polish: stance-tinted shard well border, the accent line
@@ -284,8 +299,7 @@ public class AltarScreen extends AbstractContainerScreen<AltarMenu> {
 	 * accent feels anchored to the text without crowding it.
 	 */
 	private static void drawReadoutAccent(GuiGraphicsExtractor graphics, int panelX, int panelY, int stance) {
-		int labelY = panelY + 18;
-		int accentY = labelY - 4;
+		int accentY = panelY + 17;
 		int accentWidth = IMAGE_WIDTH * 6 / 10;
 		int accentX = panelX + (IMAGE_WIDTH - accentWidth) / 2;
 		graphics.fill(accentX, accentY, accentX + accentWidth, accentY + 1, stance);
@@ -336,12 +350,12 @@ public class AltarScreen extends AbstractContainerScreen<AltarMenu> {
 
 		int capacity = Attunement.capacity(player);
 		int used = Attunement.used(player);
-		int cap = AttunedConfig.get().capacityCap();
+		int cap = this.menu.capacityCap();
+		int active = Attunement.activeSlots(player).size();
+		int dormant = dormantFocusCount(player);
 
-		// Readout row: used / capacity, then stance.
-		Component readout = Component.translatable("screen.attuned.altar.attunement")
-			.append(Component.literal(used + " / " + capacity));
-		graphics.text(this.font, readout, 8, 18, LABEL_DARK, false);
+		Component readout = Component.literal("Capacity " + used + " / " + capacity);
+		graphics.text(this.font, readout, 14, 24, LABEL_DARK, false);
 
 		// Stance row: a small textured gem prefix that visually says "this is your
 		// stance," followed only by the affinity name in its colour. Dropping the
@@ -351,12 +365,13 @@ public class AltarScreen extends AbstractContainerScreen<AltarMenu> {
 		Optional<Affinity> committed = Attunement.committedAffinity(player);
 		boolean discord = Attunement.isDiscord(player);
 		int stanceGemSize = 10;
-		int stanceGemX = 8;
-		int stanceGemY = 28;
+		int stanceGemX = 14;
+		int stanceGemY = 39;
 		CombatHud.drawGem(graphics, stanceGemX, stanceGemY, stanceGemSize,
 			committed.orElse(null), discord, false, false);
 		graphics.text(this.font, AttunementAltarBlock.stanceLabel(player),
-			stanceGemX + stanceGemSize + 3, 30, LABEL_DARK, false);
+			stanceGemX + stanceGemSize + 4, 41, LABEL_DARK, false);
+		graphics.text(this.font, forecastLine(player, active, dormant), 14, 55, LABEL_DARK, false);
 
 		// Hint text under the slot, swapped out when capacity is full or empty.
 		Component hint;
@@ -366,10 +381,37 @@ public class AltarScreen extends AbstractContainerScreen<AltarMenu> {
 			hint = Component.translatable("screen.attuned.altar.hint.empty");
 		} else {
 			ItemStack shard = this.menu.inputStack();
-			int next = Math.min(cap, capacity + AttunedConfig.get().capacityPerShard());
+			int next = Math.min(cap, capacity + this.menu.capacityPerShard());
 			hint = Component.translatable("screen.attuned.altar.hint.ready",
 				shard.getCount(), next, cap);
 		}
-		graphics.text(this.font, hint, 8, HINT_Y, LABEL_DARK, false);
+		graphics.text(this.font, hint, 14, HINT_Y, LABEL_DARK, false);
+	}
+
+	private static int dormantFocusCount(Player player) {
+		AttunedInv inv = AttunedAttachments.getInventory(player);
+		int dormant = 0;
+		for (int slot = 0; slot < AttunedInv.SIZE; slot++) {
+			if (!inv.get(slot).isEmpty()
+					&& !Attunement.isActive(player, slot)
+					&& Attunement.definitionFor(player, inv.get(slot)).isPresent()) {
+				dormant++;
+			}
+		}
+		return dormant;
+	}
+
+	private static Component forecastLine(Player player, int active, int dormant) {
+		Component line = Component.literal(active + " active / " + dormant + " dormant");
+		Optional<Pact> pact = Pacts.activeOf(player);
+		if (pact.isPresent()) {
+			return line.copy()
+				.append(Component.literal(" / "))
+				.append(pact.get().displayName());
+		}
+		if (Apex.affinityOf(player).isPresent()) {
+			return line.copy().append(Component.literal(" / Apex ready"));
+		}
+		return line;
 	}
 }
