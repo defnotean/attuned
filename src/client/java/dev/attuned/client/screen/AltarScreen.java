@@ -46,6 +46,7 @@ public class AltarScreen extends AbstractContainerScreen<AltarMenu> {
 	private static final int TITLE_TEXT = 0xFFEDE6FF;
 	private static final int BODY_TEXT = 0xFFE3D8F5;
 	private static final int MUTED_TEXT = 0xFFB8ACC8;
+	private static final int WARNING_TEXT = 0xFFFFD37A;
 
 	// Hover ring on the Bind button: white at moderate alpha so the highlight
 	// reads as a glow rather than a hard outline.
@@ -275,8 +276,10 @@ public class AltarScreen extends AbstractContainerScreen<AltarMenu> {
 
 		// Hint text under the slot, swapped out when capacity is full or empty.
 		Component hint;
+		int hintColor = BODY_TEXT;
 		if (capacity >= cap) {
 			hint = Component.translatable("screen.attuned.altar.hint.cap", cap);
+			hintColor = WARNING_TEXT;
 		} else if (this.menu.inputStack().isEmpty()) {
 			hint = Component.translatable("screen.attuned.altar.hint.empty");
 		} else {
@@ -287,12 +290,14 @@ public class AltarScreen extends AbstractContainerScreen<AltarMenu> {
 				: Component.translatable("screen.attuned.altar.hint.ready.many",
 					capacity, next, cap, shard.getCount());
 		}
-		graphics.text(this.font, hint, 14, HINT_Y, BODY_TEXT, false);
+		graphics.text(this.font, hint, 14, HINT_Y, hintColor, false);
 
 		Component wakePreview = this.menu.inputStack().isEmpty()
 			? null
 			: dormantWakePreview(player, capacity, cap, perShard);
-		Component forecast = wakePreview != null ? wakePreview : capacityForecast(capacity, cap, perShard);
+		Component forecast = wakePreview != null
+			? wakePreview
+			: capacityForecast(capacity, cap, perShard, this.menu.inputStack().isEmpty());
 		if (forecast != null) {
 			graphics.text(this.font, forecast, 14, FORECAST_Y, MUTED_TEXT, false);
 		}
@@ -318,10 +323,13 @@ public class AltarScreen extends AbstractContainerScreen<AltarMenu> {
 			: Component.translatable("screen.attuned.altar.forecast.wakes.many", newlyAwake);
 	}
 
-	private static Component capacityForecast(int capacity, int cap, int perShard) {
+	private static Component capacityForecast(int capacity, int cap, int perShard, boolean noShardInserted) {
 		int remaining = Math.max(0, cap - capacity);
 		if (remaining <= 0) {
 			return null;
+		}
+		if (noShardInserted) {
+			return Component.translatable("screen.attuned.altar.forecast.capacity_left", remaining);
 		}
 		int safePerShard = Math.max(1, perShard);
 		int shards = Math.max(1, (remaining + safePerShard - 1) / safePerShard);
@@ -353,12 +361,9 @@ public class AltarScreen extends AbstractContainerScreen<AltarMenu> {
 		if (Apex.affinityOf(player).isPresent()) {
 			return line.copy().append(Component.literal(" / Apex ready"));
 		}
-		if (memory != AttunementAltarBlock.AltarAffinity.NONE) {
-			return line.copy()
-				.append(Component.literal(" / "))
-				.append(Component.translatable("screen.attuned.altar.memory.short", memoryName(memory)));
-		}
-		return line;
+		return line.copy()
+			.append(Component.literal(" / "))
+			.append(Component.translatable("screen.attuned.altar.memory.short", memoryName(memory)));
 	}
 
 	private static Component memoryName(AttunementAltarBlock.AltarAffinity memory) {

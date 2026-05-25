@@ -78,6 +78,7 @@
 	"screen.attuned.altar.hint.cap": "Capacity full (%s).",
 	"screen.attuned.altar.hint.ready.one": "Bind: %s -> %s / %s (1 shard).",
 	"screen.attuned.altar.hint.ready.many": "Bind: %s -> %s / %s (%s shards).",
+	"screen.attuned.altar.forecast.capacity_left": "%s capacity to cap.",
 	"screen.attuned.altar.forecast.shards_left": "%s shard(s) to cap.",
 	"screen.attuned.altar.forecast.wakes.one": "Binding wakes 1 dormant Focus.",
 	"screen.attuned.altar.forecast.wakes.many": "Binding wakes %s dormant Foci.",

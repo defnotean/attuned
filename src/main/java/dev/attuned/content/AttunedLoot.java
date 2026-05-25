@@ -35,7 +35,7 @@ import net.minecraft.world.level.storage.loot.providers.number.ConstantValue;
 public final class AttunedLoot {
 	private AttunedLoot() {}
 
-	/** How rich a structure's Focus drop is — a multiplier on the configured base chance. */
+	/** How rich a reward source's Focus drop is — a multiplier on the configured base chance. */
 	enum Tier {
 		LOW(0.35F),
 		COMMON(0.7F),
@@ -63,9 +63,9 @@ public final class AttunedLoot {
 
 	private record FocusMeta(Affinity affinity, Identifier faction) {}
 
-	/** Vanilla structure chest loot tables that gain a chance at a Focus. */
+	/** Vanilla loot tables that gain a chance at a Focus. Grouped by source family. */
 	private static final Map<Identifier, Drop> TARGETS = Map.ofEntries(
-		// Common — found often, modest odds.
+		// Structure chests — common exploration, modest odds.
 		Map.entry(chest("simple_dungeon"), normal(Tier.COMMON, null)),
 		Map.entry(chest("abandoned_mineshaft"), unseen(Tier.COMMON, null)),
 		Map.entry(chest("igloo_chest"), normal(Tier.COMMON, null)),
@@ -74,7 +74,7 @@ public final class AttunedLoot {
 		Map.entry(chest("village/village_toolsmith"), normal(Tier.COMMON, null)),
 		Map.entry(chest("village/village_temple"), normal(Tier.COMMON, Affinity.ZEPHYR)),
 		Map.entry(chest("shipwreck_treasure"), unseen(Tier.COMMON, Affinity.ZEPHYR)),
-		// Rich — riskier places, better odds.
+		// Structure chests — riskier places, better odds.
 		Map.entry(chest("jungle_temple"), normal(Tier.RICH, Affinity.ZEPHYR)),
 		Map.entry(chest("desert_pyramid"), unseen(Tier.RICH, null)),
 		Map.entry(chest("buried_treasure"), normal(Tier.RICH, Affinity.ZEPHYR)),
@@ -84,7 +84,7 @@ public final class AttunedLoot {
 		Map.entry(chest("pillager_outpost"), unseen(Tier.RICH, Affinity.FURY)),
 		Map.entry(chest("ruined_portal"), unseen(Tier.RICH, null)),
 		Map.entry(chest("bastion_other"), normal(Tier.RICH, Affinity.BASTION)),
-		// Treasure — the deep and dangerous, the best odds.
+		// Structure chests — the deep and dangerous, the best odds.
 		Map.entry(chest("woodland_mansion"), unseen(Tier.TREASURE, Affinity.FURY)),
 		Map.entry(chest("ancient_city"), unseen(Tier.TREASURE, Affinity.BASTION)),
 		Map.entry(chest("end_city_treasure"), unseen(Tier.TREASURE, Affinity.ZEPHYR)),

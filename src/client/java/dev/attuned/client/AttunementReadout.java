@@ -4,6 +4,7 @@ import dev.attuned.api.focus.Affinity;
 import dev.attuned.api.focus.AffinityColors;
 import dev.attuned.attunement.Attunement;
 import dev.attuned.combat.Apex;
+import dev.attuned.combat.Resonance;
 import dev.attuned.pacts.Pact;
 import dev.attuned.pacts.Pacts;
 import net.minecraft.ChatFormatting;
@@ -92,10 +93,18 @@ public final class AttunementReadout {
 		Optional<Affinity> apex = Apex.affinityOf(player);
 		if (apex.isPresent()) {
 			Affinity capstone = apex.get();
-			lines.add(Component.literal("Apex: " + Apex.capstoneName(capstone))
-				.withStyle(affinityTextColor(apex), ChatFormatting.BOLD));
+			boolean activeApex = Resonance.atApex(player);
+			lines.add(Component.literal("Apex: ").withStyle(ChatFormatting.GRAY)
+				.append(Component.literal(Apex.capstoneName(capstone))
+					.withStyle(affinityTextColor(apex), ChatFormatting.BOLD))
+				.append(Component.literal(activeApex ? " - Active" : " - Dormant")
+					.withStyle(activeApex ? ChatFormatting.GREEN : ChatFormatting.DARK_GRAY)));
 			lines.add(Component.literal(Apex.capstoneDescription(capstone))
 				.withStyle(ChatFormatting.GRAY));
+			if (!activeApex) {
+				lines.add(Component.literal("Build qualifies; raise Resonance to wake it.")
+					.withStyle(ChatFormatting.DARK_GRAY));
+			}
 		}
 		return lines;
 	}
@@ -159,7 +168,7 @@ public final class AttunementReadout {
 
 	private static String affinityName(Optional<Affinity> affinity) {
 		if (affinity.isEmpty()) {
-			return "None";
+			return "Neutral";
 		}
 		String lower = affinity.get().name().toLowerCase(Locale.ROOT);
 		return Character.toUpperCase(lower.charAt(0)) + lower.substring(1);
