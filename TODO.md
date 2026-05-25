@@ -660,6 +660,9 @@ private static Identifier vanilla(String path) {
     monitor pacing because fishing can be repeated indefinitely.
   - If fishing makes shard farming too easy, add a config multiplier for
     non-structure sources.
+  - Recommended first pass: fragments are uncommon, Foci are very rare.
+  - Do not make fishing the best way to farm Foci; it should be a pleasant
+    surprise while playing vanilla.
 
 - [ ] Add archaeology integration if the target Minecraft version has stable
   archaeology loot tables.
@@ -676,6 +679,9 @@ private static Identifier vanilla(String path) {
     - ocean sources: Zephyr
     - ruins: neutral or Unseen
   - Keep every Focus eligible in each table.
+  - Recommended first pass: shard fragments are more common than full Foci.
+  - Suspicious sand/gravel sources should feel like finding a splinter of
+    attunement history, not a primary progression route.
 
 - [ ] Add trial/challenge loot if available in this version.
   - Verify exact table ids for trial chamber containers, vaults, ominous vaults,
@@ -685,6 +691,8 @@ private static Identifier vanilla(String path) {
     - ominous/high-risk rewards: `TREASURE`
   - Recommended theme: mixed or neutral unless the structure itself strongly
     suggests an affinity.
+  - Trial rewards can support stronger Focus odds than fishing/archaeology
+    because the player is actively taking combat risk.
 
 - [ ] Add stronger structure flavor without exclusivity.
   - Mineshafts: keep or strengthen Unseen/utility bias.
@@ -695,9 +703,73 @@ private static Identifier vanilla(String path) {
   - Shipwrecks, buried treasure, and end cities: Zephyr bias.
   - Desert pyramid and ruined portal: Unseen or mixed mystery bias.
 
+- [ ] Add village loot identity.
+  - Weaponsmith: Fury bias.
+  - Armorer: Bastion bias.
+  - Toolsmith: neutral utility bias.
+  - Temple: Zephyr or neutral support bias.
+  - Keep existing village tables in `TARGETS`; tune weights rather than adding a
+    separate village-only loot system.
+
+- [ ] Add ruined portal flavor.
+  - Recommended theme: mixed/Unseen.
+  - Consider a slightly higher chance for shard fragments than common village
+    chests because ruined portals are rarer.
+  - Do not create "Discord loot" as a separate category until Discord has its
+    own item/content identity. For now, "volatile or mixed" means off-theme Foci
+    remain possible and Unseen gets a small bump.
+
+- [ ] Add ancient city flavor.
+  - Recommended theme: Bastion with Unseen bonus.
+  - Rationale: danger, deep stone, silence, and stealth all match the current
+    systems.
+  - Keep all Foci eligible so ancient cities do not become mandatory for Unseen.
+
+- [ ] Add end city flavor.
+  - Recommended theme: Zephyr.
+  - Bias movement Foci indirectly through Zephyr weighting; do not special-case
+    individual items unless a later loot pass adds item-level tags.
+
+- [ ] Add buried treasure flavor.
+  - Recommended theme: neutral or Zephyr.
+  - Good place for shard fragments and utility Foci.
+  - Keep full Focus chance modest because buried treasure can be map-guided.
+
+- [ ] Add Nether fortress and bastion contrast.
+  - Nether fortress: Fury bias, aggressive combat identity.
+  - Bastion other/treasure: Bastion bias, heavy defense identity.
+  - Avoid making the Nether the fastest shard-fragment farm unless testing
+    supports that pacing.
+
+- [ ] Add wandering trader support, very cautiously.
+  - Goal: rarely sell an Attunement Shard Fragment or Attunement Journal, not
+    full Foci.
+  - Verify Fabric API trade helper availability in this Minecraft version before
+    coding.
+  - Likely file: new helper such as `AttunedTrades.java`, initialized from
+    `Attuned.onInitialize()`.
+  - Suggested offer:
+    - Journal: low price, uncommon, helps onboarding.
+    - Shard fragment: moderate emerald cost, rare, limited uses.
+  - Do not sell Attunement Shards or Foci by default; that bypasses exploration.
+
+- [ ] Defer cartographer "attuned ruins" maps.
+  - Do not implement until Attuned has its own structures or a strong reason to
+    point players at vanilla structures.
+  - If revisited later, prefer maps to existing vanilla structures rather than
+    adding a new structure just for the map.
+  - This is explicitly a later idea, not part of the first world-integration
+    pass.
+
 ### Implementation Steps - Table Additions
 
 - [ ] Expand `AttunedLoot.TARGETS` with the new verified table ids.
+- [ ] Keep target additions grouped by source family:
+  - vanilla structure chests
+  - fishing
+  - archaeology
+  - trial/challenge rewards
+  - trade integration, if added, should live outside `AttunedLoot`
 - [ ] If non-container sources need gentler rates, add a new tier:
 
 ```java
@@ -718,6 +790,31 @@ record Drop(Tier tier, Affinity theme, boolean unseenTheme, boolean fragments) {
   - Only turn it off after playtesting shows a source is too farmable.
 - [ ] Preserve the invariant tested by `AttunedLootCompatibilityTest`: every
   shipped Focus has positive weight in every target.
+- [ ] If item-level flavor is needed later, add metadata instead of hand-picking
+  items in loot pools.
+  - Example future shape: Focus tags or definition fields like `families`.
+  - Do not add one-off `if (focus == SWIFT_FOCUS)` rules in `AttunedLoot`.
+
+### Trade Integration Steps
+
+- [ ] Add trader offers only after loot table expansion is stable.
+- [ ] Prefer a separate initializer class:
+
+```java
+public final class AttunedTrades {
+	public static void init() {
+		// Register wandering trader offers here after verifying API names.
+	}
+}
+```
+
+- [ ] Call `AttunedTrades.init()` from `Attuned.onInitialize()`.
+- [ ] Keep trade quantities low:
+  - Journal: 1 item, a few uses.
+  - Shard fragment: 1 item, rare, low max uses.
+- [ ] Do not let trader trades grant enough fragments to replace structure
+  exploration.
+- [ ] Add docs in `docs/reference.md` if trades are shipped.
 
 ### Balance Config Steps
 
@@ -1026,6 +1123,39 @@ Pact: Stoneheart
   - dormant reason if applicable
 - [ ] Preserve lore and effect lines.
 
+### Status Words
+
+- [ ] Standardize short status words across tooltips/readouts:
+  - `Awake` for active Foci if a more flavorful word is desired.
+  - `Active` is clearer than `Awake`; prefer `Active` in mechanical tooltips.
+  - `Dormant` for equipped but inactive Foci.
+  - `Unique` for only-one-active Foci.
+  - `Neutral` for no affinity.
+- [ ] Do not use multiple words for the same mechanical state in the same UI
+  surface.
+- [ ] Suggested final wording:
+  - Tooltip status line: `Status: Active`
+  - Tooltip status line: `Status: Dormant - not enough remaining capacity`
+  - Focus metadata: `Affinity Neutral`
+  - Unique metadata: `Unique - only one can be active`
+- [ ] Reserve flavor words like `Awake` for journal prose or advancement titles,
+  not precision UI.
+
+### One-Time Onboarding Message
+
+- [ ] Add or extend onboarding for the first dormant Focus.
+- [ ] Best location:
+  - `AttunedEffects.announceNewDormantSlots` already detects new dormancy.
+  - Use `Onboarding` or a player attachment if the message must be shown only
+    once per player.
+- [ ] Suggested copy:
+  - `Lower Focus slots sleep first when capacity is tight. Move it higher or bind shards.`
+- [ ] Show this only once per player.
+- [ ] Do not repeat it every time a Focus becomes dormant; the normal dormant
+  reason message handles repeat cases.
+- [ ] If adding persistent onboarding state, update attachment tests/docs as
+  needed.
+
 ### Capacity Remaining Line
 
 - [ ] Add a `Remaining` line anywhere budget is shown as a summary:
@@ -1067,6 +1197,94 @@ public static Optional<Component> previewOf(Player player)
   - `screen.attuned.readout.pact_preview.fury`
   - `screen.attuned.readout.pact_preview.zephyr`
 
+### Pact Stability Glow
+
+- [ ] When a Pact is active, make same-affinity active Focus slots read more
+  clearly in the Focus panel.
+- [ ] Preferred implementation:
+  - Keep the current active glow logic in `FocusPanel`.
+  - If `Pacts.activeOf(player).isPresent()`, slightly increase glow alpha or add
+    a tiny tick/accent on active Foci matching the Pact affinity.
+  - Do not add text labels inside the panel.
+- [ ] Avoid visual overload:
+  - Active Focus glow, dormant dim, resonance ring, and Pact cue must not fight
+    each other.
+  - If the panel becomes too busy, keep Pact information in the hover tooltip
+    only.
+- [ ] Validation:
+  - active Pact with all matching Foci
+  - active Pact plus neutral active Foci
+  - dormant matching Focus
+  - Discord, where no Pact glow should show
+
+### Pact Fade Reason
+
+- [ ] When a Pact fades, explain why if the cause is clear.
+- [ ] Existing place to inspect: `Pacts.java`, especially fade/deactivation
+  logic and current `pact.attuned.fades` language keys.
+- [ ] Suggested reason categories:
+  - capacity changed and one required Focus went dormant
+  - active affinities changed or Discord began
+  - required Focus was removed
+  - no longer enough active matching Foci
+- [ ] Keep the message short:
+  - `Stoneheart fades: not enough active Bastion Foci.`
+  - `Windrunner fades: Discord breaks the pattern.`
+- [ ] If the code cannot reliably know the exact cause without adding fragile
+  state tracking, use one generic but useful line:
+  - `%s fades as your active pattern changes.`
+- [ ] Do not emit fade messages repeatedly. Only message on actual transition
+  from active Pact to no Pact/different Pact.
+
+### Pact Journal Pages
+
+- [ ] Add one short page per Pact after the first-build pages.
+- [ ] Each page should include:
+  - Pact name
+  - affinity/pattern requirement in plain language
+  - effect summary
+  - one sample build if it fits
+- [ ] Suggested pages:
+  - Pyresworn: Fury, melee hits ignite
+  - Stoneheart: Bastion, incoming damage dulled
+  - Windrunner: Zephyr, sprint and step mobility
+  - Untethered: special/neutral or cross-pattern, verify current rule in
+    `Pacts.java` before writing copy
+- [ ] Files:
+  - `AttunementJournalItem.java`
+  - `en_us.json`
+- [ ] Keep each page within vanilla book limits.
+
+### Pact Challenge Advancements
+
+- [ ] Add optional advancements that reward using each Pact in its natural role.
+- [ ] Use impossible criteria awarded from code, matching existing advancement
+  style.
+- [ ] Candidate advancements:
+  - Pyresworn: defeat a burning hostile after the Pact ignites it.
+  - Stoneheart: survive a heavy hit while Stoneheart is active.
+  - Windrunner: sprint a sustained distance while Windrunner is active.
+  - Untethered: defeat an affinity-bearing foe while Untethered is active.
+- [ ] Keep these as achievements, not required progression.
+- [ ] Files:
+  - `src/main/resources/data/attuned/advancement/attunement/*.json`
+  - `Pacts.java`
+  - possibly `AttunedAdvancements.java`
+- [ ] Do not add noisy tracking if the condition is hard to detect cleanly.
+
+### Pact Audio Identity
+
+- [ ] Give each Pact awakening a slightly different vanilla sound/pitch combo.
+- [ ] Keep the current one-shot feedback structure.
+- [ ] Suggested mapping:
+  - Pyresworn: warmer/lower chime or fire-adjacent soft sound
+  - Stoneheart: deeper chime
+  - Windrunner: higher chime
+  - Untethered: neutral/mysterious chime
+- [ ] Avoid loud combat sounds for UI/state changes.
+- [ ] Validate by repeatedly toggling Pact state in a test world; it should feel
+  informative, not irritating.
+
 ### Soft Pact Feedback
 
 - [ ] Review current Pact awaken/fade messages in `Pacts.java`.
@@ -1092,6 +1310,11 @@ public static Optional<Component> previewOf(Player player)
 - [ ] Keep Discord visually distinct through existing magenta/gem language.
 - [ ] Do not punish Discord beyond existing damage tradeoff unless a balance
   pass proves it is too strong.
+- [ ] Add one sample Discord build only if it fits in the journal:
+  - Example shape: one strong Fury Focus plus one defensive Bastion Focus.
+  - Explain that this is a risky burst stance, not a long-term default.
+- [ ] Ensure Pact preview is hidden during Discord so the player does not see
+  contradictory "one more Focus" guidance.
 
 ### Combat HUD Clarity
 
@@ -1119,6 +1342,11 @@ public static Optional<Component> previewOf(Player player)
 - [ ] Hover equipped Focus stacks in every slot and confirm slot number/status.
 - [ ] Confirm non-equipped Attuned items do not claim they are equipped.
 - [ ] Confirm Pact preview disappears once the Pact is active.
+- [ ] Confirm Pact preview is hidden in Discord.
+- [ ] Confirm active Pact glow/cue is not shown when the player has no Pact.
+- [ ] Confirm Pact fade reason appears once per actual fade, not every tick.
+- [ ] Confirm Pact journal pages fit in the vanilla book UI.
+- [ ] Confirm Pact challenge advancements trigger only from real Pact use.
 - [ ] Confirm Discord preview/journal text does not imply Discord is always bad.
 
 ## Manual QA Checklist
@@ -1136,9 +1364,15 @@ public static Optional<Component> previewOf(Player player)
 - [ ] Loot a targeted vanilla structure chest and verify Foci/fragments can roll.
 - [ ] If Phase 6 is implemented, verify fishing treasure, archaeology, and
   trial/challenge targets only after their exact vanilla table ids are confirmed.
+- [ ] If trader support is implemented, verify wandering traders can rarely sell
+  a journal or shard fragment and never sell full Foci by default.
 - [ ] Test with Lootr if available.
 - [ ] Hover the Focus panel and equipped Foci to confirm UI clarity lines.
+- [ ] Force first dormancy on a new player and confirm the one-time onboarding
+  message appears once.
 - [ ] Check Pact preview with a build that is one Focus away from a Pact.
+- [ ] Toggle each Pact and confirm awakening feedback, fade reason, audio
+  identity, and any Pact glow are readable but not noisy.
 - [ ] Bind at an altar with candles/amethyst nearby and confirm cosmetic-only
   behavior.
 
