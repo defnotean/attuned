@@ -41,7 +41,9 @@ public class AltarScreen extends AbstractContainerScreen<AltarMenu> {
 	private static final int IMAGE_HEIGHT = 190;
 
 	private static final int BAR_TRACK = 0xFF373737;
-	private static final int LABEL_DARK = 0xFF404040;
+	private static final int TITLE_TEXT = 0xFFEDE6FF;
+	private static final int BODY_TEXT = 0xFFE3D8F5;
+	private static final int MUTED_TEXT = 0xFFB8ACC8;
 
 	// Hover ring on the Bind button: white at moderate alpha so the highlight
 	// reads as a glow rather than a hard outline.
@@ -69,6 +71,8 @@ public class AltarScreen extends AbstractContainerScreen<AltarMenu> {
 
 	/** Y-coordinate for the hint label, sitting in the altar status strip. */
 	private static final int HINT_Y = 78;
+	/** Y-coordinate for the compact capacity forecast below the hint label. */
+	private static final int FORECAST_Y = 88;
 	private Button bindButton;
 
 	public AltarScreen(AltarMenu menu, Inventory inventory, Component title) {
@@ -230,10 +234,10 @@ public class AltarScreen extends AbstractContainerScreen<AltarMenu> {
 
 	@Override
 	protected void extractLabels(GuiGraphicsExtractor graphics, int mouseX, int mouseY) {
-		// Window title — drawn ourselves so we control its colour and position.
-		graphics.text(this.font, this.title, this.titleLabelX, this.titleLabelY, LABEL_DARK, false);
+		// Window title: drawn ourselves so it stays readable over the dark altar art.
+		graphics.text(this.font, this.title, this.titleLabelX, this.titleLabelY, TITLE_TEXT, false);
 		graphics.text(this.font, this.playerInventoryTitle,
-			this.inventoryLabelX, this.inventoryLabelY, LABEL_DARK, false);
+			this.inventoryLabelX, this.inventoryLabelY, MUTED_TEXT, false);
 
 		Player player = this.minecraft != null ? this.minecraft.player : null;
 		if (player == null) {
@@ -243,11 +247,12 @@ public class AltarScreen extends AbstractContainerScreen<AltarMenu> {
 		int capacity = Attunement.capacity(player);
 		int used = Attunement.used(player);
 		int cap = this.menu.capacityCap();
+		int perShard = this.menu.capacityPerShard();
 		int active = Attunement.activeSlots(player).size();
 		int dormant = dormantFocusCount(player);
 
-		Component readout = Component.literal("Capacity " + used + " / " + capacity);
-		graphics.text(this.font, readout, 14, 24, LABEL_DARK, false);
+		Component readout = Component.translatable("screen.attuned.altar.budget", used, capacity);
+		graphics.text(this.font, readout, 14, 24, BODY_TEXT, false);
 
 		// Stance row: a small textured gem prefix that visually says "this is your
 		// stance," followed only by the affinity name in its colour. Dropping the
@@ -262,8 +267,8 @@ public class AltarScreen extends AbstractContainerScreen<AltarMenu> {
 		CombatHud.drawGem(graphics, stanceGemX, stanceGemY, stanceGemSize,
 			committed.orElse(null), discord, false, false);
 		graphics.text(this.font, AttunementAltarBlock.stanceLabel(player),
-			stanceGemX + stanceGemSize + 4, 41, LABEL_DARK, false);
-		graphics.text(this.font, forecastLine(player, active, dormant), 14, 55, LABEL_DARK, false);
+			stanceGemX + stanceGemSize + 4, 41, BODY_TEXT, false);
+		graphics.text(this.font, forecastLine(player, active, dormant), 14, 55, BODY_TEXT, false);
 
 		// Hint text under the slot, swapped out when capacity is full or empty.
 		Component hint;
@@ -273,11 +278,28 @@ public class AltarScreen extends AbstractContainerScreen<AltarMenu> {
 			hint = Component.translatable("screen.attuned.altar.hint.empty");
 		} else {
 			ItemStack shard = this.menu.inputStack();
-			int next = Math.min(cap, capacity + this.menu.capacityPerShard());
-			hint = Component.translatable("screen.attuned.altar.hint.ready",
-				shard.getCount(), next, cap);
+			int next = Math.min(cap, capacity + perShard);
+			hint = shard.getCount() == 1
+				? Component.translatable("screen.attuned.altar.hint.ready.one", capacity, next, cap)
+				: Component.translatable("screen.attuned.altar.hint.ready.many",
+					capacity, next, cap, shard.getCount());
 		}
-		graphics.text(this.font, hint, 14, HINT_Y, LABEL_DARK, false);
+		graphics.text(this.font, hint, 14, HINT_Y, BODY_TEXT, false);
+
+		Component forecast = capacityForecast(capacity, cap, perShard);
+		if (forecast != null) {
+			graphics.text(this.font, forecast, 14, FORECAST_Y, MUTED_TEXT, false);
+		}
+	}
+
+	private static Component capacityForecast(int capacity, int cap, int perShard) {
+		int remaining = Math.max(0, cap - capacity);
+		if (remaining <= 0) {
+			return null;
+		}
+		int safePerShard = Math.max(1, perShard);
+		int shards = Math.max(1, (remaining + safePerShard - 1) / safePerShard);
+		return Component.translatable("screen.attuned.altar.forecast.shards_left", shards);
 	}
 
 	private static int dormantFocusCount(Player player) {

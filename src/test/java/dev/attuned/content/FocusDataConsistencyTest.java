@@ -30,11 +30,21 @@ class FocusDataConsistencyTest {
 		Path.of("src/main/java/dev/attuned/content/AttunedContent.java");
 	private static final Path FOCUS_DATA_DIR =
 		Path.of("src/main/resources/data/attuned/attuned/focus");
+	private static final Path ITEM_DEFINITION_DIR =
+		Path.of("src/main/resources/assets/attuned/items");
+	private static final Path ITEM_MODEL_DIR =
+		Path.of("src/main/resources/assets/attuned/models/item");
+	private static final Path ITEM_TEXTURE_DIR =
+		Path.of("src/main/resources/assets/attuned/textures/item");
 	private static final Path LANG_FILE =
 		Path.of("src/main/resources/assets/attuned/lang/en_us.json");
 
 	private static final Pattern REGISTERED_FOCUS = Pattern.compile(
 		"public\\s+static\\s+final\\s+Item\\s+([A-Z0-9_]+_FOCUS)\\s*=\\s*register\\(\"([a-z0-9_]+_focus)\"\\);");
+	private static final Pattern REGISTERED_BEHAVIOR = Pattern.compile(
+		"AttunedRegistries\\.registerBehavior\\(\\s*"
+			+ "Identifier\\.fromNamespaceAndPath\\(\\s*Attuned\\.MOD_ID\\s*,\\s*\"([a-z0-9_/.-]+)\"\\s*\\)",
+		Pattern.DOTALL);
 	private static final Pattern FOCI_LIST = Pattern.compile(
 		"public\\s+static\\s+final\\s+List<Item>\\s+FOCI\\s*=\\s*List\\.of\\((.*?)\\);",
 		Pattern.DOTALL);
@@ -59,6 +69,39 @@ class FocusDataConsistencyTest {
 			"AttunedContent.FOCI should include every registered shipped Focus item");
 		assertEquals(registeredItems, definitionItems,
 			"Registered shipped Focus items should match datapack FocusDefinition item ids");
+	}
+
+	@Test
+	void registeredShippedFociHaveClientAssetsAndLanguage() throws IOException {
+		String source = Files.readString(CONTENT_SOURCE, StandardCharsets.UTF_8);
+		Set<String> registeredItems = new TreeSet<>(registeredFocusItemsByField(source).values());
+		JsonObject lang = languageRoot();
+
+		for (String itemId : registeredItems) {
+			String name = attunedPath(itemId);
+			assertTrue(Files.isRegularFile(ITEM_DEFINITION_DIR.resolve(name + ".json")),
+				"Registered Focus should have an item definition asset: " + itemId);
+			assertTrue(Files.isRegularFile(ITEM_MODEL_DIR.resolve(name + ".json")),
+				"Registered Focus should have an item model asset: " + itemId);
+			assertTrue(Files.isRegularFile(ITEM_TEXTURE_DIR.resolve(name + ".png")),
+				"Registered Focus should have an item texture asset: " + itemId);
+			assertLanguageKey(lang, "item.attuned." + name);
+			assertLanguageKey(lang, "item.attuned." + name + ".lore");
+			assertLanguageKey(lang, "item.attuned." + name + ".lore2");
+			assertLanguageKey(lang, "item.attuned." + name + ".effect");
+		}
+	}
+
+	@Test
+	void focusBehaviorIdsAreRegisteredInAttunedContent() throws IOException {
+		String source = Files.readString(CONTENT_SOURCE, StandardCharsets.UTF_8);
+		Set<String> referencedBehaviors = focusDefinitionBehaviorIds();
+		Set<String> registeredBehaviors = registeredBehaviorIds(source);
+
+		Set<String> missingBehaviors = new TreeSet<>(referencedBehaviors);
+		missingBehaviors.removeAll(registeredBehaviors);
+		assertEquals(Set.of(), missingBehaviors,
+			"Every FocusDefinition behavior id should be registered in AttunedContent.init()");
 	}
 
 	@Test
@@ -99,6 +142,16 @@ class FocusDataConsistencyTest {
 		}
 		assertTrue(!itemsByField.isEmpty(), "Could not find registered Focus item fields in AttunedContent");
 		return itemsByField;
+	}
+
+	private static Set<String> registeredBehaviorIds(String source) {
+		Matcher matcher = REGISTERED_BEHAVIOR.matcher(source);
+		Set<String> behaviorIds = new TreeSet<>();
+		while (matcher.find()) {
+			behaviorIds.add("attuned:" + matcher.group(1));
+		}
+		assertTrue(!behaviorIds.isEmpty(), "Could not find registered Focus behaviors in AttunedContent");
+		return behaviorIds;
 	}
 
 	private static Set<String> focusListItems(String source, Map<String, String> registeredItemsByField) {
@@ -157,12 +210,40 @@ class FocusDataConsistencyTest {
 		return item.getAsString();
 	}
 
+	private static Set<String> focusDefinitionBehaviorIds() throws IOException {
+		assertTrue(Files.isDirectory(FOCUS_DATA_DIR), "Could not find FocusDefinition data directory");
+		try (Stream<Path> paths = Files.list(FOCUS_DATA_DIR)) {
+			List<Path> files = paths
+				.filter(path -> path.getFileName().toString().endsWith(".json"))
+				.sorted()
+				.toList();
+			assertTrue(!files.isEmpty(), "Could not find FocusDefinition JSON files");
+
+			Set<String> behaviorIds = new TreeSet<>();
+			for (Path file : files) {
+				JsonObject root = focusDefinitionRoot(file);
+				JsonElement behavior = root.get("behavior");
+				if (behavior == null) {
+					continue;
+				}
+				assertTrue(behavior.isJsonPrimitive(),
+					"FocusDefinition behavior should be a string id: " + file);
+				String behaviorId = behavior.getAsString();
+				assertTrue(NAMESPACED_ID.matcher(behaviorId).matches(),
+					"FocusDefinition behavior should be a namespaced id: " + file);
+				behaviorIds.add(behaviorId);
+			}
+			assertTrue(!behaviorIds.isEmpty(), "Could not find any FocusDefinition behavior ids");
+			return behaviorIds;
+		}
+	}
+
 	private static JsonObject focusDefinitionRoot(Path file) throws IOException {
 		return JsonParser.parseString(Files.readString(file, StandardCharsets.UTF_8)).getAsJsonObject();
 	}
 
 	private static Set<String> translatedFactionIds() throws IOException {
-		JsonObject lang = JsonParser.parseString(Files.readString(LANG_FILE, StandardCharsets.UTF_8)).getAsJsonObject();
+		JsonObject lang = languageRoot();
 		Set<String> factions = new TreeSet<>();
 		for (String key : lang.keySet()) {
 			if (key.startsWith("faction.")) {
@@ -171,5 +252,18 @@ class FocusDataConsistencyTest {
 			}
 		}
 		return factions;
+	}
+
+	private static JsonObject languageRoot() throws IOException {
+		return JsonParser.parseString(Files.readString(LANG_FILE, StandardCharsets.UTF_8)).getAsJsonObject();
+	}
+
+	private static void assertLanguageKey(JsonObject lang, String key) {
+		assertTrue(lang.has(key), "Missing language key: " + key);
+	}
+
+	private static String attunedPath(String itemId) {
+		assertTrue(itemId.startsWith("attuned:"), "Expected attuned item id: " + itemId);
+		return itemId.substring("attuned:".length());
 	}
 }

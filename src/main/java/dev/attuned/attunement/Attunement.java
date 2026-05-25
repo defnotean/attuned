@@ -11,6 +11,7 @@ import net.minecraft.world.item.ItemStack;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
@@ -46,6 +47,10 @@ public final class Attunement {
 	 * slots and delegates the decision to the pure {@link BudgetResolver#resolve}.
 	 */
 	public static List<Integer> activeSlots(Player player) {
+		return BudgetResolver.resolve(candidates(player), capacity(player));
+	}
+
+	private static List<BudgetResolver.Candidate<Item>> candidates(Player player) {
 		AttunedInv inv = AttunedAttachments.getInventory(player);
 		List<BudgetResolver.Candidate<Item>> candidates = new ArrayList<>();
 		for (int slot = 0; slot < AttunedInv.SIZE; slot++) {
@@ -57,7 +62,17 @@ public final class Attunement {
 					slot, def.cost(), def.unique(), stack.getItem()));
 			}
 		}
-		return BudgetResolver.resolve(candidates, capacity(player));
+		return candidates;
+	}
+
+	/** Dormant reasons keyed by slot for occupied Focus slots that are not active. */
+	public static Map<Integer, BudgetResolver.DormantReason> dormantReasons(Player player) {
+		return BudgetResolver.resolveDetailed(candidates(player), capacity(player)).dormantReasons();
+	}
+
+	/** Why the Focus in the given slot is dormant, if it is currently dormant. */
+	public static Optional<BudgetResolver.DormantReason> dormantReason(Player player, int slot) {
+		return Optional.ofNullable(dormantReasons(player).get(slot));
 	}
 
 	/** Whether the Focus in the given slot is currently active. */

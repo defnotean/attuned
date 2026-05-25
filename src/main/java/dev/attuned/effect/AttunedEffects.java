@@ -11,6 +11,7 @@ import dev.attuned.api.focus.ModifierEntry;
 import dev.attuned.attunement.AttunedInv;
 import dev.attuned.attunement.AttunedAttachments;
 import dev.attuned.attunement.Attunement;
+import dev.attuned.attunement.BudgetResolver;
 import net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.minecraft.core.particles.DustParticleOptions;
@@ -27,7 +28,6 @@ import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.item.ItemStack;
 
-import java.util.HashSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -103,8 +103,8 @@ public final class AttunedEffects {
 		for (int slot : currentActive) {
 			nextState.put(slot, inv.get(slot));
 		}
-		Set<Integer> dormantSlots = dormantSlots(player, inv, currentActive);
-		announceNewDormantSlots(player, dormantSlots, wasTracked);
+		Map<Integer, BudgetResolver.DormantReason> dormantReasons = Attunement.dormantReasons(player);
+		announceNewDormantSlots(player, dormantReasons, wasTracked);
 
 		boolean anyActivated = false;
 		boolean anyDeactivated = false;
@@ -153,37 +153,35 @@ public final class AttunedEffects {
 		}
 	}
 
-	private static Set<Integer> dormantSlots(ServerPlayer player, AttunedInv inv, List<Integer> activeSlots) {
-		Set<Integer> active = new HashSet<>(activeSlots);
-		Set<Integer> dormant = new HashSet<>();
-		for (int slot = 0; slot < AttunedInv.SIZE; slot++) {
-			if (!active.contains(slot) && Attunement.definitionFor(player, inv.get(slot)).isPresent()) {
-				dormant.add(slot);
-			}
-		}
-		return dormant;
-	}
-
-	private static void announceNewDormantSlots(ServerPlayer player, Set<Integer> dormantSlots, boolean wasTracked) {
+	private static void announceNewDormantSlots(ServerPlayer player,
+			Map<Integer, BudgetResolver.DormantReason> dormantReasons, boolean wasTracked) {
 		UUID id = player.getUUID();
 		Set<Integer> previous = DORMANT.getOrDefault(id, Set.of());
 		if (wasTracked) {
-			for (int slot : dormantSlots) {
+			for (Map.Entry<Integer, BudgetResolver.DormantReason> entry : dormantReasons.entrySet()) {
+				int slot = entry.getKey();
 				if (!previous.contains(slot)) {
 					player.sendSystemMessage(Component.literal("A Focus falls dormant: ")
 						.withStyle(ChatFormatting.GRAY)
 						.append(AttunedAttachments.getInventory(player).get(slot).getHoverName())
-						.append(Component.literal(". Move it higher or raise capacity.")
+						.append(Component.literal(". " + dormantChatMessage(entry.getValue()))
 							.withStyle(ChatFormatting.DARK_GRAY)));
 					break;
 				}
 			}
 		}
-		if (dormantSlots.isEmpty()) {
+		if (dormantReasons.isEmpty()) {
 			DORMANT.remove(id);
 		} else {
-			DORMANT.put(id, Set.copyOf(dormantSlots));
+			DORMANT.put(id, Set.copyOf(dormantReasons.keySet()));
 		}
+	}
+
+	private static String dormantChatMessage(BudgetResolver.DormantReason reason) {
+		return switch (reason) {
+			case NOT_ENOUGH_CAPACITY -> "Not enough remaining capacity.";
+			case DUPLICATE_UNIQUE -> "Only one copy can be active.";
+		};
 	}
 
 	/** A soft chime when a Focus changes activation — pitched up to attune, down to lapse. */

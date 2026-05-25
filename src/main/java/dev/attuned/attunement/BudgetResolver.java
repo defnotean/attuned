@@ -1,8 +1,11 @@
 package dev.attuned.attunement;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -35,21 +38,49 @@ public final class BudgetResolver {
 	 */
 	public record Candidate<I>(int slot, int cost, boolean unique, I identity) {}
 
+	/** Why an occupied Focus slot was skipped during budget resolution. */
+	public enum DormantReason {
+		NOT_ENOUGH_CAPACITY,
+		DUPLICATE_UNIQUE
+	}
+
+	/**
+	 * The full budget-resolution result: active slots plus per-slot dormancy
+	 * reasons in candidate priority order.
+	 */
+	public record Resolution(List<Integer> activeSlots, Map<Integer, DormantReason> dormantReasons) {
+		public Resolution {
+			activeSlots = List.copyOf(activeSlots);
+			dormantReasons = Collections.unmodifiableMap(new LinkedHashMap<>(dormantReasons));
+		}
+	}
+
 	/**
 	 * Resolves which candidates are active. {@code candidates} must be in
 	 * priority order; the returned slot indices preserve that order.
 	 */
 	public static <I> List<Integer> resolve(List<Candidate<I>> candidates, int budget) {
+		return resolveDetailed(candidates, budget).activeSlots();
+	}
+
+	/**
+	 * Resolves active slots and records why each skipped candidate is dormant.
+	 * {@code candidates} must be in priority order.
+	 */
+	public static <I> Resolution resolveDetailed(List<Candidate<I>> candidates, int budget) {
 		int used = 0;
 		Set<I> activeUnique = new HashSet<>();
 		List<Integer> active = new ArrayList<>();
+		Map<Integer, DormantReason> dormantReasons = new LinkedHashMap<>();
 		for (Candidate<I> candidate : candidates) {
 			// A later copy of a unique Focus stays dormant.
 			if (candidate.unique() && activeUnique.contains(candidate.identity())) {
+				dormantReasons.put(candidate.slot(), DormantReason.DUPLICATE_UNIQUE);
 				continue;
 			}
 			// An over-budget Focus is dormant and consumes nothing.
 			if (used + candidate.cost() > budget) {
+				dormantReasons.put(candidate.slot(), DormantReason.NOT_ENOUGH_CAPACITY);
 				continue;
 			}
 			used += candidate.cost();
@@ -58,6 +89,6 @@ public final class BudgetResolver {
 				activeUnique.add(candidate.identity());
 			}
 		}
-		return active;
+		return new Resolution(active, dormantReasons);
 	}
 }

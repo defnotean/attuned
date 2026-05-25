@@ -7,6 +7,7 @@ import dev.attuned.api.focus.FocusDefinition;
 import dev.attuned.attunement.AttunedAttachments;
 import dev.attuned.attunement.AttunedInv;
 import dev.attuned.attunement.Attunement;
+import dev.attuned.attunement.BudgetResolver;
 import dev.attuned.attunement.FocusLookup;
 import net.fabricmc.fabric.api.client.item.v1.ItemTooltipCallback;
 import net.minecraft.ChatFormatting;
@@ -76,11 +77,15 @@ public final class AttunedTooltips {
 				if (player != null) {
 					AttunedInv inv = AttunedAttachments.getInventory(player);
 					for (int slot = 0; slot < AttunedInv.SIZE; slot++) {
-						if (inv.get(slot) == stack && !Attunement.isActive(player, slot)) {
+						if (inv.get(slot) == stack) {
+							var dormantReason = Attunement.dormantReason(player, slot);
+							if (dormantReason.isEmpty()) {
+								continue;
+							}
 							lines.add(Component.empty());
-							lines.add(Component.literal("Dormant")
+							lines.add(Component.literal("Dormant: " + dormantSummary(dormantReason.get()))
 								.withStyle(ChatFormatting.DARK_RED, ChatFormatting.BOLD));
-							lines.add(Component.literal("Raise your capacity or remove a Focus.")
+							lines.add(Component.literal(dormantAdvice(dormantReason.get()))
 								.withStyle(ChatFormatting.GRAY));
 							break;
 						}
@@ -116,6 +121,20 @@ public final class AttunedTooltips {
 			case FURY -> ChatFormatting.RED;
 			case BASTION -> ChatFormatting.GOLD;
 			case ZEPHYR -> ChatFormatting.AQUA;
+		};
+	}
+
+	private static String dormantSummary(BudgetResolver.DormantReason reason) {
+		return switch (reason) {
+			case NOT_ENOUGH_CAPACITY -> "Not enough remaining capacity.";
+			case DUPLICATE_UNIQUE -> "Duplicate unique Focus.";
+		};
+	}
+
+	private static String dormantAdvice(BudgetResolver.DormantReason reason) {
+		return switch (reason) {
+			case NOT_ENOUGH_CAPACITY -> "Move it higher, bind shards, or lower total cost.";
+			case DUPLICATE_UNIQUE -> "Only the first copy can be active.";
 		};
 	}
 }

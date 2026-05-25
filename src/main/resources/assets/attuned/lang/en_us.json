@@ -59,9 +59,12 @@
 	"screen.attuned.altar.bind": "Bind",
 	"screen.attuned.altar.attunement": "Attunement: ",
 	"screen.attuned.altar.stance": "Stance: ",
+	"screen.attuned.altar.budget": "Budget %s / %s",
 	"screen.attuned.altar.hint.empty": "Place a shard to bind.",
 	"screen.attuned.altar.hint.cap": "Capacity full (%s).",
-	"screen.attuned.altar.hint.ready": "%s shard(s) ready -> %s / %s.",
+	"screen.attuned.altar.hint.ready.one": "Bind: %s -> %s / %s (1 shard).",
+	"screen.attuned.altar.hint.ready.many": "Bind: %s -> %s / %s (%s shards).",
+	"screen.attuned.altar.forecast.shards_left": "%s shard(s) to cap.",
 
 	"item.attuned.swift_focus.lore": "Tuned to the wind's own hurry.",
 	"item.attuned.swift_focus.lore2": "The ground forgets to hold you.",

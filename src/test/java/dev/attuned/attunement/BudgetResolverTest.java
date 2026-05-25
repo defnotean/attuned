@@ -3,7 +3,9 @@ package dev.attuned.attunement;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import dev.attuned.attunement.BudgetResolver.Candidate;
+import dev.attuned.attunement.BudgetResolver.DormantReason;
 import java.util.List;
+import java.util.Map;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -49,6 +51,15 @@ class BudgetResolverTest {
 	}
 
 	@Test
+	void detailedResolutionReportsOverBudgetReasonAndStillActivatesLaterCheaperFocus() {
+		BudgetResolver.Resolution resolution = BudgetResolver.resolveDetailed(
+			List.of(focus(0, 3), focus(1, 3), focus(2, 2)), 5);
+
+		assertEquals(List.of(0, 2), resolution.activeSlots());
+		assertEquals(Map.of(1, DormantReason.NOT_ENOUGH_CAPACITY), resolution.dormantReasons());
+	}
+
+	@Test
 	void slotOrderIsPriority() {
 		// Budget 3: only the first slot's Focus fits.
 		assertEquals(List.of(0), BudgetResolver.resolve(
@@ -59,6 +70,15 @@ class BudgetResolverTest {
 	void aDuplicateUniqueFocusStaysDormant() {
 		assertEquals(List.of(0), BudgetResolver.resolve(
 			List.of(unique(0, 2, "shard"), unique(1, 2, "shard")), 20));
+	}
+
+	@Test
+	void detailedResolutionReportsDuplicateUniqueReason() {
+		BudgetResolver.Resolution resolution = BudgetResolver.resolveDetailed(
+			List.of(unique(0, 2, "shard"), unique(1, 2, "shard")), 20);
+
+		assertEquals(List.of(0), resolution.activeSlots());
+		assertEquals(Map.of(1, DormantReason.DUPLICATE_UNIQUE), resolution.dormantReasons());
 	}
 
 	@Test
@@ -73,6 +93,24 @@ class BudgetResolverTest {
 		// so slot 1's copy is free to activate.
 		assertEquals(List.of(1), BudgetResolver.resolve(
 			List.of(unique(0, 99, "shard"), unique(1, 2, "shard")), 10));
+	}
+
+	@Test
+	void detailedResolutionDoesNotClaimUniqueIdentityWhenDormantFromBudget() {
+		BudgetResolver.Resolution resolution = BudgetResolver.resolveDetailed(
+			List.of(unique(0, 99, "shard"), unique(1, 2, "shard")), 10);
+
+		assertEquals(List.of(1), resolution.activeSlots());
+		assertEquals(Map.of(0, DormantReason.NOT_ENOUGH_CAPACITY), resolution.dormantReasons());
+	}
+
+	@Test
+	void resolveDelegatesToDetailedResolutionActiveSlots() {
+		List<Candidate<String>> candidates =
+			List.of(focus(0, 3), focus(1, 3), focus(2, 2));
+
+		assertEquals(BudgetResolver.resolveDetailed(candidates, 5).activeSlots(),
+			BudgetResolver.resolve(candidates, 5));
 	}
 
 	@Test
