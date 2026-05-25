@@ -1,0 +1,14 @@
+{
+	"type": "minecraft:crafting_shaped",
+	"category": "misc",
+	"key": {
+		"F": "attuned:attunement_shard_fragment"
+	},
+	"pattern": [
+		"FF",
+		"FF"
+	],
+	"result": {
+		"id": "attuned:attunement_shard"
+	}
+}

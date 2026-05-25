@@ -78,6 +78,10 @@ public final class AttunedContent {
 
 	/** A consumable that permanently raises attunement capacity. Stacks normally. */
 	public static final Item ATTUNEMENT_SHARD = register("attunement_shard", AttunementShardItem::new);
+	/** A fragment reward that smooths shard progression; four craft into one shard. */
+	public static final Item ATTUNEMENT_SHARD_FRAGMENT = register("attunement_shard_fragment", Item::new);
+	/** A lightweight in-game guide to Foci, affinities, Pacts and Apex. */
+	public static final Item ATTUNEMENT_JOURNAL = register("attunement_journal", AttunementJournalItem::new);
 
 	/** The Attunement Altar — the home block where shards are bound into capacity. */
 	public static final Block ATTUNEMENT_ALTAR = registerAltar();
@@ -175,6 +179,8 @@ public final class AttunedContent {
 					output.accept(focus);
 				}
 				output.accept(ATTUNEMENT_SHARD);
+				output.accept(ATTUNEMENT_SHARD_FRAGMENT);
+				output.accept(ATTUNEMENT_JOURNAL);
 				output.accept(ATTUNEMENT_ALTAR);
 			})
 			.build();

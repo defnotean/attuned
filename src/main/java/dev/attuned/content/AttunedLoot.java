@@ -1,9 +1,13 @@
 package dev.attuned.content;
 
 import dev.attuned.AttunedConfig;
+import dev.attuned.AttunedRegistries;
 import dev.attuned.api.focus.Affinity;
+import dev.attuned.api.focus.FocusDefinition;
+import java.util.IdentityHashMap;
 import java.util.Map;
 import net.fabricmc.fabric.api.loot.v3.LootTableEvents;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.resources.Identifier;
 import net.minecraft.util.Mth;
 import net.minecraft.world.item.Item;
@@ -46,27 +50,6 @@ public final class AttunedLoot {
 	private static final int WEIGHT_ON_THEME = 3;
 	private static final int WEIGHT_NEUTRAL = 2;
 	private static final int WEIGHT_OFF_THEME = 1;
-
-	/** Affinity of each shipped Focus — kept in step with the datapack focus definitions. */
-	private static final Map<Item, Affinity> FOCUS_AFFINITY = Map.ofEntries(
-		Map.entry(AttunedContent.BLOODFURY_FOCUS, Affinity.FURY),
-		Map.entry(AttunedContent.EDGE_FOCUS, Affinity.FURY),
-		Map.entry(AttunedContent.FRENZY_FOCUS, Affinity.FURY),
-		Map.entry(AttunedContent.LEECH_FOCUS, Affinity.FURY),
-		Map.entry(AttunedContent.THORNWARD_FOCUS, Affinity.FURY),
-		Map.entry(AttunedContent.AEGIS_FOCUS, Affinity.BASTION),
-		Map.entry(AttunedContent.BULWARK_FOCUS, Affinity.BASTION),
-		Map.entry(AttunedContent.EMBERWARD_FOCUS, Affinity.BASTION),
-		Map.entry(AttunedContent.GRAVEBIND_FOCUS, Affinity.BASTION),
-		Map.entry(AttunedContent.IRON_FOCUS, Affinity.BASTION),
-		Map.entry(AttunedContent.VITAL_FOCUS, Affinity.BASTION),
-		Map.entry(AttunedContent.DRIFT_FOCUS, Affinity.ZEPHYR),
-		Map.entry(AttunedContent.LEAP_FOCUS, Affinity.ZEPHYR),
-		Map.entry(AttunedContent.STORMCALL_FOCUS, Affinity.ZEPHYR),
-		Map.entry(AttunedContent.SWIFT_FOCUS, Affinity.ZEPHYR),
-		Map.entry(AttunedContent.TIDE_FOCUS, Affinity.ZEPHYR)
-		// Beacon, Delver, Harvest, Lodestone, Nightgaze and Voidstep are neutral.
-	);
 
 	/** Vanilla structure chest loot tables that gain a chance at a Focus. */
 	private static final Map<Identifier, Drop> TARGETS = Map.ofEntries(
@@ -112,16 +95,34 @@ public final class AttunedLoot {
 			LootPool.Builder pool = LootPool.lootPool()
 				.setRolls(ConstantValue.exactly(1.0F))
 				.when(LootItemRandomChanceCondition.randomChance(chance));
+			Map<Item, Affinity> focusAffinities = focusAffinities(
+				registries.lookupOrThrow(AttunedRegistries.FOCUS_DEFINITIONS));
 			for (Item focus : AttunedContent.FOCI) {
-				pool.add(LootItem.lootTableItem(focus).setWeight(weightFor(focus, drop.theme())));
+				pool.add(LootItem.lootTableItem(focus).setWeight(weightFor(focus, drop.theme(), focusAffinities)));
 			}
 			tableBuilder.withPool(pool);
+
+			float fragmentChance = Mth.clamp(chance * 2.0F, 0.0F, 1.0F);
+			tableBuilder.withPool(LootPool.lootPool()
+				.setRolls(ConstantValue.exactly(1.0F))
+				.when(LootItemRandomChanceCondition.randomChance(fragmentChance))
+				.add(LootItem.lootTableItem(AttunedContent.ATTUNEMENT_SHARD_FRAGMENT)));
 		});
 	}
 
+	/** Affinities from the synced datapack registry, keyed by Focus item. Neutral Foci are absent. */
+	private static Map<Item, Affinity> focusAffinities(HolderLookup.RegistryLookup<FocusDefinition> lookup) {
+		Map<Item, Affinity> affinities = new IdentityHashMap<>();
+		lookup.listElements().forEach(holder -> {
+			FocusDefinition definition = holder.value();
+			definition.affinity().ifPresent(affinity -> affinities.put(definition.item().value(), affinity));
+		});
+		return affinities;
+	}
+
 	/** The pool weight for a Focus in a structure with the given affinity theme. */
-	private static int weightFor(Item focus, Affinity theme) {
-		Affinity affinity = FOCUS_AFFINITY.get(focus);
+	private static int weightFor(Item focus, Affinity theme, Map<Item, Affinity> focusAffinities) {
+		Affinity affinity = focusAffinities.get(focus);
 		if (affinity == null) {
 			return WEIGHT_NEUTRAL;
 		}
