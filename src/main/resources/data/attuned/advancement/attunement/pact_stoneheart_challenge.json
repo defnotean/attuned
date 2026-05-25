@@ -1,0 +1,19 @@
+{
+	"parent": "attuned:attunement/pact_stoneheart",
+	"display": {
+		"icon": {
+			"id": "attuned:bulwark_focus"
+		},
+		"title": "Unbroken",
+		"description": "Survive a heavy hit while Stoneheart is active.",
+		"frame": "challenge",
+		"show_toast": true,
+		"announce_to_chat": true,
+		"hidden": false
+	},
+	"criteria": {
+		"done": {
+			"trigger": "minecraft:impossible"
+		}
+	}
+}

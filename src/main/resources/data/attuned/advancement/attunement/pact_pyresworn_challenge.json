@@ -1,0 +1,19 @@
+{
+	"parent": "attuned:attunement/pact_pyresworn",
+	"display": {
+		"icon": {
+			"id": "attuned:emberward_focus"
+		},
+		"title": "Kindled Finish",
+		"description": "Defeat a hostile creature after your Pyresworn flames catch it.",
+		"frame": "challenge",
+		"show_toast": true,
+		"announce_to_chat": true,
+		"hidden": false
+	},
+	"criteria": {
+		"done": {
+			"trigger": "minecraft:impossible"
+		}
+	}
+}

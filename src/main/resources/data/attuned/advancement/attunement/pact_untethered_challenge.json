@@ -1,0 +1,19 @@
+{
+	"parent": "attuned:attunement/pact_untethered",
+	"display": {
+		"icon": {
+			"id": "attuned:voidstep_focus"
+		},
+		"title": "Manifold Hunt",
+		"description": "Defeat an affinity-bearing foe while Untethered is active.",
+		"frame": "challenge",
+		"show_toast": true,
+		"announce_to_chat": true,
+		"hidden": false
+	},
+	"criteria": {
+		"done": {
+			"trigger": "minecraft:impossible"
+		}
+	}
+}

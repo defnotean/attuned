@@ -1,0 +1,19 @@
+{
+	"parent": "attuned:attunement/pact_windrunner",
+	"display": {
+		"icon": {
+			"id": "attuned:swift_focus"
+		},
+		"title": "Long Gale",
+		"description": "Sprint 128 blocks while Windrunner is active.",
+		"frame": "challenge",
+		"show_toast": true,
+		"announce_to_chat": true,
+		"hidden": false
+	},
+	"criteria": {
+		"done": {
+			"trigger": "minecraft:impossible"
+		}
+	}
+}

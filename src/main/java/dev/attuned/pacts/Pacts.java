@@ -9,6 +9,7 @@ import dev.attuned.api.focus.FocusDefinition;
 import dev.attuned.attunement.AttunedAttachments;
 import dev.attuned.attunement.AttunedInv;
 import dev.attuned.attunement.Attunement;
+import dev.attuned.combat.AttunedCombat;
 import dev.attuned.combat.MobAffinities;
 import dev.attuned.combat.Resonance;
 import java.util.EnumMap;
@@ -27,6 +28,7 @@ import net.minecraft.core.particles.ParticleOptions;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -37,12 +39,14 @@ import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.entity.TamableAnimal;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.npc.villager.AbstractVillager;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.gamerules.GameRules;
 
 /**
@@ -81,8 +85,21 @@ public final class Pacts {
 	private static final int PYRESWORN_IGNITE_SECONDS = 3;
 	/** Pyresworn only ignites when the swing is at least half-charged. */
 	private static final float PYRESWORN_CHARGED_SWING_THRESHOLD = 0.5F;
+	/** Time window for a Pyresworn challenge kill after Pact fire catches a hostile. */
+	private static final int PYRESWORN_CHALLENGE_WINDOW_TICKS = 20 * 20;
+	/** Final damage threshold for the Stoneheart heavy-hit challenge. */
+	private static final float STONEHEART_CHALLENGE_DAMAGE = 8.0F;
+	/** Sustained active Windrunner sprint distance needed for its challenge. */
+	private static final double WINDRUNNER_CHALLENGE_DISTANCE = 128.0;
+	/** Ignores teleports/launches while counting Windrunner sprint distance. */
+	private static final double WINDRUNNER_MAX_DELTA_PER_TICK = 1.25;
 	/** Untethered requires at least one Focus of each of the three affinities. */
 	private static final int UNTETHERED_AFFINITY_COUNT = 3;
+
+	private static final String PYRESWORN_CHALLENGE = "attunement/pact_pyresworn_challenge";
+	private static final String STONEHEART_CHALLENGE = "attunement/pact_stoneheart_challenge";
+	private static final String WINDRUNNER_CHALLENGE = "attunement/pact_windrunner_challenge";
+	private static final String UNTETHERED_CHALLENGE = "attunement/pact_untethered_challenge";
 
 	/**
 	 * Permanent {@link Attributes#STEP_HEIGHT} modifier id used by Windrunner.
@@ -97,6 +114,10 @@ public final class Pacts {
 
 	/** Per-player pact as of last tick, for spotting on/off transitions. */
 	private static final Map<UUID, Pact> pactState = new HashMap<>();
+	/** Hostiles recently caught by Pyresworn Pact fire, keyed by victim UUID. */
+	private static final Map<UUID, PyreswornFireMark> pyreswornFireMarks = new HashMap<>();
+	/** Sustained active Windrunner sprint progress, keyed by player UUID. */
+	private static final Map<UUID, WindrunnerRun> windrunnerRuns = new HashMap<>();
 	/** Per-server tick counter — drives aura cadence and the Windrunner effect. */
 	private static int ticks;
 
@@ -104,6 +125,7 @@ public final class Pacts {
 	public static void init() {
 		ServerTickEvents.END_SERVER_TICK.register(Pacts::tick);
 		ServerLivingEntityEvents.AFTER_DAMAGE.register(Pacts::afterDamage);
+		ServerLivingEntityEvents.AFTER_DEATH.register(Pacts::afterDeath);
 		ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
 			ServerPlayer player = handler.player;
 			Optional<Pact> joined = activeOf(player);
@@ -120,8 +142,14 @@ public final class Pacts {
 		ServerLifecycleEvents.SERVER_STOPPED.register(server -> {
 			ticks = 0;
 			pactState.clear();
+			pyreswornFireMarks.clear();
+			windrunnerRuns.clear();
 		});
-		AttunedPlayerCleanup.onForget(pactState::remove);
+		AttunedPlayerCleanup.onForget(id -> {
+			pactState.remove(id);
+			windrunnerRuns.remove(id);
+			pyreswornFireMarks.entrySet().removeIf(entry -> entry.getValue().playerId().equals(id));
+		});
 	}
 
 	/** The pact a player has woken, if any. */
@@ -234,7 +262,9 @@ public final class Pacts {
 		if (dealtDamage <= 0.0F) {
 			return;
 		}
-		if (!(source.getEntity() instanceof Player attacker)) {
+		LivingEntity livingAttacker = AttunedCombat.attackerOf(source);
+		maybeAwardStoneheartChallenge(defender, livingAttacker, dealtDamage);
+		if (!(livingAttacker instanceof Player attacker)) {
 			return;
 		}
 		if (attacker == defender || !defender.isAlive()) {
@@ -282,6 +312,15 @@ public final class Pacts {
 			return;
 		}
 		defender.igniteForSeconds(PYRESWORN_IGNITE_SECONDS);
+		markPyreswornFire(attacker, defender);
+	}
+
+	private static void markPyreswornFire(Player attacker, LivingEntity defender) {
+		if (!(attacker instanceof ServerPlayer serverPlayer) || !isHostile(defender)) {
+			return;
+		}
+		pyreswornFireMarks.put(defender.getUUID(),
+			new PyreswornFireMark(serverPlayer.getUUID(), ticks + PYRESWORN_CHALLENGE_WINDOW_TICKS));
 	}
 
 	/**
@@ -304,9 +343,63 @@ public final class Pacts {
 		);
 	}
 
+	private static void afterDeath(LivingEntity entity, DamageSource source) {
+		maybeAwardPyreswornChallenge(entity, source);
+		maybeAwardUntetheredChallenge(entity, source);
+		pyreswornFireMarks.remove(entity.getUUID());
+	}
+
+	private static void maybeAwardPyreswornChallenge(LivingEntity entity, DamageSource source) {
+		PyreswornFireMark mark = pyreswornFireMarks.get(entity.getUUID());
+		if (mark == null || mark.expiresAt() < ticks || !isHostile(entity)
+				|| !(entity.level() instanceof ServerLevel level)) {
+			return;
+		}
+		LivingEntity killer = AttunedCombat.attackerOf(source);
+		if (killer != null && !mark.playerId().equals(killer.getUUID())) {
+			return;
+		}
+		if (killer == null && !source.is(net.minecraft.tags.DamageTypeTags.IS_FIRE)) {
+			return;
+		}
+		ServerPlayer player = level.getServer().getPlayerList().getPlayer(mark.playerId());
+		if (player != null && isAt(player, Pact.PYRESWORN)) {
+			AttunedAdvancements.award(player, PYRESWORN_CHALLENGE);
+		}
+	}
+
+	private static void maybeAwardStoneheartChallenge(LivingEntity defender,
+			LivingEntity attacker, float dealtDamage) {
+		if (!(defender instanceof ServerPlayer player) || attacker == null || attacker == defender
+				|| !defender.isAlive() || dealtDamage < STONEHEART_CHALLENGE_DAMAGE) {
+			return;
+		}
+		if (isAt(player, Pact.STONEHEART)) {
+			AttunedAdvancements.award(player, STONEHEART_CHALLENGE);
+		}
+	}
+
+	private static void maybeAwardUntetheredChallenge(LivingEntity entity, DamageSource source) {
+		LivingEntity killer = AttunedCombat.attackerOf(source);
+		if (!(killer instanceof ServerPlayer player) || entity == player || entity instanceof Player
+				|| MobAffinities.of(entity).isEmpty() || !isHostile(entity)) {
+			return;
+		}
+		if (isAt(player, Pact.UNTETHERED)) {
+			AttunedAdvancements.award(player, UNTETHERED_CHALLENGE);
+		}
+	}
+
+	private static boolean isHostile(LivingEntity entity) {
+		return entity.getType().getCategory() == MobCategory.MONSTER;
+	}
+
 	/** Per-tick: announce transitions, paint aura particles, sustain Windrunner. */
 	private static void tick(MinecraftServer server) {
 		ticks++;
+		if (ticks % 40 == 0) {
+			pruneExpiredPyreswornMarks();
+		}
 		for (ServerPlayer player : server.getPlayerList().getPlayers()) {
 			Pact now = activeOf(player).orElse(null);
 			Pact was = pactState.get(player.getUUID());
@@ -353,7 +446,43 @@ public final class Pacts {
 						MobEffects.SPEED, WINDRUNNER_TICK * 4, 0, true, false, true));
 				}
 			}
+			trackWindrunnerChallenge(player, now);
 		}
+	}
+
+	private static void pruneExpiredPyreswornMarks() {
+		pyreswornFireMarks.entrySet().removeIf(entry -> entry.getValue().expiresAt() < ticks);
+	}
+
+	private static void trackWindrunnerChallenge(ServerPlayer player, Pact pact) {
+		UUID id = player.getUUID();
+		if (pact != Pact.WINDRUNNER || !player.isSprinting()
+				|| player.isPassenger() || player.isFallFlying()) {
+			windrunnerRuns.remove(id);
+			return;
+		}
+		ResourceKey<Level> dimension = player.level().dimension();
+		double x = player.getX();
+		double z = player.getZ();
+		WindrunnerRun previous = windrunnerRuns.get(id);
+		if (previous == null || !previous.dimension().equals(dimension)) {
+			windrunnerRuns.put(id, new WindrunnerRun(dimension, x, z, 0.0));
+			return;
+		}
+		double dx = x - previous.x();
+		double dz = z - previous.z();
+		double step = Math.sqrt(dx * dx + dz * dz);
+		if (step > WINDRUNNER_MAX_DELTA_PER_TICK) {
+			windrunnerRuns.put(id, new WindrunnerRun(dimension, x, z, 0.0));
+			return;
+		}
+		double distance = previous.distance() + step;
+		if (distance >= WINDRUNNER_CHALLENGE_DISTANCE) {
+			AttunedAdvancements.award(player, WINDRUNNER_CHALLENGE);
+			windrunnerRuns.remove(id);
+			return;
+		}
+		windrunnerRuns.put(id, new WindrunnerRun(dimension, x, z, distance));
 	}
 
 	/**
@@ -489,6 +618,8 @@ public final class Pacts {
 	}
 
 	private record PactSound(SoundEvent event, float volume, float pitch) {}
+	private record PyreswornFireMark(UUID playerId, int expiresAt) {}
+	private record WindrunnerRun(ResourceKey<Level> dimension, double x, double z, double distance) {}
 
 	/**
 	 * If this is the first time the player has woken {@code pact} on this
