@@ -77,6 +77,19 @@ class AttunedLootCompatibilityTest {
 	}
 
 	@Test
+	void archaeologyTargetsModifyExistingPoolsInsteadOfAppendingExtraPools() {
+		for (Identifier table : AttunedLoot.targetDrops().keySet()) {
+			if (table.getPath().startsWith("archaeology/")) {
+				assertTrue(AttunedLoot.modifiesExistingPools(table),
+					"Archaeology should preserve brushable block single-stack generation: " + table);
+			} else {
+				assertTrue(!AttunedLoot.modifiesExistingPools(table),
+					"Only archaeology tables need single-pool injection: " + table);
+			}
+		}
+	}
+
+	@Test
 	void unseenThemedTablesBiasUnseenFociWithoutMakingLootrRequired() throws IOException {
 		Map<String, FocusData> foci = focusDataByItemId();
 		FocusData unseenFocus = foci.get("attuned:veil_focus");

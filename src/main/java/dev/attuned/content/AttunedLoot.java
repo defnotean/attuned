@@ -7,6 +7,7 @@ import dev.attuned.api.focus.Affinity;
 import dev.attuned.api.focus.FocusDefinition;
 import java.util.IdentityHashMap;
 import java.util.Map;
+import net.fabricmc.fabric.api.loot.v3.FabricLootTableBuilder;
 import net.fabricmc.fabric.api.loot.v3.LootTableEvents;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.resources.Identifier;
@@ -126,6 +127,10 @@ public final class AttunedLoot {
 		return TARGETS;
 	}
 
+	static boolean modifiesExistingPools(Identifier table) {
+		return table.getNamespace().equals("minecraft") && table.getPath().startsWith("archaeology/");
+	}
+
 	/** Registers the loot-table injection. Called from the mod initializer. */
 	public static void init() {
 		LootTableEvents.MODIFY.register((key, tableBuilder, source, registries) -> {
@@ -135,11 +140,25 @@ public final class AttunedLoot {
 			}
 			float chance = Mth.clamp(
 				AttunedConfig.get().focusLootChance() * drop.tier().multiplier, 0.0F, 1.0F);
+			Map<Item, FocusMeta> focusMetadata = focusMetadata(
+				registries.lookupOrThrow(AttunedRegistries.FOCUS_DEFINITIONS));
+			if (modifiesExistingPools(key.identifier())) {
+				((FabricLootTableBuilder) tableBuilder).modifyPools(pool -> {
+					float focusEntryChance = chance / Math.max(1, AttunedContent.FOCI.size());
+					for (Item focus : AttunedContent.FOCI) {
+						pool.add(LootItem.lootTableItem(focus)
+							.setWeight(weightFor(focus, drop, focusMetadata))
+							.when(LootItemRandomChanceCondition.randomChance(focusEntryChance)));
+					}
+					pool.add(LootItem.lootTableItem(AttunedContent.ATTUNEMENT_SHARD_FRAGMENT)
+						.setWeight(WEIGHT_NEUTRAL)
+						.when(LootItemRandomChanceCondition.randomChance(Mth.clamp(chance * 2.0F, 0.0F, 1.0F))));
+				});
+				return;
+			}
 			LootPool.Builder pool = LootPool.lootPool()
 				.setRolls(ConstantValue.exactly(1.0F))
 				.when(LootItemRandomChanceCondition.randomChance(chance));
-			Map<Item, FocusMeta> focusMetadata = focusMetadata(
-				registries.lookupOrThrow(AttunedRegistries.FOCUS_DEFINITIONS));
 			for (Item focus : AttunedContent.FOCI) {
 				pool.add(LootItem.lootTableItem(focus).setWeight(weightFor(focus, drop, focusMetadata)));
 			}
