@@ -162,7 +162,7 @@ public final class WaystoneBehavior implements FocusBehavior {
 	}
 
 	private static boolean canTrack(ItemStack stack) {
-		return stack.is(Items.COMPASS) && stack.getCount() == 1;
+		return stack.is(Items.COMPASS);
 	}
 
 	private static final class TrackerSnapshot {
