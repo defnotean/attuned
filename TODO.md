@@ -566,7 +566,7 @@ Implementation details:
   - It should not replace Swift Focus in dry terrain.
   - It should feel good during rain, rivers, swamps, and caves with water.
 
-### Priority Focus 5 - Tailwind Focus
+### Priority Focus 5 - Galespur Focus
 
 Purpose: Zephyr mount mobility. While the player is riding, the mount moves at
 about twice its normal speed. Target examples: happy ghasts, horses, pigs,
@@ -574,27 +574,27 @@ striders, camels, donkeys, mules, and other rideable entities.
 
 Recommended design:
 
-- Name: `tailwind_focus`
+- Name: `galespur_focus`
 - Cost: `4` or `5`; start at `4` for testing, raise to `5` if 2x mount speed is
   too strong.
 - Affinity: `zephyr`
 - Unique: `true`
-- Behavior id: `attuned:tailwind`
+- Behavior id: `attuned:galespur`
 - Effect: `Doubles the speed of creatures and vehicles you ride.`
 
 Implementation details:
 
-- [ ] Create `TailwindBehavior`.
+- [ ] Create `GalespurBehavior`.
 - [ ] Add Focus data at
-  `src/main/resources/data/attuned/attuned/focus/tailwind_focus.json`:
+  `src/main/resources/data/attuned/attuned/focus/galespur_focus.json`:
 
 ```json
 {
-	"item": "attuned:tailwind_focus",
+	"item": "attuned:galespur_focus",
 	"cost": 4,
 	"unique": true,
 	"affinity": "zephyr",
-	"behavior": "attuned:tailwind"
+	"behavior": "attuned:galespur"
 }
 ```
 
@@ -602,10 +602,27 @@ Implementation details:
 - [ ] Add item definition, model, texture, mcmeta, and language keys following
   the shared checklist above.
 - [ ] Suggested lore/effect copy:
-  - Name: `Tailwind Focus`
+  - Name: `Galespur Focus`
   - Lore 1: `A bridle for the wind itself.`
   - Lore 2: `Every road arrives sooner beneath you.`
   - Effect: `Doubles the speed of creatures and vehicles you ride.`
+- [ ] Generate a custom item asset for this Focus. This is required before the
+  Focus is considered implementation-complete.
+  - Do not ship a copied placeholder texture.
+  - Output path: `src/main/resources/assets/attuned/textures/item/galespur_focus.png`
+  - Size: 16x16 pixels.
+  - Style: Minecraft-readable pixel art matching the existing Attuned Focus
+    icons.
+  - Visual brief: a small wind-charged riding spur or bridle charm, with Zephyr
+    cyan/white motion streaks and a metallic silver/gold body.
+  - Keep the silhouette readable at inventory scale.
+  - Avoid text, letters, detailed horse faces, or large transparent empty space.
+  - Add/update `galespur_focus.png.mcmeta` only if the icon should use the same
+    animated texture metadata pattern as the existing Foci.
+  - After generating the asset, inspect it in-game in the inventory and creative
+    tab; do not rely only on the raw PNG.
+  - If content contract tests are expanded first, make sure they explicitly
+    require this texture path to exist.
 - [ ] Track the boosted vehicle per player so the modifier can be removed when:
   - the player dismounts
   - the player switches mounts
@@ -631,8 +648,8 @@ Living mount path, first implementation:
   - Also check for a flying-speed attribute if the mapped API exposes one, so
     happy ghasts/flying mounts can be covered without velocity hacks.
 - [ ] Use stable modifier ids, for example:
-  - `attuned:tailwind_mount_speed`
-  - `attuned:tailwind_mount_flying_speed`
+  - `attuned:galespur_mount_speed`
+  - `attuned:galespur_mount_flying_speed`
 - [ ] Before applying to a new vehicle, remove modifiers from the previously
   tracked vehicle.
 - [ ] In `onDeactivate`, always remove modifiers from the tracked vehicle.
@@ -662,8 +679,8 @@ Balance notes:
   - Drift cost 2
   - Tide cost 3
   - Stormcall cost 4
-- [ ] Tailwind should be powerful for mounted travel but do nothing on foot.
-- [ ] It should not stack with duplicate Tailwind Foci.
+- [ ] Galespur should be powerful for mounted travel but do nothing on foot.
+- [ ] It should not stack with duplicate Galespur Foci.
 - [ ] It should not permanently alter a mount after dismounting.
 
 Validation:
@@ -673,7 +690,7 @@ Validation:
 - [ ] Confirm speed returns to normal after dismounting.
 - [ ] Confirm speed returns to normal when the Focus goes dormant.
 - [ ] Confirm switching mounts removes the modifier from the old mount.
-- [ ] Confirm duplicate Tailwind Focus copies do not stack.
+- [ ] Confirm duplicate Galespur Focus copies do not stack.
 - [ ] Confirm non-living vehicle support is either stable or intentionally not
   shipped in the first pass.
 
