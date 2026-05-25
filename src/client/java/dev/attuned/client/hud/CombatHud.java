@@ -43,6 +43,9 @@ public final class CombatHud {
 	private static final int TARGET_GEM_SIZE = 16;
 	private static final int RESONANCE_BAR_W = 24;
 	private static final int RESONANCE_BAR_H = 2;
+	private static final int HUD_BACKPLATE_W = 50;
+	private static final int HUD_BACKPLATE_PLAYER_W = 30;
+	private static final int HUD_BACKPLATE_H = 24;
 
 	// Gap between the player gem and the target gem.
 	private static final int GEM_GAP = 4;
@@ -88,6 +91,8 @@ public final class CombatHud {
 	private static final Identifier EXECUTE_SPRITE = Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "hud/execute");
 	private static final Identifier UNYIELDING_SPRITE = Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "hud/unyielding");
 	private static final Identifier UNTOUCHABLE_SPRITE = Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "hud/untouchable");
+	private static final Identifier HUD_BACKPLATE_TEXTURE =
+		Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "textures/gui/hud_backplate.png");
 
 	// Empowered halo: a gold ring traced one pixel outside the player gem whose
 	// alpha breathes between the two bounds.
@@ -155,6 +160,12 @@ public final class CombatHud {
 		int rowWidth = PLAYER_GEM_SIZE + (hasTarget ? GEM_GAP + TARGET_GEM_SIZE : 0);
 		int rowX = screenW / 2 - rowWidth / 2;
 		int rowY = screenH - BOTTOM_OFFSET;
+
+		int backplateW = hasTarget ? HUD_BACKPLATE_W : HUD_BACKPLATE_PLAYER_W;
+		int backplateX = rowX - (backplateW - rowWidth) / 2;
+		graphics.blit(net.minecraft.client.renderer.RenderPipelines.GUI_TEXTURED,
+			HUD_BACKPLATE_TEXTURE, backplateX, rowY - 2,
+			0.0F, 0.0F, backplateW, HUD_BACKPLATE_H, HUD_BACKPLATE_W, HUD_BACKPLATE_H);
 
 		// Resonance bar first, just above the gem row, so the gem itself sits on
 		// top in the visual stack and never gets clipped by the bar.

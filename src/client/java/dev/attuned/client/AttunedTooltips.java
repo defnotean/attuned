@@ -51,23 +51,23 @@ public final class AttunedTooltips {
 			if (definition != null) {
 				Affinity affinity = definition.affinity().orElse(null);
 				lines.add(Component.empty());
-				lines.add(Component.literal("Affinity: ")
+				lines.add(Component.literal("Affinity ")
 					.withStyle(ChatFormatting.GRAY)
 					.append(Component.literal(affinityName(affinity))
 						.withStyle(affinityColor(affinity), ChatFormatting.BOLD)));
-				lines.add(Component.literal("Attunement Cost: ")
-					.withStyle(ChatFormatting.GRAY)
-					.append(Component.literal(Integer.toString(definition.cost()))
-						.withStyle(ChatFormatting.AQUA)));
 				definition.faction().ifPresent(faction -> lines.add(Component.literal("Faction: ")
 					.withStyle(ChatFormatting.GRAY)
 					.append(Component.translatableWithFallback(
 						"faction." + faction.getNamespace() + "." + faction.getPath(), faction.toString())
 						.withStyle(ChatFormatting.DARK_PURPLE, ChatFormatting.BOLD))));
+				lines.add(Component.literal("Cost ")
+					.withStyle(ChatFormatting.GRAY)
+					.append(Component.literal(definition.cost() + " attunement")
+						.withStyle(ChatFormatting.AQUA)));
 				if (definition.unique()) {
 					lines.add(Component.literal("Unique")
 						.withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD)
-						.append(Component.literal(" — only one can be active")
+						.append(Component.literal(" - only one can be active")
 							.withStyle(ChatFormatting.GRAY)));
 				}
 

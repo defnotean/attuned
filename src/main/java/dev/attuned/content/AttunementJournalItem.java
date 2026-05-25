@@ -38,7 +38,7 @@ public class AttunementJournalItem extends WrittenBookItem {
 	public static void showGuide(Player player) {
 		player.sendSystemMessage(Component.translatable("journal.attuned.title")
 			.withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD));
-		for (int i = 1; i <= 7; i++) {
+		for (int i = 1; i <= 8; i++) {
 			player.sendSystemMessage(Component.translatable("journal.attuned.line" + i)
 				.withStyle(ChatFormatting.GRAY));
 		}
@@ -52,7 +52,10 @@ public class AttunementJournalItem extends WrittenBookItem {
 			Filterable.passThrough(Component.translatable("journal.attuned.page4")),
 			Filterable.passThrough(Component.translatable("journal.attuned.page5")),
 			Filterable.passThrough(Component.translatable("journal.attuned.page6")),
-			Filterable.passThrough(Component.translatable("journal.attuned.page7"))
+			Filterable.passThrough(Component.translatable("journal.attuned.page7")),
+			Filterable.passThrough(Component.translatable("journal.attuned.page8")),
+			Filterable.passThrough(Component.translatable("journal.attuned.page9")),
+			Filterable.passThrough(Component.translatable("journal.attuned.page10"))
 		);
 		return new WrittenBookContent(
 			Filterable.passThrough("Attunement Journal"),

@@ -1,5 +1,6 @@
 package dev.attuned.client.screen;
 
+import dev.attuned.Attuned;
 import dev.attuned.api.focus.Affinity;
 import dev.attuned.attunement.AttunedAttachments;
 import dev.attuned.attunement.AttunedInv;
@@ -17,47 +18,31 @@ import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 
 /**
- * The Attunement Altar's screen — a flat-rectangle GUI showing the player's
- * current attunement readout, a single shard input slot and a Bind button. The
- * background is drawn from solid fills rather than a texture so the mod ships
- * without a placeholder art file; the user-supplied texture pass replaces this
- * later if desired.
+ * The Attunement Altar's screen: a custom-textured ritual panel showing the
+ * player's current attunement readout, a single shard input slot, and a Bind
+ * button. The texture supplies the static stonework while code draws dynamic
+ * stance, capacity, hover, and status details.
  */
 public class AltarScreen extends AbstractContainerScreen<AltarMenu> {
+	private static final Identifier BACKGROUND_TEXTURE =
+		Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "textures/gui/altar.png");
 
 	// Window dimensions, in GUI pixels. Wider and taller than a vanilla chest row
 	// so the altar readout can breathe above the centered player inventory.
 	private static final int IMAGE_WIDTH = 216;
 	private static final int IMAGE_HEIGHT = 190;
 
-	// Colour palette — the same vanilla-inventory grey used by FocusPanel, so the
-	// Altar screen reads as a sibling of the inventory GUI rather than a stranger.
-	private static final int PANEL_FACE = 0xFFC6C6C6;
-	private static final int PANEL_SHADOW = 0xFF555555;
-	private static final int PANEL_HIGHLIGHT = 0xFFFFFFFF;
-	private static final int SECTION_FACE = 0xFFD0D0D0;
-	private static final int SECTION_SHADOW = 0xFF777777;
-	private static final int SECTION_HIGHLIGHT = 0xFFE7E7E7;
-	private static final int STATUS_FACE = 0xFFB9B9B9;
-	private static final int WELL_SHADOW = 0xFF373737;
-	private static final int WELL_HIGHLIGHT = 0xFFFFFFFF;
-	private static final int WELL_FACE = 0xFF8B8B8B;
 	private static final int BAR_TRACK = 0xFF373737;
 	private static final int LABEL_DARK = 0xFF404040;
 
-	// Polish accents — texture-less detail layered over the flat panel so the
-	// screen reads as designed without commissioning art.
-	// Bracket arms are 3 GUI pixels long and 1 pixel thick: long enough to read as
-	// a frame corner at the screen's typical scale, short enough to stay
-	// subordinate to the slot well and Bind button.
-	private static final int BRACKET_ARM = 3;
-	private static final int BRACKET_COLOR = 0xFF373737;
 	// Hover ring on the Bind button: white at moderate alpha so the highlight
 	// reads as a glow rather than a hard outline.
 	private static final int BUTTON_HOVER_ARGB = 0xC0FFFFFF;
@@ -84,13 +69,6 @@ public class AltarScreen extends AbstractContainerScreen<AltarMenu> {
 
 	/** Y-coordinate for the hint label, sitting in the altar status strip. */
 	private static final int HINT_Y = 78;
-	/**
-	 * Horizontal divider between the altar section and the player inventory. A
-	 * dark hairline anchored just above the inventory label so the two sections
-	 * read as distinct without commissioning a full texture.
-	 */
-	private static final int DIVIDER_Y = 94;
-
 	private Button bindButton;
 
 	public AltarScreen(AltarMenu menu, Inventory inventory, Component title) {
@@ -101,9 +79,11 @@ public class AltarScreen extends AbstractContainerScreen<AltarMenu> {
 	@Override
 	protected void init() {
 		super.init();
-		this.bindButton = Button.builder(Component.translatable("screen.attuned.altar.bind"), btn -> sendBind())
-			.bounds(this.leftPos + BUTTON_X, this.topPos + BUTTON_Y, BUTTON_W, BUTTON_H)
-			.build();
+		this.bindButton = new BindButton(
+			this.leftPos + BUTTON_X,
+			this.topPos + BUTTON_Y,
+			Component.translatable("screen.attuned.altar.bind"),
+			btn -> sendBind());
 		this.addRenderableWidget(this.bindButton);
 		refreshButtonState();
 	}
@@ -139,51 +119,11 @@ public class AltarScreen extends AbstractContainerScreen<AltarMenu> {
 		int x = this.leftPos;
 		int y = this.topPos;
 
-		// Panel: bevelled rectangle in the vanilla inventory grey.
-		graphics.fill(x, y, x + IMAGE_WIDTH, y + IMAGE_HEIGHT, PANEL_SHADOW);
-		graphics.fill(x + 1, y + 1, x + IMAGE_WIDTH, y + IMAGE_HEIGHT, PANEL_HIGHLIGHT);
-		graphics.fill(x + 1, y + 1, x + IMAGE_WIDTH - 1, y + IMAGE_HEIGHT - 1, PANEL_FACE);
+		graphics.blit(RenderPipelines.GUI_TEXTURED, BACKGROUND_TEXTURE, x, y,
+			0.0F, 0.0F, IMAGE_WIDTH, IMAGE_HEIGHT, IMAGE_WIDTH, IMAGE_HEIGHT);
 
-		// Corner brackets: a 3-pixel L at each panel corner, drawn in the same dark
-		// tone as the slot well shadow so the four corners read as part of one frame.
-		drawCornerBrackets(graphics, x, y);
-
-		// Altar section inset: a shallow vanilla-style well behind the readout,
-		// shard slot and Bind button.
-		graphics.fill(x + 7, y + 17, x + IMAGE_WIDTH - 7, y + 91, SECTION_SHADOW);
-		graphics.fill(x + 8, y + 18, x + IMAGE_WIDTH - 7, y + 91, SECTION_HIGHLIGHT);
-		graphics.fill(x + 8, y + 18, x + IMAGE_WIDTH - 8, y + 90, SECTION_FACE);
-		graphics.fill(x + 10, y + 74, x + IMAGE_WIDTH - 10, y + 89, STATUS_FACE);
-
-		// Horizontal hairline divider between the altar section and the player
-		// inventory grid below. Keeps the eye from reading the two sections as
-		// one cramped block of text and slots.
-		graphics.fill(x + 8, y + DIVIDER_Y, x + IMAGE_WIDTH - 8, y + DIVIDER_Y + 1, BRACKET_COLOR);
-
-		// Shard slot well: drawn at the slot position with an inset bevel that matches
-		// the wells on the inventory's Focus panel.
 		int sx = x + SLOT_X - 1;
 		int sy = y + SLOT_Y - 1;
-		graphics.fill(sx, sy, sx + SLOT_SIZE, sy + SLOT_SIZE, WELL_SHADOW);
-		graphics.fill(sx + 1, sy + 1, sx + SLOT_SIZE, sy + SLOT_SIZE, WELL_HIGHLIGHT);
-		graphics.fill(sx + 1, sy + 1, sx + SLOT_SIZE - 1, sy + SLOT_SIZE - 1, WELL_FACE);
-
-		// Player-inventory and hotbar slot wells. Vanilla containers paint these as
-		// part of their background texture; with a texture-less screen we have to
-		// draw them ourselves or the inventory area renders as blank grey. Positions
-		// match {@link AltarMenu#INVENTORY_X}/{@link AltarMenu#INVENTORY_Y}.
-		for (int row = 0; row < 3; row++) {
-			for (int col = 0; col < 9; col++) {
-				drawInventoryWell(graphics,
-					x + AltarMenu.INVENTORY_X + col * 18,
-					y + AltarMenu.INVENTORY_Y + row * 18);
-			}
-		}
-		for (int col = 0; col < 9; col++) {
-			drawInventoryWell(graphics,
-				x + AltarMenu.INVENTORY_X + col * 18,
-				y + AltarMenu.INVENTORY_Y + 58);
-		}
 
 		// Player-dependent polish: stance-tinted shard well border, the accent line
 		// above the readout, the budget bar fill and the Bind button hover ring all
@@ -225,21 +165,6 @@ public class AltarScreen extends AbstractContainerScreen<AltarMenu> {
 	}
 
 	/**
-	 * Draws one player-inventory or hotbar slot well: a beveled 18x18 dark frame
-	 * matching the shard well's idiom but without the stance-coloured inner tint.
-	 * {@code slotX} and {@code slotY} are the screen-space coordinates of the
-	 * 16x16 slot's top-left corner — the well is drawn one pixel outside on every
-	 * side so the slot's items render cleanly over the bevel.
-	 */
-	private static void drawInventoryWell(GuiGraphicsExtractor graphics, int slotX, int slotY) {
-		int wx = slotX - 1;
-		int wy = slotY - 1;
-		graphics.fill(wx, wy, wx + SLOT_SIZE, wy + SLOT_SIZE, WELL_SHADOW);
-		graphics.fill(wx + 1, wy + 1, wx + SLOT_SIZE, wy + SLOT_SIZE, WELL_HIGHLIGHT);
-		graphics.fill(wx + 1, wy + 1, wx + SLOT_SIZE - 1, wy + SLOT_SIZE - 1, WELL_FACE);
-	}
-
-	/**
 	 * Draws a 1-pixel inner border on the four edges of the shard well, one pixel
 	 * inside the bevel so the tint reads as a glow on the slot face rather than as
 	 * a thickening of the bevel. {@code wellX} and {@code wellY} are the top-left
@@ -257,39 +182,6 @@ public class AltarScreen extends AbstractContainerScreen<AltarMenu> {
 		// Left and right edges, inset to avoid double-blending the corners.
 		graphics.fill(innerX0, innerY0 + 1, innerX0 + 1, innerY1 - 1, argb);
 		graphics.fill(innerX1 - 1, innerY0 + 1, innerX1, innerY1 - 1, argb);
-	}
-
-	/**
-	 * Draws a 3-pixel L-shaped bracket at each of the panel's four corners. The
-	 * brackets sit on the panel edge so they crown the existing bevel rather than
-	 * floating inside the panel face.
-	 */
-	private static void drawCornerBrackets(GuiGraphicsExtractor graphics, int panelX, int panelY) {
-		drawCornerBracket(graphics, panelX, panelY, +1, +1);
-		drawCornerBracket(graphics, panelX + IMAGE_WIDTH, panelY, -1, +1);
-		drawCornerBracket(graphics, panelX, panelY + IMAGE_HEIGHT, +1, -1);
-		drawCornerBracket(graphics, panelX + IMAGE_WIDTH, panelY + IMAGE_HEIGHT, -1, -1);
-	}
-
-	/**
-	 * Draws one corner bracket — an L-shape made of a horizontal and a vertical
-	 * 1-pixel arm of length {@link #BRACKET_ARM}, anchored at the corner pixel
-	 * ({@code cornerX}, {@code cornerY}) and growing in the directions given by
-	 * {@code dirX} and {@code dirY} (each {@code +1} or {@code -1}).
-	 */
-	private static void drawCornerBracket(GuiGraphicsExtractor graphics,
-			int cornerX, int cornerY, int dirX, int dirY) {
-		int hx0 = dirX > 0 ? cornerX : cornerX - BRACKET_ARM;
-		int hx1 = dirX > 0 ? cornerX + BRACKET_ARM : cornerX;
-		int hy0 = dirY > 0 ? cornerY : cornerY - 1;
-		int hy1 = dirY > 0 ? cornerY + 1 : cornerY;
-		graphics.fill(hx0, hy0, hx1, hy1, BRACKET_COLOR);
-
-		int vx0 = dirX > 0 ? cornerX : cornerX - 1;
-		int vx1 = dirX > 0 ? cornerX + 1 : cornerX;
-		int vy0 = dirY > 0 ? cornerY : cornerY - BRACKET_ARM;
-		int vy1 = dirY > 0 ? cornerY + BRACKET_ARM : cornerY;
-		graphics.fill(vx0, vy0, vx1, vy1, BRACKET_COLOR);
 	}
 
 	/**
@@ -413,5 +305,29 @@ public class AltarScreen extends AbstractContainerScreen<AltarMenu> {
 			return line.copy().append(Component.literal(" / Apex ready"));
 		}
 		return line;
+	}
+
+	private static final class BindButton extends Button {
+		private BindButton(int x, int y, Component message, OnPress onPress) {
+			super(x, y, BUTTON_W, BUTTON_H, message, onPress, DEFAULT_NARRATION);
+		}
+
+		@Override
+		protected void extractContents(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
+			int x0 = getX();
+			int y0 = getY();
+			int x1 = x0 + getWidth();
+			int y1 = y0 + getHeight();
+			int face = this.active
+				? (isHoveredOrFocused() ? 0xFF4B415F : 0xFF2D2935)
+				: 0xFF24222A;
+			int trim = this.active ? 0xFFB995FF : 0xFF5F596A;
+			graphics.fill(x0, y0, x1, y1, 0xFF15131B);
+			graphics.fill(x0 + 1, y0 + 1, x1 - 1, y1 - 1, trim);
+			graphics.fill(x0 + 2, y0 + 2, x1 - 2, y1 - 2, face);
+			graphics.fill(x0 + 3, y0 + 3, x1 - 3, y0 + 4, this.active ? 0xFFE0C6FF : 0xFF77707E);
+			graphics.fill(x0 + 3, y1 - 4, x1 - 3, y1 - 3, 0xFF17151D);
+			extractDefaultLabel(graphics.textRendererForWidget(this, GuiGraphicsExtractor.HoveredTextEffects.NONE));
+		}
 	}
 }

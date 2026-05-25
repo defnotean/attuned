@@ -1,5 +1,6 @@
 package dev.attuned.client;
 
+import dev.attuned.Attuned;
 import dev.attuned.api.focus.Affinity;
 import dev.attuned.api.focus.AffinityColors;
 import dev.attuned.api.focus.FocusDefinition;
@@ -12,6 +13,8 @@ import dev.attuned.client.hud.CombatHud;
 import dev.attuned.menu.FocusLayout;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.renderer.RenderPipelines;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.player.Player;
 
 import java.util.EnumSet;
@@ -20,28 +23,31 @@ import java.util.Optional;
 import java.util.Set;
 
 /**
- * Draws the Focus side panel: a vanilla-coloured extension of the inventory with
- * six recessed slot wells, a committed-affinity gem above them and an
- * attunement-budget bar below. Shared by the survival and creative inventory
+ * Draws the Focus side panel: a custom-textured inventory extension with six
+ * recessed slot wells, priority ticks, a committed-affinity gem above them, and
+ * an attunement-budget bar below. Shared by the survival and creative inventory
  * screens so both render an identical panel — only the column's position differs.
  */
 public final class FocusPanel {
 	private FocusPanel() {}
 
+	private static final Identifier PANEL_TEXTURE =
+		Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "textures/gui/focus_panel.png");
+
 	// Padding between the slot column and the panel edge, in GUI pixels.
 	private static final int PAD_X = 5;
 	private static final int PAD_Y = 8;
+	private static final int PANEL_WIDTH = 28;
+	private static final int PANEL_HEIGHT = 124;
 
 	// Affinity gem (top padding band) and budget bar (bottom padding band).
 	private static final int GEM_SIZE = 8;
 	private static final int BAR_HEIGHT = 4;
 
-	// ARGB palette — sampled directly from the vanilla inventory texture.
-	private static final int PANEL_FACE = 0xFFC6C6C6;
+	// ARGB palette used by dynamic overlays drawn above the custom panel art.
 	private static final int WELL_SHADOW = 0xFF373737;
-	private static final int WELL_HIGHLIGHT = 0xFFFFFFFF;
-	private static final int WELL_FACE = 0xFF8B8B8B;
 	private static final int DORMANT_DIM = 0x55000000;
+	private static final int PRIORITY_TICK_DIM = 0x80373737;
 
 	// Idle-glow pulse: a sine modulation across PULSE_PERIOD_TICKS whose alpha
 	// breathes between two narrow bounds so the highlight reads as ambient rather
@@ -77,9 +83,8 @@ public final class FocusPanel {
 		int y0 = topPos + slotY - PAD_Y;
 		int y1 = topPos + slotY + AttunedInv.SIZE * FocusLayout.SLOT + PAD_Y;
 
-		// Panel: a flat fill in the exact vanilla inventory colour, so it reads as
-		// a seamless extension of the inventory rather than a separate bordered box.
-		graphics.fill(x0, y0, x1, y1, PANEL_FACE);
+		graphics.blit(RenderPipelines.GUI_TEXTURED, PANEL_TEXTURE, x0, y0,
+			0.0F, 0.0F, PANEL_WIDTH, PANEL_HEIGHT, PANEL_WIDTH, PANEL_HEIGHT);
 
 		// Cache the breathing-pulse alpha once per draw — every active slot shares
 		// the same phase so the wells pulse as a chord rather than out of sync. The
@@ -120,11 +125,8 @@ public final class FocusPanel {
 		for (int i = 0; i < AttunedInv.SIZE; i++) {
 			int sx = leftPos + slotX;
 			int sy = topPos + slotY + i * FocusLayout.SLOT;
-			// Inset bevel: dark on the top/left, white on the bottom/right.
-			graphics.fill(sx, sy, sx + FocusLayout.SLOT, sy + FocusLayout.SLOT, WELL_SHADOW);
-			graphics.fill(sx + 1, sy + 1, sx + FocusLayout.SLOT, sy + FocusLayout.SLOT, WELL_HIGHLIGHT);
-			graphics.fill(sx + 1, sy + 1, sx + FocusLayout.SLOT - 1, sy + FocusLayout.SLOT - 1, WELL_FACE);
 			boolean active = slotDefinitions[i] != null;
+			drawPriorityTick(graphics, sx - 3, sy, i, active ? affinityColor : PRIORITY_TICK_DIM);
 			// Dim only an equipped-but-dormant Focus (over budget) — empty wells stay clean.
 			if (!inv.get(i).isEmpty() && !active) {
 				graphics.fill(sx + 1, sy + 1, sx + FocusLayout.SLOT - 1, sy + FocusLayout.SLOT - 1, DORMANT_DIM);
@@ -169,6 +171,17 @@ public final class FocusPanel {
 		if (capacity > 0 && used > 0) {
 			int fill = Math.max(1, Math.round((barX1 - barX0) * (used / (float) capacity)));
 			graphics.fill(barX0, barY0, barX0 + fill, barY0 + BAR_HEIGHT, affinityColor);
+		}
+	}
+
+	private static void drawPriorityTick(GuiGraphicsExtractor graphics, int x, int y, int slot, int colorArgb) {
+		int ticks = slot + 1;
+		for (int i = 0; i < Math.min(ticks, 3); i++) {
+			int ty = y + 4 + i * 3;
+			graphics.fill(x, ty, x + 1, ty + 2, colorArgb);
+		}
+		if (ticks > 3) {
+			graphics.fill(x + 1, y + 4, x + 2, y + 4 + (ticks - 3) * 3 - 1, colorArgb);
 		}
 	}
 

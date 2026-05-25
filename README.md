@@ -14,6 +14,7 @@ Equip **Foci** into six inventory slots, but mind your **attunement capacity**. 
 - **Pacts**: set bonuses that wake when you commit (Pyresworn, Stoneheart, Windrunner, Untethered)
 - **Apex capstones** at full commitment, gated by combat **Resonance**
 - **Attunement Altar**: bind shards to grow capacity; glows with your stance
+- Custom pixel-art UI for the Altar, Focus panel, combat HUD, and Attunement Journal
 - Lootr-friendly survival loot: every Focus and shard fragment rolls through vanilla structure chest loot tables
 - Combat HUD shows your gem, your target's gem, and resonance at a glance
 

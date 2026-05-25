@@ -103,15 +103,14 @@ modrinth {
 	versionName = "Attuned ${project.version}"
 	// Changelog for the current release — refresh this each time mod_version bumps.
 	changelog = """\
-The Unseen faction and survival shard teaching release.
+Custom UI art and guide polish release.
 
-- Added The Unseen, a stealth-focused faction that stays separate from the Fury/Bastion/Zephyr affinity cycle.
-- Added four new Foci: Softstep for silent crouched movement, Veil for low-light stillness, Needle for direct-melee ambush openings, and Smoke for line-of-sight misdirection.
-- Added matching animated Focus textures, item models, Focus definitions, tooltip text, and a new Attunement Journal page for The Unseen.
-- Added faction metadata to Focus definitions and tooltips so future themed content can group cleanly without changing affinity math.
-- Weighted Unseen Foci toward stealth-flavored vanilla structures while keeping all rewards loot-table based for Lootr-style per-player chest compatibility.
-- Improved Attunement Shard Fragment onboarding: using fragments now explains progress, altar attempts give better feedback, and the guide/docs teach fragment crafting.
-- Tightened runtime cleanup so temporary stealth state restores on disconnect, and added consistency tests for faction metadata and shipped Focus definitions.
+- Added custom pixel-art GUI textures for the Attunement Altar, Focus side panel, compact combat HUD backplate, and Attunement Journal item.
+- Reworked the Attunement Altar screen to render the new ritual-stone background and a custom textured Bind button while preserving the existing shard slot, inventory slot positions, and server validation.
+- Reworked the Focus panel to render from custom art, add priority tick marks, and keep active glow, dormant dimming, resonance, and capacity feedback readable.
+- Added a custom HUD backplate behind stance, target, resonance, and Apex cues without expanding the overlay into the playfield.
+- Expanded the Attunement Journal into a fuller in-game field guide covering priority, capacity, affinities, Discord, Pacts, Apex, shards, The Unseen, and Lootr-friendly loot.
+- Tightened Focus tooltip metadata and added asset-contract tests that verify custom UI textures exist, keep their intended dimensions, and stay wired into the renderers.
 """
 	uploadFile = file("build/libs/${project.name}-${project.version}.jar")
 	gameVersions = ["26.1.2"]

@@ -230,6 +230,7 @@ Operator commands require game-master permission:
 | `data/attuned/advancement/attunement/` | Code-awarded Attuned progression advancements |
 | `assets/attuned/items/` + `assets/attuned/models/item/` | Item model files |
 | `assets/attuned/textures/item/` | Item textures (`.png`) |
+| `assets/attuned/textures/gui/` | Custom Altar, Focus panel, and HUD UI textures |
 | `assets/attuned/lang/en_us.json` | All names, lore, and effect text |
 | `attunement/` | The budget, the six slots, active-vs-dormant logic |
 | `combat/` | Affinity combat and the Gravebind death-save |
