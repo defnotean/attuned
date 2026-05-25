@@ -103,15 +103,15 @@ modrinth {
 	versionName = "Attuned ${project.version}"
 	// Changelog for the current release — refresh this each time mod_version bumps.
 	changelog = """\
-Quality of life, onboarding, and polish release.
+The Unseen faction and survival shard teaching release.
 
-- Added Attunement Shard Fragments as survival loot smoothing: fragments have their own animated broken-crystal texture and four craft into one full Attunement Shard.
-- Added the Attunement Journal with a custom Attuned book texture. Right-click opens Minecraft's normal readable book UI with pages explaining Foci, capacity, affinities, Pacts, Apex, shards, and the Altar.
-- Reworked the Attunement Altar GUI so it is wider, less cramped, and better centered around the shard slot, Bind button, stance readout, capacity bar, and player inventory.
-- Added progression advancements for first Pact, Pact identities, favored matchups, and Apex.
-- Added player-facing quality-of-life commands: /attuned journal and focus slot up/down/move helpers, while keeping admin validation and capacity commands gated.
-- Added one-shot dormant Focus hints, short affinity blessings when binding shards, and subtle combat spark feedback for affinity-bearing mobs.
-- Hardened several foundations: server-synced Altar config in the GUI, safer Beacon compass restoration, creative-mode Focus slot validation, loot/definition consistency checks, and HUD capstone sprite handling.
+- Added The Unseen, a stealth-focused faction that stays separate from the Fury/Bastion/Zephyr affinity cycle.
+- Added four new Foci: Softstep for silent crouched movement, Veil for low-light stillness, Needle for direct-melee ambush openings, and Smoke for line-of-sight misdirection.
+- Added matching animated Focus textures, item models, Focus definitions, tooltip text, and a new Attunement Journal page for The Unseen.
+- Added faction metadata to Focus definitions and tooltips so future themed content can group cleanly without changing affinity math.
+- Weighted Unseen Foci toward stealth-flavored vanilla structures while keeping all rewards loot-table based for Lootr-style per-player chest compatibility.
+- Improved Attunement Shard Fragment onboarding: using fragments now explains progress, altar attempts give better feedback, and the guide/docs teach fragment crafting.
+- Tightened runtime cleanup so temporary stealth state restores on disconnect, and added consistency tests for faction metadata and shipped Focus definitions.
 """
 	uploadFile = file("build/libs/${project.name}-${project.version}.jar")
 	gameVersions = ["26.1.2"]
