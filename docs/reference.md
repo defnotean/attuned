@@ -123,6 +123,7 @@ examples to copy from:
 | `attuned:softstep`   | `SoftstepBehavior`       | Makes crouched movement silent. |
 | `attuned:emberward`  | `EmberwardBehavior`      | Fire immunity. |
 | `attuned:tide`       | `TideBehavior`           | Underwater breathing. |
+| `attuned:galespur`   | `GalespurBehavior`       | Doubles the speed of living mounts while riding. |
 | `attuned:bloodfury`  | `BloodfuryBehavior`      | Attack speed scaled by missing health. |
 | `attuned:harvest`    | `HarvestBehavior`        | Speeds up nearby crops. |
 | `attuned:aegis`      | `AegisBehavior`          | Periodic absorption shield (uses a cooldown). |

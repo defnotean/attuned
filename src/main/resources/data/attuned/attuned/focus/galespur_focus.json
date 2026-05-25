@@ -1,0 +1,7 @@
+{
+	"item": "attuned:galespur_focus",
+	"cost": 4,
+	"unique": true,
+	"affinity": "zephyr",
+	"behavior": "attuned:galespur"
+}
