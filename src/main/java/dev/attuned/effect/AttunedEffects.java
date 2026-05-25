@@ -21,14 +21,18 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
+import net.minecraft.ChatFormatting;
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.item.ItemStack;
 
+import java.util.HashSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -54,6 +58,8 @@ public final class AttunedEffects {
 	 * mutations cannot alias the tracked state.
 	 */
 	private static final Map<UUID, Map<Integer, ItemStack>> ACTIVE = new HashMap<>();
+	/** Per-player dormant slot set from last tick, for one-shot dormancy hints. */
+	private static final Map<UUID, Set<Integer>> DORMANT = new HashMap<>();
 
 	/** Server-wide tick counter used to throttle the aura. */
 	private static int auraTick;
@@ -69,12 +75,15 @@ public final class AttunedEffects {
 
 		// A respawned player is a fresh entity with no transient modifiers; drop the
 		// tracked state so the next tick reapplies every active Focus from scratch.
-		ServerPlayerEvents.AFTER_RESPAWN.register((oldPlayer, newPlayer, alive) ->
-			ACTIVE.remove(newPlayer.getUUID()));
+		ServerPlayerEvents.AFTER_RESPAWN.register((oldPlayer, newPlayer, alive) -> {
+			ACTIVE.remove(newPlayer.getUUID());
+			DORMANT.remove(newPlayer.getUUID());
+		});
 
 		// Drop a disconnecting player's snapshot too — like respawn, a reconnecting
 		// player is a fresh entity whose active Foci must be reapplied from scratch.
 		AttunedPlayerCleanup.onForget(ACTIVE::remove);
+		AttunedPlayerCleanup.onForget(DORMANT::remove);
 	}
 
 	private static void tickPlayer(ServerPlayer player) {
@@ -94,6 +103,8 @@ public final class AttunedEffects {
 		for (int slot : currentActive) {
 			nextState.put(slot, inv.get(slot));
 		}
+		Set<Integer> dormantSlots = dormantSlots(player, inv, currentActive);
+		announceNewDormantSlots(player, dormantSlots, wasTracked);
 
 		boolean anyActivated = false;
 		boolean anyDeactivated = false;
@@ -139,6 +150,39 @@ public final class AttunedEffects {
 			if (anyDeactivated) {
 				playAttuneSound(player, 0.7F);
 			}
+		}
+	}
+
+	private static Set<Integer> dormantSlots(ServerPlayer player, AttunedInv inv, List<Integer> activeSlots) {
+		Set<Integer> active = new HashSet<>(activeSlots);
+		Set<Integer> dormant = new HashSet<>();
+		for (int slot = 0; slot < AttunedInv.SIZE; slot++) {
+			if (!active.contains(slot) && Attunement.definitionFor(player, inv.get(slot)).isPresent()) {
+				dormant.add(slot);
+			}
+		}
+		return dormant;
+	}
+
+	private static void announceNewDormantSlots(ServerPlayer player, Set<Integer> dormantSlots, boolean wasTracked) {
+		UUID id = player.getUUID();
+		Set<Integer> previous = DORMANT.getOrDefault(id, Set.of());
+		if (wasTracked) {
+			for (int slot : dormantSlots) {
+				if (!previous.contains(slot)) {
+					player.sendSystemMessage(Component.literal("A Focus falls dormant: ")
+						.withStyle(ChatFormatting.GRAY)
+						.append(AttunedAttachments.getInventory(player).get(slot).getHoverName())
+						.append(Component.literal(". Move it higher or raise capacity.")
+							.withStyle(ChatFormatting.DARK_GRAY)));
+					break;
+				}
+			}
+		}
+		if (dormantSlots.isEmpty()) {
+			DORMANT.remove(id);
+		} else {
+			DORMANT.put(id, Set.copyOf(dormantSlots));
 		}
 	}
 

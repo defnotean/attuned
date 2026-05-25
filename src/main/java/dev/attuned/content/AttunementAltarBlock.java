@@ -22,6 +22,8 @@ import net.minecraft.util.RandomSource;
 import net.minecraft.util.StringRepresentable;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.BlockGetter;
@@ -176,11 +178,23 @@ public class AttunementAltarBlock extends Block {
 		server.playSound(null, pos, SoundEvents.AMETHYST_BLOCK_CHIME, SoundSource.BLOCKS, 0.8F, 1.0F);
 		if (player instanceof ServerPlayer serverPlayer) {
 			AltarAnimations.begin(server, pos, serverPlayer, stanceRgb(player));
+			applyBindingPerk(serverPlayer);
 		}
 		player.sendSystemMessage(Component.literal("The Altar binds the shard — capacity ")
 			.withStyle(ChatFormatting.GRAY)
 			.append(Component.literal(raised + " / " + cap).withStyle(ChatFormatting.AQUA)));
 		return true;
+	}
+
+	private static void applyBindingPerk(ServerPlayer player) {
+		Attunement.committedAffinity(player).ifPresent(affinity -> {
+			MobEffectInstance effect = switch (affinity) {
+				case FURY -> new MobEffectInstance(MobEffects.STRENGTH, 400, 0, true, true, true);
+				case BASTION -> new MobEffectInstance(MobEffects.RESISTANCE, 400, 0, true, true, true);
+				case ZEPHYR -> new MobEffectInstance(MobEffects.SPEED, 400, 0, true, true, true);
+			};
+			player.addEffect(effect);
+		});
 	}
 
 	/**

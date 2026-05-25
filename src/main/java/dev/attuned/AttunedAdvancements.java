@@ -1,0 +1,32 @@
+package dev.attuned;
+
+import net.minecraft.advancements.AdvancementHolder;
+import net.minecraft.resources.Identifier;
+import net.minecraft.server.level.ServerPlayer;
+
+/**
+ * Small helper for Attuned's code-awarded challenge advancements. The JSON uses
+ * impossible criteria so these milestones only unlock when the corresponding
+ * attunement event actually happens in code.
+ */
+public final class AttunedAdvancements {
+	private AttunedAdvancements() {}
+
+	private static final String CRITERION = "done";
+	private static final String ROOT = "attunement/root";
+
+	public static void award(ServerPlayer player, String path) {
+		if (!ROOT.equals(path)) {
+			awardSingle(player, ROOT);
+		}
+		awardSingle(player, path);
+	}
+
+	private static void awardSingle(ServerPlayer player, String path) {
+		AdvancementHolder holder = player.level().getServer().getAdvancements()
+			.get(Identifier.fromNamespaceAndPath(Attuned.MOD_ID, path));
+		if (holder != null) {
+			player.getAdvancements().award(holder, CRITERION);
+		}
+	}
+}

@@ -1,0 +1,19 @@
+{
+	"display": {
+		"icon": {
+			"id": "attuned:attunement_journal"
+		},
+		"title": "Attuned",
+		"description": "Begin shaping a build through Foci and capacity.",
+		"background": "minecraft:gui/advancements/backgrounds/adventure",
+		"frame": "task",
+		"show_toast": false,
+		"announce_to_chat": false,
+		"hidden": false
+	},
+	"criteria": {
+		"done": {
+			"trigger": "minecraft:impossible"
+		}
+	}
+}

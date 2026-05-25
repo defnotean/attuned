@@ -1,6 +1,7 @@
 package dev.attuned.pacts;
 
 import dev.attuned.AttunedPlayerCleanup;
+import dev.attuned.AttunedAdvancements;
 import dev.attuned.api.focus.Affinity;
 import dev.attuned.api.focus.AffinityColors;
 import dev.attuned.api.focus.FocusDefinition;
@@ -369,6 +370,7 @@ public final class Pacts {
 			.append(pact.displayName().withStyle(pact.chatColor(), ChatFormatting.BOLD))
 			.append(Component.literal(". ").withStyle(ChatFormatting.GRAY))
 			.append(pact.description().withStyle(ChatFormatting.GRAY)));
+		AttunedAdvancements.award(player, "attunement/pact_" + pact.name().toLowerCase(Locale.ROOT));
 	}
 
 	private static void announceLost(ServerPlayer player, Pact pact) {
@@ -416,5 +418,6 @@ public final class Pacts {
 		);
 		player.sendSystemMessage(Component.translatable("pact.attuned.first_pact")
 			.withStyle(pact.chatColor(), ChatFormatting.BOLD, ChatFormatting.ITALIC));
+		AttunedAdvancements.award(player, "attunement/first_pact");
 	}
 }

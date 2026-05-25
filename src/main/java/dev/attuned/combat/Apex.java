@@ -1,6 +1,7 @@
 package dev.attuned.combat;
 
 import dev.attuned.AttunedPlayerCleanup;
+import dev.attuned.AttunedAdvancements;
 import dev.attuned.api.focus.Affinity;
 import dev.attuned.api.focus.FocusDefinition;
 import dev.attuned.attunement.AttunedAttachments;
@@ -360,6 +361,7 @@ public final class Apex {
 				.withStyle(affinityColor(affinity), ChatFormatting.BOLD))
 			.append(Component.literal(". " + capstoneDescription(affinity))
 				.withStyle(ChatFormatting.GRAY)));
+		AttunedAdvancements.award(player, "attunement/apex");
 	}
 
 	/**
@@ -387,6 +389,7 @@ public final class Apex {
 			.append(Component.literal(capstoneName(affinity))
 				.withStyle(affinityColor(affinity), ChatFormatting.BOLD))
 			.append(Component.literal(".").withStyle(ChatFormatting.GRAY)));
+		AttunedAdvancements.award(player, "attunement/apex");
 	}
 
 	private static void announceDormant(ServerPlayer player) {

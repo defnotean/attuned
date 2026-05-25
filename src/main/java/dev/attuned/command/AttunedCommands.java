@@ -3,16 +3,24 @@ package dev.attuned.command;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import dev.attuned.api.focus.Affinity;
 import dev.attuned.api.focus.FocusDefinition;
+import dev.attuned.AttunedRegistries;
 import dev.attuned.attunement.AttunedAttachments;
 import dev.attuned.attunement.AttunedInv;
 import dev.attuned.attunement.Attunement;
 import dev.attuned.combat.Apex;
 import dev.attuned.combat.Resonance;
+import dev.attuned.content.AttunedContent;
+import dev.attuned.content.AttunementJournalItem;
 import dev.attuned.pacts.Pact;
 import dev.attuned.pacts.Pacts;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.minecraft.ChatFormatting;
 import net.minecraft.commands.CommandSourceStack;
@@ -33,11 +41,41 @@ public final class AttunedCommands {
 	public static void init() {
 		CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) ->
 			dispatcher.register(Commands.literal("attuned")
+				.then(Commands.literal("journal")
+					.executes(ctx -> {
+						ServerPlayer player = ctx.getSource().getPlayerOrException();
+						AttunementJournalItem.showGuide(player);
+						return 1;
+					}))
+				.then(Commands.literal("focus")
+					.then(Commands.literal("up")
+						.then(Commands.argument("slot", IntegerArgumentType.integer(1, AttunedInv.SIZE))
+							.executes(ctx -> {
+								ServerPlayer player = ctx.getSource().getPlayerOrException();
+								int slot = IntegerArgumentType.getInteger(ctx, "slot") - 1;
+								return moveFocus(ctx.getSource(), player, slot, slot - 1);
+							})))
+					.then(Commands.literal("down")
+						.then(Commands.argument("slot", IntegerArgumentType.integer(1, AttunedInv.SIZE))
+							.executes(ctx -> {
+								ServerPlayer player = ctx.getSource().getPlayerOrException();
+								int slot = IntegerArgumentType.getInteger(ctx, "slot") - 1;
+								return moveFocus(ctx.getSource(), player, slot, slot + 1);
+							})))
+					.then(Commands.literal("move")
+						.then(Commands.argument("from", IntegerArgumentType.integer(1, AttunedInv.SIZE))
+							.then(Commands.argument("to", IntegerArgumentType.integer(1, AttunedInv.SIZE))
+								.executes(ctx -> {
+									ServerPlayer player = ctx.getSource().getPlayerOrException();
+									int from = IntegerArgumentType.getInteger(ctx, "from") - 1;
+									int to = IntegerArgumentType.getInteger(ctx, "to") - 1;
+									return moveFocus(ctx.getSource(), player, from, to);
+								})))))
 				// Operator-only (permission level 2). In 26.1 the old
 				// CommandSourceStack#hasPermission(int) is gone; gating now uses
 				// Commands.hasPermission(PermissionCheck) with a LEVEL_* constant.
-				.requires(Commands.hasPermission(Commands.LEVEL_GAMEMASTERS))
 				.then(Commands.literal("capacity")
+					.requires(Commands.hasPermission(Commands.LEVEL_GAMEMASTERS))
 					.executes(ctx -> {
 						ServerPlayer player = ctx.getSource().getPlayerOrException();
 						int capacity = AttunedAttachments.getCapacity(player);
@@ -55,11 +93,80 @@ public final class AttunedCommands {
 							return amount;
 						})))
 				.then(Commands.literal("status")
+					.requires(Commands.hasPermission(Commands.LEVEL_GAMEMASTERS))
 					.executes(ctx -> {
 						ServerPlayer player = ctx.getSource().getPlayerOrException();
 						printStatus(ctx.getSource(), player);
 						return 1;
-					}))));
+					}))
+				.then(Commands.literal("validate")
+					.requires(Commands.hasPermission(Commands.LEVEL_GAMEMASTERS))
+					.executes(ctx -> validateContent(ctx.getSource())))));
+	}
+
+	private static int moveFocus(CommandSourceStack source, ServerPlayer player, int from, int to) {
+		if (to < 0 || to >= AttunedInv.SIZE) {
+			source.sendFailure(Component.literal("That Focus slot cannot move any further."));
+			return 0;
+		}
+		if (from == to) {
+			return 0;
+		}
+		AttunedInv inv = AttunedAttachments.getInventory(player);
+		ItemStack first = inv.get(from).copy();
+		ItemStack second = inv.get(to).copy();
+		if (first.isEmpty() && second.isEmpty()) {
+			source.sendFailure(Component.literal("Both Focus slots are empty."));
+			return 0;
+		}
+		AttunedAttachments.setSlot(player, from, second);
+		AttunedAttachments.setSlot(player, to, first);
+		source.sendSuccess(() -> Component.literal(
+			"Swapped Focus slots " + (from + 1) + " and " + (to + 1) + "."), false);
+		return 1;
+	}
+
+	private static int validateContent(CommandSourceStack source) {
+		List<String> problems = new ArrayList<>();
+		var registry = source.getServer().registryAccess().lookupOrThrow(AttunedRegistries.FOCUS_DEFINITIONS);
+		Map<net.minecraft.world.item.Item, FocusDefinition> byItem = new IdentityHashMap<>();
+		registry.listElements().forEach(holder -> {
+			FocusDefinition def = holder.value();
+			byItem.put(def.item().value(), def);
+			def.behavior().ifPresent(behaviorId -> {
+				if (dev.attuned.AttunedRegistries.getBehavior(behaviorId) == null) {
+					problems.add("Missing behavior " + behaviorId + " for "
+						+ BuiltInRegistries.ITEM.getKey(def.item().value()));
+				}
+			});
+		});
+
+		Set<net.minecraft.world.item.Item> shipped = new HashSet<>(AttunedContent.FOCI);
+		for (net.minecraft.world.item.Item focus : AttunedContent.FOCI) {
+			if (!byItem.containsKey(focus)) {
+				problems.add("Missing FocusDefinition for " + BuiltInRegistries.ITEM.getKey(focus));
+			}
+		}
+		for (net.minecraft.world.item.Item item : byItem.keySet()) {
+			if (!shipped.contains(item)) {
+				problems.add("FocusDefinition item is not in AttunedContent.FOCI: "
+					+ BuiltInRegistries.ITEM.getKey(item));
+			}
+		}
+
+		if (problems.isEmpty()) {
+			source.sendSuccess(() -> Component.literal(
+				"Attuned validation passed: " + byItem.size() + " Focus definitions checked."), false);
+			return byItem.size();
+		}
+		source.sendFailure(Component.literal("Attuned validation found " + problems.size() + " issue(s):"));
+		for (String problem : problems.subList(0, Math.min(8, problems.size()))) {
+			source.sendFailure(Component.literal("- " + problem));
+		}
+		if (problems.size() > 8) {
+			source.sendFailure(Component.literal("- ...and " + (problems.size() - 8) + " more."));
+		}
+		return 0;
 	}
 
 	/** Dumps the player's attunement state to the command source as styled chat lines. */

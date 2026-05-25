@@ -1,0 +1,19 @@
+{
+	"parent": "attuned:attunement/root",
+	"display": {
+		"icon": {
+			"id": "attuned:edge_focus"
+		},
+		"title": "Favored Matchup",
+		"description": "Defeat a foe your committed affinity counters.",
+		"frame": "task",
+		"show_toast": true,
+		"announce_to_chat": false,
+		"hidden": false
+	},
+	"criteria": {
+		"done": {
+			"trigger": "minecraft:impossible"
+		}
+	}
+}

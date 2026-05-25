@@ -1,5 +1,6 @@
 package dev.attuned.combat;
 
+import dev.attuned.AttunedAdvancements;
 import dev.attuned.api.focus.Affinity;
 import dev.attuned.attunement.AttunedAttachments;
 import dev.attuned.attunement.Attunement;
@@ -99,7 +100,12 @@ public final class Resonance {
 			return;
 		}
 		switch (matchup(player, entity)) {
-			case EMPOWERED -> add(player, KILL_EMPOWERED_GAIN);
+			case EMPOWERED -> {
+				add(player, KILL_EMPOWERED_GAIN);
+				if (player instanceof ServerPlayer serverPlayer) {
+					AttunedAdvancements.award(serverPlayer, "attunement/favored_matchup");
+				}
+			}
 			case NORMAL -> add(player, KILL_NEUTRAL_GAIN);
 			case NEUTRALIZED -> { /* No gain from a neutralized kill. */ }
 		}

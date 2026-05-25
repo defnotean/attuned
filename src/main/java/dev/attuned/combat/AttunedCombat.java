@@ -20,7 +20,10 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 
 /**
  * The rock-paper-scissors counter-combat system.
@@ -61,10 +64,14 @@ public final class AttunedCombat {
 
 	/** Re-entrancy guard so a reflected hit cannot trigger another reflection. */
 	private static final ThreadLocal<Boolean> REFLECTING = ThreadLocal.withInitial(() -> false);
+	/** Last game-time a mob affinity spark was shown for an entity. */
+	private static final Map<UUID, Long> LAST_AFFINITY_SPARK = new HashMap<>();
 
 	/** Registers the combat event handlers. Called from the mod initializer. */
 	public static void init() {
 		ServerLivingEntityEvents.AFTER_DAMAGE.register(AttunedCombat::afterDamage);
+		ServerLivingEntityEvents.AFTER_DEATH.register((entity, source) ->
+			LAST_AFFINITY_SPARK.remove(entity.getUUID()));
 	}
 
 	/**
@@ -77,7 +84,27 @@ public final class AttunedCombat {
 		if (multiplier != 1.0F) {
 			matchupFeedback(level, defender, source, multiplier);
 		}
+		if (attackerOf(source) instanceof Player && !(defender instanceof Player)) {
+			mobAffinitySpark(level, defender);
+		}
 		return amount * multiplier;
+	}
+
+	private static void mobAffinitySpark(ServerLevel level, LivingEntity entity) {
+		Optional<Affinity> affinity = MobAffinities.of(entity);
+		if (affinity.isEmpty()) {
+			return;
+		}
+		UUID id = entity.getUUID();
+		long now = level.getGameTime();
+		Long last = LAST_AFFINITY_SPARK.get(id);
+		if (last != null && now - last < 40L) {
+			return;
+		}
+		LAST_AFFINITY_SPARK.put(id, now);
+		level.sendParticles(new DustParticleOptions(affinity.get().argb() & 0x00FFFFFF, 0.8F),
+			entity.getX(), entity.getY() + entity.getBbHeight() * 0.7, entity.getZ(),
+			4, 0.2, 0.25, 0.2, 0.0);
 	}
 
 	/**
