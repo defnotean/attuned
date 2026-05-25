@@ -103,15 +103,15 @@ modrinth {
 	versionName = "Attuned ${project.version}"
 	// Changelog for the current release — refresh this each time mod_version bumps.
 	changelog = """\
-A polish pass on top of the Pacts Update.
+Quality of life, onboarding, and polish release.
 
-- Apex capstone icons on the combat HUD: a red skull for Fury Execute, a gold shield for Bastion Unyielding, a cyan swirl for Zephyr Untouchable. The icons render through the GUI sprite atlas so they stay crisp at any HUD size and on any GUI scale.
-- The Attunement Altar got a full visual rebuild: a solid-block 3D monument with affinity-themed crystals at the corners, animated runic plates per stance, and a 3D inventory render so the item icon matches what you place.
-- The Altar GUI now opens reliably on empty-hand right-click. Fixed the interaction chain that was silently swallowing the click in 26.1.2, sized the click hitbox to match the new 3D model, and synced the player inventory grid layout so its slot wells render correctly under a texture-less screen.
-- The Altar's Bind GUI shows a stance gem next to the affinity name so a player at Apex sees their Execute / Unyielding / Untouchable icon in the GUI too, not just in chat.
-- Per-stance gem rendering in the Focus panel and the Altar GUI uses the same sprite path as the HUD, so all surfaces of the mod read as one design language.
-- BlockItem display-name lang key wired so the Altar shows as "Attunement Altar" in tooltips instead of the raw translation key.
-- Many smaller fixes: VoxelShape now mirrors the new altar model element for element, the corner-coord blit signature is documented in code, the HUD halo pulses on game-tick time so it freezes with a paused single-player game, and the Focus panel's idle glow does too.
+- Added Attunement Shard Fragments as survival loot smoothing: fragments have their own animated broken-crystal texture and four craft into one full Attunement Shard.
+- Added the Attunement Journal with a custom Attuned book texture. Right-click opens Minecraft's normal readable book UI with pages explaining Foci, capacity, affinities, Pacts, Apex, shards, and the Altar.
+- Reworked the Attunement Altar GUI so it is wider, less cramped, and better centered around the shard slot, Bind button, stance readout, capacity bar, and player inventory.
+- Added progression advancements for first Pact, Pact identities, favored matchups, and Apex.
+- Added player-facing quality-of-life commands: /attuned journal and focus slot up/down/move helpers, while keeping admin validation and capacity commands gated.
+- Added one-shot dormant Focus hints, short affinity blessings when binding shards, and subtle combat spark feedback for affinity-bearing mobs.
+- Hardened several foundations: server-synced Altar config in the GUI, safer Beacon compass restoration, creative-mode Focus slot validation, loot/definition consistency checks, and HUD capstone sprite handling.
 """
 	uploadFile = file("build/libs/${project.name}-${project.version}.jar")
 	gameVersions = ["26.1.2"]
