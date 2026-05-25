@@ -4,6 +4,8 @@ import dev.attuned.api.focus.Affinity;
 import dev.attuned.api.focus.AffinityColors;
 import dev.attuned.attunement.Attunement;
 import dev.attuned.combat.Apex;
+import dev.attuned.pacts.Pact;
+import dev.attuned.pacts.Pacts;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
@@ -59,6 +61,10 @@ public final class AttunementReadout {
 			.append(Component.literal("  Dormant: ").withStyle(ChatFormatting.GRAY))
 			.append(Component.literal(Integer.toString(dormant))
 				.withStyle(dormant > 0 ? ChatFormatting.YELLOW : ChatFormatting.DARK_GRAY)));
+		if (dormant > 0) {
+			lines.add(Component.literal("Hover a dormant Focus for details.")
+				.withStyle(ChatFormatting.DARK_GRAY));
+		}
 
 		if (Attunement.isDiscord(player)) {
 			lines.add(Component.literal("Stance: ").withStyle(ChatFormatting.GRAY)
@@ -69,6 +75,18 @@ public final class AttunementReadout {
 			Optional<Affinity> affinity = Attunement.committedAffinity(player);
 			lines.add(Component.literal("Affinity: ").withStyle(ChatFormatting.GRAY)
 				.append(Component.literal(affinityName(affinity)).withStyle(affinityTextColor(affinity))));
+		}
+
+		Optional<Pact> pact = Pacts.activeOf(player);
+		if (pact.isPresent()) {
+			Pact activePact = pact.get();
+			lines.add(Component.literal("Pact: ").withStyle(ChatFormatting.GRAY)
+				.append(activePact.displayName().withStyle(activePact.chatColor(), ChatFormatting.BOLD)));
+		} else {
+			lines.add(Component.literal("Pact: ").withStyle(ChatFormatting.GRAY)
+				.append(Component.literal("None").withStyle(ChatFormatting.DARK_GRAY)));
+			Pacts.previewOf(player).ifPresent(preview -> lines.add(
+				Component.literal("Next Pact: ").withStyle(ChatFormatting.GRAY).append(preview)));
 		}
 
 		Optional<Affinity> apex = Apex.affinityOf(player);

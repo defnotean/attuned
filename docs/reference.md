@@ -154,7 +154,7 @@ Every key is optional and falls back to a built-in default:
 | `starting_capacity` | 4 | Attunement capacity a new player begins with. |
 | `capacity_cap` | 20 | Highest capacity an Attunement Shard can reach. |
 | `capacity_per_shard` | 2 | Capacity each Attunement Shard grants. |
-| `focus_loot_chance` | 0.25 | Chance a targeted structure chest yields a Focus. |
+| `focus_loot_chance` | 0.25 | Base chance a targeted loot table yields a Focus. |
 | `voidstep_cooldown_ticks` | 200 | Cooldown of the Voidstep blink, in ticks. |
 | `gravebind_cooldown_ticks` | 1200 | Cooldown of the Gravebind death-save, in ticks. |
 
@@ -173,15 +173,16 @@ The `/attuned capacity` command reads or sets a player's capacity for testing.
 |------|-----------------|---------|
 | Attunement Altar | Amethyst block, diamond, polished deepslate | Opens the shard-binding GUI and binds shards into capacity. |
 | Attunement Shard | Diamond surrounded by amethyst shards, or four Attunement Shard Fragments | Raises capacity when bound at an Altar. |
-| Attunement Shard Fragment | Structure loot injected alongside Foci | Four craft into one Attunement Shard; using one tells the player their current fragment count. |
+| Attunement Shard Fragment | Vanilla loot injected alongside Foci | Four craft into one Attunement Shard; using one tells the player their current fragment count. |
 | Attunement Journal | Book + amethyst shard | Opens as a readable book with the core Attuned rules. |
 
 ## Loot and Lootr compatibility
 
-Attuned injects Foci and shard fragments into vanilla structure loot tables in
-`content/AttunedLoot.java`. That keeps the rewards vanilla-friendly and also
-works with Lootr-style per-player chests because those mods resolve the same
-loot tables for each player instead of needing custom Attuned chest blocks.
+Attuned injects Foci and shard fragments into reviewed vanilla loot tables in
+`content/AttunedLoot.java`: structure chests, fishing treasure, archaeology, and
+trial rewards. That keeps the rewards vanilla-friendly and also works with
+Lootr-style per-player chests because those mods resolve the same chest loot
+tables for each player instead of needing custom Attuned chest blocks.
 
 Every shipped Focus is added to every Attuned Focus loot pool with a positive
 weight. Theme weights bias the roll; they never remove a Focus from the pool.
@@ -189,9 +190,9 @@ That means adding a new Focus to `AttunedContent.FOCI` and its definition data
 keeps it findable anywhere Attuned Focus loot can roll, including Lootr
 per-player containers.
 
-The Unseen Foci are weighted a little higher in stealth-flavoured structures
-such as mineshafts, strongholds, outposts, ancient cities, and end cities, but
-they remain possible anywhere Attuned Focus loot can roll.
+The Unseen Foci are weighted a little higher in stealth-flavoured structures and
+ruins such as mineshafts, strongholds, outposts, ancient cities, end cities, and
+archaeology sites, but they remain possible anywhere Attuned Focus loot can roll.
 
 Lootr stays an optional/suggested dependency in `fabric.mod.json`. Attuned only
 needs Lootr's native behavior for vanilla loot-table containers; a direct Lootr

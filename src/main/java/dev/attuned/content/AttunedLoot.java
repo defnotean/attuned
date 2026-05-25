@@ -19,7 +19,7 @@ import net.minecraft.world.level.storage.loot.providers.number.ConstantValue;
 
 /**
  * Seeds the Foci into survival as exploration rewards: a chance at one Focus is
- * injected into a spread of vanilla structure chest loot tables.
+ * injected into a spread of vanilla loot tables.
  *
  * <p>Each targeted table has a {@link Tier} — deeper, more dangerous structures
  * yield Foci more often — and an affinity {@link Drop#theme theme} that weights
@@ -36,6 +36,7 @@ public final class AttunedLoot {
 
 	/** How rich a structure's Focus drop is — a multiplier on the configured base chance. */
 	enum Tier {
+		LOW(0.35F),
 		COMMON(0.7F),
 		RICH(1.0F),
 		TREASURE(1.8F);
@@ -86,7 +87,23 @@ public final class AttunedLoot {
 		Map.entry(chest("woodland_mansion"), unseen(Tier.TREASURE, Affinity.FURY)),
 		Map.entry(chest("ancient_city"), unseen(Tier.TREASURE, Affinity.BASTION)),
 		Map.entry(chest("end_city_treasure"), unseen(Tier.TREASURE, Affinity.ZEPHYR)),
-		Map.entry(chest("bastion_treasure"), normal(Tier.TREASURE, Affinity.BASTION))
+		Map.entry(chest("bastion_treasure"), normal(Tier.TREASURE, Affinity.BASTION)),
+		// Repeatable treasure - pleasant finds, deliberately low odds.
+		Map.entry(vanilla("gameplay/fishing/treasure"), normal(Tier.LOW, null)),
+		// Archaeology - quiet exploration, with Unseen-leaning ruins and desert sites.
+		Map.entry(vanilla("archaeology/desert_pyramid"), unseen(Tier.RICH, null)),
+		Map.entry(vanilla("archaeology/desert_well"), unseen(Tier.COMMON, null)),
+		Map.entry(vanilla("archaeology/trail_ruins_common"), unseen(Tier.LOW, null)),
+		Map.entry(vanilla("archaeology/trail_ruins_rare"), unseen(Tier.COMMON, Affinity.ZEPHYR)),
+		Map.entry(vanilla("archaeology/ocean_ruin_warm"), normal(Tier.COMMON, Affinity.ZEPHYR)),
+		Map.entry(vanilla("archaeology/ocean_ruin_cold"), normal(Tier.COMMON, Affinity.ZEPHYR)),
+		// Trial reward children only. The parent reward tables delegate to these.
+		Map.entry(chest("trial_chambers/reward_common"), normal(Tier.RICH, Affinity.FURY)),
+		Map.entry(chest("trial_chambers/reward_rare"), normal(Tier.TREASURE, Affinity.BASTION)),
+		Map.entry(chest("trial_chambers/reward_unique"), normal(Tier.TREASURE, Affinity.ZEPHYR)),
+		Map.entry(chest("trial_chambers/reward_ominous_common"), unseen(Tier.RICH, Affinity.FURY)),
+		Map.entry(chest("trial_chambers/reward_ominous_rare"), unseen(Tier.TREASURE, Affinity.FURY)),
+		Map.entry(chest("trial_chambers/reward_ominous_unique"), unseen(Tier.TREASURE, null))
 	);
 
 	private static Drop normal(Tier tier, Affinity theme) {
@@ -98,7 +115,11 @@ public final class AttunedLoot {
 	}
 
 	private static Identifier chest(String name) {
-		return Identifier.fromNamespaceAndPath("minecraft", "chests/" + name);
+		return vanilla("chests/" + name);
+	}
+
+	private static Identifier vanilla(String path) {
+		return Identifier.fromNamespaceAndPath("minecraft", path);
 	}
 
 	static Map<Identifier, Drop> targetDrops() {

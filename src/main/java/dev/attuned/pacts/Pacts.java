@@ -2,6 +2,7 @@ package dev.attuned.pacts;
 
 import dev.attuned.AttunedPlayerCleanup;
 import dev.attuned.AttunedAdvancements;
+import dev.attuned.AttunedRegistries;
 import dev.attuned.api.focus.Affinity;
 import dev.attuned.api.focus.AffinityColors;
 import dev.attuned.api.focus.FocusDefinition;
@@ -124,13 +125,7 @@ public final class Pacts {
 
 	/** The pact a player has woken, if any. */
 	public static Optional<Pact> activeOf(Player player) {
-		AttunedInv inv = AttunedAttachments.getInventory(player);
-		EnumMap<Affinity, Integer> counts = new EnumMap<>(Affinity.class);
-		for (int slot : Attunement.activeSlots(player)) {
-			Attunement.definitionFor(player, inv.get(slot))
-				.flatMap(FocusDefinition::affinity)
-				.ifPresent(a -> counts.merge(a, 1, Integer::sum));
-		}
+		EnumMap<Affinity, Integer> counts = activeAffinityCounts(player);
 		if (counts.size() >= UNTETHERED_AFFINITY_COUNT) {
 			return Optional.of(Pact.UNTETHERED);
 		}
@@ -143,9 +138,66 @@ public final class Pacts {
 		return Optional.empty();
 	}
 
+	/**
+	 * Short UI hint for a build that is exactly one same-affinity active Focus
+	 * away from a single-affinity pact.
+	 */
+	public static Optional<Component> previewOf(Player player) {
+		if (activeOf(player).isPresent() || Attunement.isDiscord(player)) {
+			return Optional.empty();
+		}
+		EnumMap<Affinity, Integer> counts = activeAffinityCounts(player);
+		if (counts.size() != 1) {
+			return Optional.empty();
+		}
+		Map.Entry<Affinity, Integer> only = counts.entrySet().iterator().next();
+		if (only.getValue() != SINGLE_AFFINITY_THRESHOLD - 1) {
+			return Optional.empty();
+		}
+		Affinity affinity = only.getKey();
+		if (remainingBudget(player) < cheapestFocusCost(player, affinity)) {
+			return Optional.empty();
+		}
+		Pact pact = Pact.ofAffinity(affinity);
+		return Optional.of(pact.displayName().withStyle(pact.chatColor(), ChatFormatting.BOLD)
+			.append(Component.literal(" needs 1 " + affinityName(affinity) + " Focus")
+				.withStyle(ChatFormatting.GRAY)));
+	}
+
 	/** Whether a player has woken exactly this pact. */
 	public static boolean isAt(Player player, Pact pact) {
 		return activeOf(player).filter(p -> p == pact).isPresent();
+	}
+
+	private static EnumMap<Affinity, Integer> activeAffinityCounts(Player player) {
+		AttunedInv inv = AttunedAttachments.getInventory(player);
+		EnumMap<Affinity, Integer> counts = new EnumMap<>(Affinity.class);
+		for (int slot : Attunement.activeSlots(player)) {
+			Attunement.definitionFor(player, inv.get(slot))
+				.flatMap(FocusDefinition::affinity)
+				.ifPresent(a -> counts.merge(a, 1, Integer::sum));
+		}
+		return counts;
+	}
+
+	private static int remainingBudget(Player player) {
+		return Math.max(0, Attunement.capacity(player) - Attunement.used(player));
+	}
+
+	private static int cheapestFocusCost(Player player, Affinity affinity) {
+		int cheapest = Integer.MAX_VALUE;
+		var registry = player.level().registryAccess().lookupOrThrow(AttunedRegistries.FOCUS_DEFINITIONS);
+		for (FocusDefinition definition : registry) {
+			if (definition.affinity().filter(a -> a == affinity).isPresent()) {
+				cheapest = Math.min(cheapest, definition.cost());
+			}
+		}
+		return cheapest;
+	}
+
+	private static String affinityName(Affinity affinity) {
+		String lower = affinity.name().toLowerCase(Locale.ROOT);
+		return Character.toUpperCase(lower.charAt(0)) + lower.substring(1);
 	}
 
 	/**

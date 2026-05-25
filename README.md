@@ -15,7 +15,7 @@ Equip **Foci** into six inventory slots, but mind your **attunement capacity**. 
 - **Apex capstones** at full commitment, gated by combat **Resonance**
 - **Attunement Altar**: bind shards to grow capacity; glows with your stance
 - Custom pixel-art UI for the Altar, Focus panel, combat HUD, and Attunement Journal
-- Lootr-friendly survival loot: every Focus and shard fragment rolls through vanilla structure chest loot tables
+- Lootr-friendly survival loot: every Focus and shard fragment rolls through vanilla structures, fishing treasure, archaeology, and trial rewards
 - Combat HUD shows your gem, your target's gem, and resonance at a glance
 
 ## Requirements
@@ -23,8 +23,8 @@ Equip **Foci** into six inventory slots, but mind your **attunement capacity**. 
 Minecraft 26.1.2 · Fabric Loader 0.19.2+ · Fabric API
 
 Lootr is optional but suggested for modpacks. Attuned does not add custom
-loot containers; it injects Foci and shard fragments into vanilla structure
-chest loot tables, so Lootr's per-player containers can roll the same rewards.
+loot containers; it injects Foci and shard fragments into vanilla loot tables,
+so Lootr's per-player containers can roll the same chest rewards.
 
 ## Modding it
 

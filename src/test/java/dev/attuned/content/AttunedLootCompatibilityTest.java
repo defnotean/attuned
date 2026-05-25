@@ -12,6 +12,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
 import java.util.stream.Stream;
 import net.minecraft.resources.Identifier;
@@ -28,21 +29,51 @@ class AttunedLootCompatibilityTest {
 		Path.of("src/main/resources/fabric.mod.json");
 
 	@Test
-	void everyShippedFocusCanRollInEveryTargetedVanillaChest() throws IOException {
+	void everyShippedFocusCanRollInEveryTargetedVanillaTable() throws IOException {
 		Map<String, FocusData> foci = focusDataByItemId();
 
 		for (Map.Entry<Identifier, AttunedLoot.Drop> target : AttunedLoot.targetDrops().entrySet()) {
 			Identifier table = target.getKey();
 			assertEquals("minecraft", table.getNamespace(),
 				"Attuned loot should target vanilla tables so Lootr can resolve them: " + table);
-			assertTrue(table.getPath().startsWith("chests/"),
-				"Attuned loot should target chest loot tables for Lootr compatibility: " + table);
+			assertTrue(isSupportedVanillaLootPath(table.getPath()),
+				"Attuned loot should target reviewed vanilla loot tables: " + table);
 
 			for (Map.Entry<String, FocusData> focus : foci.entrySet()) {
 				assertTrue(AttunedLoot.weightForMeta(focus.getValue().affinity(), focus.getValue().faction(), target.getValue()) > 0,
 					focus.getKey() + " should stay eligible in " + table);
 			}
 		}
+	}
+
+	@Test
+	void worldIntegrationTargetsUseReviewedVanillaTables() {
+		Set<String> targets = AttunedLoot.targetDrops().keySet().stream()
+			.map(Identifier::getPath)
+			.collect(java.util.stream.Collectors.toSet());
+
+		assertTrue(targets.contains("gameplay/fishing/treasure"),
+			"Fishing integration should target the reviewed treasure table");
+		assertTrue(targets.containsAll(Set.of(
+			"archaeology/desert_pyramid",
+			"archaeology/desert_well",
+			"archaeology/trail_ruins_common",
+			"archaeology/trail_ruins_rare",
+			"archaeology/ocean_ruin_warm",
+			"archaeology/ocean_ruin_cold"
+		)), "Archaeology integration should cover the reviewed brushable loot tables");
+		assertTrue(targets.containsAll(Set.of(
+			"chests/trial_chambers/reward_common",
+			"chests/trial_chambers/reward_rare",
+			"chests/trial_chambers/reward_unique",
+			"chests/trial_chambers/reward_ominous_common",
+			"chests/trial_chambers/reward_ominous_rare",
+			"chests/trial_chambers/reward_ominous_unique"
+		)), "Trial integration should target child reward tables");
+		assertTrue(!targets.contains("chests/trial_chambers/reward"),
+			"Do not inject into the regular trial parent table and its children");
+		assertTrue(!targets.contains("chests/trial_chambers/reward_ominous"),
+			"Do not inject into the ominous trial parent table and its children");
 	}
 
 	@Test
@@ -87,6 +118,12 @@ class AttunedLootCompatibilityTest {
 		}
 		assertTrue(!foci.isEmpty(), "Expected shipped FocusDefinition fixtures");
 		return foci;
+	}
+
+	private static boolean isSupportedVanillaLootPath(String path) {
+		return path.startsWith("chests/")
+			|| path.equals("gameplay/fishing/treasure")
+			|| path.startsWith("archaeology/");
 	}
 
 	private static String requiredString(JsonObject root, String field, Path file) {
