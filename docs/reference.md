@@ -148,13 +148,46 @@ A couple of values are still set in code:
 
 The `/attuned capacity` command reads or sets a player's capacity for testing.
 
+## Items and recipes
+
+| Item | Recipe / source | Purpose |
+|------|-----------------|---------|
+| Attunement Altar | Amethyst block, diamond, polished deepslate | Opens the shard-binding GUI and binds shards into capacity. |
+| Attunement Shard | Diamond surrounded by amethyst shards, or four Attunement Shard Fragments | Raises capacity when bound at an Altar. |
+| Attunement Shard Fragment | Structure loot injected alongside Foci | Four craft into one Attunement Shard; using one tells the player their current fragment count. |
+| Attunement Journal | Book + amethyst shard | Opens as a readable book with the core Attuned rules. |
+
+## Commands
+
+Player-facing commands:
+
+| Command | Purpose |
+|---------|---------|
+| `/attuned journal` | Prints the same compact guide text as the Attunement Journal. |
+| `/attuned focus up <slot>` | Swaps a Focus one slot higher in the priority order. |
+| `/attuned focus down <slot>` | Swaps a Focus one slot lower in the priority order. |
+| `/attuned focus move <from> <to>` | Swaps two Focus slots directly. |
+
+Operator commands require game-master permission:
+
+| Command | Purpose |
+|---------|---------|
+| `/attuned capacity` | Prints your current attunement capacity. |
+| `/attuned capacity <amount>` | Sets your current attunement capacity for testing. |
+| `/attuned status` | Dumps active Foci, stance, Pact, resonance, and Apex state. |
+| `/attuned validate` | Checks shipped Focus registrations, datapack definitions, and behavior ids. |
+
 ## Where everything lives
 
 | Folder / file | Holds |
 |---------------|-------|
 | `content/AttunedContent.java` | Item registration, the creative tab, behavior registration |
+| `content/AttunementJournalItem.java` | The readable in-game guide item |
+| `content/AttunementShardFragmentItem.java` | Fragment progress hint behavior |
 | `content/behavior/` | Behavior classes |
 | `data/attuned/attuned/focus/` | Focus definition JSON files |
+| `data/attuned/recipe/` | Altar, shard, fragment, and journal recipes |
+| `data/attuned/advancement/attunement/` | Code-awarded Attuned progression advancements |
 | `assets/attuned/items/` + `assets/attuned/models/item/` | Item model files |
 | `assets/attuned/textures/item/` | Item textures (`.png`) |
 | `assets/attuned/lang/en_us.json` | All names, lore, and effect text |

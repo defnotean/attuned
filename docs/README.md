@@ -14,6 +14,12 @@ add a Focus.
   but switched off. Slot order, top to bottom, is the priority order.
 - Most combat Foci carry an **affinity**: Fury, Bastion, or Zephyr. All of your
   *active* Foci must share one affinity, so a build commits to a lane.
+- Three matching active affinities can awaken a **Pact**. A fully committed,
+  high-capacity build can reach **Apex** during combat.
+- **Attunement Shards** raise capacity at an Altar. **Shard Fragments** are a
+  smaller loot reward; four craft into one shard.
+- The **Attunement Journal** is a crafted in-game guide and opens like a normal
+  readable book.
 
 That is the whole idea: a Focus is a trade-off, never a free bonus.
 
@@ -24,6 +30,7 @@ That is the whole idea: a Focus is a trade-off, never a free bonus.
 | Add a brand-new Focus                         | [adding-a-focus.md](adding-a-focus.md) |
 | Change a Focus's cost, affinity, stats, text  | [adding-a-focus.md](adding-a-focus.md#changing-an-existing-focus) |
 | Look up a field, an attribute, a tuning number| [reference.md](reference.md) |
+| Check commands, recipes, and setup files      | [reference.md](reference.md#commands) |
 
 ## The two kinds of Focus
 

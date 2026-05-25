@@ -112,6 +112,8 @@
 	"item.attuned.attunement_shard_fragment.lore": "A bright splinter of room yet to be made.",
 	"item.attuned.attunement_shard_fragment.lore2": "Four remember the shape of a whole shard.",
 	"item.attuned.attunement_shard_fragment.effect": "Craft four fragments into an Attunement Shard.",
+	"item.attuned.attunement_shard_fragment.use.progress": "Shard Fragments: %s / %s. Craft four together to make a shard.",
+	"item.attuned.attunement_shard_fragment.use.ready": "Shard Fragments: %s. Craft four together in a 2x2 square to make a shard.",
 	"item.attuned.attunement_journal.lore": "A field guide for the newly attuned.",
 	"item.attuned.attunement_journal.lore2": "Its margins smell faintly of amethyst dust.",
 	"item.attuned.attunement_journal.effect": "Use to open a field guide to Foci, affinity, Pacts and Apex.",
@@ -155,6 +157,8 @@
 
 	"onboarding.attuned.first_shard.found": "You found an Attunement Shard. ",
 	"onboarding.attuned.first_shard.detail": "Bring it to an Attunement Altar to raise your capacity.",
+	"onboarding.attuned.first_fragment.found": "You found an Attunement Shard Fragment. ",
+	"onboarding.attuned.first_fragment.detail": "Collect four, then craft them into a full shard.",
 	"onboarding.attuned.first_altar.bind_here": "Bind shards here ",
 	"onboarding.attuned.first_altar.detail": "to grow your soul's capacity.",
 	"onboarding.attuned.altar_sight": "An Altar waits. Right-click empty-handed to open it, or with a shard to bind directly."

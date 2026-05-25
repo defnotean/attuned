@@ -79,7 +79,8 @@ public final class AttunedContent {
 	/** A consumable that permanently raises attunement capacity. Stacks normally. */
 	public static final Item ATTUNEMENT_SHARD = register("attunement_shard", AttunementShardItem::new);
 	/** A fragment reward that smooths shard progression; four craft into one shard. */
-	public static final Item ATTUNEMENT_SHARD_FRAGMENT = register("attunement_shard_fragment", Item::new);
+	public static final Item ATTUNEMENT_SHARD_FRAGMENT =
+		register("attunement_shard_fragment", AttunementShardFragmentItem::new);
 	/** A lightweight in-game guide to Foci, affinities, Pacts and Apex. */
 	public static final Item ATTUNEMENT_JOURNAL = register("attunement_journal", AttunementJournalItem::new);
 

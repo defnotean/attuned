@@ -11,6 +11,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
@@ -29,6 +30,7 @@ public final class Onboarding {
 	private Onboarding() {}
 
 	private static final String HINT_FIRST_SHARD = "first_shard";
+	private static final String HINT_FIRST_FRAGMENT = "first_fragment";
 	private static final String HINT_FIRST_ALTAR = "first_altar";
 	private static final String HINT_ALTAR_SIGHT = "altar_sight";
 
@@ -55,6 +57,9 @@ public final class Onboarding {
 			}
 			tickCounter = 0;
 			for (ServerPlayer player : server.getPlayerList().getPlayers()) {
+				if (!AttunedAttachments.sawOnboarding(player, HINT_FIRST_FRAGMENT) && carriesFragment(player)) {
+					tryFragmentHint(player);
+				}
 				if (!AttunedAttachments.sawOnboarding(player, HINT_FIRST_SHARD) && carriesShard(player)) {
 					tryShardHint(player);
 				}
@@ -77,6 +82,18 @@ public final class Onboarding {
 		fireHint(player, HINT_FIRST_SHARD,
 			Component.translatable("onboarding.attuned.first_shard.found").withStyle(ChatFormatting.AQUA)
 				.append(Component.translatable("onboarding.attuned.first_shard.detail")
+					.withStyle(ChatFormatting.GRAY)));
+	}
+
+	/**
+	 * Fires the first-fragment hint once. A no-op if the player has already seen it.
+	 *
+	 * @param player the player to nudge
+	 */
+	public static void tryFragmentHint(ServerPlayer player) {
+		fireHint(player, HINT_FIRST_FRAGMENT,
+			Component.translatable("onboarding.attuned.first_fragment.found").withStyle(ChatFormatting.AQUA)
+				.append(Component.translatable("onboarding.attuned.first_fragment.detail")
 					.withStyle(ChatFormatting.GRAY)));
 	}
 
@@ -104,8 +121,17 @@ public final class Onboarding {
 
 	/** Whether the player is carrying at least one Attunement Shard in their main inventory. */
 	private static boolean carriesShard(ServerPlayer player) {
+		return carries(player, AttunedContent.ATTUNEMENT_SHARD);
+	}
+
+	/** Whether the player is carrying at least one Attunement Shard Fragment. */
+	private static boolean carriesFragment(ServerPlayer player) {
+		return carries(player, AttunedContent.ATTUNEMENT_SHARD_FRAGMENT);
+	}
+
+	private static boolean carries(ServerPlayer player, Item item) {
 		for (int i = 0; i < player.getInventory().getContainerSize(); i++) {
-			if (player.getInventory().getItem(i).is(AttunedContent.ATTUNEMENT_SHARD)) {
+			if (player.getInventory().getItem(i).is(item)) {
 				return true;
 			}
 		}

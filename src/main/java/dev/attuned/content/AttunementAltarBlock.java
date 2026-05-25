@@ -113,6 +113,12 @@ public class AttunementAltarBlock extends Block {
 		// 26.1.2 the dispatcher in ServerPlayerGameMode only calls useWithoutItem
 		// when useItemOn returns TRY_WITH_EMPTY_HAND — returning PASS here would
 		// swallow the click and never open the altar GUI.
+		if (stack.is(AttunedContent.ATTUNEMENT_SHARD_FRAGMENT)) {
+			if (!level.isClientSide()) {
+				AttunementShardFragmentItem.sendProgressHint(player);
+			}
+			return level.isClientSide() ? InteractionResult.SUCCESS : InteractionResult.SUCCESS_SERVER;
+		}
 		if (!stack.is(AttunedContent.ATTUNEMENT_SHARD)) {
 			return InteractionResult.TRY_WITH_EMPTY_HAND;
 		}
