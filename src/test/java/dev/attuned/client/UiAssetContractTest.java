@@ -31,6 +31,7 @@ class UiAssetContractTest {
 		assertPngSize("gui/altar.png", 216, 190);
 		assertPngSize("gui/focus_panel.png", 28, 124);
 		assertPngSize("gui/hud_backplate.png", 50, 24);
+		assertPngSize("gui/attunement_journal.png", 336, 214);
 		assertPngSize("item/attunement_journal.png", 16, 16);
 	}
 

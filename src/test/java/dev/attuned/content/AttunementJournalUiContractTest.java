@@ -50,6 +50,8 @@ class AttunementJournalUiContractTest {
 			"Journal UI should use the current client render extraction API");
 		assertTrue(screenSource.contains("extractBackground(GuiGraphicsExtractor"),
 			"Journal UI should draw a custom background/content layer");
+		assertTrue(screenSource.contains("textures/gui/attunement_journal.png"),
+			"Journal UI should use its generated custom book texture");
 		assertTrue(screenSource.contains("CHAPTERS = List.of"),
 			"Journal UI should keep chapter navigation separate from vanilla book pages");
 		assertFalse(screenSource.contains("BookViewScreen"),

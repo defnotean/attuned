@@ -1,5 +1,6 @@
 package dev.attuned.client.screen;
 
+import dev.attuned.Attuned;
 import dev.attuned.api.focus.Affinity;
 import dev.attuned.network.OpenJournalPayload;
 import java.util.ArrayList;
@@ -9,8 +10,10 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.Identifier;
 import net.minecraft.util.FormattedCharSequence;
 
 /**
@@ -19,6 +22,9 @@ import net.minecraft.util.FormattedCharSequence;
  * and a single scroll-free page surface sized for the existing guide copy.
  */
 public final class AttunementJournalScreen extends Screen {
+	private static final Identifier BACKGROUND_TEXTURE =
+		Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "textures/gui/attunement_journal.png");
+
 	private static final int PANEL_WIDTH = 336;
 	private static final int PANEL_HEIGHT = 214;
 	private static final int NAV_WIDTH = 88;
@@ -30,10 +36,6 @@ public final class AttunementJournalScreen extends Screen {
 
 	private static final int BACKDROP = 0xE6131218;
 	private static final int PANEL_SHADOW = 0xB0000000;
-	private static final int PANEL_BORDER = 0xFF8E7CC3;
-	private static final int PANEL_FACE = 0xFF221D2B;
-	private static final int NAV_FACE = 0xFF191720;
-	private static final int CONTENT_FACE = 0xFF312A39;
 	private static final int CONTENT_INSET = 0xFF17141C;
 	private static final int TEXT_TITLE = 0xFFF2E7FF;
 	private static final int TEXT_BODY = 0xFFE8DEF4;
@@ -147,14 +149,8 @@ public final class AttunementJournalScreen extends Screen {
 		int top = top();
 		graphics.fill(0, 0, this.width, this.height, BACKDROP);
 		graphics.fill(left + 4, top + 4, left + PANEL_WIDTH + 4, top + PANEL_HEIGHT + 4, PANEL_SHADOW);
-		graphics.fill(left, top, left + PANEL_WIDTH, top + PANEL_HEIGHT, PANEL_BORDER);
-		graphics.fill(left + 1, top + 1, left + PANEL_WIDTH - 1, top + PANEL_HEIGHT - 1, PANEL_FACE);
-		graphics.fill(left + PADDING - 4, top + 34, left + NAV_WIDTH + PADDING - 2,
-			top + PANEL_HEIGHT - PADDING, NAV_FACE);
-		graphics.fill(contentLeft() - 6, top + 34, left + PANEL_WIDTH - PADDING,
-			top + PANEL_HEIGHT - PADDING, CONTENT_INSET);
-		graphics.fill(contentLeft() - 3, top + 37, left + PANEL_WIDTH - PADDING - 3,
-			top + PANEL_HEIGHT - PADDING - 3, CONTENT_FACE);
+		graphics.blit(RenderPipelines.GUI_TEXTURED, BACKGROUND_TEXTURE, left, top,
+			0.0F, 0.0F, PANEL_WIDTH, PANEL_HEIGHT, PANEL_WIDTH, PANEL_HEIGHT);
 	}
 
 	private void drawNavigation(GuiGraphicsExtractor graphics) {
