@@ -1,0 +1,8 @@
+{
+	"item": "attuned:smoke_focus",
+	"cost": 3,
+	"unique": true,
+	"affinity": "bastion",
+	"faction": "attuned:unseen",
+	"behavior": "attuned:smoke"
+}

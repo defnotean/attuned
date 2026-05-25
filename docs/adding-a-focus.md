@@ -38,14 +38,14 @@ That is the whole item. `register` already makes it stack to 1, like every Focus
 
 **File:** the same `AttunedContent.java`
 
-Find the method `registerCreativeTab()`. Inside it is a list of
-`output.accept(...)` lines. Add yours:
+Find the `FOCI` list near the item registrations. Add yours to the list:
 
 ```java
-output.accept(STONESKIN_FOCUS);
+STONESKIN_FOCUS
 ```
 
-Now the Focus appears in the **Attuned** creative-inventory tab.
+The creative tab reads from `FOCI`, so the Focus appears in the **Attuned**
+creative-inventory tab once it is in that list.
 
 > For a **stat-only Focus, `AttunedContent.java` is the only `.java` file you
 > touch.** Everything below is plain text and images.
@@ -75,6 +75,11 @@ This file sets the cost, the affinity, and the stats. It is the heart of a Focus
 - `cost` — attunement points this Focus uses, usually 2–6. Defaults to 1 if left out.
 - `affinity` — `fury`, `bastion`, or `zephyr`. **Leave this line out** for a
   neutral utility Focus.
+- `unique` - set to `true` when only one copy of this Focus should be active
+  at a time.
+- `faction` - optional story/gameplay family such as `attuned:unseen`. Factions
+  show on tooltips and can shape loot weighting, but they do not change the
+  affinity cycle.
 - `modifiers` — the stat changes. Leave it out entirely if the Focus has no
   stats (a pure power Focus). See [reference.md](reference.md#attribute-modifiers)
   for the full list of attributes and what `operation` means.
@@ -132,6 +137,8 @@ the very last line in the file):
 - The first line is the item's display name.
 - `.lore` and `.lore2` are two italic flavour lines shown on the tooltip.
 - `.effect` is the green line that tells the player what the Focus does.
+- If you add a brand-new `faction`, also add `faction.<namespace>.<path>` so the
+  tooltip shows a friendly name.
 
 **That is a complete, working Focus.** If it only changes stats, you are done —
 skip to [Test your Focus](#test-your-focus).
@@ -147,7 +154,7 @@ teleport, grant night vision, and so on. It adds one Java file.
 
 **Create:** `src/main/java/dev/attuned/content/behavior/StoneskinBehavior.java`
 
-A behavior implements `FocusBehavior`, which gives you three optional hooks:
+A behavior implements `FocusBehavior`, which gives you four optional hooks:
 
 ```java
 package dev.attuned.content.behavior;
@@ -171,6 +178,11 @@ public final class StoneskinBehavior implements FocusBehavior {
 	@Override
 	public void onDeactivate(ServerPlayer player, ItemStack focus) {
 		// Runs once, when the Focus stops being active. Undo anything here.
+	}
+
+	@Override
+	public void onAbility(ServerPlayer player, ItemStack focus) {
+		// Runs when the player presses the Focus-ability keybind.
 	}
 }
 ```
@@ -216,7 +228,7 @@ The name in `behavior` must match the name you registered in Step 7b.
 
 For a stat-only Focus, you created or edited:
 
-- [ ] `AttunedContent.java` — one `register` line, one `output.accept` line
+- [ ] `AttunedContent.java` - one `register` line and one `FOCI` entry
 - [ ] `data/attuned/attuned/focus/<name>.json`
 - [ ] `assets/attuned/items/<name>.json`
 - [ ] `assets/attuned/models/item/<name>.json`
@@ -259,6 +271,6 @@ relaunched.
 
 ## Removing a Focus
 
-Reverse the recipe: delete the line in `AttunedContent.java` (and its
-`output.accept` line, and any `registerBehavior` line), then delete the Focus's
-`.json` files, texture, behavior class, and `en_us.json` lines.
+Reverse the recipe: delete the item registration and `FOCI` entry in
+`AttunedContent.java` (and any `registerBehavior` line), then delete the
+Focus's `.json` files, texture, behavior class, and `en_us.json` lines.

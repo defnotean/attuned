@@ -13,6 +13,7 @@ Lives in `src/main/resources/data/attuned/attuned/focus/<name>.json`.
 | `cost`      | number  | no (1)   | Attunement points the Focus uses. Usually 2–6. |
 | `unique`    | boolean | no (false) | If true, only one copy of this Focus can be active at once; a duplicate stays dormant. |
 | `affinity`  | text    | no       | `fury`, `bastion`, or `zephyr`. Omit for a neutral Focus. |
+| `faction`   | text    | no       | Optional story/gameplay family, e.g. `attuned:unseen`. It does not change affinity math. |
 | `modifiers` | list    | no ([])  | Stat changes — see [Attribute modifiers](#attribute-modifiers). |
 | `behavior`  | text    | no       | A registered behavior id, e.g. `attuned:stormcall`. |
 
@@ -36,6 +37,18 @@ Fury  beats  Bastion  beats  Zephyr  beats  Fury
 - A Focus with **no** `affinity` is *neutral* — it never triggers Discord and
   fits any committed lane.
 - Pick an affinity for combat-flavoured Foci; leave it off for utility Foci.
+
+## Factions
+
+Factions are optional labels for Foci that share a theme. They show on tooltips
+and can be used by loot weighting, but they are not a fourth affinity and never
+change the Fury/Bastion/Zephyr cycle.
+
+Attuned currently ships one faction:
+
+| Faction id | Theme | Balance role |
+|------------|-------|--------------|
+| `attuned:unseen` | Stealth, stillness, smoke, ambush openings | Rewards setup and positioning without replacing armor, speed, or raw damage builds. |
 
 ## Attribute modifiers
 
@@ -68,6 +81,7 @@ of the unmodified stat (this is what most percentage Foci want).
 | `minecraft:armor_toughness`        | Armor toughness | |
 | `minecraft:knockback_resistance`   | Knockback resistance | `0`–`1`, where `1` is immune |
 | `minecraft:movement_speed`         | Walking speed | percentage works best |
+| `minecraft:sneaking_speed`         | Sneaking speed | percentage works best |
 | `minecraft:attack_damage`          | Melee damage | |
 | `minecraft:attack_speed`           | Attack cooldown speed | |
 | `minecraft:jump_strength`          | Jump height | percentage works best |
@@ -106,6 +120,7 @@ examples to copy from:
 |----------------------|--------------------------|--------------|
 | `attuned:delver`     | `DelverBehavior`         | Refreshes a Haste effect. |
 | `attuned:nightgaze`  | `NightgazeBehavior`      | Refreshes Night Vision. |
+| `attuned:softstep`   | `SoftstepBehavior`       | Makes crouched movement silent. |
 | `attuned:emberward`  | `EmberwardBehavior`      | Fire immunity. |
 | `attuned:tide`       | `TideBehavior`           | Underwater breathing. |
 | `attuned:bloodfury`  | `BloodfuryBehavior`      | Attack speed scaled by missing health. |
@@ -113,6 +128,8 @@ examples to copy from:
 | `attuned:aegis`      | `AegisBehavior`          | Periodic absorption shield (uses a cooldown). |
 | `attuned:lodestone`  | `LodestoneBehavior`      | Pulls nearby dropped items in. |
 | `attuned:beacon`     | `BeaconBehavior`         | Points a held compass at your bed. |
+| `attuned:veil`       | `VeilBehavior`           | Crouch still in low light to become invisible until broken. |
+| `attuned:smoke`      | `SmokeBehavior`          | Ability-key smoke burst that drops mobs with broken line of sight. |
 | `attuned:stormcall`  | `StormcallBehavior`      | Lightning while sprinting in rain. |
 | `attuned:voidstep`   | `VoidstepBehavior`       | Blinks forward on the Focus-ability keybind. |
 
@@ -124,6 +141,8 @@ their own classes — read these if your idea resembles them:
 - **Death effects** — `combat/GravebindSave.java` hooks the death event.
 - **Affinity combat** — `combat/AttunedCombat.java` handles damage between
   affinities (Thornward, Leech).
+- **Unseen ambush combat** - `combat/UnseenCombat.java` handles Needle's
+  opening-hit bonus and breaks Veil when combat starts.
 
 ## Numbers you can tune
 
@@ -156,6 +175,17 @@ The `/attuned capacity` command reads or sets a player's capacity for testing.
 | Attunement Shard | Diamond surrounded by amethyst shards, or four Attunement Shard Fragments | Raises capacity when bound at an Altar. |
 | Attunement Shard Fragment | Structure loot injected alongside Foci | Four craft into one Attunement Shard; using one tells the player their current fragment count. |
 | Attunement Journal | Book + amethyst shard | Opens as a readable book with the core Attuned rules. |
+
+## Loot and Lootr compatibility
+
+Attuned injects Foci and shard fragments into vanilla structure loot tables in
+`content/AttunedLoot.java`. That keeps the rewards vanilla-friendly and also
+works with Lootr-style per-player chests because those mods resolve the same
+loot tables for each player instead of needing custom Attuned chest blocks.
+
+The Unseen Foci are weighted a little higher in stealth-flavoured structures
+such as mineshafts, strongholds, outposts, ancient cities, and end cities, but
+they remain possible anywhere Attuned Focus loot can roll.
 
 ## Commands
 

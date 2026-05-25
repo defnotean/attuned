@@ -1,6 +1,7 @@
 package dev.attuned.content;
 
 import dev.attuned.AttunedConfig;
+import dev.attuned.Attuned;
 import dev.attuned.AttunedRegistries;
 import dev.attuned.api.focus.Affinity;
 import dev.attuned.api.focus.FocusDefinition;
@@ -25,6 +26,10 @@ import net.minecraft.world.level.storage.loot.providers.number.ConstantValue;
  * its pool toward Foci of one affinity, so where you explore softly steers which
  * Foci you find. The base drop chance is the {@code focus_loot_chance} config
  * value; each tier scales it.
+ *
+ * <p>Compatibility note: this modifies loot tables, not chest block entities.
+ * Per-player loot mods such as Lootr resolve those same tables, so every shipped
+ * Focus and shard fragment remains available through their containers.
  */
 public final class AttunedLoot {
 	private AttunedLoot() {}
@@ -42,42 +47,55 @@ public final class AttunedLoot {
 		}
 	}
 
-	/** A targeted loot table: how rich it is, and which affinity it favours ({@code null} = neutral). */
-	private record Drop(Tier tier, Affinity theme) {}
+	/** A targeted loot table: how rich it is, which affinity and faction it favours. */
+	private record Drop(Tier tier, Affinity theme, boolean unseenTheme) {}
 
 	// Pool weights: a Focus matching the structure's theme is favoured, neutral Foci
 	// fit anywhere, and off-theme Foci are still possible but rarer.
 	private static final int WEIGHT_ON_THEME = 3;
 	private static final int WEIGHT_NEUTRAL = 2;
 	private static final int WEIGHT_OFF_THEME = 1;
+	private static final int WEIGHT_UNSEEN_THEME_BONUS = 3;
+	private static final Identifier UNSEEN_FACTION =
+		Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "unseen");
+
+	private record FocusMeta(Affinity affinity, Identifier faction) {}
 
 	/** Vanilla structure chest loot tables that gain a chance at a Focus. */
 	private static final Map<Identifier, Drop> TARGETS = Map.ofEntries(
 		// Common — found often, modest odds.
-		Map.entry(chest("simple_dungeon"), new Drop(Tier.COMMON, null)),
-		Map.entry(chest("abandoned_mineshaft"), new Drop(Tier.COMMON, null)),
-		Map.entry(chest("igloo_chest"), new Drop(Tier.COMMON, null)),
-		Map.entry(chest("village/village_weaponsmith"), new Drop(Tier.COMMON, Affinity.FURY)),
-		Map.entry(chest("village/village_armorer"), new Drop(Tier.COMMON, Affinity.BASTION)),
-		Map.entry(chest("village/village_toolsmith"), new Drop(Tier.COMMON, null)),
-		Map.entry(chest("village/village_temple"), new Drop(Tier.COMMON, Affinity.ZEPHYR)),
-		Map.entry(chest("shipwreck_treasure"), new Drop(Tier.COMMON, Affinity.ZEPHYR)),
+		Map.entry(chest("simple_dungeon"), normal(Tier.COMMON, null)),
+		Map.entry(chest("abandoned_mineshaft"), unseen(Tier.COMMON, null)),
+		Map.entry(chest("igloo_chest"), normal(Tier.COMMON, null)),
+		Map.entry(chest("village/village_weaponsmith"), normal(Tier.COMMON, Affinity.FURY)),
+		Map.entry(chest("village/village_armorer"), normal(Tier.COMMON, Affinity.BASTION)),
+		Map.entry(chest("village/village_toolsmith"), normal(Tier.COMMON, null)),
+		Map.entry(chest("village/village_temple"), normal(Tier.COMMON, Affinity.ZEPHYR)),
+		Map.entry(chest("shipwreck_treasure"), unseen(Tier.COMMON, Affinity.ZEPHYR)),
 		// Rich — riskier places, better odds.
-		Map.entry(chest("jungle_temple"), new Drop(Tier.RICH, Affinity.ZEPHYR)),
-		Map.entry(chest("desert_pyramid"), new Drop(Tier.RICH, null)),
-		Map.entry(chest("buried_treasure"), new Drop(Tier.RICH, Affinity.ZEPHYR)),
-		Map.entry(chest("stronghold_corridor"), new Drop(Tier.RICH, Affinity.BASTION)),
-		Map.entry(chest("stronghold_crossing"), new Drop(Tier.RICH, Affinity.BASTION)),
-		Map.entry(chest("nether_bridge"), new Drop(Tier.RICH, Affinity.FURY)),
-		Map.entry(chest("pillager_outpost"), new Drop(Tier.RICH, Affinity.FURY)),
-		Map.entry(chest("ruined_portal"), new Drop(Tier.RICH, null)),
-		Map.entry(chest("bastion_other"), new Drop(Tier.RICH, Affinity.BASTION)),
+		Map.entry(chest("jungle_temple"), normal(Tier.RICH, Affinity.ZEPHYR)),
+		Map.entry(chest("desert_pyramid"), unseen(Tier.RICH, null)),
+		Map.entry(chest("buried_treasure"), normal(Tier.RICH, Affinity.ZEPHYR)),
+		Map.entry(chest("stronghold_corridor"), unseen(Tier.RICH, Affinity.BASTION)),
+		Map.entry(chest("stronghold_crossing"), unseen(Tier.RICH, Affinity.BASTION)),
+		Map.entry(chest("nether_bridge"), normal(Tier.RICH, Affinity.FURY)),
+		Map.entry(chest("pillager_outpost"), unseen(Tier.RICH, Affinity.FURY)),
+		Map.entry(chest("ruined_portal"), unseen(Tier.RICH, null)),
+		Map.entry(chest("bastion_other"), normal(Tier.RICH, Affinity.BASTION)),
 		// Treasure — the deep and dangerous, the best odds.
-		Map.entry(chest("woodland_mansion"), new Drop(Tier.TREASURE, Affinity.FURY)),
-		Map.entry(chest("ancient_city"), new Drop(Tier.TREASURE, Affinity.BASTION)),
-		Map.entry(chest("end_city_treasure"), new Drop(Tier.TREASURE, Affinity.ZEPHYR)),
-		Map.entry(chest("bastion_treasure"), new Drop(Tier.TREASURE, Affinity.BASTION))
+		Map.entry(chest("woodland_mansion"), unseen(Tier.TREASURE, Affinity.FURY)),
+		Map.entry(chest("ancient_city"), unseen(Tier.TREASURE, Affinity.BASTION)),
+		Map.entry(chest("end_city_treasure"), unseen(Tier.TREASURE, Affinity.ZEPHYR)),
+		Map.entry(chest("bastion_treasure"), normal(Tier.TREASURE, Affinity.BASTION))
 	);
+
+	private static Drop normal(Tier tier, Affinity theme) {
+		return new Drop(tier, theme, false);
+	}
+
+	private static Drop unseen(Tier tier, Affinity theme) {
+		return new Drop(tier, theme, true);
+	}
 
 	private static Identifier chest(String name) {
 		return Identifier.fromNamespaceAndPath("minecraft", "chests/" + name);
@@ -95,10 +113,10 @@ public final class AttunedLoot {
 			LootPool.Builder pool = LootPool.lootPool()
 				.setRolls(ConstantValue.exactly(1.0F))
 				.when(LootItemRandomChanceCondition.randomChance(chance));
-			Map<Item, Affinity> focusAffinities = focusAffinities(
+			Map<Item, FocusMeta> focusMetadata = focusMetadata(
 				registries.lookupOrThrow(AttunedRegistries.FOCUS_DEFINITIONS));
 			for (Item focus : AttunedContent.FOCI) {
-				pool.add(LootItem.lootTableItem(focus).setWeight(weightFor(focus, drop.theme(), focusAffinities)));
+				pool.add(LootItem.lootTableItem(focus).setWeight(weightFor(focus, drop, focusMetadata)));
 			}
 			tableBuilder.withPool(pool);
 
@@ -110,25 +128,33 @@ public final class AttunedLoot {
 		});
 	}
 
-	/** Affinities from the synced datapack registry, keyed by Focus item. Neutral Foci are absent. */
-	private static Map<Item, Affinity> focusAffinities(HolderLookup.RegistryLookup<FocusDefinition> lookup) {
-		Map<Item, Affinity> affinities = new IdentityHashMap<>();
+	/** Affinities and factions from the synced datapack registry, keyed by Focus item. */
+	private static Map<Item, FocusMeta> focusMetadata(HolderLookup.RegistryLookup<FocusDefinition> lookup) {
+		Map<Item, FocusMeta> metadata = new IdentityHashMap<>();
 		lookup.listElements().forEach(holder -> {
 			FocusDefinition definition = holder.value();
-			definition.affinity().ifPresent(affinity -> affinities.put(definition.item().value(), affinity));
+			metadata.put(definition.item().value(), new FocusMeta(
+				definition.affinity().orElse(null),
+				definition.faction().orElse(null)));
 		});
-		return affinities;
+		return metadata;
 	}
 
 	/** The pool weight for a Focus in a structure with the given affinity theme. */
-	private static int weightFor(Item focus, Affinity theme, Map<Item, Affinity> focusAffinities) {
-		Affinity affinity = focusAffinities.get(focus);
+	private static int weightFor(Item focus, Drop drop, Map<Item, FocusMeta> focusMetadata) {
+		FocusMeta meta = focusMetadata.get(focus);
+		Affinity affinity = meta == null ? null : meta.affinity();
+		int weight;
 		if (affinity == null) {
-			return WEIGHT_NEUTRAL;
+			weight = WEIGHT_NEUTRAL;
+		} else if (drop.theme() != null && affinity == drop.theme()) {
+			weight = WEIGHT_ON_THEME;
+		} else {
+			weight = WEIGHT_OFF_THEME;
 		}
-		if (theme != null && affinity == theme) {
-			return WEIGHT_ON_THEME;
+		if (drop.unseenTheme() && meta != null && UNSEEN_FACTION.equals(meta.faction())) {
+			weight += WEIGHT_UNSEEN_THEME_BONUS;
 		}
-		return WEIGHT_OFF_THEME;
+		return weight;
 	}
 }

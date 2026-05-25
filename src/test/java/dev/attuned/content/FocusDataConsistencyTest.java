@@ -30,6 +30,8 @@ class FocusDataConsistencyTest {
 		Path.of("src/main/java/dev/attuned/content/AttunedContent.java");
 	private static final Path FOCUS_DATA_DIR =
 		Path.of("src/main/resources/data/attuned/attuned/focus");
+	private static final Path LANG_FILE =
+		Path.of("src/main/resources/assets/attuned/lang/en_us.json");
 
 	private static final Pattern REGISTERED_FOCUS = Pattern.compile(
 		"public\\s+static\\s+final\\s+Item\\s+([A-Z0-9_]+_FOCUS)\\s*=\\s*register\\(\"([a-z0-9_]+_focus)\"\\);");
@@ -37,6 +39,12 @@ class FocusDataConsistencyTest {
 		"public\\s+static\\s+final\\s+List<Item>\\s+FOCI\\s*=\\s*List\\.of\\((.*?)\\);",
 		Pattern.DOTALL);
 	private static final Pattern FOCI_ENTRY = Pattern.compile("\\b([A-Z0-9_]+_FOCUS)\\b");
+	private static final Pattern NAMESPACED_ID = Pattern.compile("[a-z0-9_.-]+:[a-z0-9_/.-]+");
+	private static final Set<String> UNSEEN_FOCUS_ITEMS = Set.of(
+		"attuned:needle_focus",
+		"attuned:smoke_focus",
+		"attuned:softstep_focus",
+		"attuned:veil_focus");
 
 	@Test
 	void shippedFocusRegistrationsListAndDefinitionsStayInStep() throws IOException {
@@ -51,6 +59,36 @@ class FocusDataConsistencyTest {
 			"AttunedContent.FOCI should include every registered shipped Focus item");
 		assertEquals(registeredItems, definitionItems,
 			"Registered shipped Focus items should match datapack FocusDefinition item ids");
+	}
+
+	@Test
+	void factionFieldsStayNamespacedTranslatedAndAppliedToUnseenFoci() throws IOException {
+		Set<String> translatedFactions = translatedFactionIds();
+		Set<String> unseenItems = new TreeSet<>();
+		try (Stream<Path> paths = Files.list(FOCUS_DATA_DIR)) {
+			for (Path file : paths
+					.filter(path -> path.getFileName().toString().endsWith(".json"))
+					.sorted()
+					.toList()) {
+				JsonObject root = focusDefinitionRoot(file);
+				JsonElement faction = root.get("faction");
+				if (faction == null) {
+					continue;
+				}
+				assertTrue(faction.isJsonPrimitive(),
+					"FocusDefinition faction should be a string id: " + file);
+				String factionId = faction.getAsString();
+				assertTrue(NAMESPACED_ID.matcher(factionId).matches(),
+					"FocusDefinition faction should be a namespaced id: " + file);
+				assertTrue(translatedFactions.contains(factionId),
+					"FocusDefinition faction should have a lang entry: " + factionId);
+				if ("attuned:unseen".equals(factionId)) {
+					unseenItems.add(root.get("item").getAsString());
+				}
+			}
+		}
+		assertEquals(UNSEEN_FOCUS_ITEMS, unseenItems,
+			"The Unseen batch should consistently declare faction metadata");
 	}
 
 	private static Map<String, String> registeredFocusItemsByField(String source) {
@@ -112,10 +150,26 @@ class FocusDataConsistencyTest {
 	}
 
 	private static String focusDefinitionItem(Path file) throws IOException {
-		JsonObject root = JsonParser.parseString(Files.readString(file, StandardCharsets.UTF_8)).getAsJsonObject();
+		JsonObject root = focusDefinitionRoot(file);
 		JsonElement item = root.get("item");
 		assertTrue(item != null && item.isJsonPrimitive(),
 			"FocusDefinition JSON should declare a string item id: " + file);
 		return item.getAsString();
+	}
+
+	private static JsonObject focusDefinitionRoot(Path file) throws IOException {
+		return JsonParser.parseString(Files.readString(file, StandardCharsets.UTF_8)).getAsJsonObject();
+	}
+
+	private static Set<String> translatedFactionIds() throws IOException {
+		JsonObject lang = JsonParser.parseString(Files.readString(LANG_FILE, StandardCharsets.UTF_8)).getAsJsonObject();
+		Set<String> factions = new TreeSet<>();
+		for (String key : lang.keySet()) {
+			if (key.startsWith("faction.")) {
+				String id = key.substring("faction.".length()).replaceFirst("\\.", ":");
+				factions.add(id);
+			}
+		}
+		return factions;
 	}
 }

@@ -59,6 +59,11 @@ public final class AttunedTooltips {
 					.withStyle(ChatFormatting.GRAY)
 					.append(Component.literal(Integer.toString(definition.cost()))
 						.withStyle(ChatFormatting.AQUA)));
+				definition.faction().ifPresent(faction -> lines.add(Component.literal("Faction: ")
+					.withStyle(ChatFormatting.GRAY)
+					.append(Component.translatableWithFallback(
+						"faction." + faction.getNamespace() + "." + faction.getPath(), faction.toString())
+						.withStyle(ChatFormatting.DARK_PURPLE, ChatFormatting.BOLD))));
 				if (definition.unique()) {
 					lines.add(Component.literal("Unique")
 						.withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD)

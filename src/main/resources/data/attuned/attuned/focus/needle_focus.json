@@ -1,0 +1,7 @@
+{
+	"item": "attuned:needle_focus",
+	"cost": 4,
+	"unique": true,
+	"affinity": "fury",
+	"faction": "attuned:unseen"
+}

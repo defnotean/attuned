@@ -15,12 +15,14 @@ import java.util.Optional;
  * cost, its affinity, the modifiers it grants, and an optional code behaviour.
  * Loaded from datapack JSON at {@code data/<namespace>/attuned/focus/<name>.json}.
  * An empty {@code affinity} means the Focus is affinity-neutral.
+ * An empty {@code faction} means the Focus is not part of a named content family.
  */
 public record FocusDefinition(
 		Holder<Item> item,
 		int cost,
 		boolean unique,
 		Optional<Affinity> affinity,
+		Optional<Identifier> faction,
 		List<ModifierEntry> modifiers,
 		Optional<Identifier> behavior) {
 
@@ -29,6 +31,7 @@ public record FocusDefinition(
 		Codec.intRange(0, 64).optionalFieldOf("cost", 1).forGetter(FocusDefinition::cost),
 		Codec.BOOL.optionalFieldOf("unique", false).forGetter(FocusDefinition::unique),
 		Affinity.CODEC.optionalFieldOf("affinity").forGetter(FocusDefinition::affinity),
+		Identifier.CODEC.optionalFieldOf("faction").forGetter(FocusDefinition::faction),
 		ModifierEntry.CODEC.listOf().optionalFieldOf("modifiers", List.of()).forGetter(FocusDefinition::modifiers),
 		Identifier.CODEC.optionalFieldOf("behavior").forGetter(FocusDefinition::behavior)
 	).apply(instance, FocusDefinition::new));

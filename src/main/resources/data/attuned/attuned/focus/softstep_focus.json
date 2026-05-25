@@ -1,0 +1,14 @@
+{
+	"item": "attuned:softstep_focus",
+	"cost": 2,
+	"affinity": "zephyr",
+	"faction": "attuned:unseen",
+	"modifiers": [
+		{
+			"attribute": "minecraft:sneaking_speed",
+			"amount": 0.35,
+			"operation": "add_multiplied_base"
+		}
+	],
+	"behavior": "attuned:softstep"
+}

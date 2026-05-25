@@ -12,8 +12,11 @@ import dev.attuned.content.behavior.EmberwardBehavior;
 import dev.attuned.content.behavior.HarvestBehavior;
 import dev.attuned.content.behavior.LodestoneBehavior;
 import dev.attuned.content.behavior.NightgazeBehavior;
+import dev.attuned.content.behavior.SmokeBehavior;
+import dev.attuned.content.behavior.SoftstepBehavior;
 import dev.attuned.content.behavior.StormcallBehavior;
 import dev.attuned.content.behavior.TideBehavior;
+import dev.attuned.content.behavior.VeilBehavior;
 import dev.attuned.content.behavior.VoidstepBehavior;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -76,6 +79,12 @@ public final class AttunedContent {
 	public static final Item HARVEST_FOCUS = register("harvest_focus");
 	public static final Item BEACON_FOCUS = register("beacon_focus");
 
+	// The Unseen — stealth-flavoured Foci that work through patience, misdirection and openings.
+	public static final Item SOFTSTEP_FOCUS = register("softstep_focus");
+	public static final Item VEIL_FOCUS = register("veil_focus");
+	public static final Item NEEDLE_FOCUS = register("needle_focus");
+	public static final Item SMOKE_FOCUS = register("smoke_focus");
+
 	/** A consumable that permanently raises attunement capacity. Stacks normally. */
 	public static final Item ATTUNEMENT_SHARD = register("attunement_shard", AttunementShardItem::new);
 	/** A fragment reward that smooths shard progression; four craft into one shard. */
@@ -93,7 +102,7 @@ public final class AttunedContent {
 		BULWARK_FOCUS, DRIFT_FOCUS, TIDE_FOCUS, EMBERWARD_FOCUS, AEGIS_FOCUS,
 		NIGHTGAZE_FOCUS, DELVER_FOCUS, LODESTONE_FOCUS, THORNWARD_FOCUS, LEECH_FOCUS,
 		STORMCALL_FOCUS, GRAVEBIND_FOCUS, BLOODFURY_FOCUS, VOIDSTEP_FOCUS,
-		HARVEST_FOCUS, BEACON_FOCUS);
+		HARVEST_FOCUS, BEACON_FOCUS, SOFTSTEP_FOCUS, VEIL_FOCUS, NEEDLE_FOCUS, SMOKE_FOCUS);
 
 	private static Item register(String name) {
 		ResourceKey<Item> key = ResourceKey.create(
@@ -158,6 +167,12 @@ public final class AttunedContent {
 			Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "beacon"), new BeaconBehavior());
 		AttunedRegistries.registerBehavior(
 			Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "voidstep"), new VoidstepBehavior());
+		AttunedRegistries.registerBehavior(
+			Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "softstep"), new SoftstepBehavior());
+		AttunedRegistries.registerBehavior(
+			Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "veil"), new VeilBehavior());
+		AttunedRegistries.registerBehavior(
+			Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "smoke"), new SmokeBehavior());
 		registerCreativeTab();
 	}
 
