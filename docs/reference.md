@@ -130,9 +130,12 @@ examples to copy from:
 | `attuned:lantern`    | `LanternBehavior`        | Briefly marks visible hostile mobs in darkness while holding a torch or lantern. |
 | `attuned:bloodfury`  | `BloodfuryBehavior`      | Attack speed scaled by missing health. |
 | `attuned:harvest`    | `HarvestBehavior`        | Speeds up nearby crops. |
+| `attuned:forager`    | `ForagerBehavior`        | Sometimes adds small food or seed rewards while gathering plants. |
+| `attuned:tremor`     | `TremorBehavior`         | Mining stone may hint when ore is nearby. |
 | `attuned:aegis`      | `AegisBehavior`          | Periodic absorption shield (uses a cooldown). |
 | `attuned:lodestone`  | `LodestoneBehavior`      | Pulls nearby dropped items in. |
 | `attuned:beacon`     | `BeaconBehavior`         | Points a held compass at your bed. |
+| `attuned:waystone`   | `WaystoneBehavior`       | Points a single held compass at your last death, deferring to Beacon if both are active. |
 | `attuned:veil`       | `VeilBehavior`           | Crouch still in low light to become invisible until broken. |
 | `attuned:smoke`      | `SmokeBehavior`          | Ability-key smoke burst that drops mobs with broken line of sight. |
 | `attuned:stormcall`  | `StormcallBehavior`      | Lightning while sprinting in rain. |
@@ -144,8 +147,8 @@ A few effects are too special for the tick-based behavior hooks and live in
 their own classes — read these if your idea resembles them:
 
 - **Death effects** — `combat/GravebindSave.java` hooks the death event.
-- **Affinity combat** — `combat/AttunedCombat.java` handles damage between
-  affinities (Thornward, Leech).
+- **Affinity combat and hit procs** — `combat/AttunedCombat.java` handles
+  damage between affinities plus Cinder, Thornward, and Leech.
 - **Unseen ambush combat** - `combat/UnseenCombat.java` handles Needle's
   opening-hit bonus and breaks Veil when combat starts.
 
@@ -160,8 +163,20 @@ Every key is optional and falls back to a built-in default:
 | `capacity_cap` | 20 | Highest capacity an Attunement Shard can reach. |
 | `capacity_per_shard` | 2 | Capacity each Attunement Shard grants. |
 | `focus_loot_chance` | 0.25 | Base chance a targeted loot table yields a Focus. |
+| `low_loot_multiplier` | 1.0 | Extra multiplier for low-tier repeatable/exploration loot, after the built-in 0.35 tier scale. |
+| `common_loot_multiplier` | 1.0 | Extra multiplier for common loot, after the built-in 0.7 tier scale. |
+| `rich_loot_multiplier` | 1.0 | Extra multiplier for rich loot, after the built-in 1.0 tier scale. |
+| `treasure_loot_multiplier` | 1.0 | Extra multiplier for treasure loot, after the built-in 1.8 tier scale. |
+| `shard_fragment_loot_multiplier` | 1.0 | Extra multiplier for shard fragment rolls, after their normal 2x Focus chance scale. |
 | `voidstep_cooldown_ticks` | 200 | Cooldown of the Voidstep blink, in ticks. |
 | `gravebind_cooldown_ticks` | 1200 | Cooldown of the Gravebind death-save, in ticks. |
+
+Loot chances are clamped between 0 and 1 after all scales are applied. With
+defaults, the appended Focus-pool roll chances stay unchanged: low 8.75%,
+common 17.5%, rich 25%, and treasure 45%. Shard fragment rolls stay twice the
+matching Focus chance, also clamped. Archaeology tables preserve vanilla
+single-stack brushable generation by adding entries to existing pools, so their
+actual odds depend on the vanilla pool as well as the configured roll chance.
 
 A couple of values are still set in code:
 

@@ -10,6 +10,7 @@ import dev.attuned.content.behavior.BeaconBehavior;
 import dev.attuned.content.behavior.BloodfuryBehavior;
 import dev.attuned.content.behavior.DelverBehavior;
 import dev.attuned.content.behavior.EmberwardBehavior;
+import dev.attuned.content.behavior.ForagerBehavior;
 import dev.attuned.content.behavior.GalespurBehavior;
 import dev.attuned.content.behavior.HarvestBehavior;
 import dev.attuned.content.behavior.HearthBehavior;
@@ -21,8 +22,10 @@ import dev.attuned.content.behavior.SmokeBehavior;
 import dev.attuned.content.behavior.SoftstepBehavior;
 import dev.attuned.content.behavior.StormcallBehavior;
 import dev.attuned.content.behavior.TideBehavior;
+import dev.attuned.content.behavior.TremorBehavior;
 import dev.attuned.content.behavior.VeilBehavior;
 import dev.attuned.content.behavior.VoidstepBehavior;
+import dev.attuned.content.behavior.WaystoneBehavior;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.IdentityHashMap;
@@ -61,6 +64,7 @@ public final class AttunedContent {
 	public static final Item LEAP_FOCUS = register("leap_focus");
 	public static final Item EDGE_FOCUS = register("edge_focus");
 	public static final Item FRENZY_FOCUS = register("frenzy_focus");
+	public static final Item CINDER_FOCUS = register("cinder_focus");
 	public static final Item BULWARK_FOCUS = register("bulwark_focus");
 	public static final Item DRIFT_FOCUS = register("drift_focus");
 
@@ -87,7 +91,10 @@ public final class AttunedContent {
 	public static final Item BLOODFURY_FOCUS = register("bloodfury_focus");
 	public static final Item VOIDSTEP_FOCUS = register("voidstep_focus");
 	public static final Item HARVEST_FOCUS = register("harvest_focus");
+	public static final Item FORAGER_FOCUS = register("forager_focus");
+	public static final Item TREMOR_FOCUS = register("tremor_focus");
 	public static final Item BEACON_FOCUS = register("beacon_focus");
+	public static final Item WAYSTONE_FOCUS = register("waystone_focus");
 
 	// The Unseen — stealth-flavoured Foci that work through patience, misdirection and openings.
 	public static final Item SOFTSTEP_FOCUS = register("softstep_focus");
@@ -109,11 +116,12 @@ public final class AttunedContent {
 	/** Every Focus item, in display order — the single source for the creative tab and survival loot. */
 	public static final List<Item> FOCI = List.of(
 		SWIFT_FOCUS, VITAL_FOCUS, IRON_FOCUS, LEAP_FOCUS, EDGE_FOCUS, FRENZY_FOCUS,
-		BULWARK_FOCUS, DRIFT_FOCUS, TIDE_FOCUS, EMBERWARD_FOCUS, AEGIS_FOCUS,
+		CINDER_FOCUS, BULWARK_FOCUS, DRIFT_FOCUS, TIDE_FOCUS, EMBERWARD_FOCUS, AEGIS_FOCUS,
 		GALESPUR_FOCUS, RAINSTEP_FOCUS, ANCHOR_FOCUS, NIGHTGAZE_FOCUS, HEARTH_FOCUS,
 		LANTERN_FOCUS, DELVER_FOCUS, LODESTONE_FOCUS, THORNWARD_FOCUS,
 		LEECH_FOCUS, STORMCALL_FOCUS, GRAVEBIND_FOCUS, BLOODFURY_FOCUS, VOIDSTEP_FOCUS,
-		HARVEST_FOCUS, BEACON_FOCUS, SOFTSTEP_FOCUS, VEIL_FOCUS, NEEDLE_FOCUS, SMOKE_FOCUS);
+		HARVEST_FOCUS, FORAGER_FOCUS, TREMOR_FOCUS, BEACON_FOCUS, WAYSTONE_FOCUS,
+		SOFTSTEP_FOCUS, VEIL_FOCUS, NEEDLE_FOCUS, SMOKE_FOCUS);
 
 	private static Item register(String name) {
 		ResourceKey<Item> key = ResourceKey.create(
@@ -185,7 +193,13 @@ public final class AttunedContent {
 		AttunedRegistries.registerBehavior(
 			Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "harvest"), new HarvestBehavior());
 		AttunedRegistries.registerBehavior(
+			Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "forager"), new ForagerBehavior());
+		AttunedRegistries.registerBehavior(
+			Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "tremor"), new TremorBehavior());
+		AttunedRegistries.registerBehavior(
 			Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "beacon"), new BeaconBehavior());
+		AttunedRegistries.registerBehavior(
+			Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "waystone"), new WaystoneBehavior());
 		AttunedRegistries.registerBehavior(
 			Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "voidstep"), new VoidstepBehavior());
 		AttunedRegistries.registerBehavior(

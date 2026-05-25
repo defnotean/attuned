@@ -116,9 +116,16 @@ rename them.
 
 **Create:** `src/main/resources/assets/attuned/textures/item/stoneskin_focus.png`
 
-A 16×16 PNG image. If you do not have art yet, copy any existing Focus texture
-and rename it — you can replace it with real art later. Without this file the
-item shows the black-and-purple "missing texture" pattern (it still works).
+Current shipped Foci use a 64×512 animated PNG sheet: eight 64×64 item frames
+stacked vertically. Match that format for new shipped art so the Focus sits with
+the existing medallion-style assets.
+
+**Create:** `src/main/resources/assets/attuned/textures/item/stoneskin_focus.png.mcmeta`
+
+Copy an existing Focus `.png.mcmeta` and keep the same animation settings unless
+you intentionally change the frame count. Without the PNG the item shows the
+black-and-purple "missing texture" pattern; without the `.mcmeta`, an animated
+sheet will render incorrectly.
 
 ## Step 6 — Add the names and text
 
@@ -233,6 +240,7 @@ For a stat-only Focus, you created or edited:
 - [ ] `assets/attuned/items/<name>.json`
 - [ ] `assets/attuned/models/item/<name>.json`
 - [ ] `assets/attuned/textures/item/<name>.png`
+- [ ] `assets/attuned/textures/item/<name>.png.mcmeta`
 - [ ] `assets/attuned/lang/en_us.json` — four lines
 
 A power Focus also has:

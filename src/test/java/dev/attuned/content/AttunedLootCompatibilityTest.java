@@ -6,6 +6,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.mojang.serialization.JsonOps;
+import dev.attuned.AttunedConfig;
 import dev.attuned.api.focus.Affinity;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -27,6 +29,7 @@ class AttunedLootCompatibilityTest {
 		Path.of("src/main/resources/data/attuned/attuned/focus");
 	private static final Path FABRIC_MOD_JSON =
 		Path.of("src/main/resources/fabric.mod.json");
+	private static final float EPSILON = 0.00001F;
 
 	@Test
 	void everyShippedFocusCanRollInEveryTargetedVanillaTable() throws IOException {
@@ -90,6 +93,48 @@ class AttunedLootCompatibilityTest {
 	}
 
 	@Test
+	void defaultLootConfigPreservesAppendedPoolRollChances() {
+		assertEquals(0.0875F, AttunedLoot.focusChance(AttunedConfig.DEFAULT, drop(AttunedLoot.Tier.LOW)), EPSILON);
+		assertEquals(0.175F, AttunedLoot.focusChance(AttunedConfig.DEFAULT, drop(AttunedLoot.Tier.COMMON)), EPSILON);
+		assertEquals(0.25F, AttunedLoot.focusChance(AttunedConfig.DEFAULT, drop(AttunedLoot.Tier.RICH)), EPSILON);
+		assertEquals(0.45F, AttunedLoot.focusChance(AttunedConfig.DEFAULT, drop(AttunedLoot.Tier.TREASURE)), EPSILON);
+
+		assertEquals(0.175F, AttunedLoot.fragmentChance(AttunedConfig.DEFAULT, 0.0875F), EPSILON);
+		assertEquals(0.35F, AttunedLoot.fragmentChance(AttunedConfig.DEFAULT, 0.175F), EPSILON);
+		assertEquals(0.5F, AttunedLoot.fragmentChance(AttunedConfig.DEFAULT, 0.25F), EPSILON);
+		assertEquals(0.9F, AttunedLoot.fragmentChance(AttunedConfig.DEFAULT, 0.45F), EPSILON);
+	}
+
+	@Test
+	void lootConfigMultipliersTuneTiersAndClampFinalChances() {
+		AttunedConfig tuned = config(0.25F, 2.0F, 0.5F, 3.0F, 4.0F, 0.25F);
+
+		assertEquals(0.175F, AttunedLoot.focusChance(tuned, drop(AttunedLoot.Tier.LOW)), EPSILON);
+		assertEquals(0.0875F, AttunedLoot.focusChance(tuned, drop(AttunedLoot.Tier.COMMON)), EPSILON);
+		assertEquals(0.75F, AttunedLoot.focusChance(tuned, drop(AttunedLoot.Tier.RICH)), EPSILON);
+		assertEquals(1.0F, AttunedLoot.focusChance(tuned, drop(AttunedLoot.Tier.TREASURE)), EPSILON);
+		assertEquals(0.375F, AttunedLoot.fragmentChance(tuned, 0.75F), EPSILON);
+	}
+
+	@Test
+	void configCodecDefaultsLootMultipliersAndRejectsMalformedValues() {
+		JsonObject legacy = new JsonObject();
+		legacy.addProperty("focus_loot_chance", 0.25F);
+
+		AttunedConfig parsed = AttunedConfig.CODEC.parse(JsonOps.INSTANCE, legacy).getOrThrow();
+		assertEquals(AttunedConfig.DEFAULT.lowLootMultiplier(), parsed.lowLootMultiplier(), EPSILON);
+		assertEquals(AttunedConfig.DEFAULT.commonLootMultiplier(), parsed.commonLootMultiplier(), EPSILON);
+		assertEquals(AttunedConfig.DEFAULT.richLootMultiplier(), parsed.richLootMultiplier(), EPSILON);
+		assertEquals(AttunedConfig.DEFAULT.treasureLootMultiplier(), parsed.treasureLootMultiplier(), EPSILON);
+		assertEquals(AttunedConfig.DEFAULT.shardFragmentLootMultiplier(), parsed.shardFragmentLootMultiplier(), EPSILON);
+
+		JsonObject malformed = new JsonObject();
+		malformed.addProperty("common_loot_multiplier", -1.0F);
+		assertTrue(AttunedConfig.CODEC.parse(JsonOps.INSTANCE, malformed).result().isEmpty(),
+			"Malformed loot multipliers should still fail config parsing so load() falls back to defaults");
+	}
+
+	@Test
 	void unseenThemedTablesBiasUnseenFociWithoutMakingLootrRequired() throws IOException {
 		Map<String, FocusData> foci = focusDataByItemId();
 		FocusData unseenFocus = foci.get("attuned:veil_focus");
@@ -131,6 +176,32 @@ class AttunedLootCompatibilityTest {
 		}
 		assertTrue(!foci.isEmpty(), "Expected shipped FocusDefinition fixtures");
 		return foci;
+	}
+
+	private static AttunedLoot.Drop drop(AttunedLoot.Tier tier) {
+		return new AttunedLoot.Drop(tier, null, false);
+	}
+
+	private static AttunedConfig config(
+			float focusLootChance,
+			float lowLootMultiplier,
+			float commonLootMultiplier,
+			float richLootMultiplier,
+			float treasureLootMultiplier,
+			float shardFragmentLootMultiplier) {
+		return new AttunedConfig(
+			AttunedConfig.DEFAULT.startingCapacity(),
+			AttunedConfig.DEFAULT.capacityCap(),
+			AttunedConfig.DEFAULT.capacityPerShard(),
+			focusLootChance,
+			lowLootMultiplier,
+			commonLootMultiplier,
+			richLootMultiplier,
+			treasureLootMultiplier,
+			shardFragmentLootMultiplier,
+			AttunedConfig.DEFAULT.voidstepCooldownTicks(),
+			AttunedConfig.DEFAULT.gravebindCooldownTicks(),
+			AttunedConfig.DEFAULT.broadcastPactDeaths());
 	}
 
 	private static boolean isSupportedVanillaLootPath(String path) {

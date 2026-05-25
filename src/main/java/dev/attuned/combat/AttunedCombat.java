@@ -56,11 +56,15 @@ public final class AttunedCombat {
 	private static final float THORNWARD_REFLECT = 0.25F;
 	/** Fraction of damage dealt a Leech attacker recovers as health. */
 	private static final float LEECH_LIFESTEAL = 0.20F;
+	/** Extra direct-melee damage Cinder deals to burning enemies. */
+	private static final float CINDER_BURNING_BONUS = 0.20F;
 
 	private static final Identifier THORNWARD_FOCUS =
 		Identifier.fromNamespaceAndPath("attuned", "thornward_focus");
 	private static final Identifier LEECH_FOCUS =
 		Identifier.fromNamespaceAndPath("attuned", "leech_focus");
+	private static final Identifier CINDER_FOCUS =
+		Identifier.fromNamespaceAndPath("attuned", "cinder_focus");
 
 	/** Re-entrancy guard so a reflected hit cannot trigger another reflection. */
 	private static final ThreadLocal<Boolean> REFLECTING = ThreadLocal.withInitial(() -> false);
@@ -87,7 +91,22 @@ public final class AttunedCombat {
 		if (attackerOf(source) instanceof Player && !(defender instanceof Player)) {
 			mobAffinitySpark(level, defender);
 		}
-		return amount * multiplier;
+		float adjusted = amount * multiplier;
+		if (cinderApplies(defender, source)) {
+			adjusted *= (1.0F + CINDER_BURNING_BONUS);
+		}
+		return adjusted;
+	}
+
+	private static boolean cinderApplies(LivingEntity defender, DamageSource source) {
+		if (!(attackerOf(source) instanceof Player player) || source.getDirectEntity() != player) {
+			return false;
+		}
+		if (source.is(net.minecraft.tags.DamageTypeTags.IS_PROJECTILE)
+				|| source.is(net.minecraft.tags.DamageTypeTags.IS_EXPLOSION)) {
+			return false;
+		}
+		return defender.isOnFire() && hasActiveFocus(player, CINDER_FOCUS);
 	}
 
 	private static void mobAffinitySpark(ServerLevel level, LivingEntity entity) {

@@ -17,6 +17,7 @@ import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.player.Player;
 
+import java.util.EnumMap;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
@@ -48,6 +49,7 @@ public final class FocusPanel {
 	private static final int WELL_SHADOW = 0xFF373737;
 	private static final int DORMANT_DIM = 0x55000000;
 	private static final int PRIORITY_TICK_DIM = 0x80373737;
+	private static final int SINGLE_AFFINITY_PACT_THRESHOLD = 3;
 
 	// Idle-glow pulse: a sine modulation across PULSE_PERIOD_TICKS whose alpha
 	// breathes between two narrow bounds so the highlight reads as ambient rather
@@ -58,6 +60,9 @@ public final class FocusPanel {
 	private static final long PULSE_PERIOD_TICKS = 40L;
 	private static final int GLOW_ALPHA_MIN = 60;
 	private static final int GLOW_ALPHA_MAX = 120;
+	private static final int PACT_STABILITY_ALPHA_BONUS = 70;
+	private static final int PACT_STABILITY_ALPHA_MAX = 185;
+	private static final int PACT_STABILITY_MARK_LEN = 4;
 
 	// Resonance ring: a 1-pixel border traced just outside the affinity gem.
 	// Below Apex the ring sits at a dim base alpha; once at Apex it brightens to
@@ -105,6 +110,7 @@ public final class FocusPanel {
 		FocusDefinition[] slotDefinitions = new FocusDefinition[AttunedInv.SIZE];
 		int used = 0;
 		Set<Affinity> activeAffinities = EnumSet.noneOf(Affinity.class);
+		EnumMap<Affinity, Integer> activeAffinityCounts = new EnumMap<>(Affinity.class);
 		for (int slot : activeSlotsList) {
 			FocusDefinition def = Attunement.definitionFor(player, inv.get(slot)).orElse(null);
 			if (def == null) {
@@ -112,7 +118,10 @@ public final class FocusPanel {
 			}
 			slotDefinitions[slot] = def;
 			used += def.cost();
-			def.affinity().ifPresent(activeAffinities::add);
+			def.affinity().ifPresent(affinity -> {
+				activeAffinities.add(affinity);
+				activeAffinityCounts.merge(affinity, 1, Integer::sum);
+			});
 		}
 		int capacity = Attunement.capacity(player);
 		boolean discord = activeAffinities.size() >= 2;
@@ -121,6 +130,7 @@ public final class FocusPanel {
 			: Optional.empty();
 		Optional<Affinity> playerAffinity = committed.isPresent() ? committed : Apex.affinityOf(player);
 		int affinityColor = AttunementReadout.stanceArgb(discord, playerAffinity);
+		Optional<Affinity> pactStabilityAffinity = pactStabilityAffinity(discord, activeAffinityCounts);
 
 		for (int i = 0; i < AttunedInv.SIZE; i++) {
 			int sx = leftPos + slotX;
@@ -147,6 +157,9 @@ public final class FocusPanel {
 				// Left and right edges, inset to avoid double-blending the corners.
 				graphics.fill(gx0, gy0 + 1, gx0 + 1, gy1 - 1, glowArgb);
 				graphics.fill(gx1 - 1, gy0 + 1, gx1, gy1 - 1, glowArgb);
+				if (hasPactStability(slotDefinitions[i], pactStabilityAffinity)) {
+					drawPactStabilityCue(graphics, sx, sy, baseColor, pulseAlpha);
+				}
 			}
 		}
 
@@ -235,6 +248,54 @@ public final class FocusPanel {
 	 */
 	private static int focusAffinityColor(FocusDefinition definition) {
 		return definition.affinity().map(Affinity::argb).orElse(AffinityColors.NEUTRAL_ARGB);
+	}
+
+	/**
+	 * The affinity whose active Focus wells should receive the Pact stability cue.
+	 * This mirrors the single-affinity Pact wake condition while reusing the slot
+	 * scan already done by draw(): at least three active affinity-bearing Foci,
+	 * all from one lane. Discord and Untethered deliberately stay quiet.
+	 */
+	private static Optional<Affinity> pactStabilityAffinity(boolean discord,
+			EnumMap<Affinity, Integer> activeAffinityCounts) {
+		if (discord || activeAffinityCounts.size() != 1) {
+			return Optional.empty();
+		}
+		var only = activeAffinityCounts.entrySet().iterator().next();
+		return only.getValue() >= SINGLE_AFFINITY_PACT_THRESHOLD
+			? Optional.of(only.getKey())
+			: Optional.empty();
+	}
+
+	private static boolean hasPactStability(FocusDefinition definition, Optional<Affinity> pactAffinity) {
+		return pactAffinity.isPresent()
+			&& definition.affinity().filter(affinity -> affinity == pactAffinity.get()).isPresent();
+	}
+
+	/**
+	 * A tiny, textless stability mark for active Foci that are sustaining a
+	 * single-affinity Pact: four short corner brackets inside the well. It shares
+	 * the existing pulse phase but caps alpha tightly so it reads as clarity, not
+	 * a second full-slot effect.
+	 */
+	private static void drawPactStabilityCue(GuiGraphicsExtractor graphics, int sx, int sy,
+			int baseColor, int pulseAlpha) {
+		int alpha = Math.min(PACT_STABILITY_ALPHA_MAX, pulseAlpha + PACT_STABILITY_ALPHA_BONUS);
+		int argb = (alpha << 24) | (baseColor & 0x00FFFFFF);
+		int x0 = sx + 2;
+		int y0 = sy + 2;
+		int x1 = sx + FocusLayout.SLOT - 2;
+		int y1 = sy + FocusLayout.SLOT - 2;
+		int len = PACT_STABILITY_MARK_LEN;
+
+		graphics.fill(x0, y0, x0 + len, y0 + 1, argb);
+		graphics.fill(x0, y0, x0 + 1, y0 + len, argb);
+		graphics.fill(x1 - len, y0, x1, y0 + 1, argb);
+		graphics.fill(x1 - 1, y0, x1, y0 + len, argb);
+		graphics.fill(x0, y1 - 1, x0 + len, y1, argb);
+		graphics.fill(x0, y1 - len, x0 + 1, y1, argb);
+		graphics.fill(x1 - len, y1 - 1, x1, y1, argb);
+		graphics.fill(x1 - 1, y1 - len, x1, y1, argb);
 	}
 
 	/**

@@ -85,6 +85,8 @@ class FocusDataConsistencyTest {
 				"Registered Focus should have an item model asset: " + itemId);
 			assertTrue(Files.isRegularFile(ITEM_TEXTURE_DIR.resolve(name + ".png")),
 				"Registered Focus should have an item texture asset: " + itemId);
+			assertTrue(Files.isRegularFile(ITEM_TEXTURE_DIR.resolve(name + ".png.mcmeta")),
+				"Registered Focus should have animated item texture metadata: " + itemId);
 			assertLanguageKey(lang, "item.attuned." + name);
 			assertLanguageKey(lang, "item.attuned." + name + ".lore");
 			assertLanguageKey(lang, "item.attuned." + name + ".lore2");

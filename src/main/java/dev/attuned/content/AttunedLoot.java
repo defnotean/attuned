@@ -138,8 +138,9 @@ public final class AttunedLoot {
 			if (drop == null) {
 				return;
 			}
-			float chance = Mth.clamp(
-				AttunedConfig.get().focusLootChance() * drop.tier().multiplier, 0.0F, 1.0F);
+			AttunedConfig config = AttunedConfig.get();
+			float chance = focusChance(config, drop);
+			float fragmentChance = fragmentChance(config, chance);
 			Map<Item, FocusMeta> focusMetadata = focusMetadata(
 				registries.lookupOrThrow(AttunedRegistries.FOCUS_DEFINITIONS));
 			if (modifiesExistingPools(key.identifier())) {
@@ -152,7 +153,7 @@ public final class AttunedLoot {
 					}
 					pool.add(LootItem.lootTableItem(AttunedContent.ATTUNEMENT_SHARD_FRAGMENT)
 						.setWeight(WEIGHT_NEUTRAL)
-						.when(LootItemRandomChanceCondition.randomChance(Mth.clamp(chance * 2.0F, 0.0F, 1.0F))));
+						.when(LootItemRandomChanceCondition.randomChance(fragmentChance)));
 				});
 				return;
 			}
@@ -164,12 +165,31 @@ public final class AttunedLoot {
 			}
 			tableBuilder.withPool(pool);
 
-			float fragmentChance = Mth.clamp(chance * 2.0F, 0.0F, 1.0F);
 			tableBuilder.withPool(LootPool.lootPool()
 				.setRolls(ConstantValue.exactly(1.0F))
 				.when(LootItemRandomChanceCondition.randomChance(fragmentChance))
 				.add(LootItem.lootTableItem(AttunedContent.ATTUNEMENT_SHARD_FRAGMENT)));
 		});
+	}
+
+	static float focusChance(AttunedConfig config, Drop drop) {
+		return Mth.clamp(
+			config.focusLootChance() * drop.tier().multiplier * lootMultiplier(config, drop.tier()),
+			0.0F,
+			1.0F);
+	}
+
+	static float fragmentChance(AttunedConfig config, float focusChance) {
+		return Mth.clamp(focusChance * 2.0F * config.shardFragmentLootMultiplier(), 0.0F, 1.0F);
+	}
+
+	private static float lootMultiplier(AttunedConfig config, Tier tier) {
+		return switch (tier) {
+			case LOW -> config.lowLootMultiplier();
+			case COMMON -> config.commonLootMultiplier();
+			case RICH -> config.richLootMultiplier();
+			case TREASURE -> config.treasureLootMultiplier();
+		};
 	}
 
 	/** Affinities and factions from the synced datapack registry, keyed by Focus item. */
