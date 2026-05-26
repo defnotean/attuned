@@ -140,19 +140,67 @@ def hud_backplate():
 
 
 def journal():
-    img = Image.new("RGBA", (16, 16), CLEAR)
+    img = Image.new("RGBA", (64, 64), CLEAR)
     draw = ImageDraw.Draw(img)
-    rect(draw, (2, 1, 12, 14), (45, 31, 58, 255))
-    draw.line((3, 1, 12, 1), fill=(95, 71, 122, 255))
-    draw.line((2, 2, 2, 13), fill=(19, 14, 25, 255))
-    draw.line((12, 2, 12, 14), fill=(18, 13, 24, 255))
-    rect(draw, (4, 3, 10, 12), (72, 48, 92, 255))
-    draw.line((5, 4, 9, 4), fill=AMETHYST_LIGHT)
-    draw.line((5, 6, 9, 6), fill=AMETHYST)
-    draw.line((5, 8, 8, 8), fill=(176, 148, 214, 255))
-    draw.rectangle((10, 6, 14, 9), fill=(190, 151, 73, 255), outline=(82, 55, 20, 255))
-    draw.point((12, 7), fill=AMETHYST_LIGHT)
-    draw.line((4, 13, 12, 13), fill=(18, 13, 24, 255))
+    # The Foci use 64px item art, so the journal keeps the same density instead
+    # of scaling a tiny 16px book beside much sharper equipment.
+    rect(draw, (19, 6, 48, 58), (16, 12, 22, 255))
+    rect(draw, (21, 4, 45, 56), (46, 31, 60, 255))
+    rect(draw, (24, 7, 48, 58), (78, 52, 96, 255))
+    draw.line((23, 5, 45, 5), fill=(120, 86, 150, 255))
+    draw.line((24, 7, 47, 7), fill=(145, 105, 178, 255))
+    draw.line((21, 8, 21, 54), fill=(20, 14, 26, 255))
+    draw.line((22, 8, 22, 54), fill=(32, 20, 38, 255))
+    draw.line((48, 10, 48, 58), fill=(23, 16, 30, 255))
+    draw.line((20, 56, 47, 56), fill=(18, 12, 24, 255))
+    draw.line((21, 58, 49, 58), fill=(7, 6, 10, 255))
+
+    # Page block and chipped parchment edge.
+    rect(draw, (27, 50, 49, 58), (224, 206, 158, 255))
+    draw.line((29, 52, 49, 52), fill=(164, 134, 85, 255))
+    draw.line((31, 55, 48, 55), fill=(137, 106, 62, 255))
+    for x in range(29, 48, 4):
+        draw.point((x, 57), fill=(102, 72, 42, 255))
+
+    # Raised cover panel.
+    rect(draw, (27, 12, 43, 43), (52, 34, 70, 255))
+    draw.rectangle((26, 11, 44, 44), outline=(18, 12, 24, 255))
+    draw.line((27, 12, 43, 12), fill=(119, 83, 156, 255))
+    draw.line((27, 13, 27, 43), fill=(90, 62, 118, 255))
+    draw.line((43, 13, 43, 43), fill=(27, 18, 36, 255))
+    draw.line((28, 43, 43, 43), fill=(26, 17, 34, 255))
+
+    # Amethyst sigil with enough pixels to read after item scaling.
+    draw.polygon(
+        [(35, 15), (41, 23), (38, 35), (31, 35), (28, 23)],
+        fill=AMETHYST_DARK,
+        outline=(32, 22, 48, 255),
+    )
+    draw.polygon(
+        [(35, 17), (39, 23), (36, 33), (32, 33), (30, 23)],
+        fill=AMETHYST,
+    )
+    draw.polygon([(35, 17), (37, 23), (35, 31), (32, 33), (30, 23)], fill=AMETHYST_LIGHT)
+    draw.line((35, 17, 35, 31), fill=(235, 218, 255, 255))
+    draw.point((38, 21), fill=(246, 237, 255, 255))
+    draw.point((33, 27), fill=(88, 52, 148, 255))
+
+    # Brass binding, clasp, and bookmark.
+    rect(draw, (16, 12, 23, 52), (95, 62, 25, 255))
+    draw.line((17, 13, 17, 50), fill=(211, 162, 76, 255))
+    draw.line((22, 13, 22, 52), fill=(51, 31, 13, 255))
+    for y in (16, 25, 34, 43):
+        rect(draw, (17, y, 22, y + 3), (190, 139, 56, 255))
+        draw.line((18, y + 1, 21, y + 1), fill=(245, 204, 105, 255))
+    rect(draw, (43, 29, 54, 37), (93, 58, 20, 255))
+    rect(draw, (44, 30, 52, 35), (202, 151, 65, 255))
+    draw.line((45, 31, 51, 31), fill=(247, 211, 111, 255))
+    rect(draw, (47, 32, 49, 34), AMETHYST_LIGHT)
+    rect(draw, (33, 45, 38, 61), (118, 32, 58, 255))
+    draw.line((34, 46, 34, 58), fill=(224, 74, 104, 255))
+    draw.point((36, 60), fill=(224, 74, 104, 255))
+
+    deterministic_speckles(draw, 64, 64, (112, 77, 140, 255), 83)
     img.save(TEXTURES / "item/attunement_journal.png")
 
 
