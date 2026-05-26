@@ -103,14 +103,16 @@ modrinth {
 	versionName = "Attuned ${project.version}"
 	// Changelog for the current release — refresh this each time mod_version bumps.
 	changelog = """\
-Custom UI art and guide polish release.
+Utility Foci, journal UI, loot, and polish release.
 
-- Added custom pixel-art GUI textures for the Attunement Altar, Focus side panel, compact combat HUD backplate, and Attunement Journal item.
-- Reworked the Attunement Altar screen to render the new ritual-stone background and a custom textured Bind button while preserving the existing shard slot, inventory slot positions, and server validation.
-- Reworked the Focus panel to render from custom art, add priority tick marks, and keep active glow, dormant dimming, resonance, and capacity feedback readable.
-- Added a custom HUD backplate behind stance, target, resonance, and Apex cues without expanding the overlay into the playfield.
-- Expanded the Attunement Journal into a fuller in-game field guide covering priority, capacity, affinities, Discord, Pacts, Apex, shards, The Unseen, and Lootr-friendly loot.
-- Tightened Focus tooltip metadata and added asset-contract tests that verify custom UI textures exist, keep their intended dimensions, and stay wired into the renderers.
+- Added vanilla-friendly utility Foci including Anchor, Cinder, Forager, Galespur, Hearth, Lantern, Rainstep, Tremor, and Waystone.
+- Added a custom Attunement Journal screen and generated journal book art, with expanded in-game guidance for Foci, attunement, Pacts, and progression.
+- Expanded Lootr-friendly loot and wandering trader access so Focus rewards, shard fragments, and journals are easier to find through vanilla-style gameplay.
+- Added pact challenge advancements plus clearer onboarding milestones for first Foci, dormant Foci, Discord, and pact challenges.
+- Improved altar, pact, dormant Focus, and attunement readout feedback so capacity, binding, and state changes are easier to understand in-game.
+- Unified Focus item art into the shared animated medallion style and made every Focus texture animation visibly move.
+- Fixed Beacon and Waystone compass tracking so vanilla compasses can be redirected, named while active, and restored afterward.
+- Added contract coverage for attunement sources, budget resolution, loot/trade data, altar behavior, journal UI, compass Focus behavior, and Focus data consistency.
 """
 	uploadFile = file("build/libs/${project.name}-${project.version}.jar")
 	gameVersions = ["26.1.2"]
