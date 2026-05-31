@@ -5,6 +5,7 @@
 	"mixins": [
 		"InventoryMenuMixin",
 		"FishingHookMixin",
+		"FishingRodItemMixin",
 		"LivingEntityHurtMixin",
 		"LivingEntityKnockbackMixin",
 		"ServerGamePacketListenerImplMixin"

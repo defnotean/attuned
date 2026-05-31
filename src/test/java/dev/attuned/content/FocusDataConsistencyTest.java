@@ -63,6 +63,11 @@ class FocusDataConsistencyTest {
 		"attuned:harborlight_focus",
 		"attuned:linecast_focus",
 		"attuned:netmender_focus");
+	private static final Map<String, Double> SEAFARERS_LUCK_AMOUNTS = Map.of(
+		"attuned:driftglass_focus", 1.0D,
+		"attuned:harborlight_focus", 1.0D,
+		"attuned:linecast_focus", 1.0D,
+		"attuned:netmender_focus", 1.0D);
 
 	@Test
 	void shippedFocusRegistrationsListAndDefinitionsStayInStep() throws IOException {
@@ -149,7 +154,7 @@ class FocusDataConsistencyTest {
 	}
 
 	@Test
-	void seafarersFociStayNeutralTranslatedAndNonCombat() throws IOException {
+	void seafarersFociStayNeutralTranslatedAndGrantOnlyLuckUtility() throws IOException {
 		Set<String> seafarersItems = new TreeSet<>();
 		try (Stream<Path> paths = Files.list(FOCUS_DATA_DIR)) {
 			for (Path file : paths
@@ -161,12 +166,29 @@ class FocusDataConsistencyTest {
 				if (faction == null || !"attuned:seafarers".equals(faction.getAsString())) {
 					continue;
 				}
-				seafarersItems.add(root.get("item").getAsString());
+				String itemId = root.get("item").getAsString();
+				seafarersItems.add(itemId);
 				assertTrue(!root.has("affinity"), "Seafarers Foci must stay neutral: " + file);
-				assertTrue(!root.has("modifiers"), "Seafarers first wave must not add combat modifiers: " + file);
+				assertSeafarersLuckModifier(root, itemId, file);
 			}
 		}
 		assertEquals(SEAFARERS_FOCUS_ITEMS, seafarersItems);
+	}
+
+	private static void assertSeafarersLuckModifier(JsonObject root, String itemId, Path file) {
+		JsonElement modifiers = root.get("modifiers");
+		assertNotNull(modifiers, "Seafarers Foci should grant real player Luck while active: " + file);
+		assertTrue(modifiers.isJsonArray(), "Seafarers modifiers should be a JSON array: " + file);
+		assertEquals(1, modifiers.getAsJsonArray().size(),
+			"Seafarers should only carry their non-combat Luck modifier: " + file);
+
+		JsonObject modifier = modifiers.getAsJsonArray().get(0).getAsJsonObject();
+		assertEquals("minecraft:luck", modifier.get("attribute").getAsString(),
+			"Seafarers modifier should affect vanilla player Luck: " + file);
+		assertEquals(SEAFARERS_LUCK_AMOUNTS.get(itemId), modifier.get("amount").getAsDouble(), 0.0001D,
+			"Seafarers Luck amount should stay significant but vanilla-friendly: " + file);
+		assertEquals("add_value", modifier.get("operation").getAsString(),
+			"Seafarers Luck should add a flat utility bonus: " + file);
 	}
 
 	private static Map<String, String> registeredFocusItemsByField(String source) {

@@ -3,5 +3,12 @@
 	"cost": 3,
 	"unique": true,
 	"faction": "attuned:seafarers",
+	"modifiers": [
+		{
+			"attribute": "minecraft:luck",
+			"amount": 1.0,
+			"operation": "add_value"
+		}
+	],
 	"behavior": "attuned:driftglass"
 }
