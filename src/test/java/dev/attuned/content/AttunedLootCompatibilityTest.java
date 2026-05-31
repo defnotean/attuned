@@ -158,6 +158,25 @@ class AttunedLootCompatibilityTest {
 			"Lootr should stay suggested for modpack discovery");
 	}
 
+	@Test
+	void fishingTreasureBiasesSeafarersWithoutAddingCombatWeight() throws IOException {
+		Map<String, FocusData> foci = focusDataByItemId();
+		AttunedLoot.Drop fishing = AttunedLoot.targetDrops()
+			.get(Identifier.fromNamespaceAndPath("minecraft", "gameplay/fishing/treasure"));
+		assertTrue(fishing != null && fishing.fishingTheme(),
+			"Fishing treasure should use the Seafarers-themed drop");
+
+		FocusData seafarer = foci.get("attuned:linecast_focus");
+		FocusData neutral = foci.get("attuned:forager_focus");
+		assertTrue(seafarer != null, "Expected a Seafarers Focus fixture");
+		assertTrue(neutral != null, "Expected a neutral non-faction Focus fixture");
+
+		int seafarerWeight = AttunedLoot.weightForMeta(seafarer.affinity(), seafarer.faction(), fishing);
+		int neutralWeight = AttunedLoot.weightForMeta(neutral.affinity(), neutral.faction(), fishing);
+		assertTrue(seafarerWeight > neutralWeight,
+			"Fishing treasure should gently bias Seafarers Foci without excluding other Foci");
+	}
+
 	private static Map<String, FocusData> focusDataByItemId() throws IOException {
 		assertTrue(Files.isDirectory(FOCUS_DATA_DIR), "Could not find FocusDefinition data directory");
 		Map<String, FocusData> foci = new TreeMap<>();
@@ -179,7 +198,7 @@ class AttunedLootCompatibilityTest {
 	}
 
 	private static AttunedLoot.Drop drop(AttunedLoot.Tier tier) {
-		return new AttunedLoot.Drop(tier, null, false);
+		return new AttunedLoot.Drop(tier, null, false, false);
 	}
 
 	private static AttunedConfig config(

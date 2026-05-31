@@ -1,0 +1,7 @@
+{
+	"item": "attuned:harborlight_focus",
+	"cost": 2,
+	"unique": true,
+	"faction": "attuned:seafarers",
+	"behavior": "attuned:harborlight"
+}

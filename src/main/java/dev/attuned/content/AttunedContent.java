@@ -9,10 +9,12 @@ import dev.attuned.content.behavior.AnchorBehavior;
 import dev.attuned.content.behavior.BeaconBehavior;
 import dev.attuned.content.behavior.BloodfuryBehavior;
 import dev.attuned.content.behavior.DelverBehavior;
+import dev.attuned.content.behavior.DriftglassBehavior;
 import dev.attuned.content.behavior.EmberwardBehavior;
 import dev.attuned.content.behavior.ForagerBehavior;
 import dev.attuned.content.behavior.GalespurBehavior;
 import dev.attuned.content.behavior.HarvestBehavior;
+import dev.attuned.content.behavior.HarborlightBehavior;
 import dev.attuned.content.behavior.HearthBehavior;
 import dev.attuned.content.behavior.LanternBehavior;
 import dev.attuned.content.behavior.LodestoneBehavior;
@@ -102,6 +104,12 @@ public final class AttunedContent {
 	public static final Item NEEDLE_FOCUS = register("needle_focus");
 	public static final Item SMOKE_FOCUS = register("smoke_focus");
 
+	// The Seafarers - peaceful utility Foci for fishing, wayfinding, and water-side travel.
+	public static final Item LINECAST_FOCUS = register("linecast_focus");
+	public static final Item NETMENDER_FOCUS = register("netmender_focus");
+	public static final Item HARBORLIGHT_FOCUS = register("harborlight_focus");
+	public static final Item DRIFTGLASS_FOCUS = register("driftglass_focus");
+
 	/** A consumable that permanently raises attunement capacity. Stacks normally. */
 	public static final Item ATTUNEMENT_SHARD = register("attunement_shard", AttunementShardItem::new);
 	/** A fragment reward that smooths shard progression; four craft into one shard. */
@@ -112,6 +120,8 @@ public final class AttunedContent {
 
 	/** The Attunement Altar — the home block where shards are bound into capacity. */
 	public static final Block ATTUNEMENT_ALTAR = registerAltar();
+	/** The Altar of Reweaving converts three Foci and a shard fragment into a new Focus. */
+	public static final Block ALTAR_OF_REWEAVING = registerReweavingAltar();
 
 	/** Every Focus item, in display order — the single source for the creative tab and survival loot. */
 	public static final List<Item> FOCI = List.of(
@@ -121,7 +131,8 @@ public final class AttunedContent {
 		LANTERN_FOCUS, DELVER_FOCUS, LODESTONE_FOCUS, THORNWARD_FOCUS,
 		LEECH_FOCUS, STORMCALL_FOCUS, GRAVEBIND_FOCUS, BLOODFURY_FOCUS, VOIDSTEP_FOCUS,
 		HARVEST_FOCUS, FORAGER_FOCUS, TREMOR_FOCUS, BEACON_FOCUS, WAYSTONE_FOCUS,
-		SOFTSTEP_FOCUS, VEIL_FOCUS, NEEDLE_FOCUS, SMOKE_FOCUS);
+		SOFTSTEP_FOCUS, VEIL_FOCUS, NEEDLE_FOCUS, SMOKE_FOCUS,
+		LINECAST_FOCUS, NETMENDER_FOCUS, HARBORLIGHT_FOCUS, DRIFTGLASS_FOCUS);
 
 	private static Item register(String name) {
 		ResourceKey<Item> key = ResourceKey.create(
@@ -150,6 +161,24 @@ public final class AttunedContent {
 			.strength(3.5F, 6.0F)
 			.sound(SoundType.DEEPSLATE)
 			.lightLevel(state -> 7)
+			.noOcclusion());
+		Registry.register(BuiltInRegistries.BLOCK, blockKey, block);
+
+		ResourceKey<Item> itemKey = ResourceKey.create(Registries.ITEM, id);
+		Registry.register(BuiltInRegistries.ITEM, itemKey,
+			new BlockItem(block, new Item.Properties().setId(itemKey)));
+		return block;
+	}
+
+	/** Registers the Altar of Reweaving block and its matching block item. */
+	private static Block registerReweavingAltar() {
+		Identifier id = Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "altar_of_reweaving");
+		ResourceKey<Block> blockKey = ResourceKey.create(Registries.BLOCK, id);
+		Block block = new AltarOfReweavingBlock(BlockBehaviour.Properties.of()
+			.setId(blockKey)
+			.strength(3.5F, 6.0F)
+			.sound(SoundType.DEEPSLATE)
+			.lightLevel(state -> 6)
 			.noOcclusion());
 		Registry.register(BuiltInRegistries.BLOCK, blockKey, block);
 
@@ -208,6 +237,10 @@ public final class AttunedContent {
 			Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "veil"), new VeilBehavior());
 		AttunedRegistries.registerBehavior(
 			Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "smoke"), new SmokeBehavior());
+		AttunedRegistries.registerBehavior(
+			Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "harborlight"), new HarborlightBehavior());
+		AttunedRegistries.registerBehavior(
+			Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "driftglass"), new DriftglassBehavior());
 		registerCreativeTab();
 	}
 
@@ -233,6 +266,7 @@ public final class AttunedContent {
 				output.accept(ATTUNEMENT_SHARD_FRAGMENT);
 				output.accept(ATTUNEMENT_JOURNAL);
 				output.accept(ATTUNEMENT_ALTAR);
+				output.accept(ALTAR_OF_REWEAVING);
 			})
 			.build();
 		Registry.register(BuiltInRegistries.CREATIVE_MODE_TAB,

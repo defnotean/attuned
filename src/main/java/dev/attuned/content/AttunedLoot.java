@@ -50,7 +50,7 @@ public final class AttunedLoot {
 	}
 
 	/** A targeted loot table: how rich it is, which affinity and faction it favours. */
-	record Drop(Tier tier, Affinity theme, boolean unseenTheme) {}
+	record Drop(Tier tier, Affinity theme, boolean unseenTheme, boolean fishingTheme) {}
 
 	// Pool weights: a Focus matching the structure's theme is favoured, neutral Foci
 	// fit anywhere, and off-theme Foci are still possible but rarer.
@@ -58,8 +58,11 @@ public final class AttunedLoot {
 	private static final int WEIGHT_NEUTRAL = 2;
 	private static final int WEIGHT_OFF_THEME = 1;
 	private static final int WEIGHT_UNSEEN_THEME_BONUS = 3;
+	private static final int WEIGHT_SEAFARERS_FISHING_BONUS = 3;
 	private static final Identifier UNSEEN_FACTION =
 		Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "unseen");
+	private static final Identifier SEAFARERS_FACTION =
+		Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "seafarers");
 
 	private record FocusMeta(Affinity affinity, Identifier faction) {}
 
@@ -90,7 +93,7 @@ public final class AttunedLoot {
 		Map.entry(chest("end_city_treasure"), unseen(Tier.TREASURE, Affinity.ZEPHYR)),
 		Map.entry(chest("bastion_treasure"), normal(Tier.TREASURE, Affinity.BASTION)),
 		// Repeatable treasure - pleasant finds, deliberately low odds.
-		Map.entry(vanilla("gameplay/fishing/treasure"), normal(Tier.LOW, null)),
+		Map.entry(vanilla("gameplay/fishing/treasure"), fishing(Tier.LOW)),
 		// Archaeology - quiet exploration, with Unseen-leaning ruins and desert sites.
 		Map.entry(vanilla("archaeology/desert_pyramid"), unseen(Tier.RICH, null)),
 		Map.entry(vanilla("archaeology/desert_well"), unseen(Tier.COMMON, null)),
@@ -108,11 +111,15 @@ public final class AttunedLoot {
 	);
 
 	private static Drop normal(Tier tier, Affinity theme) {
-		return new Drop(tier, theme, false);
+		return new Drop(tier, theme, false, false);
 	}
 
 	private static Drop unseen(Tier tier, Affinity theme) {
-		return new Drop(tier, theme, true);
+		return new Drop(tier, theme, true, false);
+	}
+
+	private static Drop fishing(Tier tier) {
+		return new Drop(tier, null, false, true);
 	}
 
 	private static Identifier chest(String name) {
@@ -224,6 +231,9 @@ public final class AttunedLoot {
 		}
 		if (drop.unseenTheme() && UNSEEN_FACTION.equals(faction)) {
 			weight += WEIGHT_UNSEEN_THEME_BONUS;
+		}
+		if (drop.fishingTheme() && SEAFARERS_FACTION.equals(faction)) {
+			weight += WEIGHT_SEAFARERS_FISHING_BONUS;
 		}
 		return weight;
 	}

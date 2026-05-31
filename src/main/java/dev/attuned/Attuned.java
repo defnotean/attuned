@@ -14,6 +14,8 @@ import dev.attuned.content.AttunedLoot;
 import dev.attuned.effect.AttunedEffects;
 import dev.attuned.menu.AltarMenuType;
 import dev.attuned.menu.AltarNetworking;
+import dev.attuned.menu.ReweavingMenuType;
+import dev.attuned.menu.ReweavingNetworking;
 import dev.attuned.network.AttunedNetworking;
 import dev.attuned.network.JournalNetworking;
 import dev.attuned.onboarding.Onboarding;
@@ -49,6 +51,8 @@ public class Attuned implements ModInitializer {
 		JournalNetworking.init();
 		AltarMenuType.init();
 		AltarNetworking.init();
+		ReweavingMenuType.init();
+		ReweavingNetworking.init();
 		GravebindSave.init();
 		Milestones.init();
 		Onboarding.init();

@@ -1,0 +1,17 @@
+{
+	"type": "minecraft:crafting_shaped",
+	"pattern": [
+		"SDS",
+		"DLD",
+		"SFS"
+	],
+	"key": {
+		"S": "minecraft:string",
+		"D": "minecraft:polished_deepslate",
+		"L": "minecraft:loom",
+		"F": "attuned:attunement_shard_fragment"
+	},
+	"result": {
+		"id": "attuned:altar_of_reweaving"
+	}
+}

@@ -1,0 +1,56 @@
+{
+	"parent": "minecraft:block/block",
+	"textures": {
+		"base": "attuned:block/altar_of_reweaving_base",
+		"top": "attuned:block/altar_of_reweaving_top",
+		"gem": "attuned:block/altar_of_reweaving_gem",
+		"particle": "attuned:block/altar_of_reweaving_base"
+	},
+	"elements": [
+		{
+			"from": [0, 0, 0],
+			"to": [16, 2, 16],
+			"faces": {
+				"down": {"texture": "#base", "cullface": "down"},
+				"up": {"texture": "#base"},
+				"north": {"texture": "#base"},
+				"south": {"texture": "#base"},
+				"west": {"texture": "#base"},
+				"east": {"texture": "#base"}
+			}
+		},
+		{
+			"from": [1, 2, 1],
+			"to": [15, 4, 15],
+			"faces": {
+				"up": {"texture": "#base"},
+				"north": {"texture": "#base"},
+				"south": {"texture": "#base"},
+				"west": {"texture": "#base"},
+				"east": {"texture": "#base"}
+			}
+		},
+		{
+			"from": [2, 4, 2],
+			"to": [14, 14, 14],
+			"faces": {
+				"north": {"texture": "#gem"},
+				"south": {"texture": "#gem"},
+				"west": {"texture": "#gem"},
+				"east": {"texture": "#gem"}
+			}
+		},
+		{
+			"from": [1, 14, 1],
+			"to": [15, 16, 15],
+			"faces": {
+				"down": {"texture": "#base"},
+				"up": {"texture": "#top"},
+				"north": {"texture": "#base"},
+				"south": {"texture": "#base"},
+				"west": {"texture": "#base"},
+				"east": {"texture": "#base"}
+			}
+		}
+	]
+}

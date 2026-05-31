@@ -8,6 +8,7 @@ import net.fabricmc.api.ClientModInitializer;
 public class AttunedClient implements ClientModInitializer {
 	@Override
 	public void onInitializeClient() {
+		AttunedClientConfig.load();
 		AttunedTooltips.init();
 		AttunedKeybinds.init();
 		CombatHud.init();

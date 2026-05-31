@@ -4,6 +4,7 @@ import dev.attuned.Attuned;
 import dev.attuned.api.focus.Affinity;
 import dev.attuned.api.focus.AffinityColors;
 import dev.attuned.attunement.Attunement;
+import dev.attuned.client.AttunedClientConfig;
 import dev.attuned.combat.Apex;
 import dev.attuned.combat.MobAffinities;
 import dev.attuned.combat.Resonance;
@@ -131,13 +132,30 @@ public final class CombatHud {
 	// All player-state reads happen once at the top of this method so the per-frame
 	// HUD draw never re-walks the Focus slots or repeats a registry lookup.
 	private static void draw(GuiGraphicsExtractor graphics, Minecraft minecraft, Player player) {
+		boolean showOwn = AttunedClientConfig.get().showOwnAffinityHud();
+		boolean showEnemy = AttunedClientConfig.get().showEnemyAffinityHud();
+		if (!showOwn && !showEnemy) {
+			return;
+		}
+
+		LivingEntity target = showEnemy ? targetedLiving(minecraft, player) : null;
+		Optional<Affinity> targetAffinity;
+		if (showEnemy && target != null) {
+			targetAffinity = MobAffinities.of(target);
+		} else {
+			targetAffinity = Optional.empty();
+		}
+		boolean hasTarget = target != null && targetAffinity.isPresent();
 		// Cheapest gate first — a plain float read off the player attachment.
 		float resonance = Resonance.get(player);
 		Optional<Affinity> committed = Attunement.committedAffinity(player);
 		boolean discord = Attunement.isDiscord(player);
 		// Skip the panel entirely for unattuned players with no resonance — there
 		// is nothing combat-relevant to telegraph.
-		if (committed.isEmpty() && !discord && resonance <= 0.0F) {
+		if (showOwn && committed.isEmpty() && !discord && resonance <= 0.0F && targetAffinity.isEmpty()) {
+			return;
+		}
+		if (!showOwn && !hasTarget) {
 			return;
 		}
 		boolean apexArmed = Resonance.atApex(player);
@@ -147,21 +165,18 @@ public final class CombatHud {
 		// bezel colour rather than diverging from it.
 		Optional<Affinity> playerAffinity = committed.isPresent() ? committed : Apex.affinityOf(player);
 		int playerColor = playerArgb(playerAffinity, discord);
-		LivingEntity target = targetedLiving(minecraft, player);
-		Optional<Affinity> targetAffinity = target == null ? Optional.empty() : MobAffinities.of(target);
 		Matchup matchup = matchup(committed, targetAffinity);
 
 		int screenW = graphics.guiWidth();
 		int screenH = graphics.guiHeight();
-		boolean hasTarget = target != null && targetAffinity.isPresent();
 
 		// Lay the panel out centred horizontally above the hotbar. With a target,
 		// the gem row's full width includes both gems and the gap between them.
-		int rowWidth = PLAYER_GEM_SIZE + (hasTarget ? GEM_GAP + TARGET_GEM_SIZE : 0);
+		int rowWidth = showOwn ? PLAYER_GEM_SIZE + (hasTarget ? GEM_GAP + TARGET_GEM_SIZE : 0) : TARGET_GEM_SIZE;
 		int rowX = screenW / 2 - rowWidth / 2;
 		int rowY = screenH - BOTTOM_OFFSET;
 
-		int backplateW = hasTarget ? HUD_BACKPLATE_W : HUD_BACKPLATE_PLAYER_W;
+		int backplateW = showOwn && hasTarget ? HUD_BACKPLATE_W : HUD_BACKPLATE_PLAYER_W;
 		int backplateX = rowX - (backplateW - rowWidth) / 2;
 		graphics.blit(net.minecraft.client.renderer.RenderPipelines.GUI_TEXTURED,
 			HUD_BACKPLATE_TEXTURE, backplateX, rowY - 2,
@@ -169,24 +184,26 @@ public final class CombatHud {
 
 		// Resonance bar first, just above the gem row, so the gem itself sits on
 		// top in the visual stack and never gets clipped by the bar.
-		drawResonanceBar(graphics, screenW, rowY - BAR_GAP - RESONANCE_BAR_H, playerColor, resonance, apexArmed);
+		if (showOwn) {
+			drawResonanceBar(graphics, screenW, rowY - BAR_GAP - RESONANCE_BAR_H, playerColor, resonance, apexArmed);
 
 		// Player gem with a dark bezel — same construction as the Focus panel gem.
 		// The player's own gem is never "targeted" — that flag is for the mob gem.
-		drawGem(graphics, rowX, rowY, PLAYER_GEM_SIZE, playerAffinity.orElse(null), discord, false, apexArmed);
+			drawGem(graphics, rowX, rowY, PLAYER_GEM_SIZE, playerAffinity.orElse(null), discord, false, apexArmed);
 
 		// Matchup state markers — gold pulse halo for empowered, red dim overlay
 		// for neutralized. Neutral and "no target" cases leave the gem plain.
-		if (matchup == Matchup.EMPOWERED) {
-			drawEmpoweredHalo(graphics, rowX, rowY, PLAYER_GEM_SIZE);
-		} else if (matchup == Matchup.NEUTRALIZED) {
-			drawNeutralizedTint(graphics, rowX, rowY, PLAYER_GEM_SIZE);
+			if (matchup == Matchup.EMPOWERED) {
+				drawEmpoweredHalo(graphics, rowX, rowY, PLAYER_GEM_SIZE);
+			} else if (matchup == Matchup.NEUTRALIZED) {
+				drawNeutralizedTint(graphics, rowX, rowY, PLAYER_GEM_SIZE);
+			}
 		}
 
 		// Target gem to the right of the player gem, vertically centred against it.
 		if (hasTarget) {
-			int targetX = rowX + PLAYER_GEM_SIZE + GEM_GAP;
-			int targetY = rowY + (PLAYER_GEM_SIZE - TARGET_GEM_SIZE) / 2;
+			int targetX = showOwn ? rowX + PLAYER_GEM_SIZE + GEM_GAP : rowX;
+			int targetY = showOwn ? rowY + (PLAYER_GEM_SIZE - TARGET_GEM_SIZE) / 2 : rowY + 2;
 			drawGem(graphics, targetX, targetY, TARGET_GEM_SIZE, targetAffinity.get(), false, true, false);
 		}
 	}

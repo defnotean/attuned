@@ -1,0 +1,92 @@
+package dev.attuned.client;
+
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import dev.attuned.Attuned;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
+import net.fabricmc.loader.api.FabricLoader;
+
+@Environment(EnvType.CLIENT)
+public record AttunedClientConfig(boolean showOwnAffinityHud, boolean showEnemyAffinityHud) {
+	public static final AttunedClientConfig DEFAULT = new AttunedClientConfig(true, true);
+
+	private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
+	private static AttunedClientConfig current = DEFAULT;
+
+	public static AttunedClientConfig get() {
+		return current;
+	}
+
+	public static void load() {
+		Path path = path();
+		if (Files.exists(path)) {
+			try {
+				JsonElement element = JsonParser.parseString(Files.readString(path));
+				current = readConfig(element);
+			} catch (Exception e) {
+				Attuned.LOGGER.error("Invalid {} - using default client HUD settings.", path, e);
+				current = DEFAULT;
+			}
+		} else {
+			current = DEFAULT;
+		}
+		save();
+	}
+
+	public static void toggleOwnAffinityHud() {
+		setShowOwnAffinityHud(!current.showOwnAffinityHud());
+	}
+
+	public static void toggleEnemyAffinityHud() {
+		setShowEnemyAffinityHud(!current.showEnemyAffinityHud());
+	}
+
+	public static void setShowOwnAffinityHud(boolean showOwnAffinityHud) {
+		current = new AttunedClientConfig(showOwnAffinityHud, current.showEnemyAffinityHud());
+		save();
+	}
+
+	public static void setShowEnemyAffinityHud(boolean showEnemyAffinityHud) {
+		current = new AttunedClientConfig(current.showOwnAffinityHud(), showEnemyAffinityHud);
+		save();
+	}
+
+	public static void save() {
+		JsonObject json = new JsonObject();
+		json.addProperty("show_own_affinity_hud", current.showOwnAffinityHud());
+		json.addProperty("show_enemy_affinity_hud", current.showEnemyAffinityHud());
+		Path path = path();
+		try {
+			Files.createDirectories(path.getParent());
+			Files.writeString(path, GSON.toJson(json));
+		} catch (Exception e) {
+			Attuned.LOGGER.error("Could not write {}", path, e);
+		}
+	}
+
+	private static AttunedClientConfig readConfig(JsonElement element) {
+		if (!element.isJsonObject()) {
+			return DEFAULT;
+		}
+		JsonObject json = element.getAsJsonObject();
+		return new AttunedClientConfig(
+			booleanOr(json, "show_own_affinity_hud", DEFAULT.showOwnAffinityHud()),
+			booleanOr(json, "show_enemy_affinity_hud", DEFAULT.showEnemyAffinityHud()));
+	}
+
+	private static boolean booleanOr(JsonObject json, String key, boolean fallback) {
+		return json.has(key) && json.get(key).isJsonPrimitive() && json.get(key).getAsJsonPrimitive().isBoolean()
+			? json.get(key).getAsBoolean()
+			: fallback;
+	}
+
+	private static Path path() {
+		return FabricLoader.getInstance().getConfigDir().resolve("attuned-client.json");
+	}
+}

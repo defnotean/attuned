@@ -1,0 +1,7 @@
+{
+	"item": "attuned:driftglass_focus",
+	"cost": 3,
+	"unique": true,
+	"faction": "attuned:seafarers",
+	"behavior": "attuned:driftglass"
+}

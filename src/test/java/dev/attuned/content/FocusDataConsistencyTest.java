@@ -58,6 +58,11 @@ class FocusDataConsistencyTest {
 		"attuned:smoke_focus",
 		"attuned:softstep_focus",
 		"attuned:veil_focus");
+	private static final Set<String> SEAFARERS_FOCUS_ITEMS = Set.of(
+		"attuned:driftglass_focus",
+		"attuned:harborlight_focus",
+		"attuned:linecast_focus",
+		"attuned:netmender_focus");
 
 	@Test
 	void shippedFocusRegistrationsListAndDefinitionsStayInStep() throws IOException {
@@ -138,6 +143,27 @@ class FocusDataConsistencyTest {
 		}
 		assertEquals(UNSEEN_FOCUS_ITEMS, unseenItems,
 			"The Unseen batch should consistently declare faction metadata");
+	}
+
+	@Test
+	void seafarersFociStayNeutralTranslatedAndNonCombat() throws IOException {
+		Set<String> seafarersItems = new TreeSet<>();
+		try (Stream<Path> paths = Files.list(FOCUS_DATA_DIR)) {
+			for (Path file : paths
+					.filter(path -> path.getFileName().toString().endsWith(".json"))
+					.sorted()
+					.toList()) {
+				JsonObject root = focusDefinitionRoot(file);
+				JsonElement faction = root.get("faction");
+				if (faction == null || !"attuned:seafarers".equals(faction.getAsString())) {
+					continue;
+				}
+				seafarersItems.add(root.get("item").getAsString());
+				assertTrue(!root.has("affinity"), "Seafarers Foci must stay neutral: " + file);
+				assertTrue(!root.has("modifiers"), "Seafarers first wave must not add combat modifiers: " + file);
+			}
+		}
+		assertEquals(SEAFARERS_FOCUS_ITEMS, seafarersItems);
 	}
 
 	private static Map<String, String> registeredFocusItemsByField(String source) {
