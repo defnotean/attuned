@@ -30,7 +30,8 @@ public final class AttunementJournalScreen extends Screen {
 	private static final int NAV_WIDTH = 88;
 	private static final int PADDING = 12;
 	private static final int CONTENT_GAP = 12;
-	private static final int CHAPTER_BUTTON_HEIGHT = 20;
+	private static final int CHAPTER_BUTTON_HEIGHT = 14;
+	private static final int CHAPTER_BUTTON_GAP = 1;
 	private static final int PAGE_BUTTON_WIDTH = 66;
 	private static final int PAGE_BUTTON_HEIGHT = 20;
 
@@ -61,7 +62,16 @@ public final class AttunementJournalScreen extends Screen {
 		new Page("Pacts", "journal.attuned.page16", 0xFFFFD37A, Affinity.BASTION),
 		new Page("Pacts", "journal.attuned.page17", 0xFF70D7FF, Affinity.ZEPHYR),
 		new Page("Pacts", "journal.attuned.page18", 0xFFFF6AA8, null),
-		new Page("Pacts", "journal.attuned.page19", 0xFFFF6AA8, null)
+		new Page("Pacts", "journal.attuned.page19", 0xFFFF6AA8, null),
+		new Page("Lore", "journal.attuned.page20", 0xFFAEEAFF, null),
+		new Page("Lore", "journal.attuned.page21", 0xFFAEEAFF, null),
+		new Page("Lore", "journal.attuned.page22", 0xFFAEEAFF, null),
+		new Page("Radiant", "journal.attuned.page23", 0xFFFFD37A, null),
+		new Page("Unseen", "journal.attuned.page24", 0xFFB995FF, null),
+		new Page("Lore", "journal.attuned.page25", 0xFFFFD37A, null),
+		new Page("Seafarers", "journal.attuned.page26", 0xFF70D7FF, null),
+		new Page("Seafarers", "journal.attuned.page27", 0xFF70D7FF, null),
+		new Page("HUD", "journal.attuned.page28", 0xFF95E6B3, null)
 	);
 	private static final List<Chapter> CHAPTERS = List.of(
 		new Chapter("Core", 0),
@@ -70,7 +80,11 @@ public final class AttunementJournalScreen extends Screen {
 		new Chapter("Altar", 7),
 		new Chapter("Unseen", 8),
 		new Chapter("Finding", 9),
-		new Chapter("Builds", 10)
+		new Chapter("Builds", 10),
+		new Chapter("Lore", 19),
+		new Chapter("Radiant", 22),
+		new Chapter("Seafarers", 25),
+		new Chapter("HUD", 27)
 	);
 
 	private final List<Button> chapterButtons = new ArrayList<>();
@@ -94,27 +108,23 @@ public final class AttunementJournalScreen extends Screen {
 		int left = left();
 		int top = top();
 		int navX = left + PADDING;
-		int y = top + 40;
+		int y = top + 36;
 		for (int i = 0; i < CHAPTERS.size(); i++) {
 			Chapter chapter = CHAPTERS.get(i);
-			Button button = Button.builder(Component.literal(chapter.name()), btn -> setPage(chapter.firstPage()))
-				.bounds(navX, y + i * (CHAPTER_BUTTON_HEIGHT + 4), NAV_WIDTH - 10, CHAPTER_BUTTON_HEIGHT)
-				.build();
+			Button button = addJournalButton(Component.literal(chapter.name()),
+				navX, y + i * (CHAPTER_BUTTON_HEIGHT + CHAPTER_BUTTON_GAP), NAV_WIDTH - 10, CHAPTER_BUTTON_HEIGHT,
+				true, btn -> setPage(chapter.firstPage()));
 			this.chapterButtons.add(button);
-			this.addRenderableWidget(button);
 		}
 
 		int buttonY = top + PANEL_HEIGHT - PADDING - PAGE_BUTTON_HEIGHT;
 		int contentLeft = contentLeft();
 		int contentWidth = contentWidth();
-		this.previousButton = Button.builder(Component.literal("Previous"), btn -> setPage(this.pageIndex - 1))
-			.bounds(contentLeft, buttonY, PAGE_BUTTON_WIDTH, PAGE_BUTTON_HEIGHT)
-			.build();
-		this.nextButton = Button.builder(Component.literal("Next"), btn -> setPage(this.pageIndex + 1))
-			.bounds(contentLeft + contentWidth - PAGE_BUTTON_WIDTH, buttonY, PAGE_BUTTON_WIDTH, PAGE_BUTTON_HEIGHT)
-			.build();
-		this.addRenderableWidget(this.previousButton);
-		this.addRenderableWidget(this.nextButton);
+		this.previousButton = addJournalButton(Component.translatable("screen.attuned.journal.previous"),
+			contentLeft, buttonY, PAGE_BUTTON_WIDTH, PAGE_BUTTON_HEIGHT, false, btn -> setPage(this.pageIndex - 1));
+		this.nextButton = addJournalButton(Component.translatable("screen.attuned.journal.next"),
+			contentLeft + contentWidth - PAGE_BUTTON_WIDTH, buttonY, PAGE_BUTTON_WIDTH, PAGE_BUTTON_HEIGHT,
+			false, btn -> setPage(this.pageIndex + 1));
 		updateButtonState();
 	}
 
@@ -142,6 +152,12 @@ public final class AttunementJournalScreen extends Screen {
 		if (this.nextButton != null) {
 			this.nextButton.active = this.pageIndex < PAGES.size() - 1;
 		}
+	}
+
+	private Button addJournalButton(Component label, int x, int y, int width, int height,
+			boolean chapterButton, Button.OnPress onPress) {
+		Button button = new JournalButton(x, y, width, height, label, chapterButton, onPress);
+		return this.addRenderableWidget(button);
 	}
 
 	private void drawFrame(GuiGraphicsExtractor graphics) {
@@ -199,18 +215,20 @@ public final class AttunementJournalScreen extends Screen {
 				bodyY += 6;
 				continue;
 			}
-			bodyY = drawWrapped(graphics, Component.literal(paragraph), x, bodyY, w, TEXT_BODY, top() + 172);
+			bodyY = drawWrapped(graphics, Component.literal(paragraph), x, bodyY, w, TEXT_BODY, top() + 154);
 			bodyY += 5;
 		}
 
 		String progress = (this.pageIndex + 1) + " / " + PAGES.size();
-		graphics.text(this.font, Component.literal(progress), x + (w - this.font.width(progress)) / 2,
-			top() + PANEL_HEIGHT - 26, TEXT_MUTED, false);
-		int progressWidth = w;
+		int progressX = x + PAGE_BUTTON_WIDTH + 10;
+		int progressWidth = w - (PAGE_BUTTON_WIDTH + 10) * 2;
+		graphics.text(this.font, Component.literal(progress),
+			progressX + (progressWidth - this.font.width(progress)) / 2,
+			top() + PANEL_HEIGHT - 45, TEXT_MUTED, false);
 		int progressFill = Math.max(4, Math.round(progressWidth * ((this.pageIndex + 1) / (float) PAGES.size())));
-		int progressY = top() + PANEL_HEIGHT - 31;
-		graphics.fill(x, progressY, x + progressWidth, progressY + 2, CONTENT_INSET);
-		graphics.fill(x, progressY, x + progressFill, progressY + 2, accent);
+		int progressY = top() + PANEL_HEIGHT - 34;
+		graphics.fill(progressX, progressY, progressX + progressWidth, progressY + 2, CONTENT_INSET);
+		graphics.fill(progressX, progressY, progressX + progressFill, progressY + 2, accent);
 	}
 
 	private int drawWrapped(GuiGraphicsExtractor graphics, Component component, int x, int y,
@@ -264,6 +282,34 @@ public final class AttunementJournalScreen extends Screen {
 
 	private int contentWidth() {
 		return PANEL_WIDTH - PADDING * 2 - NAV_WIDTH - CONTENT_GAP;
+	}
+
+	private static final class JournalButton extends Button {
+		private final boolean chapterButton;
+
+		private JournalButton(int x, int y, int width, int height, Component message,
+				boolean chapterButton, OnPress onPress) {
+			super(x, y, width, height, message, onPress, DEFAULT_NARRATION);
+			this.chapterButton = chapterButton;
+		}
+
+		@Override
+		protected void extractContents(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
+			int x0 = getX();
+			int y0 = getY();
+			int x1 = x0 + getWidth();
+			int y1 = y0 + getHeight();
+			int face = this.active
+				? (isHoveredOrFocused() ? 0xFF4B415F : (this.chapterButton ? 0xFF302A3A : 0xFF2D2935))
+				: 0xFF24222A;
+			int trim = this.active ? (this.chapterButton ? 0xFFB995FF : 0xFFAEEAFF) : 0xFF5F596A;
+			graphics.fill(x0, y0, x1, y1, 0xFF15131B);
+			graphics.fill(x0 + 1, y0 + 1, x1 - 1, y1 - 1, trim);
+			graphics.fill(x0 + 2, y0 + 2, x1 - 2, y1 - 2, face);
+			graphics.fill(x0 + 3, y0 + 3, x1 - 3, y0 + 4, this.active ? 0xFFE0C6FF : 0xFF77707E);
+			graphics.fill(x0 + 3, y1 - 4, x1 - 3, y1 - 3, 0xFF17151D);
+			extractDefaultLabel(graphics.textRendererForWidget(this, GuiGraphicsExtractor.HoveredTextEffects.NONE));
+		}
 	}
 
 	private record Page(String chapter, String translationKey, int accent, Affinity affinity) {}

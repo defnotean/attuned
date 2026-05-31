@@ -54,12 +54,24 @@ class AttunementJournalUiContractTest {
 			"Journal UI should use its generated custom book texture");
 		assertTrue(screenSource.contains("CHAPTERS = List.of"),
 			"Journal UI should keep chapter navigation separate from vanilla book pages");
+		assertTrue(screenSource.contains("private static final class JournalButton extends Button"),
+			"Journal UI should render chapter/page controls with codex-style custom buttons");
+		assertTrue(screenSource.contains("extractContents(GuiGraphicsExtractor"),
+			"Journal buttons should draw their own face through the render extraction API");
+		assertTrue(screenSource.contains("Component.translatable(\"screen.attuned.journal.previous\")"),
+			"Previous page button should use translatable screen copy");
+		assertTrue(screenSource.contains("Component.translatable(\"screen.attuned.journal.next\")"),
+			"Next page button should use translatable screen copy");
 		assertFalse(screenSource.contains("BookViewScreen"),
 			"Journal UI should not reuse the vanilla book screen");
 		assertTrue(lang.contains("\"journal.attuned.screen.title\""),
 			"Journal UI should have its own screen title copy");
 		assertTrue(lang.contains("\"journal.attuned.screen.subtitle\""),
 			"Journal UI should have its own screen subtitle copy");
+		assertTrue(lang.contains("\"journal.attuned.page20\""),
+			"Journal UI should include the reweaving lore pages");
+		assertTrue(lang.contains("\"journal.attuned.page28\""),
+			"Journal UI should include the HUD lore page");
 	}
 
 	private static String read(Path file) throws IOException {

@@ -70,7 +70,16 @@ public class AttunementJournalItem extends WrittenBookItem {
 			Filterable.passThrough(Component.translatable("journal.attuned.page16")),
 			Filterable.passThrough(Component.translatable("journal.attuned.page17")),
 			Filterable.passThrough(Component.translatable("journal.attuned.page18")),
-			Filterable.passThrough(Component.translatable("journal.attuned.page19"))
+			Filterable.passThrough(Component.translatable("journal.attuned.page19")),
+			Filterable.passThrough(Component.translatable("journal.attuned.page20")),
+			Filterable.passThrough(Component.translatable("journal.attuned.page21")),
+			Filterable.passThrough(Component.translatable("journal.attuned.page22")),
+			Filterable.passThrough(Component.translatable("journal.attuned.page23")),
+			Filterable.passThrough(Component.translatable("journal.attuned.page24")),
+			Filterable.passThrough(Component.translatable("journal.attuned.page25")),
+			Filterable.passThrough(Component.translatable("journal.attuned.page26")),
+			Filterable.passThrough(Component.translatable("journal.attuned.page27")),
+			Filterable.passThrough(Component.translatable("journal.attuned.page28"))
 		);
 		return new WrittenBookContent(
 			Filterable.passThrough("Attunement Journal"),
