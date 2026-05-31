@@ -60,11 +60,11 @@ public class AltarScreen extends AbstractContainerScreen<AltarMenu> {
 	private static final int SLOT_Y = AltarMenu.INPUT_SLOT_Y;
 	private static final int SLOT_SIZE = 18;
 
-	// Bind button geometry, positioned to the right of the shard slot.
-	private static final int BUTTON_W = 54;
+	// Bind button geometry, positioned over the generated button recess.
+	private static final int BUTTON_W = 50;
 	private static final int BUTTON_H = 20;
-	private static final int BUTTON_X = 153;
-	private static final int BUTTON_Y = 33;
+	private static final int BUTTON_X = 147;
+	private static final int BUTTON_Y = 42;
 
 	// Budget bar, drawn under the forecast line with room for the status strip.
 	private static final int BAR_X = 14;
@@ -80,7 +80,7 @@ public class AltarScreen extends AbstractContainerScreen<AltarMenu> {
 
 	public AltarScreen(AltarMenu menu, Inventory inventory, Component title) {
 		super(menu, inventory, title, IMAGE_WIDTH, IMAGE_HEIGHT);
-		this.inventoryLabelY = this.imageHeight - 94;
+		this.inventoryLabelY = AltarMenu.INVENTORY_Y - 10;
 	}
 
 	@Override
@@ -161,13 +161,6 @@ public class AltarScreen extends AbstractContainerScreen<AltarMenu> {
 				graphics.fill(barX, barY, barX + fill, barY + BAR_H, stance);
 			}
 
-			// Bind button hover ring: a 1-pixel highlight border traced around the
-			// button when it is enabled and the cursor is over it. Disabled buttons
-			// get no extra treatment so the disabled state still reads as inert.
-			if (this.bindButton != null && this.bindButton.active
-					&& isOverBindButton(mouseX, mouseY)) {
-				drawBindHoverRing(graphics, x, y);
-			}
 		}
 	}
 
@@ -202,37 +195,6 @@ public class AltarScreen extends AbstractContainerScreen<AltarMenu> {
 		int accentWidth = IMAGE_WIDTH * 6 / 10;
 		int accentX = panelX + (IMAGE_WIDTH - accentWidth) / 2;
 		graphics.fill(accentX, accentY, accentX + accentWidth, accentY + 1, stance);
-	}
-
-	/**
-	 * Draws a 1-pixel highlight border around the Bind button when it is active and
-	 * hovered. Traced just outside the button's bounds so the ring crowns the
-	 * vanilla button render rather than painting over its bevel.
-	 */
-	private static void drawBindHoverRing(GuiGraphicsExtractor graphics, int panelX, int panelY) {
-		int bx0 = panelX + BUTTON_X - 1;
-		int by0 = panelY + BUTTON_Y - 1;
-		int bx1 = panelX + BUTTON_X + BUTTON_W + 1;
-		int by1 = panelY + BUTTON_Y + BUTTON_H + 1;
-		// Top and bottom edges of the ring.
-		graphics.fill(bx0, by0, bx1, by0 + 1, BUTTON_HOVER_ARGB);
-		graphics.fill(bx0, by1 - 1, bx1, by1, BUTTON_HOVER_ARGB);
-		// Left and right edges, inset to avoid double-blending the corners.
-		graphics.fill(bx0, by0 + 1, bx0 + 1, by1 - 1, BUTTON_HOVER_ARGB);
-		graphics.fill(bx1 - 1, by0 + 1, bx1, by1 - 1, BUTTON_HOVER_ARGB);
-	}
-
-	/**
-	 * True when the given mouse position lies within the Bind button's bounds.
-	 * Uses {@link #BUTTON_X}/{@link #BUTTON_Y} relative to {@code leftPos} and
-	 * {@code topPos} rather than going through {@link #bindButton} so the hover
-	 * test stays self-contained and matches the button's actual hit-box exactly.
-	 */
-	private boolean isOverBindButton(int mouseX, int mouseY) {
-		int bx0 = this.leftPos + BUTTON_X;
-		int by0 = this.topPos + BUTTON_Y;
-		return mouseX >= bx0 && mouseX < bx0 + BUTTON_W
-			&& mouseY >= by0 && mouseY < by0 + BUTTON_H;
 	}
 
 	@Override
@@ -375,6 +337,13 @@ public class AltarScreen extends AbstractContainerScreen<AltarMenu> {
 		};
 	}
 
+	private static void drawButtonOutline(GuiGraphicsExtractor graphics, int x0, int y0, int x1, int y1, int argb) {
+		graphics.fill(x0, y0, x1, y0 + 1, argb);
+		graphics.fill(x0, y1 - 1, x1, y1, argb);
+		graphics.fill(x0, y0 + 1, x0 + 1, y1 - 1, argb);
+		graphics.fill(x1 - 1, y0 + 1, x1, y1 - 1, argb);
+	}
+
 	private static final class BindButton extends Button {
 		private BindButton(int x, int y, Component message, OnPress onPress) {
 			super(x, y, BUTTON_W, BUTTON_H, message, onPress, DEFAULT_NARRATION);
@@ -386,15 +355,11 @@ public class AltarScreen extends AbstractContainerScreen<AltarMenu> {
 			int y0 = getY();
 			int x1 = x0 + getWidth();
 			int y1 = y0 + getHeight();
-			int face = this.active
-				? (isHoveredOrFocused() ? 0xFF4B415F : 0xFF2D2935)
-				: 0xFF24222A;
-			int trim = this.active ? 0xFFB995FF : 0xFF5F596A;
-			graphics.fill(x0, y0, x1, y1, 0xFF15131B);
-			graphics.fill(x0 + 1, y0 + 1, x1 - 1, y1 - 1, trim);
-			graphics.fill(x0 + 2, y0 + 2, x1 - 2, y1 - 2, face);
-			graphics.fill(x0 + 3, y0 + 3, x1 - 3, y0 + 4, this.active ? 0xFFE0C6FF : 0xFF77707E);
-			graphics.fill(x0 + 3, y1 - 4, x1 - 3, y1 - 3, 0xFF17151D);
+			if (!this.active) {
+				graphics.fill(x0 + 2, y0 + 2, x1 - 2, y1 - 2, 0x99000000);
+			} else if (isHoveredOrFocused()) {
+				drawButtonOutline(graphics, x0, y0, x1, y1, BUTTON_HOVER_ARGB);
+			}
 			extractDefaultLabel(graphics.textRendererForWidget(this, GuiGraphicsExtractor.HoveredTextEffects.NONE));
 		}
 	}

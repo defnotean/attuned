@@ -96,6 +96,9 @@ class FocusDataConsistencyTest {
 			assertTrue(Files.isRegularFile(ITEM_TEXTURE_DIR.resolve(name + ".png.mcmeta")),
 				"Registered Focus should have animated item texture metadata: " + itemId);
 			assertAnimatedFocusTexture(name);
+			if (SEAFARERS_FOCUS_ITEMS.contains(itemId)) {
+				assertReadableSeafarersAnimation(name);
+			}
 			assertLanguageKey(lang, "item.attuned." + name);
 			assertLanguageKey(lang, "item.attuned." + name + ".lore");
 			assertLanguageKey(lang, "item.attuned." + name + ".lore2");
@@ -334,6 +337,35 @@ class FocusDataConsistencyTest {
 			}
 		}
 		return false;
+	}
+
+	private static void assertReadableSeafarersAnimation(String name) throws IOException {
+		Path texture = ITEM_TEXTURE_DIR.resolve(name + ".png");
+		BufferedImage image = ImageIO.read(texture.toFile());
+		assertNotNull(image, "Seafarers Focus texture should be readable: " + texture);
+
+		double strongestFrameDelta = 0.0D;
+		for (int frame = 1; frame < 8; frame++) {
+			strongestFrameDelta = Math.max(strongestFrameDelta, averageFrameDeltaFromFirst(image, frame));
+		}
+		assertTrue(strongestFrameDelta >= 18.0D,
+			"Seafarers Focus animation should be visibly readable in-game: " + texture);
+	}
+
+	private static double averageFrameDeltaFromFirst(BufferedImage image, int frame) {
+		long totalDelta = 0L;
+		int frameY = frame * 64;
+		for (int y = 0; y < 64; y++) {
+			for (int x = 0; x < 64; x++) {
+				int first = image.getRGB(x, y);
+				int current = image.getRGB(x, frameY + y);
+				totalDelta += Math.abs(((first >>> 24) & 0xFF) - ((current >>> 24) & 0xFF));
+				totalDelta += Math.abs(((first >>> 16) & 0xFF) - ((current >>> 16) & 0xFF));
+				totalDelta += Math.abs(((first >>> 8) & 0xFF) - ((current >>> 8) & 0xFF));
+				totalDelta += Math.abs((first & 0xFF) - (current & 0xFF));
+			}
+		}
+		return totalDelta / (double) (64 * 64);
 	}
 
 	private static void assertLanguageKey(JsonObject lang, String key) {

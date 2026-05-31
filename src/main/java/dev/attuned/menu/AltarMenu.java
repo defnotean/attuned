@@ -27,13 +27,13 @@ public class AltarMenu extends AbstractContainerMenu {
 	/** Index of the shard input slot within {@link #slots}. */
 	public static final int INPUT_SLOT = 0;
 	/** GUI X-coordinate for the shard input slot. */
-	public static final int INPUT_SLOT_X = 128;
+	public static final int INPUT_SLOT_X = 113;
 	/** GUI Y-coordinate for the shard input slot. */
-	public static final int INPUT_SLOT_Y = 34;
+	public static final int INPUT_SLOT_Y = 42;
 	/** GUI X-coordinate for the player inventory grid. */
-	public static final int INVENTORY_X = 27;
+	public static final int INVENTORY_X = 24;
 	/** GUI Y-coordinate for the player inventory grid. */
-	public static final int INVENTORY_Y = 108;
+	public static final int INVENTORY_Y = 101;
 
 	private final Container input;
 	private int capacityCap = AttunedConfig.DEFAULT.capacityCap();

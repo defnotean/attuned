@@ -24,12 +24,12 @@ public class ReweavingMenu extends AbstractContainerMenu {
 	public static final int INVENTORY_X = 27;
 	public static final int INVENTORY_Y = 108;
 
-	private static final int[] FOCUS_SLOT_X = {54, 78, 102};
-	private static final int FOCUS_SLOT_Y = 36;
-	private static final int CATALYST_SLOT_X = 128;
-	private static final int CATALYST_SLOT_Y = 36;
-	private static final int OUTPUT_SLOT_X = 164;
-	private static final int OUTPUT_SLOT_Y = 36;
+	private static final int[] FOCUS_SLOT_X = {28, 55, 82};
+	private static final int FOCUS_SLOT_Y = 58;
+	private static final int CATALYST_SLOT_X = 110;
+	private static final int CATALYST_SLOT_Y = 58;
+	private static final int OUTPUT_SLOT_X = 154;
+	private static final int OUTPUT_SLOT_Y = 52;
 
 	private final Container container;
 	private final ContainerLevelAccess access;

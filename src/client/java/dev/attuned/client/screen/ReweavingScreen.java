@@ -22,16 +22,20 @@ public class ReweavingScreen extends AbstractContainerScreen<ReweavingMenu> {
 	private static final int BODY_TEXT = 0xFFE3D8F5;
 	private static final int MUTED_TEXT = 0xFFB8ACC8;
 	private static final int WARNING_TEXT = 0xFFFFD37A;
-	private static final int BUTTON_W = 58;
-	private static final int BUTTON_H = 20;
-	private static final int BUTTON_X = 148;
-	private static final int BUTTON_Y = 66;
+	private static final int BUTTON_HOVER_ARGB = 0xC0FFFFFF;
+	private static final int BUTTON_W = 54;
+	private static final int BUTTON_H = 16;
+	private static final int BUTTON_X = 134;
+	private static final int BUTTON_Y = 83;
+	private static final int HINT_X = 14;
+	private static final int HINT_Y = 88;
+	private static final int HINT_MAX_WIDTH = BUTTON_X - HINT_X - 7;
 
 	private Button reweaveButton;
 
 	public ReweavingScreen(ReweavingMenu menu, Inventory inventory, Component title) {
 		super(menu, inventory, title, IMAGE_WIDTH, IMAGE_HEIGHT);
-		this.inventoryLabelY = this.imageHeight - 94;
+		this.inventoryLabelY = ReweavingMenu.INVENTORY_Y - 10;
 	}
 
 	@Override
@@ -63,11 +67,9 @@ public class ReweavingScreen extends AbstractContainerScreen<ReweavingMenu> {
 		graphics.text(this.font, this.title, this.titleLabelX, this.titleLabelY, TITLE_TEXT, false);
 		graphics.text(this.font, this.playerInventoryTitle,
 			this.inventoryLabelX, this.inventoryLabelY, MUTED_TEXT, false);
-		graphics.text(this.font, Component.translatable("screen.attuned.reweaving_altar.hint.title"),
-			14, 24, BODY_TEXT, false);
 		Component hint = hint();
 		int color = this.menu.hasAllInputs() && this.menu.outputStack().isEmpty() ? BODY_TEXT : WARNING_TEXT;
-		graphics.text(this.font, hint, 14, 90, color, false);
+		drawTrimmedText(graphics, hint, HINT_X, HINT_Y, HINT_MAX_WIDTH, color);
 	}
 
 	private void refreshButtonState() {
@@ -99,6 +101,24 @@ public class ReweavingScreen extends AbstractContainerScreen<ReweavingMenu> {
 		return true;
 	}
 
+	private void drawTrimmedText(GuiGraphicsExtractor graphics, Component text, int x, int y, int maxWidth, int color) {
+		if (this.font.width(text) <= maxWidth) {
+			graphics.text(this.font, text, x, y, color, false);
+			return;
+		}
+		String ellipsis = "...";
+		int ellipsisWidth = this.font.width(ellipsis);
+		String trimmed = this.font.plainSubstrByWidth(text.getString(), Math.max(0, maxWidth - ellipsisWidth));
+		graphics.text(this.font, Component.literal(trimmed + ellipsis), x, y, color, false);
+	}
+
+	private static void drawButtonOutline(GuiGraphicsExtractor graphics, int x0, int y0, int x1, int y1, int argb) {
+		graphics.fill(x0, y0, x1, y0 + 1, argb);
+		graphics.fill(x0, y1 - 1, x1, y1, argb);
+		graphics.fill(x0, y0 + 1, x0 + 1, y1 - 1, argb);
+		graphics.fill(x1 - 1, y0 + 1, x1, y1 - 1, argb);
+	}
+
 	private static final class ReweaveButton extends Button {
 		private ReweaveButton(int x, int y, Component message, OnPress onPress) {
 			super(x, y, BUTTON_W, BUTTON_H, message, onPress, DEFAULT_NARRATION);
@@ -110,15 +130,11 @@ public class ReweavingScreen extends AbstractContainerScreen<ReweavingMenu> {
 			int y0 = getY();
 			int x1 = x0 + getWidth();
 			int y1 = y0 + getHeight();
-			int face = this.active
-				? (isHoveredOrFocused() ? 0xFF3D5C68 : 0xFF253942)
-				: 0xFF24222A;
-			int trim = this.active ? 0xFF70D7FF : 0xFF5F596A;
-			graphics.fill(x0, y0, x1, y1, 0xFF15131B);
-			graphics.fill(x0 + 1, y0 + 1, x1 - 1, y1 - 1, trim);
-			graphics.fill(x0 + 2, y0 + 2, x1 - 2, y1 - 2, face);
-			graphics.fill(x0 + 3, y0 + 3, x1 - 3, y0 + 4, this.active ? 0xFFAEEAFF : 0xFF77707E);
-			graphics.fill(x0 + 3, y1 - 4, x1 - 3, y1 - 3, 0xFF17151D);
+			if (!this.active) {
+				graphics.fill(x0 + 2, y0 + 2, x1 - 2, y1 - 2, 0x99000000);
+			} else if (isHoveredOrFocused()) {
+				drawButtonOutline(graphics, x0, y0, x1, y1, BUTTON_HOVER_ARGB);
+			}
 			extractDefaultLabel(graphics.textRendererForWidget(this, GuiGraphicsExtractor.HoveredTextEffects.NONE));
 		}
 	}
