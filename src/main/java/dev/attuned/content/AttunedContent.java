@@ -20,6 +20,7 @@ import dev.attuned.content.behavior.LanternBehavior;
 import dev.attuned.content.behavior.LodestoneBehavior;
 import dev.attuned.content.behavior.NightgazeBehavior;
 import dev.attuned.content.behavior.RainstepBehavior;
+import dev.attuned.content.behavior.RadiantFocusBehaviors;
 import dev.attuned.content.behavior.SmokeBehavior;
 import dev.attuned.content.behavior.SoftstepBehavior;
 import dev.attuned.content.behavior.StormcallBehavior;
@@ -35,6 +36,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import net.fabricmc.fabric.api.creativetab.v1.FabricCreativeModeTab;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.Registry;
@@ -110,6 +112,32 @@ public final class AttunedContent {
 	public static final Item HARBORLIGHT_FOCUS = register("harborlight_focus");
 	public static final Item DRIFTGLASS_FOCUS = register("driftglass_focus");
 
+	// The Radiant - Holy Foci built around vows, revelation, and measured judgment.
+	public static final Item VOTIVE_FOCUS = register("votive_focus");
+	public static final Item BELLWETHER_FOCUS = register("bellwether_focus");
+	public static final Item OATHGUARD_FOCUS = register("oathguard_focus");
+	public static final Item SUNLANCE_FOCUS = register("sunlance_focus");
+
+	// The Reliquary - Holy utility Foci for relics, thresholds, names, and quiet rites.
+	public static final Item CENSER_FOCUS = register("censer_focus");
+	public static final Item NAMESAKE_FOCUS = register("namesake_focus");
+	public static final Item THRESHOLD_FOCUS = register("threshold_focus");
+
+	// The Verdant Choir - broad naturalist Foci for grounded travel and gathering.
+	public static final Item ROOTSTEP_FOCUS = register("rootstep_focus");
+	public static final Item BLOOM_FOCUS = register("bloom_focus");
+	public static final Item MOSSHEART_FOCUS = register("mossheart_focus");
+
+	// The Ashen Forge - craft-bound Foci with restrained Bastion/Fury utility.
+	public static final Item TEMPER_FOCUS = register("temper_focus");
+	public static final Item KILNWARD_FOCUS = register("kilnward_focus");
+	public static final Item RIVET_FOCUS = register("rivet_focus");
+
+	// Additional Unseen Foci - evasive and misdirection tools with low direct damage.
+	public static final Item MASK_FOCUS = register("mask_focus");
+	public static final Item WHISPER_FOCUS = register("whisper_focus");
+	public static final Item BLACKOUT_FOCUS = register("blackout_focus");
+
 	/** A consumable that permanently raises attunement capacity. Stacks normally. */
 	public static final Item ATTUNEMENT_SHARD = register("attunement_shard", AttunementShardItem::new);
 	/** A fragment reward that smooths shard progression; four craft into one shard. */
@@ -132,7 +160,12 @@ public final class AttunedContent {
 		LEECH_FOCUS, STORMCALL_FOCUS, GRAVEBIND_FOCUS, BLOODFURY_FOCUS, VOIDSTEP_FOCUS,
 		HARVEST_FOCUS, FORAGER_FOCUS, TREMOR_FOCUS, BEACON_FOCUS, WAYSTONE_FOCUS,
 		SOFTSTEP_FOCUS, VEIL_FOCUS, NEEDLE_FOCUS, SMOKE_FOCUS,
-		LINECAST_FOCUS, NETMENDER_FOCUS, HARBORLIGHT_FOCUS, DRIFTGLASS_FOCUS);
+		LINECAST_FOCUS, NETMENDER_FOCUS, HARBORLIGHT_FOCUS, DRIFTGLASS_FOCUS,
+		VOTIVE_FOCUS, BELLWETHER_FOCUS, OATHGUARD_FOCUS, SUNLANCE_FOCUS,
+		CENSER_FOCUS, NAMESAKE_FOCUS, THRESHOLD_FOCUS,
+		ROOTSTEP_FOCUS, BLOOM_FOCUS, MOSSHEART_FOCUS,
+		TEMPER_FOCUS, KILNWARD_FOCUS, RIVET_FOCUS,
+		MASK_FOCUS, WHISPER_FOCUS, BLACKOUT_FOCUS);
 
 	private static Item register(String name) {
 		ResourceKey<Item> key = ResourceKey.create(
@@ -190,7 +223,7 @@ public final class AttunedContent {
 
 	/**
 	 * Forces this class to load so the items register, registers Focus
-	 * behaviours, and registers the creative tab.
+	 * behaviours, and registers the creative tabs.
 	 */
 	public static void init() {
 		AttunedRegistries.registerBehavior(
@@ -241,47 +274,76 @@ public final class AttunedContent {
 			Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "harborlight"), new HarborlightBehavior());
 		AttunedRegistries.registerBehavior(
 			Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "driftglass"), new DriftglassBehavior());
-		registerCreativeTab();
+		AttunedRegistries.registerBehavior(
+			Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "votive"), new RadiantFocusBehaviors.Votive());
+		AttunedRegistries.registerBehavior(
+			Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "bellwether"), new RadiantFocusBehaviors.Bellwether());
+		AttunedRegistries.registerBehavior(
+			Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "oathguard"), new RadiantFocusBehaviors.Oathguard());
+		AttunedRegistries.registerBehavior(
+			Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "censer"), new RadiantFocusBehaviors.Censer());
+		AttunedRegistries.registerBehavior(
+			Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "threshold"), new RadiantFocusBehaviors.Threshold());
+		registerCreativeTabs();
 	}
 
 	/**
-	 * Registers the Attuned creative-inventory tab — every Focus and the
-	 * Attunement Shard, so the mod's items are reachable without {@code /give}.
+	 * Registers the Attuned creative-inventory tabs so Foci and altar tools are
+	 * reachable without {@code /give}.
 	 *
-	 * <p>Foci are grouped by affinity (Fury, Bastion, Zephyr, then neutral)
+	 * <p>Foci are grouped by affinity (Fury, Bastion, Zephyr, Holy, then neutral)
 	 * and sorted within each group by attunement cost, so players can scan the
-	 * tab by build identity rather than registration order.
+	 * tabs by build identity rather than registration order.
 	 */
-	private static void registerCreativeTab() {
+	private static void registerCreativeTabs() {
+		registerFocusCreativeTab(
+			"attuned",
+			Component.translatable("itemGroup.attuned.affinity_foci"),
+			SUNLANCE_FOCUS,
+			definition -> definition != null && definition.affinity().isPresent(),
+			false);
+		registerFocusCreativeTab(
+			"attuned_utility",
+			Component.translatable("itemGroup.attuned.utility_foci"),
+			LINECAST_FOCUS,
+			definition -> definition == null || definition.affinity().isEmpty(),
+			true);
+	}
+
+	private static void registerFocusCreativeTab(String id, Component title, Item icon,
+			Predicate<FocusDefinition> include, boolean includeCoreItems) {
 		CreativeModeTab tab = FabricCreativeModeTab.builder()
-			.title(Component.translatable("itemGroup.attuned"))
-			.icon(() -> new ItemStack(ATTUNEMENT_SHARD))
+			.title(title)
+			.icon(() -> new ItemStack(icon))
 			.displayItems((parameters, output) -> {
 				HolderLookup.RegistryLookup<FocusDefinition> lookup =
 					parameters.holders().lookupOrThrow(AttunedRegistries.FOCUS_DEFINITIONS);
-				for (Item focus : fociInDisplayOrder(lookup)) {
+				for (Item focus : fociInDisplayOrder(lookup, include)) {
 					output.accept(focus);
 				}
-				output.accept(ATTUNEMENT_SHARD);
-				output.accept(ATTUNEMENT_SHARD_FRAGMENT);
-				output.accept(ATTUNEMENT_JOURNAL);
-				output.accept(ATTUNEMENT_ALTAR);
-				output.accept(ALTAR_OF_REWEAVING);
+				if (includeCoreItems) {
+					output.accept(ATTUNEMENT_SHARD);
+					output.accept(ATTUNEMENT_SHARD_FRAGMENT);
+					output.accept(ATTUNEMENT_JOURNAL);
+					output.accept(ATTUNEMENT_ALTAR);
+					output.accept(ALTAR_OF_REWEAVING);
+				}
 			})
 			.build();
 		Registry.register(BuiltInRegistries.CREATIVE_MODE_TAB,
-			Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "attuned"), tab);
+			Identifier.fromNamespaceAndPath(Attuned.MOD_ID, id), tab);
 	}
 
 	/**
-	 * Returns the Foci in display order for the creative tab: grouped by
-	 * affinity (Fury, then Bastion, then Zephyr, then neutral), and sorted
+	 * Returns the Foci in display order for a creative tab: grouped by
+	 * affinity (Fury, then Bastion, then Zephyr, then Holy, then neutral), and sorted
 	 * within each group by attunement cost ascending, then by registry id
 	 * alphabetically as a tiebreak. A Focus whose definition is missing from
 	 * the supplied lookup falls into the neutral group at the maximum cost so
 	 * it sorts to the very end.
 	 */
-	private static List<Item> fociInDisplayOrder(HolderLookup.RegistryLookup<FocusDefinition> lookup) {
+	private static List<Item> fociInDisplayOrder(HolderLookup.RegistryLookup<FocusDefinition> lookup,
+			Predicate<FocusDefinition> include) {
 		Map<Item, FocusDefinition> byItem = new IdentityHashMap<>();
 		lookup.listElements().forEach(holder -> byItem.put(holder.value().item().value(), holder.value()));
 		Comparator<Item> byAffinity = Comparator.comparingInt(item -> {
@@ -293,23 +355,30 @@ public final class AttunedContent {
 			return def == null ? Integer.MAX_VALUE : def.cost();
 		});
 		Comparator<Item> byKey = Comparator.comparing(item -> BuiltInRegistries.ITEM.getKey(item).toString());
-		List<Item> sorted = new ArrayList<>(FOCI);
+		List<Item> sorted = new ArrayList<>();
+		for (Item item : FOCI) {
+			FocusDefinition definition = byItem.get(item);
+			if (include.test(definition)) {
+				sorted.add(item);
+			}
+		}
 		sorted.sort(byAffinity.thenComparing(byCost).thenComparing(byKey));
 		return sorted;
 	}
 
 	/**
-	 * Stable sort key for the affinity grouping: Fury, Bastion, Zephyr, then
+	 * Stable sort key for the affinity grouping: Fury, Bastion, Zephyr, Holy, then
 	 * affinity-neutral last.
 	 */
 	private static int affinityOrder(Optional<Affinity> affinity) {
 		if (affinity.isEmpty()) {
-			return 3;
+			return 4;
 		}
 		return switch (affinity.get()) {
 			case FURY -> 0;
 			case BASTION -> 1;
 			case ZEPHYR -> 2;
+			case HOLY -> 3;
 		};
 	}
 }

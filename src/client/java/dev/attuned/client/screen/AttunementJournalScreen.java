@@ -61,6 +61,7 @@ public final class AttunementJournalScreen extends Screen {
 		new Page("Pacts", "journal.attuned.page15", 0xFFFF8A5A, Affinity.FURY),
 		new Page("Pacts", "journal.attuned.page16", 0xFFFFD37A, Affinity.BASTION),
 		new Page("Pacts", "journal.attuned.page17", 0xFF70D7FF, Affinity.ZEPHYR),
+		new Page("Pacts", "journal.attuned.page29", 0xFFFFF1A8, Affinity.HOLY),
 		new Page("Pacts", "journal.attuned.page18", 0xFFFF6AA8, null),
 		new Page("Pacts", "journal.attuned.page19", 0xFFFF6AA8, null),
 		new Page("Lore", "journal.attuned.page20", 0xFFAEEAFF, null),
@@ -81,10 +82,10 @@ public final class AttunementJournalScreen extends Screen {
 		new Chapter("Unseen", 8),
 		new Chapter("Finding", 9),
 		new Chapter("Builds", 10),
-		new Chapter("Lore", 19),
-		new Chapter("Radiant", 22),
-		new Chapter("Seafarers", 25),
-		new Chapter("HUD", 27)
+		new Chapter("Lore", 20),
+		new Chapter("Radiant", 23),
+		new Chapter("Seafarers", 26),
+		new Chapter("HUD", 28)
 	);
 
 	private final List<Button> chapterButtons = new ArrayList<>();
@@ -249,6 +250,7 @@ public final class AttunementJournalScreen extends Screen {
 			case FURY -> 0xFFE95E4D;
 			case BASTION -> 0xFFFFC857;
 			case ZEPHYR -> 0xFF54C7F0;
+			case HOLY -> 0xFFFFF1A8;
 		};
 		graphics.fill(x, y + 3, x + 3, y + size - 3, 0xFF0C0B10);
 		graphics.fill(x + 3, y, x + size - 3, y + size, 0xFF0C0B10);

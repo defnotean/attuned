@@ -3,6 +3,7 @@
 		"affinity=none": { "model": "attuned:block/attunement_altar_none" },
 		"affinity=fury": { "model": "attuned:block/attunement_altar_fury" },
 		"affinity=bastion": { "model": "attuned:block/attunement_altar_bastion" },
-		"affinity=zephyr": { "model": "attuned:block/attunement_altar_zephyr" }
+		"affinity=zephyr": { "model": "attuned:block/attunement_altar_zephyr" },
+		"affinity=holy": { "model": "attuned:block/attunement_altar_holy" }
 	}
 }

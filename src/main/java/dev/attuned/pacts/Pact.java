@@ -10,8 +10,8 @@ import net.minecraft.network.chat.MutableComponent;
 /**
  * A named set bonus that activates from the player's spread of active Foci.
  *
- * <p>The single-affinity pacts (Pyresworn, Stoneheart, Windrunner) wake up when
- * three or more active Foci share one affinity and none oppose it; the Manifold
+ * <p>The single-affinity pacts (Pyresworn, Stoneheart, Windrunner, Radiant
+ * Covenant) wake up when three or more active Foci share one affinity; the Manifold
  * pact (Untethered) wakes up when the player carries at least one active Focus
  * of every affinity at once. A player is in at most one pact at a time.</p>
  *
@@ -23,6 +23,7 @@ public enum Pact {
 	PYRESWORN("pyresworn", Optional.of(Affinity.FURY), ChatFormatting.RED),
 	STONEHEART("stoneheart", Optional.of(Affinity.BASTION), ChatFormatting.GOLD),
 	WINDRUNNER("windrunner", Optional.of(Affinity.ZEPHYR), ChatFormatting.AQUA),
+	RADIANT_COVENANT("radiant_covenant", Optional.of(Affinity.HOLY), ChatFormatting.YELLOW),
 	UNTETHERED("untethered", Optional.empty(), ChatFormatting.LIGHT_PURPLE);
 
 	private final String displayNameKey;
@@ -71,6 +72,7 @@ public enum Pact {
 			case FURY -> PYRESWORN;
 			case BASTION -> STONEHEART;
 			case ZEPHYR -> WINDRUNNER;
+			case HOLY -> RADIANT_COVENANT;
 		};
 	}
 }

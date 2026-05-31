@@ -35,6 +35,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
+import net.minecraft.tags.EntityTypeTags;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
@@ -85,6 +86,12 @@ public final class Pacts {
 	private static final int PYRESWORN_IGNITE_SECONDS = 3;
 	/** Pyresworn only ignites when the swing is at least half-charged. */
 	private static final float PYRESWORN_CHARGED_SWING_THRESHOLD = 0.5F;
+	/** Radiant Covenant asks for a deliberate melee strike before revealing. */
+	private static final float RADIANT_COVENANT_SWING_THRESHOLD = 0.9F;
+	/** Radiant Covenant reveals hostile mobs briefly instead of adding raw PvP power. */
+	private static final int RADIANT_COVENANT_REVEAL_TICKS = 80;
+	/** Radiant Covenant's modest Smite-flavored boost against hostile undead. */
+	private static final float RADIANT_COVENANT_UNDEAD_BONUS = 0.10F;
 	/** Time window for a Pyresworn challenge kill after Pact fire catches a hostile. */
 	private static final int PYRESWORN_CHALLENGE_WINDOW_TICKS = 20 * 20;
 	/** Final damage threshold for the Stoneheart heavy-hit challenge. */
@@ -93,8 +100,8 @@ public final class Pacts {
 	private static final double WINDRUNNER_CHALLENGE_DISTANCE = 128.0;
 	/** Ignores teleports/launches while counting Windrunner sprint distance. */
 	private static final double WINDRUNNER_MAX_DELTA_PER_TICK = 1.25;
-	/** Untethered requires at least one Focus of each of the three affinities. */
-	private static final int UNTETHERED_AFFINITY_COUNT = 3;
+	/** Untethered requires at least one Focus of every affinity. */
+	private static final int UNTETHERED_AFFINITY_COUNT = Affinity.values().length;
 
 	private static final String PYRESWORN_CHALLENGE = "attunement/pact_pyresworn_challenge";
 	private static final String STONEHEART_CHALLENGE = "attunement/pact_stoneheart_challenge";
@@ -249,6 +256,14 @@ public final class Pacts {
 				&& MobAffinities.of(defender).isPresent()) {
 			amount *= (1.0F + UNTETHERED_AMPLIFY);
 		}
+		if (source.getEntity() instanceof Player attackerPlayer
+				&& isAt(attackerPlayer, Pact.RADIANT_COVENANT)
+				&& !(defender instanceof Player)
+				&& isHostile(defender)
+				&& defender.typeHolder().is(EntityTypeTags.UNDEAD)
+				&& isDirectChargedMelee(attackerPlayer, source, RADIANT_COVENANT_SWING_THRESHOLD)) {
+			amount *= (1.0F + RADIANT_COVENANT_UNDEAD_BONUS);
+		}
 		return amount;
 	}
 
@@ -276,6 +291,43 @@ public final class Pacts {
 		if (isAt(attacker, Pact.UNTETHERED) && !(defender instanceof Player)) {
 			untetheredImpactSparkle(defender);
 		}
+		if (isAt(attacker, Pact.RADIANT_COVENANT)) {
+			radiantCovenantReveal(attacker, defender, source);
+		}
+	}
+
+	private static void radiantCovenantReveal(Player attacker, LivingEntity defender, DamageSource source) {
+		if (defender instanceof Player || !defender.isAlive() || !isHostile(defender)
+				|| !isDirectChargedMelee(attacker, source, RADIANT_COVENANT_SWING_THRESHOLD)
+				|| isOwnPet(defender, attacker) || defender instanceof AbstractVillager) {
+			return;
+		}
+		defender.addEffect(new MobEffectInstance(
+			MobEffects.GLOWING, RADIANT_COVENANT_REVEAL_TICKS, 0, true, false, true));
+		if (defender.level() instanceof ServerLevel level) {
+			level.sendParticles(new DustParticleOptions(Affinity.HOLY.argb() & 0x00FFFFFF, 0.9F),
+				defender.getX(), defender.getY() + defender.getBbHeight() * 0.65, defender.getZ(),
+				5, 0.25, 0.25, 0.25, 0.0);
+		}
+	}
+
+	private static boolean isDirectChargedMelee(Player attacker, DamageSource source, float threshold) {
+		if (source.getDirectEntity() != attacker) {
+			return false;
+		}
+		if (source.is(net.minecraft.tags.DamageTypeTags.IS_PROJECTILE)
+				|| source.is(net.minecraft.tags.DamageTypeTags.IS_EXPLOSION)) {
+			return false;
+		}
+		return attacker.getAttackStrengthScale(0.5F) >= threshold;
+	}
+
+	private static boolean isOwnPet(LivingEntity defender, Player attacker) {
+		if (!(defender instanceof TamableAnimal pet)) {
+			return false;
+		}
+		var ownerRef = pet.getOwnerReference();
+		return ownerRef != null && attacker.getUUID().equals(ownerRef.getUUID());
 	}
 
 	/** Pyresworn's fire-on-strike, gated to direct melee and to at-least-half-charged swings. */
@@ -540,6 +592,7 @@ public final class Pacts {
 			case PYRESWORN -> ParticleTypes.SMALL_FLAME;
 			case STONEHEART -> new DustParticleOptions(0xC8A05A, 0.8F);
 			case WINDRUNNER -> ParticleTypes.CLOUD;
+			case RADIANT_COVENANT -> new DustParticleOptions(Affinity.HOLY.argb() & 0x00FFFFFF, 0.9F);
 			case UNTETHERED -> new DustParticleOptions(AffinityColors.DISCORD_RGB, 0.9F);
 		};
 	}
@@ -604,6 +657,7 @@ public final class Pacts {
 			case PYRESWORN -> new PactSound(SoundEvents.FLINTANDSTEEL_USE, 0.45F, 1.25F);
 			case STONEHEART -> new PactSound(SoundEvents.TUFF_PLACE, 0.45F, 0.85F);
 			case WINDRUNNER -> new PactSound(SoundEvents.WIND_CHARGE_THROW, 0.35F, 1.55F);
+			case RADIANT_COVENANT -> new PactSound(SoundEvents.AMETHYST_BLOCK_CHIME, 0.45F, 1.45F);
 			case UNTETHERED -> new PactSound(SoundEvents.ENCHANTMENT_TABLE_USE, 0.45F, 1.15F);
 		};
 	}
@@ -613,6 +667,7 @@ public final class Pacts {
 			case PYRESWORN -> new PactSound(SoundEvents.FIRE_EXTINGUISH, 0.35F, 1.35F);
 			case STONEHEART -> new PactSound(SoundEvents.TUFF_HIT, 0.4F, 0.7F);
 			case WINDRUNNER -> new PactSound(SoundEvents.WOOL_STEP, 0.35F, 1.6F);
+			case RADIANT_COVENANT -> new PactSound(SoundEvents.AMETHYST_BLOCK_RESONATE, 0.35F, 0.9F);
 			case UNTETHERED -> new PactSound(SoundEvents.AMETHYST_BLOCK_HIT, 0.4F, 0.8F);
 		};
 	}

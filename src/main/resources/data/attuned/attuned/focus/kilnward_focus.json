@@ -1,0 +1,13 @@
+{
+	"item": "attuned:kilnward_focus",
+	"cost": 3,
+	"affinity": "bastion",
+	"faction": "attuned:ashen_forge",
+	"modifiers": [
+		{
+			"attribute": "minecraft:armor",
+			"amount": 1.0,
+			"operation": "add_value"
+		}
+	]
+}

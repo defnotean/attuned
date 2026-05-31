@@ -12,7 +12,7 @@ Lives in `src/main/resources/data/attuned/attuned/focus/<name>.json`.
 | `item`      | text    | yes      | The item id, always `attuned:<name>`. |
 | `cost`      | number  | no (1)   | Attunement points the Focus uses. Usually 2–6. |
 | `unique`    | boolean | no (false) | If true, only one copy of this Focus can be active at once; a duplicate stays dormant. |
-| `affinity`  | text    | no       | `fury`, `bastion`, or `zephyr`. Omit for a neutral Focus. |
+| `affinity`  | text    | no       | `fury`, `bastion`, `zephyr`, or `holy`. Omit for a neutral Focus. |
 | `faction`   | text    | no       | Optional story/gameplay family, e.g. `attuned:unseen`. It does not change affinity math. |
 | `modifiers` | list    | no ([])  | Stat changes — see [Attribute modifiers](#attribute-modifiers). |
 | `behavior`  | text    | no       | A registered behavior id, e.g. `attuned:stormcall`. |
@@ -22,10 +22,10 @@ does nothing. Most Foci use either `modifiers` or `behavior` (or both).
 
 ## Affinities
 
-Three affinities form a rock-paper-scissors cycle:
+Four affinities form a counter cycle:
 
 ```
-Fury  beats  Bastion  beats  Zephyr  beats  Fury
+Holy  beats  Fury  beats  Bastion  beats  Zephyr  beats  Holy
 ```
 
 - A Focus with an `affinity` pulls its wearer toward that lane. When every
@@ -41,14 +41,19 @@ Fury  beats  Bastion  beats  Zephyr  beats  Fury
 ## Factions
 
 Factions are optional labels for Foci that share a theme. They show on tooltips
-and can be used by loot weighting, but they are not a fourth affinity and never
-change the Fury/Bastion/Zephyr cycle.
+and can be used by loot weighting, but they are not affinities and never change
+the Holy/Fury/Bastion/Zephyr cycle.
 
-Attuned currently ships one faction:
+Attuned currently ships these factions:
 
 | Faction id | Theme | Balance role |
 |------------|-------|--------------|
 | `attuned:unseen` | Stealth, stillness, smoke, ambush openings | Rewards setup and positioning without replacing armor, speed, or raw damage builds. |
+| `attuned:seafarers` | Fishing, shore travel, return points | Peaceful Luck and water utility without PvP pressure. |
+| `attuned:radiant` | Holy vows, light, witness, judgment | Reveals and protects in short windows rather than adding broad damage. |
+| `attuned:reliquary` | Names, relics, rites, thresholds | Utility-side Holy tools that reward preparation and place. |
+| `attuned:verdant_choir` | Roots, bloom, moss, patient growth | Broad natural utility with small travel and survival numbers. |
+| `attuned:ashen_forge` | Heat, craft, rivets, tempering | Craft-flavoured Fury/Bastion tools with restrained stat bonuses. |
 
 ## Attribute modifiers
 
@@ -128,6 +133,11 @@ examples to copy from:
 | `attuned:anchor`     | `AnchorBehavior`         | Knockback resistance while sneaking or blocking. |
 | `attuned:hearth`     | `HearthBehavior`         | Campfire-adjacent regeneration while well fed. |
 | `attuned:lantern`    | `LanternBehavior`        | Briefly marks visible hostile mobs in darkness while holding a torch or lantern. |
+| `attuned:votive`     | `RadiantFocusBehaviors`  | Bright light or lit candles grant a short absorption shield on cooldown. |
+| `attuned:bellwether` | `RadiantFocusBehaviors`  | Bells reveal visible hostile mobs nearby. |
+| `attuned:oathguard`  | `RadiantFocusBehaviors`  | Blocking grants a short absorption shield on cooldown. |
+| `attuned:censer`     | `RadiantFocusBehaviors`  | Bright light or campfires trim poison and wither durations. |
+| `attuned:threshold`  | `RadiantFocusBehaviors`  | Crossing from low light into bright light grants a short shield. |
 | `attuned:bloodfury`  | `BloodfuryBehavior`      | Attack speed scaled by missing health. |
 | `attuned:harvest`    | `HarvestBehavior`        | Speeds up nearby crops. |
 | `attuned:forager`    | `ForagerBehavior`        | Sometimes adds small food or seed rewards while gathering plants. |
@@ -244,7 +254,7 @@ Operator commands require game-master permission:
 
 | Folder / file | Holds |
 |---------------|-------|
-| `content/AttunedContent.java` | Item registration, the creative tab, behavior registration |
+| `content/AttunedContent.java` | Item registration, creative tabs, behavior registration |
 | `content/AttunementJournalItem.java` | The readable in-game guide item |
 | `content/AttunementShardFragmentItem.java` | Fragment progress hint behavior |
 | `content/behavior/` | Behavior classes |

@@ -22,6 +22,7 @@ public class ReweavingScreen extends AbstractContainerScreen<ReweavingMenu> {
 	private static final int BODY_TEXT = 0xFFE3D8F5;
 	private static final int MUTED_TEXT = 0xFFB8ACC8;
 	private static final int WARNING_TEXT = 0xFFFFD37A;
+	private static final int SCREEN_BACKDROP = 0xB0101218;
 	private static final int BUTTON_HOVER_ARGB = 0xC0FFFFFF;
 	private static final int BUTTON_W = 54;
 	private static final int BUTTON_H = 16;
@@ -35,6 +36,8 @@ public class ReweavingScreen extends AbstractContainerScreen<ReweavingMenu> {
 
 	public ReweavingScreen(ReweavingMenu menu, Inventory inventory, Component title) {
 		super(menu, inventory, title, IMAGE_WIDTH, IMAGE_HEIGHT);
+		this.titleLabelX = 14;
+		this.titleLabelY = 13;
 		this.inventoryLabelY = ReweavingMenu.INVENTORY_Y - 10;
 	}
 
@@ -58,6 +61,7 @@ public class ReweavingScreen extends AbstractContainerScreen<ReweavingMenu> {
 
 	@Override
 	public void extractBackground(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
+		graphics.fill(0, 0, this.width, this.height, SCREEN_BACKDROP);
 		graphics.blit(RenderPipelines.GUI_TEXTURED, BACKGROUND_TEXTURE, this.leftPos, this.topPos,
 			0.0F, 0.0F, IMAGE_WIDTH, IMAGE_HEIGHT, IMAGE_WIDTH, IMAGE_HEIGHT);
 	}
@@ -65,8 +69,6 @@ public class ReweavingScreen extends AbstractContainerScreen<ReweavingMenu> {
 	@Override
 	protected void extractLabels(GuiGraphicsExtractor graphics, int mouseX, int mouseY) {
 		graphics.text(this.font, this.title, this.titleLabelX, this.titleLabelY, TITLE_TEXT, false);
-		graphics.text(this.font, this.playerInventoryTitle,
-			this.inventoryLabelX, this.inventoryLabelY, MUTED_TEXT, false);
 		Component hint = hint();
 		int color = this.menu.hasAllInputs() && this.menu.outputStack().isEmpty() ? BODY_TEXT : WARNING_TEXT;
 		drawTrimmedText(graphics, hint, HINT_X, HINT_Y, HINT_MAX_WIDTH, color);

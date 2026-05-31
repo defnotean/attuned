@@ -1,0 +1,14 @@
+{
+	"item": "attuned:namesake_focus",
+	"cost": 2,
+	"unique": true,
+	"affinity": "holy",
+	"faction": "attuned:reliquary",
+	"modifiers": [
+		{
+			"attribute": "minecraft:luck",
+			"amount": 1.0,
+			"operation": "add_value"
+		}
+	]
+}

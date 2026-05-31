@@ -22,8 +22,7 @@
             ],
             "faces": {
                 "down": {
-                    "texture": "#base",
-                    "cullface": "down"
+                    "texture": "#base"
                 },
                 "up": {
                     "texture": "#base"
@@ -253,6 +252,9 @@
                 16
             ],
             "faces": {
+                "down": {
+                    "texture": "#base"
+                },
                 "up": {
                     "texture": "#top"
                 },

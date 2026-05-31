@@ -13,6 +13,7 @@ import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
+import net.minecraft.tags.EntityTypeTags;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
@@ -58,6 +59,10 @@ public final class AttunedCombat {
 	private static final float LEECH_LIFESTEAL = 0.20F;
 	/** Extra direct-melee damage Cinder deals to burning enemies. */
 	private static final float CINDER_BURNING_BONUS = 0.20F;
+	/** Extra fully charged direct-melee damage Sunlance deals to its marked prey. */
+	private static final float SUNLANCE_BONUS = 0.10F;
+	/** Sunlance asks for a deliberate swing, not spam-click pressure. */
+	private static final float SUNLANCE_CHARGED_SWING_THRESHOLD = 0.9F;
 
 	private static final Identifier THORNWARD_FOCUS =
 		Identifier.fromNamespaceAndPath("attuned", "thornward_focus");
@@ -65,6 +70,8 @@ public final class AttunedCombat {
 		Identifier.fromNamespaceAndPath("attuned", "leech_focus");
 	private static final Identifier CINDER_FOCUS =
 		Identifier.fromNamespaceAndPath("attuned", "cinder_focus");
+	private static final Identifier SUNLANCE_FOCUS =
+		Identifier.fromNamespaceAndPath("attuned", "sunlance_focus");
 
 	/** Re-entrancy guard so a reflected hit cannot trigger another reflection. */
 	private static final ThreadLocal<Boolean> REFLECTING = ThreadLocal.withInitial(() -> false);
@@ -95,6 +102,9 @@ public final class AttunedCombat {
 		if (cinderApplies(defender, source)) {
 			adjusted *= (1.0F + CINDER_BURNING_BONUS);
 		}
+		if (sunlanceApplies(defender, source)) {
+			adjusted *= (1.0F + SUNLANCE_BONUS);
+		}
 		return adjusted;
 	}
 
@@ -107,6 +117,26 @@ public final class AttunedCombat {
 			return false;
 		}
 		return defender.isOnFire() && hasActiveFocus(player, CINDER_FOCUS);
+	}
+
+	private static boolean sunlanceApplies(LivingEntity defender, DamageSource source) {
+		if (!(attackerOf(source) instanceof Player player) || !isDirectChargedMelee(player, source,
+				SUNLANCE_CHARGED_SWING_THRESHOLD) || !hasActiveFocus(player, SUNLANCE_FOCUS)) {
+			return false;
+		}
+		return defender.typeHolder().is(EntityTypeTags.UNDEAD)
+			|| MobAffinities.of(defender).filter(affinity -> affinity == Affinity.FURY).isPresent();
+	}
+
+	private static boolean isDirectChargedMelee(Player player, DamageSource source, float threshold) {
+		if (source.getDirectEntity() != player) {
+			return false;
+		}
+		if (source.is(net.minecraft.tags.DamageTypeTags.IS_PROJECTILE)
+				|| source.is(net.minecraft.tags.DamageTypeTags.IS_EXPLOSION)) {
+			return false;
+		}
+		return player.getAttackStrengthScale(0.5F) >= threshold;
 	}
 
 	private static void mobAffinitySpark(ServerLevel level, LivingEntity entity) {

@@ -1,0 +1,8 @@
+{
+	"item": "attuned:oathguard_focus",
+	"cost": 4,
+	"unique": true,
+	"affinity": "holy",
+	"faction": "attuned:radiant",
+	"behavior": "attuned:oathguard"
+}

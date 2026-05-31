@@ -127,6 +127,7 @@ public final class AttunedTooltips {
 			case FURY -> ChatFormatting.RED;
 			case BASTION -> ChatFormatting.GOLD;
 			case ZEPHYR -> ChatFormatting.AQUA;
+			case HOLY -> ChatFormatting.YELLOW;
 		};
 	}
 

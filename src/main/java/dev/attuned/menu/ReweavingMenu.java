@@ -24,12 +24,32 @@ public class ReweavingMenu extends AbstractContainerMenu {
 	public static final int INVENTORY_X = 27;
 	public static final int INVENTORY_Y = 108;
 
-	private static final int[] FOCUS_SLOT_X = {28, 55, 82};
-	private static final int FOCUS_SLOT_Y = 58;
-	private static final int CATALYST_SLOT_X = 110;
-	private static final int CATALYST_SLOT_Y = 58;
-	private static final int OUTPUT_SLOT_X = 154;
-	private static final int OUTPUT_SLOT_Y = 52;
+	private static final int SLOT_ITEM_SIZE = 16;
+	private static final int PAINTED_INPUT_WELL_SIZE = 24;
+	private static final int PAINTED_OUTPUT_WELL_SIZE = 26;
+	private static final int SLOT_INSET = (PAINTED_INPUT_WELL_SIZE - SLOT_ITEM_SIZE) / 2;
+	private static final int OUTPUT_SLOT_INSET = (PAINTED_OUTPUT_WELL_SIZE - SLOT_ITEM_SIZE) / 2;
+	private static final int SLOT_VISUAL_OFFSET_Y = 2;
+	private static final int OUTPUT_VISUAL_OFFSET_X = 2;
+	private static final int OUTPUT_VISUAL_OFFSET_Y = 1;
+
+	private static final int[] FOCUS_WELL_X = {26, 53, 80};
+	private static final int FOCUS_WELL_Y = 56;
+	private static final int CATALYST_WELL_X = 107;
+	private static final int CATALYST_WELL_Y = 56;
+	private static final int OUTPUT_WELL_X = 151;
+	private static final int OUTPUT_WELL_Y = 47;
+
+	private static final int[] FOCUS_SLOT_X = {
+		FOCUS_WELL_X[0] + SLOT_INSET,
+		FOCUS_WELL_X[1] + SLOT_INSET,
+		FOCUS_WELL_X[2] + SLOT_INSET
+	};
+	private static final int FOCUS_SLOT_Y = FOCUS_WELL_Y + SLOT_INSET + SLOT_VISUAL_OFFSET_Y;
+	private static final int CATALYST_SLOT_X = CATALYST_WELL_X + SLOT_INSET;
+	private static final int CATALYST_SLOT_Y = CATALYST_WELL_Y + SLOT_INSET + SLOT_VISUAL_OFFSET_Y;
+	private static final int OUTPUT_SLOT_X = OUTPUT_WELL_X + OUTPUT_SLOT_INSET + OUTPUT_VISUAL_OFFSET_X;
+	private static final int OUTPUT_SLOT_Y = OUTPUT_WELL_Y + OUTPUT_SLOT_INSET + OUTPUT_VISUAL_OFFSET_Y;
 
 	private final Container container;
 	private final ContainerLevelAccess access;

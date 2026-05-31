@@ -75,7 +75,7 @@ public final class AttunedLoot {
 		Map.entry(chest("village/village_weaponsmith"), normal(Tier.COMMON, Affinity.FURY)),
 		Map.entry(chest("village/village_armorer"), normal(Tier.COMMON, Affinity.BASTION)),
 		Map.entry(chest("village/village_toolsmith"), normal(Tier.COMMON, null)),
-		Map.entry(chest("village/village_temple"), normal(Tier.COMMON, Affinity.ZEPHYR)),
+		Map.entry(chest("village/village_temple"), normal(Tier.COMMON, Affinity.HOLY)),
 		Map.entry(chest("shipwreck_treasure"), unseen(Tier.COMMON, Affinity.ZEPHYR)),
 		// Structure chests — riskier places, better odds.
 		Map.entry(chest("jungle_temple"), normal(Tier.RICH, Affinity.ZEPHYR)),
@@ -104,7 +104,7 @@ public final class AttunedLoot {
 		// Trial reward children only. The parent reward tables delegate to these.
 		Map.entry(chest("trial_chambers/reward_common"), normal(Tier.RICH, Affinity.FURY)),
 		Map.entry(chest("trial_chambers/reward_rare"), normal(Tier.TREASURE, Affinity.BASTION)),
-		Map.entry(chest("trial_chambers/reward_unique"), normal(Tier.TREASURE, Affinity.ZEPHYR)),
+		Map.entry(chest("trial_chambers/reward_unique"), normal(Tier.TREASURE, Affinity.HOLY)),
 		Map.entry(chest("trial_chambers/reward_ominous_common"), unseen(Tier.RICH, Affinity.FURY)),
 		Map.entry(chest("trial_chambers/reward_ominous_rare"), unseen(Tier.TREASURE, Affinity.FURY)),
 		Map.entry(chest("trial_chambers/reward_ominous_unique"), unseen(Tier.TREASURE, null))

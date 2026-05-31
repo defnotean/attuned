@@ -13,9 +13,7 @@ import dev.attuned.menu.AltarMenu;
 import dev.attuned.menu.BindShardPayload;
 import dev.attuned.pacts.Pact;
 import dev.attuned.pacts.Pacts;
-import java.util.HashSet;
 import java.util.Optional;
-import java.util.Set;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
@@ -47,6 +45,7 @@ public class AltarScreen extends AbstractContainerScreen<AltarMenu> {
 	private static final int BODY_TEXT = 0xFFE3D8F5;
 	private static final int MUTED_TEXT = 0xFFB8ACC8;
 	private static final int WARNING_TEXT = 0xFFFFD37A;
+	private static final int SCREEN_BACKDROP = 0xB0101218;
 
 	// Hover ring on the Bind button: white at moderate alpha so the highlight
 	// reads as a glow rather than a hard outline.
@@ -55,10 +54,11 @@ public class AltarScreen extends AbstractContainerScreen<AltarMenu> {
 	// the stance ARGB after its alpha has been masked off.
 	private static final int WELL_TINT_ALPHA = 0x80000000;
 
-	// Slot geometry — keep in sync with the {@link AltarMenu} slot positions.
-	private static final int SLOT_X = AltarMenu.INPUT_SLOT_X;
-	private static final int SLOT_Y = AltarMenu.INPUT_SLOT_Y;
-	private static final int SLOT_SIZE = 18;
+	// Painted shard well geometry, used for custom polish around the menu slot.
+	private static final int SLOT_WELL_X = AltarMenu.INPUT_WELL_X;
+	private static final int SLOT_WELL_Y = AltarMenu.INPUT_WELL_Y;
+	private static final int SLOT_WELL_WIDTH = AltarMenu.INPUT_WELL_WIDTH;
+	private static final int SLOT_WELL_HEIGHT = AltarMenu.INPUT_WELL_HEIGHT;
 
 	// Bind button geometry, positioned over the generated button recess.
 	private static final int BUTTON_W = 50;
@@ -66,20 +66,28 @@ public class AltarScreen extends AbstractContainerScreen<AltarMenu> {
 	private static final int BUTTON_X = 147;
 	private static final int BUTTON_Y = 42;
 
-	// Budget bar, drawn under the forecast line with room for the status strip.
+	// Budget bar, drawn above the lower status strip.
 	private static final int BAR_X = 14;
-	private static final int BAR_Y = 67;
+	private static final int BAR_Y = 75;
 	private static final int BAR_W = IMAGE_WIDTH - 28;
 	private static final int BAR_H = 3;
 
 	/** Y-coordinate for the hint label, sitting in the altar status strip. */
-	private static final int HINT_Y = 78;
-	/** Y-coordinate for the compact capacity forecast below the hint label. */
-	private static final int FORECAST_Y = 88;
+	private static final int HINT_Y = 88;
+	private static final int READOUT_X = 24;
+	private static final int TEXT_BOX_X = 18;
+	private static final int HINT_MAX_WIDTH = IMAGE_WIDTH - TEXT_BOX_X - 18;
+	private static final int STATUS_X = TEXT_BOX_X;
+	private static final int STATUS_MAX_WIDTH = 84;
+	private static final int DETAIL_MAX_WIDTH = STATUS_MAX_WIDTH;
+	private static final int STATUS_Y = 55;
+	private static final int DETAIL_Y = 65;
 	private Button bindButton;
 
 	public AltarScreen(AltarMenu menu, Inventory inventory, Component title) {
 		super(menu, inventory, title, IMAGE_WIDTH, IMAGE_HEIGHT);
+		this.titleLabelX = READOUT_X;
+		this.titleLabelY = 13;
 		this.inventoryLabelY = AltarMenu.INVENTORY_Y - 10;
 	}
 
@@ -126,11 +134,12 @@ public class AltarScreen extends AbstractContainerScreen<AltarMenu> {
 		int x = this.leftPos;
 		int y = this.topPos;
 
+		graphics.fill(0, 0, this.width, this.height, SCREEN_BACKDROP);
 		graphics.blit(RenderPipelines.GUI_TEXTURED, BACKGROUND_TEXTURE, x, y,
 			0.0F, 0.0F, IMAGE_WIDTH, IMAGE_HEIGHT, IMAGE_WIDTH, IMAGE_HEIGHT);
 
-		int sx = x + SLOT_X - 1;
-		int sy = y + SLOT_Y - 1;
+		int sx = x + SLOT_WELL_X;
+		int sy = y + SLOT_WELL_Y;
 
 		// Player-dependent polish: stance-tinted shard well border, the accent line
 		// above the readout, the budget bar fill and the Bind button hover ring all
@@ -168,14 +177,14 @@ public class AltarScreen extends AbstractContainerScreen<AltarMenu> {
 	 * Draws a 1-pixel inner border on the four edges of the shard well, one pixel
 	 * inside the bevel so the tint reads as a glow on the slot face rather than as
 	 * a thickening of the bevel. {@code wellX} and {@code wellY} are the top-left
-	 * of the well's outer dark border; the {@link #SLOT_SIZE} square inside it is
+	 * of the well's outer dark border; the custom well rectangle inside it is
 	 * the face that holds the slot itself.
 	 */
 	private static void drawWellInnerBorder(GuiGraphicsExtractor graphics, int wellX, int wellY, int argb) {
 		int innerX0 = wellX + 1;
 		int innerY0 = wellY + 1;
-		int innerX1 = wellX + SLOT_SIZE - 1;
-		int innerY1 = wellY + SLOT_SIZE - 1;
+		int innerX1 = wellX + SLOT_WELL_WIDTH - 1;
+		int innerY1 = wellY + SLOT_WELL_HEIGHT - 1;
 		// Top and bottom edges of the inner border.
 		graphics.fill(innerX0, innerY0, innerX1, innerY0 + 1, argb);
 		graphics.fill(innerX0, innerY1 - 1, innerX1, innerY1, argb);
@@ -201,8 +210,6 @@ public class AltarScreen extends AbstractContainerScreen<AltarMenu> {
 	protected void extractLabels(GuiGraphicsExtractor graphics, int mouseX, int mouseY) {
 		// Window title: drawn ourselves so it stays readable over the dark altar art.
 		graphics.text(this.font, this.title, this.titleLabelX, this.titleLabelY, TITLE_TEXT, false);
-		graphics.text(this.font, this.playerInventoryTitle,
-			this.inventoryLabelX, this.inventoryLabelY, MUTED_TEXT, false);
 
 		Player player = this.minecraft != null ? this.minecraft.player : null;
 		if (player == null) {
@@ -217,7 +224,7 @@ public class AltarScreen extends AbstractContainerScreen<AltarMenu> {
 		int dormant = dormantFocusCount(player);
 
 		Component readout = Component.translatable("screen.attuned.altar.budget", used, capacity);
-		graphics.text(this.font, readout, 14, 24, BODY_TEXT, false);
+		graphics.text(this.font, readout, READOUT_X, 24, BODY_TEXT, false);
 
 		// Stance row: a small textured gem prefix that visually says "this is your
 		// stance," followed only by the affinity name in its colour. Dropping the
@@ -227,14 +234,16 @@ public class AltarScreen extends AbstractContainerScreen<AltarMenu> {
 		Optional<Affinity> committed = Attunement.committedAffinity(player);
 		boolean discord = Attunement.isDiscord(player);
 		int stanceGemSize = 10;
-		int stanceGemX = 14;
+		int stanceGemX = TEXT_BOX_X;
 		int stanceGemY = 39;
 		CombatHud.drawGem(graphics, stanceGemX, stanceGemY, stanceGemSize,
 			committed.orElse(null), discord, false, false);
 		graphics.text(this.font, AttunementAltarBlock.stanceLabel(player),
 			stanceGemX + stanceGemSize + 4, 41, BODY_TEXT, false);
-		graphics.text(this.font, forecastLine(player, active, dormant, this.menu.altarMemory()),
-			14, 55, BODY_TEXT, false);
+		drawTrimmedText(graphics, Component.literal(active + " active"),
+			STATUS_X, STATUS_Y, STATUS_MAX_WIDTH, BODY_TEXT);
+		drawTrimmedText(graphics, detailLine(player, dormant),
+			STATUS_X, DETAIL_Y, DETAIL_MAX_WIDTH, MUTED_TEXT);
 
 		// Hint text under the slot, swapped out when capacity is full or empty.
 		Component hint;
@@ -252,50 +261,18 @@ public class AltarScreen extends AbstractContainerScreen<AltarMenu> {
 				: Component.translatable("screen.attuned.altar.hint.ready.many",
 					capacity, next, cap, shard.getCount());
 		}
-		graphics.text(this.font, hint, 14, HINT_Y, hintColor, false);
-
-		Component wakePreview = this.menu.inputStack().isEmpty()
-			? null
-			: dormantWakePreview(player, capacity, cap, perShard);
-		Component forecast = wakePreview != null
-			? wakePreview
-			: capacityForecast(capacity, cap, perShard, this.menu.inputStack().isEmpty());
-		if (forecast != null) {
-			graphics.text(this.font, forecast, 14, FORECAST_Y, MUTED_TEXT, false);
-		}
+		drawTrimmedText(graphics, hint, TEXT_BOX_X, HINT_Y, HINT_MAX_WIDTH, hintColor);
 	}
 
-	private static Component dormantWakePreview(Player player, int capacity, int cap, int perShard) {
-		if (capacity >= cap) {
-			return null;
+	private void drawTrimmedText(GuiGraphicsExtractor graphics, Component text, int x, int y, int maxWidth, int color) {
+		if (this.font.width(text) <= maxWidth) {
+			graphics.text(this.font, text, x, y, color, false);
+			return;
 		}
-		int next = Math.min(capacity + Math.max(1, perShard), cap);
-		Set<Integer> activeNow = new HashSet<>(Attunement.activeSlots(player));
-		int newlyAwake = 0;
-		for (int slot : Attunement.activeSlots(player, next)) {
-			if (!activeNow.contains(slot) && Attunement.dormantReason(player, slot).isPresent()) {
-				newlyAwake++;
-			}
-		}
-		if (newlyAwake <= 0) {
-			return null;
-		}
-		return newlyAwake == 1
-			? Component.translatable("screen.attuned.altar.forecast.wakes.one")
-			: Component.translatable("screen.attuned.altar.forecast.wakes.many", newlyAwake);
-	}
-
-	private static Component capacityForecast(int capacity, int cap, int perShard, boolean noShardInserted) {
-		int remaining = Math.max(0, cap - capacity);
-		if (remaining <= 0) {
-			return null;
-		}
-		if (noShardInserted) {
-			return Component.translatable("screen.attuned.altar.forecast.capacity_left", remaining);
-		}
-		int safePerShard = Math.max(1, perShard);
-		int shards = Math.max(1, (remaining + safePerShard - 1) / safePerShard);
-		return Component.translatable("screen.attuned.altar.forecast.shards_left", shards);
+		String ellipsis = "...";
+		int ellipsisWidth = this.font.width(ellipsis);
+		String trimmed = this.font.plainSubstrByWidth(text.getString(), Math.max(0, maxWidth - ellipsisWidth));
+		graphics.text(this.font, Component.literal(trimmed + ellipsis), x, y, color, false);
 	}
 
 	private static int dormantFocusCount(Player player) {
@@ -311,30 +288,16 @@ public class AltarScreen extends AbstractContainerScreen<AltarMenu> {
 		return dormant;
 	}
 
-	private static Component forecastLine(Player player, int active, int dormant,
-			AttunementAltarBlock.AltarAffinity memory) {
-		Component line = Component.literal(active + " active / " + dormant + " dormant");
+	private static Component detailLine(Player player, int dormant) {
+		Component prefix = Component.literal(dormant + " dormant");
 		Optional<Pact> pact = Pacts.activeOf(player);
 		if (pact.isPresent()) {
-			return line.copy()
-				.append(Component.literal(" / "))
-				.append(pact.get().displayName());
+			return prefix.copy().append(Component.literal(" / Pact"));
 		}
 		if (Apex.affinityOf(player).isPresent()) {
-			return line.copy().append(Component.literal(" / Apex ready"));
+			return prefix.copy().append(Component.literal(" / Apex"));
 		}
-		return line.copy()
-			.append(Component.literal(" / "))
-			.append(Component.translatable("screen.attuned.altar.memory.short", memoryName(memory)));
-	}
-
-	private static Component memoryName(AttunementAltarBlock.AltarAffinity memory) {
-		return switch (memory) {
-			case NONE -> Component.translatable("screen.attuned.altar.memory.none");
-			case FURY -> Component.translatable("screen.attuned.altar.memory.fury");
-			case BASTION -> Component.translatable("screen.attuned.altar.memory.bastion");
-			case ZEPHYR -> Component.translatable("screen.attuned.altar.memory.zephyr");
-		};
+		return prefix;
 	}
 
 	private static void drawButtonOutline(GuiGraphicsExtractor graphics, int x0, int y0, int x1, int y1, int argb) {

@@ -103,16 +103,13 @@ modrinth {
 	versionName = "Attuned ${project.version}"
 	// Changelog for the current release — refresh this each time mod_version bumps.
 	changelog = """\
-Utility Foci, journal UI, loot, and polish release.
+Radiant affinity, Reweaving altar, HUD, and GUI polish release.
 
-- Added vanilla-friendly utility Foci including Anchor, Cinder, Forager, Galespur, Hearth, Lantern, Rainstep, Tremor, and Waystone.
-- Added a custom Attunement Journal screen and generated journal book art, with expanded in-game guidance for Foci, attunement, Pacts, and progression.
-- Expanded Lootr-friendly loot and wandering trader access so Focus rewards, shard fragments, and journals are easier to find through vanilla-style gameplay.
-- Added pact challenge advancements plus clearer onboarding milestones for first Foci, dormant Foci, Discord, and pact challenges.
-- Improved altar, pact, dormant Focus, and attunement readout feedback so capacity, binding, and state changes are easier to understand in-game.
-- Unified Focus item art into the shared animated medallion style and made every Focus texture animation visibly move.
-- Fixed Beacon and Waystone compass tracking so vanilla compasses can be redirected, named while active, and restored afterward.
-- Added contract coverage for attunement sources, budget resolution, loot/trade data, altar behavior, journal UI, compass Focus behavior, and Focus data consistency.
+- Added the Holy/Radiant affinity expansion with new Foci, altar assets, mob affinity support, Pact hooks, and supporting data.
+- Added and polished the Altar of Reweaving flow, including generated block art, custom GUI art, and centered input/output slot placement.
+- Improved the Attunement Altar GUI with custom slot well sizing, cleaner text layout, translucent screen backdrops, and in-game GUI preview commands for faster visual checks.
+- Reworked HUD assets and affinity sprites so the combat readout is clearer and more consistent with the new art direction.
+- Expanded docs, language entries, loot/data coverage, and contract tests for the new content and UI assets.
 """
 	uploadFile = file("build/libs/${project.name}-${project.version}.jar")
 	gameVersions = ["26.1.2"]

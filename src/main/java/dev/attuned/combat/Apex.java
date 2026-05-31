@@ -81,6 +81,11 @@ public final class Apex {
 	/** Zephyr dodge chance against the affinity Zephyr beats. */
 	private static final float DODGE_EMPOWERED = 0.65F;
 
+	/** Holy Judgment only judges wounded hostile mobs, avoiding full-health burst. */
+	private static final float JUDGMENT_THRESHOLD = 0.30F;
+	/** Holy Judgment adds damage instead of executing outright. */
+	private static final float JUDGMENT_DAMAGE_BONUS = 0.40F;
+
 	/** Per-player Apex affinity as of last tick, for spotting on/off changes. */
 	private static final Map<UUID, Affinity> apexState = new HashMap<>();
 	/**
@@ -149,6 +154,7 @@ public final class Apex {
 			case FURY -> "Execute";
 			case BASTION -> "Unyielding";
 			case ZEPHYR -> "Untouchable";
+			case HOLY -> "Judgment";
 		};
 	}
 
@@ -158,6 +164,7 @@ public final class Apex {
 			case FURY -> "Your strikes finish off low-health foes.";
 			case BASTION -> "No single blow can land hard, and knockback is ignored.";
 			case ZEPHYR -> "A chance to dodge attacks outright while sprinting.";
+			case HOLY -> "Judgment marks wounded Fury-aligned foes for a decisive strike.";
 		};
 	}
 
@@ -204,6 +211,21 @@ public final class Apex {
 				if (defender.getHealth() / defender.getMaxHealth() <= threshold) {
 					amount = Math.max(amount, EXECUTE_DAMAGE);
 				}
+			}
+		}
+		// Holy - Judgment: a decisive but non-executing strike against wounded
+		// Fury-aligned mobs. Zephyr-affinity targets counter and neutralize it.
+		if (!(defender instanceof Player) && defender.getMaxHealth() > 0.0F
+				&& attacker instanceof Player attackerPlayer
+				&& isAt(attackerPlayer, Affinity.HOLY)
+				&& Resonance.atApex(attackerPlayer)
+				&& source.getDirectEntity() == attackerPlayer
+				&& !isOwnPet(defender, attackerPlayer)
+				&& !(defender instanceof AbstractVillager)) {
+			Matchup matchup = matchupAgainst(Affinity.HOLY, defender);
+			if (matchup == Matchup.EMPOWERED
+					&& defender.getHealth() / defender.getMaxHealth() <= JUDGMENT_THRESHOLD) {
+				amount *= (1.0F + JUDGMENT_DAMAGE_BONUS);
 			}
 		}
 		return amount;
@@ -420,6 +442,7 @@ public final class Apex {
 			case FURY -> ChatFormatting.RED;
 			case BASTION -> ChatFormatting.GOLD;
 			case ZEPHYR -> ChatFormatting.AQUA;
+			case HOLY -> ChatFormatting.YELLOW;
 		};
 	}
 }

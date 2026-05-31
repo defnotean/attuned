@@ -1,0 +1,13 @@
+{
+	"item": "attuned:mask_focus",
+	"cost": 3,
+	"affinity": "zephyr",
+	"faction": "attuned:unseen",
+	"modifiers": [
+		{
+			"attribute": "minecraft:sneaking_speed",
+			"amount": 0.15,
+			"operation": "add_multiplied_base"
+		}
+	]
+}

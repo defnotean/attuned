@@ -30,6 +30,7 @@ public final class MobAffinities {
 	private static final TagKey<EntityType<?>> FURY_MOBS = tag("fury_mobs");
 	private static final TagKey<EntityType<?>> BASTION_MOBS = tag("bastion_mobs");
 	private static final TagKey<EntityType<?>> ZEPHYR_MOBS = tag("zephyr_mobs");
+	private static final TagKey<EntityType<?>> HOLY_MOBS = tag("holy_mobs");
 
 	private static TagKey<EntityType<?>> tag(String name) {
 		return TagKey.create(Registries.ENTITY_TYPE, Identifier.fromNamespaceAndPath(Attuned.MOD_ID, name));
@@ -48,6 +49,9 @@ public final class MobAffinities {
 		}
 		if (entity.typeHolder().is(ZEPHYR_MOBS)) {
 			return Optional.of(Affinity.ZEPHYR);
+		}
+		if (entity.typeHolder().is(HOLY_MOBS)) {
+			return Optional.of(Affinity.HOLY);
 		}
 		return Optional.empty();
 	}

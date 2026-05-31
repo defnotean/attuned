@@ -1,0 +1,8 @@
+{
+	"item": "attuned:threshold_focus",
+	"cost": 3,
+	"unique": true,
+	"affinity": "holy",
+	"faction": "attuned:reliquary",
+	"behavior": "attuned:threshold"
+}

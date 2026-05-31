@@ -12,7 +12,7 @@ add a Focus.
   a **cost**. The combined cost of equipped Foci has to fit inside the budget.
 - Go over budget and your lowest-priority Foci fall **dormant** — still equipped,
   but switched off. Slot order, top to bottom, is the priority order.
-- Most combat Foci carry an **affinity**: Fury, Bastion, or Zephyr. All of your
+- Most combat Foci carry an **affinity**: Holy, Fury, Bastion, or Zephyr. All of your
   *active* Foci must share one affinity, so a build commits to a lane.
 - Three matching active affinities can awaken a **Pact**. A fully committed,
   high-capacity build can reach **Apex** during combat.
@@ -20,6 +20,9 @@ add a Focus.
   smaller loot reward; four craft into one shard.
 - The **Attunement Journal** is a crafted in-game guide and opens like a normal
   readable book.
+- Creative inventory content is split into **Attuned: Affinity Foci** and
+  **Attuned: Utility Foci** so combat builds and neutral tools are easier to
+  scan.
 
 That is the whole idea: a Focus is a trade-off, never a free bonus.
 

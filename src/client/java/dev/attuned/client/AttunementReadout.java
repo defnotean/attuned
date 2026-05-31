@@ -182,6 +182,7 @@ public final class AttunementReadout {
 			case FURY -> ChatFormatting.RED;
 			case BASTION -> ChatFormatting.GOLD;
 			case ZEPHYR -> ChatFormatting.AQUA;
+			case HOLY -> ChatFormatting.YELLOW;
 		};
 	}
 }

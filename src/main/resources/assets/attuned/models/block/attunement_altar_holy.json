@@ -1,0 +1,8 @@
+{
+	"parent": "attuned:block/attunement_altar",
+	"textures": {
+		"pillar": "attuned:block/attunement_altar_pillar_holy",
+		"top": "attuned:block/attunement_altar_top_holy",
+		"gem": "attuned:block/attunement_altar_gem_holy"
+	}
+}

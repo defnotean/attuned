@@ -1,0 +1,12 @@
+{
+	"item": "attuned:whisper_focus",
+	"cost": 2,
+	"faction": "attuned:unseen",
+	"modifiers": [
+		{
+			"attribute": "minecraft:sneaking_speed",
+			"amount": 0.1,
+			"operation": "add_multiplied_base"
+		}
+	]
+}

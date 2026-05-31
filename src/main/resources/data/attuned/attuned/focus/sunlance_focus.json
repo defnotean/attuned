@@ -1,0 +1,7 @@
+{
+	"item": "attuned:sunlance_focus",
+	"cost": 4,
+	"unique": true,
+	"affinity": "holy",
+	"faction": "attuned:radiant"
+}

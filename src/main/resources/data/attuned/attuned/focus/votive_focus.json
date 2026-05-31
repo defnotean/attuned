@@ -1,0 +1,8 @@
+{
+	"item": "attuned:votive_focus",
+	"cost": 2,
+	"unique": true,
+	"affinity": "holy",
+	"faction": "attuned:radiant",
+	"behavior": "attuned:votive"
+}

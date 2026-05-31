@@ -5,15 +5,16 @@ import java.util.Optional;
 import net.minecraft.util.StringRepresentable;
 
 /**
- * The three Focus affinities, arranged in a rock-paper-scissors counter cycle:
- * Fury beats Bastion, Bastion beats Zephyr, Zephyr beats Fury. A Focus with no
- * affinity (an affinity-neutral utility Focus) is represented by an empty
+ * The Focus affinities, arranged in a four-part counter cycle: Holy beats Fury,
+ * Fury beats Bastion, Bastion beats Zephyr, and Zephyr beats Holy. A Focus with
+ * no affinity (an affinity-neutral utility Focus) is represented by an empty
  * {@code Optional<Affinity>} on its {@link FocusDefinition}.
  */
 public enum Affinity implements StringRepresentable {
 	FURY("fury"),
 	BASTION("bastion"),
-	ZEPHYR("zephyr");
+	ZEPHYR("zephyr"),
+	HOLY("holy");
 
 	public static final Codec<Affinity> CODEC = StringRepresentable.fromEnum(Affinity::values);
 
@@ -33,7 +34,8 @@ public enum Affinity implements StringRepresentable {
 		return switch (this) {
 			case FURY -> other == BASTION;
 			case BASTION -> other == ZEPHYR;
-			case ZEPHYR -> other == FURY;
+			case ZEPHYR -> other == HOLY;
+			case HOLY -> other == FURY;
 		};
 	}
 
@@ -48,6 +50,7 @@ public enum Affinity implements StringRepresentable {
 			case FURY -> 0xFFFF5555;
 			case BASTION -> 0xFFFFAA00;
 			case ZEPHYR -> 0xFF55FFFF;
+			case HOLY -> 0xFFFFF1A8;
 		};
 	}
 

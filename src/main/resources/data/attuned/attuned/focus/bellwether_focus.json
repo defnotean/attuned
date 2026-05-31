@@ -1,0 +1,8 @@
+{
+	"item": "attuned:bellwether_focus",
+	"cost": 3,
+	"unique": true,
+	"affinity": "holy",
+	"faction": "attuned:radiant",
+	"behavior": "attuned:bellwether"
+}

@@ -58,7 +58,8 @@ public class AttunementAltarBlock extends Block {
 		NONE("none"),
 		FURY("fury"),
 		BASTION("bastion"),
-		ZEPHYR("zephyr");
+		ZEPHYR("zephyr"),
+		HOLY("holy");
 
 		private final String serializedName;
 
@@ -213,6 +214,7 @@ public class AttunementAltarBlock extends Block {
 				case FURY -> new MobEffectInstance(MobEffects.STRENGTH, 400, 0, true, true, true);
 				case BASTION -> new MobEffectInstance(MobEffects.RESISTANCE, 400, 0, true, true, true);
 				case ZEPHYR -> new MobEffectInstance(MobEffects.SPEED, 400, 0, true, true, true);
+				case HOLY -> new MobEffectInstance(MobEffects.ABSORPTION, 400, 0, true, true, true);
 			};
 			player.addEffect(effect);
 		});
@@ -237,6 +239,7 @@ public class AttunementAltarBlock extends Block {
 			case FURY -> 0.88F;
 			case BASTION -> 0.76F;
 			case ZEPHYR -> 1.18F;
+			case HOLY -> 1.38F;
 		};
 	}
 
@@ -282,6 +285,7 @@ public class AttunementAltarBlock extends Block {
 			case FURY -> Component.literal("Fury").withStyle(ChatFormatting.RED);
 			case BASTION -> Component.literal("Bastion").withStyle(ChatFormatting.GOLD);
 			case ZEPHYR -> Component.literal("Zephyr").withStyle(ChatFormatting.AQUA);
+			case HOLY -> Component.literal("Holy").withStyle(ChatFormatting.YELLOW);
 		};
 	}
 
@@ -376,6 +380,7 @@ public class AttunementAltarBlock extends Block {
 			case FURY -> AltarAffinity.FURY;
 			case BASTION -> AltarAffinity.BASTION;
 			case ZEPHYR -> AltarAffinity.ZEPHYR;
+			case HOLY -> AltarAffinity.HOLY;
 		};
 	}
 
@@ -384,6 +389,7 @@ public class AttunementAltarBlock extends Block {
 			case FURY -> 0xFF5555;
 			case BASTION -> 0xFFAA00;
 			case ZEPHYR -> 0x55FFFF;
+			case HOLY -> 0xFFF1A8;
 			case NONE -> 0xFFFFFF;
 		};
 	}

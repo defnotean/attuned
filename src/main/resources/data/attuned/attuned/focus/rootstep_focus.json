@@ -1,0 +1,18 @@
+{
+	"item": "attuned:rootstep_focus",
+	"cost": 2,
+	"affinity": "zephyr",
+	"faction": "attuned:verdant_choir",
+	"modifiers": [
+		{
+			"attribute": "minecraft:movement_speed",
+			"amount": 0.05,
+			"operation": "add_multiplied_base"
+		},
+		{
+			"attribute": "minecraft:fall_damage_multiplier",
+			"amount": -0.15,
+			"operation": "add_multiplied_total"
+		}
+	]
+}

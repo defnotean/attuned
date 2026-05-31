@@ -44,8 +44,9 @@ Find the `FOCI` list near the item registrations. Add yours to the list:
 STONESKIN_FOCUS
 ```
 
-The creative tab reads from `FOCI`, so the Focus appears in the **Attuned**
-creative-inventory tab once it is in that list.
+The creative tabs read from `FOCI`, so the Focus appears once it is in that
+list: affinity Foci go to **Attuned: Affinity Foci**, and neutral Foci go to
+**Attuned: Utility Foci**.
 
 > For a **stat-only Focus, `AttunedContent.java` is the only `.java` file you
 > touch.** Everything below is plain text and images.
@@ -73,7 +74,7 @@ This file sets the cost, the affinity, and the stats. It is the heart of a Focus
 
 - `item` — always `attuned:` followed by your name. **Required.**
 - `cost` — attunement points this Focus uses, usually 2–6. Defaults to 1 if left out.
-- `affinity` — `fury`, `bastion`, or `zephyr`. **Leave this line out** for a
+- `affinity` — `fury`, `bastion`, `zephyr`, or `holy`. **Leave this line out** for a
   neutral utility Focus.
 - `unique` - set to `true` when only one copy of this Focus should be active
   at a time.
@@ -257,8 +258,9 @@ Run the game from the project folder:
 ./gradlew runClient
 ```
 
-Open the creative inventory, find the **Attuned** tab, and your Focus should be
-there. Equip it in a Focus slot and check the tooltip and the effect.
+Open the creative inventory, find the matching **Attuned** Focus tab, and your
+Focus should be there. Equip it in a Focus slot and check the tooltip and the
+effect.
 
 If the build fails, the error message names the file and line — usually a typo
 or a missing comma. If the item shows a missing-texture pattern, re-check the

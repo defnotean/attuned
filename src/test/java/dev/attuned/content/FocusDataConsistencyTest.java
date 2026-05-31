@@ -39,6 +39,10 @@ class FocusDataConsistencyTest {
 		Path.of("src/main/resources/assets/attuned/models/item");
 	private static final Path ITEM_TEXTURE_DIR =
 		Path.of("src/main/resources/assets/attuned/textures/item");
+	private static final Path BLOCK_MODEL_DIR =
+		Path.of("src/main/resources/assets/attuned/models/block");
+	private static final Path BLOCK_TEXTURE_DIR =
+		Path.of("src/main/resources/assets/attuned/textures/block");
 	private static final Path LANG_FILE =
 		Path.of("src/main/resources/assets/attuned/lang/en_us.json");
 
@@ -54,15 +58,26 @@ class FocusDataConsistencyTest {
 	private static final Pattern FOCI_ENTRY = Pattern.compile("\\b([A-Z0-9_]+_FOCUS)\\b");
 	private static final Pattern NAMESPACED_ID = Pattern.compile("[a-z0-9_.-]+:[a-z0-9_/.-]+");
 	private static final Set<String> UNSEEN_FOCUS_ITEMS = Set.of(
+		"attuned:blackout_focus",
+		"attuned:mask_focus",
 		"attuned:needle_focus",
 		"attuned:smoke_focus",
 		"attuned:softstep_focus",
-		"attuned:veil_focus");
+		"attuned:veil_focus",
+		"attuned:whisper_focus");
 	private static final Set<String> SEAFARERS_FOCUS_ITEMS = Set.of(
 		"attuned:driftglass_focus",
 		"attuned:harborlight_focus",
 		"attuned:linecast_focus",
 		"attuned:netmender_focus");
+	private static final Set<String> HOLY_FOCUS_ITEMS = Set.of(
+		"attuned:bellwether_focus",
+		"attuned:censer_focus",
+		"attuned:namesake_focus",
+		"attuned:oathguard_focus",
+		"attuned:sunlance_focus",
+		"attuned:threshold_focus",
+		"attuned:votive_focus");
 	private static final Map<String, Double> SEAFARERS_LUCK_AMOUNTS = Map.of(
 		"attuned:driftglass_focus", 1.0D,
 		"attuned:harborlight_focus", 1.0D,
@@ -104,6 +119,9 @@ class FocusDataConsistencyTest {
 			if (SEAFARERS_FOCUS_ITEMS.contains(itemId)) {
 				assertReadableSeafarersAnimation(name);
 			}
+			if (HOLY_FOCUS_ITEMS.contains(itemId)) {
+				assertReadableHolyAnimation(name);
+			}
 			assertLanguageKey(lang, "item.attuned." + name);
 			assertLanguageKey(lang, "item.attuned." + name + ".lore");
 			assertLanguageKey(lang, "item.attuned." + name + ".lore2");
@@ -121,6 +139,23 @@ class FocusDataConsistencyTest {
 		missingBehaviors.removeAll(registeredBehaviors);
 		assertEquals(Set.of(), missingBehaviors,
 			"Every FocusDefinition behavior id should be registered in AttunedContent.init()");
+	}
+
+	@Test
+	void creativeInventorySplitsAffinityAndUtilityContentIntoReadableTabs() throws IOException {
+		String source = Files.readString(CONTENT_SOURCE, StandardCharsets.UTF_8);
+		JsonObject lang = languageRoot();
+
+		assertTrue(source.contains("\"attuned_utility\""),
+			"Creative inventory should include a second Attuned utility tab");
+		assertTrue(source.contains("itemGroup.attuned.affinity_foci"),
+			"Affinity Focus tab should use a dedicated translated title");
+		assertTrue(source.contains("itemGroup.attuned.utility_foci"),
+			"Utility Focus tab should use a dedicated translated title");
+		assertTrue(source.contains("ALTAR_OF_REWEAVING"),
+			"Utility tab should keep the Altar of Reweaving reachable");
+		assertLanguageKey(lang, "itemGroup.attuned.affinity_foci");
+		assertLanguageKey(lang, "itemGroup.attuned.utility_foci");
 	}
 
 	@Test
@@ -175,6 +210,21 @@ class FocusDataConsistencyTest {
 		assertEquals(SEAFARERS_FOCUS_ITEMS, seafarersItems);
 	}
 
+	@Test
+	void altarBlockAssetsKeepClosedUndersidesAndReadableReweavingTextures() throws IOException {
+		assertNoDownCullface(BLOCK_MODEL_DIR.resolve("attunement_altar.json"));
+		assertNoDownCullface(BLOCK_MODEL_DIR.resolve("attunement_altar_none.json"));
+		assertNoDownCullface(BLOCK_MODEL_DIR.resolve("attunement_altar_fury.json"));
+		assertNoDownCullface(BLOCK_MODEL_DIR.resolve("attunement_altar_bastion.json"));
+		assertNoDownCullface(BLOCK_MODEL_DIR.resolve("attunement_altar_zephyr.json"));
+		assertNoDownCullface(BLOCK_MODEL_DIR.resolve("attunement_altar_holy.json"));
+		assertNoDownCullface(BLOCK_MODEL_DIR.resolve("altar_of_reweaving.json"));
+		assertTopPlateHasBottomFace(BLOCK_MODEL_DIR.resolve("attunement_altar.json"));
+		assertBlockTextureSize("altar_of_reweaving_base.png", 64, 64);
+		assertBlockTextureSize("altar_of_reweaving_gem.png", 64, 64);
+		assertBlockTextureSize("altar_of_reweaving_top.png", 64, 64);
+	}
+
 	private static void assertSeafarersLuckModifier(JsonObject root, String itemId, Path file) {
 		JsonElement modifiers = root.get("modifiers");
 		assertNotNull(modifiers, "Seafarers Foci should grant real player Luck while active: " + file);
@@ -189,6 +239,34 @@ class FocusDataConsistencyTest {
 			"Seafarers Luck amount should stay significant but vanilla-friendly: " + file);
 		assertEquals("add_value", modifier.get("operation").getAsString(),
 			"Seafarers Luck should add a flat utility bonus: " + file);
+	}
+
+	private static void assertNoDownCullface(Path file) throws IOException {
+		String source = Files.readString(file, StandardCharsets.UTF_8);
+		assertTrue(!source.contains("\"cullface\": \"down\""),
+			"Altar models should not cull their underside faces: " + file);
+	}
+
+	private static void assertTopPlateHasBottomFace(Path file) throws IOException {
+		JsonObject model = JsonParser.parseString(Files.readString(file, StandardCharsets.UTF_8)).getAsJsonObject();
+		for (JsonElement element : model.getAsJsonArray("elements")) {
+			JsonObject object = element.getAsJsonObject();
+			if (!"top_plate".equals(object.get("name").getAsString())) {
+				continue;
+			}
+			assertTrue(object.getAsJsonObject("faces").has("down"),
+				"Attunement Altar top plate should draw its underside: " + file);
+			return;
+		}
+		assertTrue(false, "Attunement Altar model should contain a named top_plate element: " + file);
+	}
+
+	private static void assertBlockTextureSize(String name, int expectedWidth, int expectedHeight) throws IOException {
+		Path texture = BLOCK_TEXTURE_DIR.resolve(name);
+		BufferedImage image = ImageIO.read(texture.toFile());
+		assertNotNull(image, "Block texture should be a readable PNG: " + texture);
+		assertEquals(expectedWidth, image.getWidth(), "Block texture width should be upgraded: " + texture);
+		assertEquals(expectedHeight, image.getHeight(), "Block texture height should be upgraded: " + texture);
 	}
 
 	private static Map<String, String> registeredFocusItemsByField(String source) {
@@ -372,6 +450,41 @@ class FocusDataConsistencyTest {
 		}
 		assertTrue(strongestFrameDelta >= 18.0D,
 			"Seafarers Focus animation should be visibly readable in-game: " + texture);
+	}
+
+	private static void assertReadableHolyAnimation(String name) throws IOException {
+		Path texture = ITEM_TEXTURE_DIR.resolve(name + ".png");
+		BufferedImage image = ImageIO.read(texture.toFile());
+		assertNotNull(image, "Holy Focus texture should be readable: " + texture);
+		assertFrameFootprint(image, texture);
+
+		double totalDelta = 0.0D;
+		for (int frame = 1; frame < 8; frame++) {
+			totalDelta += averageFrameDeltaFromFirst(image, frame);
+		}
+		assertTrue(totalDelta / 7.0D >= 38.0D,
+			"Holy Focus animation should be as visible as the older animated Foci: " + texture);
+	}
+
+	private static void assertFrameFootprint(BufferedImage image, Path texture) {
+		int minX = 64;
+		int minY = 64;
+		int maxX = -1;
+		int maxY = -1;
+		for (int y = 0; y < 64; y++) {
+			for (int x = 0; x < 64; x++) {
+				if (((image.getRGB(x, y) >>> 24) & 0xFF) > 24) {
+					minX = Math.min(minX, x);
+					minY = Math.min(minY, y);
+					maxX = Math.max(maxX, x);
+					maxY = Math.max(maxY, y);
+				}
+			}
+		}
+		int width = maxX - minX + 1;
+		int height = maxY - minY + 1;
+		assertTrue(width >= 56 && height >= 60,
+			"Holy Focus first frame should fill the same medallion footprint as older Foci: " + texture);
 	}
 
 	private static double averageFrameDeltaFromFirst(BufferedImage image, int frame) {
