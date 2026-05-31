@@ -1,0 +1,476 @@
+from __future__ import annotations
+
+import json
+import math
+import textwrap
+from dataclasses import dataclass
+from pathlib import Path
+
+from PIL import Image, ImageDraw, ImageFilter, ImageFont
+
+
+ROOT = Path(__file__).resolve().parents[1]
+FOCUS_DATA_DIR = ROOT / "src/main/resources/data/attuned/attuned/focus"
+ITEM_TEXTURE_DIR = ROOT / "src/main/resources/assets/attuned/textures/item"
+HUD_TEXTURE_DIR = ROOT / "src/main/resources/assets/attuned/textures/gui/sprites/hud"
+LANG_FILE = ROOT / "src/main/resources/assets/attuned/lang/en_us.json"
+OUT_DIR = ROOT / "docs/modrinth-gallery"
+
+WIDTH = 1920
+HEIGHT = 1080
+
+
+AFFINITY_LABELS = {
+	"fury": "Fury",
+	"bastion": "Bastion",
+	"zephyr": "Zephyr",
+	"holy": "Holy",
+	"neutral": "Neutral",
+}
+
+AFFINITY_COLORS = {
+	"fury": (230, 83, 46),
+	"bastion": (84, 180, 116),
+	"zephyr": (77, 178, 235),
+	"holy": (255, 218, 105),
+	"neutral": (176, 170, 190),
+}
+
+PANEL_ORDER = [
+	("fury", "Fury Foci", "Fast, violent relics for pressure, burns, lifesteal, and decisive openings."),
+	("bastion", "Bastion Foci", "Defensive relics for armor, resistance, survival, and held ground."),
+	("zephyr", "Zephyr Foci", "Mobility relics for speed, air, weather, travel, and quiet movement."),
+	("holy", "Holy Foci", "Radiant and reliquary relics built around light, vows, witness, and protection."),
+]
+
+
+@dataclass(frozen=True)
+class Focus:
+	id: str
+	name: str
+	cost: int
+	affinity: str
+	faction: str
+	lore: tuple[str, str]
+	effect: str
+	texture: Path
+
+
+def load_font(name: str, size: int) -> ImageFont.FreeTypeFont | ImageFont.ImageFont:
+	candidates = [
+		Path("C:/Windows/Fonts") / name,
+		Path("C:/Windows/Fonts/segoeui.ttf"),
+		Path("C:/Windows/Fonts/arial.ttf"),
+	]
+	for candidate in candidates:
+		if candidate.exists():
+			return ImageFont.truetype(str(candidate), size)
+	return ImageFont.load_default()
+
+
+FONT_TITLE = load_font("segoeuib.ttf", 52)
+FONT_SUBTITLE = load_font("segoeui.ttf", 25)
+FONT_CARD_TITLE = load_font("segoeuib.ttf", 24)
+FONT_LABEL = load_font("segoeuib.ttf", 16)
+FONT_BODY = load_font("segoeui.ttf", 17)
+FONT_BODY_BOLD = load_font("segoeuib.ttf", 17)
+FONT_SMALL = load_font("segoeui.ttf", 15)
+FONT_APEX_TITLE = load_font("segoeuib.ttf", 29)
+FONT_APEX_BODY = load_font("segoeui.ttf", 19)
+FONT_APEX_SMALL = load_font("segoeui.ttf", 16)
+
+
+def clean_faction(faction: str) -> str:
+	if not faction:
+		return "None"
+	raw = faction.split(":", 1)[-1]
+	return raw.replace("_", " ").title()
+
+
+def load_foci() -> list[Focus]:
+	lang = json.loads(LANG_FILE.read_text(encoding="utf-8"))
+	foci: list[Focus] = []
+	for path in sorted(FOCUS_DATA_DIR.glob("*_focus.json")):
+		data = json.loads(path.read_text(encoding="utf-8"))
+		item_id = data["item"].split(":", 1)[1]
+		key = f"item.attuned.{item_id}"
+		texture = ITEM_TEXTURE_DIR / f"{item_id}.png"
+		if not texture.exists():
+			raise FileNotFoundError(f"Missing texture for {item_id}: {texture}")
+		foci.append(
+			Focus(
+				id=item_id,
+				name=lang[key],
+				cost=int(data.get("cost", 1)),
+				affinity=data.get("affinity", "neutral"),
+				faction=clean_faction(data.get("faction", "")),
+				lore=(
+					lang.get(f"{key}.lore", ""),
+					lang.get(f"{key}.lore2", ""),
+				),
+				effect=lang.get(f"{key}.effect", ""),
+				texture=texture,
+			)
+		)
+	return foci
+
+
+def first_frame(path: Path) -> Image.Image:
+	img = Image.open(path).convert("RGBA")
+	frame_size = img.width
+	return img.crop((0, 0, frame_size, min(frame_size, img.height)))
+
+
+def rounded_rectangle(draw: ImageDraw.ImageDraw, box: tuple[int, int, int, int], radius: int, fill, outline=None, width=1):
+	draw.rounded_rectangle(box, radius=radius, fill=fill, outline=outline, width=width)
+
+
+def draw_text(draw: ImageDraw.ImageDraw, xy: tuple[int, int], text: str, font, fill, max_width: int, line_spacing: int = 4, max_lines: int | None = None) -> int:
+	if not text:
+		return xy[1]
+	lines: list[str] = []
+	for paragraph in text.splitlines():
+		words = paragraph.split()
+		current = ""
+		for word in words:
+			candidate = word if not current else f"{current} {word}"
+			if draw.textlength(candidate, font=font) <= max_width:
+				current = candidate
+			else:
+				if current:
+					lines.append(current)
+				current = word
+		if current:
+			lines.append(current)
+	if max_lines is not None and len(lines) > max_lines:
+		lines = lines[:max_lines]
+		while lines[-1] and draw.textlength(lines[-1] + "...", font=font) > max_width:
+			lines[-1] = lines[-1][:-1]
+		lines[-1] += "..."
+	y = xy[1]
+	for line in lines:
+		draw.text((xy[0], y), line, font=font, fill=fill)
+		y += font.size + line_spacing
+	return y
+
+
+def make_background(accent: tuple[int, int, int]) -> Image.Image:
+	bg = Image.new("RGB", (WIDTH, HEIGHT), (13, 15, 21))
+	draw = ImageDraw.Draw(bg)
+
+	for y in range(0, HEIGHT, 48):
+		for x in range(0, WIDTH, 48):
+			tone = 18 + ((x // 48 + y // 48) % 2) * 4
+			draw.rectangle((x, y, x + 47, y + 47), fill=(tone, tone + 2, tone + 8))
+			draw.rectangle((x, y, x + 47, y + 47), outline=(31, 33, 43))
+
+	overlay = Image.new("RGBA", (WIDTH, HEIGHT), (0, 0, 0, 0))
+	od = ImageDraw.Draw(overlay)
+	for radius, alpha in [(760, 46), (520, 40), (300, 34)]:
+		box = (WIDTH // 2 - radius, -radius // 2, WIDTH // 2 + radius, radius + 250)
+		od.ellipse(box, fill=(*accent, alpha))
+	overlay = overlay.filter(ImageFilter.GaussianBlur(80))
+	return Image.alpha_composite(bg.convert("RGBA"), overlay)
+
+
+def chip(draw: ImageDraw.ImageDraw, x: int, y: int, label: str, fill: tuple[int, int, int], text_fill=(248, 248, 250)) -> int:
+	padding_x = 12
+	w = int(draw.textlength(label, font=FONT_LABEL)) + padding_x * 2
+	h = 28
+	rounded_rectangle(draw, (x, y, x + w, y + h), 7, (*fill, 220), outline=(*fill, 255), width=1)
+	draw.text((x + padding_x, y + 5), label, font=FONT_LABEL, fill=text_fill)
+	return x + w + 8
+
+
+def draw_focus_card(canvas: Image.Image, focus: Focus, box: tuple[int, int, int, int]) -> None:
+	draw = ImageDraw.Draw(canvas)
+	x0, y0, x1, y1 = box
+	accent = AFFINITY_COLORS[focus.affinity]
+	rounded_rectangle(draw, box, 12, (25, 27, 36, 232), outline=(*accent, 230), width=2)
+	draw.rectangle((x0 + 2, y0 + 2, x1 - 2, y0 + 48), fill=(*accent, 34))
+
+	icon_back = (x0 + 18, y0 + 62, x0 + 130, y0 + 174)
+	rounded_rectangle(draw, icon_back, 10, (11, 12, 17, 255), outline=(73, 75, 89), width=2)
+	sprite = first_frame(focus.texture).resize((96, 96), Image.Resampling.NEAREST)
+	canvas.alpha_composite(sprite, (x0 + 26, y0 + 70))
+
+	draw.text((x0 + 18, y0 + 15), focus.name, font=FONT_CARD_TITLE, fill=(252, 252, 255))
+
+	chip_x = x0 + 148
+	chip_y = y0 + 68
+	chip_x = chip(draw, chip_x, chip_y, AFFINITY_LABELS[focus.affinity], accent, text_fill=(16, 16, 18) if focus.affinity == "holy" else (250, 250, 252))
+	chip(draw, chip_x, chip_y, f"Cost {focus.cost}", (82, 84, 100))
+
+	draw.text((x0 + 148, y0 + 108), "Faction", font=FONT_LABEL, fill=(180, 184, 197))
+	draw_text(draw, (x0 + 148, y0 + 131), focus.faction, FONT_BODY_BOLD, (238, 239, 244), x1 - x0 - 166, line_spacing=2, max_lines=2)
+
+	section_y = y0 + 190
+	draw.text((x0 + 18, section_y), "Lore", font=FONT_LABEL, fill=(*accent, 255))
+	section_y += 24
+	draw_text(draw, (x0 + 18, section_y), focus.lore[0], FONT_BODY, (221, 220, 228), x1 - x0 - 36, line_spacing=3, max_lines=2)
+	section_y += 50
+	draw_text(draw, (x0 + 18, section_y), focus.lore[1], FONT_BODY, (221, 220, 228), x1 - x0 - 36, line_spacing=3, max_lines=2)
+
+	effect_y = y1 - 106
+	draw.line((x0 + 18, effect_y - 14, x1 - 18, effect_y - 14), fill=(64, 66, 78), width=1)
+	draw.text((x0 + 18, effect_y), "What It Does", font=FONT_LABEL, fill=(151, 217, 150))
+	draw_text(draw, (x0 + 18, effect_y + 24), focus.effect, FONT_SMALL, (232, 236, 224), x1 - x0 - 36, line_spacing=2, max_lines=3)
+
+
+def panel_filename(title: str) -> str:
+	return "attuned-" + title.lower().replace(" ", "-").replace("/", "-") + ".png"
+
+
+def render_panel(title: str, subtitle: str, foci: list[Focus]) -> Path:
+	accent = AFFINITY_COLORS[foci[0].affinity] if foci else (170, 170, 180)
+	canvas = make_background(accent)
+	draw = ImageDraw.Draw(canvas)
+
+	draw.rectangle((0, 0, WIDTH, 120), fill=(9, 10, 15, 218))
+	draw.text((64, 30), title, font=FONT_TITLE, fill=(255, 255, 255))
+	draw.text((66, 90), subtitle, font=FONT_SUBTITLE, fill=(199, 203, 214))
+	draw.text((WIDTH - 410, 39), "Actual in-game Focus assets", font=FONT_BODY_BOLD, fill=(234, 235, 242))
+	draw.text((WIDTH - 410, 68), "Lore, effect, affinity, faction, cost", font=FONT_SMALL, fill=(174, 178, 190))
+
+	cols = 5
+	rows = math.ceil(len(foci) / cols)
+	margin_x = 54
+	gap_x = 18
+	gap_y = 18
+	top = 150
+	card_w = (WIDTH - margin_x * 2 - gap_x * (cols - 1)) // cols
+	card_h = (HEIGHT - top - 54 - gap_y * (rows - 1)) // rows
+	for idx, focus in enumerate(foci):
+		col = idx % cols
+		row = idx // cols
+		x0 = margin_x + col * (card_w + gap_x)
+		y0 = top + row * (card_h + gap_y)
+		draw_focus_card(canvas, focus, (x0, y0, x0 + card_w, y0 + card_h))
+
+	OUT_DIR.mkdir(parents=True, exist_ok=True)
+	out = OUT_DIR / panel_filename(title)
+	canvas.convert("RGB").save(out, quality=96)
+	return out
+
+
+def render_all_foci_index(foci: list[Focus]) -> Path:
+	canvas = make_background((160, 91, 224))
+	draw = ImageDraw.Draw(canvas)
+	draw.rectangle((0, 0, WIDTH, 126), fill=(9, 10, 15, 225))
+	draw.text((64, 28), "Attuned Focus Collection", font=FONT_TITLE, fill=(255, 255, 255))
+	draw.text((66, 89), "Every displayed icon is copied directly from the mod's shipped item textures.", font=FONT_SUBTITLE, fill=(203, 207, 218))
+
+	cols = 11
+	card = 146
+	gap_x = 19
+	gap_y = 21
+	start_x = (WIDTH - cols * card - (cols - 1) * gap_x) // 2
+	start_y = 158
+	for idx, focus in enumerate(foci):
+		col = idx % cols
+		row = idx // cols
+		x = start_x + col * (card + gap_x)
+		y = start_y + row * (card + gap_y)
+		accent = AFFINITY_COLORS[focus.affinity]
+		rounded_rectangle(draw, (x, y, x + card, y + card), 10, (25, 27, 36, 236), outline=(*accent, 220), width=2)
+		sprite = first_frame(focus.texture).resize((82, 82), Image.Resampling.NEAREST)
+		canvas.alpha_composite(sprite, (x + 32, y + 15))
+		name_lines = textwrap.wrap(focus.name.replace(" Focus", ""), width=12)
+		text_y = y + 102
+		for line in name_lines[:2]:
+			w = draw.textlength(line, font=FONT_SMALL)
+			draw.text((x + (card - w) / 2, text_y), line, font=FONT_SMALL, fill=(238, 239, 244))
+			text_y += 18
+		aff = AFFINITY_LABELS[focus.affinity]
+		w = draw.textlength(aff, font=FONT_LABEL)
+		draw.text((x + (card - w) / 2, y + card - 24), aff, font=FONT_LABEL, fill=accent)
+
+	OUT_DIR.mkdir(parents=True, exist_ok=True)
+	out = OUT_DIR / "attuned-all-foci-real-assets.png"
+	canvas.convert("RGB").save(out, quality=96)
+	return out
+
+
+def load_hud_sprite(name: str, size: int = 92) -> Image.Image:
+	path = HUD_TEXTURE_DIR / name
+	if not path.exists():
+		raise FileNotFoundError(path)
+	return Image.open(path).convert("RGBA").resize((size, size), Image.Resampling.NEAREST)
+
+
+def focus_by_id(foci: list[Focus], item_id: str) -> Focus:
+	for focus in foci:
+		if focus.id == item_id:
+			return focus
+	raise KeyError(item_id)
+
+
+def draw_loadout(canvas: Image.Image, foci: list[Focus], x: int, y: int, icon_size: int = 42) -> None:
+	draw = ImageDraw.Draw(canvas)
+	for index, focus in enumerate(foci):
+		ix = x + index * (icon_size + 10)
+		rounded_rectangle(draw, (ix, y, ix + icon_size + 12, y + icon_size + 12), 7, (11, 12, 17, 245), outline=(74, 77, 91), width=1)
+		sprite = first_frame(focus.texture).resize((icon_size, icon_size), Image.Resampling.NEAREST)
+		canvas.alpha_composite(sprite, (ix + 6, y + 6))
+
+
+def draw_apex_card(
+	canvas: Image.Image,
+	box: tuple[int, int, int, int],
+	sprite_name: str,
+	title: str,
+	subtitle: str,
+	body: str,
+	loadout: list[Focus],
+	accent: tuple[int, int, int],
+	note: str | None = None,
+) -> None:
+	draw = ImageDraw.Draw(canvas)
+	x0, y0, x1, y1 = box
+	rounded_rectangle(draw, box, 14, (25, 27, 36, 238), outline=(*accent, 225), width=2)
+	draw.rectangle((x0 + 2, y0 + 2, x1 - 2, y0 + 58), fill=(*accent, 45))
+	draw.text((x0 + 22, y0 + 17), title, font=FONT_APEX_TITLE, fill=(255, 255, 255))
+	icon_box = (x0 + 24, y0 + 82, x0 + 140, y0 + 198)
+	rounded_rectangle(draw, icon_box, 12, (9, 10, 15, 255), outline=(82, 85, 100), width=2)
+	canvas.alpha_composite(load_hud_sprite(sprite_name, 96), (x0 + 34, y0 + 92))
+	draw.text((x0 + 160, y0 + 86), subtitle, font=FONT_BODY_BOLD, fill=(*accent, 255))
+	body_lines = 4 if (y1 - y0) <= 340 else 5
+	draw_text(draw, (x0 + 160, y0 + 116), body, FONT_APEX_BODY, (226, 228, 236), x1 - x0 - 186, line_spacing=5, max_lines=body_lines)
+	draw.text((x0 + 24, y1 - 106), "Example real Foci", font=FONT_LABEL, fill=(183, 187, 199))
+	draw_loadout(canvas, loadout, x0 + 24, y1 - 76)
+	if note:
+		draw_text(draw, (x0 + 278, y1 - 82), note, FONT_APEX_SMALL, (215, 216, 224), x1 - x0 - 302, line_spacing=3, max_lines=3)
+
+
+def render_apex_stances_panel(foci: list[Focus]) -> Path:
+	canvas = make_background((180, 83, 214))
+	draw = ImageDraw.Draw(canvas)
+	draw.rectangle((0, 0, WIDTH, 134), fill=(9, 10, 15, 226))
+	draw.text((64, 24), "Apex, Discord & Neutral", font=FONT_TITLE, fill=(255, 255, 255))
+	draw.text((66, 86), "Current release behavior, shown with real HUD sprites and real Focus assets.", font=FONT_SUBTITLE, fill=(202, 206, 218))
+	draw.text((WIDTH - 512, 38), "Apex gate: near-full Focus build", font=FONT_BODY_BOLD, fill=(236, 237, 244))
+	draw.text((WIDTH - 512, 68), "Near full capacity + combat Resonance", font=FONT_SMALL, fill=(175, 179, 192))
+	draw.text((WIDTH - 512, 92), "Neutral Foci block committed Apex", font=FONT_SMALL, fill=(175, 179, 192))
+
+	apex_cards = [
+		(
+			"execute.png",
+			"Execute",
+			"Fury Apex",
+			"Finish low-health foes. Stronger against Bastion; neutralized when countered.",
+			["edge_focus", "frenzy_focus", "cinder_focus", "bloodfury_focus"],
+			AFFINITY_COLORS["fury"],
+		),
+		(
+			"unyielding.png",
+			"Unyielding",
+			"Bastion Apex",
+			"Caps incoming blows and ignores knockback. Built for holding ground.",
+			["iron_focus", "bulwark_focus", "aegis_focus", "vital_focus"],
+			AFFINITY_COLORS["bastion"],
+		),
+		(
+			"untouchable.png",
+			"Untouchable",
+			"Zephyr Apex",
+			"Dodge attacks while sprinting. Strongest when momentum stays alive.",
+			["swift_focus", "leap_focus", "stormcall_focus", "tide_focus"],
+			AFFINITY_COLORS["zephyr"],
+		),
+		(
+			"judgment.png",
+			"Judgment",
+			"Holy Apex",
+			"Marks wounded Fury-aligned foes for a decisive strike.",
+			["votive_focus", "oathguard_focus", "sunlance_focus", "threshold_focus"],
+			AFFINITY_COLORS["holy"],
+		),
+	]
+
+	card_w = 424
+	card_h = 326
+	start_x = 54
+	gap = 28
+	for index, (sprite, title, subtitle, body, ids, accent) in enumerate(apex_cards):
+		x = start_x + index * (card_w + gap)
+		draw_apex_card(
+			canvas,
+			(x, 164, x + card_w, 164 + card_h),
+			sprite,
+			title,
+			subtitle,
+			body,
+			[focus_by_id(foci, item_id) for item_id in ids],
+			accent,
+		)
+
+	stance_cards = [
+		(
+			"maelstrom.png",
+			"Maelstrom Apex",
+			"Discord capstone",
+			"Run every shipped affinity near full capacity. At resonance, hits deal +10% direct melee damage; the Apex briefly scrambles affinity foes.",
+			["edge_focus", "iron_focus", "swift_focus", "sunlance_focus"],
+			(221, 92, 230),
+			"Requires every shipped affinity active. Neutral Foci may join if the build stays near full capacity.",
+		),
+		(
+			"stillpoint.png",
+			"Stillpoint Apex",
+			"Neutral capstone",
+			"Run only neutral active Foci near full capacity. At resonance, it suppresses affinity pressure and uses Absorption pulses.",
+			["linecast_focus", "harborlight_focus", "driftglass_focus", "netmender_focus"],
+			AFFINITY_COLORS["neutral"],
+			"Requires every active Focus to be neutral. Any active affinity Focus breaks the pattern.",
+		),
+	]
+	wide_w = 878
+	for index, (sprite, title, subtitle, body, ids, accent, note) in enumerate(stance_cards):
+		x = 54 + index * (wide_w + 56)
+		draw_apex_card(
+			canvas,
+			(x, 548, x + wide_w, 548 + 388),
+			sprite,
+			title,
+			subtitle,
+			body,
+			[focus_by_id(foci, item_id) for item_id in ids],
+			accent,
+			note,
+		)
+
+	draw.rectangle((54, 974, WIDTH - 54, 1032), fill=(10, 11, 16, 220), outline=(64, 66, 78))
+	draw.text((76, 992), "Maelstrom and Stillpoint use shipped HUD sprites and real Focus assets in the current release.", font=FONT_BODY_BOLD, fill=(240, 223, 176))
+
+	OUT_DIR.mkdir(parents=True, exist_ok=True)
+	out = OUT_DIR / "attuned-apex-discord-neutral.png"
+	canvas.convert("RGB").save(out, quality=96)
+	return out
+
+
+def main() -> None:
+	foci = load_foci()
+	by_affinity: dict[str, list[Focus]] = {}
+	for focus in foci:
+		by_affinity.setdefault(focus.affinity, []).append(focus)
+	for group in by_affinity.values():
+		group.sort(key=lambda focus: (focus.faction, focus.name))
+
+	outputs = [
+		render_all_foci_index(sorted(foci, key=lambda focus: focus.name)),
+		render_apex_stances_panel(foci),
+	]
+	for affinity, title, subtitle in PANEL_ORDER:
+		outputs.append(render_panel(title, subtitle, by_affinity[affinity]))
+
+	neutral = by_affinity["neutral"]
+	outputs.append(render_panel("Neutral Foci I", "Utility, exploration, farming, mining, and survival relics with no affinity lock.", neutral[:10]))
+	outputs.append(render_panel("Neutral Foci II", "Seafarers, Unseen, Verdant, travel, and mixed-build utility relics.", neutral[10:]))
+
+	print("Generated Modrinth gallery panels:")
+	for output in outputs:
+		print(output)
+
+
+if __name__ == "__main__":
+	main()

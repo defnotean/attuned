@@ -18,6 +18,7 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Locale;
 import java.util.Optional;
 
 /**
@@ -59,10 +60,6 @@ public final class CombatHud {
 	// the sprite atlas (same path vanilla heart/hunger icons use) gets us proper
 	// filtering and mipmapping at any HUD render size, so the gem face and the
 	// centred icon stay readable when the gem is downscaled to 16-20 px.
-	private static final Identifier EXECUTE_SPRITE = Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "hud/execute");
-	private static final Identifier UNYIELDING_SPRITE = Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "hud/unyielding");
-	private static final Identifier UNTOUCHABLE_SPRITE = Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "hud/untouchable");
-	private static final Identifier JUDGMENT_SPRITE = Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "hud/judgment");
 	private static final Identifier FURY_SPRITE = Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "hud/affinity_fury");
 	private static final Identifier BASTION_SPRITE = Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "hud/affinity_bastion");
 	private static final Identifier ZEPHYR_SPRITE = Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "hud/affinity_zephyr");
@@ -141,12 +138,12 @@ public final class CombatHud {
 		if (!showOwn && !hasTarget) {
 			return;
 		}
-		boolean apexArmed = Resonance.atApex(player);
+		Optional<Apex.Capstone> capstone = Apex.capstoneOf(player);
+		boolean apexArmed = capstone.isPresent() && Resonance.atApex(player);
 
 		// The affinity actually painted on the player gem — committed first, then
 		// the Apex fallback for legacy state, so the glyph routing matches the
 		// bezel colour rather than diverging from it.
-		Optional<Affinity> playerAffinity = committed.isPresent() ? committed : Apex.affinityOf(player);
 		Matchup matchup = matchup(committed, targetAffinity);
 
 		int screenW = graphics.guiWidth();
@@ -172,7 +169,8 @@ public final class CombatHud {
 
 		// Player gem with a dark bezel — same construction as the Focus panel gem.
 		// The player's own gem is never "targeted" — that flag is for the mob gem.
-			drawGem(graphics, rowX, rowY, PLAYER_GEM_SIZE, playerAffinity.orElse(null), discord, false, apexArmed);
+			drawPlayerGem(graphics, rowX, rowY, PLAYER_GEM_SIZE,
+				committed.orElse(null), discord, capstone.orElse(null), apexArmed);
 
 		// Matchup state markers — gold pulse halo for empowered, red dim overlay
 		// for neutralized. Neutral and "no target" cases leave the gem plain.
@@ -241,8 +239,21 @@ public final class CombatHud {
 	public static void drawGem(GuiGraphicsExtractor graphics, int x, int y, int size,
 			@Nullable Affinity affinity, boolean discord, boolean targeted, boolean atApex) {
 		Identifier sprite = atApex && affinity != null && !discord
-			? capstoneSpriteFor(affinity)
+			? capstoneSpriteFor(Apex.Capstone.ofAffinity(affinity))
 			: affinitySpriteFor(affinity, discord);
+		drawGemSprite(graphics, x, y, size, targeted, sprite);
+	}
+
+	public static void drawPlayerGem(GuiGraphicsExtractor graphics, int x, int y, int size,
+			@Nullable Affinity affinity, boolean discord, @Nullable Apex.Capstone capstone, boolean atApex) {
+		Identifier sprite = atApex && capstone != null
+			? capstoneSpriteFor(capstone)
+			: affinitySpriteFor(affinity, discord);
+		drawGemSprite(graphics, x, y, size, false, sprite);
+	}
+
+	private static void drawGemSprite(GuiGraphicsExtractor graphics, int x, int y, int size,
+			boolean targeted, Identifier sprite) {
 		graphics.blitSprite(net.minecraft.client.renderer.RenderPipelines.GUI_TEXTURED,
 			sprite, x, y, size, size);
 		if (targeted) {
@@ -265,13 +276,9 @@ public final class CombatHud {
 		};
 	}
 
-	private static Identifier capstoneSpriteFor(Affinity affinity) {
-		return switch (affinity) {
-			case FURY -> EXECUTE_SPRITE;
-			case BASTION -> UNYIELDING_SPRITE;
-			case ZEPHYR -> UNTOUCHABLE_SPRITE;
-			case HOLY -> JUDGMENT_SPRITE;
-		};
+	private static Identifier capstoneSpriteFor(Apex.Capstone capstone) {
+		return Identifier.fromNamespaceAndPath(Attuned.MOD_ID,
+			"hud/" + capstone.name().toLowerCase(Locale.ROOT));
 	}
 
 	private static void drawOverlaySprite(GuiGraphicsExtractor graphics, Identifier sprite, int gemX, int gemY, int size) {

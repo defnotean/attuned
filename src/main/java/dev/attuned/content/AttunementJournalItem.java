@@ -22,6 +22,39 @@ import net.minecraft.world.level.Level;
  * client screen instead of Minecraft's vanilla written-book screen.
  */
 public class AttunementJournalItem extends WrittenBookItem {
+	public static final List<String> GUIDE_PAGE_KEYS = List.of(
+		"journal.attuned.page1",
+		"journal.attuned.page2",
+		"journal.attuned.page3",
+		"journal.attuned.page4",
+		"journal.attuned.page5",
+		"journal.attuned.page6",
+		"journal.attuned.page7",
+		"journal.attuned.page30",
+		"journal.attuned.page31",
+		"journal.attuned.page8",
+		"journal.attuned.page9",
+		"journal.attuned.page10",
+		"journal.attuned.page11",
+		"journal.attuned.page12",
+		"journal.attuned.page13",
+		"journal.attuned.page14",
+		"journal.attuned.page15",
+		"journal.attuned.page16",
+		"journal.attuned.page17",
+		"journal.attuned.page29",
+		"journal.attuned.page18",
+		"journal.attuned.page19",
+		"journal.attuned.page20",
+		"journal.attuned.page21",
+		"journal.attuned.page22",
+		"journal.attuned.page23",
+		"journal.attuned.page24",
+		"journal.attuned.page25",
+		"journal.attuned.page26",
+		"journal.attuned.page27",
+		"journal.attuned.page28"
+	);
 	private static final WrittenBookContent GUIDE_CONTENT = createGuideContent();
 
 	public AttunementJournalItem(Properties properties) {
@@ -51,36 +84,12 @@ public class AttunementJournalItem extends WrittenBookItem {
 	}
 
 	private static WrittenBookContent createGuideContent() {
-		List<Filterable<Component>> pages = List.of(
-			Filterable.passThrough(Component.translatable("journal.attuned.page1")),
-			Filterable.passThrough(Component.translatable("journal.attuned.page2")),
-			Filterable.passThrough(Component.translatable("journal.attuned.page3")),
-			Filterable.passThrough(Component.translatable("journal.attuned.page4")),
-			Filterable.passThrough(Component.translatable("journal.attuned.page5")),
-			Filterable.passThrough(Component.translatable("journal.attuned.page6")),
-			Filterable.passThrough(Component.translatable("journal.attuned.page7")),
-			Filterable.passThrough(Component.translatable("journal.attuned.page8")),
-			Filterable.passThrough(Component.translatable("journal.attuned.page9")),
-			Filterable.passThrough(Component.translatable("journal.attuned.page10")),
-			Filterable.passThrough(Component.translatable("journal.attuned.page11")),
-			Filterable.passThrough(Component.translatable("journal.attuned.page12")),
-			Filterable.passThrough(Component.translatable("journal.attuned.page13")),
-			Filterable.passThrough(Component.translatable("journal.attuned.page14")),
-			Filterable.passThrough(Component.translatable("journal.attuned.page15")),
-			Filterable.passThrough(Component.translatable("journal.attuned.page16")),
-			Filterable.passThrough(Component.translatable("journal.attuned.page17")),
-			Filterable.passThrough(Component.translatable("journal.attuned.page18")),
-			Filterable.passThrough(Component.translatable("journal.attuned.page19")),
-			Filterable.passThrough(Component.translatable("journal.attuned.page20")),
-			Filterable.passThrough(Component.translatable("journal.attuned.page21")),
-			Filterable.passThrough(Component.translatable("journal.attuned.page22")),
-			Filterable.passThrough(Component.translatable("journal.attuned.page23")),
-			Filterable.passThrough(Component.translatable("journal.attuned.page24")),
-			Filterable.passThrough(Component.translatable("journal.attuned.page25")),
-			Filterable.passThrough(Component.translatable("journal.attuned.page26")),
-			Filterable.passThrough(Component.translatable("journal.attuned.page27")),
-			Filterable.passThrough(Component.translatable("journal.attuned.page28"))
-		);
+		List<Filterable<Component>> pages = GUIDE_PAGE_KEYS.stream()
+			.map(key -> {
+				Component page = Component.translatable(key);
+				return Filterable.passThrough(page);
+			})
+			.toList();
 		return new WrittenBookContent(
 			Filterable.passThrough("Attunement Journal"),
 			"Attuned",

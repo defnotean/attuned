@@ -1,18 +1,22 @@
 package dev.attuned.combat;
 
-import dev.attuned.AttunedPlayerCleanup;
 import dev.attuned.AttunedAdvancements;
+import dev.attuned.AttunedPlayerCleanup;
 import dev.attuned.api.focus.Affinity;
+import dev.attuned.api.focus.AffinityColors;
 import dev.attuned.api.focus.FocusDefinition;
 import dev.attuned.attunement.AttunedAttachments;
 import dev.attuned.attunement.AttunedInv;
 import dev.attuned.attunement.Attunement;
+import java.util.ArrayList;
+import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.particles.ParticleTypes;
@@ -31,158 +35,185 @@ import net.minecraft.world.entity.npc.villager.AbstractVillager;
 import net.minecraft.world.entity.player.Player;
 
 /**
- * The Apex capstone: a per-affinity passive that switches on only when a player
- * is fully committed to one affinity — at least {@link #MIN_FOCI} active Foci,
- * all sharing one affinity (no neutral Foci), with the attunement budget so
- * nearly spent that no further Focus could fit.
- *
- * <p>Every capstone is wired into the Fury &gt; Bastion &gt; Zephyr &gt; Fury
- * counter-cycle: it is <b>empowered</b> against the affinity it beats, behaves
- * <b>normally</b> against the unaffiliated, and is <b>neutralized</b> by the
- * affinity that beats it — so even a maxed build still answers to
- * rock-paper-scissors.
- *
- * <ul>
- *   <li><b>Fury — Execute:</b> finishes a low-health mob. Empowered against
- *       Bastion mobs (higher health threshold); neutralized against Zephyr.</li>
- *   <li><b>Bastion — Unyielding:</b> caps how much one hit can remove. The cap
- *       tightens against Zephyr attackers and is pierced entirely by Fury.
- *       Knockback is always ignored ({@code LivingEntityKnockbackMixin}).</li>
- *   <li><b>Zephyr — Untouchable:</b> a chance to dodge attacks while sprinting.
- *       Higher against Fury attackers; nil against Bastion.</li>
- * </ul>
- *
- * <p>A per-tick check announces to the player — with a sound and a chat line —
- * when a capstone switches on or off, so the passive is never silent.
+ * Apex capstones: late-build passives gated by Focus layout, nearly full
+ * attunement capacity, and combat Resonance.
  */
 public final class Apex {
 	private Apex() {}
 
-	/** Minimum active Foci for an Apex build. */
+	public enum Capstone {
+		EXECUTE("Execute", "Your strikes finish off low-health foes.", Affinity.FURY,
+			ChatFormatting.RED, Affinity.FURY.argb()),
+		UNYIELDING("Unyielding", "No single blow can land hard, and knockback is ignored.", Affinity.BASTION,
+			ChatFormatting.GOLD, Affinity.BASTION.argb()),
+		UNTOUCHABLE("Untouchable", "A chance to dodge attacks outright while sprinting.", Affinity.ZEPHYR,
+			ChatFormatting.AQUA, Affinity.ZEPHYR.argb()),
+		JUDGMENT("Judgment", "Judgment marks wounded Fury-aligned foes for a decisive strike.", Affinity.HOLY,
+			ChatFormatting.YELLOW, Affinity.HOLY.argb()),
+		MAELSTROM("Maelstrom", "Discord Apex adds force to direct hits and scrambles struck foes.", null,
+			ChatFormatting.LIGHT_PURPLE, AffinityColors.DISCORD_ARGB),
+		STILLPOINT("Stillpoint", "Neutral Apex grants Absorption pulses and denies affinity pressure.", null,
+			ChatFormatting.GRAY, AffinityColors.NEUTRAL_ARGB);
+
+		private final String displayName;
+		private final String description;
+		private final Affinity affinity;
+		private final ChatFormatting chatColor;
+		private final int argb;
+
+		Capstone(String displayName, String description, Affinity affinity, ChatFormatting chatColor, int argb) {
+			this.displayName = displayName;
+			this.description = description;
+			this.affinity = affinity;
+			this.chatColor = chatColor;
+			this.argb = argb;
+		}
+
+		public String displayName() {
+			return displayName;
+		}
+
+		public String description() {
+			return description;
+		}
+
+		public Optional<Affinity> affinity() {
+			return Optional.ofNullable(affinity);
+		}
+
+		public ChatFormatting chatColor() {
+			return chatColor;
+		}
+
+		public int argb() {
+			return argb;
+		}
+
+		public static Capstone ofAffinity(Affinity affinity) {
+			return switch (affinity) {
+				case FURY -> EXECUTE;
+				case BASTION -> UNYIELDING;
+				case ZEPHYR -> UNTOUCHABLE;
+				case HOLY -> JUDGMENT;
+			};
+		}
+	}
+
 	private static final int MIN_FOCI = 4;
-	/** Apex requires the budget within this many points of full. */
 	private static final int BUDGET_SLACK = 1;
 
-	/** Damage used to finish an executed mob — lethal through any armour. */
 	private static final float EXECUTE_DAMAGE = 100000.0F;
-
-	/** Fury execute health threshold against a neutral target. */
 	private static final float EXECUTE_NORMAL = 0.20F;
-	/** Fury execute threshold against the affinity Fury beats — devastating. */
 	private static final float EXECUTE_EMPOWERED = 0.35F;
-
-	/** Bastion's per-hit damage cap (fraction of max health) vs a neutral attacker. */
 	private static final float CAP_NORMAL = 0.15F;
-	/** Bastion's cap against the affinity Bastion beats — tighter. */
 	private static final float CAP_EMPOWERED = 0.10F;
-
-	/** Zephyr dodge chance against a neutral attacker. */
 	private static final float DODGE_NORMAL = 0.40F;
-	/** Zephyr dodge chance against the affinity Zephyr beats. */
 	private static final float DODGE_EMPOWERED = 0.65F;
-
-	/** Holy Judgment only judges wounded hostile mobs, avoiding full-health burst. */
 	private static final float JUDGMENT_THRESHOLD = 0.30F;
-	/** Holy Judgment adds damage instead of executing outright. */
 	private static final float JUDGMENT_DAMAGE_BONUS = 0.40F;
+	private static final float MAELSTROM_DAMAGE_BONUS = 0.10F;
+	private static final int MAELSTROM_SCRAMBLE_TICKS = 60;
+	private static final int STILLPOINT_ABSORPTION_TICKS = 60;
+	private static final int STILLPOINT_ABSORPTION_COOLDOWN_TICKS = 160;
 
-	/** Per-player Apex affinity as of last tick, for spotting on/off changes. */
-	private static final Map<UUID, Affinity> apexState = new HashMap<>();
-	/**
-	 * Per-player armed flag as of last tick. A capstone is <em>armed</em> when
-	 * the player's Foci qualify for Apex <em>and</em> resonance is at or above
-	 * the gating threshold. Tracking arming separately from affinity lets us
-	 * announce the dormant / rearmed transitions that happen when resonance
-	 * crosses the threshold without the Foci changing.
-	 */
+	private static final Map<UUID, Capstone> apexState = new HashMap<>();
 	private static final Map<UUID, Boolean> armedState = new HashMap<>();
+	private static final Map<ScrambleKey, Long> maelstromScrambles = new HashMap<>();
+	private static final Map<UUID, Long> stillpointPulses = new HashMap<>();
 
-	/** How a capstone fares against another combatant's affinity. */
 	private enum Matchup { EMPOWERED, NORMAL, NEUTRALIZED }
 
-	/** Registers the Zephyr dodge veto and the activation watcher. */
 	public static void init() {
 		ServerLivingEntityEvents.ALLOW_DAMAGE.register(Apex::allowDamage);
+		ServerLivingEntityEvents.AFTER_DAMAGE.register(Apex::afterDamage);
+		ServerLivingEntityEvents.AFTER_DEATH.register((entity, source) ->
+			maelstromScrambles.keySet().removeIf(key -> key.targetId().equals(entity.getUUID())));
 		ServerTickEvents.END_SERVER_TICK.register(Apex::tick);
+		ServerLifecycleEvents.SERVER_STOPPED.register(server -> {
+			apexState.clear();
+			armedState.clear();
+			maelstromScrambles.clear();
+			stillpointPulses.clear();
+		});
 		AttunedPlayerCleanup.onForget(uuid -> {
 			apexState.remove(uuid);
 			armedState.remove(uuid);
+			stillpointPulses.remove(uuid);
+			maelstromScrambles.keySet().removeIf(key -> key.playerId().equals(uuid));
 		});
 	}
 
-	/**
-	 * The affinity a player has reached Apex in, if any. Apex requires at least
-	 * {@link #MIN_FOCI} active Foci, every one of them on the same affinity (no
-	 * neutral Foci), and the budget all but spent.
-	 */
-	public static Optional<Affinity> affinityOf(Player player) {
-		List<Integer> active = Attunement.activeSlots(player);
-		if (active.size() < MIN_FOCI) {
+	public static Optional<Capstone> resolveCapstone(List<Optional<Affinity>> activeAffinities,
+			int used, int capacity) {
+		if (activeAffinities.size() < MIN_FOCI) {
 			return Optional.empty();
 		}
-		AttunedInv inv = AttunedAttachments.getInventory(player);
-		Affinity shared = null;
-		for (int slot : active) {
-			Optional<Affinity> affinity = Attunement.definitionFor(player, inv.get(slot))
-				.flatMap(FocusDefinition::affinity);
-			if (affinity.isEmpty()) {
-				return Optional.empty();
-			}
-			if (shared == null) {
-				shared = affinity.get();
-			} else if (shared != affinity.get()) {
-				return Optional.empty();
+		if (used > capacity || capacity - used > BUDGET_SLACK) {
+			return Optional.empty();
+		}
+
+		EnumMap<Affinity, Integer> counts = new EnumMap<>(Affinity.class);
+		int neutral = 0;
+		for (Optional<Affinity> affinity : activeAffinities) {
+			if (affinity.isPresent()) {
+				counts.merge(affinity.get(), 1, Integer::sum);
+			} else {
+				neutral++;
 			}
 		}
-		if (shared == null) {
-			return Optional.empty();
+		if (counts.isEmpty()) {
+			return neutral == activeAffinities.size()
+				? Optional.of(Capstone.STILLPOINT)
+				: Optional.empty();
 		}
-		if (Attunement.capacity(player) - Attunement.used(player) > BUDGET_SLACK) {
-			return Optional.empty();
+		if (counts.size() == 1 && neutral == 0) {
+			return Optional.of(Capstone.ofAffinity(counts.keySet().iterator().next()));
 		}
-		return Optional.of(shared);
+		if (counts.size() == Affinity.values().length) {
+			return Optional.of(Capstone.MAELSTROM);
+		}
+		return Optional.empty();
 	}
 
-	/** Whether a player is at Apex in a specific affinity. */
+	public static Optional<Capstone> capstoneOf(Player player) {
+		List<Integer> active = Attunement.activeSlots(player);
+		List<Optional<Affinity>> activeAffinities = new ArrayList<>(active.size());
+		AttunedInv inv = AttunedAttachments.getInventory(player);
+		for (int slot : active) {
+			activeAffinities.add(Attunement.definitionFor(player, inv.get(slot))
+				.flatMap(FocusDefinition::affinity));
+		}
+		return resolveCapstone(activeAffinities, Attunement.used(player), Attunement.capacity(player));
+	}
+
+	public static Optional<Affinity> affinityOf(Player player) {
+		return capstoneOf(player).flatMap(Capstone::affinity);
+	}
+
 	public static boolean isAt(Player player, Affinity affinity) {
 		return affinityOf(player).filter(a -> a == affinity).isPresent();
 	}
 
-	/** The capstone's display name for an affinity. */
+	public static boolean isAt(Player player, Capstone capstone) {
+		return capstoneOf(player).filter(c -> c == capstone).isPresent();
+	}
+
 	public static String capstoneName(Affinity affinity) {
-		return switch (affinity) {
-			case FURY -> "Execute";
-			case BASTION -> "Unyielding";
-			case ZEPHYR -> "Untouchable";
-			case HOLY -> "Judgment";
-		};
+		return Capstone.ofAffinity(affinity).displayName();
 	}
 
-	/** A one-line description of what an affinity's capstone does. */
 	public static String capstoneDescription(Affinity affinity) {
-		return switch (affinity) {
-			case FURY -> "Your strikes finish off low-health foes.";
-			case BASTION -> "No single blow can land hard, and knockback is ignored.";
-			case ZEPHYR -> "A chance to dodge attacks outright while sprinting.";
-			case HOLY -> "Judgment marks wounded Fury-aligned foes for a decisive strike.";
-		};
+		return Capstone.ofAffinity(affinity).description();
 	}
 
-	/**
-	 * Applies the damage-shaping capstones to one hit — the Bastion cap on a
-	 * defending player and the Fury execute on a low-health mob — each scaled by
-	 * the affinity matchup. The capstone only fires while the player's Resonance
-	 * is at or above the Apex threshold. Called from {@code LivingEntityHurtMixin}.
-	 */
 	public static float adjustDamage(LivingEntity defender, DamageSource source, float amount) {
 		if (amount <= 0.0F) {
 			return amount;
 		}
 		LivingEntity attacker = AttunedCombat.attackerOf(source);
 
-		// Bastion — Unyielding: cap one hit, unless a Fury attacker pierces it.
 		if (defender instanceof Player defenderPlayer
-				&& isAt(defenderPlayer, Affinity.BASTION)
+				&& isAt(defenderPlayer, Capstone.UNYIELDING)
 				&& Resonance.atApex(defenderPlayer)) {
 			Matchup matchup = matchupAgainst(Affinity.BASTION, attacker);
 			if (matchup != Matchup.NEUTRALIZED) {
@@ -194,17 +225,11 @@ public final class Apex {
 			}
 		}
 
-		// Fury — Execute: finish a low-health mob, unless its affinity counters Fury.
-		// Restricted to direct melee from the Apex player and never against their
-		// own tamed pets or villagers. Fire ticks, drowning and friendly fire
-		// must not one-shot something just because the player has Fury Apex.
 		if (!(defender instanceof Player) && defender.getMaxHealth() > 0.0F
 				&& attacker instanceof Player attackerPlayer
-				&& isAt(attackerPlayer, Affinity.FURY)
+				&& isAt(attackerPlayer, Capstone.EXECUTE)
 				&& Resonance.atApex(attackerPlayer)
-				&& source.getDirectEntity() == attackerPlayer
-				&& !isOwnPet(defender, attackerPlayer)
-				&& !(defender instanceof AbstractVillager)) {
+				&& isApexMeleeTarget(defender, attackerPlayer, source)) {
 			Matchup matchup = matchupAgainst(Affinity.FURY, defender);
 			if (matchup != Matchup.NEUTRALIZED) {
 				float threshold = matchup == Matchup.EMPOWERED ? EXECUTE_EMPOWERED : EXECUTE_NORMAL;
@@ -213,29 +238,80 @@ public final class Apex {
 				}
 			}
 		}
-		// Holy - Judgment: a decisive but non-executing strike against wounded
-		// Fury-aligned mobs. Zephyr-affinity targets counter and neutralize it.
+
 		if (!(defender instanceof Player) && defender.getMaxHealth() > 0.0F
 				&& attacker instanceof Player attackerPlayer
-				&& isAt(attackerPlayer, Affinity.HOLY)
+				&& isAt(attackerPlayer, Capstone.JUDGMENT)
 				&& Resonance.atApex(attackerPlayer)
-				&& source.getDirectEntity() == attackerPlayer
-				&& !isOwnPet(defender, attackerPlayer)
-				&& !(defender instanceof AbstractVillager)) {
+				&& isApexMeleeTarget(defender, attackerPlayer, source)) {
 			Matchup matchup = matchupAgainst(Affinity.HOLY, defender);
 			if (matchup == Matchup.EMPOWERED
 					&& defender.getHealth() / defender.getMaxHealth() <= JUDGMENT_THRESHOLD) {
 				amount *= (1.0F + JUDGMENT_DAMAGE_BONUS);
 			}
 		}
+
+		if (!(defender instanceof Player) && defender.getMaxHealth() > 0.0F
+				&& attacker instanceof Player attackerPlayer
+				&& isAt(attackerPlayer, Capstone.MAELSTROM)
+				&& Resonance.atApex(attackerPlayer)
+				&& isApexMeleeTarget(defender, attackerPlayer, source)
+				&& MobAffinities.of(defender).isPresent()) {
+			amount *= (1.0F + MAELSTROM_DAMAGE_BONUS);
+			markScrambled(attackerPlayer, defender);
+		}
 		return amount;
 	}
 
-	/**
-	 * Whether {@code defender} is a {@link TamableAnimal} owned by
-	 * {@code attacker}. Used to make sure a player's own wolves, cats and
-	 * parrots are never the target of an Apex finisher.
-	 */
+	private static void afterDamage(LivingEntity defender, DamageSource source,
+			float originalDamage, float dealtDamage, boolean blocked) {
+		if (dealtDamage <= 0.0F || !(defender instanceof Player defenderPlayer)) {
+			return;
+		}
+		LivingEntity attacker = AttunedCombat.attackerOf(source);
+		if (attacker != null
+				&& isAt(defenderPlayer, Capstone.STILLPOINT)
+				&& Resonance.atApex(defenderPlayer)
+				&& hasAffinityPressure(attacker)) {
+			pulseStillpoint(defenderPlayer);
+		}
+	}
+
+	public static boolean suppressesIncomingAdvantage(Player defender, LivingEntity attacker) {
+		if (attacker == null) {
+			return false;
+		}
+		if (isAt(defender, Capstone.STILLPOINT)
+				&& Resonance.atApex(defender)
+				&& hasAffinityPressure(attacker)) {
+			return true;
+		}
+		return isAt(defender, Capstone.MAELSTROM)
+			&& Resonance.atApex(defender)
+			&& isScrambledBy(attacker, defender);
+	}
+
+	static boolean hasAffinityPressure(LivingEntity entity) {
+		if (entity instanceof Player player) {
+			return Attunement.isDiscord(player) || Attunement.committedAffinity(player).isPresent();
+		}
+		return AttunedCombat.affinityOf(entity).isPresent();
+	}
+
+	private static boolean isApexMeleeTarget(LivingEntity defender, Player attacker, DamageSource source) {
+		return isDirectMelee(attacker, source)
+			&& !isOwnPet(defender, attacker)
+			&& !(defender instanceof AbstractVillager);
+	}
+
+	private static boolean isDirectMelee(Player player, DamageSource source) {
+		if (source.getDirectEntity() != player) {
+			return false;
+		}
+		return !source.is(net.minecraft.tags.DamageTypeTags.IS_PROJECTILE)
+			&& !source.is(net.minecraft.tags.DamageTypeTags.IS_EXPLOSION);
+	}
+
 	private static boolean isOwnPet(LivingEntity defender, Player attacker) {
 		if (!(defender instanceof TamableAnimal pet)) {
 			return false;
@@ -244,29 +320,55 @@ public final class Apex {
 		return ownerRef != null && attacker.getUUID().equals(ownerRef.getUUID());
 	}
 
-	/** Whether knockback against this entity should be ignored (Bastion Apex at Resonance). */
+	private static void markScrambled(Player player, LivingEntity target) {
+		long expiresAt = target.level().getGameTime() + MAELSTROM_SCRAMBLE_TICKS;
+		maelstromScrambles.put(new ScrambleKey(target.getUUID(), player.getUUID()), expiresAt);
+	}
+
+	private static boolean isScrambledBy(LivingEntity target, Player player) {
+		ScrambleKey key = new ScrambleKey(target.getUUID(), player.getUUID());
+		Long expiresAt = maelstromScrambles.get(key);
+		if (expiresAt == null) {
+			return false;
+		}
+		if (target.level().getGameTime() >= expiresAt) {
+			maelstromScrambles.remove(key);
+			return false;
+		}
+		return true;
+	}
+
+	private static void pulseStillpoint(Player player) {
+		long now = player.level().getGameTime();
+		Long last = stillpointPulses.get(player.getUUID());
+		if (last != null && now - last < STILLPOINT_ABSORPTION_COOLDOWN_TICKS) {
+			return;
+		}
+		stillpointPulses.put(player.getUUID(), now);
+		player.addEffect(new MobEffectInstance(MobEffects.ABSORPTION,
+			STILLPOINT_ABSORPTION_TICKS, 0, true, true, true));
+	}
+
 	public static boolean ignoresKnockback(LivingEntity entity) {
 		return entity instanceof Player player
-			&& isAt(player, Affinity.BASTION)
+			&& isAt(player, Capstone.UNYIELDING)
 			&& Resonance.atApex(player);
 	}
 
-	/** {@code ALLOW_DAMAGE} veto implementing the Zephyr dodge. */
 	private static boolean allowDamage(LivingEntity entity, DamageSource source, float amount) {
 		if (!(entity instanceof ServerPlayer player) || !player.isSprinting()) {
 			return true;
 		}
-		if (!isAt(player, Affinity.ZEPHYR) || !Resonance.atApex(player)) {
+		if (!isAt(player, Capstone.UNTOUCHABLE) || !Resonance.atApex(player)) {
 			return true;
 		}
-		// Only a blow from a combatant can be dodged — never fall, fire or the void.
 		LivingEntity attacker = AttunedCombat.attackerOf(source);
 		if (attacker == null) {
 			return true;
 		}
 		Matchup matchup = matchupAgainst(Affinity.ZEPHYR, attacker);
 		if (matchup == Matchup.NEUTRALIZED) {
-			return true; // Bastion's blows always land.
+			return true;
 		}
 		float chance = matchup == Matchup.EMPOWERED ? DODGE_EMPOWERED : DODGE_NORMAL;
 		if (player.getRandom().nextFloat() >= chance) {
@@ -276,12 +378,6 @@ public final class Apex {
 		return false;
 	}
 
-	/**
-	 * How an Apex capstone of {@code capstone} affinity fares against another
-	 * combatant: empowered when the capstone's affinity counters theirs,
-	 * neutralized when theirs counters the capstone, normal otherwise (an
-	 * unaffiliated combatant, or a mirror match).
-	 */
 	private static Matchup matchupAgainst(Affinity capstone, LivingEntity other) {
 		Optional<Affinity> otherAffinity =
 			other == null ? Optional.empty() : AttunedCombat.affinityOf(other);
@@ -298,30 +394,13 @@ public final class Apex {
 		return Matchup.NORMAL;
 	}
 
-	/**
-	 * Each tick, watch every player for four distinct Apex transitions and
-	 * narrate each one to the player so the capstone is never silent.
-	 *
-	 * <p>The capstone has two independent inputs, the player's Foci layout
-	 * and their resonance, and either can flip the capstone on or off. The
-	 * transitions are:</p>
-	 *
-	 * <ul>
-	 *   <li><b>gained</b>: a player who had no Apex affinity now does and is at
-	 *       or above the resonance threshold.</li>
-	 *   <li><b>dormant</b>: a player who was armed still has the same Apex
-	 *       affinity but resonance has fallen below the threshold.</li>
-	 *   <li><b>rearmed</b>: a player who went dormant has crossed resonance
-	 *       back over the threshold with the same Apex affinity.</li>
-	 *   <li><b>lost</b>: a player no longer qualifies for any Apex (their Foci
-	 *       layout has changed).</li>
-	 * </ul>
-	 */
 	private static void tick(MinecraftServer server) {
+		long nowTime = server.overworld().getGameTime();
+		maelstromScrambles.entrySet().removeIf(entry -> nowTime >= entry.getValue());
 		for (ServerPlayer player : server.getPlayerList().getPlayers()) {
 			UUID id = player.getUUID();
-			Affinity now = affinityOf(player).orElse(null);
-			Affinity was = apexState.get(id);
+			Capstone now = capstoneOf(player).orElse(null);
+			Capstone was = apexState.get(id);
 			boolean armedNow = now != null && Resonance.atApex(player);
 			boolean armedWas = Boolean.TRUE.equals(armedState.get(id));
 
@@ -329,17 +408,12 @@ public final class Apex {
 				continue;
 			}
 			if (now == null) {
-				// Foci no longer qualify, so the capstone is lost outright.
 				apexState.remove(id);
 				armedState.remove(id);
 				announceLost(player);
 				continue;
 			}
 			if (was == null) {
-				// Fresh Apex affinity. Announce that the capstone has unlocked
-				// either way so the player learns about the qualification; if
-				// resonance is too low we follow with a dormant flavor so they
-				// know the effect is gated on Resonance, not on their Foci.
 				apexState.put(id, now);
 				armedState.put(id, armedNow);
 				if (armedNow) {
@@ -350,8 +424,6 @@ public final class Apex {
 				continue;
 			}
 			if (was != now) {
-				// Affinity itself changed without dropping through null. Treat it
-				// as a lost-and-gained pair so each capstone gets its own beat.
 				apexState.put(id, now);
 				armedState.put(id, armedNow);
 				announceLost(player);
@@ -362,7 +434,6 @@ public final class Apex {
 				}
 				continue;
 			}
-			// Same Apex affinity as last tick, so only the armed flag can flip.
 			if (armedNow != armedWas) {
 				armedState.put(id, armedNow);
 				if (armedNow) {
@@ -374,42 +445,35 @@ public final class Apex {
 		}
 	}
 
-	private static void announceGained(ServerPlayer player, Affinity affinity) {
+	private static void announceGained(ServerPlayer player, Capstone capstone) {
 		((ServerLevel) player.level()).playSound(null, player.blockPosition(),
 			SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, SoundSource.PLAYERS, 0.7F, 1.0F);
 		player.sendSystemMessage(Component.literal("Apex active: ")
 			.withStyle(ChatFormatting.GRAY)
-			.append(Component.literal(capstoneName(affinity))
-				.withStyle(affinityColor(affinity), ChatFormatting.BOLD))
-			.append(Component.literal(". " + capstoneDescription(affinity))
+			.append(Component.literal(capstone.displayName())
+				.withStyle(capstone.chatColor(), ChatFormatting.BOLD))
+			.append(Component.literal(". " + capstone.description())
 				.withStyle(ChatFormatting.GRAY)));
 		AttunedAdvancements.award(player, "attunement/apex");
 	}
 
-	/**
-	 * Announces that a capstone has just qualified but resonance is below the
-	 * Apex threshold, so the effect itself is still asleep. The player has done
-	 * the work of stacking the Foci — we should not leave them in silence
-	 * wondering whether anything happened, but we also should not claim the
-	 * capstone is "active".
-	 */
-	private static void announceGainedDormant(ServerPlayer player, Affinity affinity) {
+	private static void announceGainedDormant(ServerPlayer player, Capstone capstone) {
 		((ServerLevel) player.level()).playSound(null, player.blockPosition(),
 			SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, SoundSource.PLAYERS, 0.6F, 0.8F);
 		player.sendSystemMessage(Component.translatable(
 				"apex.attuned.unlocked_dormant",
-				Component.literal(capstoneName(affinity))
-					.withStyle(affinityColor(affinity), ChatFormatting.BOLD))
+				Component.literal(capstone.displayName())
+					.withStyle(capstone.chatColor(), ChatFormatting.BOLD))
 			.withStyle(ChatFormatting.GRAY));
 	}
 
-	private static void announceRearmed(ServerPlayer player, Affinity affinity) {
+	private static void announceRearmed(ServerPlayer player, Capstone capstone) {
 		((ServerLevel) player.level()).playSound(null, player.blockPosition(),
 			SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, SoundSource.PLAYERS, 0.7F, 1.3F);
 		player.sendSystemMessage(Component.literal("Apex active again: ")
 			.withStyle(ChatFormatting.GRAY)
-			.append(Component.literal(capstoneName(affinity))
-				.withStyle(affinityColor(affinity), ChatFormatting.BOLD))
+			.append(Component.literal(capstone.displayName())
+				.withStyle(capstone.chatColor(), ChatFormatting.BOLD))
 			.append(Component.literal(".").withStyle(ChatFormatting.GRAY)));
 		AttunedAdvancements.award(player, "attunement/apex");
 	}
@@ -437,12 +501,6 @@ public final class Apex {
 			SoundEvents.PLAYER_ATTACK_SWEEP, SoundSource.PLAYERS, 0.7F, 1.7F);
 	}
 
-	private static ChatFormatting affinityColor(Affinity affinity) {
-		return switch (affinity) {
-			case FURY -> ChatFormatting.RED;
-			case BASTION -> ChatFormatting.GOLD;
-			case ZEPHYR -> ChatFormatting.AQUA;
-			case HOLY -> ChatFormatting.YELLOW;
-		};
+	private record ScrambleKey(UUID targetId, UUID playerId) {
 	}
 }

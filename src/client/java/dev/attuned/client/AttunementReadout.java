@@ -90,16 +90,16 @@ public final class AttunementReadout {
 				Component.literal("Next Pact: ").withStyle(ChatFormatting.GRAY).append(preview)));
 		}
 
-		Optional<Affinity> apex = Apex.affinityOf(player);
+		Optional<Apex.Capstone> apex = Apex.capstoneOf(player);
 		if (apex.isPresent()) {
-			Affinity capstone = apex.get();
+			Apex.Capstone capstone = apex.get();
 			boolean activeApex = Resonance.atApex(player);
 			lines.add(Component.literal("Apex: ").withStyle(ChatFormatting.GRAY)
-				.append(Component.literal(Apex.capstoneName(capstone))
-					.withStyle(affinityTextColor(apex), ChatFormatting.BOLD))
+				.append(Component.literal(capstone.displayName())
+					.withStyle(capstone.chatColor(), ChatFormatting.BOLD))
 				.append(Component.literal(activeApex ? " - Active" : " - Dormant")
 					.withStyle(activeApex ? ChatFormatting.GREEN : ChatFormatting.DARK_GRAY)));
-			lines.add(Component.literal(Apex.capstoneDescription(capstone))
+			lines.add(Component.literal(capstone.description())
 				.withStyle(ChatFormatting.GRAY));
 			if (!activeApex) {
 				lines.add(Component.literal("Build qualifies; raise Resonance to wake it.")
@@ -123,6 +123,23 @@ public final class AttunementReadout {
 	 */
 	public static int stanceArgb(boolean discord, Optional<Affinity> committed) {
 		return AffinityColors.argbOf(committed, discord);
+	}
+
+	/**
+	 * ARGB colour for capstone-aware UI accents. Apex capstones own the display
+	 * colour while qualified, including Discord and neutral capstones that do not
+	 * have a committed affinity.
+	 */
+	public static int stanceArgb(Optional<Apex.Capstone> capstone, boolean discord,
+			Optional<Affinity> committed) {
+		return capstone.map(Apex.Capstone::argb)
+			.orElseGet(() -> stanceArgb(discord, committed));
+	}
+
+	/** Capstone-aware ARGB colour for callers that do not already cache stance state. */
+	public static int apexAwareStanceArgb(Player player) {
+		return stanceArgb(Apex.capstoneOf(player), Attunement.isDiscord(player),
+			Attunement.committedAffinity(player));
 	}
 
 	// How many Foci are active: one, a few, many, or the full six.

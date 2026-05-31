@@ -103,13 +103,13 @@ modrinth {
 	versionName = "Attuned ${project.version}"
 	// Changelog for the current release — refresh this each time mod_version bumps.
 	changelog = """\
-Radiant affinity, Reweaving altar, HUD, and GUI polish release.
+Expanded Apex capstones and gallery release.
 
-- Added the Holy/Radiant affinity expansion with new Foci, altar assets, mob affinity support, Pact hooks, and supporting data.
-- Added and polished the Altar of Reweaving flow, including generated block art, custom GUI art, and centered input/output slot placement.
-- Improved the Attunement Altar GUI with custom slot well sizing, cleaner text layout, translucent screen backdrops, and in-game GUI preview commands for faster visual checks.
-- Reworked HUD assets and affinity sprites so the combat readout is clearer and more consistent with the new art direction.
-- Expanded docs, language entries, loot/data coverage, and contract tests for the new content and UI assets.
+- Added Maelstrom, a Discord Apex for builds with every shipped affinity active near full capacity. At Resonance it adds direct melee pressure against affinity-bearing non-player enemies and briefly scrambles struck foes.
+- Added Stillpoint, a neutral Apex for all-neutral active Focus builds near full capacity. At Resonance it suppresses affinity pressure and pulses Absorption after real combat hits.
+- Updated HUD, Focus panel, Attunement Altar readouts, /attuned status, and the Attunement Journal so Maelstrom and Stillpoint render as first-class capstones.
+- Added shipped Maelstrom and Stillpoint HUD sprites plus contract coverage for capstone resolution, HUD assets, journal pages, and Modrinth gallery copy.
+- Regenerated Modrinth gallery panels with real in-game Focus assets and accurate Maelstrom/Stillpoint release copy.
 """
 	uploadFile = file("build/libs/${project.name}-${project.version}.jar")
 	gameVersions = ["26.1.2"]

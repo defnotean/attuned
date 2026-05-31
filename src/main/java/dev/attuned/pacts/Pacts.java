@@ -9,6 +9,7 @@ import dev.attuned.api.focus.FocusDefinition;
 import dev.attuned.attunement.AttunedAttachments;
 import dev.attuned.attunement.AttunedInv;
 import dev.attuned.attunement.Attunement;
+import dev.attuned.combat.Apex;
 import dev.attuned.combat.AttunedCombat;
 import dev.attuned.combat.MobAffinities;
 import dev.attuned.combat.Resonance;
@@ -252,6 +253,7 @@ public final class Pacts {
 		// Untethered: an attacker-side amplifier against any affinity-bearing mob.
 		if (source.getEntity() instanceof Player attackerPlayer
 				&& isAt(attackerPlayer, Pact.UNTETHERED)
+				&& !Apex.isAt(attackerPlayer, Apex.Capstone.MAELSTROM)
 				&& !(defender instanceof Player)
 				&& MobAffinities.of(defender).isPresent()) {
 			amount *= (1.0F + UNTETHERED_AMPLIFY);

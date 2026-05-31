@@ -81,15 +81,26 @@ public final class Resonance {
 		if (attacker == defender) {
 			return;
 		}
-		// Attacker side — gain when the matchup empowers us.
-		if (attacker instanceof Player attackerPlayer
-				&& matchup(attackerPlayer, defender) == Matchup.EMPOWERED) {
-			add(attackerPlayer, dealtDamage * HIT_EMPOWERED_GAIN_PER_DAMAGE);
+		// Attacker side — gain when the matchup empowers us. Maelstrom uses a
+		// generic combat path because Discord deliberately has no single lane.
+		if (attacker instanceof Player attackerPlayer) {
+			Optional<Apex.Capstone> attackerCapstone = Apex.capstoneOf(attackerPlayer);
+			if (attackerCapstone.filter(capstone -> capstone == Apex.Capstone.MAELSTROM).isPresent()
+					&& MobAffinities.of(defender).isPresent()) {
+				add(attackerPlayer, dealtDamage * HIT_EMPOWERED_GAIN_PER_DAMAGE);
+			} else if (matchup(attackerPlayer, defender) == Matchup.EMPOWERED) {
+				add(attackerPlayer, dealtDamage * HIT_EMPOWERED_GAIN_PER_DAMAGE);
+			}
 		}
 		// Defender side — drain when the matchup neutralizes us.
 		if (defender instanceof Player defenderPlayer && attacker != null
 				&& matchup(defenderPlayer, attacker) == Matchup.NEUTRALIZED) {
 			add(defenderPlayer, -HIT_NEUTRALIZED_LOSS);
+		}
+		if (defender instanceof Player defenderPlayer && attacker != null
+				&& Apex.capstoneOf(defenderPlayer).filter(capstone -> capstone == Apex.Capstone.STILLPOINT).isPresent()
+				&& Apex.hasAffinityPressure(attacker)) {
+			add(defenderPlayer, KILL_NEUTRAL_GAIN);
 		}
 	}
 
@@ -99,6 +110,7 @@ public final class Resonance {
 		if (!(attacker instanceof Player player) || entity == player) {
 			return;
 		}
+		Optional<Apex.Capstone> capstone = Apex.capstoneOf(player);
 		switch (matchup(player, entity)) {
 			case EMPOWERED -> {
 				add(player, KILL_EMPOWERED_GAIN);
@@ -106,7 +118,15 @@ public final class Resonance {
 					AttunedAdvancements.award(serverPlayer, "attunement/favored_matchup");
 				}
 			}
-			case NORMAL -> add(player, KILL_NEUTRAL_GAIN);
+			case NORMAL -> {
+				if (capstone
+						.filter(apex -> apex == Apex.Capstone.MAELSTROM
+							&& MobAffinities.of(entity).isPresent()).isPresent()) {
+					add(player, KILL_EMPOWERED_GAIN);
+				} else {
+					add(player, KILL_NEUTRAL_GAIN);
+				}
+			}
 			case NEUTRALIZED -> { /* No gain from a neutralized kill. */ }
 		}
 	}

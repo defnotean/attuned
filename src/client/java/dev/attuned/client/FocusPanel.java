@@ -128,8 +128,8 @@ public final class FocusPanel {
 		Optional<Affinity> committed = activeAffinities.size() == 1
 			? Optional.of(activeAffinities.iterator().next())
 			: Optional.empty();
-		Optional<Affinity> playerAffinity = committed.isPresent() ? committed : Apex.affinityOf(player);
-		int affinityColor = AttunementReadout.stanceArgb(discord, playerAffinity);
+		Optional<Apex.Capstone> capstone = Apex.capstoneOf(player);
+		int affinityColor = AttunementReadout.stanceArgb(capstone, discord, committed);
 		Optional<Affinity> pactStabilityAffinity = pactStabilityAffinity(discord, activeAffinityCounts);
 
 		for (int i = 0; i < AttunedInv.SIZE; i++) {
@@ -166,7 +166,9 @@ public final class FocusPanel {
 		// Affinity gem, centred in the panel's top padding band: a 3D cut gemstone
 		// with a custom status glyph inside it.
 		int gemX0 = leftPos + slotX + FocusLayout.SLOT / 2 - GEM_SIZE / 2;
-		CombatHud.drawGem(graphics, gemX0, y0, GEM_SIZE, playerAffinity.orElse(null), discord, false, Resonance.atApex(player));
+		CombatHud.drawPlayerGem(graphics, gemX0, y0, GEM_SIZE,
+			committed.orElse(null), discord, capstone.orElse(null),
+			capstone.isPresent() && Resonance.atApex(player));
 
 		// Resonance ring: a 1-pixel square border traced one pixel outside the
 		// gem's bezel. The full ring is laid down as a faint track, then overlaid

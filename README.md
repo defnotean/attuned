@@ -8,11 +8,11 @@ Equip **Foci** into six inventory slots, but mind your **attunement capacity**. 
 
 ## At a glance
 
-- 35 Foci across mobility, defense, combat, stealth, and utility
+- 55 Foci across mobility, defense, combat, stealth, holy, seafaring, and utility
 - **The Unseen**: a stealth faction built around quiet movement, low-light veils, smoke misdirection, and ambush openings
-- Three **affinities** (Fury · Bastion · Zephyr) in a rock-paper-scissors cycle, plus the cross-affinity **Discord** stance
+- Four **affinities** (Fury, Bastion, Zephyr, Holy) in a counter-combat cycle, plus the cross-affinity **Discord** stance
 - **Pacts**: set bonuses that wake when you commit (Pyresworn, Stoneheart, Windrunner, Untethered)
-- **Apex capstones** at full commitment, gated by combat **Resonance**
+- **Apex capstones** at near-full commitment, including Maelstrom for Discord and Stillpoint for neutral builds, gated by combat **Resonance**
 - **Attunement Altar**: bind shards to grow capacity; glows with your stance
 - Custom pixel-art UI for the Altar, Focus panel, combat HUD, and Attunement Journal
 - Lootr-friendly survival loot: every Focus and shard fragment rolls through vanilla structures, fishing treasure, archaeology, and trial rewards; wandering traders can rarely offer the journal or a shard fragment
@@ -20,7 +20,7 @@ Equip **Foci** into six inventory slots, but mind your **attunement capacity**. 
 
 ## Requirements
 
-Minecraft 26.1.2 · Fabric Loader 0.19.2+ · Fabric API
+Minecraft 26.1.2, Fabric Loader 0.19.2+, Fabric API
 
 Lootr is optional but suggested for modpacks. Attuned does not add custom
 loot containers; it injects Foci and shard fragments into vanilla loot tables,

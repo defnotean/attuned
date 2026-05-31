@@ -8,6 +8,7 @@ import dev.attuned.attunement.Attunement;
 import dev.attuned.client.AttunementReadout;
 import dev.attuned.client.hud.CombatHud;
 import dev.attuned.combat.Apex;
+import dev.attuned.combat.Resonance;
 import dev.attuned.content.AttunementAltarBlock;
 import dev.attuned.menu.AltarMenu;
 import dev.attuned.menu.BindShardPayload;
@@ -146,7 +147,7 @@ public class AltarScreen extends AbstractContainerScreen<AltarMenu> {
 		// need the player's stance colour, so resolve it once here.
 		Player player = this.minecraft != null ? this.minecraft.player : null;
 		if (player != null) {
-			int stance = AttunementReadout.stanceArgb(player);
+			int stance = AttunementReadout.apexAwareStanceArgb(player);
 
 			// Stance-tinted inner border around the shard well, sitting one pixel
 			// inside the well's bevel so the tint reads as a glow on the slot face.
@@ -233,12 +234,14 @@ public class AltarScreen extends AbstractContainerScreen<AltarMenu> {
 		// row fits comfortably in the left half of the panel.
 		Optional<Affinity> committed = Attunement.committedAffinity(player);
 		boolean discord = Attunement.isDiscord(player);
+		Optional<Apex.Capstone> capstone = Apex.capstoneOf(player);
 		int stanceGemSize = 10;
 		int stanceGemX = TEXT_BOX_X;
 		int stanceGemY = 39;
-		CombatHud.drawGem(graphics, stanceGemX, stanceGemY, stanceGemSize,
-			committed.orElse(null), discord, false, false);
-		graphics.text(this.font, AttunementAltarBlock.stanceLabel(player),
+		CombatHud.drawPlayerGem(graphics, stanceGemX, stanceGemY, stanceGemSize,
+			committed.orElse(null), discord, capstone.orElse(null),
+			capstone.isPresent() && Resonance.atApex(player));
+		graphics.text(this.font, altarStanceLabel(player, capstone),
 			stanceGemX + stanceGemSize + 4, 41, BODY_TEXT, false);
 		drawTrimmedText(graphics, Component.literal(active + " active"),
 			STATUS_X, STATUS_Y, STATUS_MAX_WIDTH, BODY_TEXT);
@@ -294,10 +297,17 @@ public class AltarScreen extends AbstractContainerScreen<AltarMenu> {
 		if (pact.isPresent()) {
 			return prefix.copy().append(Component.literal(" / Pact"));
 		}
-		if (Apex.affinityOf(player).isPresent()) {
+		if (Apex.capstoneOf(player).isPresent()) {
 			return prefix.copy().append(Component.literal(" / Apex"));
 		}
 		return prefix;
+	}
+
+	private static Component altarStanceLabel(Player player, Optional<Apex.Capstone> capstone) {
+		if (capstone.isPresent()) {
+			return Component.literal(capstone.get().displayName()).withStyle(capstone.get().chatColor());
+		}
+		return AttunementAltarBlock.stanceLabel(player);
 	}
 
 	private static void drawButtonOutline(GuiGraphicsExtractor graphics, int x0, int y0, int x1, int y1, int argb) {

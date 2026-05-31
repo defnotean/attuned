@@ -228,8 +228,8 @@ public final class AttunedCommands {
 		boolean discord = Attunement.isDiscord(player);
 		Optional<Pact> pact = Pacts.activeOf(player);
 		float resonance = Resonance.get(player);
-		Optional<Affinity> apexAffinity = Apex.affinityOf(player);
-		boolean apexFiring = apexAffinity.isPresent() && Resonance.atApex(player);
+		Optional<Apex.Capstone> apexCapstone = Apex.capstoneOf(player);
+		boolean apexFiring = apexCapstone.isPresent() && Resonance.atApex(player);
 
 		source.sendSuccess(() -> Component.literal("=== Attuned status for " + player.getName().getString() + " ===")
 			.withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD), false);
@@ -280,16 +280,16 @@ public final class AttunedCommands {
 				.withStyle(ChatFormatting.DARK_GRAY)), false);
 
 		source.sendSuccess(() -> {
-			if (apexAffinity.isEmpty()) {
+			if (apexCapstone.isEmpty()) {
 				return label("Apex: ")
 					.append(Component.literal("Foci do not qualify").withStyle(ChatFormatting.DARK_GRAY));
 			}
-			Affinity capstone = apexAffinity.get();
-			String name = Apex.capstoneName(capstone);
+			Apex.Capstone capstone = apexCapstone.get();
+			String name = capstone.displayName();
 			if (apexFiring) {
 				return label("Apex: ")
 					.append(Component.literal("active — " + name)
-						.withStyle(affinityChatColor(capstone), ChatFormatting.BOLD));
+						.withStyle(capstone.chatColor(), ChatFormatting.BOLD));
 			}
 			return label("Apex: ")
 				.append(Component.literal("not active (would be " + name + " when resonance >= "

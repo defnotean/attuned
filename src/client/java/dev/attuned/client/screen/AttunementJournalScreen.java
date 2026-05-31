@@ -51,6 +51,8 @@ public final class AttunementJournalScreen extends Screen {
 		new Page("Core", "journal.attuned.page5", 0xFFFF6AA8, null),
 		new Page("Pacts", "journal.attuned.page6", 0xFFFFD37A, null),
 		new Page("Apex", "journal.attuned.page7", 0xFFFFD37A, null),
+		new Page("Apex", "journal.attuned.page30", 0xFFFF6AA8, null),
+		new Page("Apex", "journal.attuned.page31", 0xFFD8D4E8, null),
 		new Page("Altar", "journal.attuned.page8", 0xFFAEEAFF, null),
 		new Page("Unseen", "journal.attuned.page9", 0xFFB995FF, null),
 		new Page("Finding", "journal.attuned.page10", 0xFF95E6B3, null),
@@ -78,14 +80,14 @@ public final class AttunementJournalScreen extends Screen {
 		new Chapter("Core", 0),
 		new Chapter("Pacts", 5),
 		new Chapter("Apex", 6),
-		new Chapter("Altar", 7),
-		new Chapter("Unseen", 8),
-		new Chapter("Finding", 9),
-		new Chapter("Builds", 10),
-		new Chapter("Lore", 20),
-		new Chapter("Radiant", 23),
-		new Chapter("Seafarers", 26),
-		new Chapter("HUD", 28)
+		new Chapter("Altar", 9),
+		new Chapter("Unseen", 10),
+		new Chapter("Finding", 11),
+		new Chapter("Builds", 12),
+		new Chapter("Lore", 22),
+		new Chapter("Radiant", 25),
+		new Chapter("Seafarers", 28),
+		new Chapter("HUD", 30)
 	);
 
 	private final List<Button> chapterButtons = new ArrayList<>();

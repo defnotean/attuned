@@ -4,11 +4,13 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import dev.attuned.combat.Apex;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Locale;
 import javax.imageio.ImageIO;
 import org.junit.jupiter.api.Test;
 
@@ -27,6 +29,7 @@ class HudAssetConsistencyTest {
 		assertTrue(!source.contains("graphics.fill("),
 			"Combat HUD should use PNG sprites instead of manually filled pixel shapes");
 		assertTrue(source.contains("affinity_fury"));
+		assertTrue(source.contains("capstone.name().toLowerCase(Locale.ROOT)"));
 		assertTrue(source.contains("hud_empowered_ring"));
 		assertTrue(source.contains("hud_resonance_fill"));
 		assertSprite("affinity_fury.png", 64, 64);
@@ -35,6 +38,9 @@ class HudAssetConsistencyTest {
 		assertSprite("affinity_holy.png", 64, 64);
 		assertSprite("affinity_discord.png", 64, 64);
 		assertSprite("affinity_neutral.png", 64, 64);
+		for (Apex.Capstone capstone : Apex.Capstone.values()) {
+			assertSprite(capstone.name().toLowerCase(Locale.ROOT) + ".png", 64, 64);
+		}
 		assertSprite("hud_empowered_ring.png", 64, 64);
 		assertSprite("hud_target_ring.png", 64, 64);
 		assertSprite("hud_neutralized_overlay.png", 64, 64);

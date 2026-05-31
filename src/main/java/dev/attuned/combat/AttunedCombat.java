@@ -167,6 +167,10 @@ public final class AttunedCombat {
 		if (attacker == null || attacker == defender) {
 			return 1.0F;
 		}
+		if (defender instanceof Player defenderPlayer
+				&& Apex.suppressesIncomingAdvantage(defenderPlayer, attacker)) {
+			return 1.0F;
+		}
 		// Discord — clashing affinities — is a glass cannon on both ends.
 		if (isDiscord(attacker) || isDiscord(defender)) {
 			return ADVANTAGE_MULTIPLIER;

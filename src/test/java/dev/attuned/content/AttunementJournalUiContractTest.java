@@ -42,6 +42,7 @@ class AttunementJournalUiContractTest {
 	@Test
 	void journalScreenKeepsCustomCodexLayoutContract() throws IOException {
 		String screenSource = read(JOURNAL_SCREEN_SOURCE);
+		String itemSource = read(JOURNAL_ITEM_SOURCE);
 		String lang = read(LANG_FILE);
 
 		assertTrue(screenSource.contains("extends Screen"),
@@ -72,6 +73,29 @@ class AttunementJournalUiContractTest {
 			"Journal UI should include the reweaving lore pages");
 		assertTrue(lang.contains("\"journal.attuned.page28\""),
 			"Journal UI should include the HUD lore page");
+		assertTrue(lang.contains("\"journal.attuned.page29\""),
+			"Journal UI should include the Radiant Covenant page");
+		assertTrue(lang.contains("\"journal.attuned.page30\""),
+			"Journal UI should include the Maelstrom Apex page");
+		assertTrue(lang.contains("\"journal.attuned.page31\""),
+			"Journal UI should include the Stillpoint Apex page");
+		assertTrue(screenSource.contains("journal.attuned.page30"),
+			"Journal UI should route to the Maelstrom Apex page");
+		assertTrue(screenSource.contains("journal.attuned.page31"),
+			"Journal UI should route to the Stillpoint Apex page");
+		assertTrue(screenSource.indexOf("journal.attuned.page7") < screenSource.indexOf("journal.attuned.page30")
+				&& screenSource.indexOf("journal.attuned.page30") < screenSource.indexOf("journal.attuned.page31")
+				&& screenSource.indexOf("journal.attuned.page31") < screenSource.indexOf("journal.attuned.page8"),
+			"Apex chapter navigation should page through the base, Maelstrom, and Stillpoint pages together");
+		assertTrue(itemSource.contains("\"journal.attuned.page29\""),
+			"Written-book fallback should include the Radiant Covenant page");
+		assertTrue(itemSource.indexOf("\"journal.attuned.page7\"")
+				< itemSource.indexOf("\"journal.attuned.page30\"")
+				&& itemSource.indexOf("\"journal.attuned.page30\"")
+				< itemSource.indexOf("\"journal.attuned.page31\"")
+				&& itemSource.indexOf("\"journal.attuned.page31\"")
+				< itemSource.indexOf("\"journal.attuned.page8\""),
+			"Written-book fallback should keep the Apex pages adjacent");
 	}
 
 	private static String read(Path file) throws IOException {
