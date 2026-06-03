@@ -102,17 +102,12 @@ modrinth {
 	versionType = "release"
 	versionName = "Attuned ${project.version}"
 	// Changelog for the current release — refresh this each time mod_version bumps.
-	changelog = """\
-Attuned 1.2.5 - Offshore, Revenant, and HUD release.
+changelog = """\
+Attuned 1.2.6 - Ocean Relic Trident hotfix.
 
-- Added a compact Foci HUD with configurable visibility, separate keybind support, active Focus indicators, Apex status, resonance feedback, and cooldown readouts.
-- Added Maelstrom and Stillpoint Apex capstones with journal, tooltip, HUD, command, and gallery coverage.
-- Added the Offshore faction's Harpoon Focus: a server-authoritative active ability that summons a temporary custom trident and cleans it up from inventories, drops, and projectiles.
-- Added Ocean Relic/Frostbound trident asset work, improved first-person/third-person/throwing transforms, and the local asset customizer for previewing item assets without relaunching Minecraft.
-- Added The Revenant faction with Epitaph, Ashen Debt, Hollowstep, Last Rites, and Bonechill Foci plus animated Focus art.
-- Improved PvP consistency: combat-facing Foci use the same target rules, only one active ability Focus can respond to the ability key, and cooldown state is surfaced to the HUD.
-- Reworked Tremor ore hints to use a visible client outline instead of only text feedback.
-- Updated tooltips, journal pages, /attuned status, and reference docs so buff/effect wording stays consistent across items and UI.
+- Fixed the Ocean Relic Trident held pose so it sits in the player's hand instead of floating behind the arm.
+- Fixed the throwing wind-up pose so the trident prongs face forward.
+- Added regression coverage for the third-person hand anchor and throw-pose orientation.
 """
 	uploadFile = file("build/libs/${project.name}-${project.version}.jar")
 	gameVersions = ["26.1.2"]
