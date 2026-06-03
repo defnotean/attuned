@@ -1,6 +1,6 @@
 {
-  "source": "docs/superpowers/assets/revenant-foci/revenant-foci-imagegen-source.png",
-  "strategy": "imagegen_source_chroma_key_crops_with_pulsed_revenant_glow",
+  "source": "docs/superpowers/assets/revenant-foci/revenant-foci-concept-source.png",
+  "strategy": "concept_source_chroma_key_crops_with_pulsed_revenant_glow",
   "frames": 8,
   "textures": [
     {

@@ -43,7 +43,7 @@ class AssetCustomizerContractTest {
 	private static final Path FROSTBOUND_REPORT =
 		Path.of("docs/superpowers/assets/frostbound-trident/frostbound_trident_report.json");
 	private static final Path FROSTBOUND_WRAPPED_SOURCE =
-		Path.of("docs/superpowers/assets/frostbound-trident/frostbound_trident_wrapped_imagegen_source.png");
+		Path.of("docs/superpowers/assets/frostbound-trident/frostbound_trident_wrapped_concept_source.png");
 	private static final Path FROSTBOUND_WRAPPED =
 		Path.of("docs/superpowers/assets/frostbound-trident/frostbound_trident_wrapped.png");
 	private static final Path FROSTBOUND_SHAPE_ANALYSIS =
@@ -135,11 +135,11 @@ class AssetCustomizerContractTest {
 	}
 
 	@Test
-	void offshoreArtComesFromImageGenerationSources() throws IOException {
-		assertTrue(Files.isRegularFile(OFFSHORE_ASSETS.resolve("harpoon-focus-imagegen-sheet.png")),
-			"Harpoon Focus should keep its image-generated sheet source");
-		assertTrue(Files.isRegularFile(OFFSHORE_ASSETS.resolve("offshore-harpoon-imagegen-source.png")),
-			"Offshore Harpoon should keep its image-generated source");
+	void offshoreArtKeepsPolishedSources() throws IOException {
+		assertTrue(Files.isRegularFile(OFFSHORE_ASSETS.resolve("harpoon-focus-concept-sheet.png")),
+			"Harpoon Focus should keep its polished sheet source");
+		assertTrue(Files.isRegularFile(OFFSHORE_ASSETS.resolve("offshore-harpoon-concept-source.png")),
+			"Offshore Harpoon should keep its polished source");
 		assertTrue(!Files.exists(Path.of("tools/generate_offshore_assets.py")),
 			"Offshore assets should not use the old hand-drawn PIL generator");
 	}
@@ -245,9 +245,9 @@ class AssetCustomizerContractTest {
 			"Throwing pose should not use vanilla special-renderer Z-flip for this cuboid model");
 		assertTrue(throwingDisplay.getAsJsonArray("scale").get(0).getAsDouble() < 0.9D,
 			"Throwing pose should stay compact enough to avoid clipping through the camera");
-		assertEquals("curated_trident_silhouette_from_image_generated_palette",
+		assertEquals("curated_trident_silhouette_from_concept_palette",
 			report.get("strategy").getAsString(),
-			"Voxel report should document why the held model is curated from the generated palette");
+			"Voxel report should document why the held model is curated from the concept palette");
 		JsonArray bbox = report.getAsJsonArray("bbox_size");
 		assertTrue(bbox.get(0).getAsDouble() >= 10.0D,
 			"Held trident should have visibly separated side prongs");
@@ -260,9 +260,9 @@ class AssetCustomizerContractTest {
 	}
 
 	@Test
-	void frostboundWrapperKeepsShapeAnalysisAndImageGeneratedSource() throws IOException {
+	void frostboundWrapperKeepsShapeAnalysisAndConceptSource() throws IOException {
 		assertTrue(Files.isRegularFile(FROSTBOUND_WRAPPED_SOURCE),
-			"Frostbound wrapper should keep its image-generation source");
+			"Frostbound wrapper should keep its concept source");
 		assertTrue(Files.isRegularFile(FROSTBOUND_WRAPPED),
 			"Frostbound wrapper should keep the cleaned transparent source");
 		assertTrue(Files.isRegularFile(FROSTBOUND_SHAPE_ANALYSIS),

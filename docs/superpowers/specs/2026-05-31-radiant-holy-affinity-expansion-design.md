@@ -198,7 +198,7 @@ Palette anchors:
 - Ashen Forge: copper, ember red, iron gray.
 - Unseen: smoke gray, violet shadow, muted magenta.
 
-Use image generation for initial concepts where helpful, then normalize into the existing animated pixel-medallion style. Generated art must be committed into the project only after cleanup, dimension checks, and animation checks pass.
+Use concept art where helpful, then normalize into the existing animated pixel-medallion style. Art must be committed into the project only after cleanup, dimension checks, and animation checks pass.
 
 ## Documentation And Journal
 

@@ -6,7 +6,7 @@ from pathlib import Path
 
 from PIL import Image, ImageEnhance, ImageFilter
 
-SOURCE = Path("docs/superpowers/assets/revenant-foci/revenant-foci-imagegen-source.png")
+SOURCE = Path("docs/superpowers/assets/revenant-foci/revenant-foci-concept-source.png")
 TEXTURE_DIR = Path("src/main/resources/assets/attuned/textures/item")
 REPORT = Path("docs/superpowers/assets/revenant-foci/revenant-foci-report.json")
 
@@ -26,7 +26,7 @@ def main() -> None:
 
 	report = {
 		"source": str(SOURCE).replace("\\", "/"),
-		"strategy": "imagegen_source_chroma_key_crops_with_pulsed_revenant_glow",
+		"strategy": "concept_source_chroma_key_crops_with_pulsed_revenant_glow",
 		"frames": 8,
 		"textures": [],
 	}

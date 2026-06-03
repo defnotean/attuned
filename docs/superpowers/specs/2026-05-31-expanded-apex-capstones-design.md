@@ -84,9 +84,9 @@ Create two new generated HUD sprites:
 - `hud/maelstrom.png`: 64x64 Discord magenta sprite, fractured tri-affinity swirl, sharp and chaotic.
 - `hud/stillpoint.png`: 64x64 pale neutral/white sprite, centered calm sigil, stable and minimal.
 
-Use the `imagegen` workflow for source art, then normalize the outputs into Minecraft-ready PNG sprites. The final assets must live in the project under `src/main/resources/assets/attuned/textures/gui/sprites/hud/` and be referenced by the HUD renderer. Existing `execute`, `unyielding`, and `untouchable` sprite behavior stays unchanged.
+Use the concept-art workflow for source art, then normalize the outputs into Minecraft-ready PNG sprites. The final assets must live in the project under `src/main/resources/assets/attuned/textures/gui/sprites/hud/` and be referenced by the HUD renderer. Existing `execute`, `unyielding`, and `untouchable` sprite behavior stays unchanged.
 
-The Focus panel and HUD render capstone sprites for all five Apexes. If generated art cannot be made readable at HUD size, use deterministic pixel-art cleanup while keeping the generated concept as the visual source.
+The Focus panel and HUD render capstone sprites for all five Apexes. If concept art cannot be made readable at HUD size, use deterministic pixel-art cleanup while keeping the concept as the visual source.
 
 ## UI And Text
 

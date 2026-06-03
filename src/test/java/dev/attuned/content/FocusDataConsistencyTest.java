@@ -93,7 +93,7 @@ class FocusDataConsistencyTest {
 		"attuned:linecast_focus", 1.0D,
 		"attuned:netmender_focus", 1.0D);
 	private static final Path REVENANT_SOURCE =
-		Path.of("docs/superpowers/assets/revenant-foci/revenant-foci-imagegen-source.png");
+		Path.of("docs/superpowers/assets/revenant-foci/revenant-foci-concept-source.png");
 	private static final Path REVENANT_REPORT =
 		Path.of("docs/superpowers/assets/revenant-foci/revenant-foci-report.json");
 
@@ -261,7 +261,7 @@ class FocusDataConsistencyTest {
 	}
 
 	@Test
-	void revenantFociShipAsARealFactionWithGeneratedAnimatedArt() throws IOException {
+	void revenantFociShipAsARealFactionWithAnimatedArt() throws IOException {
 		Set<String> revenantItems = new TreeSet<>();
 		try (Stream<Path> paths = Files.list(FOCUS_DATA_DIR)) {
 			for (Path file : paths
@@ -287,7 +287,7 @@ class FocusDataConsistencyTest {
 			"The Revenant release should declare its planned Foci and Gravebind anchor");
 		assertLanguageKey(lang, "faction.attuned.revenant");
 		assertTrue(Files.isRegularFile(REVENANT_SOURCE),
-			"Revenant art should keep its image-generation source sheet");
+			"Revenant art should keep its concept source sheet");
 		assertTrue(Files.isRegularFile(REVENANT_REPORT),
 			"Revenant art should keep a reproducible texture build report");
 		String report = Files.readString(REVENANT_REPORT, StandardCharsets.UTF_8);

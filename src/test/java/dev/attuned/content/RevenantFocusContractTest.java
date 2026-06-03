@@ -27,7 +27,7 @@ class RevenantFocusContractTest {
 	private static final Path COMMON_INIT =
 		Path.of("src/main/java/dev/attuned/Attuned.java");
 	private static final Path SOURCE_ART =
-		Path.of("docs/superpowers/assets/revenant-foci/revenant-foci-imagegen-source.png");
+		Path.of("docs/superpowers/assets/revenant-foci/revenant-foci-concept-source.png");
 	private static final Path REPORT =
 		Path.of("docs/superpowers/assets/revenant-foci/revenant-foci-report.json");
 	private static final Path TEXTURE_DIR =
@@ -105,13 +105,13 @@ class RevenantFocusContractTest {
 	}
 
 	@Test
-	void revenantArtComesFromImageGenerationAndShipsAnimatedSheets() throws IOException {
+	void revenantArtKeepsSourceAndShipsAnimatedSheets() throws IOException {
 		assertTrue(Files.isRegularFile(SOURCE_ART),
-			"Revenant Foci should keep their image-generation source");
+			"Revenant Foci should keep their concept source");
 		JsonObject report = JsonParser.parseString(read(REPORT)).getAsJsonObject();
-		assertEquals("imagegen_source_chroma_key_crops_with_pulsed_revenant_glow",
+		assertEquals("concept_source_chroma_key_crops_with_pulsed_revenant_glow",
 			report.get("strategy").getAsString(),
-			"Revenant texture report should document the generated-art pipeline");
+			"Revenant texture report should document the source-art pipeline");
 
 		for (String name : NEW_REVENANT_FOCI) {
 			Path texture = TEXTURE_DIR.resolve(name + ".png");

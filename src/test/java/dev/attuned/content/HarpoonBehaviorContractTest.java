@@ -79,7 +79,7 @@ class HarpoonBehaviorContractTest {
 	}
 
 	@Test
-	void offshoreHarpoonShipsImageGeneratedTemporaryItemAssets() throws IOException {
+	void offshoreHarpoonShipsTemporaryItemAssets() throws IOException {
 		Path itemDefinition = Path.of("src/main/resources/assets/attuned/items/ocean_relic_trident.json");
 		Path itemModel = Path.of("src/main/resources/assets/attuned/models/item/ocean_relic_trident.json");
 		Path throwingModel = Path.of("src/main/resources/assets/attuned/models/item/ocean_relic_trident_throwing.json");

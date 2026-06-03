@@ -4,7 +4,7 @@
   "minecraft_throwing_model": "src/main/resources/assets/attuned/models/item/ocean_relic_trident_throwing.json",
   "item_definition": "src/main/resources/assets/attuned/items/ocean_relic_trident.json",
   "palette_texture": "src/main/resources/assets/attuned/textures/item/ocean_relic_trident_voxel_palette.png",
-  "strategy": "curated_trident_silhouette_from_image_generated_palette",
+  "strategy": "curated_trident_silhouette_from_concept_palette",
   "reason": "Raw sprite voxelization looked compact and noisy in third-person hand rendering.",
   "palette_colors": 28,
   "cuboids": 48,
