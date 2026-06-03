@@ -44,10 +44,10 @@ def build_model(elements: list[dict[str, Any]], display: dict[str, Any], credit:
 def base_display() -> dict[str, Any]:
 	return {
 		"gui": transform([15, -25, -5], [2, 1, 0], [0.48, 0.48, 0.48]),
-		"firstperson_righthand": transform([12, -24, 0], [2, -1, 0], [0.72, 0.72, 0.72]),
-		"firstperson_lefthand": transform([12, 24, 0], [-2, -1, 0], [0.72, 0.72, 0.72]),
-		"thirdperson_righthand": transform([18, -32, 0], [0, 1, 0], [1.23, 1.23, 1.23]),
-		"thirdperson_lefthand": transform([18, 32, 0], [0, 1, 0], [1.23, 1.23, 1.23]),
+		"firstperson_righthand": transform([0, -90, 25], [-3, 17, 1], [0.72, 0.72, 0.72]),
+		"firstperson_lefthand": transform([0, 90, -25], [13, 17, 1], [0.72, 0.72, 0.72]),
+		"thirdperson_righthand": transform([0, 60, 0], [11, 17, -2], [0.72, 0.72, 0.72]),
+		"thirdperson_lefthand": transform([0, 60, 0], [3, 17, 12], [0.72, 0.72, 0.72]),
 		"ground": transform([0, 0, 0], [4, 4, 2], [0.32, 0.32, 0.32]),
 		"fixed": transform([0, 180, 0], [-2, 4, -5], [0.42, 0.42, 0.42]),
 	}
@@ -56,10 +56,10 @@ def base_display() -> dict[str, Any]:
 def throwing_display() -> dict[str, Any]:
 	return {
 		"gui": transform([15, -25, -5], [2, 1, 0], [0.48, 0.48, 0.48]),
-		"firstperson_righthand": transform([0, -90, 25], [-3, 11, 1], [0.62, 0.62, 0.62]),
-		"firstperson_lefthand": transform([0, 90, -25], [13, 11, 1], [0.62, 0.62, 0.62]),
-		"thirdperson_righthand": transform([0, 90, 0], [8, -15, 9], [0.68, 0.68, 0.68]),
-		"thirdperson_lefthand": transform([0, 90, 0], [8, -15, -7], [0.68, 0.68, 0.68]),
+		"firstperson_righthand": transform([0, -90, 25], [-3, 17, 1], [0.62, 0.62, 0.62]),
+		"firstperson_lefthand": transform([0, 90, -25], [13, 17, 1], [0.62, 0.62, 0.62]),
+		"thirdperson_righthand": transform([0, 90, 180], [8, -17, 9], [0.68, 0.68, 0.68]),
+		"thirdperson_lefthand": transform([0, 90, 180], [8, -17, -7], [0.68, 0.68, 0.68]),
 		"ground": transform([0, 0, 0], [4, 4, 2], [0.32, 0.32, 0.32]),
 		"fixed": transform([0, 180, 0], [-2, 4, -5], [0.42, 0.42, 0.42]),
 	}

@@ -143,8 +143,8 @@ class HarpoonBehaviorContractTest {
 		JsonObject throwingRightHand = throwing.getAsJsonObject("display").getAsJsonObject("thirdperson_righthand");
 		assertEquals(90, throwingRightHand.getAsJsonArray("rotation").get(1).getAsInt(),
 			"Throw wind-up should turn the cuboid trident edge-on so it points out from the hand");
-		assertEquals(0, throwingRightHand.getAsJsonArray("rotation").get(2).getAsInt(),
-			"Throw wind-up should avoid the vanilla special-model Z flip that points this cuboid head backward");
+		assertEquals(180, throwingRightHand.getAsJsonArray("rotation").get(2).getAsInt(),
+			"Throw wind-up should flip the cuboid trident so the prongs face forward from the hand");
 
 		BufferedImage image = ImageIO.read(itemTexture.toFile());
 		assertNotNull(image, "Harpoon texture should decode as a PNG");

@@ -237,12 +237,22 @@ class AssetCustomizerContractTest {
 			"Voxel report should match the shipped cuboid count");
 		assertEquals(elements.size(), throwingModel.getAsJsonArray("elements").size(),
 			"Throwing model should reuse the same readable trident geometry");
+		JsonObject heldDisplay = model.getAsJsonObject("display")
+			.getAsJsonObject("thirdperson_righthand");
+		assertEquals(60, heldDisplay.getAsJsonArray("rotation").get(1).getAsInt(),
+			"Held third-person pose should use the vanilla trident hand angle so the grip stays at the wrist");
+		assertTrue(heldDisplay.getAsJsonArray("translation").get(0).getAsDouble() >= 8.0D,
+			"Held third-person pose should sit in the right hand instead of behind the player");
+		assertTrue(heldDisplay.getAsJsonArray("translation").get(1).getAsDouble() >= 12.0D,
+			"Held third-person pose should be raised to the hand anchor");
+		assertTrue(heldDisplay.getAsJsonArray("translation").get(2).getAsDouble() <= 0.0D,
+			"Held third-person pose should not float behind the shoulder");
 		JsonObject throwingDisplay = throwingModel.getAsJsonObject("display")
 			.getAsJsonObject("thirdperson_righthand");
 		assertEquals(90, throwingDisplay.getAsJsonArray("rotation").get(1).getAsInt(),
 			"Throwing pose should rotate the trident so the prongs point forward during wind-up");
-		assertEquals(0, throwingDisplay.getAsJsonArray("rotation").get(2).getAsInt(),
-			"Throwing pose should not use vanilla special-renderer Z-flip for this cuboid model");
+		assertEquals(180, throwingDisplay.getAsJsonArray("rotation").get(2).getAsInt(),
+			"Throwing pose should flip the cuboid trident so the prongs face forward during wind-up");
 		assertTrue(throwingDisplay.getAsJsonArray("scale").get(0).getAsDouble() < 0.9D,
 			"Throwing pose should stay compact enough to avoid clipping through the camera");
 		assertEquals("curated_trident_silhouette_from_concept_palette",
