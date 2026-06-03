@@ -24,9 +24,10 @@ class AttunedClientConfigContractTest {
 
 		assertTrue(source.contains("show_own_affinity_hud"), "Client config should persist the own HUD key.");
 		assertTrue(source.contains("show_enemy_affinity_hud"), "Client config should persist the enemy HUD key.");
+		assertTrue(source.contains("show_foci_hud"), "Client config should persist the Foci HUD key.");
 		assertTrue(source.contains("resolve(\"attuned-client.json\")"), "Client config should load attuned-client.json.");
-		assertTrue(source.contains("DEFAULT = new AttunedClientConfig(true, true)"),
-			"Client config should default both HUD elements on.");
+		assertTrue(source.contains("DEFAULT = new AttunedClientConfig(true, true, true)"),
+			"Client config should default all HUD elements on.");
 		assertTrue(source.contains("save();"), "Client config should write normalized/default settings.");
 	}
 
@@ -46,6 +47,8 @@ class AttunedClientConfigContractTest {
 			"Own HUD toggle keybind should be registered.");
 		assertTrue(source.contains("key.attuned.toggle_enemy_affinity_hud"),
 			"Enemy HUD toggle keybind should be registered.");
+		assertTrue(source.contains("key.attuned.toggle_foci_hud"),
+			"Foci HUD toggle keybind should be registered.");
 		assertTrue(source.contains("InputConstants.UNKNOWN"), "HUD toggle keybinds should be unbound by default.");
 	}
 
@@ -57,6 +60,8 @@ class AttunedClientConfigContractTest {
 			"Own HUD toggle keybind should have a translation.");
 		assertTrue(source.contains("\"key.attuned.toggle_enemy_affinity_hud\""),
 			"Enemy HUD toggle keybind should have a translation.");
+		assertTrue(source.contains("\"key.attuned.toggle_foci_hud\""),
+			"Foci HUD toggle keybind should have a translation.");
 	}
 
 	private static String read(Path file) throws IOException {

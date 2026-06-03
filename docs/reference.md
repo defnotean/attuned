@@ -50,10 +50,12 @@ Attuned currently ships these factions:
 |------------|-------|--------------|
 | `attuned:unseen` | Stealth, stillness, smoke, ambush openings | Rewards setup and positioning without replacing armor, speed, or raw damage builds. |
 | `attuned:seafarers` | Fishing, shore travel, return points | Peaceful Luck and water utility without PvP pressure. |
+| `attuned:offshore` | Salvage, storms, wreck maps, deep-water risk | Utility with danger: temporary tools, water pressure, and anti-drowned/guardian space without becoming a permanent weapon line. |
 | `attuned:radiant` | Holy vows, light, witness, judgment | Reveals and protects in short windows rather than adding broad damage. |
 | `attuned:reliquary` | Names, relics, rites, thresholds | Utility-side Holy tools that reward preparation and place. |
 | `attuned:verdant_choir` | Roots, bloom, moss, patient growth | Broad natural utility with small travel and survival numbers. |
 | `attuned:ashen_forge` | Heat, craft, rivets, tempering | Craft-flavoured Fury/Bastion tools with restrained stat bonuses. |
+| `attuned:revenant` | Unfinished endings, debts, rites, grave-cold reprisals | Utility and controlled combat pressure through short revenge windows, cleansing, slowness, and one active movement ability. |
 
 ## Attribute modifiers
 
@@ -112,7 +114,7 @@ all are optional:
 | `onActivate`    | Once, when the Focus becomes active. |
 | `onTick`        | Every server tick (20×/second) while active. |
 | `onDeactivate`  | Once, when the Focus stops being active. Undo things here. |
-| `onAbility`     | When the player presses the Focus-ability keybind, if active. |
+| `onAbility`     | When the player presses the Focus Ability keybind, if active. |
 
 "Active" means equipped **and** within the attunement budget. A Focus pushed
 over budget goes dormant and counts as deactivated.
@@ -132,12 +134,14 @@ examples to copy from:
 | `attuned:rainstep`   | `RainstepBehavior`       | Movement speed in rain, water, or waterlogged blocks. |
 | `attuned:anchor`     | `AnchorBehavior`         | Knockback resistance while sneaking or blocking. |
 | `attuned:hearth`     | `HearthBehavior`         | Campfire-adjacent regeneration while well fed. |
-| `attuned:lantern`    | `LanternBehavior`        | Briefly marks visible hostile mobs in darkness while holding a torch or lantern. |
+| `attuned:lantern`    | `LanternBehavior`        | Briefly marks visible threats in darkness while holding a torch or lantern. |
 | `attuned:votive`     | `RadiantFocusBehaviors`  | Bright light or lit candles grant a short absorption shield on cooldown. |
-| `attuned:bellwether` | `RadiantFocusBehaviors`  | Bells reveal visible hostile mobs nearby. |
+| `attuned:bellwether` | `RadiantFocusBehaviors`  | Bells reveal visible threats nearby. |
 | `attuned:oathguard`  | `RadiantFocusBehaviors`  | Blocking grants a short absorption shield on cooldown. |
 | `attuned:censer`     | `RadiantFocusBehaviors`  | Bright light or campfires trim poison and wither durations. |
 | `attuned:threshold`  | `RadiantFocusBehaviors`  | Crossing from low light into bright light grants a short shield. |
+| `attuned:epitaph`    | `RevenantFocusBehaviors` | Pulls nearby experience orbs gently toward the player. |
+| `attuned:hollowstep` | `RevenantFocusBehaviors` | Ability-key spectral step up to 5 blocks through entities, never through walls. |
 | `attuned:bloodfury`  | `BloodfuryBehavior`      | Attack speed scaled by missing health. |
 | `attuned:harvest`    | `HarvestBehavior`        | Speeds up nearby crops. |
 | `attuned:forager`    | `ForagerBehavior`        | Sometimes adds small food or seed rewards while gathering plants. |
@@ -149,7 +153,8 @@ examples to copy from:
 | `attuned:veil`       | `VeilBehavior`           | Crouch still in low light to become invisible until broken. |
 | `attuned:smoke`      | `SmokeBehavior`          | Ability-key smoke burst that drops mobs with broken line of sight. |
 | `attuned:stormcall`  | `StormcallBehavior`      | Lightning while sprinting in rain. |
-| `attuned:voidstep`   | `VoidstepBehavior`       | Blinks forward on the Focus-ability keybind. |
+| `attuned:voidstep`   | `VoidstepBehavior`       | Blinks forward on the Focus Ability keybind. |
+| `attuned:harpoon`    | `HarpoonBehavior`       | Ability key summons a temporary custom-model trident for 30 seconds, then removes it from inventory, drops, or projectile state. |
 
 ### When a power is not a behavior
 
@@ -161,6 +166,8 @@ their own classes — read these if your idea resembles them:
   damage between affinities plus Cinder, Thornward, and Leech.
 - **Unseen ambush combat** - `combat/UnseenCombat.java` handles Needle's
   opening-hit bonus and breaks Veil when combat starts.
+- **Revenant combat** - `combat/RevenantCombat.java` handles Ashen Debt's
+  revenge window, Last Rites cleansing, and Bonechill slowing.
 
 ## Numbers you can tune
 

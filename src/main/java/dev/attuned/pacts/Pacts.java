@@ -11,6 +11,7 @@ import dev.attuned.attunement.AttunedInv;
 import dev.attuned.attunement.Attunement;
 import dev.attuned.combat.Apex;
 import dev.attuned.combat.AttunedCombat;
+import dev.attuned.combat.CombatTargets;
 import dev.attuned.combat.MobAffinities;
 import dev.attuned.combat.Resonance;
 import java.util.EnumMap;
@@ -89,7 +90,7 @@ public final class Pacts {
 	private static final float PYRESWORN_CHARGED_SWING_THRESHOLD = 0.5F;
 	/** Radiant Covenant asks for a deliberate melee strike before revealing. */
 	private static final float RADIANT_COVENANT_SWING_THRESHOLD = 0.9F;
-	/** Radiant Covenant reveals hostile mobs briefly instead of adding raw PvP power. */
+	/** Radiant Covenant reveals visible threats briefly instead of adding raw PvP power. */
 	private static final int RADIANT_COVENANT_REVEAL_TICKS = 80;
 	/** Radiant Covenant's modest Smite-flavored boost against hostile undead. */
 	private static final float RADIANT_COVENANT_UNDEAD_BONUS = 0.10F;
@@ -250,12 +251,12 @@ public final class Pacts {
 		if (defender instanceof Player defenderPlayer && isAt(defenderPlayer, Pact.STONEHEART)) {
 			amount *= (1.0F - STONEHEART_DAMPEN);
 		}
-		// Untethered: an attacker-side amplifier against any affinity-bearing mob.
+		// Untethered: an attacker-side amplifier against any affinity-bearing foe.
 		if (source.getEntity() instanceof Player attackerPlayer
 				&& isAt(attackerPlayer, Pact.UNTETHERED)
 				&& !Apex.isAt(attackerPlayer, Apex.Capstone.MAELSTROM)
-				&& !(defender instanceof Player)
-				&& MobAffinities.of(defender).isPresent()) {
+				&& canAffectCombatTarget(attackerPlayer, defender)
+				&& hasAffinityPressure(defender)) {
 			amount *= (1.0F + UNTETHERED_AMPLIFY);
 		}
 		if (source.getEntity() instanceof Player attackerPlayer
@@ -290,7 +291,9 @@ public final class Pacts {
 		if (isAt(attacker, Pact.PYRESWORN)) {
 			pyreswornIgnite(attacker, defender, source);
 		}
-		if (isAt(attacker, Pact.UNTETHERED) && !(defender instanceof Player)) {
+		if (isAt(attacker, Pact.UNTETHERED)
+				&& canAffectCombatTarget(attacker, defender)
+				&& hasAffinityPressure(defender)) {
 			untetheredImpactSparkle(defender);
 		}
 		if (isAt(attacker, Pact.RADIANT_COVENANT)) {
@@ -299,7 +302,7 @@ public final class Pacts {
 	}
 
 	private static void radiantCovenantReveal(Player attacker, LivingEntity defender, DamageSource source) {
-		if (defender instanceof Player || !defender.isAlive() || !isHostile(defender)
+		if (!defender.isAlive() || !CombatTargets.isHostileOrPvpOpponent(defender, attacker)
 				|| !isDirectChargedMelee(attacker, source, RADIANT_COVENANT_SWING_THRESHOLD)
 				|| isOwnPet(defender, attacker) || defender instanceof AbstractVillager) {
 			return;
@@ -382,19 +385,35 @@ public final class Pacts {
 	 * colour at chest height, so the matchup-agnostic amplifier reads on screen.
 	 */
 	private static void untetheredImpactSparkle(LivingEntity defender) {
-		Optional<Affinity> defAffinity = MobAffinities.of(defender);
-		if (defAffinity.isEmpty() || !(defender.level() instanceof ServerLevel level)) {
+		Optional<Integer> color = affinityColor(defender);
+		if (color.isEmpty() || !(defender.level() instanceof ServerLevel level)) {
 			return;
 		}
 		// DustParticleOptions takes an opaque RGB, not an ARGB — strip the alpha byte.
-		int rgb = defAffinity.get().argb() & 0x00FFFFFF;
 		level.sendParticles(
-			new DustParticleOptions(rgb, 0.9F),
+			new DustParticleOptions(color.get(), 0.9F),
 			defender.getX(),
 			defender.getY() + defender.getBbHeight() * 0.6,
 			defender.getZ(),
 			3, 0.25, 0.25, 0.25, 0.0
 		);
+	}
+
+	private static boolean canAffectCombatTarget(Player attacker, LivingEntity defender) {
+		return !(defender instanceof Player targetPlayer)
+			|| CombatTargets.canAffectPlayer(attacker, targetPlayer);
+	}
+
+	private static boolean hasAffinityPressure(LivingEntity defender) {
+		return CombatTargets.affinityOf(defender).isPresent()
+			|| (defender instanceof Player player && Attunement.isDiscord(player));
+	}
+
+	private static Optional<Integer> affinityColor(LivingEntity defender) {
+		if (defender instanceof Player player && Attunement.isDiscord(player)) {
+			return Optional.of(AffinityColors.DISCORD_RGB);
+		}
+		return CombatTargets.affinityOf(defender).map(affinity -> affinity.argb() & 0x00FFFFFF);
 	}
 
 	private static void afterDeath(LivingEntity entity, DamageSource source) {

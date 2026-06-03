@@ -47,7 +47,8 @@ class RadiantExpansionContractTest {
 		"attuned:oathguard_focus",
 		"attuned:sunlance_focus",
 		"attuned:threshold_focus",
-		"attuned:votive_focus");
+		"attuned:votive_focus",
+		"attuned:last_rites_focus");
 	private static final Map<String, Set<String>> FACTION_FOCI = Map.of(
 		"attuned:radiant", Set.of(
 			"attuned:bellwether_focus",
@@ -108,7 +109,7 @@ class RadiantExpansionContractTest {
 			}
 		}
 
-		assertEquals(HOLY_FOCI, holyFoci, "The first wave should provide seven Holy Foci");
+		assertEquals(HOLY_FOCI, holyFoci, "Shipped Holy Foci should include Radiant, Reliquary, and Revenant rites");
 		for (Map.Entry<String, Set<String>> expected : FACTION_FOCI.entrySet()) {
 			assertEquals(expected.getValue(), factionItems.get(expected.getKey()),
 				expected.getKey() + " should ship its planned first-wave Foci");

@@ -86,7 +86,7 @@ public final class Resonance {
 		if (attacker instanceof Player attackerPlayer) {
 			Optional<Apex.Capstone> attackerCapstone = Apex.capstoneOf(attackerPlayer);
 			if (attackerCapstone.filter(capstone -> capstone == Apex.Capstone.MAELSTROM).isPresent()
-					&& MobAffinities.of(defender).isPresent()) {
+					&& CombatTargets.hasAffinity(defender)) {
 				add(attackerPlayer, dealtDamage * HIT_EMPOWERED_GAIN_PER_DAMAGE);
 			} else if (matchup(attackerPlayer, defender) == Matchup.EMPOWERED) {
 				add(attackerPlayer, dealtDamage * HIT_EMPOWERED_GAIN_PER_DAMAGE);
@@ -121,7 +121,7 @@ public final class Resonance {
 			case NORMAL -> {
 				if (capstone
 						.filter(apex -> apex == Apex.Capstone.MAELSTROM
-							&& MobAffinities.of(entity).isPresent()).isPresent()) {
+							&& CombatTargets.hasAffinity(entity)).isPresent()) {
 					add(player, KILL_EMPOWERED_GAIN);
 				} else {
 					add(player, KILL_NEUTRAL_GAIN);

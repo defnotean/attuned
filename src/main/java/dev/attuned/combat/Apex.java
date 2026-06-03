@@ -225,7 +225,7 @@ public final class Apex {
 			}
 		}
 
-		if (!(defender instanceof Player) && defender.getMaxHealth() > 0.0F
+		if (defender.getMaxHealth() > 0.0F
 				&& attacker instanceof Player attackerPlayer
 				&& isAt(attackerPlayer, Capstone.EXECUTE)
 				&& Resonance.atApex(attackerPlayer)
@@ -239,7 +239,7 @@ public final class Apex {
 			}
 		}
 
-		if (!(defender instanceof Player) && defender.getMaxHealth() > 0.0F
+		if (defender.getMaxHealth() > 0.0F
 				&& attacker instanceof Player attackerPlayer
 				&& isAt(attackerPlayer, Capstone.JUDGMENT)
 				&& Resonance.atApex(attackerPlayer)
@@ -251,12 +251,12 @@ public final class Apex {
 			}
 		}
 
-		if (!(defender instanceof Player) && defender.getMaxHealth() > 0.0F
+		if (defender.getMaxHealth() > 0.0F
 				&& attacker instanceof Player attackerPlayer
 				&& isAt(attackerPlayer, Capstone.MAELSTROM)
 				&& Resonance.atApex(attackerPlayer)
 				&& isApexMeleeTarget(defender, attackerPlayer, source)
-				&& MobAffinities.of(defender).isPresent()) {
+				&& CombatTargets.hasAffinity(defender)) {
 			amount *= (1.0F + MAELSTROM_DAMAGE_BONUS);
 			markScrambled(attackerPlayer, defender);
 		}
@@ -292,16 +292,19 @@ public final class Apex {
 	}
 
 	static boolean hasAffinityPressure(LivingEntity entity) {
-		if (entity instanceof Player player) {
-			return Attunement.isDiscord(player) || Attunement.committedAffinity(player).isPresent();
-		}
-		return AttunedCombat.affinityOf(entity).isPresent();
+		return CombatTargets.hasAffinity(entity);
 	}
 
 	private static boolean isApexMeleeTarget(LivingEntity defender, Player attacker, DamageSource source) {
 		return isDirectMelee(attacker, source)
+			&& canAffectApexTarget(defender, attacker)
 			&& !isOwnPet(defender, attacker)
 			&& !(defender instanceof AbstractVillager);
+	}
+
+	private static boolean canAffectApexTarget(LivingEntity defender, Player attackerPlayer) {
+		return !(defender instanceof Player targetPlayer)
+			|| CombatTargets.canAffectPlayer(attackerPlayer, targetPlayer);
 	}
 
 	private static boolean isDirectMelee(Player player, DamageSource source) {

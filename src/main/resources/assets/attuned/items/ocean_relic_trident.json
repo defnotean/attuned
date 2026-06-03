@@ -1,0 +1,32 @@
+{
+	"model": {
+		"type": "minecraft:select",
+		"property": "minecraft:display_context",
+		"cases": [
+			{
+				"when": [
+					"gui",
+					"ground",
+					"fixed",
+					"on_shelf"
+				],
+				"model": {
+					"type": "minecraft:model",
+					"model": "attuned:item/ocean_relic_trident"
+				}
+			}
+		],
+		"fallback": {
+			"type": "minecraft:condition",
+			"property": "minecraft:using_item",
+			"on_false": {
+				"type": "minecraft:model",
+				"model": "attuned:item/ocean_relic_trident"
+			},
+			"on_true": {
+				"type": "minecraft:model",
+				"model": "attuned:item/ocean_relic_trident_throwing"
+			}
+		}
+	}
+}

@@ -1,0 +1,51 @@
+[
+	{
+		"id": "harpoon_focus",
+		"name": "Harpoon Focus",
+		"kind": "generated",
+		"model": "../../src/main/resources/assets/attuned/models/item/harpoon_focus.json",
+		"texture": "../../src/main/resources/assets/attuned/textures/item/harpoon_focus.png",
+		"definition": "../../src/main/resources/assets/attuned/items/harpoon_focus.json",
+		"data": "../../src/main/resources/data/attuned/attuned/focus/harpoon_focus.json"
+	},
+	{
+		"id": "offshore_harpoon",
+		"name": "Offshore Harpoon",
+		"kind": "generated",
+		"model": "../../src/main/resources/assets/attuned/models/item/offshore_harpoon.json",
+		"texture": "../../src/main/resources/assets/attuned/textures/item/offshore_harpoon.png",
+		"definition": "../../src/main/resources/assets/attuned/items/offshore_harpoon.json",
+		"data": "../../src/main/resources/data/attuned/attuned/focus/harpoon_focus.json"
+	},
+	{
+		"id": "ocean_relic_trident",
+		"name": "Ocean Relic Trident",
+		"kind": "voxel",
+		"model": "../../src/main/resources/assets/attuned/models/item/ocean_relic_trident.json",
+		"texture": "../../src/main/resources/assets/attuned/textures/item/ocean_relic_trident_voxel_palette.png",
+		"sprite": "../../src/main/resources/assets/attuned/textures/item/ocean_relic_trident.png",
+		"definition": "../../src/main/resources/assets/attuned/items/ocean_relic_trident.json",
+		"source": "../../docs/superpowers/assets/ocean-relic-trident/Meshy_AI_Ocean_Relic_Trident_0602120856_image-to-3d-texture_obj/Meshy_AI_Ocean_Relic_Trident_0602120856_image-to-3d-texture.obj",
+		"data": "../../src/main/resources/data/attuned/attuned/focus/harpoon_focus.json"
+	},
+	{
+		"id": "ocean_relic_trident_throwing",
+		"name": "Ocean Relic Trident Throwing",
+		"kind": "voxel",
+		"model": "../../src/main/resources/assets/attuned/models/item/ocean_relic_trident_throwing.json",
+		"texture": "../../src/main/resources/assets/attuned/textures/item/ocean_relic_trident_voxel_palette.png",
+		"sprite": "../../src/main/resources/assets/attuned/textures/item/ocean_relic_trident.png",
+		"definition": "../../src/main/resources/assets/attuned/items/ocean_relic_trident.json",
+		"source": "../../docs/superpowers/assets/ocean-relic-trident/Meshy_AI_Ocean_Relic_Trident_0602120856_image-to-3d-texture_obj/Meshy_AI_Ocean_Relic_Trident_0602120856_image-to-3d-texture.obj",
+		"data": "../../src/main/resources/data/attuned/attuned/focus/harpoon_focus.json"
+	},
+	{
+		"id": "frostbound_trident",
+		"name": "Frostbound Trident",
+		"kind": "generated",
+		"model": "../../src/main/resources/assets/attuned/models/item/frostbound_trident.json",
+		"texture": "../../src/main/resources/assets/attuned/textures/item/frostbound_trident.png",
+		"definition": "../../src/main/resources/assets/attuned/items/frostbound_trident.json",
+		"source": "../../docs/superpowers/assets/frostbound-trident/frostbound_trident.glb"
+	}
+]

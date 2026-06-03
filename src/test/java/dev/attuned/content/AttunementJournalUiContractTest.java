@@ -7,6 +7,8 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -73,6 +75,42 @@ class AttunementJournalUiContractTest {
 			"Journal UI should include the reweaving lore pages");
 		assertTrue(lang.contains("\"journal.attuned.page28\""),
 			"Journal UI should include the HUD lore page");
+		assertTrue(lang.contains("\"journal.attuned.page32\""),
+			"Journal UI should include the Offshore Harpoon page");
+		assertTrue(lang.contains("\"journal.attuned.page33\""),
+			"Journal UI should include the Revenant faction page");
+		String revenantPage = translationValue(lang, "journal.attuned.page33").replace("\\n", "\n");
+		assertTrue(revenantPage.length() <= 190,
+			"Revenant journal copy should fit the compact custom journal page");
+		assertTrue(revenantPage.contains("Revenant"),
+			"Revenant journal copy should name the faction");
+		assertTrue(revenantPage.contains("debts"),
+			"Revenant journal copy should carry the faction's debt theme");
+		assertTrue(revenantPage.contains("death"),
+			"Revenant journal copy should explain the death-facing identity");
+		assertTrue(screenSource.contains("journal.attuned.page33"),
+			"Journal UI should route to the Revenant faction page");
+		assertTrue(itemSource.contains("\"journal.attuned.page33\""),
+			"Written-book fallback should include the Revenant faction page");
+		String offshorePage = translationValue(lang, "journal.attuned.page32").replace("\\n", "\n");
+		assertTrue(offshorePage.length() <= 190,
+			"Offshore Harpoon journal copy should fit the compact custom journal page");
+		assertTrue(paragraphSplits(offshorePage) <= 1,
+			"Offshore Harpoon journal copy should keep paragraph spacing compact");
+		assertTrue(offshorePage.contains("Offshore"),
+			"Offshore Harpoon journal copy should name the Offshore faction");
+		assertTrue(offshorePage.contains("Harpoon Focus"),
+			"Offshore Harpoon journal copy should name the Harpoon Focus");
+		assertTrue(offshorePage.contains("temporary"),
+			"Offshore Harpoon journal copy should explain the temporary summon");
+		assertTrue(offshorePage.contains("crafted"),
+			"Offshore Harpoon journal copy should say the trident cannot be crafted");
+		assertTrue(screenSource.contains("journal.attuned.page32"),
+			"Journal UI should route to the Offshore Harpoon page");
+		assertTrue(screenSource.contains("new Chapter(\"Offshore\""),
+			"Journal UI should expose Offshore as its own chapter");
+		assertTrue(itemSource.contains("\"journal.attuned.page32\""),
+			"Written-book fallback should include the Offshore Harpoon page");
 		assertTrue(lang.contains("\"journal.attuned.page29\""),
 			"Journal UI should include the Radiant Covenant page");
 		assertTrue(lang.contains("\"journal.attuned.page30\""),
@@ -100,5 +138,16 @@ class AttunementJournalUiContractTest {
 
 	private static String read(Path file) throws IOException {
 		return Files.readString(file, StandardCharsets.UTF_8);
+	}
+
+	private static String translationValue(String lang, String key) {
+		Pattern pattern = Pattern.compile("\"" + Pattern.quote(key) + "\"\\s*:\\s*\"((?:\\\\.|[^\"])*)\"");
+		Matcher matcher = pattern.matcher(lang);
+		assertTrue(matcher.find(), "Expected translation key " + key);
+		return matcher.group(1);
+	}
+
+	private static int paragraphSplits(String copy) {
+		return copy.split("\n\n", -1).length - 1;
 	}
 }

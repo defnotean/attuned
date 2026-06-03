@@ -1,0 +1,26 @@
+{
+  "source_sprite": "src/main/resources/assets/attuned/textures/item/ocean_relic_trident.png",
+  "minecraft_model": "src/main/resources/assets/attuned/models/item/ocean_relic_trident.json",
+  "minecraft_throwing_model": "src/main/resources/assets/attuned/models/item/ocean_relic_trident_throwing.json",
+  "item_definition": "src/main/resources/assets/attuned/items/ocean_relic_trident.json",
+  "palette_texture": "src/main/resources/assets/attuned/textures/item/ocean_relic_trident_voxel_palette.png",
+  "strategy": "curated_trident_silhouette_from_image_generated_palette",
+  "reason": "Raw sprite voxelization looked compact and noisy in third-person hand rendering.",
+  "palette_colors": 28,
+  "cuboids": 48,
+  "bbox_min": [
+    2.25,
+    -14.5,
+    6.25
+  ],
+  "bbox_max": [
+    13.75,
+    32.0,
+    10.35
+  ],
+  "bbox_size": [
+    11.5,
+    46.5,
+    4.1
+  ]
+}

@@ -9,9 +9,8 @@ import net.minecraft.client.KeyMapping;
 import org.lwjgl.glfw.GLFW;
 
 /**
- * The Focus-ability keybind. Pressing it asks the server to trigger the active
- * ability of every active Focus the player carries; the server owns all
- * validation.
+ * The Focus Ability keybind. Pressing it asks the server to trigger the active
+ * ability of the player's one active ability Focus; the server owns all validation.
  */
 public final class AttunedKeybinds {
 	private AttunedKeybinds() {}
@@ -19,6 +18,7 @@ public final class AttunedKeybinds {
 	private static KeyMapping abilityKey;
 	private static KeyMapping toggleOwnAffinityHudKey;
 	private static KeyMapping toggleEnemyAffinityHudKey;
+	private static KeyMapping toggleFociHudKey;
 
 	/** Registers the keybind and the tick watcher that sends the ability packet. */
 	public static void init() {
@@ -30,6 +30,9 @@ public final class AttunedKeybinds {
 		toggleEnemyAffinityHudKey = KeyMappingHelper.registerKeyMapping(new KeyMapping(
 			"key.attuned.toggle_enemy_affinity_hud",
 			InputConstants.UNKNOWN.getType(), InputConstants.UNKNOWN.getValue(), KeyMapping.Category.GAMEPLAY));
+		toggleFociHudKey = KeyMappingHelper.registerKeyMapping(new KeyMapping(
+			"key.attuned.toggle_foci_hud",
+			InputConstants.UNKNOWN.getType(), InputConstants.UNKNOWN.getValue(), KeyMapping.Category.GAMEPLAY));
 		ClientTickEvents.END_CLIENT_TICK.register(client -> {
 			while (abilityKey.consumeClick()) {
 				ClientPlayNetworking.send(new AbilityPayload());
@@ -39,6 +42,9 @@ public final class AttunedKeybinds {
 			}
 			while (toggleEnemyAffinityHudKey.consumeClick()) {
 				AttunedClientConfig.toggleEnemyAffinityHud();
+			}
+			while (toggleFociHudKey.consumeClick()) {
+				AttunedClientConfig.toggleFociHud();
 			}
 		});
 	}

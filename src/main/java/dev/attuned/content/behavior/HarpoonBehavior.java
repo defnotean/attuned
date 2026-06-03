@@ -1,0 +1,265 @@
+package dev.attuned.content.behavior;
+
+import dev.attuned.Attuned;
+import dev.attuned.AttunedPlayerCleanup;
+import dev.attuned.api.focus.FocusBehavior;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.UUID;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.Identifier;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.util.Unit;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.entity.projectile.arrow.ThrownTrident;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.item.component.CustomData;
+
+/** Offshore Harpoon Focus: summons one temporary custom trident on the ability key. */
+public final class HarpoonBehavior implements FocusBehavior {
+	static final int DURATION_TICKS = 600;
+	static final int COOLDOWN_TICKS = 1200;
+	private static final String MARKER_ID = "attuned:offshore_harpoon";
+	private static final String MARKER_KEY = "marker";
+	private static final String OWNER_KEY = "owner";
+	private static final String EXPIRES_AT_KEY = "expires_at";
+	private static final Identifier HARPOON_MODEL =
+		Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "ocean_relic_trident");
+	private static final Component HARPOON_NAME =
+		Component.translatable("item.attuned.ocean_relic_trident");
+	private static final Map<UUID, Long> ACTIVE_HARPOONS = new HashMap<>();
+	private static boolean initialized;
+
+	public HarpoonBehavior() {
+		initLifecycle();
+	}
+
+	@Override
+	public boolean hasActiveAbility() {
+		return true;
+	}
+
+	@Override
+	public int abilityCooldownTicks() {
+		return COOLDOWN_TICKS;
+	}
+
+	@Override
+	public boolean onAbility(ServerPlayer player, ItemStack focus) {
+		long now = player.level().getGameTime();
+		removeInvalidInventoryHarpoons(player, now);
+		if (ACTIVE_HARPOONS.getOrDefault(player.getUUID(), -1L) > now) {
+			player.sendOverlayMessage(Component.translatable("item.attuned.harpoon_focus.active"));
+			return false;
+		}
+
+		ItemStack harpoon = createHarpoon(player, now);
+		if (!placeHarpoon(player, harpoon)) {
+			player.sendOverlayMessage(Component.translatable("item.attuned.harpoon_focus.no_space"));
+			return false;
+		}
+
+		ACTIVE_HARPOONS.put(player.getUUID(), expiresAt(harpoon));
+		player.level().playSound(null, player.blockPosition(),
+			SoundEvents.TRIDENT_RETURN, SoundSource.PLAYERS, 0.75F, 0.85F);
+		return true;
+	}
+
+	@Override
+	public void onTick(ServerPlayer player, ItemStack focus) {
+		removeInvalidInventoryHarpoons(player, player.level().getGameTime());
+	}
+
+	@Override
+	public void onDeactivate(ServerPlayer player, ItemStack focus) {
+		removeForPlayer(player);
+	}
+
+	public static boolean isTemporaryHarpoon(ItemStack stack) {
+		if (stack == null || stack.isEmpty() || !stack.is(Items.TRIDENT)) {
+			return false;
+		}
+		CustomData data = stack.get(DataComponents.CUSTOM_DATA);
+		return data != null && MARKER_ID.equals(data.copyTag().getStringOr(MARKER_KEY, ""));
+	}
+
+	public static boolean shouldDiscardProjectile(ItemStack stack, long now) {
+		return isTemporaryHarpoon(stack) && expiresAt(stack) <= now;
+	}
+
+	private static void initLifecycle() {
+		if (initialized) {
+			return;
+		}
+		initialized = true;
+		ServerTickEvents.END_SERVER_TICK.register(HarpoonBehavior::tickServer);
+		ServerLifecycleEvents.SERVER_STOPPED.register(HarpoonBehavior::removeAllTemporaryHarpoons);
+		AttunedPlayerCleanup.onForgetPlayer(HarpoonBehavior::removeForPlayer);
+	}
+
+	private static ItemStack createHarpoon(ServerPlayer player, long now) {
+		ItemStack harpoon = new ItemStack(Items.TRIDENT);
+		CompoundTag tag = new CompoundTag();
+		tag.putString(MARKER_KEY, MARKER_ID);
+		tag.putString(OWNER_KEY, player.getUUID().toString());
+		tag.putLong(EXPIRES_AT_KEY, now + DURATION_TICKS);
+		harpoon.set(DataComponents.CUSTOM_DATA, CustomData.of(tag));
+		harpoon.set(DataComponents.ITEM_MODEL, HARPOON_MODEL);
+		harpoon.set(DataComponents.CUSTOM_NAME, HARPOON_NAME);
+		harpoon.set(DataComponents.INTANGIBLE_PROJECTILE, Unit.INSTANCE);
+		return harpoon;
+	}
+
+	private static boolean placeHarpoon(ServerPlayer player, ItemStack harpoon) {
+		if (player.getMainHandItem().isEmpty()) {
+			player.setItemInHand(InteractionHand.MAIN_HAND, harpoon);
+			return true;
+		}
+
+		Inventory inventory = player.getInventory();
+		int freeSlot = inventory.getFreeSlot();
+		if (freeSlot < 0) {
+			return false;
+		}
+		inventory.setItem(freeSlot, player.getMainHandItem().copy());
+		player.setItemInHand(InteractionHand.MAIN_HAND, harpoon);
+		return true;
+	}
+
+	private static void tickServer(MinecraftServer server) {
+		long now = server.overworld().getGameTime();
+		for (ServerPlayer player : server.getPlayerList().getPlayers()) {
+			removeInvalidInventoryHarpoons(player, now);
+		}
+		if (!ACTIVE_HARPOONS.isEmpty() || now % 20L == 0L) {
+			cleanupEntities(server, now);
+		}
+		pruneActiveHarpoons(now);
+	}
+
+	private static void pruneActiveHarpoons(long now) {
+		Iterator<Map.Entry<UUID, Long>> entries = ACTIVE_HARPOONS.entrySet().iterator();
+		while (entries.hasNext()) {
+			if (entries.next().getValue() <= now) {
+				entries.remove();
+			}
+		}
+	}
+
+	private static void removeAllTemporaryHarpoons(MinecraftServer server) {
+		for (ServerPlayer player : server.getPlayerList().getPlayers()) {
+			removeInventoryHarpoons(player, player.getUUID(), Long.MAX_VALUE, true);
+		}
+		for (ServerLevel level : server.getAllLevels()) {
+			for (Entity entity : level.getAllEntities()) {
+				if (entity instanceof ItemEntity item && isTemporaryHarpoon(item.getItem())) {
+					item.discard();
+				} else if (entity instanceof ThrownTrident trident
+						&& isTemporaryHarpoon(trident.getPickupItemStackOrigin())) {
+					trident.discard();
+				}
+			}
+		}
+		ACTIVE_HARPOONS.clear();
+	}
+
+	private static void removeForPlayer(ServerPlayer player) {
+		UUID owner = player.getUUID();
+		removeInventoryHarpoons(player, owner, Long.MAX_VALUE, true);
+		if (player.level() instanceof ServerLevel level) {
+			removeEntitiesForOwner(level.getServer(), owner);
+		}
+		ACTIVE_HARPOONS.remove(owner);
+	}
+
+	private static void removeInvalidInventoryHarpoons(ServerPlayer player, long now) {
+		UUID owner = player.getUUID();
+		removeInventoryHarpoons(player, owner, now, false);
+		if (ACTIVE_HARPOONS.getOrDefault(owner, -1L) <= now) {
+			ACTIVE_HARPOONS.remove(owner);
+		}
+	}
+
+	private static void removeInventoryHarpoons(ServerPlayer player, UUID owner, long now, boolean force) {
+		removeMarkedStack(player.getMainHandItem(), owner, now, force, true);
+		Inventory inventory = player.getInventory();
+		for (int slot = 0; slot < inventory.getContainerSize(); slot++) {
+			removeMarkedStack(inventory.getItem(slot), owner, now, force, true);
+		}
+	}
+
+	private static void removeMarkedStack(ItemStack stack, UUID owner, long now, boolean force, boolean removeForeignOwner) {
+		if (!isTemporaryHarpoon(stack)) {
+			return;
+		}
+		UUID stackOwner = ownerOf(stack);
+		if ((owner.equals(stackOwner) && (force || expiresAt(stack) <= now))
+				|| (removeForeignOwner && !owner.equals(stackOwner))) {
+			stack.shrink(stack.getCount());
+		}
+	}
+
+	private static void cleanupEntities(MinecraftServer server, long now) {
+		for (ServerLevel level : server.getAllLevels()) {
+			for (Entity entity : level.getAllEntities()) {
+				if (entity instanceof ItemEntity item && shouldDiscardProjectile(item.getItem(), now)) {
+					item.discard();
+				} else if (entity instanceof ThrownTrident trident
+						&& shouldDiscardProjectile(trident.getPickupItemStackOrigin(), now)) {
+					trident.discard();
+				}
+			}
+		}
+	}
+
+	private static void removeEntitiesForOwner(MinecraftServer server, UUID owner) {
+		for (ServerLevel level : server.getAllLevels()) {
+			for (Entity entity : level.getAllEntities()) {
+				if (entity instanceof ItemEntity item && isOwnedTemporaryHarpoon(item.getItem(), owner)) {
+					item.discard();
+				} else if (entity instanceof ThrownTrident trident
+						&& isOwnedTemporaryHarpoon(trident.getPickupItemStackOrigin(), owner)) {
+					trident.discard();
+				}
+			}
+		}
+	}
+
+	private static boolean isOwnedTemporaryHarpoon(ItemStack stack, UUID owner) {
+		return isTemporaryHarpoon(stack) && owner.equals(ownerOf(stack));
+	}
+
+	private static UUID ownerOf(ItemStack stack) {
+		CustomData data = stack.get(DataComponents.CUSTOM_DATA);
+		if (data == null) {
+			return null;
+		}
+		String value = data.copyTag().getStringOr(OWNER_KEY, "");
+		try {
+			return value.isBlank() ? null : UUID.fromString(value);
+		} catch (IllegalArgumentException ignored) {
+			return null;
+		}
+	}
+
+	private static long expiresAt(ItemStack stack) {
+		CustomData data = stack.get(DataComponents.CUSTOM_DATA);
+		if (data == null) {
+			return -1L;
+		}
+		return data.copyTag().getLongOr(EXPIRES_AT_KEY, -1L);
+	}
+}

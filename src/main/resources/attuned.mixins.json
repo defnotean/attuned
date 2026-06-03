@@ -8,7 +8,8 @@
 		"FishingRodItemMixin",
 		"LivingEntityHurtMixin",
 		"LivingEntityKnockbackMixin",
-		"ServerGamePacketListenerImplMixin"
+		"ServerGamePacketListenerImplMixin",
+		"ThrownTridentMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1

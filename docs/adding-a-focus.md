@@ -190,7 +190,7 @@ public final class StoneskinBehavior implements FocusBehavior {
 
 	@Override
 	public void onAbility(ServerPlayer player, ItemStack focus) {
-		// Runs when the player presses the Focus-ability keybind.
+		// Runs when the player presses the Focus Ability keybind.
 	}
 }
 ```

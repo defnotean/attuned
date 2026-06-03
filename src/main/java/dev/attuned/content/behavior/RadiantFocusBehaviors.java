@@ -2,6 +2,7 @@ package dev.attuned.content.behavior;
 
 import dev.attuned.AttunedPlayerCleanup;
 import dev.attuned.api.focus.FocusBehavior;
+import dev.attuned.combat.CombatTargets;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -15,7 +16,6 @@ import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.AbstractCandleBlock;
 import net.minecraft.world.level.block.Blocks;
@@ -96,7 +96,8 @@ public final class RadiantFocusBehaviors {
 			ServerLevel level = (ServerLevel) player.level();
 			List<LivingEntity> targets = level.getEntitiesOfClass(LivingEntity.class,
 				player.getBoundingBox().inflate(TARGET_RADIUS),
-				target -> target.isAlive() && isHostile(target) && player.hasLineOfSight(target));
+				target -> target.isAlive() && CombatTargets.isHostileOrPvpOpponent(target, player)
+					&& player.hasLineOfSight(target));
 			for (LivingEntity target : targets) {
 				target.addEffect(new MobEffectInstance(MobEffects.GLOWING, GLOW_TICKS, 0, true, false, true));
 			}
@@ -267,10 +268,6 @@ public final class RadiantFocusBehaviors {
 			}
 		}
 		return false;
-	}
-
-	private static boolean isHostile(LivingEntity entity) {
-		return entity.getType().getCategory() == MobCategory.MONSTER;
 	}
 
 	private static final class Cooldown {

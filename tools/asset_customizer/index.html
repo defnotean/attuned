@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<title>Attuned Asset Customizer</title>
+		<link rel="stylesheet" href="styles.css">
+	</head>
+	<body>
+		<main class="app">
+			<aside class="controls" aria-label="Asset controls">
+				<div class="brand">
+					<h1>Attuned Asset Customizer</h1>
+					<p id="assetStatus">Loading assets...</p>
+				</div>
+
+				<label>
+					<span>Asset</span>
+					<select id="assetSelect"></select>
+				</label>
+
+				<label>
+					<span>View</span>
+					<select id="viewMode">
+						<option value="slot">Inventory Slot</option>
+						<option value="model">Model</option>
+						<option value="firstperson">First Person</option>
+						<option value="thirdperson">Third Person</option>
+						<option value="texture">Texture Atlas</option>
+					</select>
+				</label>
+
+				<label>
+					<span>Display</span>
+					<select id="displayPreset"></select>
+				</label>
+
+				<div class="control-grid">
+					<label>
+						<span>X</span>
+						<input id="rotX" type="range" min="-180" max="180" step="1" value="36">
+						<output id="rotXValue">36</output>
+					</label>
+					<label>
+						<span>Y</span>
+						<input id="rotY" type="range" min="-180" max="180" step="1" value="-38">
+						<output id="rotYValue">-38</output>
+					</label>
+					<label>
+						<span>Z</span>
+						<input id="rotZ" type="range" min="-180" max="180" step="1" value="5">
+						<output id="rotZValue">5</output>
+					</label>
+					<label>
+						<span>Zoom</span>
+						<input id="zoom" type="range" min="8" max="48" step="1" value="26">
+						<output id="zoomValue">26</output>
+					</label>
+					<label>
+						<span>Offset X</span>
+						<input id="offsetX" type="range" min="-160" max="160" step="1" value="0">
+						<output id="offsetXValue">0</output>
+					</label>
+					<label>
+						<span>Offset Y</span>
+						<input id="offsetY" type="range" min="-160" max="160" step="1" value="0">
+						<output id="offsetYValue">0</output>
+					</label>
+					<label>
+						<span>Frame</span>
+						<input id="frame" type="range" min="0" max="0" step="1" value="0">
+						<output id="frameValue">0</output>
+					</label>
+				</div>
+
+				<div class="button-row">
+					<button id="playToggle" type="button" title="Play animated texture frames">Play</button>
+					<button id="resetView" type="button" title="Reset to selected display transform">Reset</button>
+					<button id="refreshAsset" type="button" title="Reload model and texture files">Refresh</button>
+				</div>
+
+				<div class="button-row">
+					<button id="copyTransform" type="button" title="Copy the current display JSON">Copy JSON</button>
+					<button id="exportPng" type="button" title="Download the current preview canvas">Export PNG</button>
+				</div>
+
+				<textarea id="transformOutput" spellcheck="false" aria-label="Current display transform"></textarea>
+			</aside>
+
+			<section class="viewport" aria-label="Asset preview">
+				<div class="preview-shell">
+					<canvas id="previewCanvas" width="960" height="640"></canvas>
+				</div>
+				<div class="meta">
+					<div>
+						<strong id="assetName">Asset</strong>
+						<span id="assetKind">kind</span>
+					</div>
+					<div id="assetPaths"></div>
+				</div>
+			</section>
+		</main>
+
+		<script src="asset-customizer.js"></script>
+	</body>
+</html>

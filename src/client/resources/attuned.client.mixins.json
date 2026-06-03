@@ -6,7 +6,8 @@
 		"AbstractRecipeBookScreenAccessor",
 		"AbstractRecipeBookScreenMixin",
 		"CreativeModeInventoryScreenMixin",
-		"InventoryScreenMixin"
+		"InventoryScreenMixin",
+		"RenderTypeInvoker"
 	],
 	"injectors": {
 		"defaultRequire": 1

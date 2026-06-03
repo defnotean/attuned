@@ -7,9 +7,9 @@ import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.Identifier;
 
 /**
- * Client-to-server signal that the player pressed the Focus-ability keybind. It
- * carries no data; the server resolves which abilities fire entirely from the
- * player's own active Foci, so a forged payload triggers nothing extra.
+ * Client-to-server signal that the player pressed the Focus Ability keybind. It
+ * carries no data; the server resolves the one active ability Focus entirely
+ * from the player's own active Foci, so a forged payload triggers nothing extra.
  */
 public record AbilityPayload() implements CustomPacketPayload {
 

@@ -1,0 +1,7 @@
+{
+	"item": "attuned:last_rites_focus",
+	"cost": 3,
+	"unique": true,
+	"affinity": "holy",
+	"faction": "attuned:revenant"
+}

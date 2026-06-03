@@ -13,8 +13,11 @@ import net.fabricmc.api.Environment;
 import net.fabricmc.loader.api.FabricLoader;
 
 @Environment(EnvType.CLIENT)
-public record AttunedClientConfig(boolean showOwnAffinityHud, boolean showEnemyAffinityHud) {
-	public static final AttunedClientConfig DEFAULT = new AttunedClientConfig(true, true);
+public record AttunedClientConfig(
+		boolean showOwnAffinityHud,
+		boolean showEnemyAffinityHud,
+		boolean showFociHud) {
+	public static final AttunedClientConfig DEFAULT = new AttunedClientConfig(true, true, true);
 
 	private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
 	private static AttunedClientConfig current = DEFAULT;
@@ -47,13 +50,22 @@ public record AttunedClientConfig(boolean showOwnAffinityHud, boolean showEnemyA
 		setShowEnemyAffinityHud(!current.showEnemyAffinityHud());
 	}
 
+	public static void toggleFociHud() {
+		setShowFociHud(!current.showFociHud());
+	}
+
 	public static void setShowOwnAffinityHud(boolean showOwnAffinityHud) {
-		current = new AttunedClientConfig(showOwnAffinityHud, current.showEnemyAffinityHud());
+		current = new AttunedClientConfig(showOwnAffinityHud, current.showEnemyAffinityHud(), current.showFociHud());
 		save();
 	}
 
 	public static void setShowEnemyAffinityHud(boolean showEnemyAffinityHud) {
-		current = new AttunedClientConfig(current.showOwnAffinityHud(), showEnemyAffinityHud);
+		current = new AttunedClientConfig(current.showOwnAffinityHud(), showEnemyAffinityHud, current.showFociHud());
+		save();
+	}
+
+	public static void setShowFociHud(boolean showFociHud) {
+		current = new AttunedClientConfig(current.showOwnAffinityHud(), current.showEnemyAffinityHud(), showFociHud);
 		save();
 	}
 
@@ -61,6 +73,7 @@ public record AttunedClientConfig(boolean showOwnAffinityHud, boolean showEnemyA
 		JsonObject json = new JsonObject();
 		json.addProperty("show_own_affinity_hud", current.showOwnAffinityHud());
 		json.addProperty("show_enemy_affinity_hud", current.showEnemyAffinityHud());
+		json.addProperty("show_foci_hud", current.showFociHud());
 		Path path = path();
 		try {
 			Files.createDirectories(path.getParent());
@@ -77,7 +90,8 @@ public record AttunedClientConfig(boolean showOwnAffinityHud, boolean showEnemyA
 		JsonObject json = element.getAsJsonObject();
 		return new AttunedClientConfig(
 			booleanOr(json, "show_own_affinity_hud", DEFAULT.showOwnAffinityHud()),
-			booleanOr(json, "show_enemy_affinity_hud", DEFAULT.showEnemyAffinityHud()));
+			booleanOr(json, "show_enemy_affinity_hud", DEFAULT.showEnemyAffinityHud()),
+			booleanOr(json, "show_foci_hud", DEFAULT.showFociHud()));
 	}
 
 	private static boolean booleanOr(JsonObject json, String key, boolean fallback) {

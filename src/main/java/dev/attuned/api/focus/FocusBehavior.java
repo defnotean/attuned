@@ -21,6 +21,18 @@ public interface FocusBehavior {
 	/** Called every server tick while the Focus is active. */
 	default void onTick(ServerPlayer player, ItemStack focus) {}
 
-	/** Called when the player triggers the Focus-ability keybind, for each active Focus. */
-	default void onAbility(ServerPlayer player, ItemStack focus) {}
+	/** Whether this behavior owns the player's single Focus Ability key response. */
+	default boolean hasActiveAbility() {
+		return false;
+	}
+
+	/** Cooldown duration, in server ticks, for the Focus Ability key response. */
+	default int abilityCooldownTicks() {
+		return 0;
+	}
+
+	/** Called when this is the first active ability Focus and the player triggers the keybind. */
+	default boolean onAbility(ServerPlayer player, ItemStack focus) {
+		return false;
+	}
 }

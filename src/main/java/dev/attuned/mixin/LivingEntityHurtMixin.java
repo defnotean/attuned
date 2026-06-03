@@ -2,6 +2,7 @@ package dev.attuned.mixin;
 
 import dev.attuned.combat.Apex;
 import dev.attuned.combat.AttunedCombat;
+import dev.attuned.combat.RevenantCombat;
 import dev.attuned.combat.UnseenCombat;
 import dev.attuned.pacts.Pacts;
 import net.minecraft.server.level.ServerLevel;
@@ -36,6 +37,7 @@ public abstract class LivingEntityHurtMixin {
 		float scaled = AttunedCombat.applyAffinity(level, self, source, amount);
 		float capped = Apex.adjustDamage(self, source, scaled);
 		float adjusted = Pacts.adjustDamage(self, source, capped);
-		return UnseenCombat.adjustDamage(self, source, adjusted);
+		float unseen = UnseenCombat.adjustDamage(self, source, adjusted);
+		return RevenantCombat.adjustDamage(self, source, unseen);
 	}
 }

@@ -53,7 +53,7 @@ Qualification:
 
 Effect:
 
-- Fully charged direct melee hits against hostile mobs reveal the target for 80 ticks.
+- Fully charged direct melee hits against visible threats reveal the target for 80 ticks.
 - Undead targets take 10% extra damage from those fully charged direct melee hits.
 - The effect is readable and helpful, but lower raw damage than a Fury build.
 
@@ -73,7 +73,7 @@ Qualification:
 Effect:
 
 - Judgment pressures Fury, the affinity Holy beats.
-- Direct melee hits against Fury-affinity non-player enemies at or below 30% health add 40% damage instead of executing outright.
+- Direct melee hits against Fury-affinity foes at or below 30% health add 40% damage instead of executing outright.
 - Zephyr counters Holy, so Zephyr-affinity enemies and players can slip past Judgment's pressure.
 
 Judgment feels like an oath being fulfilled, not a generic smite button.
@@ -91,9 +91,9 @@ Theme: Holy vows, light, bells, sanctuaries, remembered names.
 Foci:
 
 - **Votive Focus**: cost 2 Holy Focus. While in light level 12+ or within 3 blocks of lit candles, hostile hits can grant Absorption I for 40 ticks on a 240-tick cooldown. No regeneration.
-- **Bellwether Focus**: cost 3 Holy behavior Focus. Ringing or standing within 8 blocks of a bell reveals nearby hostile mobs for 80 ticks, with a 200-tick player cooldown.
+- **Bellwether Focus**: cost 3 Holy behavior Focus. Ringing or standing within 8 blocks of a bell reveals nearby visible threats for 80 ticks, with a 200-tick player cooldown.
 - **Oathguard Focus**: cost 4 Holy defensive Focus. Blocking or taking a hostile hit grants Absorption I for 60 ticks on a 240-tick cooldown.
-- **Sunlance Focus**: cost 4 Holy combat Focus. Fully charged direct melee hits deal 10% extra damage to undead and Fury-affinity mobs.
+- **Sunlance Focus**: cost 4 Holy combat Focus. Fully charged direct melee hits deal 10% extra damage to undead and Fury-affinity foes.
 
 ### The Reliquary
 

@@ -4,6 +4,7 @@ import dev.attuned.Attuned;
 import dev.attuned.AttunedRegistries;
 import dev.attuned.api.focus.Affinity;
 import dev.attuned.api.focus.FocusDefinition;
+import dev.attuned.api.focus.ModifierEntry;
 import dev.attuned.attunement.AttunedAttachments;
 import dev.attuned.attunement.AttunedInv;
 import dev.attuned.attunement.Attunement;
@@ -17,6 +18,7 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.Identifier;
+import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.item.ItemStack;
 
 import java.util.Locale;
@@ -51,6 +53,16 @@ public final class AttunedTooltips {
 			// Affinity and attunement cost on items that are registered Foci.
 			FocusDefinition definition = definitionFor(stack);
 			if (definition != null) {
+				if (!definition.modifiers().isEmpty()) {
+					lines.add(Component.empty());
+					lines.add(Component.translatable("tooltip.attuned.modifier.header")
+						.withStyle(ChatFormatting.GRAY));
+					for (ModifierEntry modifier : definition.modifiers()) {
+						lines.add(modifierSummary(modifier)
+							.withStyle(ChatFormatting.AQUA));
+					}
+				}
+
 				Affinity affinity = definition.affinity().orElse(null);
 				lines.add(Component.empty());
 				lines.add(Component.literal("Affinity ")
@@ -129,6 +141,52 @@ public final class AttunedTooltips {
 			case ZEPHYR -> ChatFormatting.AQUA;
 			case HOLY -> ChatFormatting.YELLOW;
 		};
+	}
+
+	private static MutableComponent modifierSummary(ModifierEntry modifier) {
+		Identifier attributeId = modifier.attribute().unwrapKey()
+			.map(key -> key.identifier())
+			.orElseGet(() -> BuiltInRegistries.ATTRIBUTE.getKey(modifier.attribute().value()));
+		String attributePath = attributeId.getPath();
+		MutableComponent attributeName = Component.translatableWithFallback(
+			"tooltip.attuned.modifier.attribute." + attributePath, humanize(attributePath));
+		return Component.translatable("tooltip.attuned.modifier.line",
+			modifierAmount(attributePath, modifier.amount(), modifier.operation()), attributeName);
+	}
+
+	private static String modifierAmount(String attributePath, double amount, AttributeModifier.Operation operation) {
+		boolean percent = operation == AttributeModifier.Operation.ADD_MULTIPLIED_BASE
+			|| operation == AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL
+			|| "knockback_resistance".equals(attributePath);
+		double display = percent ? amount * 100.0D : amount;
+		return signedNumber(display) + (percent ? "%" : "");
+	}
+
+	private static String signedNumber(double value) {
+		String sign = value >= 0.0D ? "+" : "";
+		double rounded = Math.rint(value);
+		if (Math.abs(value - rounded) < 0.0001D) {
+			return sign + Long.toString(Math.round(rounded));
+		}
+		return sign + String.format(Locale.ROOT, "%.1f", value);
+	}
+
+	private static String humanize(String path) {
+		String[] words = path.split("_");
+		StringBuilder builder = new StringBuilder();
+		for (String word : words) {
+			if (word.isEmpty()) {
+				continue;
+			}
+			if (!builder.isEmpty()) {
+				builder.append(' ');
+			}
+			builder.append(Character.toUpperCase(word.charAt(0)));
+			if (word.length() > 1) {
+				builder.append(word.substring(1));
+			}
+		}
+		return builder.toString();
 	}
 
 	private static MutableComponent dormantSummary(BudgetResolver.DormantReason reason) {

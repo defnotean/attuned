@@ -103,13 +103,16 @@ modrinth {
 	versionName = "Attuned ${project.version}"
 	// Changelog for the current release — refresh this each time mod_version bumps.
 	changelog = """\
-Expanded Apex capstones and gallery release.
+Attuned 1.2.4 - Offshore, Revenant, and HUD release.
 
-- Added Maelstrom, a Discord Apex for builds with every shipped affinity active near full capacity. At Resonance it adds direct melee pressure against affinity-bearing non-player enemies and briefly scrambles struck foes.
-- Added Stillpoint, a neutral Apex for all-neutral active Focus builds near full capacity. At Resonance it suppresses affinity pressure and pulses Absorption after real combat hits.
-- Updated HUD, Focus panel, Attunement Altar readouts, /attuned status, and the Attunement Journal so Maelstrom and Stillpoint render as first-class capstones.
-- Added shipped Maelstrom and Stillpoint HUD sprites plus contract coverage for capstone resolution, HUD assets, journal pages, and Modrinth gallery copy.
-- Regenerated Modrinth gallery panels with real in-game Focus assets and accurate Maelstrom/Stillpoint release copy.
+- Added a compact Foci HUD with configurable visibility, separate keybind support, active Focus indicators, Apex status, resonance feedback, and cooldown readouts.
+- Added Maelstrom and Stillpoint Apex capstones with journal, tooltip, HUD, command, and gallery coverage.
+- Added the Offshore faction's Harpoon Focus: a server-authoritative active ability that summons a temporary custom trident and cleans it up from inventories, drops, and projectiles.
+- Added Ocean Relic/Frostbound trident asset work, improved first-person/third-person/throwing transforms, and the local asset customizer for previewing generated item assets without relaunching Minecraft.
+- Added The Revenant faction with Epitaph, Ashen Debt, Hollowstep, Last Rites, and Bonechill Foci plus animated image-generated art.
+- Improved PvP consistency: combat-facing Foci use the same target rules, only one active ability Focus can respond to the ability key, and cooldown state is surfaced to the HUD.
+- Reworked Tremor ore hints to use a visible client outline instead of only text feedback.
+- Updated tooltips, journal pages, /attuned status, and reference docs so buff/effect wording stays consistent across items and UI.
 """
 	uploadFile = file("build/libs/${project.name}-${project.version}.jar")
 	gameVersions = ["26.1.2"]

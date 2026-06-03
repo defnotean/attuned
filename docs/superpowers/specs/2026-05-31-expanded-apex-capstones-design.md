@@ -57,7 +57,7 @@ Neutral Apex qualifies as **Stillpoint**:
 **Maelstrom** preserves Discord's risk and makes the mixed path explosive:
 
 - Discord's existing glass-cannon multiplier remains: the player deals and takes 1.33x damage.
-- While Maelstrom is active, direct player hits against affinity-bearing non-player enemies add a 10% damage kicker.
+- While Maelstrom is active, direct player hits against affinity-bearing foes add a 10% damage kicker.
 - The target is scrambled for 60 ticks after a hit. While scrambled, that target does not get affinity advantage damage against the Maelstrom player who scrambled it.
 
 **Stillpoint** makes neutral utility builds defensive and unexploitable:

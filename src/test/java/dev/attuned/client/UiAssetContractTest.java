@@ -35,12 +35,15 @@ class UiAssetContractTest {
 		Path.of("src/client/java/dev/attuned/client/FocusPanel.java");
 	private static final Path COMBAT_HUD_SOURCE =
 		Path.of("src/client/java/dev/attuned/client/hud/CombatHud.java");
+	private static final Path FOCI_HUD_SOURCE =
+		Path.of("src/client/java/dev/attuned/client/hud/FociHud.java");
 
 	@Test
 	void customUiTexturesHaveStableMinecraftGuiDimensions() throws IOException {
 		assertPngSize("gui/altar.png", 216, 190);
 		assertPngSize("gui/altar_of_reweaving.png", 216, 190);
 		assertPngSize("gui/focus_panel.png", 28, 124);
+		assertPngSize("gui/foci_hud.png", 64, 96);
 		assertPngSize("gui/hud_backplate.png", 50, 24);
 		assertPngSize("gui/attunement_journal.png", 336, 214);
 		assertPngSize("item/attunement_journal.png", 64, 64);
@@ -51,6 +54,7 @@ class UiAssetContractTest {
 		assertSourceContains(ALTAR_SCREEN_SOURCE, "textures/gui/altar.png");
 		assertSourceContains(REWEAVING_SCREEN_SOURCE, "textures/gui/altar_of_reweaving.png");
 		assertSourceContains(FOCUS_PANEL_SOURCE, "textures/gui/focus_panel.png");
+		assertSourceContains(FOCI_HUD_SOURCE, "textures/gui/foci_hud.png");
 		assertSourceContains(COMBAT_HUD_SOURCE, "textures/gui/hud_backplate.png");
 	}
 

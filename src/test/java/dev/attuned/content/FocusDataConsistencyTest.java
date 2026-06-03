@@ -70,6 +70,15 @@ class FocusDataConsistencyTest {
 		"attuned:harborlight_focus",
 		"attuned:linecast_focus",
 		"attuned:netmender_focus");
+	private static final Set<String> OFFSHORE_FOCUS_ITEMS = Set.of(
+		"attuned:harpoon_focus");
+	private static final Set<String> REVENANT_FOCUS_ITEMS = Set.of(
+		"attuned:ashen_debt_focus",
+		"attuned:bonechill_focus",
+		"attuned:epitaph_focus",
+		"attuned:gravebind_focus",
+		"attuned:hollowstep_focus",
+		"attuned:last_rites_focus");
 	private static final Set<String> HOLY_FOCUS_ITEMS = Set.of(
 		"attuned:bellwether_focus",
 		"attuned:censer_focus",
@@ -83,6 +92,10 @@ class FocusDataConsistencyTest {
 		"attuned:harborlight_focus", 1.0D,
 		"attuned:linecast_focus", 1.0D,
 		"attuned:netmender_focus", 1.0D);
+	private static final Path REVENANT_SOURCE =
+		Path.of("docs/superpowers/assets/revenant-foci/revenant-foci-imagegen-source.png");
+	private static final Path REVENANT_REPORT =
+		Path.of("docs/superpowers/assets/revenant-foci/revenant-foci-report.json");
 
 	@Test
 	void shippedFocusRegistrationsListAndDefinitionsStayInStep() throws IOException {
@@ -208,6 +221,83 @@ class FocusDataConsistencyTest {
 			}
 		}
 		assertEquals(SEAFARERS_FOCUS_ITEMS, seafarersItems);
+	}
+
+	@Test
+	void offshoreHarpoonFocusStaysNeutralTranslatedAndTemporaryOnly() throws IOException {
+		Set<String> offshoreItems = new TreeSet<>();
+		try (Stream<Path> paths = Files.list(FOCUS_DATA_DIR)) {
+			for (Path file : paths
+					.filter(path -> path.getFileName().toString().endsWith(".json"))
+					.sorted()
+					.toList()) {
+				JsonObject root = focusDefinitionRoot(file);
+				JsonElement faction = root.get("faction");
+				if (faction == null || !"attuned:offshore".equals(faction.getAsString())) {
+					continue;
+				}
+				String itemId = root.get("item").getAsString();
+				offshoreItems.add(itemId);
+				assertTrue(!root.has("affinity"), "Offshore Foci must stay neutral: " + file);
+				assertTrue(root.has("unique") && root.get("unique").getAsBoolean(),
+					"Offshore Harpoon should be unique while active: " + file);
+			}
+		}
+
+		JsonObject lang = languageRoot();
+		assertEquals(OFFSHORE_FOCUS_ITEMS, offshoreItems,
+			"The first Offshore release should ship only Harpoon Focus");
+		assertLanguageKey(lang, "faction.attuned.offshore");
+		assertLanguageKey(lang, "item.attuned.offshore_harpoon");
+		assertLanguageKey(lang, "item.attuned.ocean_relic_trident");
+
+		String source = Files.readString(CONTENT_SOURCE, StandardCharsets.UTF_8);
+		assertTrue(!source.contains("OFFSHORE_HARPOON"),
+			"Offshore Harpoon should not be registered as a permanent craftable item");
+		assertTrue(!Files.isRegularFile(Path.of("src/main/resources/data/attuned/recipe/offshore_harpoon.json")),
+			"Offshore Harpoon should not have a recipe");
+		assertTrue(!Files.isRegularFile(Path.of("src/main/resources/data/attuned/recipe/ocean_relic_trident.json")),
+			"Ocean Relic Trident should not have a recipe");
+	}
+
+	@Test
+	void revenantFociShipAsARealFactionWithGeneratedAnimatedArt() throws IOException {
+		Set<String> revenantItems = new TreeSet<>();
+		try (Stream<Path> paths = Files.list(FOCUS_DATA_DIR)) {
+			for (Path file : paths
+					.filter(path -> path.getFileName().toString().endsWith(".json"))
+					.sorted()
+					.toList()) {
+				JsonObject root = focusDefinitionRoot(file);
+				JsonElement faction = root.get("faction");
+				if (faction == null || !"attuned:revenant".equals(faction.getAsString())) {
+					continue;
+				}
+				String itemId = root.get("item").getAsString();
+				revenantItems.add(itemId);
+				if (!"attuned:gravebind_focus".equals(itemId) && !"attuned:epitaph_focus".equals(itemId)) {
+					assertTrue(root.has("unique") && root.get("unique").getAsBoolean(),
+						"Combat-facing Revenant Foci should be unique while active: " + file);
+				}
+			}
+		}
+
+		JsonObject lang = languageRoot();
+		assertEquals(REVENANT_FOCUS_ITEMS, revenantItems,
+			"The Revenant release should declare its planned Foci and Gravebind anchor");
+		assertLanguageKey(lang, "faction.attuned.revenant");
+		assertTrue(Files.isRegularFile(REVENANT_SOURCE),
+			"Revenant art should keep its image-generation source sheet");
+		assertTrue(Files.isRegularFile(REVENANT_REPORT),
+			"Revenant art should keep a reproducible texture build report");
+		String report = Files.readString(REVENANT_REPORT, StandardCharsets.UTF_8);
+		for (String item : REVENANT_FOCUS_ITEMS) {
+			String name = attunedPath(item);
+			if (!"gravebind_focus".equals(name)) {
+				assertTrue(report.contains(name),
+					"Revenant report should list each generated texture: " + name);
+			}
+		}
 	}
 
 	@Test

@@ -125,7 +125,7 @@ public final class AttunedCombat {
 			return false;
 		}
 		return defender.typeHolder().is(EntityTypeTags.UNDEAD)
-			|| MobAffinities.of(defender).filter(affinity -> affinity == Affinity.FURY).isPresent();
+			|| affinityOf(defender).filter(affinity -> affinity == Affinity.FURY).isPresent();
 	}
 
 	private static boolean isDirectChargedMelee(Player player, DamageSource source, float threshold) {
@@ -276,10 +276,7 @@ public final class AttunedCombat {
 
 	/** The committed affinity of a living entity — player attunement or mob mapping. */
 	static Optional<Affinity> affinityOf(LivingEntity entity) {
-		if (entity instanceof Player player) {
-			return Attunement.committedAffinity(player);
-		}
-		return MobAffinities.of(entity);
+		return CombatTargets.affinityOf(entity);
 	}
 
 	/**

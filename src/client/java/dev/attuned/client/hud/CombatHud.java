@@ -23,7 +23,7 @@ import java.util.Optional;
 
 /**
  * The combat heads-up overlay: a compact panel anchored above the hotbar that
- * shows the player's stance gem, a resonance arc, the targeted mob's affinity
+ * shows the player's stance gem, a resonance arc, the targeted entity's affinity
  * (when the crosshair sits on one within {@link #TARGET_RANGE_BLOCKS} blocks),
  * and a matchup tint on the player's gem so the rock-paper-scissors state reads
  * without opening the inventory.
@@ -55,6 +55,7 @@ public final class CombatHud {
 	private static final int HOTBAR_HALF_WIDTH = 91;
 	private static final int HOTBAR_GAP = 8;
 	private static final int SCREEN_MARGIN = 4;
+	private static final int FOCI_HUD_HEIGHT = FociHud.HUD_H;
 	// HUD sprite identifiers resolve against the GUI sprite atlas at
 	// {@code assets/attuned/textures/gui/sprites/hud/<name>.png}. Routing through
 	// the sprite atlas (same path vanilla heart/hunger icons use) gets us proper
@@ -83,8 +84,15 @@ public final class CombatHud {
 	private static final Identifier RESONANCE_FILL_TEXTURE =
 		Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "textures/gui/sprites/hud/hud_resonance_fill.png");
 
-	// The matchup of the player's affinity against the targeted mob's.
+	// The matchup of the player's affinity against the targeted entity's.
 	private enum Matchup { EMPOWERED, NEUTRAL, NEUTRALIZED, NONE }
+
+	private record TargetStance(@Nullable Affinity affinity, boolean discord,
+			@Nullable Apex.Capstone capstone, boolean apexArmed) {
+		Optional<Affinity> matchupAffinity() {
+			return discord ? Optional.empty() : Optional.ofNullable(affinity);
+		}
+	}
 
 	/**
 	 * Registers the combat HUD layer so it draws between the hotbar and the chat
@@ -119,20 +127,16 @@ public final class CombatHud {
 		}
 
 		LivingEntity target = showEnemy ? targetedLiving(minecraft, player) : null;
-		Optional<Affinity> targetAffinity;
-		if (showEnemy && target != null) {
-			targetAffinity = MobAffinities.of(target);
-		} else {
-			targetAffinity = Optional.empty();
-		}
-		boolean hasTarget = target != null && targetAffinity.isPresent();
+		TargetStance targetStance = showEnemy ? targetedStance(target) : null;
+		boolean hasTarget = targetStance != null;
+		Optional<Affinity> targetAffinity = hasTarget ? targetStance.matchupAffinity() : Optional.empty();
 		// Cheapest gate first — a plain float read off the player attachment.
 		float resonance = Resonance.get(player);
 		Optional<Affinity> committed = Attunement.committedAffinity(player);
 		boolean discord = Attunement.isDiscord(player);
 		// Skip the panel entirely for unattuned players with no resonance — there
 		// is nothing combat-relevant to telegraph.
-		if (showOwn && committed.isEmpty() && !discord && resonance <= 0.0F && targetAffinity.isEmpty()) {
+		if (showOwn && committed.isEmpty() && !discord && resonance <= 0.0F && !hasTarget) {
 			return;
 		}
 		if (!showOwn && !hasTarget) {
@@ -153,8 +157,9 @@ public final class CombatHud {
 		// the gem row's full width includes both gems and the gap between them.
 		int rowWidth = showOwn ? PLAYER_GEM_SIZE + (hasTarget ? GEM_GAP + TARGET_GEM_SIZE : 0) : TARGET_GEM_SIZE;
 		int backplateW = backplateWidth(showOwn, hasTarget);
-		int backplateX = sidecarX(screenW, backplateW);
-		int backplateY = sidecarY(screenW, screenH, backplateW);
+		boolean fociHudVisible = FociHud.isVisible(player);
+		int backplateX = fociHudVisible ? secondarySidecarX(screenW, backplateW) : sidecarX(screenW, backplateW);
+		int backplateY = fociHudVisible ? secondarySidecarY(screenW, screenH, backplateW) : sidecarY(screenW, screenH, backplateW);
 		int rowX = backplateX + (backplateW - rowWidth) / 2;
 		int rowY = backplateY + (showOwn ? 2 : (HUD_BACKPLATE_H - TARGET_GEM_SIZE) / 2);
 		graphics.blit(net.minecraft.client.renderer.RenderPipelines.GUI_TEXTURED,
@@ -188,8 +193,30 @@ public final class CombatHud {
 			if (showOwn) {
 				drawMatchupLink(graphics, rowX + PLAYER_GEM_SIZE, rowY + PLAYER_GEM_SIZE / 2 - 2, matchup);
 			}
-			drawGem(graphics, targetX, targetY, TARGET_GEM_SIZE, targetAffinity.get(), false, true, false);
+			drawTargetGem(graphics, targetX, targetY, TARGET_GEM_SIZE, targetStance);
 		}
+	}
+
+	private static TargetStance targetedStance(@Nullable LivingEntity target) {
+		if (target == null) {
+			return null;
+		}
+		if (target instanceof Player targetPlayer) {
+			if (Attunement.activeSlots(targetPlayer).isEmpty()
+					&& Resonance.get(targetPlayer) <= 0.0F
+					&& Apex.capstoneOf(targetPlayer).isEmpty()) {
+				return null;
+			}
+			Optional<Apex.Capstone> capstone = Apex.capstoneOf(targetPlayer);
+			return new TargetStance(
+				Attunement.committedAffinity(targetPlayer).orElse(null),
+				Attunement.isDiscord(targetPlayer),
+				capstone.orElse(null),
+				capstone.isPresent() && Resonance.atApex(targetPlayer));
+		}
+		return MobAffinities.of(target)
+			.map(affinity -> new TargetStance(affinity, false, null, false))
+			.orElse(null);
 	}
 
 	private static int backplateWidth(boolean showOwn, boolean hasTarget) {
@@ -208,11 +235,33 @@ public final class CombatHud {
 		return Math.max(SCREEN_MARGIN, screenW - backplateW - SCREEN_MARGIN);
 	}
 
+	private static int secondarySidecarX(int screenW, int backplateW) {
+		int primary = FociHud.primarySidecarX(screenW, FociHud.HUD_W);
+		int right = screenW / 2 + HOTBAR_HALF_WIDTH + HOTBAR_GAP;
+		int left = screenW / 2 - HOTBAR_HALF_WIDTH - HOTBAR_GAP - backplateW;
+		if (primary >= screenW / 2 && left >= SCREEN_MARGIN) {
+			return left;
+		}
+		if (primary < screenW / 2 && right + backplateW <= screenW - SCREEN_MARGIN) {
+			return right;
+		}
+		return sidecarX(screenW, backplateW);
+	}
+
 	private static int sidecarY(int screenW, int screenH, int backplateW) {
 		if (!hasSidecarRoom(screenW, backplateW)) {
 			return SCREEN_MARGIN;
 		}
 		return Math.max(SCREEN_MARGIN, screenH - HUD_BACKPLATE_H - SCREEN_MARGIN);
+	}
+
+	private static int secondarySidecarY(int screenW, int screenH, int backplateW) {
+		if (!hasSidecarRoom(screenW, backplateW)) {
+			return Math.min(
+				Math.max(SCREEN_MARGIN, screenH - HUD_BACKPLATE_H - SCREEN_MARGIN),
+				SCREEN_MARGIN + FOCI_HUD_HEIGHT + SCREEN_MARGIN);
+		}
+		return sidecarY(screenW, screenH, backplateW);
 	}
 
 	private static boolean hasSidecarRoom(int screenW, int backplateW) {
@@ -250,6 +299,12 @@ public final class CombatHud {
 			? capstoneSpriteFor(capstone)
 			: affinitySpriteFor(affinity, discord);
 		drawGemSprite(graphics, x, y, size, false, sprite);
+	}
+
+	private static void drawTargetGem(GuiGraphicsExtractor graphics, int x, int y, int size,
+			TargetStance stance) {
+		drawPlayerGem(graphics, x, y, size, stance.affinity(), stance.discord(), stance.capstone(), stance.apexArmed());
+		drawOverlaySprite(graphics, TARGET_RING_SPRITE, x, y, size);
 	}
 
 	private static void drawGemSprite(GuiGraphicsExtractor graphics, int x, int y, int size,

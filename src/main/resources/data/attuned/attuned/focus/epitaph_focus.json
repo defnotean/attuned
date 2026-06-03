@@ -1,0 +1,6 @@
+{
+	"item": "attuned:epitaph_focus",
+	"cost": 2,
+	"faction": "attuned:revenant",
+	"behavior": "attuned:epitaph"
+}

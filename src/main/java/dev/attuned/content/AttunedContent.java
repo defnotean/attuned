@@ -13,6 +13,7 @@ import dev.attuned.content.behavior.DriftglassBehavior;
 import dev.attuned.content.behavior.EmberwardBehavior;
 import dev.attuned.content.behavior.ForagerBehavior;
 import dev.attuned.content.behavior.GalespurBehavior;
+import dev.attuned.content.behavior.HarpoonBehavior;
 import dev.attuned.content.behavior.HarvestBehavior;
 import dev.attuned.content.behavior.HarborlightBehavior;
 import dev.attuned.content.behavior.HearthBehavior;
@@ -21,6 +22,7 @@ import dev.attuned.content.behavior.LodestoneBehavior;
 import dev.attuned.content.behavior.NightgazeBehavior;
 import dev.attuned.content.behavior.RainstepBehavior;
 import dev.attuned.content.behavior.RadiantFocusBehaviors;
+import dev.attuned.content.behavior.RevenantFocusBehaviors;
 import dev.attuned.content.behavior.SmokeBehavior;
 import dev.attuned.content.behavior.SoftstepBehavior;
 import dev.attuned.content.behavior.StormcallBehavior;
@@ -112,6 +114,9 @@ public final class AttunedContent {
 	public static final Item HARBORLIGHT_FOCUS = register("harborlight_focus");
 	public static final Item DRIFTGLASS_FOCUS = register("driftglass_focus");
 
+	// The Offshore - dangerous water utility for salvage, storms, and things below the waves.
+	public static final Item HARPOON_FOCUS = register("harpoon_focus");
+
 	// The Radiant - Holy Foci built around vows, revelation, and measured judgment.
 	public static final Item VOTIVE_FOCUS = register("votive_focus");
 	public static final Item BELLWETHER_FOCUS = register("bellwether_focus");
@@ -138,6 +143,13 @@ public final class AttunedContent {
 	public static final Item WHISPER_FOCUS = register("whisper_focus");
 	public static final Item BLACKOUT_FOCUS = register("blackout_focus");
 
+	// The Revenant - unfinished endings, remembered deaths, debts, and grave-cold reprisals.
+	public static final Item EPITAPH_FOCUS = register("epitaph_focus");
+	public static final Item ASHEN_DEBT_FOCUS = register("ashen_debt_focus");
+	public static final Item HOLLOWSTEP_FOCUS = register("hollowstep_focus");
+	public static final Item LAST_RITES_FOCUS = register("last_rites_focus");
+	public static final Item BONECHILL_FOCUS = register("bonechill_focus");
+
 	/** A consumable that permanently raises attunement capacity. Stacks normally. */
 	public static final Item ATTUNEMENT_SHARD = register("attunement_shard", AttunementShardItem::new);
 	/** A fragment reward that smooths shard progression; four craft into one shard. */
@@ -160,12 +172,13 @@ public final class AttunedContent {
 		LEECH_FOCUS, STORMCALL_FOCUS, GRAVEBIND_FOCUS, BLOODFURY_FOCUS, VOIDSTEP_FOCUS,
 		HARVEST_FOCUS, FORAGER_FOCUS, TREMOR_FOCUS, BEACON_FOCUS, WAYSTONE_FOCUS,
 		SOFTSTEP_FOCUS, VEIL_FOCUS, NEEDLE_FOCUS, SMOKE_FOCUS,
-		LINECAST_FOCUS, NETMENDER_FOCUS, HARBORLIGHT_FOCUS, DRIFTGLASS_FOCUS,
+		LINECAST_FOCUS, NETMENDER_FOCUS, HARBORLIGHT_FOCUS, DRIFTGLASS_FOCUS, HARPOON_FOCUS,
 		VOTIVE_FOCUS, BELLWETHER_FOCUS, OATHGUARD_FOCUS, SUNLANCE_FOCUS,
 		CENSER_FOCUS, NAMESAKE_FOCUS, THRESHOLD_FOCUS,
 		ROOTSTEP_FOCUS, BLOOM_FOCUS, MOSSHEART_FOCUS,
 		TEMPER_FOCUS, KILNWARD_FOCUS, RIVET_FOCUS,
-		MASK_FOCUS, WHISPER_FOCUS, BLACKOUT_FOCUS);
+		MASK_FOCUS, WHISPER_FOCUS, BLACKOUT_FOCUS,
+		EPITAPH_FOCUS, ASHEN_DEBT_FOCUS, HOLLOWSTEP_FOCUS, LAST_RITES_FOCUS, BONECHILL_FOCUS);
 
 	private static Item register(String name) {
 		ResourceKey<Item> key = ResourceKey.create(
@@ -275,6 +288,8 @@ public final class AttunedContent {
 		AttunedRegistries.registerBehavior(
 			Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "driftglass"), new DriftglassBehavior());
 		AttunedRegistries.registerBehavior(
+			Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "harpoon"), new HarpoonBehavior());
+		AttunedRegistries.registerBehavior(
 			Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "votive"), new RadiantFocusBehaviors.Votive());
 		AttunedRegistries.registerBehavior(
 			Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "bellwether"), new RadiantFocusBehaviors.Bellwether());
@@ -284,6 +299,10 @@ public final class AttunedContent {
 			Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "censer"), new RadiantFocusBehaviors.Censer());
 		AttunedRegistries.registerBehavior(
 			Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "threshold"), new RadiantFocusBehaviors.Threshold());
+		AttunedRegistries.registerBehavior(
+			Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "epitaph"), new RevenantFocusBehaviors.Epitaph());
+		AttunedRegistries.registerBehavior(
+			Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "hollowstep"), new RevenantFocusBehaviors.Hollowstep());
 		registerCreativeTabs();
 	}
 

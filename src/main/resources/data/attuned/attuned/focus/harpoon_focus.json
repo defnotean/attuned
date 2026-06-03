@@ -1,0 +1,7 @@
+{
+	"item": "attuned:harpoon_focus",
+	"cost": 3,
+	"unique": true,
+	"faction": "attuned:offshore",
+	"behavior": "attuned:harpoon"
+}

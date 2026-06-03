@@ -1,11 +1,7 @@
 package dev.attuned.content.behavior;
 
-import dev.attuned.AttunedPlayerCleanup;
 import dev.attuned.api.focus.FocusBehavior;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.UUID;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -17,27 +13,25 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.AABB;
 
 /**
- * Smoke Focus: the Focus-ability key creates a short misdirection burst that
+ * Smoke Focus: the Focus Ability key creates a short misdirection burst that
  * drops nearby mob targets only when their line of sight is already broken.
  */
 public final class SmokeBehavior implements FocusBehavior {
 	private static final int COOLDOWN_TICKS = 300;
 	private static final double RADIUS = 6.0D;
 
-	private final Map<UUID, Long> lastSmoke = new HashMap<>();
-
-	public SmokeBehavior() {
-		AttunedPlayerCleanup.onForget(lastSmoke::remove);
+	@Override
+	public boolean hasActiveAbility() {
+		return true;
 	}
 
 	@Override
-	public void onAbility(ServerPlayer player, ItemStack focus) {
-		long now = player.level().getGameTime();
-		Long last = lastSmoke.get(player.getUUID());
-		if (last != null && now - last < COOLDOWN_TICKS) {
-			return;
-		}
-		lastSmoke.put(player.getUUID(), now);
+	public int abilityCooldownTicks() {
+		return COOLDOWN_TICKS;
+	}
+
+	@Override
+	public boolean onAbility(ServerPlayer player, ItemStack focus) {
 		ServerLevel level = (ServerLevel) player.level();
 		level.sendParticles(ParticleTypes.LARGE_SMOKE,
 			player.getX(), player.getY() + 0.6, player.getZ(), 42, 0.9, 0.45, 0.9, 0.02);
@@ -45,6 +39,7 @@ public final class SmokeBehavior implements FocusBehavior {
 			SoundEvents.FIRE_EXTINGUISH, SoundSource.PLAYERS, 0.65F, 1.35F);
 		VeilBehavior.breakVeil(player, 30);
 		dropBrokenSightTargets(player, level);
+		return true;
 	}
 
 	private static void dropBrokenSightTargets(ServerPlayer player, ServerLevel level) {

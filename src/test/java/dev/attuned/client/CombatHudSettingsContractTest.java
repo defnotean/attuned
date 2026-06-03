@@ -22,9 +22,23 @@ class CombatHudSettingsContractTest {
 			"Combat HUD should read the enemy HUD setting.");
 		assertTrue(source.contains("if (!showOwn && !showEnemy)"),
 			"Combat HUD should return early when both HUD sections are hidden.");
-		assertTrue(source.contains("targetAffinity = Optional.empty()"),
-			"Combat HUD should avoid target affinity resolution when enemy HUD is hidden.");
+		assertTrue(source.contains("TargetStance targetStance = showEnemy ? targetedStance(target) : null"),
+			"Combat HUD should avoid target stance resolution when enemy HUD is hidden.");
 		assertTrue(source.contains("showOwn"), "Combat HUD should branch on showOwn.");
 		assertTrue(source.contains("showEnemy"), "Combat HUD should branch on showEnemy.");
+	}
+
+	@Test
+	void combatHudUsesAttunedPlayerStanceForPvpTargets() throws IOException {
+		String source = Files.readString(COMBAT_HUD_SOURCE, StandardCharsets.UTF_8);
+
+		assertTrue(source.contains("targetedStance("),
+			"Combat HUD target resolution should go through one stance helper.");
+		assertTrue(source.contains("target instanceof Player targetPlayer"),
+			"Targeted players should use their equipped active Foci for the PvP HUD marker.");
+		assertTrue(source.contains("Attunement.activeSlots(targetPlayer)"),
+			"PvP targets with active neutral Foci should still show a neutral target marker.");
+		assertTrue(source.contains("drawTargetGem("),
+			"Target rendering should support player Discord/Apex/neutral stance sprites, not only mob affinity sprites.");
 	}
 }

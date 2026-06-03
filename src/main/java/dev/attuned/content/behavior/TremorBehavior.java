@@ -5,10 +5,13 @@ import dev.attuned.AttunedPlayerCleanup;
 import dev.attuned.attunement.AttunedAttachments;
 import dev.attuned.attunement.AttunedInv;
 import dev.attuned.attunement.Attunement;
+import dev.attuned.network.TremorOreHintPayload;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import net.fabricmc.fabric.api.event.player.PlayerBlockBreakEvents;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -26,7 +29,7 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 
 /**
- * Tremor Focus: mining stone may hint that ore is somewhere nearby.
+ * Tremor Focus: mining stone reveals the nearest ore pulse through a brief outline.
  */
 public final class TremorBehavior implements dev.attuned.api.focus.FocusBehavior {
 	private static final Identifier FOCUS_ID =
@@ -55,7 +58,10 @@ public final class TremorBehavior implements dev.attuned.api.focus.FocusBehavior
 			return;
 		}
 		LAST_SCAN.put(playerId, now);
-		if (nearOre(server, pos)) {
+		Optional<BlockPos> ore = nearestOre(server, pos);
+		if (ore.isPresent()) {
+			BlockPos orePos = ore.get();
+			ServerPlayNetworking.send(serverPlayer, new TremorOreHintPayload(orePos));
 			server.sendParticles(ParticleTypes.NOTE,
 				pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5,
 				2, 0.25, 0.25, 0.25, 0.0);
@@ -74,14 +80,20 @@ public final class TremorBehavior implements dev.attuned.api.focus.FocusBehavior
 			|| state.is(Blocks.ANDESITE);
 	}
 
-	private static boolean nearOre(ServerLevel level, BlockPos center) {
+	private static Optional<BlockPos> nearestOre(ServerLevel level, BlockPos center) {
+		BlockPos nearest = null;
+		double nearestDistance = Double.MAX_VALUE;
 		for (BlockPos scan : BlockPos.betweenClosed(center.offset(-RADIUS, -RADIUS, -RADIUS),
 				center.offset(RADIUS, RADIUS, RADIUS))) {
 			if (level.getBlockState(scan).is(ORES)) {
-				return true;
+				double distance = scan.distSqr(center);
+				if (distance < nearestDistance) {
+					nearest = scan.immutable();
+					nearestDistance = distance;
+				}
 			}
 		}
-		return false;
+		return Optional.ofNullable(nearest);
 	}
 
 	private static boolean hasActiveTremor(ServerPlayer player) {
