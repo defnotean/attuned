@@ -103,7 +103,7 @@ modrinth {
 	versionName = "Attuned ${project.version}"
 	// Changelog for the current release — refresh this each time mod_version bumps.
 	changelog = """\
-Attuned 1.2.4 - Offshore, Revenant, and HUD release.
+Attuned 1.2.5 - Offshore, Revenant, and HUD release.
 
 - Added a compact Foci HUD with configurable visibility, separate keybind support, active Focus indicators, Apex status, resonance feedback, and cooldown readouts.
 - Added Maelstrom and Stillpoint Apex capstones with journal, tooltip, HUD, command, and gallery coverage.
