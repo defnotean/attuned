@@ -24,6 +24,7 @@ dependencyLocking {
 // while relying on dependency verification checksums for these launch-only
 // runtime configurations.
 def platformNativeRuntimeConfigurations = [
+	"minecraftClientLibraries",
 	"minecraftClientRuntimeLibraries",
 	"minecraftTestClientRuntimeLibraries",
 	"minecraftNatives"
