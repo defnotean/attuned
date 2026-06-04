@@ -12,7 +12,7 @@
 				],
 				"model": {
 					"type": "minecraft:model",
-					"model": "attuned:item/ocean_relic_trident"
+					"model": "attuned:item/ocean_relic_trident_inventory"
 				}
 			}
 		],

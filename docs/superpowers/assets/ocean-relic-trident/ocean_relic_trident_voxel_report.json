@@ -1,26 +1,30 @@
 {
   "source_sprite": "src/main/resources/assets/attuned/textures/item/ocean_relic_trident.png",
+  "inventory_sprite": "src/main/resources/assets/attuned/textures/item/ocean_relic_trident.png",
   "minecraft_model": "src/main/resources/assets/attuned/models/item/ocean_relic_trident.json",
   "minecraft_throwing_model": "src/main/resources/assets/attuned/models/item/ocean_relic_trident_throwing.json",
+  "minecraft_inventory_model": "src/main/resources/assets/attuned/models/item/ocean_relic_trident_inventory.json",
   "item_definition": "src/main/resources/assets/attuned/items/ocean_relic_trident.json",
+  "projectile_item_definition": "src/main/resources/assets/attuned/items/ocean_relic_trident_projectile.json",
   "palette_texture": "src/main/resources/assets/attuned/textures/item/ocean_relic_trident_voxel_palette.png",
   "strategy": "curated_trident_silhouette_from_concept_palette",
-  "reason": "Raw sprite voxelization looked compact and noisy in third-person hand rendering.",
-  "palette_colors": 28,
-  "cuboids": 48,
+  "enhancement_strategy": "material_separated_curated_trident_silhouette",
+  "reason": "The raw concept-sprite voxelization and first curated pass had weak material separation and vanilla trident hand transforms made the oversized cuboid geometry float beside the player; this pass adds explicit material colors, face-aware shading, brighter readable prongs, driftwood grip, copper/verdigris bands, an amethyst focus core, a stronger dark silhouette, compact hand-anchored held/throwing transforms, GUI inventory routing that reuses the richer existing flat trident sprite, and a projectile item definition used by the custom thrown-harpoon renderer.",
+  "palette_colors": 34,
+  "cuboids": 49,
   "bbox_min": [
-    2.25,
-    -14.5,
-    6.25
+    1.65,
+    -15.8,
+    6.85
   ],
   "bbox_max": [
-    13.75,
-    32.0,
-    10.35
+    14.35,
+    31.2,
+    10.95
   ],
   "bbox_size": [
-    11.5,
-    46.5,
+    12.7,
+    47.0,
     4.1
   ]
 }

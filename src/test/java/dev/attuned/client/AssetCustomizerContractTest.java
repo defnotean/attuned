@@ -32,8 +32,17 @@ class AssetCustomizerContractTest {
 		Path.of("src/main/resources/assets/attuned/textures/item/offshore_harpoon.png");
 	private static final Path OCEAN_RELIC_TRIDENT_TEXTURE =
 		Path.of("src/main/resources/assets/attuned/textures/item/ocean_relic_trident.png");
+	private static final Path OCEAN_RELIC_TRIDENT_INVENTORY_TEXTURE =
+		Path.of("src/main/resources/assets/attuned/textures/item/ocean_relic_trident_inventory.png");
 	private static final Path OCEAN_RELIC_TRIDENT_PALETTE =
 		Path.of("src/main/resources/assets/attuned/textures/item/ocean_relic_trident_voxel_palette.png");
+	private static final Path OCEAN_RELIC_TRIDENT_INVENTORY_MODEL =
+		Path.of("src/main/resources/assets/attuned/models/item/ocean_relic_trident_inventory.json");
+	private static final Path OCEAN_RELIC_TRIDENT_ITEM_DEFINITION =
+		Path.of("src/main/resources/assets/attuned/items/ocean_relic_trident.json");
+	private static final Path OCEAN_RELIC_TRIDENT_PROJECTILE_DEFINITION =
+		Path.of("src/main/resources/assets/attuned/items/ocean_relic_trident_projectile.json");
+	private static final Path CLIENT_MIXIN_CONFIG = Path.of("src/client/resources/attuned.client.mixins.json");
 	private static final Path OCEAN_RELIC_SOURCE =
 		Path.of("docs/superpowers/assets/ocean-relic-trident/Meshy_AI_Ocean_Relic_Trident_0602120856_image-to-3d-texture_obj/Meshy_AI_Ocean_Relic_Trident_0602120856_image-to-3d-texture.obj");
 	private static final Path OCEAN_RELIC_VOXEL_REPORT =
@@ -190,6 +199,8 @@ class AssetCustomizerContractTest {
 		assertNotNull(texture, "Frostbound Trident texture should decode");
 		assertNotNull(oceanRelic, "Ocean Relic Trident texture should decode");
 		assertNotNull(oceanPalette, "Ocean Relic Trident palette should decode");
+		assertTrue(!Files.exists(OCEAN_RELIC_TRIDENT_INVENTORY_TEXTURE),
+			"Ocean Relic inventory should reuse the richer existing trident sprite instead of shipping a separate inventory icon");
 		assertEquals(64, texture.getWidth(), "Frostbound Trident should be a 64px item sprite");
 		assertEquals(64, texture.getHeight(), "Frostbound Trident should be a 64px item sprite");
 		assertEquals(64, oceanRelic.getWidth(), "Ocean Relic Trident should be a 64px item sprite");
@@ -224,36 +235,66 @@ class AssetCustomizerContractTest {
 		Path throwingModelPath = Path.of("src/main/resources/assets/attuned/models/item/ocean_relic_trident_throwing.json");
 		JsonObject model = JsonParser.parseString(read(modelPath)).getAsJsonObject();
 		JsonObject throwingModel = JsonParser.parseString(read(throwingModelPath)).getAsJsonObject();
+		JsonObject inventoryModel = JsonParser.parseString(read(OCEAN_RELIC_TRIDENT_INVENTORY_MODEL)).getAsJsonObject();
+		JsonObject itemDefinition = JsonParser.parseString(read(OCEAN_RELIC_TRIDENT_ITEM_DEFINITION)).getAsJsonObject();
+		JsonObject projectileDefinition = JsonParser.parseString(read(OCEAN_RELIC_TRIDENT_PROJECTILE_DEFINITION)).getAsJsonObject();
 		JsonObject report = JsonParser.parseString(read(OCEAN_RELIC_VOXEL_REPORT)).getAsJsonObject();
 
 		assertTrue(!model.has("parent"), "Voxel item model should not inherit flat generated rendering");
 		assertEquals("attuned:item/ocean_relic_trident_voxel_palette",
 			model.getAsJsonObject("textures").get("palette").getAsString(),
 			"Voxel model should use the generated palette texture");
+		assertEquals("minecraft:item/generated", inventoryModel.get("parent").getAsString(),
+			"Inventory model should use a flat item sprite instead of the bulky cuboid model");
+		assertEquals("attuned:item/ocean_relic_trident",
+			inventoryModel.getAsJsonObject("textures").get("layer0").getAsString(),
+			"Inventory model should reuse the richer existing flat trident sprite instead of the separate inventory icon");
+		String itemDefinitionText = itemDefinition.toString();
+		assertTrue(itemDefinitionText.contains("minecraft:display_context"),
+			"Item definition should select a separate GUI model by display context");
+		assertTrue(itemDefinitionText.contains("ocean_relic_trident_inventory"),
+			"GUI display context should use the flat inventory icon");
+		assertTrue(itemDefinitionText.contains("ground") && itemDefinitionText.contains("fixed"),
+			"Inventory-style display contexts should use the flat icon instead of the bulky held cuboid model");
+		assertEquals("attuned:item/ocean_relic_trident_throwing",
+			projectileDefinition.getAsJsonObject("model").get("model").getAsString(),
+			"Thrown harpoon renderer should resolve a custom projectile model instead of vanilla trident art");
 		JsonArray elements = model.getAsJsonArray("elements");
+		assertCuboidCoordinatesInMinecraftBounds(modelPath, elements);
+		assertCuboidCoordinatesInMinecraftBounds(throwingModelPath, throwingModel.getAsJsonArray("elements"));
 		assertTrue(elements.size() >= 36 && elements.size() <= 96,
-			"Voxel trident should use a readable held silhouette instead of a noisy high-cuboid icon");
+			"Voxel trident should use a readable Minecraft-style silhouette without exceeding the compact cuboid budget");
 		assertEquals(elements.size(), report.get("cuboids").getAsInt(),
 			"Voxel report should match the shipped cuboid count");
 		assertEquals(elements.size(), throwingModel.getAsJsonArray("elements").size(),
 			"Throwing model should reuse the same readable trident geometry");
-		JsonObject heldDisplay = model.getAsJsonObject("display")
-			.getAsJsonObject("thirdperson_righthand");
+		JsonObject display = model.getAsJsonObject("display");
+		JsonObject heldDisplay = display.getAsJsonObject("thirdperson_righthand");
 		assertEquals(60, heldDisplay.getAsJsonArray("rotation").get(1).getAsInt(),
-			"Held third-person pose should use the vanilla trident hand angle so the grip stays at the wrist");
-		assertTrue(heldDisplay.getAsJsonArray("translation").get(0).getAsDouble() >= 8.0D,
-			"Held third-person pose should sit in the right hand instead of behind the player");
-		assertTrue(heldDisplay.getAsJsonArray("translation").get(1).getAsDouble() >= 12.0D,
-			"Held third-person pose should be raised to the hand anchor");
-		assertTrue(heldDisplay.getAsJsonArray("translation").get(2).getAsDouble() <= 0.0D,
-			"Held third-person pose should not float behind the shoulder");
+			"Held third-person pose should keep the vanilla trident hand angle");
+		assertTranslationBetween(heldDisplay, 0, -0.75D, 0.25D,
+			"Held third-person X should tuck the grip inward to the player's visible hand instead of sitting outside the arm");
+		assertTranslationBetween(heldDisplay, 1, 0.75D, 2.25D,
+			"Held third-person Y should sit at the player's gripped hand instead of riding up by the shoulder/head");
+		assertTranslationBetween(heldDisplay, 2, -3.25D, -1.75D,
+			"Held third-person Z should pull the grip out to the hand plane instead of clipping through the torso");
+		assertTranslationBetween(display.getAsJsonObject("firstperson_righthand"), 1, 5.0D, 7.0D,
+			"Held first-person Y should pull the long cuboid grip down into the hand");
+		assertScaleBetween(heldDisplay, 0.5D, 0.6D,
+			"Held third-person scale should resize the cuboid trident to a player-hand readable size");
 		JsonObject throwingDisplay = throwingModel.getAsJsonObject("display")
 			.getAsJsonObject("thirdperson_righthand");
 		assertEquals(90, throwingDisplay.getAsJsonArray("rotation").get(1).getAsInt(),
 			"Throwing pose should rotate the trident so the prongs point forward during wind-up");
 		assertEquals(180, throwingDisplay.getAsJsonArray("rotation").get(2).getAsInt(),
 			"Throwing pose should flip the cuboid trident so the prongs face forward during wind-up");
-		assertTrue(throwingDisplay.getAsJsonArray("scale").get(0).getAsDouble() < 0.9D,
+		assertTranslationBetween(throwingDisplay, 0, 8.5D, 10.5D,
+			"Throwing third-person X should extend the wind-up grip out to the player's hand instead of stopping at the elbow");
+		assertTranslationBetween(throwingDisplay, 1, -6.25D, -4.25D,
+			"Throwing third-person Y should place the wind-up grip on the lowered hand plane instead of the elbow bend");
+		assertTranslationBetween(throwingDisplay, 2, 0.0D, 1.5D,
+			"Throwing third-person Z should pull the wind-up grip forward from the elbow/backline to the hand");
+		assertScaleBetween(throwingDisplay, 0.5D, 0.6D,
 			"Throwing pose should stay compact enough to avoid clipping through the camera");
 		assertEquals("curated_trident_silhouette_from_concept_palette",
 			report.get("strategy").getAsString(),
@@ -265,8 +306,36 @@ class AssetCustomizerContractTest {
 			"Held trident should be long enough to read as a trident in third person");
 		assertTrue(bbox.get(2).getAsDouble() >= 3.0D,
 			"Voxel trident should have enough depth to avoid looking like a flat sprite");
-		assertTrue(read(Path.of("tools/build_ocean_relic_trident_model.py")).contains("build_elements"),
+		assertTrue(bbox.get(2).getAsDouble() <= 6.0D,
+			"Voxel trident should stay slim enough for hand-held item rendering");
+		String generator = read(Path.of("tools/build_ocean_relic_trident_model.py"));
+		assertTrue(generator.contains("build_elements"),
 			"Voxel item pipeline should be reusable instead of hand-edited JSON only");
+		assertTrue(!generator.contains("write_inventory_sprite"),
+			"Pipeline should not redraw a lower-quality inventory icon when the richer existing trident sprite is available");
+		assertTrue(generator.contains("build_projectile_item_definition"),
+			"Generator should emit a projectile item definition for the custom thrown harpoon renderer");
+	}
+
+	@Test
+	void temporaryHarpoonProjectileUsesCustomThrownModelRenderer() throws IOException {
+		String clientMixins = read(CLIENT_MIXIN_CONFIG);
+		String rendererMixin = read(Path.of("src/client/java/dev/attuned/client/mixin/ThrownTridentRendererMixin.java"));
+		String stateMixin = read(Path.of("src/client/java/dev/attuned/client/mixin/ThrownTridentRenderStateMixin.java"));
+		assertTrue(clientMixins.contains("ThrownTridentRendererMixin"),
+			"Client mixins should replace vanilla thrown-trident rendering for temporary harpoons");
+		assertTrue(clientMixins.contains("ThrownTridentRenderStateMixin"),
+			"Client mixins should attach custom item render state to thrown trident render states");
+		assertTrue(rendererMixin.contains("HarpoonBehavior.isTemporaryHarpoon"),
+			"Renderer should only override Attuned temporary harpoons, not every vanilla trident");
+		assertTrue(rendererMixin.contains("ocean_relic_trident_projectile"),
+			"Thrown harpoon should resolve Attuned's projectile item definition");
+		assertTrue(rendererMixin.contains("ci.cancel()"),
+			"Custom projectile renderer should cancel vanilla trident model submission");
+		assertTrue(rendererMixin.contains("ItemDisplayContext.NONE"),
+			"Projectile renderer should render the custom cuboid spear directly instead of GUI/ground inventory transforms");
+		assertTrue(stateMixin.contains("ItemStackRenderState"),
+			"Thrown trident render state should carry an item render state for the custom cuboid spear");
 	}
 
 	@Test
@@ -329,6 +398,23 @@ class AssetCustomizerContractTest {
 			"Generated asset should have a transparent corner");
 	}
 
+	private static void assertTransparentBorder(BufferedImage image, int border) {
+		for (int i = 0; i < image.getWidth(); i++) {
+			for (int inset = 0; inset < border; inset++) {
+				assertEquals(0, alpha(image, i, inset), "Inventory icon should keep top transparent padding");
+				assertEquals(0, alpha(image, i, image.getHeight() - 1 - inset),
+					"Inventory icon should keep bottom transparent padding");
+			}
+		}
+		for (int i = 0; i < image.getHeight(); i++) {
+			for (int inset = 0; inset < border; inset++) {
+				assertEquals(0, alpha(image, inset, i), "Inventory icon should keep left transparent padding");
+				assertEquals(0, alpha(image, image.getWidth() - 1 - inset, i),
+					"Inventory icon should keep right transparent padding");
+			}
+		}
+	}
+
 	private static void assertNoVisibleChromaKey(BufferedImage image) {
 		for (int y = 0; y < image.getHeight(); y++) {
 			for (int x = 0; x < image.getWidth(); x++) {
@@ -362,6 +448,19 @@ class AssetCustomizerContractTest {
 		assertTrue(maxY - minY + 1 >= minHeight, "Generated asset should fill enough icon height");
 	}
 
+	private static void assertNearestNeighbor2x(BufferedImage image) {
+		assertTrue(image.getWidth() % 2 == 0 && image.getHeight() % 2 == 0,
+			"Pixel-art inventory icon should have even dimensions for 2x nearest-neighbor scaling");
+		for (int y = 0; y < image.getHeight(); y += 2) {
+			for (int x = 0; x < image.getWidth(); x += 2) {
+				int argb = image.getRGB(x, y);
+				assertEquals(argb, image.getRGB(x + 1, y), "Inventory icon should keep hard 2x pixels");
+				assertEquals(argb, image.getRGB(x, y + 1), "Inventory icon should keep hard 2x pixels");
+				assertEquals(argb, image.getRGB(x + 1, y + 1), "Inventory icon should keep hard 2x pixels");
+			}
+		}
+	}
+
 	private static void assertReadableGeneratedWeaponTransforms(Path modelPath) throws IOException {
 		JsonObject model = JsonParser.parseString(read(modelPath)).getAsJsonObject();
 		assertEquals("minecraft:item/generated", model.get("parent").getAsString(),
@@ -378,6 +477,38 @@ class AssetCustomizerContractTest {
 		JsonArray scale = display.getAsJsonArray("scale");
 		assertTrue(scale.get(0).getAsDouble() >= 0.7D,
 			"Generated weapon should stay large enough to read in held views: " + label);
+	}
+
+	private static void assertTranslationBetween(JsonObject display, int index, double min, double max, String message) {
+		double value = display.getAsJsonArray("translation").get(index).getAsDouble();
+		assertTrue(value >= min && value <= max, message + ": " + value);
+	}
+
+	private static void assertScaleBetween(JsonObject display, double min, double max, String message) {
+		JsonArray scale = display.getAsJsonArray("scale");
+		for (int index = 0; index < scale.size(); index++) {
+			double value = scale.get(index).getAsDouble();
+			assertTrue(value >= min && value <= max, message + " axis " + index + ": " + value);
+		}
+	}
+
+	private static void assertCuboidCoordinatesInMinecraftBounds(Path modelPath, JsonArray elements) {
+		for (JsonElement element : elements) {
+			JsonObject cuboid = element.getAsJsonObject();
+			assertCoordinateTripletInMinecraftBounds(modelPath, cuboid, "from");
+			assertCoordinateTripletInMinecraftBounds(modelPath, cuboid, "to");
+		}
+	}
+
+	private static void assertCoordinateTripletInMinecraftBounds(Path modelPath, JsonObject cuboid, String key) {
+		JsonArray coordinates = cuboid.getAsJsonArray(key);
+		String name = cuboid.has("name") ? cuboid.get("name").getAsString() : "<unnamed>";
+		for (int index = 0; index < coordinates.size(); index++) {
+			double value = coordinates.get(index).getAsDouble();
+			assertTrue(value >= -16.0D && value <= 32.0D,
+				modelPath + " cuboid " + name + " " + key + "[" + index
+					+ "] should stay within Minecraft's [-16, 32] element bounds but was " + value);
+		}
 	}
 
 	private static int alpha(BufferedImage image, int x, int y) {
