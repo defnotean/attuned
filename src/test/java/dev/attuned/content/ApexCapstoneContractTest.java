@@ -69,6 +69,20 @@ class ApexCapstoneContractTest {
 	}
 
 	@Test
+	void nearFullCapacityGateAllowsExactlyOneUnusedBudgetPoint() {
+		assertEquals(Apex.Capstone.EXECUTE, Apex.resolveCapstone(
+			List.of(focus(Affinity.FURY), focus(Affinity.FURY), focus(Affinity.FURY), focus(Affinity.FURY)),
+			11, 12).orElseThrow());
+	}
+
+	@Test
+	void neutralFociDoNotCompleteSingleAffinityCapstones() {
+		assertTrue(Apex.resolveCapstone(
+			List.of(focus(Affinity.FURY), focus(Affinity.FURY), focus(Affinity.FURY), neutral()),
+			11, 12).isEmpty());
+	}
+
+	@Test
 	void newCapstonesExposePlayerFacingNamesAndDescriptions() {
 		assertEquals("Maelstrom", Apex.Capstone.MAELSTROM.displayName());
 		assertEquals("Stillpoint", Apex.Capstone.STILLPOINT.displayName());

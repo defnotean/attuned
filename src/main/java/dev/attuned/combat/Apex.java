@@ -9,7 +9,6 @@ import dev.attuned.attunement.AttunedAttachments;
 import dev.attuned.attunement.AttunedInv;
 import dev.attuned.attunement.Attunement;
 import java.util.ArrayList;
-import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -99,9 +98,6 @@ public final class Apex {
 		}
 	}
 
-	private static final int MIN_FOCI = 4;
-	private static final int BUDGET_SLACK = 1;
-
 	private static final float EXECUTE_DAMAGE = 100000.0F;
 	private static final float EXECUTE_NORMAL = 0.20F;
 	private static final float EXECUTE_EMPOWERED = 0.35F;
@@ -145,34 +141,7 @@ public final class Apex {
 
 	public static Optional<Capstone> resolveCapstone(List<Optional<Affinity>> activeAffinities,
 			int used, int capacity) {
-		if (activeAffinities.size() < MIN_FOCI) {
-			return Optional.empty();
-		}
-		if (used > capacity || capacity - used > BUDGET_SLACK) {
-			return Optional.empty();
-		}
-
-		EnumMap<Affinity, Integer> counts = new EnumMap<>(Affinity.class);
-		int neutral = 0;
-		for (Optional<Affinity> affinity : activeAffinities) {
-			if (affinity.isPresent()) {
-				counts.merge(affinity.get(), 1, Integer::sum);
-			} else {
-				neutral++;
-			}
-		}
-		if (counts.isEmpty()) {
-			return neutral == activeAffinities.size()
-				? Optional.of(Capstone.STILLPOINT)
-				: Optional.empty();
-		}
-		if (counts.size() == 1 && neutral == 0) {
-			return Optional.of(Capstone.ofAffinity(counts.keySet().iterator().next()));
-		}
-		if (counts.size() == Affinity.values().length) {
-			return Optional.of(Capstone.MAELSTROM);
-		}
-		return Optional.empty();
+		return ApexCapstoneResolver.resolve(activeAffinities, used, capacity);
 	}
 
 	public static Optional<Capstone> capstoneOf(Player player) {

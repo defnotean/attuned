@@ -19,6 +19,8 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10
+        with:
+          lfs: true
 
       - name: Set up Java
         uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654
@@ -37,3 +39,6 @@ jobs:
 
       - name: Run Gradle build
         run: ./gradlew test build --no-daemon
+
+      - name: Run Minecraft server smoke check
+        run: python3 tools/minecraft_runtime_smoke.py --accept-eula --timeout 240 --stop-timeout 60

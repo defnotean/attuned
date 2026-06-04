@@ -30,13 +30,40 @@ Run the Python contract tests with:
 PYTHONDONTWRITEBYTECODE=1 python -m unittest discover -s tests
 ```
 
+Run the dedicated-server smoke check after reviewing and accepting the Minecraft EULA:
+
+```sh
+PYTHONDONTWRITEBYTECODE=1 python tools/minecraft_runtime_smoke.py --accept-eula
+```
+
+The smoke check starts the Fabric `runServer` task, waits for the server-ready signal, stops it, and fails on fatal server, mixin, or resource-load errors.
+
 ## Dependency updates
 
-Gradle dependency locking is enabled. After intentionally changing Gradle dependency versions, refresh and review the locks with:
+Gradle dependency locking and dependency verification are enabled. After intentionally changing Gradle dependency versions, refresh and review the locks with:
 
 ```sh
 ./gradlew dependencies --write-locks
 ```
+
+Then refresh and review the checksum metadata with:
+
+```sh
+./gradlew --write-verification-metadata sha256 help
+```
+
+Commit the resulting `gradle.lockfile` and `gradle/verification-metadata.xml` changes only after confirming the dependency update was intentional and the checksums came from the expected repositories.
+
+## Large assets
+
+Install Git LFS before working with source/reference assets under `docs/superpowers/assets`:
+
+```sh
+git lfs install
+git lfs pull
+```
+
+GLB, OBJ, and PNG files in `docs/superpowers/assets` are stored as LFS objects. Keep shipped game textures under `src/main/resources` in the normal repository unless a separate release decision changes that.
 
 Keep local secrets in environment variables or untracked `.env` files. The Modrinth publish task expects `MODRINTH_TOKEN` in the environment.
 
