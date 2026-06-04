@@ -17,6 +17,24 @@ dependencyLocking {
 	lockAllConfigurations()
 }
 
+// Loom resolves these launch/runtime classpaths with OS-specific native variants
+// (for example Netty epoll on Linux and kqueue on macOS). A single shared
+// lockfile cannot represent every platform at once without breaking another
+// platform's smoke run, so keep version locks on compile/test/release classpaths
+// while relying on dependency verification checksums for these launch-only
+// runtime configurations.
+def platformNativeRuntimeConfigurations = [
+	"minecraftClientRuntimeLibraries",
+	"minecraftTestClientRuntimeLibraries",
+	"minecraftNatives"
+] as Set
+
+configurations.configureEach {
+	if (platformNativeRuntimeConfigurations.contains(name)) {
+		resolutionStrategy.deactivateDependencyLocking()
+	}
+}
+
 loom {
 	splitEnvironmentSourceSets()
 
