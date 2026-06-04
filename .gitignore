@@ -3,6 +3,14 @@ apex_icons_mockup.png
 apex_mockup_real.png
 *_zoom.png
 
+# local environment
+.env
+.env.*
+
+# python
+__pycache__/
+*.py[cod]
+
 # gradle
 
 .gradle/

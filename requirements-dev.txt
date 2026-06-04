@@ -1,0 +1,2 @@
+# Python tooling dependencies for local asset tooling.
+Pillow==12.2.0

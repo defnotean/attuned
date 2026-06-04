@@ -59,6 +59,24 @@ class ReweavingResultPickerTest {
 		assertTrue(neutral > zephyr, "Neutral candidates should still outrank other affinities");
 	}
 
+	@Test
+	void pickMapsRollsAcrossWeightedCandidateRanges() {
+		List<ReweavingResultPicker.Candidate> pool = List.of(
+			new ReweavingResultPicker.Candidate("attuned:edge_focus", Optional.of("fury")),
+			new ReweavingResultPicker.Candidate("attuned:forager_focus", Optional.empty()),
+			new ReweavingResultPicker.Candidate("attuned:swift_focus", Optional.of("zephyr")));
+
+		assertEquals(Optional.of("attuned:edge_focus"), pickWithRoll(pool, 0));
+		assertEquals(Optional.of("attuned:edge_focus"), pickWithRoll(pool, 3));
+		assertEquals(Optional.of("attuned:forager_focus"), pickWithRoll(pool, 4));
+		assertEquals(Optional.of("attuned:forager_focus"), pickWithRoll(pool, 5));
+		assertEquals(Optional.of("attuned:swift_focus"), pickWithRoll(pool, 6));
+	}
+
+	private static Optional<String> pickWithRoll(List<ReweavingResultPicker.Candidate> pool, int roll) {
+		return ReweavingResultPicker.pick(pool, Set.of(), Optional.of("fury"), new FixedRandom(roll));
+	}
+
 	private static int weightOf(List<ReweavingResultPicker.WeightedCandidate> weighted, String id) {
 		return weighted.stream()
 			.filter(candidate -> candidate.id().equals(id))
