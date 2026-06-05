@@ -2,6 +2,7 @@ package dev.attuned.menu;
 
 import dev.attuned.AttunedConfig;
 import dev.attuned.AttunedPlayerCleanup;
+import dev.attuned.AttunedServerCleanup;
 import dev.attuned.attunement.AttunedAttachments;
 import dev.attuned.content.AttunedContent;
 import dev.attuned.content.AttunementAltarBlock;
@@ -46,6 +47,7 @@ public final class AltarNetworking {
 			player.level().getServer().execute(() -> tryBind(player));
 		});
 		AttunedPlayerCleanup.onForget(LAST_BIND_TICK::remove);
+		AttunedServerCleanup.onStop(LAST_BIND_TICK::clear);
 	}
 
 	/**

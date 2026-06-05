@@ -2,6 +2,7 @@ package dev.attuned.combat;
 
 import dev.attuned.AttunedConfig;
 import dev.attuned.AttunedPlayerCleanup;
+import dev.attuned.AttunedServerCleanup;
 import dev.attuned.attunement.AttunedAttachments;
 import dev.attuned.attunement.AttunedInv;
 import dev.attuned.attunement.Attunement;
@@ -48,6 +49,7 @@ public final class GravebindSave {
 			return false;
 		});
 		AttunedPlayerCleanup.onForget(lastSave::remove);
+		AttunedServerCleanup.onStop(lastSave::clear);
 	}
 
 	private static boolean hasGravebindActive(ServerPlayer player) {

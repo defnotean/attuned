@@ -1,6 +1,7 @@
 package dev.attuned.combat;
 
 import dev.attuned.AttunedPlayerCleanup;
+import dev.attuned.AttunedServerCleanup;
 import dev.attuned.attunement.AttunedAttachments;
 import dev.attuned.attunement.AttunedInv;
 import dev.attuned.attunement.Attunement;
@@ -42,6 +43,7 @@ public final class UnseenCombat {
 
 	public static void init() {
 		AttunedPlayerCleanup.onForget(LAST_NEEDLE::remove);
+		AttunedServerCleanup.onStop(LAST_NEEDLE::clear);
 		ServerLivingEntityEvents.AFTER_DAMAGE.register(UnseenCombat::afterDamage);
 		ServerLivingEntityEvents.AFTER_DEATH.register((entity, source) ->
 			LAST_NEEDLE.remove(entity.getUUID()));

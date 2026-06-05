@@ -1,5 +1,6 @@
 package dev.attuned.combat;
 
+import dev.attuned.AttunedServerCleanup;
 import dev.attuned.api.focus.Affinity;
 import dev.attuned.api.focus.AffinityColors;
 import dev.attuned.attunement.AttunedAttachments;
@@ -63,6 +64,10 @@ public final class AttunedCombat {
 	private static final float SUNLANCE_BONUS = 0.10F;
 	/** Sunlance asks for a deliberate swing, not spam-click pressure. */
 	private static final float SUNLANCE_CHARGED_SWING_THRESHOLD = 0.9F;
+	/** Minimum delay between repeated affinity feedback bursts for one mob. */
+	private static final long AFFINITY_SPARK_COOLDOWN_TICKS = 40L;
+	/** Maximum age for cached mob feedback throttles. */
+	private static final long AFFINITY_SPARK_CACHE_TTL_TICKS = 20L * 60L;
 
 	private static final Identifier THORNWARD_FOCUS =
 		Identifier.fromNamespaceAndPath("attuned", "thornward_focus");
@@ -77,12 +82,17 @@ public final class AttunedCombat {
 	private static final ThreadLocal<Boolean> REFLECTING = ThreadLocal.withInitial(() -> false);
 	/** Last game-time a mob affinity spark was shown for an entity. */
 	private static final Map<UUID, Long> LAST_AFFINITY_SPARK = new HashMap<>();
+	private static long lastAffinitySparkPrune;
 
 	/** Registers the combat event handlers. Called from the mod initializer. */
 	public static void init() {
 		ServerLivingEntityEvents.AFTER_DAMAGE.register(AttunedCombat::afterDamage);
 		ServerLivingEntityEvents.AFTER_DEATH.register((entity, source) ->
 			LAST_AFFINITY_SPARK.remove(entity.getUUID()));
+		AttunedServerCleanup.onStop(() -> {
+			LAST_AFFINITY_SPARK.clear();
+			lastAffinitySparkPrune = 0L;
+		});
 	}
 
 	/**
@@ -146,14 +156,25 @@ public final class AttunedCombat {
 		}
 		UUID id = entity.getUUID();
 		long now = level.getGameTime();
+		pruneAffinitySparkCache(now);
 		Long last = LAST_AFFINITY_SPARK.get(id);
-		if (last != null && now - last < 40L) {
+		if (last != null && now - last < AFFINITY_SPARK_COOLDOWN_TICKS) {
 			return;
 		}
 		LAST_AFFINITY_SPARK.put(id, now);
 		level.sendParticles(new DustParticleOptions(affinity.get().argb() & 0x00FFFFFF, 0.8F),
 			entity.getX(), entity.getY() + entity.getBbHeight() * 0.7, entity.getZ(),
 			4, 0.2, 0.25, 0.2, 0.0);
+	}
+
+	private static void pruneAffinitySparkCache(long now) {
+		if (LAST_AFFINITY_SPARK.isEmpty()
+				|| now - lastAffinitySparkPrune < AFFINITY_SPARK_CACHE_TTL_TICKS) {
+			return;
+		}
+		lastAffinitySparkPrune = now;
+		LAST_AFFINITY_SPARK.entrySet().removeIf(entry ->
+			now - entry.getValue() >= AFFINITY_SPARK_CACHE_TTL_TICKS);
 	}
 
 	/**

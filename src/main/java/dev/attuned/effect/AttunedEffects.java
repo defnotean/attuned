@@ -4,6 +4,7 @@ import dev.attuned.Attuned;
 import dev.attuned.AttunedAdvancements;
 import dev.attuned.AttunedPlayerCleanup;
 import dev.attuned.AttunedRegistries;
+import dev.attuned.AttunedServerCleanup;
 import dev.attuned.api.focus.Affinity;
 import dev.attuned.api.focus.AffinityColors;
 import dev.attuned.api.focus.FocusBehavior;
@@ -86,6 +87,11 @@ public final class AttunedEffects {
 		// player is a fresh entity whose active Foci must be reapplied from scratch.
 		AttunedPlayerCleanup.onForget(ACTIVE::remove);
 		AttunedPlayerCleanup.onForget(DORMANT::remove);
+		AttunedServerCleanup.onStop(() -> {
+			ACTIVE.clear();
+			DORMANT.clear();
+			auraTick = 0;
+		});
 	}
 
 	private static void tickPlayer(ServerPlayer player) {

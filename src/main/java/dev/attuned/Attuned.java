@@ -37,6 +37,7 @@ public class Attuned implements ModInitializer {
 		DynamicRegistries.registerSynced(AttunedRegistries.FOCUS_DEFINITIONS, FocusDefinition.CODEC);
 		AttunedAttachments.init();
 		AttunedPlayerCleanup.init();
+		AttunedServerCleanup.init();
 		AttunedContent.init();
 		AltarAnimations.init();
 		AttunedLoot.init();

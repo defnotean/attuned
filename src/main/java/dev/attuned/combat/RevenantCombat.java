@@ -2,6 +2,7 @@ package dev.attuned.combat;
 
 import dev.attuned.Attuned;
 import dev.attuned.AttunedPlayerCleanup;
+import dev.attuned.AttunedServerCleanup;
 import dev.attuned.attunement.AttunedAttachments;
 import dev.attuned.attunement.AttunedInv;
 import dev.attuned.attunement.Attunement;
@@ -55,6 +56,10 @@ public final class RevenantCombat {
 		AttunedPlayerCleanup.onForget(uuid -> {
 			DEBTS.remove(uuid);
 			LAST_RITES.remove(uuid);
+		});
+		AttunedServerCleanup.onStop(() -> {
+			DEBTS.clear();
+			LAST_RITES.clear();
 		});
 	}
 
