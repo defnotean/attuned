@@ -248,24 +248,28 @@ public final class Pacts {
 			return amount;
 		}
 		// Stoneheart: a defender-side dampen on everything, no matchup gating.
-		if (defender instanceof Player defenderPlayer && isAt(defenderPlayer, Pact.STONEHEART)) {
+		Pact defenderPact = defender instanceof Player defenderPlayer
+			? activeOf(defenderPlayer).orElse(null)
+			: null;
+		if (defenderPact == Pact.STONEHEART) {
 			amount *= (1.0F - STONEHEART_DAMPEN);
 		}
 		// Untethered: an attacker-side amplifier against any affinity-bearing foe.
-		if (source.getEntity() instanceof Player attackerPlayer
-				&& isAt(attackerPlayer, Pact.UNTETHERED)
-				&& !Apex.isAt(attackerPlayer, Apex.Capstone.MAELSTROM)
-				&& canAffectCombatTarget(attackerPlayer, defender)
-				&& hasAffinityPressure(defender)) {
-			amount *= (1.0F + UNTETHERED_AMPLIFY);
-		}
-		if (source.getEntity() instanceof Player attackerPlayer
-				&& isAt(attackerPlayer, Pact.RADIANT_COVENANT)
-				&& !(defender instanceof Player)
-				&& isHostile(defender)
-				&& defender.typeHolder().is(EntityTypeTags.UNDEAD)
-				&& isDirectChargedMelee(attackerPlayer, source, RADIANT_COVENANT_SWING_THRESHOLD)) {
-			amount *= (1.0F + RADIANT_COVENANT_UNDEAD_BONUS);
+		if (source.getEntity() instanceof Player attackerPlayer) {
+			Pact attackerPact = activeOf(attackerPlayer).orElse(null);
+			if (attackerPact == Pact.UNTETHERED
+					&& !Apex.isAt(attackerPlayer, Apex.Capstone.MAELSTROM)
+					&& canAffectCombatTarget(attackerPlayer, defender)
+					&& hasAffinityPressure(defender)) {
+				amount *= (1.0F + UNTETHERED_AMPLIFY);
+			}
+			if (attackerPact == Pact.RADIANT_COVENANT
+					&& !(defender instanceof Player)
+					&& isHostile(defender)
+					&& defender.typeHolder().is(EntityTypeTags.UNDEAD)
+					&& isDirectChargedMelee(attackerPlayer, source, RADIANT_COVENANT_SWING_THRESHOLD)) {
+				amount *= (1.0F + RADIANT_COVENANT_UNDEAD_BONUS);
+			}
 		}
 		return amount;
 	}
@@ -288,15 +292,16 @@ public final class Pacts {
 		if (attacker == defender || !defender.isAlive()) {
 			return;
 		}
-		if (isAt(attacker, Pact.PYRESWORN)) {
+		Pact attackerPact = activeOf(attacker).orElse(null);
+		if (attackerPact == Pact.PYRESWORN) {
 			pyreswornIgnite(attacker, defender, source);
 		}
-		if (isAt(attacker, Pact.UNTETHERED)
+		if (attackerPact == Pact.UNTETHERED
 				&& canAffectCombatTarget(attacker, defender)
 				&& hasAffinityPressure(defender)) {
 			untetheredImpactSparkle(defender);
 		}
-		if (isAt(attacker, Pact.RADIANT_COVENANT)) {
+		if (attackerPact == Pact.RADIANT_COVENANT) {
 			radiantCovenantReveal(attacker, defender, source);
 		}
 	}

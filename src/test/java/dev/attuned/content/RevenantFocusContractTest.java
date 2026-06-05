@@ -18,6 +18,8 @@ import org.junit.jupiter.api.Test;
 class RevenantFocusContractTest {
 	private static final Path CONTENT_SOURCE =
 		Path.of("src/main/java/dev/attuned/content/AttunedContent.java");
+	private static final Path BEHAVIOR_REGISTRATION_SOURCE =
+		Path.of("src/main/java/dev/attuned/content/AttunedFocusBehaviors.java");
 	private static final Path REVENANT_BEHAVIORS =
 		Path.of("src/main/java/dev/attuned/content/behavior/RevenantFocusBehaviors.java");
 	private static final Path REVENANT_COMBAT =
@@ -43,17 +45,18 @@ class RevenantFocusContractTest {
 	@Test
 	void revenantFociAreRegisteredListedAndBehaviorBacked() throws IOException {
 		String content = read(CONTENT_SOURCE);
+		String registrations = read(BEHAVIOR_REGISTRATION_SOURCE);
 
 		for (String name : NEW_REVENANT_FOCI) {
 			String field = name.substring(0, name.length() - "_focus".length()).toUpperCase() + "_FOCUS";
-			assertTrue(content.contains("public static final Item " + field + " = register(\"" + name + "\")"),
+			assertTrue(content.contains("public static final Item " + field + " = registerFocus(\"" + name + "\")"),
 				"AttunedContent should register " + name);
-			assertTrue(content.contains(field),
-				"AttunedContent.FOCI should list " + name);
 		}
-		assertTrue(content.contains("\"epitaph\"), new RevenantFocusBehaviors.Epitaph()"),
+		assertTrue(content.contains("public static final List<Item> FOCI = List.copyOf(REGISTERED_FOCI);"),
+			"AttunedContent.FOCI should follow Focus registration order");
+		assertTrue(registrations.contains("register(\"epitaph\", new RevenantFocusBehaviors.Epitaph())"),
 			"Epitaph behavior should be registered");
-		assertTrue(content.contains("\"hollowstep\"), new RevenantFocusBehaviors.Hollowstep()"),
+		assertTrue(registrations.contains("register(\"hollowstep\", new RevenantFocusBehaviors.Hollowstep())"),
 			"Hollowstep behavior should be registered");
 	}
 

@@ -12,7 +12,6 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -31,6 +30,12 @@ import org.junit.jupiter.api.Test;
 class FocusDataConsistencyTest {
 	private static final Path CONTENT_SOURCE =
 		Path.of("src/main/java/dev/attuned/content/AttunedContent.java");
+	private static final Path REGISTRIES_SOURCE =
+		Path.of("src/main/java/dev/attuned/AttunedRegistries.java");
+	private static final Path BEHAVIOR_REGISTRATION_SOURCE =
+		Path.of("src/main/java/dev/attuned/content/AttunedFocusBehaviors.java");
+	private static final Path CREATIVE_TABS_SOURCE =
+		Path.of("src/main/java/dev/attuned/content/AttunedCreativeTabs.java");
 	private static final Path FOCUS_DATA_DIR =
 		Path.of("src/main/resources/data/attuned/attuned/focus");
 	private static final Path ITEM_DEFINITION_DIR =
@@ -47,15 +52,10 @@ class FocusDataConsistencyTest {
 		Path.of("src/main/resources/assets/attuned/lang/en_us.json");
 
 	private static final Pattern REGISTERED_FOCUS = Pattern.compile(
-		"public\\s+static\\s+final\\s+Item\\s+([A-Z0-9_]+_FOCUS)\\s*=\\s*register\\(\"([a-z0-9_]+_focus)\"\\);");
+		"public\\s+static\\s+final\\s+Item\\s+([A-Z0-9_]+_FOCUS)\\s*=\\s*registerFocus\\(\"([a-z0-9_]+_focus)\"\\);");
 	private static final Pattern REGISTERED_BEHAVIOR = Pattern.compile(
-		"AttunedRegistries\\.registerBehavior\\(\\s*"
-			+ "Identifier\\.fromNamespaceAndPath\\(\\s*Attuned\\.MOD_ID\\s*,\\s*\"([a-z0-9_/.-]+)\"\\s*\\)",
+		"register\\(\\s*\"([a-z0-9_/.-]+)\"\\s*,\\s*new\\s+",
 		Pattern.DOTALL);
-	private static final Pattern FOCI_LIST = Pattern.compile(
-		"public\\s+static\\s+final\\s+List<Item>\\s+FOCI\\s*=\\s*List\\.of\\((.*?)\\);",
-		Pattern.DOTALL);
-	private static final Pattern FOCI_ENTRY = Pattern.compile("\\b([A-Z0-9_]+_FOCUS)\\b");
 	private static final Pattern NAMESPACED_ID = Pattern.compile("[a-z0-9_.-]+:[a-z0-9_/.-]+");
 	private static final Set<String> UNSEEN_FOCUS_ITEMS = Set.of(
 		"attuned:blackout_focus",
@@ -103,11 +103,16 @@ class FocusDataConsistencyTest {
 
 		Map<String, String> registeredItemsByField = registeredFocusItemsByField(source);
 		Set<String> registeredItems = new TreeSet<>(registeredItemsByField.values());
-		Set<String> listedItems = focusListItems(source, registeredItemsByField);
 		Set<String> definitionItems = focusDefinitionItems();
 
-		assertEquals(registeredItems, listedItems,
-			"AttunedContent.FOCI should include every registered shipped Focus item");
+		assertEquals(registeredItemsByField.size(), registeredItems.size(),
+			"Registered shipped Focus item ids should not be duplicated");
+		assertTrue(source.contains("public static final List<Item> FOCI = List.copyOf(REGISTERED_FOCI);"),
+			"AttunedContent.FOCI should be derived from registerFocus order, not manually duplicated");
+		assertTrue(source.contains("REGISTERED_FOCI.add(item);"),
+			"registerFocus should append every Focus to the public FOCI snapshot");
+		assertTrue(!source.contains("FOCI = List.of("),
+			"AttunedContent.FOCI should not go back to a hand-maintained List.of");
 		assertEquals(registeredItems, definitionItems,
 			"Registered shipped Focus items should match datapack FocusDefinition item ids");
 	}
@@ -143,22 +148,42 @@ class FocusDataConsistencyTest {
 	}
 
 	@Test
-	void focusBehaviorIdsAreRegisteredInAttunedContent() throws IOException {
-		String source = Files.readString(CONTENT_SOURCE, StandardCharsets.UTF_8);
+	void focusBehaviorIdsAreRegisteredInBehaviorRegistry() throws IOException {
+		String source = Files.readString(BEHAVIOR_REGISTRATION_SOURCE, StandardCharsets.UTF_8);
 		Set<String> referencedBehaviors = focusDefinitionBehaviorIds();
 		Set<String> registeredBehaviors = registeredBehaviorIds(source);
 
 		Set<String> missingBehaviors = new TreeSet<>(referencedBehaviors);
 		missingBehaviors.removeAll(registeredBehaviors);
 		assertEquals(Set.of(), missingBehaviors,
-			"Every FocusDefinition behavior id should be registered in AttunedContent.init()");
+			"Every FocusDefinition behavior id should be registered in AttunedFocusBehaviors");
+	}
+
+	@Test
+	void focusBehaviorRegistryRejectsDuplicateIdsAndCoordinatorIsIdempotent() throws IOException {
+		String registry = Files.readString(REGISTRIES_SOURCE, StandardCharsets.UTF_8);
+		String registrations = Files.readString(BEHAVIOR_REGISTRATION_SOURCE, StandardCharsets.UTF_8);
+
+		assertTrue(registry.contains("BEHAVIORS.putIfAbsent(id, behavior)"),
+			"Focus behavior registration should fail fast instead of silently replacing duplicate ids");
+		assertTrue(registry.contains("Duplicate Focus behavior id"),
+			"Duplicate behavior ids should produce a clear startup error");
+		assertTrue(registrations.contains("private static boolean initialized;"),
+			"AttunedFocusBehaviors should guard against repeated init calls");
+		assertTrue(registrations.contains("if (initialized)"),
+			"AttunedFocusBehaviors should skip duplicate init work");
+		assertTrue(registrations.contains("initialized = true;"),
+			"AttunedFocusBehaviors should mark successful registration as complete");
 	}
 
 	@Test
 	void creativeInventorySplitsAffinityAndUtilityContentIntoReadableTabs() throws IOException {
-		String source = Files.readString(CONTENT_SOURCE, StandardCharsets.UTF_8);
+		String content = Files.readString(CONTENT_SOURCE, StandardCharsets.UTF_8);
+		String source = Files.readString(CREATIVE_TABS_SOURCE, StandardCharsets.UTF_8);
 		JsonObject lang = languageRoot();
 
+		assertTrue(content.contains("AttunedCreativeTabs.init()"),
+			"AttunedContent.init should register the creative tabs");
 		assertTrue(source.contains("\"attuned_utility\""),
 			"Creative inventory should include a second Attuned utility tab");
 		assertTrue(source.contains("itemGroup.attuned.affinity_foci"),
@@ -375,34 +400,8 @@ class FocusDataConsistencyTest {
 		while (matcher.find()) {
 			behaviorIds.add("attuned:" + matcher.group(1));
 		}
-		assertTrue(!behaviorIds.isEmpty(), "Could not find registered Focus behaviors in AttunedContent");
+		assertTrue(!behaviorIds.isEmpty(), "Could not find registered Focus behaviors in AttunedFocusBehaviors");
 		return behaviorIds;
-	}
-
-	private static Set<String> focusListItems(String source, Map<String, String> registeredItemsByField) {
-		Matcher listMatcher = FOCI_LIST.matcher(source);
-		assertTrue(listMatcher.find(), "Could not find AttunedContent.FOCI");
-
-		Matcher entryMatcher = FOCI_ENTRY.matcher(listMatcher.group(1));
-		List<String> unknownFields = new ArrayList<>();
-		Set<String> items = new TreeSet<>();
-		int entries = 0;
-		while (entryMatcher.find()) {
-			entries++;
-			String field = entryMatcher.group(1);
-			String item = registeredItemsByField.get(field);
-			if (item == null) {
-				unknownFields.add(field);
-			} else {
-				items.add(item);
-			}
-		}
-
-		assertEquals(List.of(), unknownFields,
-			"Every AttunedContent.FOCI entry should refer to a registered Focus item field");
-		assertTrue(entries > 0, "AttunedContent.FOCI should list at least one Focus item");
-		assertEquals(entries, items.size(), "AttunedContent.FOCI should not list duplicate Focus items");
-		return items;
 	}
 
 	private static Set<String> focusDefinitionItems() throws IOException {

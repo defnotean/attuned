@@ -1,56 +1,16 @@
 package dev.attuned.content;
 
 import dev.attuned.Attuned;
-import dev.attuned.AttunedRegistries;
-import dev.attuned.api.focus.Affinity;
-import dev.attuned.api.focus.FocusDefinition;
-import dev.attuned.content.behavior.AegisBehavior;
-import dev.attuned.content.behavior.AnchorBehavior;
-import dev.attuned.content.behavior.BeaconBehavior;
-import dev.attuned.content.behavior.BloodfuryBehavior;
-import dev.attuned.content.behavior.DelverBehavior;
-import dev.attuned.content.behavior.DriftglassBehavior;
-import dev.attuned.content.behavior.EmberwardBehavior;
-import dev.attuned.content.behavior.ForagerBehavior;
-import dev.attuned.content.behavior.GalespurBehavior;
-import dev.attuned.content.behavior.HarpoonBehavior;
-import dev.attuned.content.behavior.HarvestBehavior;
-import dev.attuned.content.behavior.HarborlightBehavior;
-import dev.attuned.content.behavior.HearthBehavior;
-import dev.attuned.content.behavior.LanternBehavior;
-import dev.attuned.content.behavior.LodestoneBehavior;
-import dev.attuned.content.behavior.NightgazeBehavior;
-import dev.attuned.content.behavior.RainstepBehavior;
-import dev.attuned.content.behavior.RadiantFocusBehaviors;
-import dev.attuned.content.behavior.RevenantFocusBehaviors;
-import dev.attuned.content.behavior.SmokeBehavior;
-import dev.attuned.content.behavior.SoftstepBehavior;
-import dev.attuned.content.behavior.StormcallBehavior;
-import dev.attuned.content.behavior.TideBehavior;
-import dev.attuned.content.behavior.TremorBehavior;
-import dev.attuned.content.behavior.VeilBehavior;
-import dev.attuned.content.behavior.VoidstepBehavior;
-import dev.attuned.content.behavior.WaystoneBehavior;
 import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.IdentityHashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Optional;
 import java.util.function.Function;
-import java.util.function.Predicate;
-import net.fabricmc.fabric.api.creativetab.v1.FabricCreativeModeTab;
-import net.minecraft.core.HolderLookup;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
-import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.item.BlockItem;
-import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.Item;
-import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.state.BlockBehaviour;
@@ -62,93 +22,98 @@ import net.minecraft.world.level.block.state.BlockBehaviour;
 public final class AttunedContent {
 	private AttunedContent() {}
 
-	public static final Item SWIFT_FOCUS = register("swift_focus");
-	public static final Item VITAL_FOCUS = register("vital_focus");
-	public static final Item IRON_FOCUS = register("iron_focus");
+	private static final List<Item> REGISTERED_FOCI = new ArrayList<>();
+
+	public static final Item SWIFT_FOCUS = registerFocus("swift_focus");
+	public static final Item VITAL_FOCUS = registerFocus("vital_focus");
+	public static final Item IRON_FOCUS = registerFocus("iron_focus");
 
 	// Attribute Foci — behaviour is purely declarative modifiers in the datapack.
-	public static final Item LEAP_FOCUS = register("leap_focus");
-	public static final Item EDGE_FOCUS = register("edge_focus");
-	public static final Item FRENZY_FOCUS = register("frenzy_focus");
-	public static final Item CINDER_FOCUS = register("cinder_focus");
-	public static final Item BULWARK_FOCUS = register("bulwark_focus");
-	public static final Item DRIFT_FOCUS = register("drift_focus");
+	public static final Item LEAP_FOCUS = registerFocus("leap_focus");
+	public static final Item EDGE_FOCUS = registerFocus("edge_focus");
+	public static final Item FRENZY_FOCUS = registerFocus("frenzy_focus");
+	public static final Item CINDER_FOCUS = registerFocus("cinder_focus");
+	public static final Item BULWARK_FOCUS = registerFocus("bulwark_focus");
+	public static final Item DRIFT_FOCUS = registerFocus("drift_focus");
 
 	// Behaviour Foci — datapack modifiers plus a registered code behaviour.
-	public static final Item TIDE_FOCUS = register("tide_focus");
-	public static final Item GALESPUR_FOCUS = register("galespur_focus");
-	public static final Item RAINSTEP_FOCUS = register("rainstep_focus");
-	public static final Item EMBERWARD_FOCUS = register("emberward_focus");
-	public static final Item ANCHOR_FOCUS = register("anchor_focus");
-	public static final Item AEGIS_FOCUS = register("aegis_focus");
-	public static final Item NIGHTGAZE_FOCUS = register("nightgaze_focus");
-	public static final Item HEARTH_FOCUS = register("hearth_focus");
-	public static final Item LANTERN_FOCUS = register("lantern_focus");
-	public static final Item DELVER_FOCUS = register("delver_focus");
-	public static final Item LODESTONE_FOCUS = register("lodestone_focus");
+	public static final Item TIDE_FOCUS = registerFocus("tide_focus");
+	public static final Item GALESPUR_FOCUS = registerFocus("galespur_focus");
+	public static final Item RAINSTEP_FOCUS = registerFocus("rainstep_focus");
+	public static final Item EMBERWARD_FOCUS = registerFocus("emberward_focus");
+	public static final Item ANCHOR_FOCUS = registerFocus("anchor_focus");
+	public static final Item AEGIS_FOCUS = registerFocus("aegis_focus");
+	public static final Item NIGHTGAZE_FOCUS = registerFocus("nightgaze_focus");
+	public static final Item HEARTH_FOCUS = registerFocus("hearth_focus");
+	public static final Item LANTERN_FOCUS = registerFocus("lantern_focus");
+	public static final Item DELVER_FOCUS = registerFocus("delver_focus");
+	public static final Item LODESTONE_FOCUS = registerFocus("lodestone_focus");
 
 	// Combat Foci — a separate combat system handles their effects.
-	public static final Item THORNWARD_FOCUS = register("thornward_focus");
-	public static final Item LEECH_FOCUS = register("leech_focus");
+	public static final Item THORNWARD_FOCUS = registerFocus("thornward_focus");
+	public static final Item LEECH_FOCUS = registerFocus("leech_focus");
 
 	// Expansion Foci — driven by a code behaviour, a death hook, or a teleport packet.
-	public static final Item STORMCALL_FOCUS = register("stormcall_focus");
-	public static final Item GRAVEBIND_FOCUS = register("gravebind_focus");
-	public static final Item BLOODFURY_FOCUS = register("bloodfury_focus");
-	public static final Item VOIDSTEP_FOCUS = register("voidstep_focus");
-	public static final Item HARVEST_FOCUS = register("harvest_focus");
-	public static final Item FORAGER_FOCUS = register("forager_focus");
-	public static final Item TREMOR_FOCUS = register("tremor_focus");
-	public static final Item BEACON_FOCUS = register("beacon_focus");
-	public static final Item WAYSTONE_FOCUS = register("waystone_focus");
+	public static final Item STORMCALL_FOCUS = registerFocus("stormcall_focus");
+	public static final Item GRAVEBIND_FOCUS = registerFocus("gravebind_focus");
+	public static final Item BLOODFURY_FOCUS = registerFocus("bloodfury_focus");
+	public static final Item VOIDSTEP_FOCUS = registerFocus("voidstep_focus");
+	public static final Item HARVEST_FOCUS = registerFocus("harvest_focus");
+	public static final Item FORAGER_FOCUS = registerFocus("forager_focus");
+	public static final Item TREMOR_FOCUS = registerFocus("tremor_focus");
+	public static final Item BEACON_FOCUS = registerFocus("beacon_focus");
+	public static final Item WAYSTONE_FOCUS = registerFocus("waystone_focus");
 
 	// The Unseen — stealth-flavoured Foci that work through patience, misdirection and openings.
-	public static final Item SOFTSTEP_FOCUS = register("softstep_focus");
-	public static final Item VEIL_FOCUS = register("veil_focus");
-	public static final Item NEEDLE_FOCUS = register("needle_focus");
-	public static final Item SMOKE_FOCUS = register("smoke_focus");
+	public static final Item SOFTSTEP_FOCUS = registerFocus("softstep_focus");
+	public static final Item VEIL_FOCUS = registerFocus("veil_focus");
+	public static final Item NEEDLE_FOCUS = registerFocus("needle_focus");
+	public static final Item SMOKE_FOCUS = registerFocus("smoke_focus");
 
 	// The Seafarers - peaceful utility Foci for fishing, wayfinding, and water-side travel.
-	public static final Item LINECAST_FOCUS = register("linecast_focus");
-	public static final Item NETMENDER_FOCUS = register("netmender_focus");
-	public static final Item HARBORLIGHT_FOCUS = register("harborlight_focus");
-	public static final Item DRIFTGLASS_FOCUS = register("driftglass_focus");
+	public static final Item LINECAST_FOCUS = registerFocus("linecast_focus");
+	public static final Item NETMENDER_FOCUS = registerFocus("netmender_focus");
+	public static final Item HARBORLIGHT_FOCUS = registerFocus("harborlight_focus");
+	public static final Item DRIFTGLASS_FOCUS = registerFocus("driftglass_focus");
 
 	// The Offshore - dangerous water utility for salvage, storms, and things below the waves.
-	public static final Item HARPOON_FOCUS = register("harpoon_focus");
+	public static final Item HARPOON_FOCUS = registerFocus("harpoon_focus");
 
 	// The Radiant - Holy Foci built around vows, revelation, and measured judgment.
-	public static final Item VOTIVE_FOCUS = register("votive_focus");
-	public static final Item BELLWETHER_FOCUS = register("bellwether_focus");
-	public static final Item OATHGUARD_FOCUS = register("oathguard_focus");
-	public static final Item SUNLANCE_FOCUS = register("sunlance_focus");
+	public static final Item VOTIVE_FOCUS = registerFocus("votive_focus");
+	public static final Item BELLWETHER_FOCUS = registerFocus("bellwether_focus");
+	public static final Item OATHGUARD_FOCUS = registerFocus("oathguard_focus");
+	public static final Item SUNLANCE_FOCUS = registerFocus("sunlance_focus");
 
 	// The Reliquary - Holy utility Foci for relics, thresholds, names, and quiet rites.
-	public static final Item CENSER_FOCUS = register("censer_focus");
-	public static final Item NAMESAKE_FOCUS = register("namesake_focus");
-	public static final Item THRESHOLD_FOCUS = register("threshold_focus");
+	public static final Item CENSER_FOCUS = registerFocus("censer_focus");
+	public static final Item NAMESAKE_FOCUS = registerFocus("namesake_focus");
+	public static final Item THRESHOLD_FOCUS = registerFocus("threshold_focus");
 
 	// The Verdant Choir - broad naturalist Foci for grounded travel and gathering.
-	public static final Item ROOTSTEP_FOCUS = register("rootstep_focus");
-	public static final Item BLOOM_FOCUS = register("bloom_focus");
-	public static final Item MOSSHEART_FOCUS = register("mossheart_focus");
+	public static final Item ROOTSTEP_FOCUS = registerFocus("rootstep_focus");
+	public static final Item BLOOM_FOCUS = registerFocus("bloom_focus");
+	public static final Item MOSSHEART_FOCUS = registerFocus("mossheart_focus");
 
 	// The Ashen Forge - craft-bound Foci with restrained Bastion/Fury utility.
-	public static final Item TEMPER_FOCUS = register("temper_focus");
-	public static final Item KILNWARD_FOCUS = register("kilnward_focus");
-	public static final Item RIVET_FOCUS = register("rivet_focus");
+	public static final Item TEMPER_FOCUS = registerFocus("temper_focus");
+	public static final Item KILNWARD_FOCUS = registerFocus("kilnward_focus");
+	public static final Item RIVET_FOCUS = registerFocus("rivet_focus");
 
 	// Additional Unseen Foci - evasive and misdirection tools with low direct damage.
-	public static final Item MASK_FOCUS = register("mask_focus");
-	public static final Item WHISPER_FOCUS = register("whisper_focus");
-	public static final Item BLACKOUT_FOCUS = register("blackout_focus");
+	public static final Item MASK_FOCUS = registerFocus("mask_focus");
+	public static final Item WHISPER_FOCUS = registerFocus("whisper_focus");
+	public static final Item BLACKOUT_FOCUS = registerFocus("blackout_focus");
 
 	// The Revenant - unfinished endings, remembered deaths, debts, and grave-cold reprisals.
-	public static final Item EPITAPH_FOCUS = register("epitaph_focus");
-	public static final Item ASHEN_DEBT_FOCUS = register("ashen_debt_focus");
-	public static final Item HOLLOWSTEP_FOCUS = register("hollowstep_focus");
-	public static final Item LAST_RITES_FOCUS = register("last_rites_focus");
-	public static final Item BONECHILL_FOCUS = register("bonechill_focus");
+	public static final Item EPITAPH_FOCUS = registerFocus("epitaph_focus");
+	public static final Item ASHEN_DEBT_FOCUS = registerFocus("ashen_debt_focus");
+	public static final Item HOLLOWSTEP_FOCUS = registerFocus("hollowstep_focus");
+	public static final Item LAST_RITES_FOCUS = registerFocus("last_rites_focus");
+	public static final Item BONECHILL_FOCUS = registerFocus("bonechill_focus");
+
+	/** Every Focus item, in display order for creative tabs and survival loot. */
+	public static final List<Item> FOCI = List.copyOf(REGISTERED_FOCI);
 
 	/** A consumable that permanently raises attunement capacity. Stacks normally. */
 	public static final Item ATTUNEMENT_SHARD = register("attunement_shard", AttunementShardItem::new);
@@ -163,28 +128,10 @@ public final class AttunedContent {
 	/** The Altar of Reweaving converts three Foci and a shard fragment into a new Focus. */
 	public static final Block ALTAR_OF_REWEAVING = registerReweavingAltar();
 
-	/** Every Focus item, in display order — the single source for the creative tab and survival loot. */
-	public static final List<Item> FOCI = List.of(
-		SWIFT_FOCUS, VITAL_FOCUS, IRON_FOCUS, LEAP_FOCUS, EDGE_FOCUS, FRENZY_FOCUS,
-		CINDER_FOCUS, BULWARK_FOCUS, DRIFT_FOCUS, TIDE_FOCUS, EMBERWARD_FOCUS, AEGIS_FOCUS,
-		GALESPUR_FOCUS, RAINSTEP_FOCUS, ANCHOR_FOCUS, NIGHTGAZE_FOCUS, HEARTH_FOCUS,
-		LANTERN_FOCUS, DELVER_FOCUS, LODESTONE_FOCUS, THORNWARD_FOCUS,
-		LEECH_FOCUS, STORMCALL_FOCUS, GRAVEBIND_FOCUS, BLOODFURY_FOCUS, VOIDSTEP_FOCUS,
-		HARVEST_FOCUS, FORAGER_FOCUS, TREMOR_FOCUS, BEACON_FOCUS, WAYSTONE_FOCUS,
-		SOFTSTEP_FOCUS, VEIL_FOCUS, NEEDLE_FOCUS, SMOKE_FOCUS,
-		LINECAST_FOCUS, NETMENDER_FOCUS, HARBORLIGHT_FOCUS, DRIFTGLASS_FOCUS, HARPOON_FOCUS,
-		VOTIVE_FOCUS, BELLWETHER_FOCUS, OATHGUARD_FOCUS, SUNLANCE_FOCUS,
-		CENSER_FOCUS, NAMESAKE_FOCUS, THRESHOLD_FOCUS,
-		ROOTSTEP_FOCUS, BLOOM_FOCUS, MOSSHEART_FOCUS,
-		TEMPER_FOCUS, KILNWARD_FOCUS, RIVET_FOCUS,
-		MASK_FOCUS, WHISPER_FOCUS, BLACKOUT_FOCUS,
-		EPITAPH_FOCUS, ASHEN_DEBT_FOCUS, HOLLOWSTEP_FOCUS, LAST_RITES_FOCUS, BONECHILL_FOCUS);
-
-	private static Item register(String name) {
-		ResourceKey<Item> key = ResourceKey.create(
-			Registries.ITEM, Identifier.fromNamespaceAndPath(Attuned.MOD_ID, name));
-		Item item = new Item(new Item.Properties().setId(key).stacksTo(1));
-		return Registry.register(BuiltInRegistries.ITEM, key, item);
+	private static Item registerFocus(String name) {
+		Item item = register(name, properties -> new Item(properties.stacksTo(1)));
+		REGISTERED_FOCI.add(item);
+		return item;
 	}
 
 	/**
@@ -239,165 +186,7 @@ public final class AttunedContent {
 	 * behaviours, and registers the creative tabs.
 	 */
 	public static void init() {
-		AttunedRegistries.registerBehavior(
-			Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "tide"), new TideBehavior());
-		AttunedRegistries.registerBehavior(
-			Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "galespur"), new GalespurBehavior());
-		AttunedRegistries.registerBehavior(
-			Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "rainstep"), new RainstepBehavior());
-		AttunedRegistries.registerBehavior(
-			Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "emberward"), new EmberwardBehavior());
-		AttunedRegistries.registerBehavior(
-			Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "anchor"), new AnchorBehavior());
-		AttunedRegistries.registerBehavior(
-			Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "aegis"), new AegisBehavior());
-		AttunedRegistries.registerBehavior(
-			Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "nightgaze"), new NightgazeBehavior());
-		AttunedRegistries.registerBehavior(
-			Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "hearth"), new HearthBehavior());
-		AttunedRegistries.registerBehavior(
-			Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "lantern"), new LanternBehavior());
-		AttunedRegistries.registerBehavior(
-			Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "delver"), new DelverBehavior());
-		AttunedRegistries.registerBehavior(
-			Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "lodestone"), new LodestoneBehavior());
-		AttunedRegistries.registerBehavior(
-			Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "stormcall"), new StormcallBehavior());
-		AttunedRegistries.registerBehavior(
-			Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "bloodfury"), new BloodfuryBehavior());
-		AttunedRegistries.registerBehavior(
-			Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "harvest"), new HarvestBehavior());
-		AttunedRegistries.registerBehavior(
-			Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "forager"), new ForagerBehavior());
-		AttunedRegistries.registerBehavior(
-			Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "tremor"), new TremorBehavior());
-		AttunedRegistries.registerBehavior(
-			Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "beacon"), new BeaconBehavior());
-		AttunedRegistries.registerBehavior(
-			Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "waystone"), new WaystoneBehavior());
-		AttunedRegistries.registerBehavior(
-			Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "voidstep"), new VoidstepBehavior());
-		AttunedRegistries.registerBehavior(
-			Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "softstep"), new SoftstepBehavior());
-		AttunedRegistries.registerBehavior(
-			Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "veil"), new VeilBehavior());
-		AttunedRegistries.registerBehavior(
-			Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "smoke"), new SmokeBehavior());
-		AttunedRegistries.registerBehavior(
-			Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "harborlight"), new HarborlightBehavior());
-		AttunedRegistries.registerBehavior(
-			Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "driftglass"), new DriftglassBehavior());
-		AttunedRegistries.registerBehavior(
-			Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "harpoon"), new HarpoonBehavior());
-		AttunedRegistries.registerBehavior(
-			Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "votive"), new RadiantFocusBehaviors.Votive());
-		AttunedRegistries.registerBehavior(
-			Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "bellwether"), new RadiantFocusBehaviors.Bellwether());
-		AttunedRegistries.registerBehavior(
-			Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "oathguard"), new RadiantFocusBehaviors.Oathguard());
-		AttunedRegistries.registerBehavior(
-			Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "censer"), new RadiantFocusBehaviors.Censer());
-		AttunedRegistries.registerBehavior(
-			Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "threshold"), new RadiantFocusBehaviors.Threshold());
-		AttunedRegistries.registerBehavior(
-			Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "epitaph"), new RevenantFocusBehaviors.Epitaph());
-		AttunedRegistries.registerBehavior(
-			Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "hollowstep"), new RevenantFocusBehaviors.Hollowstep());
-		registerCreativeTabs();
-	}
-
-	/**
-	 * Registers the Attuned creative-inventory tabs so Foci and altar tools are
-	 * reachable without {@code /give}.
-	 *
-	 * <p>Foci are grouped by affinity (Fury, Bastion, Zephyr, Holy, then neutral)
-	 * and sorted within each group by attunement cost, so players can scan the
-	 * tabs by build identity rather than registration order.
-	 */
-	private static void registerCreativeTabs() {
-		registerFocusCreativeTab(
-			"attuned",
-			Component.translatable("itemGroup.attuned.affinity_foci"),
-			SUNLANCE_FOCUS,
-			definition -> definition != null && definition.affinity().isPresent(),
-			false);
-		registerFocusCreativeTab(
-			"attuned_utility",
-			Component.translatable("itemGroup.attuned.utility_foci"),
-			LINECAST_FOCUS,
-			definition -> definition == null || definition.affinity().isEmpty(),
-			true);
-	}
-
-	private static void registerFocusCreativeTab(String id, Component title, Item icon,
-			Predicate<FocusDefinition> include, boolean includeCoreItems) {
-		CreativeModeTab tab = FabricCreativeModeTab.builder()
-			.title(title)
-			.icon(() -> new ItemStack(icon))
-			.displayItems((parameters, output) -> {
-				HolderLookup.RegistryLookup<FocusDefinition> lookup =
-					parameters.holders().lookupOrThrow(AttunedRegistries.FOCUS_DEFINITIONS);
-				for (Item focus : fociInDisplayOrder(lookup, include)) {
-					output.accept(focus);
-				}
-				if (includeCoreItems) {
-					output.accept(ATTUNEMENT_SHARD);
-					output.accept(ATTUNEMENT_SHARD_FRAGMENT);
-					output.accept(ATTUNEMENT_JOURNAL);
-					output.accept(ATTUNEMENT_ALTAR);
-					output.accept(ALTAR_OF_REWEAVING);
-				}
-			})
-			.build();
-		Registry.register(BuiltInRegistries.CREATIVE_MODE_TAB,
-			Identifier.fromNamespaceAndPath(Attuned.MOD_ID, id), tab);
-	}
-
-	/**
-	 * Returns the Foci in display order for a creative tab: grouped by
-	 * affinity (Fury, then Bastion, then Zephyr, then Holy, then neutral), and sorted
-	 * within each group by attunement cost ascending, then by registry id
-	 * alphabetically as a tiebreak. A Focus whose definition is missing from
-	 * the supplied lookup falls into the neutral group at the maximum cost so
-	 * it sorts to the very end.
-	 */
-	private static List<Item> fociInDisplayOrder(HolderLookup.RegistryLookup<FocusDefinition> lookup,
-			Predicate<FocusDefinition> include) {
-		Map<Item, FocusDefinition> byItem = new IdentityHashMap<>();
-		lookup.listElements().forEach(holder -> byItem.put(holder.value().item().value(), holder.value()));
-		Comparator<Item> byAffinity = Comparator.comparingInt(item -> {
-			FocusDefinition def = byItem.get(item);
-			return affinityOrder(def == null ? Optional.empty() : def.affinity());
-		});
-		Comparator<Item> byCost = Comparator.comparingInt(item -> {
-			FocusDefinition def = byItem.get(item);
-			return def == null ? Integer.MAX_VALUE : def.cost();
-		});
-		Comparator<Item> byKey = Comparator.comparing(item -> BuiltInRegistries.ITEM.getKey(item).toString());
-		List<Item> sorted = new ArrayList<>();
-		for (Item item : FOCI) {
-			FocusDefinition definition = byItem.get(item);
-			if (include.test(definition)) {
-				sorted.add(item);
-			}
-		}
-		sorted.sort(byAffinity.thenComparing(byCost).thenComparing(byKey));
-		return sorted;
-	}
-
-	/**
-	 * Stable sort key for the affinity grouping: Fury, Bastion, Zephyr, Holy, then
-	 * affinity-neutral last.
-	 */
-	private static int affinityOrder(Optional<Affinity> affinity) {
-		if (affinity.isEmpty()) {
-			return 4;
-		}
-		return switch (affinity.get()) {
-			case FURY -> 0;
-			case BASTION -> 1;
-			case ZEPHYR -> 2;
-			case HOLY -> 3;
-		};
+		AttunedFocusBehaviors.init();
+		AttunedCreativeTabs.init();
 	}
 }

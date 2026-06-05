@@ -23,15 +23,15 @@ class HarpoonBehaviorContractTest {
 		Path.of("src/main/java/dev/attuned/mixin/ThrownTridentMixin.java");
 	private static final Path MIXIN_CONFIG =
 		Path.of("src/main/resources/attuned.mixins.json");
-	private static final Path CONTENT_SOURCE =
-		Path.of("src/main/java/dev/attuned/content/AttunedContent.java");
+	private static final Path BEHAVIOR_REGISTRATION_SOURCE =
+		Path.of("src/main/java/dev/attuned/content/AttunedFocusBehaviors.java");
 	private static final Path HARPOON_FOCUS_DATA =
 		Path.of("src/main/resources/data/attuned/attuned/focus/harpoon_focus.json");
 
 	@Test
 	void harpoonFocusRegistersAsOneActiveAbilityWithFixedTiming() throws IOException {
 		String behavior = read(HARPOON_BEHAVIOR);
-		String content = read(CONTENT_SOURCE);
+		String registrations = read(BEHAVIOR_REGISTRATION_SOURCE);
 		String data = read(HARPOON_FOCUS_DATA);
 
 		assertTrue(behavior.contains("public final class HarpoonBehavior implements FocusBehavior"),
@@ -46,8 +46,8 @@ class HarpoonBehaviorContractTest {
 			"Harpoon should expose cooldown to the HUD");
 		assertTrue(behavior.contains("public boolean onAbility(ServerPlayer player, ItemStack focus)"),
 			"Harpoon should spawn through the server-authoritative ability path");
-		assertTrue(content.contains("new HarpoonBehavior()"),
-			"AttunedContent should register the harpoon behavior");
+		assertTrue(registrations.contains("register(\"harpoon\", new HarpoonBehavior())"),
+			"AttunedFocusBehaviors should register the harpoon behavior");
 		assertTrue(data.contains("\"behavior\": \"attuned:harpoon\""),
 			"Harpoon Focus data should point at the behavior id");
 	}
@@ -163,8 +163,12 @@ class HarpoonBehaviorContractTest {
 
 		assertTrue(behavior.contains("ServerTickEvents.END_SERVER_TICK.register"),
 			"Harpoon behavior should scan transient harpoons on server ticks");
-		assertTrue(behavior.contains("if (!ACTIVE_HARPOONS.isEmpty() || now % 20L == 0L)"),
-			"Broad entity cleanup should run only while harpoons are active or on an orphan sweep cadence");
+		assertTrue(behavior.contains("private static final int ENTITY_CLEANUP_INTERVAL_TICKS = 20"),
+			"Broad entity cleanup should run on a bounded one-second cadence");
+		assertTrue(behavior.contains("private static boolean shouldSweepEntities(long now)"),
+			"Broad entity cleanup cadence should be isolated in a named helper");
+		assertTrue(behavior.contains("return now % ENTITY_CLEANUP_INTERVAL_TICKS == 0L;"),
+			"Broad entity cleanup should not scan every tick while a harpoon is active");
 		assertTrue(behavior.contains("cleanupEntities(server, now);"),
 			"Tick cleanup should still scan entities when the broad-scan gate allows it");
 		assertTrue(behavior.contains("ServerLifecycleEvents.SERVER_STOPPED.register"),
@@ -190,7 +194,9 @@ class HarpoonBehaviorContractTest {
 			"Cleanup should remove thrown marked harpoons");
 		assertTrue(behavior.contains("private static boolean isOwnedTemporaryHarpoon(ItemStack stack, UUID owner)"),
 			"Owner cleanup should use a marker-aware ownership helper");
-		assertTrue(behavior.contains("return isTemporaryHarpoon(stack) && owner.equals(ownerOf(stack));"),
+		assertTrue(behavior.contains("CompoundTag tag = temporaryHarpoonTag(stack);"),
+			"Owner cleanup should read and validate the marker data once");
+		assertTrue(behavior.contains("return tag != null && owner.equals(ownerOf(tag));"),
 			"Owner cleanup should require the Attuned marker before consulting the owner key");
 		assertTrue(behavior.contains("entity instanceof ItemEntity item && isOwnedTemporaryHarpoon(item.getItem(), owner)"),
 			"Owner cleanup should not discard unmarked dropped items just because they have an owner key");

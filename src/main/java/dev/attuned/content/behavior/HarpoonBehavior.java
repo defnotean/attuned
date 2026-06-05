@@ -32,6 +32,7 @@ import net.minecraft.world.item.component.CustomData;
 public final class HarpoonBehavior implements FocusBehavior {
 	static final int DURATION_TICKS = 600;
 	static final int COOLDOWN_TICKS = 1200;
+	private static final int ENTITY_CLEANUP_INTERVAL_TICKS = 20;
 	private static final String MARKER_ID = "attuned:offshore_harpoon";
 	private static final String MARKER_KEY = "marker";
 	private static final String OWNER_KEY = "owner";
@@ -72,7 +73,7 @@ public final class HarpoonBehavior implements FocusBehavior {
 			return false;
 		}
 
-		ACTIVE_HARPOONS.put(player.getUUID(), expiresAt(harpoon));
+		ACTIVE_HARPOONS.put(player.getUUID(), now + DURATION_TICKS);
 		player.level().playSound(null, player.blockPosition(),
 			SoundEvents.TRIDENT_RETURN, SoundSource.PLAYERS, 0.75F, 0.85F);
 		return true;
@@ -89,15 +90,12 @@ public final class HarpoonBehavior implements FocusBehavior {
 	}
 
 	public static boolean isTemporaryHarpoon(ItemStack stack) {
-		if (stack == null || stack.isEmpty() || !stack.is(Items.TRIDENT)) {
-			return false;
-		}
-		CustomData data = stack.get(DataComponents.CUSTOM_DATA);
-		return data != null && MARKER_ID.equals(data.copyTag().getStringOr(MARKER_KEY, ""));
+		return temporaryHarpoonTag(stack) != null;
 	}
 
 	public static boolean shouldDiscardProjectile(ItemStack stack, long now) {
-		return isTemporaryHarpoon(stack) && expiresAt(stack) <= now;
+		CompoundTag tag = temporaryHarpoonTag(stack);
+		return tag != null && expiresAt(tag) <= now;
 	}
 
 	private static void initLifecycle() {
@@ -144,10 +142,14 @@ public final class HarpoonBehavior implements FocusBehavior {
 		for (ServerPlayer player : server.getPlayerList().getPlayers()) {
 			removeInvalidInventoryHarpoons(player, now);
 		}
-		if (!ACTIVE_HARPOONS.isEmpty() || now % 20L == 0L) {
+		if (shouldSweepEntities(now)) {
 			cleanupEntities(server, now);
 		}
 		pruneActiveHarpoons(now);
+	}
+
+	private static boolean shouldSweepEntities(long now) {
+		return now % ENTITY_CLEANUP_INTERVAL_TICKS == 0L;
 	}
 
 	private static void pruneActiveHarpoons(long now) {
@@ -202,11 +204,12 @@ public final class HarpoonBehavior implements FocusBehavior {
 	}
 
 	private static void removeMarkedStack(ItemStack stack, UUID owner, long now, boolean force, boolean removeForeignOwner) {
-		if (!isTemporaryHarpoon(stack)) {
+		CompoundTag tag = temporaryHarpoonTag(stack);
+		if (tag == null) {
 			return;
 		}
-		UUID stackOwner = ownerOf(stack);
-		if ((owner.equals(stackOwner) && (force || expiresAt(stack) <= now))
+		UUID stackOwner = ownerOf(tag);
+		if ((owner.equals(stackOwner) && (force || expiresAt(tag) <= now))
 				|| (removeForeignOwner && !owner.equals(stackOwner))) {
 			stack.shrink(stack.getCount());
 		}
@@ -239,15 +242,24 @@ public final class HarpoonBehavior implements FocusBehavior {
 	}
 
 	private static boolean isOwnedTemporaryHarpoon(ItemStack stack, UUID owner) {
-		return isTemporaryHarpoon(stack) && owner.equals(ownerOf(stack));
+		CompoundTag tag = temporaryHarpoonTag(stack);
+		return tag != null && owner.equals(ownerOf(tag));
 	}
 
-	private static UUID ownerOf(ItemStack stack) {
+	private static CompoundTag temporaryHarpoonTag(ItemStack stack) {
+		if (stack == null || stack.isEmpty() || !stack.is(Items.TRIDENT)) {
+			return null;
+		}
 		CustomData data = stack.get(DataComponents.CUSTOM_DATA);
 		if (data == null) {
 			return null;
 		}
-		String value = data.copyTag().getStringOr(OWNER_KEY, "");
+		CompoundTag tag = data.copyTag();
+		return MARKER_ID.equals(tag.getStringOr(MARKER_KEY, "")) ? tag : null;
+	}
+
+	private static UUID ownerOf(CompoundTag tag) {
+		String value = tag.getStringOr(OWNER_KEY, "");
 		try {
 			return value.isBlank() ? null : UUID.fromString(value);
 		} catch (IllegalArgumentException ignored) {
@@ -255,11 +267,7 @@ public final class HarpoonBehavior implements FocusBehavior {
 		}
 	}
 
-	private static long expiresAt(ItemStack stack) {
-		CustomData data = stack.get(DataComponents.CUSTOM_DATA);
-		if (data == null) {
-			return -1L;
-		}
-		return data.copyTag().getLongOr(EXPIRES_AT_KEY, -1L);
+	private static long expiresAt(CompoundTag tag) {
+		return tag.getLongOr(EXPIRES_AT_KEY, -1L);
 	}
 }

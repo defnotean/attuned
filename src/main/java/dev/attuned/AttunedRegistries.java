@@ -2,12 +2,12 @@ package dev.attuned;
 
 import dev.attuned.api.focus.FocusBehavior;
 import dev.attuned.api.focus.FocusDefinition;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
 import net.minecraft.core.Registry;
 import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
-
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * Registry keys and code-behaviour lookups for Attuned.
@@ -23,7 +23,12 @@ public final class AttunedRegistries {
 
 	/** Registers a code behaviour under an id that a {@link FocusDefinition} can reference. */
 	public static void registerBehavior(Identifier id, FocusBehavior behavior) {
-		BEHAVIORS.put(id, behavior);
+		Objects.requireNonNull(id, "id");
+		Objects.requireNonNull(behavior, "behavior");
+		FocusBehavior previous = BEHAVIORS.putIfAbsent(id, behavior);
+		if (previous != null) {
+			throw new IllegalStateException("Duplicate Focus behavior id: " + id);
+		}
 	}
 
 	/** Returns the behaviour registered under the given id, or {@code null} if none. */
