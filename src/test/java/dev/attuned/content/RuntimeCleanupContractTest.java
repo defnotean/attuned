@@ -3,12 +3,12 @@ package dev.attuned.content;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.util.ArrayList;
 import java.io.IOException;
-import java.util.List;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 import org.junit.jupiter.api.Test;
 
 /** Contract coverage for transient runtime cleanup coordinators. */
@@ -43,6 +43,8 @@ class RuntimeCleanupContractTest {
 		Path.of("src/main/java/dev/attuned/content/AltarAnimations.java");
 	private static final Path ONBOARDING =
 		Path.of("src/main/java/dev/attuned/onboarding/Onboarding.java");
+	private static final Path HARPOON =
+		Path.of("src/main/java/dev/attuned/content/behavior/HarpoonBehavior.java");
 
 	@Test
 	void playerCleanupRegistersDisconnectHookOnceAndRejectsNullCallbacks() throws IOException {
@@ -72,6 +74,12 @@ class RuntimeCleanupContractTest {
 			"Server cleanup should mark the server-stop hook as registered");
 		assertTrue(source.contains("ServerLifecycleEvents.SERVER_STOPPED.register"),
 			"Server cleanup should own the server-stop event hook");
+		assertTrue(source.contains("private static final List<Consumer<MinecraftServer>> SERVER_CALLBACKS"),
+			"Server cleanup should support callbacks that need the stopping server");
+		assertTrue(source.contains("public static void onStopServer(Consumer<MinecraftServer> cleanup)"),
+			"Server cleanup should expose a server-aware callback registration path");
+		assertTrue(source.contains("cleanup.accept(server)"),
+			"Server-aware cleanup callbacks should receive the stopping server");
 		assertTrue(source.contains("Objects.requireNonNull(cleanup, \"cleanup\")"),
 			"Server cleanup callback registration should reject null callbacks immediately");
 		assertTrue(read(ATTUNED).contains("AttunedServerCleanup.init()"),
@@ -100,23 +108,18 @@ class RuntimeCleanupContractTest {
 		assertContains(read(ALTAR_ANIMATIONS), "AttunedServerCleanup.onStop(() -> {");
 		assertContains(read(ALTAR_ANIMATIONS), "serverTick = 0;");
 		assertContains(read(ONBOARDING), "AttunedServerCleanup.onStop(() -> tickCounter = 0)");
+		assertContains(read(HARPOON), "AttunedServerCleanup.onStopServer(HarpoonBehavior::removeAllTemporaryHarpoons)");
 	}
 
 	@Test
-	void rawServerStopHooksStayCentralizedExceptHarpoonServerSweep() throws IOException {
+	void rawServerStopHooksStayCentralized() throws IOException {
 		List<String> hooks = directServerStopHooks();
 
-		assertEquals(2, hooks.size(),
-			"Only AttunedServerCleanup and Harpoon's server-wide entity sweep should own raw server-stop hooks: "
-				+ hooks);
+		assertEquals(1, hooks.size(), "Only AttunedServerCleanup should own raw server-stop hooks: " + hooks);
 		assertTrue(hooks.stream().anyMatch(hook ->
 				hook.contains("AttunedServerCleanup.java")
 					&& hook.contains("ServerLifecycleEvents.SERVER_STOPPED.register")),
 			"The central server cleanup coordinator should own the ordinary server-stop hook");
-		assertTrue(hooks.stream().anyMatch(hook ->
-				hook.contains("HarpoonBehavior.java")
-					&& hook.contains("HarpoonBehavior::removeAllTemporaryHarpoons")),
-			"Harpoon keeps a raw hook because its cleanup needs the MinecraftServer to scan loaded levels");
 	}
 
 	@Test

@@ -2,12 +2,12 @@ package dev.attuned.content.behavior;
 
 import dev.attuned.Attuned;
 import dev.attuned.AttunedPlayerCleanup;
+import dev.attuned.AttunedServerCleanup;
 import dev.attuned.api.focus.FocusBehavior;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.UUID;
-import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
@@ -104,7 +104,7 @@ public final class HarpoonBehavior implements FocusBehavior {
 		}
 		initialized = true;
 		ServerTickEvents.END_SERVER_TICK.register(HarpoonBehavior::tickServer);
-		ServerLifecycleEvents.SERVER_STOPPED.register(HarpoonBehavior::removeAllTemporaryHarpoons);
+		AttunedServerCleanup.onStopServer(HarpoonBehavior::removeAllTemporaryHarpoons);
 		AttunedPlayerCleanup.onForgetPlayer(HarpoonBehavior::removeForPlayer);
 	}
 

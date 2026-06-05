@@ -171,11 +171,11 @@ class HarpoonBehaviorContractTest {
 			"Broad entity cleanup should not scan every tick while a harpoon is active");
 		assertTrue(behavior.contains("cleanupEntities(server, now);"),
 			"Tick cleanup should still scan entities when the broad-scan gate allows it");
-		assertTrue(behavior.contains("ServerLifecycleEvents.SERVER_STOPPED.register"),
-			"Harpoon behavior should clear cached state on server stop");
 		assertTrue(behavior.contains(
-				"ServerLifecycleEvents.SERVER_STOPPED.register(HarpoonBehavior::removeAllTemporaryHarpoons)"),
-			"Server stop should remove temporary harpoons before clearing cached state");
+				"AttunedServerCleanup.onStopServer(HarpoonBehavior::removeAllTemporaryHarpoons)"),
+			"Server stop cleanup should use the central coordinator while still receiving the stopping server");
+		assertTrue(!behavior.contains("ServerLifecycleEvents.SERVER_STOPPED.register"),
+			"Harpoon behavior should not own a raw server-stop hook");
 		assertTrue(behavior.contains("private static void removeAllTemporaryHarpoons(MinecraftServer server)"),
 			"Server stop cleanup should use a named full-sweep helper");
 		assertTrue(behavior.contains("for (ServerPlayer player : server.getPlayerList().getPlayers())"),
