@@ -42,6 +42,10 @@ class CompassFocusBehaviorContractTest {
 			"Beacon should restore player-supplied custom names");
 		assertTrue(source.contains("held.is(Items.COMPASS)"),
 			"Beacon should apply only to held vanilla compasses");
+		assertTrue(source.contains("AttunedPlayerCleanup.onForgetPlayer(this::restorePlayer)"),
+			"Beacon should restore changed compasses through the central player cleanup coordinator");
+		assertFalse(source.contains("ServerPlayConnectionEvents.DISCONNECT.register"),
+			"Beacon should not register its own duplicate disconnect hook");
 	}
 
 	@Test

@@ -1,5 +1,6 @@
 package dev.attuned.content.behavior;
 
+import dev.attuned.AttunedPlayerCleanup;
 import dev.attuned.api.focus.FocusBehavior;
 import java.util.HashMap;
 import java.util.IdentityHashMap;
@@ -8,7 +9,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
-import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.minecraft.core.GlobalPos;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.chat.Component;
@@ -34,8 +34,7 @@ public final class BeaconBehavior implements FocusBehavior {
 	private final Map<UUID, Map<ItemStack, TrackerSnapshot>> changedCompasses = new HashMap<>();
 
 	public BeaconBehavior() {
-		ServerPlayConnectionEvents.DISCONNECT.register((handler, server) ->
-			restorePlayer(handler.player));
+		AttunedPlayerCleanup.onForgetPlayer(this::restorePlayer);
 	}
 
 	@Override

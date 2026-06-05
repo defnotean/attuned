@@ -6,6 +6,7 @@ import dev.attuned.api.focus.FocusBehavior;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
@@ -32,6 +33,7 @@ public final class GalespurBehavior implements FocusBehavior {
 
 	public GalespurBehavior() {
 		AttunedPlayerCleanup.onForgetPlayer(GalespurBehavior::forgetPlayer);
+		ServerLifecycleEvents.SERVER_STOPPED.register(server -> removeAllBoosts());
 	}
 
 	@Override
@@ -88,6 +90,14 @@ public final class GalespurBehavior implements FocusBehavior {
 		UUID playerId = player.getUUID();
 		LivingEntity previousMount = MOUNT_BY_PLAYER.get(playerId);
 		releaseMount(playerId, previousMount);
+	}
+
+	private static void removeAllBoosts() {
+		for (LivingEntity mount : MOUNT_BY_PLAYER.values()) {
+			removeBoost(mount);
+		}
+		MOUNT_BY_PLAYER.clear();
+		BOOSTERS_BY_MOUNT.clear();
 	}
 
 	private static void applyBoost(LivingEntity mount) {
