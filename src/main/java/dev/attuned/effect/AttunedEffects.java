@@ -31,6 +31,7 @@ import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.item.ItemStack;
 
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -96,14 +97,16 @@ public final class AttunedEffects {
 
 	private static void tickPlayer(ServerPlayer player) {
 		AttunedInv inv = AttunedAttachments.getInventory(player);
-		List<Integer> currentActive = Attunement.activeSlots(player);
+		BudgetResolver.Resolution resolution = Attunement.resolution(player);
+		List<Integer> currentActive = resolution.activeSlots();
 		boolean wasTracked = ACTIVE.containsKey(player.getUUID());
 		Map<Integer, ItemStack> tracked =
 			ACTIVE.computeIfAbsent(player.getUUID(), id -> new HashMap<>());
+		Set<Affinity> activeAffinities = activeAffinities(player, inv, currentActive);
 
 		// A subtle ambient aura while the player has anything active.
 		if (!currentActive.isEmpty() && auraTick % AURA_INTERVAL == 0) {
-			spawnAura(player);
+			spawnAura(player, activeAffinities);
 		}
 
 		// Build this tick's active snapshot: slot -> current stack in that slot.
@@ -111,14 +114,14 @@ public final class AttunedEffects {
 		for (int slot : currentActive) {
 			nextState.put(slot, inv.get(slot));
 		}
-		Map<Integer, BudgetResolver.DormantReason> dormantReasons = Attunement.dormantReasons(player);
+		Map<Integer, BudgetResolver.DormantReason> dormantReasons = resolution.dormantReasons();
 		if (!currentActive.isEmpty()) {
 			AttunedAdvancements.award(player, "attunement/first_focus");
 		}
 		if (!dormantReasons.isEmpty()) {
 			AttunedAdvancements.award(player, "attunement/first_dormant_focus");
 		}
-		if (Attunement.isDiscord(player)) {
+		if (activeAffinities.size() >= 2) {
 			AttunedAdvancements.award(player, "attunement/first_discord");
 		}
 		announceNewDormantSlots(player, dormantReasons, wasTracked);
@@ -202,6 +205,20 @@ public final class AttunedEffects {
 		};
 	}
 
+	private static Set<Affinity> activeAffinities(ServerPlayer player, AttunedInv inv, List<Integer> activeSlots) {
+		Set<Affinity> affinities = EnumSet.noneOf(Affinity.class);
+		for (int slot : activeSlots) {
+			Attunement.definitionFor(player, inv.get(slot))
+				.flatMap(FocusDefinition::affinity)
+				.ifPresent(affinities::add);
+		}
+		return affinities;
+	}
+
+	private static Optional<Affinity> committedAffinity(Set<Affinity> activeAffinities) {
+		return activeAffinities.size() == 1 ? Optional.of(activeAffinities.iterator().next()) : Optional.empty();
+	}
+
 	/** A soft chime when a Focus changes activation — pitched up to attune, down to lapse. */
 	private static void playAttuneSound(ServerPlayer player, float pitch) {
 		((ServerLevel) player.level()).playSound(null, player.blockPosition(),
@@ -274,19 +291,19 @@ public final class AttunedEffects {
 	}
 
 	/** A subtle ambient particle aura shown while the player has any active Focus. */
-	private static void spawnAura(ServerPlayer player) {
+	private static void spawnAura(ServerPlayer player, Set<Affinity> activeAffinities) {
 		ServerLevel level = (ServerLevel) player.level();
-		level.sendParticles(auraParticle(player),
+		level.sendParticles(auraParticle(activeAffinities),
 			player.getX(), player.getY() + 1.0, player.getZ(),
 			6, 0.4, 0.9, 0.4, 0.05);
 	}
 
 	/** The aura particle for a player's stance: affinity-coloured, Discord magenta, or neutral. */
-	private static ParticleOptions auraParticle(ServerPlayer player) {
-		if (Attunement.isDiscord(player)) {
+	private static ParticleOptions auraParticle(Set<Affinity> activeAffinities) {
+		if (activeAffinities.size() >= 2) {
 			return new DustParticleOptions(AffinityColors.DISCORD_RGB, 1.0F);
 		}
-		Optional<Affinity> affinity = Attunement.committedAffinity(player);
+		Optional<Affinity> affinity = committedAffinity(activeAffinities);
 		if (affinity.isPresent()) {
 			return new DustParticleOptions(affinity.get().argb() & 0x00FFFFFF, 1.0F);
 		}

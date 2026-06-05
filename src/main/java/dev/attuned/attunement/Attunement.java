@@ -41,13 +41,18 @@ public final class Attunement {
 		return FocusLookup.forItem(registry, stack.getItem());
 	}
 
+	/** Full active/dormant resolution for the player's current Focus inventory. */
+	public static BudgetResolver.Resolution resolution(Player player) {
+		return BudgetResolver.resolveDetailed(candidates(player), capacity(player));
+	}
+
 	/**
 	 * Slot indices whose Focus is active — within budget, and (for a
 	 * {@code unique} Focus) the first copy in slot order. Gathers the occupied
 	 * slots and delegates the decision to the pure {@link BudgetResolver#resolve}.
 	 */
 	public static List<Integer> activeSlots(Player player) {
-		return BudgetResolver.resolve(candidates(player), capacity(player));
+		return resolution(player).activeSlots();
 	}
 
 	/**
@@ -75,7 +80,7 @@ public final class Attunement {
 
 	/** Dormant reasons keyed by slot for occupied Focus slots that are not active. */
 	public static Map<Integer, BudgetResolver.DormantReason> dormantReasons(Player player) {
-		return BudgetResolver.resolveDetailed(candidates(player), capacity(player)).dormantReasons();
+		return resolution(player).dormantReasons();
 	}
 
 	/** Why the Focus in the given slot is dormant, if it is currently dormant. */
