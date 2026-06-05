@@ -2,6 +2,7 @@ package dev.attuned.network;
 
 import dev.attuned.AttunedPlayerCleanup;
 import dev.attuned.AttunedRegistries;
+import dev.attuned.AttunedServerCleanup;
 import dev.attuned.api.focus.FocusBehavior;
 import dev.attuned.api.focus.FocusDefinition;
 import dev.attuned.attunement.AttunedAttachments;
@@ -10,7 +11,6 @@ import dev.attuned.attunement.Attunement;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
-import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.network.chat.Component;
@@ -34,7 +34,7 @@ public final class FocusAbilityState {
 		}
 		initialized = true;
 		ServerTickEvents.END_SERVER_TICK.register(FocusAbilityState::tick);
-		ServerLifecycleEvents.SERVER_STOPPED.register(server -> {
+		AttunedServerCleanup.onStop(() -> {
 			COOLDOWNS.clear();
 			LAST_SENT.clear();
 		});

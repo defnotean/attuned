@@ -19,8 +19,10 @@ class MountFocusBehaviorContractTest {
 
 		assertTrue(source.contains("AttunedPlayerCleanup.onForgetPlayer(GalespurBehavior::forgetPlayer)"),
 			"Galespur should release a player's mount boost when that player disconnects");
-		assertTrue(source.contains("ServerLifecycleEvents.SERVER_STOPPED.register(server -> removeAllBoosts())"),
+		assertTrue(source.contains("AttunedServerCleanup.onStop(GalespurBehavior::removeAllBoosts)"),
 			"Galespur should remove transient mount modifiers when the server stops");
+		assertTrue(!source.contains("ServerLifecycleEvents.SERVER_STOPPED.register"),
+			"Galespur should use the central server cleanup coordinator");
 		assertTrue(source.contains("private static void removeAllBoosts()"),
 			"Galespur should centralize full cleanup in a named helper");
 		assertTrue(source.contains("removeBoost(mount);"),

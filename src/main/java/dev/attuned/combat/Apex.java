@@ -2,6 +2,7 @@ package dev.attuned.combat;
 
 import dev.attuned.AttunedAdvancements;
 import dev.attuned.AttunedPlayerCleanup;
+import dev.attuned.AttunedServerCleanup;
 import dev.attuned.api.focus.Affinity;
 import dev.attuned.api.focus.AffinityColors;
 import dev.attuned.api.focus.FocusDefinition;
@@ -15,7 +16,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
-import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.particles.ParticleTypes;
@@ -125,7 +125,7 @@ public final class Apex {
 		ServerLivingEntityEvents.AFTER_DEATH.register((entity, source) ->
 			maelstromScrambles.keySet().removeIf(key -> key.targetId().equals(entity.getUUID())));
 		ServerTickEvents.END_SERVER_TICK.register(Apex::tick);
-		ServerLifecycleEvents.SERVER_STOPPED.register(server -> {
+		AttunedServerCleanup.onStop(() -> {
 			apexState.clear();
 			armedState.clear();
 			maelstromScrambles.clear();

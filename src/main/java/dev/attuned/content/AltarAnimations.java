@@ -1,10 +1,10 @@
 package dev.attuned.content;
 
+import dev.attuned.AttunedServerCleanup;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
-import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.DustParticleOptions;
@@ -73,7 +73,7 @@ public final class AltarAnimations {
 	/** Registers the per-tick driver. Call once from {@code onInitialize}. */
 	public static void init() {
 		ServerTickEvents.END_SERVER_TICK.register(AltarAnimations::tick);
-		ServerLifecycleEvents.SERVER_STOPPED.register(server -> {
+		AttunedServerCleanup.onStop(() -> {
 			ACTIVE.clear();
 			serverTick = 0;
 		});

@@ -1,8 +1,11 @@
 package dev.attuned.content;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.ArrayList;
 import java.io.IOException;
+import java.util.List;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -10,6 +13,8 @@ import org.junit.jupiter.api.Test;
 
 /** Contract coverage for transient runtime cleanup coordinators. */
 class RuntimeCleanupContractTest {
+	private static final Path SOURCE_ROOT =
+		Path.of("src/main/java/dev/attuned");
 	private static final Path PLAYER_CLEANUP =
 		Path.of("src/main/java/dev/attuned/AttunedPlayerCleanup.java");
 	private static final Path SERVER_CLEANUP =
@@ -28,6 +33,16 @@ class RuntimeCleanupContractTest {
 		Path.of("src/main/java/dev/attuned/combat/GravebindSave.java");
 	private static final Path ALTAR_NETWORKING =
 		Path.of("src/main/java/dev/attuned/menu/AltarNetworking.java");
+	private static final Path APEX =
+		Path.of("src/main/java/dev/attuned/combat/Apex.java");
+	private static final Path PACTS =
+		Path.of("src/main/java/dev/attuned/pacts/Pacts.java");
+	private static final Path FOCUS_ABILITY_STATE =
+		Path.of("src/main/java/dev/attuned/network/FocusAbilityState.java");
+	private static final Path ALTAR_ANIMATIONS =
+		Path.of("src/main/java/dev/attuned/content/AltarAnimations.java");
+	private static final Path ONBOARDING =
+		Path.of("src/main/java/dev/attuned/onboarding/Onboarding.java");
 
 	@Test
 	void playerCleanupRegistersDisconnectHookOnceAndRejectsNullCallbacks() throws IOException {
@@ -76,6 +91,32 @@ class RuntimeCleanupContractTest {
 		assertContains(read(REVENANT_COMBAT), "LAST_RITES.clear();");
 		assertContains(read(GRAVEBIND_SAVE), "AttunedServerCleanup.onStop(lastSave::clear)");
 		assertContains(read(ALTAR_NETWORKING), "AttunedServerCleanup.onStop(LAST_BIND_TICK::clear)");
+		assertContains(read(APEX), "AttunedServerCleanup.onStop(() -> {");
+		assertContains(read(APEX), "maelstromScrambles.clear();");
+		assertContains(read(PACTS), "AttunedServerCleanup.onStop(() -> {");
+		assertContains(read(PACTS), "windrunnerRuns.clear();");
+		assertContains(read(FOCUS_ABILITY_STATE), "AttunedServerCleanup.onStop(() -> {");
+		assertContains(read(FOCUS_ABILITY_STATE), "COOLDOWNS.clear();");
+		assertContains(read(ALTAR_ANIMATIONS), "AttunedServerCleanup.onStop(() -> {");
+		assertContains(read(ALTAR_ANIMATIONS), "serverTick = 0;");
+		assertContains(read(ONBOARDING), "AttunedServerCleanup.onStop(() -> tickCounter = 0)");
+	}
+
+	@Test
+	void rawServerStopHooksStayCentralizedExceptHarpoonServerSweep() throws IOException {
+		List<String> hooks = directServerStopHooks();
+
+		assertEquals(2, hooks.size(),
+			"Only AttunedServerCleanup and Harpoon's server-wide entity sweep should own raw server-stop hooks: "
+				+ hooks);
+		assertTrue(hooks.stream().anyMatch(hook ->
+				hook.contains("AttunedServerCleanup.java")
+					&& hook.contains("ServerLifecycleEvents.SERVER_STOPPED.register")),
+			"The central server cleanup coordinator should own the ordinary server-stop hook");
+		assertTrue(hooks.stream().anyMatch(hook ->
+				hook.contains("HarpoonBehavior.java")
+					&& hook.contains("HarpoonBehavior::removeAllTemporaryHarpoons")),
+			"Harpoon keeps a raw hook because its cleanup needs the MinecraftServer to scan loaded levels");
 	}
 
 	@Test
@@ -92,6 +133,24 @@ class RuntimeCleanupContractTest {
 
 	private static void assertContains(String source, String needle) {
 		assertTrue(source.contains(needle), "Expected source to contain: " + needle);
+	}
+
+	private static List<String> directServerStopHooks() throws IOException {
+		List<String> hooks = new ArrayList<>();
+		try (var paths = Files.walk(SOURCE_ROOT)) {
+			for (Path file : paths
+					.filter(Files::isRegularFile)
+					.filter(path -> path.toString().endsWith(".java"))
+					.toList()) {
+				String[] lines = read(file).split("\\R");
+				for (int i = 0; i < lines.length; i++) {
+					if (lines[i].contains("ServerLifecycleEvents.SERVER_STOPPED.register")) {
+						hooks.add(file.toString() + ":" + (i + 1) + ": " + lines[i].trim());
+					}
+				}
+			}
+		}
+		return hooks;
 	}
 
 	private static String read(Path file) throws IOException {

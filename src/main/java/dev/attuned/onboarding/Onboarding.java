@@ -1,8 +1,8 @@
 package dev.attuned.onboarding;
 
+import dev.attuned.AttunedServerCleanup;
 import dev.attuned.attunement.AttunedAttachments;
 import dev.attuned.content.AttunedContent;
-import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
@@ -71,7 +71,7 @@ public final class Onboarding {
 				}
 			}
 		});
-		ServerLifecycleEvents.SERVER_STOPPED.register(server -> tickCounter = 0);
+		AttunedServerCleanup.onStop(() -> tickCounter = 0);
 	}
 
 	/**

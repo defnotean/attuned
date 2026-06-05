@@ -3,6 +3,7 @@ package dev.attuned.pacts;
 import dev.attuned.AttunedPlayerCleanup;
 import dev.attuned.AttunedAdvancements;
 import dev.attuned.AttunedRegistries;
+import dev.attuned.AttunedServerCleanup;
 import dev.attuned.api.focus.Affinity;
 import dev.attuned.api.focus.AffinityColors;
 import dev.attuned.api.focus.FocusDefinition;
@@ -21,7 +22,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
-import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.minecraft.ChatFormatting;
@@ -148,7 +148,7 @@ public final class Pacts {
 				applyWindrunnerStepHeight(player);
 			}
 		});
-		ServerLifecycleEvents.SERVER_STOPPED.register(server -> {
+		AttunedServerCleanup.onStop(() -> {
 			ticks = 0;
 			pactState.clear();
 			pyreswornFireMarks.clear();

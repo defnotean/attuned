@@ -2,11 +2,11 @@ package dev.attuned.content.behavior;
 
 import dev.attuned.Attuned;
 import dev.attuned.AttunedPlayerCleanup;
+import dev.attuned.AttunedServerCleanup;
 import dev.attuned.api.focus.FocusBehavior;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
-import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
@@ -33,7 +33,7 @@ public final class GalespurBehavior implements FocusBehavior {
 
 	public GalespurBehavior() {
 		AttunedPlayerCleanup.onForgetPlayer(GalespurBehavior::forgetPlayer);
-		ServerLifecycleEvents.SERVER_STOPPED.register(server -> removeAllBoosts());
+		AttunedServerCleanup.onStop(GalespurBehavior::removeAllBoosts);
 	}
 
 	@Override
