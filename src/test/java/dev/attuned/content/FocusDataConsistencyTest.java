@@ -109,8 +109,16 @@ class FocusDataConsistencyTest {
 			"Registered shipped Focus item ids should not be duplicated");
 		assertTrue(source.contains("public static final List<Item> FOCI = List.copyOf(REGISTERED_FOCI);"),
 			"AttunedContent.FOCI should be derived from registerFocus order, not manually duplicated");
+		assertTrue(source.contains("private static final Set<Item> FOCI_SET = Set.copyOf(REGISTERED_FOCI);"),
+			"AttunedContent should keep constant-time Focus membership alongside the ordered list");
 		assertTrue(source.contains("REGISTERED_FOCI.add(item);"),
 			"registerFocus should append every Focus to the public FOCI snapshot");
+		assertTrue(source.contains("public static boolean isFocus(Item item)"),
+			"AttunedContent should expose the canonical Focus item membership check");
+		assertTrue(source.contains("return item != null && FOCI_SET.contains(item);"),
+			"Focus item membership should use the set-backed lookup and reject null safely");
+		assertTrue(source.contains("public static boolean isFocus(ItemStack stack)"),
+			"AttunedContent should expose the canonical Focus stack membership check");
 		assertTrue(!source.contains("FOCI = List.of("),
 			"AttunedContent.FOCI should not go back to a hand-maintained List.of");
 		assertEquals(registeredItems, definitionItems,

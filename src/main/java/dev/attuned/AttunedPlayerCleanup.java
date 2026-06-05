@@ -2,6 +2,7 @@ package dev.attuned;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.function.Consumer;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
@@ -23,19 +24,24 @@ public final class AttunedPlayerCleanup {
 
 	private static final List<Consumer<UUID>> CALLBACKS = new ArrayList<>();
 	private static final List<Consumer<ServerPlayer>> PLAYER_CALLBACKS = new ArrayList<>();
+	private static boolean initialized;
 
 	/** Registers a callback that drops the given player's cached transient state. */
 	public static void onForget(Consumer<UUID> cleanup) {
-		CALLBACKS.add(cleanup);
+		CALLBACKS.add(Objects.requireNonNull(cleanup, "cleanup"));
 	}
 
 	/** Registers a callback that can restore transient state on the player before it is forgotten. */
 	public static void onForgetPlayer(Consumer<ServerPlayer> cleanup) {
-		PLAYER_CALLBACKS.add(cleanup);
+		PLAYER_CALLBACKS.add(Objects.requireNonNull(cleanup, "cleanup"));
 	}
 
 	/** Registers the disconnect hook. Called from the mod initializer. */
 	public static void init() {
+		if (initialized) {
+			return;
+		}
+		initialized = true;
 		ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> {
 			for (Consumer<ServerPlayer> cleanup : PLAYER_CALLBACKS) {
 				cleanup.accept(handler.player);

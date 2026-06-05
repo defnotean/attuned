@@ -19,13 +19,11 @@ import dev.attuned.menu.ReweavingMenuType;
 import dev.attuned.pacts.Pact;
 import dev.attuned.pacts.Pacts;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.minecraft.ChatFormatting;
 import net.minecraft.commands.CommandSourceStack;
@@ -190,14 +188,13 @@ public final class AttunedCommands {
 			});
 		});
 
-		Set<net.minecraft.world.item.Item> shipped = new HashSet<>(AttunedContent.FOCI);
 		for (net.minecraft.world.item.Item focus : AttunedContent.FOCI) {
 			if (!byItem.containsKey(focus)) {
 				problems.add("Missing FocusDefinition for " + BuiltInRegistries.ITEM.getKey(focus));
 			}
 		}
 		for (net.minecraft.world.item.Item item : byItem.keySet()) {
-			if (!shipped.contains(item)) {
+			if (!AttunedContent.isFocus(item)) {
 				problems.add("FocusDefinition item is not in AttunedContent.FOCI: "
 					+ BuiltInRegistries.ITEM.getKey(item));
 			}

@@ -3,6 +3,7 @@ package dev.attuned.content;
 import dev.attuned.Attuned;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.function.Function;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -11,6 +12,7 @@ import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.state.BlockBehaviour;
@@ -114,6 +116,7 @@ public final class AttunedContent {
 
 	/** Every Focus item, in display order for creative tabs and survival loot. */
 	public static final List<Item> FOCI = List.copyOf(REGISTERED_FOCI);
+	private static final Set<Item> FOCI_SET = Set.copyOf(REGISTERED_FOCI);
 
 	/** A consumable that permanently raises attunement capacity. Stacks normally. */
 	public static final Item ATTUNEMENT_SHARD = register("attunement_shard", AttunementShardItem::new);
@@ -132,6 +135,14 @@ public final class AttunedContent {
 		Item item = register(name, properties -> new Item(properties.stacksTo(1)));
 		REGISTERED_FOCI.add(item);
 		return item;
+	}
+
+	public static boolean isFocus(Item item) {
+		return item != null && FOCI_SET.contains(item);
+	}
+
+	public static boolean isFocus(ItemStack stack) {
+		return !stack.isEmpty() && isFocus(stack.getItem());
 	}
 
 	/**

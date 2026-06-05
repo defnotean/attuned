@@ -69,7 +69,7 @@ public class ReweavingMenu extends AbstractContainerMenu {
 			this.addSlot(new Slot(container, index, FOCUS_SLOT_X[i], FOCUS_SLOT_Y) {
 				@Override
 				public boolean mayPlace(ItemStack stack) {
-					return isFocus(stack);
+					return AttunedContent.isFocus(stack);
 				}
 			});
 		}
@@ -98,7 +98,7 @@ public class ReweavingMenu extends AbstractContainerMenu {
 
 	public boolean hasAllInputs() {
 		for (int i = 0; i < FOCUS_INPUTS; i++) {
-			if (!isFocus(this.container.getItem(i))) {
+			if (!AttunedContent.isFocus(this.container.getItem(i))) {
 				return false;
 			}
 		}
@@ -128,7 +128,7 @@ public class ReweavingMenu extends AbstractContainerMenu {
 			if (!this.moveItemStackTo(stack, CONTAINER_SIZE, this.slots.size(), true)) {
 				return ItemStack.EMPTY;
 			}
-		} else if (isFocus(stack)) {
+		} else if (AttunedContent.isFocus(stack)) {
 			if (!this.moveItemStackTo(stack, INPUT_START, FOCUS_INPUTS, false)) {
 				return ItemStack.EMPTY;
 			}
@@ -162,9 +162,5 @@ public class ReweavingMenu extends AbstractContainerMenu {
 				player.drop(leftover, false);
 			}
 		}
-	}
-
-	private static boolean isFocus(ItemStack stack) {
-		return !stack.isEmpty() && AttunedContent.FOCI.contains(stack.getItem());
 	}
 }

@@ -69,7 +69,7 @@ public final class ReweavingNetworking {
 
 	private static boolean hasThreeFociAndFragment(Container container) {
 		for (int i = 0; i < ReweavingMenu.FOCUS_INPUTS; i++) {
-			if (!isFocus(container.getItem(i))) {
+			if (!AttunedContent.isFocus(container.getItem(i))) {
 				return false;
 			}
 		}
@@ -108,15 +108,11 @@ public final class ReweavingNetworking {
 		Set<String> ids = new TreeSet<>();
 		for (int i = 0; i < ReweavingMenu.FOCUS_INPUTS; i++) {
 			ItemStack stack = container.getItem(i);
-			if (isFocus(stack)) {
+			if (AttunedContent.isFocus(stack)) {
 				ids.add(BuiltInRegistries.ITEM.getKey(stack.getItem()).toString());
 			}
 		}
 		return ids;
-	}
-
-	private static boolean isFocus(ItemStack stack) {
-		return !stack.isEmpty() && AttunedContent.FOCI.contains(stack.getItem());
 	}
 
 	private static Identifier identifier(String id) {
