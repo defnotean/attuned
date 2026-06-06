@@ -22,34 +22,30 @@ special power. Each step is one file or one small edit.
 
 **File:** `src/main/java/dev/attuned/content/AttunedContent.java`
 
-Find the block of lines that look like `public static final Item ... = register(...)`.
+Find the block of lines that look like `public static final Item ... = registerFocus(...)`.
 Add one more line next to them:
 
 ```java
-public static final Item STONESKIN_FOCUS = register("stoneskin_focus");
+public static final Item STONESKIN_FOCUS = registerFocus("stoneskin_focus");
 ```
 
 - The text in quotes is your Focus's name. It must match every other file.
 - The `UPPERCASE_NAME` on the left is how the rest of the code refers to it.
 
-That is the whole item. `register` already makes it stack to 1, like every Focus.
+That is the whole item. `registerFocus` already makes it stack to 1, like every
+Focus, and appends it to the shared Focus ordering used by creative tabs and
+other shipped-content lists.
 
-## Step 2 — Put it in the creative menu
+## Step 2 — Check the creative menu placement
 
-**File:** the same `AttunedContent.java`
-
-Find the `FOCI` list near the item registrations. Add yours to the list:
-
-```java
-STONESKIN_FOCUS
-```
-
-The creative tabs read from `FOCI`, so the Focus appears once it is in that
-list: affinity Foci go to **Attuned: Affinity Foci**, and neutral Foci go to
+There is no manual Focus list to edit. The creative tabs read from the
+`registerFocus` order, so the Focus appears automatically once Step 1 is in
+place: affinity Foci go to **Attuned: Affinity Foci**, and neutral Foci go to
 **Attuned: Utility Foci**.
 
 > For a **stat-only Focus, `AttunedContent.java` is the only `.java` file you
-> touch.** Everything below is plain text and images.
+> touch, and it only needs the one `registerFocus` line.** Everything below is
+> plain text and images.
 
 ## Step 3 — Create the Focus definition
 
@@ -162,7 +158,8 @@ teleport, grant night vision, and so on. It adds one Java file.
 
 **Create:** `src/main/java/dev/attuned/content/behavior/StoneskinBehavior.java`
 
-A behavior implements `FocusBehavior`, which gives you four optional hooks:
+A behavior implements `FocusBehavior`, which gives you lifecycle hooks plus an
+optional single active ability response:
 
 ```java
 package dev.attuned.content.behavior;
@@ -189,8 +186,19 @@ public final class StoneskinBehavior implements FocusBehavior {
 	}
 
 	@Override
-	public void onAbility(ServerPlayer player, ItemStack focus) {
+	public boolean hasActiveAbility() {
+		return true;
+	}
+
+	@Override
+	public int abilityCooldownTicks() {
+		return 20 * 8;
+	}
+
+	@Override
+	public boolean onAbility(ServerPlayer player, ItemStack focus) {
 		// Runs when the player presses the Focus Ability keybind.
+		return true;
 	}
 }
 ```
@@ -200,13 +208,12 @@ the codebase is `DelverBehavior.java` (one short `onTick`) — read it first.
 
 ### 7b — Register the behavior
 
-**File:** `src/main/java/dev/attuned/content/AttunedContent.java`, in `init()`
+**File:** `src/main/java/dev/attuned/content/AttunedFocusBehaviors.java`
 
-Add a line next to the other `registerBehavior(...)` calls:
+Add a line next to the other behavior registrations in `init()`:
 
 ```java
-AttunedRegistries.registerBehavior(
-	Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "stoneskin"), new StoneskinBehavior());
+register("stoneskin", new StoneskinBehavior());
 ```
 
 ### 7c — Point the Focus at the behavior
@@ -236,7 +243,7 @@ The name in `behavior` must match the name you registered in Step 7b.
 
 For a stat-only Focus, you created or edited:
 
-- [ ] `AttunedContent.java` - one `register` line and one `FOCI` entry
+- [ ] `AttunedContent.java` - one `registerFocus` line
 - [ ] `data/attuned/attuned/focus/<name>.json`
 - [ ] `assets/attuned/items/<name>.json`
 - [ ] `assets/attuned/models/item/<name>.json`
@@ -247,7 +254,7 @@ For a stat-only Focus, you created or edited:
 A power Focus also has:
 
 - [ ] `content/behavior/<Name>Behavior.java`
-- [ ] one `registerBehavior` line in `AttunedContent.init()`
+- [ ] one `register` line in `AttunedFocusBehaviors.java`
 - [ ] a `behavior` line in its `.json`
 
 ## Test your Focus
@@ -281,6 +288,6 @@ relaunched.
 
 ## Removing a Focus
 
-Reverse the recipe: delete the item registration and `FOCI` entry in
-`AttunedContent.java` (and any `registerBehavior` line), then delete the
+Reverse the recipe: delete the item registration in `AttunedContent.java` and
+any behavior registration in `AttunedFocusBehaviors.java`, then delete the
 Focus's `.json` files, texture, behavior class, and `en_us.json` lines.

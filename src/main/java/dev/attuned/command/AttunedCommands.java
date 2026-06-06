@@ -194,7 +194,11 @@ public final class AttunedCommands {
 		Map<net.minecraft.world.item.Item, FocusDefinition> byItem = new IdentityHashMap<>();
 		registry.listElements().forEach(holder -> {
 			FocusDefinition def = holder.value();
-			byItem.put(def.item().value(), def);
+			FocusDefinition previous = byItem.putIfAbsent(def.item().value(), def);
+			if (previous != null) {
+				problems.add("Duplicate FocusDefinition item: "
+					+ BuiltInRegistries.ITEM.getKey(def.item().value()));
+			}
 			def.behavior().ifPresent(behaviorId -> {
 				if (dev.attuned.AttunedRegistries.getBehavior(behaviorId) == null) {
 					problems.add("Missing behavior " + behaviorId + " for "

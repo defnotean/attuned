@@ -53,6 +53,10 @@ class RuntimeCleanupContractTest {
 		Path.of("src/main/java/dev/attuned/content/behavior/SoftstepBehavior.java");
 	private static final Path AEGIS =
 		Path.of("src/main/java/dev/attuned/content/behavior/AegisBehavior.java");
+	private static final Path DELVER =
+		Path.of("src/main/java/dev/attuned/content/behavior/DelverBehavior.java");
+	private static final Path EMBERWARD =
+		Path.of("src/main/java/dev/attuned/content/behavior/EmberwardBehavior.java");
 	private static final Path HARBORLIGHT =
 		Path.of("src/main/java/dev/attuned/content/behavior/HarborlightBehavior.java");
 	private static final Path HARVEST =
@@ -61,8 +65,12 @@ class RuntimeCleanupContractTest {
 		Path.of("src/main/java/dev/attuned/content/behavior/HearthBehavior.java");
 	private static final Path LANTERN =
 		Path.of("src/main/java/dev/attuned/content/behavior/LanternBehavior.java");
+	private static final Path NIGHTGAZE =
+		Path.of("src/main/java/dev/attuned/content/behavior/NightgazeBehavior.java");
 	private static final Path STORMCALL =
 		Path.of("src/main/java/dev/attuned/content/behavior/StormcallBehavior.java");
+	private static final Path TIDE =
+		Path.of("src/main/java/dev/attuned/content/behavior/TideBehavior.java");
 	private static final Path RADIANT_BEHAVIORS =
 		Path.of("src/main/java/dev/attuned/content/behavior/RadiantFocusBehaviors.java");
 	private static final List<String> RUNTIME_EVENT_HOOKS = List.of(
@@ -286,6 +294,16 @@ class RuntimeCleanupContractTest {
 			"Mob affinity spark throttles should prune while combat feedback is active");
 		assertTrue(source.contains("LAST_AFFINITY_SPARK.entrySet().removeIf"),
 			"Mob affinity spark throttle pruning should remove stale mob UUID entries");
+	}
+
+	@Test
+	void passiveUtilityEffectsRefreshOnlyNearExpiry() throws IOException {
+		for (Path behavior : List.of(DELVER, EMBERWARD, NIGHTGAZE, TIDE)) {
+			String source = read(behavior);
+			assertContains(source, "PassiveEffectRefresher.refresh(");
+			assertTrue(!source.contains("player.addEffect(new MobEffectInstance"),
+				behavior + " should not allocate and send a new passive effect instance every tick");
+		}
 	}
 
 	private static void assertContains(String source, String needle) {

@@ -36,6 +36,8 @@ class FocusDataConsistencyTest {
 		Path.of("src/main/java/dev/attuned/content/AttunedFocusBehaviors.java");
 	private static final Path CREATIVE_TABS_SOURCE =
 		Path.of("src/main/java/dev/attuned/content/AttunedCreativeTabs.java");
+	private static final Path COMMANDS_SOURCE =
+		Path.of("src/main/java/dev/attuned/command/AttunedCommands.java");
 	private static final Path FOCUS_LOOKUP_SOURCE =
 		Path.of("src/main/java/dev/attuned/attunement/FocusLookup.java");
 	private static final Path FOCUS_DATA_DIR =
@@ -195,6 +197,19 @@ class FocusDataConsistencyTest {
 			"FocusLookup should detect duplicate FocusDefinition item keys before caching lookups");
 		assertTrue(source.contains("Duplicate FocusDefinition item"),
 			"Duplicate FocusDefinition item keys should produce a clear startup error");
+	}
+
+	@Test
+	void validateCommandReportsDuplicateDefinitionItemsInsteadOfReplacingThem() throws IOException {
+		String source = Files.readString(COMMANDS_SOURCE, StandardCharsets.UTF_8);
+		String validateContent = methodRegion(source, "private static int validateContent", "/** Dumps");
+
+		assertTrue(validateContent.contains("byItem.putIfAbsent("),
+			"/attuned validate should detect duplicate FocusDefinition item keys before reporting success");
+		assertTrue(validateContent.contains("Duplicate FocusDefinition item"),
+			"/attuned validate should report duplicate FocusDefinition item keys clearly");
+		assertTrue(!validateContent.contains("byItem.put(def.item().value(), def);"),
+			"/attuned validate should not silently overwrite duplicate FocusDefinition item keys");
 	}
 
 	@Test
@@ -411,6 +426,14 @@ class FocusDataConsistencyTest {
 		assertTrue(earlierIndex >= 0, "Expected source to contain: " + earlier);
 		assertTrue(laterIndex >= 0, "Expected source to contain: " + later);
 		assertTrue(earlierIndex < laterIndex, "Expected " + earlier + " before " + later);
+	}
+
+	private static String methodRegion(String source, String start, String end) {
+		int startIndex = source.indexOf(start);
+		int endIndex = source.indexOf(end);
+		assertTrue(startIndex >= 0, "Expected source to contain: " + start);
+		assertTrue(endIndex > startIndex, "Expected " + end + " after " + start);
+		return source.substring(startIndex, endIndex);
 	}
 
 	private static Map<String, String> registeredFocusItemsByField(String source) {
