@@ -16,6 +16,7 @@ SRC_ROOT = ROOT / "src"
 PNG_RESOURCE_ROOT = SRC_ROOT / "main" / "resources"
 PYTHON_ROOTS = (ROOT / "tools", ROOT / "tests")
 SOURCE_SCAN_ROOTS = (ROOT / "src", ROOT / "tools", ROOT / "tests", ROOT / ".github")
+FOCUS_DEFINITION_RELATIVE_DIR = Path("src/main/resources/data/attuned/attuned/focus")
 
 SOURCE_SUFFIXES = {
     ".accesswidener",
@@ -88,6 +89,7 @@ ASSIGNMENT_PATTERN = re.compile(
     rf"\b[a-z0-9_.-]*(?:{RISK_NAME_PATTERN})[a-z0-9_.-]*\b\s*[:=]\s*(?P<value>[^\s,#}}]+)",
     re.IGNORECASE,
 )
+README_FOCI_PATTERN = re.compile(r"\b(?P<count>\d+)\s+Foci\b")
 
 
 class CheckFailed(Exception):
@@ -309,10 +311,48 @@ def check_python_compile() -> str:
     return f"Python syntax compilation: {len(python_files)} files"
 
 
+def shipped_focus_definition_count(root: Path = ROOT) -> int:
+    focus_dir = root / FOCUS_DEFINITION_RELATIVE_DIR
+    if not focus_dir.is_dir():
+        raise CheckFailed(
+            "README Focus count",
+            [f"{relative(focus_dir, root)}: missing FocusDefinition directory"],
+        )
+    return sum(1 for path in focus_dir.iterdir() if path.suffix == ".json")
+
+
+def readme_focus_count_problems(root: Path = ROOT) -> list[str]:
+    readme = root / "README.md"
+    if not readme.is_file():
+        return ["README.md: missing release overview"]
+
+    text = readme.read_text(encoding="utf-8")
+    match = README_FOCI_PATTERN.search(text)
+    if match is None:
+        return ["README.md: missing advertised Focus count"]
+
+    advertised_count = int(match.group("count"))
+    shipped_count = shipped_focus_definition_count(root)
+    if advertised_count != shipped_count:
+        return [
+            "README.md: advertises "
+            f"{advertised_count} Foci but ships {shipped_count} FocusDefinition files"
+        ]
+    return []
+
+
+def check_readme_focus_count() -> str:
+    problems = readme_focus_count_problems()
+    if problems:
+        raise CheckFailed("README Focus count", problems)
+    return f"README Focus count: {shipped_focus_definition_count()} Foci"
+
+
 def run_checks() -> int:
     checks = (
         check_src_json,
         check_png_resources,
+        check_readme_focus_count,
         check_issue_markers,
         check_assignment_risks,
         check_python_caches,

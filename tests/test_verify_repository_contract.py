@@ -55,6 +55,22 @@ class VerifyRepositoryContractTest(unittest.TestCase):
             self.assertIn("sample.properties:1", problems[0])
             self.assertNotIn(assigned_value, problems[0])
 
+    def test_readme_focus_count_reports_catalog_drift(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            focus_dir = root / "src" / "main" / "resources" / "data" / "attuned" / "attuned" / "focus"
+            focus_dir.mkdir(parents=True)
+            (focus_dir / "first_focus.json").write_text("{}", encoding="utf-8")
+            (focus_dir / "second_focus.json").write_text("{}", encoding="utf-8")
+            (root / "README.md").write_text("- 1 Foci across test categories\n", encoding="utf-8")
+
+            problems = verify_repository.readme_focus_count_problems(root)
+
+            self.assertEqual(len(problems), 1)
+            self.assertIn("README.md", problems[0])
+            self.assertIn("advertises 1 Foci", problems[0])
+            self.assertIn("ships 2 FocusDefinition files", problems[0])
+
 
 if __name__ == "__main__":
     unittest.main()
