@@ -24,6 +24,8 @@ import net.minecraft.world.level.Level;
  * which is what lets external code instantiate one.
  */
 public final class AltarMenuType {
+	private static boolean initialized;
+
 	private AltarMenuType() {}
 
 	/** The Altar menu's registered type — populated by {@link #init()}. */
@@ -35,6 +37,10 @@ public final class AltarMenuType {
 
 	/** Forces this class to load and registers the menu type. */
 	public static void init() {
+		if (initialized) {
+			return;
+		}
+		initialized = true;
 		Identifier id = Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "attunement_altar");
 		// The MenuType constructor is widened by fabric-menu-api-v1; vanilla also
 		// instantiates its menu types this way (see net.minecraft.world.inventory.MenuType).

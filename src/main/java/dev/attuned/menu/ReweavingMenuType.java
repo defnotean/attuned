@@ -16,6 +16,8 @@ import net.minecraft.world.level.Level;
 
 /** Registers and opens the Altar of Reweaving menu. */
 public final class ReweavingMenuType {
+	private static boolean initialized;
+
 	private ReweavingMenuType() {}
 
 	public static MenuType<ReweavingMenu> TYPE;
@@ -23,6 +25,10 @@ public final class ReweavingMenuType {
 		Component.translatable("container.attuned.reweaving_altar");
 
 	public static void init() {
+		if (initialized) {
+			return;
+		}
+		initialized = true;
 		Identifier id = Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "altar_of_reweaving");
 		TYPE = Registry.register(BuiltInRegistries.MENU, id,
 			new MenuType<>(ReweavingMenu::new, FeatureFlags.VANILLA_SET));

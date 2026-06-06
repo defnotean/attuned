@@ -23,6 +23,8 @@ import net.minecraft.world.item.ItemStack;
 
 /** Registers and orders Attuned creative-inventory tabs. */
 final class AttunedCreativeTabs {
+	private static boolean initialized;
+
 	private AttunedCreativeTabs() {}
 
 	/**
@@ -34,6 +36,10 @@ final class AttunedCreativeTabs {
 	 * tabs by build identity rather than registration order.
 	 */
 	static void init() {
+		if (initialized) {
+			return;
+		}
+		initialized = true;
 		registerFocusCreativeTab(
 			"attuned",
 			Component.translatable("itemGroup.attuned.affinity_foci"),

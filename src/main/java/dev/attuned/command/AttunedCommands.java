@@ -42,9 +42,15 @@ import net.minecraft.world.item.ItemStack;
  * one-shot diagnostic dump of the player's full attunement state.
  */
 public final class AttunedCommands {
+	private static boolean initialized;
+
 	private AttunedCommands() {}
 
 	public static void init() {
+		if (initialized) {
+			return;
+		}
+		initialized = true;
 		CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) ->
 			dispatcher.register(Commands.literal("attuned")
 				.then(Commands.literal("journal")

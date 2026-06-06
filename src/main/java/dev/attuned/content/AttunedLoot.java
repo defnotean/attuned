@@ -33,6 +33,8 @@ import net.minecraft.world.level.storage.loot.providers.number.ConstantValue;
  * Focus and shard fragment remains available through their containers.
  */
 public final class AttunedLoot {
+	private static boolean initialized;
+
 	private AttunedLoot() {}
 
 	/** How rich a reward source's Focus drop is — a multiplier on the configured base chance. */
@@ -140,6 +142,10 @@ public final class AttunedLoot {
 
 	/** Registers the loot-table injection. Called from the mod initializer. */
 	public static void init() {
+		if (initialized) {
+			return;
+		}
+		initialized = true;
 		LootTableEvents.MODIFY.register((key, tableBuilder, source, registries) -> {
 			Drop drop = TARGETS.get(key.identifier());
 			if (drop == null) {
