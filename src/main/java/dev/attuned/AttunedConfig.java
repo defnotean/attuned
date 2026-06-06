@@ -36,10 +36,35 @@ public record AttunedConfig(
 		int gravebindCooldownTicks,
 		boolean broadcastPactDeaths) {
 
+	private static final int MIN_STARTING_CAPACITY = 0;
+	private static final int MAX_STARTING_CAPACITY = 256;
+	private static final int MIN_CAPACITY_CAP = 1;
+	private static final int MAX_CAPACITY_CAP = 256;
+	private static final int MIN_CAPACITY_PER_SHARD = 1;
+	private static final int MAX_CAPACITY_PER_SHARD = 64;
+	private static final float MIN_FOCUS_LOOT_CHANCE = 0.0F;
+	private static final float MAX_FOCUS_LOOT_CHANCE = 1.0F;
+	private static final float MIN_LOOT_MULTIPLIER = 0.0F;
+	private static final float MAX_LOOT_MULTIPLIER = 128.0F;
+	private static final int MIN_COOLDOWN_TICKS = 0;
+	private static final int MAX_COOLDOWN_TICKS = 1728000;
+
 	public AttunedConfig {
-		if (capacityCap < 1) {
-			throw new IllegalArgumentException("capacityCap must be at least 1");
-		}
+		startingCapacity = requireIntRange(
+			"startingCapacity", startingCapacity, MIN_STARTING_CAPACITY, MAX_STARTING_CAPACITY);
+		capacityCap = requireIntRange("capacityCap", capacityCap, MIN_CAPACITY_CAP, MAX_CAPACITY_CAP);
+		capacityPerShard = requireIntRange(
+			"capacityPerShard", capacityPerShard, MIN_CAPACITY_PER_SHARD, MAX_CAPACITY_PER_SHARD);
+		focusLootChance = requireFloatRange(
+			"focusLootChance", focusLootChance, MIN_FOCUS_LOOT_CHANCE, MAX_FOCUS_LOOT_CHANCE);
+		lowLootMultiplier = requireLootMultiplier("lowLootMultiplier", lowLootMultiplier);
+		commonLootMultiplier = requireLootMultiplier("commonLootMultiplier", commonLootMultiplier);
+		richLootMultiplier = requireLootMultiplier("richLootMultiplier", richLootMultiplier);
+		treasureLootMultiplier = requireLootMultiplier("treasureLootMultiplier", treasureLootMultiplier);
+		shardFragmentLootMultiplier = requireLootMultiplier(
+			"shardFragmentLootMultiplier", shardFragmentLootMultiplier);
+		voidstepCooldownTicks = requireCooldownTicks("voidstepCooldownTicks", voidstepCooldownTicks);
+		gravebindCooldownTicks = requireCooldownTicks("gravebindCooldownTicks", gravebindCooldownTicks);
 		startingCapacity = Math.min(startingCapacity, capacityCap);
 	}
 
@@ -47,16 +72,21 @@ public record AttunedConfig(
 	public static final AttunedConfig DEFAULT =
 		new AttunedConfig(4, 20, 2, 0.25F, 1.0F, 1.0F, 1.0F, 1.0F, 1.0F, 200, 1200, true);
 
-	private static final Codec<Float> LOOT_MULTIPLIER = Codec.floatRange(0.0F, 128.0F);
+	private static final Codec<Float> LOOT_MULTIPLIER =
+		Codec.floatRange(MIN_LOOT_MULTIPLIER, MAX_LOOT_MULTIPLIER);
 
 	public static final Codec<AttunedConfig> CODEC = RecordCodecBuilder.create(in -> in.group(
-		Codec.intRange(0, 256).optionalFieldOf("starting_capacity", DEFAULT.startingCapacity())
+		Codec.intRange(MIN_STARTING_CAPACITY, MAX_STARTING_CAPACITY)
+			.optionalFieldOf("starting_capacity", DEFAULT.startingCapacity())
 			.forGetter(AttunedConfig::startingCapacity),
-		Codec.intRange(1, 256).optionalFieldOf("capacity_cap", DEFAULT.capacityCap())
+		Codec.intRange(MIN_CAPACITY_CAP, MAX_CAPACITY_CAP)
+			.optionalFieldOf("capacity_cap", DEFAULT.capacityCap())
 			.forGetter(AttunedConfig::capacityCap),
-		Codec.intRange(1, 64).optionalFieldOf("capacity_per_shard", DEFAULT.capacityPerShard())
+		Codec.intRange(MIN_CAPACITY_PER_SHARD, MAX_CAPACITY_PER_SHARD)
+			.optionalFieldOf("capacity_per_shard", DEFAULT.capacityPerShard())
 			.forGetter(AttunedConfig::capacityPerShard),
-		Codec.floatRange(0.0F, 1.0F).optionalFieldOf("focus_loot_chance", DEFAULT.focusLootChance())
+		Codec.floatRange(MIN_FOCUS_LOOT_CHANCE, MAX_FOCUS_LOOT_CHANCE)
+			.optionalFieldOf("focus_loot_chance", DEFAULT.focusLootChance())
 			.forGetter(AttunedConfig::focusLootChance),
 		LOOT_MULTIPLIER.optionalFieldOf("low_loot_multiplier", DEFAULT.lowLootMultiplier())
 			.forGetter(AttunedConfig::lowLootMultiplier),
@@ -68,9 +98,11 @@ public record AttunedConfig(
 			.forGetter(AttunedConfig::treasureLootMultiplier),
 		LOOT_MULTIPLIER.optionalFieldOf("shard_fragment_loot_multiplier", DEFAULT.shardFragmentLootMultiplier())
 			.forGetter(AttunedConfig::shardFragmentLootMultiplier),
-		Codec.intRange(0, 1728000).optionalFieldOf("voidstep_cooldown_ticks", DEFAULT.voidstepCooldownTicks())
+		Codec.intRange(MIN_COOLDOWN_TICKS, MAX_COOLDOWN_TICKS)
+			.optionalFieldOf("voidstep_cooldown_ticks", DEFAULT.voidstepCooldownTicks())
 			.forGetter(AttunedConfig::voidstepCooldownTicks),
-		Codec.intRange(0, 1728000).optionalFieldOf("gravebind_cooldown_ticks", DEFAULT.gravebindCooldownTicks())
+		Codec.intRange(MIN_COOLDOWN_TICKS, MAX_COOLDOWN_TICKS)
+			.optionalFieldOf("gravebind_cooldown_ticks", DEFAULT.gravebindCooldownTicks())
 			.forGetter(AttunedConfig::gravebindCooldownTicks),
 		Codec.BOOL.optionalFieldOf("broadcast_pact_deaths", DEFAULT.broadcastPactDeaths())
 			.forGetter(AttunedConfig::broadcastPactDeaths)
@@ -105,6 +137,28 @@ public record AttunedConfig(
 
 	private static Path path() {
 		return FabricLoader.getInstance().getConfigDir().resolve("attuned.json");
+	}
+
+	private static int requireCooldownTicks(String field, int value) {
+		return requireIntRange(field, value, MIN_COOLDOWN_TICKS, MAX_COOLDOWN_TICKS);
+	}
+
+	private static int requireIntRange(String field, int value, int min, int max) {
+		if (value < min || value > max) {
+			throw new IllegalArgumentException(field + " must be between " + min + " and " + max);
+		}
+		return value;
+	}
+
+	private static float requireLootMultiplier(String field, float value) {
+		return requireFloatRange(field, value, MIN_LOOT_MULTIPLIER, MAX_LOOT_MULTIPLIER);
+	}
+
+	private static float requireFloatRange(String field, float value, float min, float max) {
+		if (!Float.isFinite(value) || value < min || value > max) {
+			throw new IllegalArgumentException(field + " must be between " + min + " and " + max);
+		}
+		return value;
 	}
 
 	private static void save() {
