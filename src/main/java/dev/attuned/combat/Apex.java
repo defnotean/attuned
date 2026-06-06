@@ -9,6 +9,7 @@ import dev.attuned.api.focus.FocusDefinition;
 import dev.attuned.attunement.AttunedAttachments;
 import dev.attuned.attunement.AttunedInv;
 import dev.attuned.attunement.Attunement;
+import dev.attuned.attunement.BudgetResolver;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -152,14 +153,22 @@ public final class Apex {
 	}
 
 	public static Optional<Capstone> capstoneOf(Player player) {
-		List<Integer> active = Attunement.activeSlots(player);
+		BudgetResolver.Resolution resolution = Attunement.resolution(player);
+		List<Integer> active = resolution.activeSlots();
 		List<Optional<Affinity>> activeAffinities = new ArrayList<>(active.size());
 		AttunedInv inv = AttunedAttachments.getInventory(player);
+		int used = 0;
 		for (int slot : active) {
-			activeAffinities.add(Attunement.definitionFor(player, inv.get(slot))
-				.flatMap(FocusDefinition::affinity));
+			Optional<FocusDefinition> maybeDefinition = Attunement.definitionFor(player, inv.get(slot));
+			if (maybeDefinition.isEmpty()) {
+				activeAffinities.add(Optional.empty());
+				continue;
+			}
+			FocusDefinition definition = maybeDefinition.get();
+			activeAffinities.add(definition.affinity());
+			used += definition.cost();
 		}
-		return resolveCapstone(activeAffinities, Attunement.used(player), Attunement.capacity(player));
+		return resolveCapstone(activeAffinities, used, Attunement.capacity(player));
 	}
 
 	public static Optional<Affinity> affinityOf(Player player) {
@@ -187,10 +196,22 @@ public final class Apex {
 			return amount;
 		}
 		LivingEntity attacker = AttunedCombat.attackerOf(source);
+		Player defenderPlayer = defender instanceof Player defenderCandidate ? defenderCandidate : null;
+		Player attackerPlayer = attacker instanceof Player attackerCandidate ? attackerCandidate : null;
+		Capstone defenderCapstone = defenderPlayer != null
+			? capstoneOf(defenderPlayer).orElse(null)
+			: null;
+		Capstone attackerCapstone = attackerPlayer != null
+			? capstoneOf(attackerPlayer).orElse(null)
+			: null;
+		boolean defenderAtApex = defenderPlayer != null && defenderCapstone != null
+			&& Resonance.atApex(defenderPlayer);
+		boolean attackerAtApex = attackerPlayer != null && attackerCapstone != null
+			&& Resonance.atApex(attackerPlayer);
 
-		if (defender instanceof Player defenderPlayer
-				&& isAt(defenderPlayer, Capstone.UNYIELDING)
-				&& Resonance.atApex(defenderPlayer)) {
+		if (defenderPlayer != null
+				&& defenderCapstone == Capstone.UNYIELDING
+				&& defenderAtApex) {
 			Matchup matchup = matchupAgainst(Affinity.BASTION, attacker);
 			if (matchup != Matchup.NEUTRALIZED) {
 				float fraction = matchup == Matchup.EMPOWERED ? CAP_EMPOWERED : CAP_NORMAL;
@@ -202,9 +223,9 @@ public final class Apex {
 		}
 
 		if (defender.getMaxHealth() > 0.0F
-				&& attacker instanceof Player attackerPlayer
-				&& isAt(attackerPlayer, Capstone.EXECUTE)
-				&& Resonance.atApex(attackerPlayer)
+				&& attackerPlayer != null
+				&& attackerCapstone == Capstone.EXECUTE
+				&& attackerAtApex
 				&& isApexMeleeTarget(defender, attackerPlayer, source)) {
 			Matchup matchup = matchupAgainst(Affinity.FURY, defender);
 			if (matchup != Matchup.NEUTRALIZED) {
@@ -216,9 +237,9 @@ public final class Apex {
 		}
 
 		if (defender.getMaxHealth() > 0.0F
-				&& attacker instanceof Player attackerPlayer
-				&& isAt(attackerPlayer, Capstone.JUDGMENT)
-				&& Resonance.atApex(attackerPlayer)
+				&& attackerPlayer != null
+				&& attackerCapstone == Capstone.JUDGMENT
+				&& attackerAtApex
 				&& isApexMeleeTarget(defender, attackerPlayer, source)) {
 			Matchup matchup = matchupAgainst(Affinity.HOLY, defender);
 			if (matchup == Matchup.EMPOWERED
@@ -228,9 +249,9 @@ public final class Apex {
 		}
 
 		if (defender.getMaxHealth() > 0.0F
-				&& attacker instanceof Player attackerPlayer
-				&& isAt(attackerPlayer, Capstone.MAELSTROM)
-				&& Resonance.atApex(attackerPlayer)
+				&& attackerPlayer != null
+				&& attackerCapstone == Capstone.MAELSTROM
+				&& attackerAtApex
 				&& isApexMeleeTarget(defender, attackerPlayer, source)
 				&& CombatTargets.hasAffinity(defender)) {
 			amount *= (1.0F + MAELSTROM_DAMAGE_BONUS);
