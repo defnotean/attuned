@@ -1,20 +1,11 @@
 package dev.attuned.client.screen;
 
 import dev.attuned.Attuned;
-import dev.attuned.api.focus.Affinity;
-import dev.attuned.attunement.AttunedAttachments;
-import dev.attuned.attunement.AttunedInv;
 import dev.attuned.attunement.Attunement;
 import dev.attuned.client.AttunementReadout;
 import dev.attuned.client.hud.CombatHud;
-import dev.attuned.combat.Apex;
-import dev.attuned.combat.Resonance;
-import dev.attuned.content.AttunementAltarBlock;
 import dev.attuned.menu.AltarMenu;
 import dev.attuned.menu.BindShardPayload;
-import dev.attuned.pacts.Pact;
-import dev.attuned.pacts.Pacts;
-import java.util.Optional;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
@@ -147,7 +138,8 @@ public class AltarScreen extends AbstractContainerScreen<AltarMenu> {
 		// need the player's stance colour, so resolve it once here.
 		Player player = this.minecraft != null ? this.minecraft.player : null;
 		if (player != null) {
-			int stance = AttunementReadout.apexAwareStanceArgb(player);
+			AttunementReadout.Snapshot readout = AttunementReadout.snapshot(player);
+			int stance = AttunementReadout.apexAwareStanceArgb(readout);
 
 			// Stance-tinted inner border around the shard well, sitting one pixel
 			// inside the well's bevel so the tint reads as a glow on the slot face.
@@ -164,8 +156,8 @@ public class AltarScreen extends AbstractContainerScreen<AltarMenu> {
 			int barX = x + BAR_X;
 			int barY = y + BAR_Y;
 			graphics.fill(barX, barY, barX + BAR_W, barY + BAR_H, BAR_TRACK);
-			int capacity = Attunement.capacity(player);
-			int used = Attunement.used(player);
+			int capacity = readout.capacity();
+			int used = readout.used();
 			int fill = AttunementReadout.budgetFillWidth(BAR_W, used, capacity);
 			if (fill > 0) {
 				graphics.fill(barX, barY, barX + fill, barY + BAR_H, stance);
@@ -217,35 +209,32 @@ public class AltarScreen extends AbstractContainerScreen<AltarMenu> {
 			return;
 		}
 
-		int capacity = Attunement.capacity(player);
-		int used = Attunement.used(player);
+		AttunementReadout.Snapshot readout = AttunementReadout.snapshot(player);
+		int capacity = readout.capacity();
+		int used = readout.used();
 		int cap = this.menu.capacityCap();
 		int perShard = this.menu.capacityPerShard();
-		int active = Attunement.activeSlots(player).size();
-		int dormant = dormantFocusCount(player);
+		int active = readout.active();
 
-		Component readout = Component.translatable("screen.attuned.altar.budget", used, capacity);
-		graphics.text(this.font, readout, READOUT_X, 24, BODY_TEXT, false);
+		Component budgetText = Component.translatable("screen.attuned.altar.budget", used, capacity);
+		graphics.text(this.font, budgetText, READOUT_X, 24, BODY_TEXT, false);
 
 		// Stance row: a small textured gem prefix that visually says "this is your
 		// stance," followed only by the affinity name in its colour. Dropping the
 		// "Stance:" label keeps the row clear of the shard slot at x=80 — with a
 		// 10-pixel gem and the affinity name at most ~30 pixels wide, the whole
 		// row fits comfortably in the left half of the panel.
-		Optional<Affinity> committed = Attunement.committedAffinity(player);
-		boolean discord = Attunement.isDiscord(player);
-		Optional<Apex.Capstone> capstone = Apex.capstoneOf(player);
 		int stanceGemSize = 10;
 		int stanceGemX = TEXT_BOX_X;
 		int stanceGemY = 39;
 		CombatHud.drawPlayerGem(graphics, stanceGemX, stanceGemY, stanceGemSize,
-			committed.orElse(null), discord, capstone.orElse(null),
-			capstone.isPresent() && Resonance.atApex(player));
-		graphics.text(this.font, altarStanceLabel(player, capstone),
+			readout.committed().orElse(null), readout.discord(), readout.capstone().orElse(null),
+			readout.atApex());
+		graphics.text(this.font, AttunementReadout.stanceLabel(readout),
 			stanceGemX + stanceGemSize + 4, 41, BODY_TEXT, false);
 		drawTrimmedText(graphics, Component.literal(active + " active"),
 			STATUS_X, STATUS_Y, STATUS_MAX_WIDTH, BODY_TEXT);
-		drawTrimmedText(graphics, detailLine(player, dormant),
+		drawTrimmedText(graphics, detailLine(readout),
 			STATUS_X, DETAIL_Y, DETAIL_MAX_WIDTH, MUTED_TEXT);
 
 		// Hint text under the slot, swapped out when capacity is full or empty.
@@ -278,36 +267,15 @@ public class AltarScreen extends AbstractContainerScreen<AltarMenu> {
 		graphics.text(this.font, Component.literal(trimmed + ellipsis), x, y, color, false);
 	}
 
-	private static int dormantFocusCount(Player player) {
-		AttunedInv inv = AttunedAttachments.getInventory(player);
-		int dormant = 0;
-		for (int slot = 0; slot < AttunedInv.SIZE; slot++) {
-			if (!inv.get(slot).isEmpty()
-					&& !Attunement.isActive(player, slot)
-					&& Attunement.definitionFor(player, inv.get(slot)).isPresent()) {
-				dormant++;
-			}
-		}
-		return dormant;
-	}
-
-	private static Component detailLine(Player player, int dormant) {
-		Component prefix = Component.literal(dormant + " dormant");
-		Optional<Pact> pact = Pacts.activeOf(player);
-		if (pact.isPresent()) {
+	private static Component detailLine(AttunementReadout.Snapshot readout) {
+		Component prefix = Component.literal(readout.dormant() + " dormant");
+		if (readout.pact().isPresent()) {
 			return prefix.copy().append(Component.literal(" / Pact"));
 		}
-		if (Apex.capstoneOf(player).isPresent()) {
+		if (readout.capstone().isPresent()) {
 			return prefix.copy().append(Component.literal(" / Apex"));
 		}
 		return prefix;
-	}
-
-	private static Component altarStanceLabel(Player player, Optional<Apex.Capstone> capstone) {
-		if (capstone.isPresent()) {
-			return Component.literal(capstone.get().displayName()).withStyle(capstone.get().chatColor());
-		}
-		return AttunementAltarBlock.stanceLabel(player);
 	}
 
 	private static void drawButtonOutline(GuiGraphicsExtractor graphics, int x0, int y0, int x1, int y1, int argb) {

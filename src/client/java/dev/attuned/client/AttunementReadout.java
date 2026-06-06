@@ -2,54 +2,128 @@ package dev.attuned.client;
 
 import dev.attuned.api.focus.Affinity;
 import dev.attuned.api.focus.AffinityColors;
+import dev.attuned.api.focus.FocusDefinition;
+import dev.attuned.attunement.AttunedAttachments;
+import dev.attuned.attunement.AttunedInv;
 import dev.attuned.attunement.Attunement;
+import dev.attuned.attunement.BudgetResolver;
 import dev.attuned.combat.Apex;
 import dev.attuned.combat.Resonance;
 import dev.attuned.pacts.Pact;
 import dev.attuned.pacts.Pacts;
+import java.util.ArrayList;
+import java.util.EnumMap;
+import java.util.EnumSet;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.world.entity.player.Player;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Locale;
-import java.util.Optional;
 
 /**
  * Turns a player's attunement state into player-facing display: a build "Title",
  * the colour used for the affinity gem and budget bar, and the tooltip shown when
  * the Focus panel is hovered.
  *
- * <p>The Title is two words — a count word for how many Foci are active and a
- * rank word for the attunement points they spend — or simply "Unattuned" when
+ * <p>The Title is two words: a count word for how many Foci are active and a
+ * rank word for the attunement points they spend, or simply "Unattuned" when
  * nothing is active, so every reachable build reads as a distinct title.</p>
  */
 public final class AttunementReadout {
 	private AttunementReadout() {}
 
+	public record Snapshot(int capacity, int used, int active,
+			Map<Integer, BudgetResolver.DormantReason> dormantReasons,
+			Optional<Affinity> committed, boolean discord, Optional<Apex.Capstone> capstone,
+			float resonance, Optional<Pact> pact, Optional<Component> pactPreview) {
+		public int remaining() {
+			return Math.max(0, capacity - used);
+		}
+
+		public int dormant() {
+			return dormantReasons.size();
+		}
+
+		public boolean atApex() {
+			return capstone.isPresent() && resonance >= Resonance.APEX_THRESHOLD;
+		}
+
+		public int stanceArgb() {
+			return AttunementReadout.apexAwareStanceArgb(this);
+		}
+	}
+
+	public static Snapshot snapshot(Player player) {
+		AttunedInv inv = AttunedAttachments.getInventory(player);
+		BudgetResolver.Resolution resolution = Attunement.resolution(player);
+		List<Integer> activeSlots = resolution.activeSlots();
+		int capacity = Attunement.capacity(player);
+		Map<Integer, BudgetResolver.DormantReason> dormantReasons = resolution.dormantReasons();
+		List<Optional<Affinity>> orderedActiveAffinities = new ArrayList<>(activeSlots.size());
+		Set<Affinity> distinctActiveAffinities = EnumSet.noneOf(Affinity.class);
+		EnumMap<Affinity, Integer> activeAffinityCounts = new EnumMap<>(Affinity.class);
+		int used = 0;
+		for (int slot : activeSlots) {
+			Optional<FocusDefinition> definition = Attunement.definitionFor(player, inv.get(slot));
+			if (definition.isEmpty()) {
+				orderedActiveAffinities.add(Optional.empty());
+				continue;
+			}
+			FocusDefinition focus = definition.get();
+			used += focus.cost();
+			Optional<Affinity> affinity = focus.affinity();
+			orderedActiveAffinities.add(affinity);
+			affinity.ifPresent(activeAffinity -> {
+				distinctActiveAffinities.add(activeAffinity);
+				activeAffinityCounts.merge(activeAffinity, 1, Integer::sum);
+			});
+		}
+		boolean discord = distinctActiveAffinities.size() >= 2;
+		Optional<Affinity> committed = distinctActiveAffinities.size() == 1
+			? Optional.of(distinctActiveAffinities.iterator().next())
+			: Optional.empty();
+		Optional<Apex.Capstone> capstone =
+			Apex.resolveCapstone(orderedActiveAffinities, used, capacity);
+		Optional<Pact> pact = Pacts.activeOf(activeAffinityCounts);
+		int remaining = Math.max(0, capacity - used);
+		return new Snapshot(capacity, used, activeSlots.size(), dormantReasons, committed, discord,
+			capstone, Resonance.get(player), pact,
+			Pacts.previewOf(player, pact, discord, activeAffinityCounts, remaining));
+	}
+
 	/** The player's build title, coloured by rank tier. */
 	public static MutableComponent title(Player player) {
-		int activeFoci = Attunement.activeSlots(player).size();
+		return title(snapshot(player));
+	}
+
+	public static MutableComponent title(Snapshot snapshot) {
+		int activeFoci = snapshot.active();
 		if (activeFoci == 0) {
 			return Component.literal("Unattuned").withStyle(ChatFormatting.DARK_GRAY);
 		}
-		int used = Attunement.used(player);
+		int used = snapshot.used();
 		return Component.literal(countWord(activeFoci) + " " + rankWord(used))
 			.withStyle(rankColor(used));
 	}
 
 	/** Lines for the Focus-panel hover tooltip: title, budget, slot state, stance, and Apex. */
 	public static List<Component> tooltip(Player player) {
-		int active = Attunement.activeSlots(player).size();
-		int used = Attunement.used(player);
-		int capacity = Attunement.capacity(player);
-		int remaining = Math.max(0, capacity - used);
-		int dormant = Attunement.dormantReasons(player).size();
+		return tooltip(snapshot(player));
+	}
+
+	public static List<Component> tooltip(Snapshot snapshot) {
+		int active = snapshot.active();
+		int used = snapshot.used();
+		int capacity = snapshot.capacity();
+		int remaining = snapshot.remaining();
+		int dormant = snapshot.dormant();
 
 		List<Component> lines = new ArrayList<>();
-		lines.add(title(player).withStyle(ChatFormatting.BOLD));
+		lines.add(title(snapshot).withStyle(ChatFormatting.BOLD));
 		lines.add(Component.empty());
 		lines.add(Component.literal("Budget: ").withStyle(ChatFormatting.GRAY)
 			.append(Component.literal(used + " / " + capacity).withStyle(ChatFormatting.AQUA)));
@@ -67,18 +141,18 @@ public final class AttunementReadout {
 				.withStyle(ChatFormatting.DARK_GRAY));
 		}
 
-		if (Attunement.isDiscord(player)) {
+		if (snapshot.discord()) {
 			lines.add(Component.literal("Stance: ").withStyle(ChatFormatting.GRAY)
 				.append(Component.literal("Discord").withStyle(ChatFormatting.LIGHT_PURPLE)));
 			lines.add(Component.literal("Clashing affinities — you deal and take extra damage.")
 				.withStyle(ChatFormatting.GRAY));
 		} else {
-			Optional<Affinity> affinity = Attunement.committedAffinity(player);
+			Optional<Affinity> affinity = snapshot.committed();
 			lines.add(Component.literal("Affinity: ").withStyle(ChatFormatting.GRAY)
 				.append(Component.literal(affinityName(affinity)).withStyle(affinityTextColor(affinity))));
 		}
 
-		Optional<Pact> pact = Pacts.activeOf(player);
+		Optional<Pact> pact = snapshot.pact();
 		if (pact.isPresent()) {
 			Pact activePact = pact.get();
 			lines.add(Component.literal("Pact: ").withStyle(ChatFormatting.GRAY)
@@ -86,14 +160,14 @@ public final class AttunementReadout {
 		} else {
 			lines.add(Component.literal("Pact: ").withStyle(ChatFormatting.GRAY)
 				.append(Component.literal("None").withStyle(ChatFormatting.DARK_GRAY)));
-			Pacts.previewOf(player).ifPresent(preview -> lines.add(
+			snapshot.pactPreview().ifPresent(preview -> lines.add(
 				Component.literal("Next Pact: ").withStyle(ChatFormatting.GRAY).append(preview)));
 		}
 
-		Optional<Apex.Capstone> apex = Apex.capstoneOf(player);
+		Optional<Apex.Capstone> apex = snapshot.capstone();
 		if (apex.isPresent()) {
 			Apex.Capstone capstone = apex.get();
-			boolean activeApex = Resonance.atApex(player);
+			boolean activeApex = snapshot.atApex();
 			lines.add(Component.literal("Apex: ").withStyle(ChatFormatting.GRAY)
 				.append(Component.literal(capstone.displayName())
 					.withStyle(capstone.chatColor(), ChatFormatting.BOLD))
@@ -111,15 +185,16 @@ public final class AttunementReadout {
 
 	/** ARGB colour for the affinity gem and budget-bar fill, the player's stance. */
 	public static int stanceArgb(Player player) {
-		return AffinityColors.argbOf(Attunement.committedAffinity(player), Attunement.isDiscord(player));
+		return stanceArgb(snapshot(player));
+	}
+
+	public static int stanceArgb(Snapshot snapshot) {
+		return stanceArgb(snapshot.discord(), snapshot.committed());
 	}
 
 	/**
 	 * ARGB colour for the affinity gem and budget-bar fill, computed from
-	 * pre-resolved stance inputs. Lets per-frame callers cache the discord and
-	 * committed-affinity reads once and reuse them without re-walking the player's
-	 * Focus slots through {@link Attunement#isDiscord(Player)} and
-	 * {@link Attunement#committedAffinity(Player)}.
+	 * pre-resolved stance inputs.
 	 */
 	public static int stanceArgb(boolean discord, Optional<Affinity> committed) {
 		return AffinityColors.argbOf(committed, discord);
@@ -138,8 +213,31 @@ public final class AttunementReadout {
 
 	/** Capstone-aware ARGB colour for callers that do not already cache stance state. */
 	public static int apexAwareStanceArgb(Player player) {
-		return stanceArgb(Apex.capstoneOf(player), Attunement.isDiscord(player),
-			Attunement.committedAffinity(player));
+		return apexAwareStanceArgb(snapshot(player));
+	}
+
+	public static int apexAwareStanceArgb(Snapshot snapshot) {
+		return stanceArgb(snapshot.capstone(), snapshot.discord(), snapshot.committed());
+	}
+
+	public static Component stanceLabel(Snapshot snapshot) {
+		if (snapshot.capstone().isPresent()) {
+			Apex.Capstone capstone = snapshot.capstone().get();
+			return Component.literal(capstone.displayName()).withStyle(capstone.chatColor());
+		}
+		if (snapshot.discord()) {
+			return Component.literal("Discord").withStyle(ChatFormatting.LIGHT_PURPLE);
+		}
+		Optional<Affinity> affinity = snapshot.committed();
+		if (affinity.isEmpty()) {
+			return Component.literal("None").withStyle(ChatFormatting.GRAY);
+		}
+		return switch (affinity.get()) {
+			case FURY -> Component.literal("Fury").withStyle(ChatFormatting.RED);
+			case BASTION -> Component.literal("Bastion").withStyle(ChatFormatting.GOLD);
+			case ZEPHYR -> Component.literal("Zephyr").withStyle(ChatFormatting.AQUA);
+			case HOLY -> Component.literal("Holy").withStyle(ChatFormatting.YELLOW);
+		};
 	}
 
 	/** Filled width for attunement budget bars, clamped to the painted track. */
@@ -195,7 +293,11 @@ public final class AttunementReadout {
 		if (affinity.isEmpty()) {
 			return "Neutral";
 		}
-		String lower = affinity.get().name().toLowerCase(Locale.ROOT);
+		return affinityName(affinity.get());
+	}
+
+	private static String affinityName(Affinity affinity) {
+		String lower = affinity.name().toLowerCase(Locale.ROOT);
 		return Character.toUpperCase(lower.charAt(0)) + lower.substring(1);
 	}
 
@@ -210,4 +312,5 @@ public final class AttunementReadout {
 			case HOLY -> ChatFormatting.YELLOW;
 		};
 	}
+
 }

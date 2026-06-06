@@ -71,7 +71,7 @@ class UiAssetContractTest {
 	@Test
 	void generatedAltarScreensKeepInteractiveControlsInsidePaintedWells() throws IOException {
 		assertSourceContains(ALTAR_SCREEN_SOURCE, "DETAIL_MAX_WIDTH = STATUS_MAX_WIDTH");
-		assertSourceContains(ALTAR_SCREEN_SOURCE, "Component.literal(dormant + \" dormant\")");
+		assertSourceContains(ALTAR_SCREEN_SOURCE, "Component.literal(readout.dormant() + \" dormant\")");
 		assertSourceContains(ALTAR_SCREEN_SOURCE, "private static final int READOUT_X = 24");
 		assertSourceContains(ALTAR_SCREEN_SOURCE, "private static final int TEXT_BOX_X = 18");
 		assertSourceContains(ALTAR_SCREEN_SOURCE, "private static final int HINT_Y = 88");

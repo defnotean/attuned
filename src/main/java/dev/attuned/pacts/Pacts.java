@@ -174,7 +174,11 @@ public final class Pacts {
 
 	/** The pact a player has woken, if any. */
 	public static Optional<Pact> activeOf(Player player) {
-		EnumMap<Affinity, Integer> counts = activeAffinityCounts(player);
+		return activeOf(activeAffinityCounts(player));
+	}
+
+	/** The pact represented by pre-resolved active affinity counts, if any. */
+	public static Optional<Pact> activeOf(Map<Affinity, Integer> counts) {
 		if (counts.size() >= UNTETHERED_AFFINITY_COUNT) {
 			return Optional.of(Pact.UNTETHERED);
 		}
@@ -192,11 +196,19 @@ public final class Pacts {
 	 * away from a single-affinity pact.
 	 */
 	public static Optional<Component> previewOf(Player player) {
-		if (activeOf(player).isPresent() || Attunement.isDiscord(player)) {
-			return Optional.empty();
-		}
 		EnumMap<Affinity, Integer> counts = activeAffinityCounts(player);
-		if (counts.size() != 1) {
+		Optional<Pact> pact = activeOf(counts);
+		return previewOf(player, pact, Attunement.isDiscord(player), counts, remainingBudget(player));
+	}
+
+	/**
+	 * Short UI hint from pre-resolved affinity counts and remaining budget.
+	 * The caller owns the player-state snapshot; this helper only performs the
+	 * registry lookup needed to know the cheapest matching Focus cost.
+	 */
+	public static Optional<Component> previewOf(Player player, Optional<Pact> pact, boolean discord,
+			Map<Affinity, Integer> counts, int remainingBudget) {
+		if (pact.isPresent() || discord || counts.size() != 1) {
 			return Optional.empty();
 		}
 		Map.Entry<Affinity, Integer> only = counts.entrySet().iterator().next();
@@ -204,11 +216,11 @@ public final class Pacts {
 			return Optional.empty();
 		}
 		Affinity affinity = only.getKey();
-		if (remainingBudget(player) < cheapestFocusCost(player, affinity)) {
+		if (remainingBudget < cheapestFocusCost(player, affinity)) {
 			return Optional.empty();
 		}
-		Pact pact = Pact.ofAffinity(affinity);
-		return Optional.of(pact.displayName().withStyle(pact.chatColor(), ChatFormatting.BOLD)
+		Pact next = Pact.ofAffinity(affinity);
+		return Optional.of(next.displayName().withStyle(next.chatColor(), ChatFormatting.BOLD)
 			.append(Component.literal(" needs 1 " + affinityName(affinity) + " Focus")
 				.withStyle(ChatFormatting.GRAY)));
 	}
