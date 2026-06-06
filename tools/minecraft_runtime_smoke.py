@@ -125,6 +125,16 @@ def scan_log_text(text: str) -> list[LogProblem]:
     return scan_log_lines(text.splitlines())
 
 
+def write_stdout(text: str) -> None:
+    try:
+        sys.stdout.write(text)
+    except UnicodeEncodeError:
+        encoding = sys.stdout.encoding or "utf-8"
+        safe_text = text.encode(encoding, errors="replace").decode(encoding, errors="replace")
+        sys.stdout.write(safe_text)
+    sys.stdout.flush()
+
+
 def default_gradle_executable() -> str:
     if os.name == "nt":
         return "gradlew.bat"
@@ -290,8 +300,7 @@ def consume_output(
             continue
         raw_line = str(item)
         if echo:
-            sys.stdout.write(raw_line)
-            sys.stdout.flush()
+            write_stdout(raw_line)
         line = normalize_log_line(raw_line)
         log_lines.append(line)
         if is_success_line(line):

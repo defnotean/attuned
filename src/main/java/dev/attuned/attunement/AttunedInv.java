@@ -16,6 +16,10 @@ import java.util.List;
 public record AttunedInv(List<ItemStack> items) {
 	public static final int SIZE = 6;
 
+	public AttunedInv {
+		items = sizedItems(items);
+	}
+
 	public static final Codec<AttunedInv> CODEC =
 		ItemStack.OPTIONAL_CODEC.listOf().xmap(AttunedInv::sized, AttunedInv::items);
 
@@ -27,11 +31,17 @@ public record AttunedInv(List<ItemStack> items) {
 	}
 
 	private static AttunedInv sized(List<ItemStack> source) {
+		return new AttunedInv(source);
+	}
+
+	private static List<ItemStack> sizedItems(List<ItemStack> source) {
 		List<ItemStack> list = new ArrayList<>(SIZE);
+		int sourceSize = source == null ? 0 : source.size();
 		for (int i = 0; i < SIZE; i++) {
-			list.add(i < source.size() ? source.get(i) : ItemStack.EMPTY);
+			ItemStack stack = i < sourceSize ? source.get(i) : ItemStack.EMPTY;
+			list.add(stack == null ? ItemStack.EMPTY : stack);
 		}
-		return new AttunedInv(list);
+		return List.copyOf(list);
 	}
 
 	public ItemStack get(int slot) {

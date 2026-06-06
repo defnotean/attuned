@@ -1,5 +1,6 @@
 from pathlib import Path
 import importlib.util
+from unittest import mock
 import tempfile
 import unittest
 
@@ -86,6 +87,30 @@ class MinecraftRuntimeSmokeContractTest(unittest.TestCase):
 		args = smoke.parse_args([])
 
 		self.assertFalse(args.accept_eula)
+
+	def test_console_echo_replaces_characters_not_supported_by_stdout_encoding(self) -> None:
+		class Cp1252Stdout:
+			encoding = "cp1252"
+
+			def __init__(self) -> None:
+				self.writes: list[str] = []
+				self.flush_count = 0
+
+			def write(self, text: str) -> int:
+				text.encode(self.encoding)
+				self.writes.append(text)
+				return len(text)
+
+			def flush(self) -> None:
+				self.flush_count += 1
+
+		stdout = Cp1252Stdout()
+
+		with mock.patch.object(smoke.sys, "stdout", stdout):
+			smoke.write_stdout("Completed in 1 \N{GREEK SMALL LETTER MU}s\n")
+
+		self.assertEqual(["Completed in 1 ?s\n"], stdout.writes)
+		self.assertEqual(1, stdout.flush_count)
 
 
 if __name__ == "__main__":
