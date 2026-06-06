@@ -166,4 +166,12 @@ class BudgetResolverTest {
 			() -> BudgetResolver.resolveDetailed(candidates, 0));
 		assertEquals("candidate", missingCandidate.getMessage());
 	}
+
+	@Test
+	void resolverRejectsDuplicateCandidateSlotsClearly() {
+		IllegalArgumentException duplicateSlot = assertThrows(IllegalArgumentException.class,
+			() -> BudgetResolver.resolveDetailed(List.of(focus(0, 1), focus(0, 1)), 2));
+
+		assertEquals("slot must be unique", duplicateSlot.getMessage());
+	}
 }

@@ -85,10 +85,14 @@ public final class BudgetResolver {
 		requireNonNegativeBudget(budget);
 		int used = 0;
 		Set<I> activeUnique = new HashSet<>();
+		Set<Integer> seenSlots = new HashSet<>();
 		List<Integer> active = new ArrayList<>();
 		Map<Integer, DormantReason> dormantReasons = new LinkedHashMap<>();
 		for (Candidate<I> candidate : candidates) {
 			Objects.requireNonNull(candidate, "candidate");
+			if (!seenSlots.add(candidate.slot())) {
+				throw new IllegalArgumentException("slot must be unique");
+			}
 			// A later copy of a unique Focus stays dormant.
 			if (candidate.unique() && activeUnique.contains(candidate.identity())) {
 				dormantReasons.put(candidate.slot(), DormantReason.DUPLICATE_UNIQUE);
