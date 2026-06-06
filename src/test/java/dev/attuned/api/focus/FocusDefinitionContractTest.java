@@ -39,11 +39,15 @@ class FocusDefinitionContractTest {
 	void focusDefinitionProgrammaticCostMatchesCodecRange() throws IOException {
 		String source = read(FOCUS_DEFINITION);
 
-		assertTrue(source.contains("Codec.intRange(0, 64)"),
-			"FocusDefinition codec should reject impossible datapack costs.");
-		assertTrue(source.contains("if (cost < 0 || cost > 64)"),
-			"FocusDefinition constructor should enforce the same cost range for programmatic definitions.");
-		assertTrue(source.contains("throw new IllegalArgumentException(\"Focus cost must be between 0 and 64\")"),
+		assertTrue(source.contains("private static final int MIN_COST = 0;"),
+			"FocusDefinition should name the minimum valid cost once.");
+		assertTrue(source.contains("private static final int MAX_COST = 64;"),
+			"FocusDefinition should name the maximum valid cost once.");
+		assertTrue(source.contains("Codec.intRange(MIN_COST, MAX_COST)"),
+			"FocusDefinition codec should use the same named range as the constructor.");
+		assertTrue(source.contains("if (cost < MIN_COST || cost > MAX_COST)"),
+			"FocusDefinition constructor should enforce the same named cost range for programmatic definitions.");
+		assertTrue(source.contains("\"Focus cost must be between \" + MIN_COST + \" and \" + MAX_COST"),
 			"Programmatic cost range failures should explain the valid FocusDefinition range.");
 	}
 

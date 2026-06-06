@@ -27,10 +27,13 @@ public record FocusDefinition(
 		List<ModifierEntry> modifiers,
 		Optional<Identifier> behavior) {
 
+	private static final int MIN_COST = 0;
+	private static final int MAX_COST = 64;
+
 	public FocusDefinition {
 		item = Objects.requireNonNull(item, "item");
-		if (cost < 0 || cost > 64) {
-			throw new IllegalArgumentException("Focus cost must be between 0 and 64");
+		if (cost < MIN_COST || cost > MAX_COST) {
+			throw new IllegalArgumentException("Focus cost must be between " + MIN_COST + " and " + MAX_COST);
 		}
 		affinity = Objects.requireNonNull(affinity, "affinity");
 		faction = Objects.requireNonNull(faction, "faction");
@@ -40,7 +43,7 @@ public record FocusDefinition(
 
 	public static final Codec<FocusDefinition> CODEC = RecordCodecBuilder.create(instance -> instance.group(
 		BuiltInRegistries.ITEM.holderByNameCodec().fieldOf("item").forGetter(FocusDefinition::item),
-		Codec.intRange(0, 64).optionalFieldOf("cost", 1).forGetter(FocusDefinition::cost),
+		Codec.intRange(MIN_COST, MAX_COST).optionalFieldOf("cost", 1).forGetter(FocusDefinition::cost),
 		Codec.BOOL.optionalFieldOf("unique", false).forGetter(FocusDefinition::unique),
 		Affinity.CODEC.optionalFieldOf("affinity").forGetter(FocusDefinition::affinity),
 		Identifier.CODEC.optionalFieldOf("faction").forGetter(FocusDefinition::faction),
