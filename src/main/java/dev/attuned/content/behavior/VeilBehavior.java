@@ -1,11 +1,13 @@
 package dev.attuned.content.behavior;
 
 import dev.attuned.AttunedPlayerCleanup;
+import dev.attuned.AttunedServerCleanup;
 import dev.attuned.api.focus.FocusBehavior;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
@@ -27,6 +29,7 @@ public final class VeilBehavior implements FocusBehavior {
 
 	public VeilBehavior() {
 		AttunedPlayerCleanup.onForgetPlayer(VeilBehavior::forgetPlayer);
+		AttunedServerCleanup.onStopServer(VeilBehavior::forgetAllPlayers);
 	}
 
 	@Override
@@ -81,6 +84,14 @@ public final class VeilBehavior implements FocusBehavior {
 		if (state != null) {
 			clear(player, state, false);
 		}
+	}
+
+	private static void forgetAllPlayers(MinecraftServer server) {
+		for (ServerPlayer player : server.getPlayerList().getPlayers()) {
+			forgetPlayer(player);
+		}
+		STATES.clear();
+		BLOCKED_UNTIL.clear();
 	}
 
 	private static boolean canCharge(ServerPlayer player, long now) {

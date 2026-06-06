@@ -2,6 +2,7 @@ package dev.attuned.content.behavior;
 
 import dev.attuned.Attuned;
 import dev.attuned.AttunedPlayerCleanup;
+import dev.attuned.AttunedServerCleanup;
 import dev.attuned.attunement.AttunedAttachments;
 import dev.attuned.attunement.AttunedInv;
 import dev.attuned.attunement.Attunement;
@@ -43,6 +44,7 @@ public final class TremorBehavior implements dev.attuned.api.focus.FocusBehavior
 	public TremorBehavior() {
 		PlayerBlockBreakEvents.AFTER.register(TremorBehavior::afterBlockBreak);
 		AttunedPlayerCleanup.onForget(LAST_SCAN::remove);
+		AttunedServerCleanup.onStop(LAST_SCAN::clear);
 	}
 
 	private static void afterBlockBreak(Level level, Player player, BlockPos pos,

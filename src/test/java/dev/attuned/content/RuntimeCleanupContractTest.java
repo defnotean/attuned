@@ -45,6 +45,10 @@ class RuntimeCleanupContractTest {
 		Path.of("src/main/java/dev/attuned/onboarding/Onboarding.java");
 	private static final Path HARPOON =
 		Path.of("src/main/java/dev/attuned/content/behavior/HarpoonBehavior.java");
+	private static final Path TREMOR =
+		Path.of("src/main/java/dev/attuned/content/behavior/TremorBehavior.java");
+	private static final Path VEIL =
+		Path.of("src/main/java/dev/attuned/content/behavior/VeilBehavior.java");
 
 	@Test
 	void playerCleanupRegistersDisconnectHookOnceAndRejectsNullCallbacks() throws IOException {
@@ -125,6 +129,10 @@ class RuntimeCleanupContractTest {
 		assertContains(read(ALTAR_ANIMATIONS), "serverTick = 0;");
 		assertContains(read(ONBOARDING), "AttunedServerCleanup.onStop(() -> tickCounter = 0)");
 		assertContains(read(HARPOON), "AttunedServerCleanup.onStopServer(HarpoonBehavior::removeAllTemporaryHarpoons)");
+		assertContains(read(TREMOR), "AttunedServerCleanup.onStop(LAST_SCAN::clear)");
+		assertContains(read(VEIL), "AttunedServerCleanup.onStopServer(VeilBehavior::forgetAllPlayers)");
+		assertContains(read(VEIL), "STATES.clear();");
+		assertContains(read(VEIL), "BLOCKED_UNTIL.clear();");
 	}
 
 	@Test
