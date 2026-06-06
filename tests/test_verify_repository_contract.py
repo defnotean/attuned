@@ -23,6 +23,22 @@ def write_minimal_png(path: Path, width: int, height: int) -> None:
     path.write_bytes(b"\x89PNG\r\n\x1a\n" + struct.pack(">I", 13) + chunk + struct.pack(">I", crc))
 
 
+def png_chunk(chunk_type: bytes, data: bytes = b"") -> bytes:
+    chunk = chunk_type + data
+    crc = zlib.crc32(chunk) & 0xFFFFFFFF
+    return struct.pack(">I", len(data)) + chunk + struct.pack(">I", crc)
+
+
+def write_complete_png(path: Path, width: int, height: int) -> None:
+    ihdr = struct.pack(">IIBBBBB", width, height, 8, 6, 0, 0, 0)
+    path.write_bytes(
+        b"\x89PNG\r\n\x1a\n"
+        + png_chunk(b"IHDR", ihdr)
+        + png_chunk(b"IDAT", zlib.compress(b""))
+        + png_chunk(b"IEND")
+    )
+
+
 class VerifyRepositoryContractTest(unittest.TestCase):
     def test_png_ihdr_parser_returns_dimensions(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -70,6 +86,37 @@ class VerifyRepositoryContractTest(unittest.TestCase):
             self.assertIn("README.md", problems[0])
             self.assertIn("advertises 1 Foci", problems[0])
             self.assertIn("ships 2 FocusDefinition files", problems[0])
+
+    def test_modrinth_gallery_pngs_report_missing_or_wrong_sized_panels(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            gallery = root / "docs" / "modrinth-gallery"
+            gallery.mkdir(parents=True)
+            for name in verify_repository.EXPECTED_MODRINTH_GALLERY_PNGS:
+                write_complete_png(gallery / name, 1920, 1080)
+            write_complete_png(gallery / "attuned-zephyr-foci.png", 1280, 720)
+            (gallery / "attuned-holy-foci.png").unlink()
+
+            problems = verify_repository.modrinth_gallery_png_problems(root)
+
+            self.assertEqual(len(problems), 2)
+            self.assertTrue(any("attuned-zephyr-foci.png" in problem and "1280x720" in problem for problem in problems))
+            self.assertTrue(any("attuned-holy-foci.png" in problem and "missing" in problem for problem in problems))
+
+    def test_modrinth_gallery_pngs_report_truncated_panels(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            gallery = root / "docs" / "modrinth-gallery"
+            gallery.mkdir(parents=True)
+            for name in verify_repository.EXPECTED_MODRINTH_GALLERY_PNGS:
+                write_complete_png(gallery / name, 1920, 1080)
+            write_minimal_png(gallery / "attuned-zephyr-foci.png", 1920, 1080)
+
+            problems = verify_repository.modrinth_gallery_png_problems(root)
+
+            self.assertEqual(len(problems), 1)
+            self.assertIn("attuned-zephyr-foci.png", problems[0])
+            self.assertIn("IDAT", problems[0])
 
 
 if __name__ == "__main__":

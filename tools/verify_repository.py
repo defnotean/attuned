@@ -14,9 +14,21 @@ from typing import Iterable
 ROOT = Path(__file__).resolve().parents[1]
 SRC_ROOT = ROOT / "src"
 PNG_RESOURCE_ROOT = SRC_ROOT / "main" / "resources"
+MODRINTH_GALLERY_RELATIVE_DIR = Path("docs/modrinth-gallery")
 PYTHON_ROOTS = (ROOT / "tools", ROOT / "tests")
 SOURCE_SCAN_ROOTS = (ROOT / "src", ROOT / "tools", ROOT / "tests", ROOT / ".github")
 FOCUS_DEFINITION_RELATIVE_DIR = Path("src/main/resources/data/attuned/attuned/focus")
+EXPECTED_MODRINTH_GALLERY_PNGS = (
+    "attuned-all-foci-real-assets.png",
+    "attuned-apex-discord-neutral.png",
+    "attuned-bastion-foci.png",
+    "attuned-fury-foci.png",
+    "attuned-holy-foci.png",
+    "attuned-neutral-foci-i.png",
+    "attuned-neutral-foci-ii.png",
+    "attuned-zephyr-foci.png",
+)
+MODRINTH_GALLERY_SIZE = (1920, 1080)
 
 SOURCE_SUFFIXES = {
     ".accesswidener",
@@ -176,6 +188,40 @@ def png_dimensions(path: Path) -> tuple[int, int]:
     return width, height
 
 
+def validate_png_chunks(path: Path) -> None:
+    seen_idat = False
+    seen_iend = False
+    with path.open("rb") as handle:
+        signature = handle.read(8)
+        if signature != PNG_SIGNATURE:
+            raise ValueError("invalid PNG signature")
+        while True:
+            length_bytes = handle.read(4)
+            if not length_bytes:
+                break
+            if len(length_bytes) != 4:
+                raise ValueError("truncated PNG chunk length")
+            length = struct.unpack(">I", length_bytes)[0]
+            chunk_type = handle.read(4)
+            data = handle.read(length)
+            crc_bytes = handle.read(4)
+            if len(chunk_type) != 4 or len(data) != length or len(crc_bytes) != 4:
+                raise ValueError("truncated PNG chunk")
+            expected_crc = struct.unpack(">I", crc_bytes)[0]
+            actual_crc = zlib.crc32(chunk_type + data) & 0xFFFFFFFF
+            if expected_crc != actual_crc:
+                raise ValueError(f"{chunk_type.decode('ascii', errors='replace')} CRC mismatch")
+            if chunk_type == b"IDAT":
+                seen_idat = True
+            elif chunk_type == b"IEND":
+                seen_iend = True
+                break
+        if not seen_idat:
+            raise ValueError("missing IDAT chunk")
+        if not seen_iend:
+            raise ValueError("missing IEND chunk")
+
+
 def check_png_resources() -> str:
     png_files = sorted(PNG_RESOURCE_ROOT.rglob("*.png"))
     problems: list[str] = []
@@ -187,6 +233,36 @@ def check_png_resources() -> str:
     if problems:
         raise CheckFailed("PNG resource headers", problems)
     return f"PNG resource headers: {len(png_files)} files"
+
+
+def modrinth_gallery_png_problems(root: Path = ROOT) -> list[str]:
+    gallery = root / MODRINTH_GALLERY_RELATIVE_DIR
+    problems: list[str] = []
+    for name in EXPECTED_MODRINTH_GALLERY_PNGS:
+        path = gallery / name
+        if not path.is_file():
+            problems.append(f"{relative(path, root)}: missing expected gallery PNG")
+            continue
+        try:
+            dimensions = png_dimensions(path)
+            validate_png_chunks(path)
+        except (OSError, ValueError) as exc:
+            problems.append(f"{relative(path, root)}: {exc}")
+            continue
+        if dimensions != MODRINTH_GALLERY_SIZE:
+            width, height = dimensions
+            expected_width, expected_height = MODRINTH_GALLERY_SIZE
+            problems.append(
+                f"{relative(path, root)}: expected {expected_width}x{expected_height}, found {width}x{height}"
+            )
+    return problems
+
+
+def check_modrinth_gallery_pngs() -> str:
+    problems = modrinth_gallery_png_problems()
+    if problems:
+        raise CheckFailed("Modrinth gallery PNGs", problems)
+    return f"Modrinth gallery PNGs: {len(EXPECTED_MODRINTH_GALLERY_PNGS)} files"
 
 
 def scan_issue_markers(paths: Iterable[Path], root: Path = ROOT) -> list[str]:
@@ -352,6 +428,7 @@ def run_checks() -> int:
     checks = (
         check_src_json,
         check_png_resources,
+        check_modrinth_gallery_pngs,
         check_readme_focus_count,
         check_issue_markers,
         check_assignment_risks,
