@@ -62,4 +62,20 @@ class AttunementSourceContractTest {
 		assertTrue(source.contains("private static ParticleOptions auraParticle(Set<Affinity> activeAffinities)"),
 			"Aura particle choice should not recompute the player's active slots");
 	}
+
+	@Test
+	void focusBehaviorCallbacksAreIsolated() throws IOException {
+		String source = Files.readString(EFFECTS_SOURCE, StandardCharsets.UTF_8);
+
+		assertTrue(source.contains("runBehaviorActivate(behavior, player, stack)"),
+			"Focus activation callbacks should be isolated through a logged helper");
+		assertTrue(source.contains("runBehaviorDeactivate(behavior, player, stack)"),
+			"Focus deactivation callbacks should be isolated through a logged helper");
+		assertTrue(source.contains("runBehaviorTick(behavior, player, stack)"),
+			"Focus tick callbacks should be isolated through a logged helper");
+		assertTrue(source.contains("catch (RuntimeException e)"),
+			"Focus behavior callback failures should be caught so one Focus cannot stop the whole tick");
+		assertTrue(source.contains("Attuned.LOGGER.warn(\"Attuned Focus behavior"),
+			"Focus behavior callback failures should be logged");
+	}
 }

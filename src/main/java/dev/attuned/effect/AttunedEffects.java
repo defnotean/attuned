@@ -250,7 +250,7 @@ public final class AttunedEffects {
 		def.behavior().ifPresent(behaviorId -> {
 			FocusBehavior behavior = AttunedRegistries.getBehavior(behaviorId);
 			if (behavior != null) {
-				behavior.onActivate(player, stack);
+				runBehaviorActivate(behavior, player, stack);
 			}
 		});
 	}
@@ -275,7 +275,7 @@ public final class AttunedEffects {
 		def.behavior().ifPresent(behaviorId -> {
 			FocusBehavior behavior = AttunedRegistries.getBehavior(behaviorId);
 			if (behavior != null) {
-				behavior.onDeactivate(player, stack);
+				runBehaviorDeactivate(behavior, player, stack);
 			}
 		});
 	}
@@ -310,7 +310,37 @@ public final class AttunedEffects {
 		Attunement.definitionFor(player, stack)
 			.flatMap(FocusDefinition::behavior)
 			.map(AttunedRegistries::getBehavior)
-			.ifPresent(behavior -> behavior.onTick(player, stack));
+			.ifPresent(behavior -> runBehaviorTick(behavior, player, stack));
+	}
+
+	private static void runBehaviorActivate(FocusBehavior behavior, ServerPlayer player, ItemStack stack) {
+		try {
+			behavior.onActivate(player, stack);
+		} catch (RuntimeException e) {
+			logBehaviorFailure("activation", behavior, player, stack, e);
+		}
+	}
+
+	private static void runBehaviorDeactivate(FocusBehavior behavior, ServerPlayer player, ItemStack stack) {
+		try {
+			behavior.onDeactivate(player, stack);
+		} catch (RuntimeException e) {
+			logBehaviorFailure("deactivation", behavior, player, stack, e);
+		}
+	}
+
+	private static void runBehaviorTick(FocusBehavior behavior, ServerPlayer player, ItemStack stack) {
+		try {
+			behavior.onTick(player, stack);
+		} catch (RuntimeException e) {
+			logBehaviorFailure("tick", behavior, player, stack, e);
+		}
+	}
+
+	private static void logBehaviorFailure(String phase, FocusBehavior behavior,
+			ServerPlayer player, ItemStack stack, RuntimeException e) {
+		Attuned.LOGGER.warn("Attuned Focus behavior {} failed for {} using {} ({})",
+			phase, player.getUUID(), stack.getItem(), behavior.getClass().getName(), e);
 	}
 
 	/** A subtle ambient particle aura shown while the player has any active Focus. */
