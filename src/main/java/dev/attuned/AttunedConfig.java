@@ -37,6 +37,9 @@ public record AttunedConfig(
 		boolean broadcastPactDeaths) {
 
 	public AttunedConfig {
+		if (capacityCap < 1) {
+			throw new IllegalArgumentException("capacityCap must be at least 1");
+		}
 		startingCapacity = Math.min(startingCapacity, capacityCap);
 	}
 
