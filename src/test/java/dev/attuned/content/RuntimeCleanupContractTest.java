@@ -69,6 +69,7 @@ class RuntimeCleanupContractTest {
 		"ServerEntityLevelChangeEvents.AFTER_PLAYER_CHANGE_LEVEL.register",
 		"ServerLifecycleEvents.SERVER_STOPPED.register",
 		"ServerLivingEntityEvents.ALLOW_DAMAGE.register",
+		"ServerLivingEntityEvents.ALLOW_DEATH.register",
 		"ServerLivingEntityEvents.AFTER_DAMAGE.register",
 		"ServerLivingEntityEvents.AFTER_DEATH.register",
 		"ServerPlayConnectionEvents.DISCONNECT.register",

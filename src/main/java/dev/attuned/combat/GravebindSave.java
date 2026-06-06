@@ -32,9 +32,15 @@ public final class GravebindSave {
 
 	/** Per-player game-time of the last save. */
 	private static final Map<UUID, Long> lastSave = new HashMap<>();
+	private static boolean initialized;
 
 	/** Registers the death hook that drives the Gravebind save. */
 	public static void init() {
+		if (initialized) {
+			return;
+		}
+		initialized = true;
+
 		ServerLivingEntityEvents.ALLOW_DEATH.register((entity, source, amount) -> {
 			if (!(entity instanceof ServerPlayer player) || !hasGravebindActive(player)) {
 				return true;
