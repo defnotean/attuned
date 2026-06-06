@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import dev.attuned.attunement.BudgetResolver.Candidate;
 import dev.attuned.attunement.BudgetResolver.DormantReason;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
@@ -141,5 +142,19 @@ class BudgetResolverTest {
 	void uniqueCandidateRejectsNullIdentity() {
 		assertThrows(NullPointerException.class, () -> new Candidate<String>(0, 1, true, null),
 			"Unique budget candidates need a real identity token for duplicate detection.");
+	}
+
+	@Test
+	void resolverRejectsNullCandidateInputsClearly() {
+		NullPointerException missingList = assertThrows(NullPointerException.class,
+			() -> BudgetResolver.resolveDetailed(null, 0));
+		assertEquals("candidates", missingList.getMessage());
+
+		List<Candidate<String>> candidates = new ArrayList<>();
+		candidates.add(null);
+
+		NullPointerException missingCandidate = assertThrows(NullPointerException.class,
+			() -> BudgetResolver.resolveDetailed(candidates, 0));
+		assertEquals("candidate", missingCandidate.getMessage());
 	}
 }

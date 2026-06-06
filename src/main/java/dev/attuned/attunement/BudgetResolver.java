@@ -81,12 +81,14 @@ public final class BudgetResolver {
 	 * {@code candidates} must be in priority order.
 	 */
 	public static <I> Resolution resolveDetailed(List<Candidate<I>> candidates, int budget) {
+		Objects.requireNonNull(candidates, "candidates");
 		requireNonNegativeBudget(budget);
 		int used = 0;
 		Set<I> activeUnique = new HashSet<>();
 		List<Integer> active = new ArrayList<>();
 		Map<Integer, DormantReason> dormantReasons = new LinkedHashMap<>();
 		for (Candidate<I> candidate : candidates) {
+			Objects.requireNonNull(candidate, "candidate");
 			// A later copy of a unique Focus stays dormant.
 			if (candidate.unique() && activeUnique.contains(candidate.identity())) {
 				dormantReasons.put(candidate.slot(), DormantReason.DUPLICATE_UNIQUE);
