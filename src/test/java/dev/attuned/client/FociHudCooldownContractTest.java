@@ -43,6 +43,12 @@ class FociHudCooldownContractTest {
 			"The Foci HUD should draw a ring around the active ability Focus when it is down.");
 		assertTrue(hud.contains("remainingTicks()"),
 			"The ring should be driven by the remaining cooldown ticks.");
+		assertTrue(hud.contains("private static boolean hasActiveAbility(FocusBehavior behavior, Player player, ItemStack stack)"),
+			"The fallback selected ability lookup should isolate Focus behavior availability calls.");
+		assertTrue(hud.contains("catch (RuntimeException e)"),
+			"The HUD should not let a broken Focus behavior crash rendering.");
+		assertTrue(hud.contains("Attuned.LOGGER.warn(\"Attuned Focus ability HUD availability failed"),
+			"Render-time behavior availability failures should be logged.");
 		assertTrue(client.contains("FocusAbilityClientState.init()"),
 			"The client initializer should install the cooldown status receiver.");
 	}

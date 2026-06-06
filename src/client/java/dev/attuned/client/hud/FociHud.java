@@ -149,11 +149,21 @@ public final class FociHud {
 				.flatMap(FocusDefinition::behavior)
 				.map(AttunedRegistries::getBehavior)
 				.orElse(null);
-			if (behavior != null && behavior.hasActiveAbility()) {
+			if (behavior != null && hasActiveAbility(behavior, player, stack)) {
 				return slot;
 			}
 		}
 		return -1;
+	}
+
+	private static boolean hasActiveAbility(FocusBehavior behavior, Player player, ItemStack stack) {
+		try {
+			return behavior.hasActiveAbility();
+		} catch (RuntimeException e) {
+			Attuned.LOGGER.warn("Attuned Focus ability HUD availability failed for {} using {} ({})",
+				player.getUUID(), stack.getItem(), behavior.getClass().getName(), e);
+			return false;
+		}
 	}
 
 	private static void drawFocusGrid(GuiGraphicsExtractor graphics, Player player, AttunedInv inv,
