@@ -60,7 +60,9 @@ public record AttunedInv(List<ItemStack> items) {
 		if (stack == null || stack.isEmpty()) {
 			return ItemStack.EMPTY;
 		}
-		return stack.copy();
+		ItemStack copy = stack.copy();
+		copy.setCount(Math.min(copy.getCount(), 1));
+		return copy;
 	}
 
 	public ItemStack get(int slot) {

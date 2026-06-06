@@ -34,6 +34,14 @@ class AttunedInvTest {
 	}
 
 	@Test
+	void copyStackCapsStoredStacksToOneItem() throws IOException {
+		String source = readSource();
+
+		assertTrue(source.contains("copy.setCount(Math.min(copy.getCount(), 1));"),
+			"AttunedInv should enforce one-Focus-per-slot even for direct construction and persisted decode.");
+	}
+
+	@Test
 	void constructorCopiesMutableItemStacks() throws IOException {
 		String source = readSource();
 
