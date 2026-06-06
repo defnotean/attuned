@@ -107,41 +107,48 @@ public final class AttunedCombat {
 	 */
 	public static float applyAffinity(ServerLevel level, LivingEntity defender,
 			DamageSource source, float amount) {
-		float multiplier = affinityMultiplier(defender, source);
+		return applyAffinity(level, defender, source, amount, CombatContext.of(defender, source));
+	}
+
+	public static float applyAffinity(ServerLevel level, LivingEntity defender,
+			DamageSource source, float amount, CombatContext context) {
+		float multiplier = affinityMultiplier(defender, source, context);
 		if (multiplier != 1.0F) {
-			matchupFeedback(level, defender, source, multiplier);
+			matchupFeedback(level, defender, source, multiplier, context);
 		}
-		if (attackerOf(source) instanceof Player && !(defender instanceof Player)) {
+		if (context.attacker() instanceof Player && !(defender instanceof Player)) {
 			mobAffinitySpark(level, defender);
 		}
 		float adjusted = amount * multiplier;
-		if (cinderApplies(defender, source)) {
+		if (cinderApplies(defender, source, context)) {
 			adjusted *= (1.0F + CINDER_BURNING_BONUS);
 		}
-		if (sunlanceApplies(defender, source)) {
+		if (sunlanceApplies(defender, source, context)) {
 			adjusted *= (1.0F + SUNLANCE_BONUS);
 		}
 		return adjusted;
 	}
 
-	private static boolean cinderApplies(LivingEntity defender, DamageSource source) {
-		if (!(attackerOf(source) instanceof Player player) || source.getDirectEntity() != player) {
+	private static boolean cinderApplies(LivingEntity defender, DamageSource source,
+			CombatContext context) {
+		if (!(context.attacker() instanceof Player player) || source.getDirectEntity() != player) {
 			return false;
 		}
 		if (source.is(net.minecraft.tags.DamageTypeTags.IS_PROJECTILE)
 				|| source.is(net.minecraft.tags.DamageTypeTags.IS_EXPLOSION)) {
 			return false;
 		}
-		return defender.isOnFire() && hasActiveFocus(player, CINDER_FOCUS);
+		return defender.isOnFire() && context.hasActiveFocus(player, CINDER_FOCUS);
 	}
 
-	private static boolean sunlanceApplies(LivingEntity defender, DamageSource source) {
-		if (!(attackerOf(source) instanceof Player player) || !isDirectChargedMelee(player, source,
-				SUNLANCE_CHARGED_SWING_THRESHOLD) || !hasActiveFocus(player, SUNLANCE_FOCUS)) {
+	private static boolean sunlanceApplies(LivingEntity defender, DamageSource source,
+			CombatContext context) {
+		if (!(context.attacker() instanceof Player player) || !isDirectChargedMelee(player, source,
+				SUNLANCE_CHARGED_SWING_THRESHOLD) || !context.hasActiveFocus(player, SUNLANCE_FOCUS)) {
 			return false;
 		}
 		return defender.typeHolder().is(EntityTypeTags.UNDEAD)
-			|| affinityOf(defender).filter(affinity -> affinity == Affinity.FURY).isPresent();
+			|| context.affinityOf(defender).filter(affinity -> affinity == Affinity.FURY).isPresent();
 	}
 
 	private static boolean isDirectChargedMelee(Player player, DamageSource source, float threshold) {
@@ -190,20 +197,25 @@ public final class AttunedCombat {
 	 * matchup with no counter (or an unattuned combatant) leaves damage at 1.0.
 	 */
 	public static float affinityMultiplier(LivingEntity defender, DamageSource source) {
-		LivingEntity attacker = attackerOf(source);
+		return affinityMultiplier(defender, source, CombatContext.of(defender, source));
+	}
+
+	public static float affinityMultiplier(LivingEntity defender, DamageSource source,
+			CombatContext context) {
+		LivingEntity attacker = context.attacker();
 		if (attacker == null || attacker == defender) {
 			return 1.0F;
 		}
 		if (defender instanceof Player defenderPlayer
-				&& Apex.suppressesIncomingAdvantage(defenderPlayer, attacker)) {
+				&& Apex.suppressesIncomingAdvantage(defenderPlayer, attacker, context)) {
 			return 1.0F;
 		}
 		// Discord — clashing affinities — is a glass cannon on both ends.
-		if (isDiscord(attacker) || isDiscord(defender)) {
+		if (context.isDiscord(attacker) || context.isDiscord(defender)) {
 			return ADVANTAGE_MULTIPLIER;
 		}
-		Optional<Affinity> attackerAffinity = affinityOf(attacker);
-		Optional<Affinity> defenderAffinity = affinityOf(defender);
+		Optional<Affinity> attackerAffinity = context.affinityOf(attacker);
+		Optional<Affinity> defenderAffinity = context.affinityOf(defender);
 		if (attackerAffinity.isEmpty() || defenderAffinity.isEmpty()) {
 			return 1.0F;
 		}
@@ -229,13 +241,13 @@ public final class AttunedCombat {
 	 * disadvantage — so players can read the cycle.
 	 */
 	private static void matchupFeedback(ServerLevel level, LivingEntity defender,
-			DamageSource source, float multiplier) {
+			DamageSource source, float multiplier, CombatContext context) {
 		double x = defender.getX();
 		double y = defender.getY() + defender.getBbHeight() * 0.6;
 		double z = defender.getZ();
 		if (multiplier > 1.0F) {
-			LivingEntity attacker = attackerOf(source);
-			int color = attacker != null ? matchupColor(attacker) : 0xFFFFFF;
+			LivingEntity attacker = context.attacker();
+			int color = attacker != null ? matchupColor(attacker, context) : 0xFFFFFF;
 			level.sendParticles(new DustParticleOptions(color, 1.0F), x, y, z, 10, 0.3, 0.3, 0.3, 0.0);
 			level.playSound(null, defender.blockPosition(),
 				SoundEvents.PLAYER_ATTACK_CRIT, SoundSource.PLAYERS, 0.7F, 1.2F);
@@ -247,11 +259,11 @@ public final class AttunedCombat {
 	}
 
 	/** The feedback colour for an attacker: its affinity colour, or the Discord magenta. */
-	private static int matchupColor(LivingEntity attacker) {
-		if (isDiscord(attacker)) {
+	private static int matchupColor(LivingEntity attacker, CombatContext context) {
+		if (context.isDiscord(attacker)) {
 			return AffinityColors.DISCORD_RGB;
 		}
-		return affinityOf(attacker).map(AttunedCombat::affinityColor).orElse(0xFFFFFF);
+		return context.affinityOf(attacker).map(AttunedCombat::affinityColor).orElse(0xFFFFFF);
 	}
 
 	/** The 24-bit RGB form of an affinity's display colour, for {@code DustParticleOptions}. */

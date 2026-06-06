@@ -80,7 +80,7 @@ class FocusPvpAvailabilityContractTest {
 			"Radiant Covenant should reveal player opponents when PvP allows it.");
 		assertTrue(apex.contains("CombatTargets.canAffectPlayer(attackerPlayer, targetPlayer)"),
 			"Offensive Apex capstones should be guarded by the same PvP player-target rules.");
-		assertTrue(apex.contains("CombatTargets.hasAffinity(defender)"),
+		assertTrue(apex.contains("context.hasAffinityPressure(defender)"),
 			"Maelstrom should treat player attunement as affinity pressure.");
 	}
 

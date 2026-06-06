@@ -195,24 +195,32 @@ public final class Apex {
 		if (amount <= 0.0F) {
 			return amount;
 		}
-		LivingEntity attacker = AttunedCombat.attackerOf(source);
+		return adjustDamage(defender, source, amount, CombatContext.of(defender, source));
+	}
+
+	public static float adjustDamage(LivingEntity defender, DamageSource source, float amount,
+			CombatContext context) {
+		if (amount <= 0.0F) {
+			return amount;
+		}
+		LivingEntity attacker = context.attacker();
 		Player defenderPlayer = defender instanceof Player defenderCandidate ? defenderCandidate : null;
 		Player attackerPlayer = attacker instanceof Player attackerCandidate ? attackerCandidate : null;
 		Capstone defenderCapstone = defenderPlayer != null
-			? capstoneOf(defenderPlayer).orElse(null)
+			? context.capstoneOf(defenderPlayer).orElse(null)
 			: null;
 		Capstone attackerCapstone = attackerPlayer != null
-			? capstoneOf(attackerPlayer).orElse(null)
+			? context.capstoneOf(attackerPlayer).orElse(null)
 			: null;
 		boolean defenderAtApex = defenderPlayer != null && defenderCapstone != null
-			&& Resonance.atApex(defenderPlayer);
+			&& context.atApex(defenderPlayer);
 		boolean attackerAtApex = attackerPlayer != null && attackerCapstone != null
-			&& Resonance.atApex(attackerPlayer);
+			&& context.atApex(attackerPlayer);
 
 		if (defenderPlayer != null
 				&& defenderCapstone == Capstone.UNYIELDING
 				&& defenderAtApex) {
-			Matchup matchup = matchupAgainst(Affinity.BASTION, attacker);
+			Matchup matchup = matchupAgainst(Affinity.BASTION, attacker, context);
 			if (matchup != Matchup.NEUTRALIZED) {
 				float fraction = matchup == Matchup.EMPOWERED ? CAP_EMPOWERED : CAP_NORMAL;
 				float cap = defenderPlayer.getMaxHealth() * fraction;
@@ -227,7 +235,7 @@ public final class Apex {
 				&& attackerCapstone == Capstone.EXECUTE
 				&& attackerAtApex
 				&& isApexMeleeTarget(defender, attackerPlayer, source)) {
-			Matchup matchup = matchupAgainst(Affinity.FURY, defender);
+			Matchup matchup = matchupAgainst(Affinity.FURY, defender, context);
 			if (matchup != Matchup.NEUTRALIZED) {
 				float threshold = matchup == Matchup.EMPOWERED ? EXECUTE_EMPOWERED : EXECUTE_NORMAL;
 				if (defender.getHealth() / defender.getMaxHealth() <= threshold) {
@@ -241,7 +249,7 @@ public final class Apex {
 				&& attackerCapstone == Capstone.JUDGMENT
 				&& attackerAtApex
 				&& isApexMeleeTarget(defender, attackerPlayer, source)) {
-			Matchup matchup = matchupAgainst(Affinity.HOLY, defender);
+			Matchup matchup = matchupAgainst(Affinity.HOLY, defender, context);
 			if (matchup == Matchup.EMPOWERED
 					&& defender.getHealth() / defender.getMaxHealth() <= JUDGMENT_THRESHOLD) {
 				amount *= (1.0F + JUDGMENT_DAMAGE_BONUS);
@@ -253,7 +261,7 @@ public final class Apex {
 				&& attackerCapstone == Capstone.MAELSTROM
 				&& attackerAtApex
 				&& isApexMeleeTarget(defender, attackerPlayer, source)
-				&& CombatTargets.hasAffinity(defender)) {
+				&& context.hasAffinityPressure(defender)) {
 			amount *= (1.0F + MAELSTROM_DAMAGE_BONUS);
 			markScrambled(attackerPlayer, defender);
 		}
@@ -285,6 +293,21 @@ public final class Apex {
 		}
 		return isAt(defender, Capstone.MAELSTROM)
 			&& Resonance.atApex(defender)
+			&& isScrambledBy(attacker, defender);
+	}
+
+	public static boolean suppressesIncomingAdvantage(Player defender, LivingEntity attacker,
+			CombatContext context) {
+		if (attacker == null) {
+			return false;
+		}
+		if (context.isAt(defender, Capstone.STILLPOINT)
+				&& context.atApex(defender)
+				&& context.hasAffinityPressure(attacker)) {
+			return true;
+		}
+		return context.isAt(defender, Capstone.MAELSTROM)
+			&& context.atApex(defender)
 			&& isScrambledBy(attacker, defender);
 	}
 
@@ -381,6 +404,17 @@ public final class Apex {
 	private static Matchup matchupAgainst(Affinity capstone, LivingEntity other) {
 		Optional<Affinity> otherAffinity =
 			other == null ? Optional.empty() : AttunedCombat.affinityOf(other);
+		return matchupAgainst(capstone, otherAffinity);
+	}
+
+	private static Matchup matchupAgainst(Affinity capstone, LivingEntity other,
+			CombatContext context) {
+		Optional<Affinity> otherAffinity =
+			other == null ? Optional.empty() : context.affinityOf(other);
+		return matchupAgainst(capstone, otherAffinity);
+	}
+
+	private static Matchup matchupAgainst(Affinity capstone, Optional<Affinity> otherAffinity) {
 		if (otherAffinity.isEmpty()) {
 			return Matchup.NORMAL;
 		}

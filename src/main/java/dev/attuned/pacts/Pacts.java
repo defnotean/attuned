@@ -12,6 +12,7 @@ import dev.attuned.attunement.AttunedInv;
 import dev.attuned.attunement.Attunement;
 import dev.attuned.combat.Apex;
 import dev.attuned.combat.AttunedCombat;
+import dev.attuned.combat.CombatContext;
 import dev.attuned.combat.CombatTargets;
 import dev.attuned.combat.MobAffinities;
 import dev.attuned.combat.Resonance;
@@ -270,20 +271,28 @@ public final class Pacts {
 		if (amount <= 0.0F) {
 			return amount;
 		}
+		return adjustDamage(defender, source, amount, CombatContext.of(defender, source));
+	}
+
+	public static float adjustDamage(LivingEntity defender, DamageSource source, float amount,
+			CombatContext context) {
+		if (amount <= 0.0F) {
+			return amount;
+		}
 		// Stoneheart: a defender-side dampen on everything, no matchup gating.
 		Pact defenderPact = defender instanceof Player defenderPlayer
-			? activeOf(defenderPlayer).orElse(null)
+			? activeOf(context.activeAffinityCounts(defenderPlayer)).orElse(null)
 			: null;
 		if (defenderPact == Pact.STONEHEART) {
 			amount *= (1.0F - STONEHEART_DAMPEN);
 		}
 		// Untethered: an attacker-side amplifier against any affinity-bearing foe.
 		if (source.getEntity() instanceof Player attackerPlayer) {
-			Pact attackerPact = activeOf(attackerPlayer).orElse(null);
+			Pact attackerPact = activeOf(context.activeAffinityCounts(attackerPlayer)).orElse(null);
 			if (attackerPact == Pact.UNTETHERED
-					&& !Apex.isAt(attackerPlayer, Apex.Capstone.MAELSTROM)
+					&& !context.isAt(attackerPlayer, Apex.Capstone.MAELSTROM)
 					&& canAffectCombatTarget(attackerPlayer, defender)
-					&& hasAffinityPressure(defender)) {
+					&& context.hasAffinityPressure(defender)) {
 				amount *= (1.0F + UNTETHERED_AMPLIFY);
 			}
 			if (attackerPact == Pact.RADIANT_COVENANT

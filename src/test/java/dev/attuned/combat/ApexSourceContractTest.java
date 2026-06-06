@@ -35,14 +35,17 @@ class ApexSourceContractTest {
 	@Test
 	void damageAdjustmentCachesPlayerCapstonesForOneHit() throws IOException {
 		String adjustDamage = methodBody(read(),
-			"public static float adjustDamage(LivingEntity defender, DamageSource source, float amount)");
+			"public static float adjustDamage(LivingEntity defender, DamageSource source, float amount,\n"
+				+ "\t\t\tCombatContext context)");
 
 		assertEquals(0, countOccurrences(adjustDamage, "isAt("),
 			"Damage adjustment should not repeatedly resolve capstones through isAt.");
-		assertEquals(1, countOccurrences(adjustDamage, "capstoneOf(defenderPlayer)"),
-			"One hit should resolve the defender capstone at most once.");
-		assertEquals(1, countOccurrences(adjustDamage, "capstoneOf(attackerPlayer)"),
-			"One hit should resolve the attacker capstone at most once.");
+		assertEquals(0, countOccurrences(adjustDamage, "Apex.capstoneOf("),
+			"Context-aware damage adjustment should not directly resolve live capstones.");
+		assertEquals(1, countOccurrences(adjustDamage, "context.capstoneOf(defenderPlayer)"),
+			"One hit should read the defender capstone from context at most once.");
+		assertEquals(1, countOccurrences(adjustDamage, "context.capstoneOf(attackerPlayer)"),
+			"One hit should read the attacker capstone from context at most once.");
 		assertTrue(adjustDamage.contains("defenderCapstone == Capstone.UNYIELDING"),
 			"Unyielding should branch on the cached defender capstone.");
 		assertTrue(adjustDamage.contains("attackerCapstone == Capstone.EXECUTE"),

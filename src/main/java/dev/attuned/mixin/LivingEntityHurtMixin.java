@@ -2,6 +2,7 @@ package dev.attuned.mixin;
 
 import dev.attuned.combat.Apex;
 import dev.attuned.combat.AttunedCombat;
+import dev.attuned.combat.CombatContext;
 import dev.attuned.combat.RevenantCombat;
 import dev.attuned.combat.UnseenCombat;
 import dev.attuned.pacts.Pacts;
@@ -34,9 +35,10 @@ public abstract class LivingEntityHurtMixin {
 			return amount;
 		}
 		LivingEntity self = (LivingEntity) (Object) this;
-		float scaled = AttunedCombat.applyAffinity(level, self, source, amount);
-		float capped = Apex.adjustDamage(self, source, scaled);
-		float adjusted = Pacts.adjustDamage(self, source, capped);
+		CombatContext context = CombatContext.of(self, source);
+		float scaled = AttunedCombat.applyAffinity(level, self, source, amount, context);
+		float capped = Apex.adjustDamage(self, source, scaled, context);
+		float adjusted = Pacts.adjustDamage(self, source, capped, context);
 		float unseen = UnseenCombat.adjustDamage(self, source, adjusted);
 		return RevenantCombat.adjustDamage(self, source, unseen);
 	}
