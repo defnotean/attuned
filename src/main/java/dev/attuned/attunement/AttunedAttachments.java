@@ -115,11 +115,18 @@ public final class AttunedAttachments {
 	}
 
 	public static float getResonance(Player player) {
-		return player.getAttachedOrElse(RESONANCE, 0.0F);
+		return clampResonance(player.getAttachedOrElse(RESONANCE, 0.0F));
 	}
 
 	public static void setResonance(Player player, float value) {
-		player.setAttached(RESONANCE, value);
+		player.setAttached(RESONANCE, clampResonance(value));
+	}
+
+	private static float clampResonance(float value) {
+		if (!Float.isFinite(value)) {
+			return 0.0F;
+		}
+		return Math.min(1.0F, Math.max(0.0F, value));
 	}
 
 	/** Whether this player has already seen the onboarding toast with the given id. */

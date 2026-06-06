@@ -42,6 +42,22 @@ class AttunedAttachmentsContractTest {
 			"The capacity command should return the clamped value to command automation.");
 	}
 
+	@Test
+	void resonanceReadsAndWritesClampToGaugeBounds() throws IOException {
+		String attachments = read(ATTACHMENTS);
+
+		assertTrue(attachments.contains("return clampResonance(player.getAttachedOrElse(RESONANCE, 0.0F));"),
+			"Resonance reads should sanitize old persisted values before gameplay logic sees them.");
+		assertTrue(attachments.contains("player.setAttached(RESONANCE, clampResonance(value));"),
+			"Resonance writes should not persist values outside the gauge bounds.");
+		assertTrue(attachments.contains("private static float clampResonance(float value)"),
+			"Resonance clamping should be centralized in a named helper.");
+		assertTrue(attachments.contains("if (!Float.isFinite(value))"),
+			"Resonance clamping should reject NaN and infinity before numeric bounds checks.");
+		assertTrue(attachments.contains("return Math.min(1.0F, Math.max(0.0F, value));"),
+			"Resonance clamping should preserve the zero floor and one ceiling.");
+	}
+
 	private static String read(Path file) throws IOException {
 		assertTrue(Files.isRegularFile(file), "Expected file to exist: " + file);
 		return Files.readString(file, StandardCharsets.UTF_8);
