@@ -8,6 +8,7 @@ import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.Item;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 /**
@@ -25,6 +26,14 @@ public record FocusDefinition(
 		Optional<Identifier> faction,
 		List<ModifierEntry> modifiers,
 		Optional<Identifier> behavior) {
+
+	public FocusDefinition {
+		item = Objects.requireNonNull(item, "item");
+		affinity = Objects.requireNonNull(affinity, "affinity");
+		faction = Objects.requireNonNull(faction, "faction");
+		modifiers = List.copyOf(Objects.requireNonNull(modifiers, "modifiers"));
+		behavior = Objects.requireNonNull(behavior, "behavior");
+	}
 
 	public static final Codec<FocusDefinition> CODEC = RecordCodecBuilder.create(instance -> instance.group(
 		BuiltInRegistries.ITEM.holderByNameCodec().fieldOf("item").forGetter(FocusDefinition::item),

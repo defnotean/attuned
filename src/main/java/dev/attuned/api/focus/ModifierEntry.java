@@ -2,6 +2,7 @@ package dev.attuned.api.focus;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import java.util.Objects;
 import net.minecraft.core.Holder;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.entity.ai.attributes.Attribute;
@@ -12,6 +13,14 @@ import net.minecraft.world.entity.ai.attributes.AttributeModifier;
  * The framework applies and removes these automatically — no cleanup code needed.
  */
 public record ModifierEntry(Holder<Attribute> attribute, double amount, AttributeModifier.Operation operation) {
+
+	public ModifierEntry {
+		attribute = Objects.requireNonNull(attribute, "attribute");
+		operation = Objects.requireNonNull(operation, "operation");
+		if (!Double.isFinite(amount)) {
+			throw new IllegalArgumentException("Modifier amount must be finite");
+		}
+	}
 
 	public static final Codec<ModifierEntry> CODEC = RecordCodecBuilder.create(instance -> instance.group(
 		BuiltInRegistries.ATTRIBUTE.holderByNameCodec().fieldOf("attribute").forGetter(ModifierEntry::attribute),
