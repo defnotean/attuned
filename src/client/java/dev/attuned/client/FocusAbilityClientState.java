@@ -30,8 +30,8 @@ public final class FocusAbilityClientState {
 
 	static void accept(FocusAbilityStatusPayload payload) {
 		slot = payload.slot();
-		remainingTicks = Math.max(0, payload.remainingTicks());
 		totalTicks = Math.max(0, payload.totalTicks());
+		remainingTicks = Math.min(Math.max(0, payload.remainingTicks()), totalTicks);
 	}
 
 	public static void tick(Minecraft client) {

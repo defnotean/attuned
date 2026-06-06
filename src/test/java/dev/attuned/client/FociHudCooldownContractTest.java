@@ -27,6 +27,8 @@ class FociHudCooldownContractTest {
 			"The client should receive server-authoritative ability cooldown status.");
 		assertTrue(state.contains("remainingTicks") && state.contains("totalTicks"),
 			"The client should keep both remaining and total cooldown ticks.");
+		assertTrue(state.contains("remainingTicks = Math.min(Math.max(0, payload.remainingTicks()), totalTicks)"),
+			"The client should preserve the cooldown invariant that remaining ticks never exceed total ticks.");
 		assertTrue(state.contains("tick(Minecraft client)"),
 			"The client should locally count down between server sync packets.");
 		assertTrue(state.contains("client.level == null || client.player == null"),
