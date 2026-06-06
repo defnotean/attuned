@@ -1,6 +1,7 @@
 package dev.attuned.network;
 
 import dev.attuned.Attuned;
+import dev.attuned.attunement.AttunedInv;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
@@ -10,6 +11,17 @@ import net.minecraft.resources.Identifier;
 /** Server-to-client state for the player's selected Focus Ability and cooldown. */
 public record FocusAbilityStatusPayload(int slot, int remainingTicks, int totalTicks) implements CustomPacketPayload {
 	public static final int NO_ABILITY_SLOT = -1;
+
+	public FocusAbilityStatusPayload {
+		if (slot < 0 || slot >= AttunedInv.SIZE) {
+			slot = NO_ABILITY_SLOT;
+			remainingTicks = 0;
+			totalTicks = 0;
+		} else {
+			totalTicks = Math.max(0, totalTicks);
+			remainingTicks = Math.min(Math.max(0, remainingTicks), totalTicks);
+		}
+	}
 
 	public static final Type<FocusAbilityStatusPayload> TYPE =
 		new Type<>(Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "focus_ability_status"));
