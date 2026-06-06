@@ -30,6 +30,10 @@ public record AttunedInv(List<ItemStack> items) {
 		return sized(List.of());
 	}
 
+	public List<ItemStack> items() {
+		return copyItems(items);
+	}
+
 	private static AttunedInv sized(List<ItemStack> source) {
 		return new AttunedInv(source);
 	}
@@ -39,9 +43,24 @@ public record AttunedInv(List<ItemStack> items) {
 		int sourceSize = source == null ? 0 : source.size();
 		for (int i = 0; i < SIZE; i++) {
 			ItemStack stack = i < sourceSize ? source.get(i) : ItemStack.EMPTY;
-			list.add(stack == null ? ItemStack.EMPTY : stack);
+			list.add(copyStack(stack));
 		}
 		return List.copyOf(list);
+	}
+
+	private static List<ItemStack> copyItems(List<ItemStack> source) {
+		List<ItemStack> copy = new ArrayList<>(source.size());
+		for (ItemStack stack : source) {
+			copy.add(copyStack(stack));
+		}
+		return List.copyOf(copy);
+	}
+
+	private static ItemStack copyStack(ItemStack stack) {
+		if (stack == null || stack.isEmpty()) {
+			return ItemStack.EMPTY;
+		}
+		return stack.copy();
 	}
 
 	public ItemStack get(int slot) {
@@ -50,7 +69,7 @@ public record AttunedInv(List<ItemStack> items) {
 
 	public AttunedInv with(int slot, ItemStack stack) {
 		List<ItemStack> copy = new ArrayList<>(items);
-		copy.set(slot, stack);
+		copy.set(slot, copyStack(stack));
 		return new AttunedInv(copy);
 	}
 }

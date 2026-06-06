@@ -2,12 +2,19 @@ package dev.attuned.attunement;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 import net.minecraft.world.item.ItemStack;
 import org.junit.jupiter.api.Test;
 
 class AttunedInvTest {
+	private static final Path SOURCE = Path.of("src/main/java/dev/attuned/attunement/AttunedInv.java");
+
 	@Test
 	void publicConstructorNormalizesToSixSlots() {
 		AttunedInv inv = new AttunedInv(List.of());
@@ -24,5 +31,38 @@ class AttunedInvTest {
 
 		assertThrows(UnsupportedOperationException.class,
 			() -> inv.items().set(0, ItemStack.EMPTY));
+	}
+
+	@Test
+	void constructorCopiesMutableItemStacks() throws IOException {
+		String source = readSource();
+
+		assertTrue(source.contains("list.add(copyStack(stack));"),
+			"The constructor normalization path should copy mutable ItemStack values.");
+		assertTrue(source.contains("private static ItemStack copyStack(ItemStack stack)"),
+			"ItemStack copying should be centralized in a named helper.");
+	}
+
+	@Test
+	void withCopiesMutableItemStacks() throws IOException {
+		String source = readSource();
+
+		assertTrue(source.contains("copy.set(slot, copyStack(stack));"),
+			"with should copy incoming mutable ItemStack values before storing them.");
+	}
+
+	@Test
+	void itemsViewCopiesMutableItemStacks() throws IOException {
+		String source = readSource();
+
+		assertTrue(source.contains("public List<ItemStack> items()"),
+			"The public record accessor should be overridden so it can protect mutable stack contents.");
+		assertTrue(source.contains("return copyItems(items);"),
+			"The public items view should return copied ItemStack values.");
+	}
+
+	private static String readSource() throws IOException {
+		assertTrue(Files.isRegularFile(SOURCE), "Expected file to exist: " + SOURCE);
+		return Files.readString(SOURCE, StandardCharsets.UTF_8);
 	}
 }
