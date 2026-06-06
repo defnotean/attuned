@@ -66,6 +66,7 @@ class RuntimeCleanupContractTest {
 	private static final Path RADIANT_BEHAVIORS =
 		Path.of("src/main/java/dev/attuned/content/behavior/RadiantFocusBehaviors.java");
 	private static final List<String> RUNTIME_EVENT_HOOKS = List.of(
+		"PlayerBlockBreakEvents.AFTER.register",
 		"ServerEntityLevelChangeEvents.AFTER_PLAYER_CHANGE_LEVEL.register",
 		"ServerLifecycleEvents.SERVER_STOPPED.register",
 		"ServerLivingEntityEvents.ALLOW_DAMAGE.register",

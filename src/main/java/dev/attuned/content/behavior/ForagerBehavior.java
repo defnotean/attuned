@@ -26,8 +26,17 @@ import net.minecraft.util.RandomSource;
 public final class ForagerBehavior implements dev.attuned.api.focus.FocusBehavior {
 	private static final Identifier FOCUS_ID =
 		Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "forager_focus");
+	private static boolean initialized;
 
 	public ForagerBehavior() {
+		initLifecycle();
+	}
+
+	private static void initLifecycle() {
+		if (initialized) {
+			return;
+		}
+		initialized = true;
 		PlayerBlockBreakEvents.AFTER.register(ForagerBehavior::afterBlockBreak);
 	}
 

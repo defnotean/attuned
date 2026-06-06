@@ -40,8 +40,17 @@ public final class TremorBehavior implements dev.attuned.api.focus.FocusBehavior
 	private static final int RADIUS = 5;
 	private static final long COOLDOWN_TICKS = 80L;
 	private static final Map<UUID, Long> LAST_SCAN = new HashMap<>();
+	private static boolean initialized;
 
 	public TremorBehavior() {
+		initLifecycle();
+	}
+
+	private static void initLifecycle() {
+		if (initialized) {
+			return;
+		}
+		initialized = true;
 		PlayerBlockBreakEvents.AFTER.register(TremorBehavior::afterBlockBreak);
 		AttunedPlayerCleanup.onForget(LAST_SCAN::remove);
 		AttunedServerCleanup.onStop(LAST_SCAN::clear);
