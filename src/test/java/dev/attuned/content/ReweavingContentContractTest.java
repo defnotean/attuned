@@ -74,6 +74,21 @@ class ReweavingContentContractTest {
 			Files.readString(NETWORKING_SOURCE, StandardCharsets.UTF_8), "ReweavingNetworking");
 	}
 
+	@Test
+	void reweavingFocusChecksUseSyncedDefinitionsInsteadOfStaticContentList() throws IOException {
+		String menu = Files.readString(REWEAVING_MENU_SOURCE, StandardCharsets.UTF_8);
+		String networking = Files.readString(NETWORKING_SOURCE, StandardCharsets.UTF_8);
+
+		assertTrue(menu.contains("Attunement.definitionFor("),
+			"Reweaving menu slots should accept any item backed by a synced FocusDefinition.");
+		assertTrue(networking.contains("FocusLookup.forItem("),
+			"Server-side reweaving validation should use the FocusDefinition registry.");
+		assertTrue(!menu.contains("AttunedContent.isFocus("),
+			"Reweaving menu slot checks should not be capped to the static shipped-Foci list.");
+		assertTrue(!networking.contains("AttunedContent.isFocus("),
+			"Reweaving sacrifices should not reject datapack-defined Focus items.");
+	}
+
 	private static void assertQuickMoveSlotGuard(String source, String menuName) {
 		assertTrue(source.contains("if (slotIndex < 0 || slotIndex >= this.slots.size())"),
 			menuName + " should reject invalid quick-move slot indexes before reading the slot list.");

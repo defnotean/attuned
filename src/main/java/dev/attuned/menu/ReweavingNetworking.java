@@ -4,6 +4,7 @@ import dev.attuned.Attuned;
 import dev.attuned.AttunedRegistries;
 import dev.attuned.api.focus.FocusDefinition;
 import dev.attuned.attunement.Attunement;
+import dev.attuned.attunement.FocusLookup;
 import dev.attuned.content.AttunedContent;
 import dev.attuned.content.ReweavingResultPicker;
 import java.util.List;
@@ -60,10 +61,13 @@ public final class ReweavingNetworking {
 				return;
 			}
 			Container container = menu.container();
-			if (!hasThreeFociAndFragment(container) || !container.getItem(ReweavingMenu.OUTPUT_SLOT).isEmpty()) {
+			Registry<FocusDefinition> registry =
+				serverLevel.registryAccess().lookupOrThrow(AttunedRegistries.FOCUS_DEFINITIONS);
+			if (!hasThreeFociAndFragment(container, registry)
+					|| !container.getItem(ReweavingMenu.OUTPUT_SLOT).isEmpty()) {
 				return;
 			}
-			ItemStack result = rollResult(player, serverLevel, container);
+			ItemStack result = rollResult(player, serverLevel, container, registry);
 			if (result.isEmpty()) {
 				return;
 			}
@@ -76,20 +80,19 @@ public final class ReweavingNetworking {
 		});
 	}
 
-	private static boolean hasThreeFociAndFragment(Container container) {
+	private static boolean hasThreeFociAndFragment(Container container, Registry<FocusDefinition> registry) {
 		for (int i = 0; i < ReweavingMenu.FOCUS_INPUTS; i++) {
-			if (!AttunedContent.isFocus(container.getItem(i))) {
+			if (focusDefinitionFor(registry, container.getItem(i)).isEmpty()) {
 				return false;
 			}
 		}
 		return container.getItem(ReweavingMenu.CATALYST_SLOT).is(AttunedContent.ATTUNEMENT_SHARD_FRAGMENT);
 	}
 
-	private static ItemStack rollResult(ServerPlayer player, ServerLevel level, Container container) {
-		Registry<FocusDefinition> registry =
-			level.registryAccess().lookupOrThrow(AttunedRegistries.FOCUS_DEFINITIONS);
+	private static ItemStack rollResult(ServerPlayer player, ServerLevel level, Container container,
+			Registry<FocusDefinition> registry) {
 		List<ReweavingResultPicker.Candidate> candidates = focusCandidates(registry);
-		Set<String> sacrificedIds = sacrificedIds(container);
+		Set<String> sacrificedIds = sacrificedIds(container, registry);
 		Optional<String> committedAffinity =
 			Attunement.committedAffinity(player).map(affinity -> affinity.getSerializedName());
 		Optional<String> picked = ReweavingResultPicker.pick(
@@ -113,15 +116,22 @@ public final class ReweavingNetworking {
 			.toList();
 	}
 
-	private static Set<String> sacrificedIds(Container container) {
+	private static Set<String> sacrificedIds(Container container, Registry<FocusDefinition> registry) {
 		Set<String> ids = new TreeSet<>();
 		for (int i = 0; i < ReweavingMenu.FOCUS_INPUTS; i++) {
 			ItemStack stack = container.getItem(i);
-			if (AttunedContent.isFocus(stack)) {
+			if (focusDefinitionFor(registry, stack).isPresent()) {
 				ids.add(BuiltInRegistries.ITEM.getKey(stack.getItem()).toString());
 			}
 		}
 		return ids;
+	}
+
+	private static Optional<FocusDefinition> focusDefinitionFor(Registry<FocusDefinition> registry, ItemStack stack) {
+		if (stack.isEmpty()) {
+			return Optional.empty();
+		}
+		return FocusLookup.forItem(registry, stack.getItem());
 	}
 
 	private static Identifier identifier(String id) {

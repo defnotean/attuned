@@ -1,5 +1,6 @@
 package dev.attuned.menu;
 
+import dev.attuned.attunement.Attunement;
 import dev.attuned.content.AttunedContent;
 import net.minecraft.world.Container;
 import net.minecraft.world.SimpleContainer;
@@ -53,6 +54,7 @@ public class ReweavingMenu extends AbstractContainerMenu {
 
 	private final Container container;
 	private final ContainerLevelAccess access;
+	private final Player player;
 
 	public ReweavingMenu(int containerId, Inventory inventory) {
 		this(containerId, inventory, new SimpleContainer(CONTAINER_SIZE), ContainerLevelAccess.NULL);
@@ -63,13 +65,14 @@ public class ReweavingMenu extends AbstractContainerMenu {
 		checkContainerSize(container, CONTAINER_SIZE);
 		this.container = container;
 		this.access = access;
+		this.player = inventory.player;
 
 		for (int i = 0; i < FOCUS_INPUTS; i++) {
 			final int index = i;
 			this.addSlot(new Slot(container, index, FOCUS_SLOT_X[i], FOCUS_SLOT_Y) {
 				@Override
 				public boolean mayPlace(ItemStack stack) {
-					return AttunedContent.isFocus(stack);
+					return ReweavingMenu.this.isFocusInput(stack);
 				}
 			});
 		}
@@ -98,7 +101,7 @@ public class ReweavingMenu extends AbstractContainerMenu {
 
 	public boolean hasAllInputs() {
 		for (int i = 0; i < FOCUS_INPUTS; i++) {
-			if (!AttunedContent.isFocus(this.container.getItem(i))) {
+			if (!this.isFocusInput(this.container.getItem(i))) {
 				return false;
 			}
 		}
@@ -131,7 +134,7 @@ public class ReweavingMenu extends AbstractContainerMenu {
 			if (!this.moveItemStackTo(stack, CONTAINER_SIZE, this.slots.size(), true)) {
 				return ItemStack.EMPTY;
 			}
-		} else if (AttunedContent.isFocus(stack)) {
+		} else if (this.isFocusInput(stack)) {
 			if (!this.moveItemStackTo(stack, INPUT_START, FOCUS_INPUTS, false)) {
 				return ItemStack.EMPTY;
 			}
@@ -149,6 +152,10 @@ public class ReweavingMenu extends AbstractContainerMenu {
 			slot.setChanged();
 		}
 		return moved;
+	}
+
+	private boolean isFocusInput(ItemStack stack) {
+		return Attunement.definitionFor(this.player, stack).isPresent();
 	}
 
 	@Override
