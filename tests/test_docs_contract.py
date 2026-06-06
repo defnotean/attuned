@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import unittest
 from pathlib import Path
 
@@ -19,6 +20,25 @@ class DocsContractTest(unittest.TestCase):
         self.assertIn("boolean onAbility(ServerPlayer player, ItemStack focus)", guide)
         self.assertIn("hasActiveAbility()", guide)
         self.assertIn("abilityCooldownTicks()", guide)
+
+    def test_reference_docs_cover_discord_apex_and_shipped_behaviors(self) -> None:
+        reference = (ROOT / "docs" / "reference.md").read_text(encoding="utf-8")
+        readme = (ROOT / "docs" / "README.md").read_text(encoding="utf-8")
+
+        self.assertNotIn("cannot reach Apex", reference)
+        self.assertIn("Maelstrom", reference)
+        self.assertIn("Stillpoint", reference)
+        self.assertNotIn("must share one affinity", readme)
+        self.assertIn("Discord", readme)
+
+        focus_dir = ROOT / "src" / "main" / "resources" / "data" / "attuned" / "attuned" / "focus"
+        behavior_ids = sorted(
+            json.loads(path.read_text(encoding="utf-8"))["behavior"]
+            for path in focus_dir.glob("*.json")
+            if "behavior" in json.loads(path.read_text(encoding="utf-8"))
+        )
+        for behavior_id in behavior_ids:
+            self.assertIn(behavior_id, reference)
 
 
 if __name__ == "__main__":

@@ -169,6 +169,13 @@ class HarpoonBehaviorContractTest {
 			"Broad entity cleanup cadence should be isolated in a named helper");
 		assertTrue(behavior.contains("return now % ENTITY_CLEANUP_INTERVAL_TICKS == 0L;"),
 			"Broad entity cleanup should not scan every tick while a harpoon is active");
+		assertBefore(behavior, "pruneActiveHarpoons(now);", "if (ACTIVE_HARPOONS.isEmpty())");
+		assertTrue(behavior.contains("if (ACTIVE_HARPOONS.isEmpty())"),
+			"Global harpoon cleanup should skip player/entity scans when no temporary harpoon is active");
+		assertTrue(behavior.contains("cleanupActiveInventories(server, now);"),
+			"Global harpoon cleanup should scan active owners instead of every online player");
+		assertTrue(!behavior.contains("for (ServerPlayer player : server.getPlayerList().getPlayers()) {\n\t\t\tremoveInvalidInventoryHarpoons(player, now);"),
+			"Global harpoon cleanup should not scan every online player inventory every server tick");
 		assertTrue(behavior.contains("cleanupEntities(server, now);"),
 			"Tick cleanup should still scan entities when the broad-scan gate allows it");
 		assertTrue(behavior.contains(
@@ -267,5 +274,13 @@ class HarpoonBehaviorContractTest {
 
 	private static int alpha(BufferedImage image, int x, int y) {
 		return (image.getRGB(x, y) >>> 24) & 0xFF;
+	}
+
+	private static void assertBefore(String source, String earlier, String later) {
+		int earlierIndex = source.indexOf(earlier);
+		int laterIndex = source.indexOf(later);
+		assertTrue(earlierIndex >= 0, "Expected source to contain: " + earlier);
+		assertTrue(laterIndex >= 0, "Expected source to contain: " + later);
+		assertTrue(earlierIndex < laterIndex, "Expected " + earlier + " before " + later);
 	}
 }

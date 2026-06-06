@@ -6,6 +6,7 @@ import dev.attuned.AttunedServerCleanup;
 import dev.attuned.api.focus.FocusBehavior;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
@@ -139,13 +140,23 @@ public final class HarpoonBehavior implements FocusBehavior {
 
 	private static void tickServer(MinecraftServer server) {
 		long now = server.overworld().getGameTime();
-		for (ServerPlayer player : server.getPlayerList().getPlayers()) {
-			removeInvalidInventoryHarpoons(player, now);
+		pruneActiveHarpoons(now);
+		if (ACTIVE_HARPOONS.isEmpty()) {
+			return;
 		}
+		cleanupActiveInventories(server, now);
 		if (shouldSweepEntities(now)) {
 			cleanupEntities(server, now);
 		}
-		pruneActiveHarpoons(now);
+	}
+
+	private static void cleanupActiveInventories(MinecraftServer server, long now) {
+		for (UUID owner : List.copyOf(ACTIVE_HARPOONS.keySet())) {
+			ServerPlayer player = server.getPlayerList().getPlayer(owner);
+			if (player != null) {
+				removeInvalidInventoryHarpoons(player, now);
+			}
+		}
 	}
 
 	private static boolean shouldSweepEntities(long now) {
@@ -155,7 +166,7 @@ public final class HarpoonBehavior implements FocusBehavior {
 	private static void pruneActiveHarpoons(long now) {
 		Iterator<Map.Entry<UUID, Long>> entries = ACTIVE_HARPOONS.entrySet().iterator();
 		while (entries.hasNext()) {
-			if (entries.next().getValue() <= now) {
+			if (entries.next().getValue() + ENTITY_CLEANUP_INTERVAL_TICKS <= now) {
 				entries.remove();
 			}
 		}
@@ -190,9 +201,6 @@ public final class HarpoonBehavior implements FocusBehavior {
 	private static void removeInvalidInventoryHarpoons(ServerPlayer player, long now) {
 		UUID owner = player.getUUID();
 		removeInventoryHarpoons(player, owner, now, false);
-		if (ACTIVE_HARPOONS.getOrDefault(owner, -1L) <= now) {
-			ACTIVE_HARPOONS.remove(owner);
-		}
 	}
 
 	private static void removeInventoryHarpoons(ServerPlayer player, UUID owner, long now, boolean force) {

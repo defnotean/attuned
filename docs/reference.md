@@ -33,9 +33,11 @@ Holy  beats  Fury  beats  Bastion  beats  Zephyr  beats  Holy
   to it — counter-combat and the Apex capstone apply.
 - Running active Foci of **two or more** affinities is **Discord**: every Focus
   still works, but the wearer is a glass cannon — dealing and taking extra
-  damage — and cannot reach Apex.
+  damage. A full every-affinity Discord build can reach **Maelstrom**, a special
+  Apex path that keeps the risky mixed-affinity identity.
 - A Focus with **no** `affinity` is *neutral* — it never triggers Discord and
-  fits any committed lane.
+  fits any committed lane. Four or more active neutral Foci can reach
+  **Stillpoint**, the neutral Apex path.
 - Pick an affinity for combat-flavoured Foci; leave it off for utility Foci.
 
 ## Factions
@@ -119,7 +121,7 @@ all are optional:
 "Active" means equipped **and** within the attunement budget. A Focus pushed
 over budget goes dormant and counts as deactivated.
 
-Behaviors are registered in `AttunedContent.init()` and referenced by the
+Behaviors are registered in `AttunedFocusBehaviors.java` and referenced by the
 `behavior` field. The ones that ship with Attuned, smallest first — good
 examples to copy from:
 
@@ -134,6 +136,8 @@ examples to copy from:
 | `attuned:rainstep`   | `RainstepBehavior`       | Movement speed in rain, water, or waterlogged blocks. |
 | `attuned:anchor`     | `AnchorBehavior`         | Knockback resistance while sneaking or blocking. |
 | `attuned:hearth`     | `HearthBehavior`         | Campfire-adjacent regeneration while well fed. |
+| `attuned:harborlight` | `HarborlightBehavior`    | Near water, a held lantern grants gentle night vision in low light. |
+| `attuned:driftglass` | `DriftglassBehavior`     | Held compasses point back to the latest fishing or boating return point. |
 | `attuned:lantern`    | `LanternBehavior`        | Briefly marks visible threats in darkness while holding a torch or lantern. |
 | `attuned:votive`     | `RadiantFocusBehaviors`  | Bright light or lit candles grant a short absorption shield on cooldown. |
 | `attuned:bellwether` | `RadiantFocusBehaviors`  | Bells reveal visible threats nearby. |

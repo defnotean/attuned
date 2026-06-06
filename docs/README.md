@@ -12,10 +12,12 @@ add a Focus.
   a **cost**. The combined cost of equipped Foci has to fit inside the budget.
 - Go over budget and your lowest-priority Foci fall **dormant** — still equipped,
   but switched off. Slot order, top to bottom, is the priority order.
-- Most combat Foci carry an **affinity**: Holy, Fury, Bastion, or Zephyr. All of your
-  *active* Foci must share one affinity, so a build commits to a lane.
+- Most combat Foci carry an **affinity**: Holy, Fury, Bastion, or Zephyr. Active
+  affinity Foci that share one lane commit the build; mixed active affinities
+  become **Discord**, which is risky but still valid.
 - Three matching active affinities can awaken a **Pact**. A fully committed,
-  high-capacity build can reach **Apex** during combat.
+  high-capacity build can reach **Apex** during combat. Full mixed-affinity and
+  neutral builds have their own Apex paths: **Maelstrom** and **Stillpoint**.
 - **Attunement Shards** raise capacity at an Altar. **Shard Fragments** are a
   smaller loot reward; four craft into one shard.
 - The **Attunement Journal** is a crafted in-game guide and opens like a normal
