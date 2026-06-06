@@ -1,6 +1,7 @@
 package dev.attuned.content.behavior;
 
 import dev.attuned.AttunedPlayerCleanup;
+import dev.attuned.AttunedServerCleanup;
 import dev.attuned.api.focus.FocusBehavior;
 import dev.attuned.combat.CombatTargets;
 import java.util.HashMap;
@@ -30,6 +31,7 @@ public final class LanternBehavior implements FocusBehavior {
 
 	public LanternBehavior() {
 		AttunedPlayerCleanup.onForget(ticks::remove);
+		AttunedServerCleanup.onStop(ticks::clear);
 	}
 
 	@Override

@@ -1,6 +1,7 @@
 package dev.attuned.content.behavior;
 
 import dev.attuned.AttunedPlayerCleanup;
+import dev.attuned.AttunedServerCleanup;
 import dev.attuned.api.focus.FocusBehavior;
 import java.util.HashMap;
 import java.util.Map;
@@ -34,6 +35,7 @@ public final class HarvestBehavior implements FocusBehavior {
 
 	public HarvestBehavior() {
 		AttunedPlayerCleanup.onForget(ticks::remove);
+		AttunedServerCleanup.onStop(ticks::clear);
 	}
 
 	@Override

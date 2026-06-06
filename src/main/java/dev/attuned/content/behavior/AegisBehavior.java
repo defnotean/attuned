@@ -1,6 +1,7 @@
 package dev.attuned.content.behavior;
 
 import dev.attuned.AttunedPlayerCleanup;
+import dev.attuned.AttunedServerCleanup;
 import dev.attuned.api.focus.FocusBehavior;
 import java.util.HashMap;
 import java.util.Map;
@@ -31,6 +32,7 @@ public final class AegisBehavior implements FocusBehavior {
 
 	public AegisBehavior() {
 		AttunedPlayerCleanup.onForget(ticksSinceGrant::remove);
+		AttunedServerCleanup.onStop(ticksSinceGrant::clear);
 	}
 
 	@Override

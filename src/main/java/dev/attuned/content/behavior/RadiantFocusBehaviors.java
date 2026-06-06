@@ -1,6 +1,7 @@
 package dev.attuned.content.behavior;
 
 import dev.attuned.AttunedPlayerCleanup;
+import dev.attuned.AttunedServerCleanup;
 import dev.attuned.api.focus.FocusBehavior;
 import dev.attuned.combat.CombatTargets;
 import java.util.HashMap;
@@ -41,6 +42,7 @@ public final class RadiantFocusBehaviors {
 
 		public Votive() {
 			AttunedPlayerCleanup.onForget(state::remove);
+			AttunedServerCleanup.onStop(state::clear);
 		}
 
 		@Override
@@ -78,6 +80,7 @@ public final class RadiantFocusBehaviors {
 
 		public Bellwether() {
 			AttunedPlayerCleanup.onForget(state::remove);
+			AttunedServerCleanup.onStop(state::clear);
 		}
 
 		@Override
@@ -120,6 +123,7 @@ public final class RadiantFocusBehaviors {
 
 		public Oathguard() {
 			AttunedPlayerCleanup.onForget(cooldowns::remove);
+			AttunedServerCleanup.onStop(cooldowns::clear);
 		}
 
 		@Override
@@ -153,6 +157,7 @@ public final class RadiantFocusBehaviors {
 
 		public Censer() {
 			AttunedPlayerCleanup.onForget(ticks::remove);
+			AttunedServerCleanup.onStop(ticks::clear);
 		}
 
 		@Override
@@ -198,6 +203,7 @@ public final class RadiantFocusBehaviors {
 
 		public Threshold() {
 			AttunedPlayerCleanup.onForget(states::remove);
+			AttunedServerCleanup.onStop(states::clear);
 		}
 
 		@Override

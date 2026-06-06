@@ -51,6 +51,20 @@ class RuntimeCleanupContractTest {
 		Path.of("src/main/java/dev/attuned/content/behavior/VeilBehavior.java");
 	private static final Path SOFTSTEP =
 		Path.of("src/main/java/dev/attuned/content/behavior/SoftstepBehavior.java");
+	private static final Path AEGIS =
+		Path.of("src/main/java/dev/attuned/content/behavior/AegisBehavior.java");
+	private static final Path HARBORLIGHT =
+		Path.of("src/main/java/dev/attuned/content/behavior/HarborlightBehavior.java");
+	private static final Path HARVEST =
+		Path.of("src/main/java/dev/attuned/content/behavior/HarvestBehavior.java");
+	private static final Path HEARTH =
+		Path.of("src/main/java/dev/attuned/content/behavior/HearthBehavior.java");
+	private static final Path LANTERN =
+		Path.of("src/main/java/dev/attuned/content/behavior/LanternBehavior.java");
+	private static final Path STORMCALL =
+		Path.of("src/main/java/dev/attuned/content/behavior/StormcallBehavior.java");
+	private static final Path RADIANT_BEHAVIORS =
+		Path.of("src/main/java/dev/attuned/content/behavior/RadiantFocusBehaviors.java");
 
 	@Test
 	void playerCleanupRegistersDisconnectHookOnceAndRejectsNullCallbacks() throws IOException {
@@ -138,6 +152,17 @@ class RuntimeCleanupContractTest {
 		assertContains(read(SOFTSTEP), "AttunedServerCleanup.onStopServer(this::restoreAllPlayers)");
 		assertContains(read(SOFTSTEP), "player.setSilent(wasSilent);");
 		assertContains(read(SOFTSTEP), "originalSilent.clear();");
+		assertContains(read(AEGIS), "AttunedServerCleanup.onStop(ticksSinceGrant::clear)");
+		assertContains(read(HARBORLIGHT), "AttunedServerCleanup.onStop(ticks::clear)");
+		assertContains(read(HARVEST), "AttunedServerCleanup.onStop(ticks::clear)");
+		assertContains(read(HEARTH), "AttunedServerCleanup.onStop(ticks::clear)");
+		assertContains(read(LANTERN), "AttunedServerCleanup.onStop(ticks::clear)");
+		assertContains(read(STORMCALL), "AttunedServerCleanup.onStop(ticks::clear)");
+		String radiantBehaviors = read(RADIANT_BEHAVIORS);
+		assertOccurrences(radiantBehaviors, "AttunedServerCleanup.onStop(state::clear)", 2);
+		assertContains(radiantBehaviors, "AttunedServerCleanup.onStop(cooldowns::clear)");
+		assertContains(radiantBehaviors, "AttunedServerCleanup.onStop(ticks::clear)");
+		assertContains(radiantBehaviors, "AttunedServerCleanup.onStop(states::clear)");
 	}
 
 	@Test
@@ -165,6 +190,16 @@ class RuntimeCleanupContractTest {
 
 	private static void assertContains(String source, String needle) {
 		assertTrue(source.contains(needle), "Expected source to contain: " + needle);
+	}
+
+	private static void assertOccurrences(String source, String needle, int expected) {
+		int count = 0;
+		int offset = 0;
+		while ((offset = source.indexOf(needle, offset)) >= 0) {
+			count++;
+			offset += needle.length();
+		}
+		assertEquals(expected, count, "Expected " + expected + " occurrences of: " + needle);
 	}
 
 	private static List<String> directServerStopHooks() throws IOException {
