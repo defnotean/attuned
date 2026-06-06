@@ -83,9 +83,15 @@ public final class AttunedCombat {
 	/** Last game-time a mob affinity spark was shown for an entity. */
 	private static final Map<UUID, Long> LAST_AFFINITY_SPARK = new HashMap<>();
 	private static long lastAffinitySparkPrune;
+	private static boolean initialized;
 
 	/** Registers the combat event handlers. Called from the mod initializer. */
 	public static void init() {
+		if (initialized) {
+			return;
+		}
+		initialized = true;
+
 		ServerLivingEntityEvents.AFTER_DAMAGE.register(AttunedCombat::afterDamage);
 		ServerLivingEntityEvents.AFTER_DEATH.register((entity, source) ->
 			LAST_AFFINITY_SPARK.remove(entity.getUUID()));

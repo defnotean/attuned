@@ -43,9 +43,15 @@ public final class Resonance {
 	private static final float HIT_NEUTRALIZED_LOSS = 0.10F;
 	/** Per-tick idle decay — gauge falls to zero in about 200 seconds at rest. */
 	private static final float DECAY_PER_TICK = 0.00025F;
+	private static boolean initialized;
 
 	/** Registers the event hooks and the per-tick decay. */
 	public static void init() {
+		if (initialized) {
+			return;
+		}
+		initialized = true;
+
 		ServerLivingEntityEvents.AFTER_DAMAGE.register(Resonance::afterDamage);
 		ServerLivingEntityEvents.AFTER_DEATH.register(Resonance::afterDeath);
 		ServerTickEvents.END_SERVER_TICK.register(Resonance::tick);

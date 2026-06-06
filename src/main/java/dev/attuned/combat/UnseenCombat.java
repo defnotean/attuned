@@ -40,8 +40,14 @@ public final class UnseenCombat {
 	private static final double BEHIND_DOT_THRESHOLD = -0.35D;
 
 	private static final Map<UUID, Long> LAST_NEEDLE = new HashMap<>();
+	private static boolean initialized;
 
 	public static void init() {
+		if (initialized) {
+			return;
+		}
+		initialized = true;
+
 		AttunedPlayerCleanup.onForget(LAST_NEEDLE::remove);
 		AttunedServerCleanup.onStop(LAST_NEEDLE::clear);
 		ServerLivingEntityEvents.AFTER_DAMAGE.register(UnseenCombat::afterDamage);

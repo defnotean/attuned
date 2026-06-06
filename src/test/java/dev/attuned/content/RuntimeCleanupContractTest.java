@@ -65,6 +65,17 @@ class RuntimeCleanupContractTest {
 		Path.of("src/main/java/dev/attuned/content/behavior/StormcallBehavior.java");
 	private static final Path RADIANT_BEHAVIORS =
 		Path.of("src/main/java/dev/attuned/content/behavior/RadiantFocusBehaviors.java");
+	private static final List<String> RUNTIME_EVENT_HOOKS = List.of(
+		"ServerEntityLevelChangeEvents.AFTER_PLAYER_CHANGE_LEVEL.register",
+		"ServerLifecycleEvents.SERVER_STOPPED.register",
+		"ServerLivingEntityEvents.ALLOW_DAMAGE.register",
+		"ServerLivingEntityEvents.AFTER_DAMAGE.register",
+		"ServerLivingEntityEvents.AFTER_DEATH.register",
+		"ServerPlayConnectionEvents.DISCONNECT.register",
+		"ServerPlayConnectionEvents.JOIN.register",
+		"ServerPlayerEvents.AFTER_RESPAWN.register",
+		"ServerTickEvents.END_SERVER_TICK.register"
+	);
 
 	@Test
 	void playerCleanupRegistersDisconnectHookOnceAndRejectsNullCallbacks() throws IOException {
@@ -136,6 +147,37 @@ class RuntimeCleanupContractTest {
 		assertBefore(effects, "initialized = true;", "ServerPlayerEvents.AFTER_RESPAWN.register");
 		assertBefore(effects, "initialized = true;", "AttunedPlayerCleanup.onForgetPlayer");
 		assertBefore(effects, "initialized = true;", "AttunedServerCleanup.onStopServer");
+	}
+
+	@Test
+	void directRuntimeEventHooksAreInitIdempotent() throws IOException {
+		List<String> violations = new ArrayList<>();
+		for (Path file : directRuntimeEventHookFiles()) {
+			String source = read(file);
+			if (!source.contains("private static boolean initialized;")) {
+				violations.add(file + ": missing initialized field");
+				continue;
+			}
+			if (!source.contains("if (initialized)")) {
+				violations.add(file + ": repeated init calls are not skipped");
+			}
+			if (!source.contains("initialized = true;")) {
+				violations.add(file + ": initialized is never set");
+				continue;
+			}
+			for (String marker : RUNTIME_EVENT_HOOKS) {
+				if (source.contains(marker)) {
+					try {
+						assertBefore(source, "initialized = true;", marker);
+					} catch (AssertionError e) {
+						violations.add(file + ": guard is set after " + marker);
+					}
+				}
+			}
+		}
+
+		assertTrue(violations.isEmpty(),
+			"Direct runtime event hooks should be registered idempotently: " + violations);
 	}
 
 	@Test
@@ -267,6 +309,22 @@ class RuntimeCleanupContractTest {
 			}
 		}
 		return hooks;
+	}
+
+	private static List<Path> directRuntimeEventHookFiles() throws IOException {
+		List<Path> files = new ArrayList<>();
+		try (var paths = Files.walk(SOURCE_ROOT)) {
+			for (Path file : paths
+					.filter(Files::isRegularFile)
+					.filter(path -> path.toString().endsWith(".java"))
+					.toList()) {
+				String source = read(file);
+				if (RUNTIME_EVENT_HOOKS.stream().anyMatch(source::contains)) {
+					files.add(file);
+				}
+			}
+		}
+		return files;
 	}
 
 	private static String read(Path file) throws IOException {

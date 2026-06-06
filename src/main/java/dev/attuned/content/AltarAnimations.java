@@ -69,9 +69,15 @@ public final class AltarAnimations {
 
 	private static final List<Pending> ACTIVE = new ArrayList<>();
 	private static int serverTick;
+	private static boolean initialized;
 
 	/** Registers the per-tick driver. Call once from {@code onInitialize}. */
 	public static void init() {
+		if (initialized) {
+			return;
+		}
+		initialized = true;
+
 		ServerTickEvents.END_SERVER_TICK.register(AltarAnimations::tick);
 		AttunedServerCleanup.onStop(() -> {
 			ACTIVE.clear();

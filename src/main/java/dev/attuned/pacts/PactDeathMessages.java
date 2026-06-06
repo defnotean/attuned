@@ -30,11 +30,18 @@ import net.minecraft.world.entity.player.Player;
 public final class PactDeathMessages {
 	private PactDeathMessages() {}
 
+	private static boolean initialized;
+
 	/**
 	 * Registers the AFTER_DEATH handler. Called from the mod initializer, after
 	 * {@code Pacts.init()} so that the pact-detection cache is in place.
 	 */
 	public static void init() {
+		if (initialized) {
+			return;
+		}
+		initialized = true;
+
 		ServerLivingEntityEvents.AFTER_DEATH.register(PactDeathMessages::afterDeath);
 	}
 

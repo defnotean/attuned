@@ -129,9 +129,15 @@ public final class Pacts {
 	private static final Map<UUID, WindrunnerRun> windrunnerRuns = new HashMap<>();
 	/** Per-server tick counter — drives aura cadence and the Windrunner effect. */
 	private static int ticks;
+	private static boolean initialized;
 
 	/** Registers tick handlers, damage hooks and the cleanup callback. */
 	public static void init() {
+		if (initialized) {
+			return;
+		}
+		initialized = true;
+
 		ServerTickEvents.END_SERVER_TICK.register(Pacts::tick);
 		ServerLivingEntityEvents.AFTER_DAMAGE.register(Pacts::afterDamage);
 		ServerLivingEntityEvents.AFTER_DEATH.register(Pacts::afterDeath);

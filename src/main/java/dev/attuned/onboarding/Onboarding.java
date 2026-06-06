@@ -49,9 +49,15 @@ public final class Onboarding {
 	private static final double ALTAR_SIGHT_REACH = 5.0D;
 
 	private static int tickCounter = 0;
+	private static boolean initialized;
 
 	/** Registers the server tick listener that polls for the shard and altar-sight hints. */
 	public static void init() {
+		if (initialized) {
+			return;
+		}
+		initialized = true;
+
 		ServerTickEvents.END_SERVER_TICK.register(server -> {
 			if (++tickCounter < POLL_INTERVAL_TICKS) {
 				return;

@@ -116,10 +116,16 @@ public final class Apex {
 	private static final Map<UUID, Boolean> armedState = new HashMap<>();
 	private static final Map<ScrambleKey, Long> maelstromScrambles = new HashMap<>();
 	private static final Map<UUID, Long> stillpointPulses = new HashMap<>();
+	private static boolean initialized;
 
 	private enum Matchup { EMPOWERED, NORMAL, NEUTRALIZED }
 
 	public static void init() {
+		if (initialized) {
+			return;
+		}
+		initialized = true;
+
 		ServerLivingEntityEvents.ALLOW_DAMAGE.register(Apex::allowDamage);
 		ServerLivingEntityEvents.AFTER_DAMAGE.register(Apex::afterDamage);
 		ServerLivingEntityEvents.AFTER_DEATH.register((entity, source) ->

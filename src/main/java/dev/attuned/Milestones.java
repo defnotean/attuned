@@ -25,6 +25,8 @@ import net.minecraft.world.level.Level;
 public final class Milestones {
 	private Milestones() {}
 
+	private static boolean initialized;
+
 	/** A one-time capacity gain tied to a notable game event. */
 	private enum Milestone {
 		NETHER("nether", 3, "stepped into the Nether"),
@@ -46,6 +48,11 @@ public final class Milestones {
 
 	/** Registers the milestone detection hooks. Called from the mod initializer. */
 	public static void init() {
+		if (initialized) {
+			return;
+		}
+		initialized = true;
+
 		ServerEntityLevelChangeEvents.AFTER_PLAYER_CHANGE_LEVEL.register((player, origin, destination) -> {
 			if (destination.dimension() == Level.NETHER) {
 				grant(player, Milestone.NETHER);

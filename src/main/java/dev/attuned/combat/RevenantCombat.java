@@ -46,10 +46,16 @@ public final class RevenantCombat {
 
 	private static final Map<UUID, Debt> DEBTS = new HashMap<>();
 	private static final Map<UUID, Long> LAST_RITES = new HashMap<>();
+	private static boolean initialized;
 
 	private RevenantCombat() {}
 
 	public static void init() {
+		if (initialized) {
+			return;
+		}
+		initialized = true;
+
 		ServerLivingEntityEvents.AFTER_DAMAGE.register(RevenantCombat::afterDamage);
 		ServerLivingEntityEvents.AFTER_DEATH.register(RevenantCombat::afterDeath);
 		ServerTickEvents.END_SERVER_TICK.register(RevenantCombat::tick);
