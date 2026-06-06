@@ -1,6 +1,7 @@
 package dev.attuned.content;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.List;
@@ -71,6 +72,18 @@ class ReweavingResultPickerTest {
 		assertEquals(Optional.of("attuned:forager_focus"), pickWithRoll(pool, 4));
 		assertEquals(Optional.of("attuned:forager_focus"), pickWithRoll(pool, 5));
 		assertEquals(Optional.of("attuned:swift_focus"), pickWithRoll(pool, 6));
+	}
+
+	@Test
+	void candidateRecordsRejectInvalidInputs() {
+		assertThrows(NullPointerException.class,
+			() -> new ReweavingResultPicker.Candidate(null, Optional.empty()));
+		assertThrows(NullPointerException.class,
+			() -> new ReweavingResultPicker.Candidate("attuned:edge_focus", null));
+		assertThrows(NullPointerException.class,
+			() -> new ReweavingResultPicker.WeightedCandidate(null, 1));
+		assertThrows(IllegalArgumentException.class,
+			() -> new ReweavingResultPicker.WeightedCandidate("attuned:edge_focus", 0));
 	}
 
 	private static Optional<String> pickWithRoll(List<ReweavingResultPicker.Candidate> pool, int roll) {

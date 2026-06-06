@@ -1,6 +1,7 @@
 package dev.attuned.content;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.random.RandomGenerator;
@@ -14,9 +15,19 @@ public final class ReweavingResultPicker {
 	}
 
 	public record Candidate(String id, Optional<String> affinity) {
+		public Candidate {
+			id = Objects.requireNonNull(id, "id");
+			affinity = Objects.requireNonNull(affinity, "affinity");
+		}
 	}
 
 	public record WeightedCandidate(String id, int weight) {
+		public WeightedCandidate {
+			id = Objects.requireNonNull(id, "id");
+			if (weight <= 0) {
+				throw new IllegalArgumentException("weight must be positive");
+			}
+		}
 	}
 
 	public static Optional<String> pick(
