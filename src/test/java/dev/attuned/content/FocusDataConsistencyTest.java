@@ -36,6 +36,8 @@ class FocusDataConsistencyTest {
 		Path.of("src/main/java/dev/attuned/content/AttunedFocusBehaviors.java");
 	private static final Path CREATIVE_TABS_SOURCE =
 		Path.of("src/main/java/dev/attuned/content/AttunedCreativeTabs.java");
+	private static final Path FOCUS_LOOKUP_SOURCE =
+		Path.of("src/main/java/dev/attuned/attunement/FocusLookup.java");
 	private static final Path FOCUS_DATA_DIR =
 		Path.of("src/main/resources/data/attuned/attuned/focus");
 	private static final Path ITEM_DEFINITION_DIR =
@@ -183,6 +185,16 @@ class FocusDataConsistencyTest {
 		assertTrue(registrations.contains("initialized = true;"),
 			"AttunedFocusBehaviors should mark successful registration as complete");
 		assertBefore(registrations, "initialized = true;", "register(\"tide\", new TideBehavior())");
+	}
+
+	@Test
+	void focusLookupRejectsDuplicateDefinitionItemsInsteadOfReplacingThem() throws IOException {
+		String source = Files.readString(FOCUS_LOOKUP_SOURCE, StandardCharsets.UTF_8);
+
+		assertTrue(source.contains("putIfAbsent("),
+			"FocusLookup should detect duplicate FocusDefinition item keys before caching lookups");
+		assertTrue(source.contains("Duplicate FocusDefinition item"),
+			"Duplicate FocusDefinition item keys should produce a clear startup error");
 	}
 
 	@Test

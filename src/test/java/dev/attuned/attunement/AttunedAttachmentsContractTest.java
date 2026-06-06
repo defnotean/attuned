@@ -77,6 +77,21 @@ class AttunedAttachmentsContractTest {
 	}
 
 	@Test
+	void focusMoveCommandRejectsStaleStacksBeforeSwapping() throws IOException {
+		String commands = read(COMMANDS);
+		String moveFocus = methodRegion(commands, "private static int moveFocus", "private static int validateContent");
+
+		assertTrue(moveFocus.contains("if (!canMoveFocus(player, first) || !canMoveFocus(player, second))"),
+			"Focus move should validate both copied stacks before mutating either slot.");
+		assertBefore(moveFocus, "if (!canMoveFocus(player, first) || !canMoveFocus(player, second))",
+			"AttunedAttachments.setSlot(player, from, second);");
+		assertTrue(commands.contains("private static boolean canMoveFocus(ServerPlayer player, ItemStack stack)"),
+			"Focus move stale-stack validation should be centralized in a named helper.");
+		assertTrue(commands.contains("return stack.isEmpty() || Attunement.definitionFor(player, stack).isPresent();"),
+			"Focus move should only swap empty slots or stacks with current Focus definitions.");
+	}
+
+	@Test
 	void listAttachmentIdsAreNormalizedBeforeReadsAndWrites() throws IOException {
 		String attachments = read(ATTACHMENTS);
 
@@ -101,5 +116,21 @@ class AttunedAttachmentsContractTest {
 	private static String read(Path file) throws IOException {
 		assertTrue(Files.isRegularFile(file), "Expected file to exist: " + file);
 		return Files.readString(file, StandardCharsets.UTF_8);
+	}
+
+	private static String methodRegion(String source, String start, String end) {
+		int startIndex = source.indexOf(start);
+		int endIndex = source.indexOf(end);
+		assertTrue(startIndex >= 0, "Expected source to contain: " + start);
+		assertTrue(endIndex > startIndex, "Expected " + end + " after " + start);
+		return source.substring(startIndex, endIndex);
+	}
+
+	private static void assertBefore(String source, String earlier, String later) {
+		int earlierIndex = source.indexOf(earlier);
+		int laterIndex = source.indexOf(later);
+		assertTrue(earlierIndex >= 0, "Expected source to contain: " + earlier);
+		assertTrue(laterIndex >= 0, "Expected source to contain: " + later);
+		assertTrue(earlierIndex < laterIndex, "Expected " + earlier + " before " + later);
 	}
 }

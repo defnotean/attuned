@@ -1,6 +1,7 @@
 package dev.attuned.api.focus;
 
 import com.mojang.serialization.Codec;
+import java.util.Objects;
 import java.util.Optional;
 import net.minecraft.util.StringRepresentable;
 
@@ -31,6 +32,7 @@ public enum Affinity implements StringRepresentable {
 
 	/** True if this affinity counters {@code other} in the cycle. */
 	public boolean beats(Affinity other) {
+		Objects.requireNonNull(other, "other");
 		return switch (this) {
 			case FURY -> other == BASTION;
 			case BASTION -> other == ZEPHYR;

@@ -173,11 +173,19 @@ public final class AttunedCommands {
 			source.sendFailure(Component.literal("Both Focus slots are empty."));
 			return 0;
 		}
+		if (!canMoveFocus(player, first) || !canMoveFocus(player, second)) {
+			source.sendFailure(Component.literal("A Focus slot contains an item that no longer has a Focus definition."));
+			return 0;
+		}
 		AttunedAttachments.setSlot(player, from, second);
 		AttunedAttachments.setSlot(player, to, first);
 		source.sendSuccess(() -> Component.literal(
 			"Swapped Focus slots " + (from + 1) + " and " + (to + 1) + "."), false);
 		return 1;
+	}
+
+	private static boolean canMoveFocus(ServerPlayer player, ItemStack stack) {
+		return stack.isEmpty() || Attunement.definitionFor(player, stack).isPresent();
 	}
 
 	private static int validateContent(CommandSourceStack source) {

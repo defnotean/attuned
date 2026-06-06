@@ -1,6 +1,7 @@
 package dev.attuned.content;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.google.gson.JsonElement;
@@ -80,6 +81,14 @@ class RadiantExpansionContractTest {
 		assertTrue(Affinity.ZEPHYR.beats(holy), "Zephyr should counter Holy");
 		assertTrue(!holy.beats(Affinity.BASTION), "Holy and Bastion should be neutral opposites");
 		assertTrue(!Affinity.BASTION.beats(holy), "Bastion and Holy should be neutral opposites");
+	}
+
+	@Test
+	void affinityMatchupsRejectMissingOpponentClearly() {
+		NullPointerException missingOpponent = assertThrows(NullPointerException.class,
+			() -> Affinity.FURY.beats(null));
+
+		assertEquals("other", missingOpponent.getMessage());
 	}
 
 	@Test

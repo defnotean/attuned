@@ -36,7 +36,11 @@ public final class FocusLookup {
 	private static Map<Item, FocusDefinition> index(Registry<FocusDefinition> registry) {
 		Map<Item, FocusDefinition> byItem = new IdentityHashMap<>();
 		for (FocusDefinition def : registry) {
-			byItem.put(def.item().value(), def);
+			Item item = def.item().value();
+			FocusDefinition previous = byItem.putIfAbsent(item, def);
+			if (previous != null) {
+				throw new IllegalStateException("Duplicate FocusDefinition item: " + item);
+			}
 		}
 		return byItem;
 	}

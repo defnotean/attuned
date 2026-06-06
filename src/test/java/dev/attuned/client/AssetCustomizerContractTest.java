@@ -144,6 +144,19 @@ class AssetCustomizerContractTest {
 	}
 
 	@Test
+	void manifestThrowingPoseUsesProjectileItemDefinition() throws IOException {
+		JsonObject throwing = manifestAsset("ocean_relic_trident_throwing");
+		Path definition = CUSTOMIZER.resolve(throwing.get("definition").getAsString()).normalize();
+		JsonObject definitionRoot = JsonParser.parseString(read(definition)).getAsJsonObject();
+
+		assertEquals(OCEAN_RELIC_TRIDENT_PROJECTILE_DEFINITION.normalize(), definition,
+			"Throwing preview should edit the projectile item definition, not the held trident definition");
+		assertEquals("attuned:item/ocean_relic_trident_throwing",
+			definitionRoot.getAsJsonObject("model").get("model").getAsString(),
+			"Projectile item definition should resolve the throwing model directly");
+	}
+
+	@Test
 	void offshoreArtKeepsPolishedSources() throws IOException {
 		assertTrue(Files.isRegularFile(OFFSHORE_ASSETS.resolve("harpoon-focus-concept-sheet.png")),
 			"Harpoon Focus should keep its polished sheet source");
@@ -517,5 +530,16 @@ class AssetCustomizerContractTest {
 
 	private static String read(Path file) throws IOException {
 		return Files.readString(file, StandardCharsets.UTF_8);
+	}
+
+	private static JsonObject manifestAsset(String id) throws IOException {
+		JsonArray assets = JsonParser.parseString(read(MANIFEST)).getAsJsonArray();
+		for (JsonElement element : assets) {
+			JsonObject asset = element.getAsJsonObject();
+			if (id.equals(asset.get("id").getAsString())) {
+				return asset;
+			}
+		}
+		throw new AssertionError("Missing customizer manifest asset: " + id);
 	}
 }
