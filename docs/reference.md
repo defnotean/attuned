@@ -191,6 +191,7 @@ Every key is optional and falls back to a built-in default:
 | `shard_fragment_loot_multiplier` | 1.0 | Extra multiplier for shard fragment rolls, after their normal 2x Focus chance scale. |
 | `voidstep_cooldown_ticks` | 200 | Cooldown of the Voidstep blink, in ticks. |
 | `gravebind_cooldown_ticks` | 1200 | Cooldown of the Gravebind death-save, in ticks. |
+| `broadcast_pact_deaths` | true | If true, Pact death messages are broadcast to nearby players; if false, only the dying player sees them. |
 
 Loot chances are clamped between 0 and 1 after all scales are applied. With
 defaults, the appended Focus-pool roll chances stay unchanged: low 8.75%,
@@ -227,11 +228,11 @@ keeps the rewards vanilla-friendly and also works with Lootr-style per-player
 chests because those mods resolve the same chest loot tables for each player
 instead of needing custom Attuned chest blocks.
 
-Every shipped Focus is added to every Attuned Focus loot pool with a positive
-weight. Theme weights bias the roll; they never remove a Focus from the pool.
-That means adding a new Focus to `AttunedContent.FOCI` and its definition data
-keeps it findable anywhere Attuned Focus loot can roll, including Lootr
-per-player containers.
+Every registered item backed by FocusDefinition data is added to every Attuned
+Focus loot pool with a positive weight. Theme weights bias the roll; they never
+remove a Focus from the pool. That means adding a registered Focus item and its
+definition data keeps it findable anywhere Attuned Focus loot can roll,
+including Lootr per-player containers.
 
 The Unseen Foci are weighted a little higher in stealth-flavoured structures and
 ruins such as mineshafts, strongholds, outposts, ancient cities, end cities, and

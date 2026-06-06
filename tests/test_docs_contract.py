@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import re
 import unittest
 from pathlib import Path
 
@@ -39,6 +40,30 @@ class DocsContractTest(unittest.TestCase):
         )
         for behavior_id in behavior_ids:
             self.assertIn(behavior_id, reference)
+
+    def test_reference_docs_cover_every_server_config_key(self) -> None:
+        config_source = (ROOT / "src" / "main" / "java" / "dev" / "attuned" / "AttunedConfig.java").read_text(
+            encoding="utf-8"
+        )
+        reference = (ROOT / "docs" / "reference.md").read_text(encoding="utf-8")
+
+        config_keys = sorted(set(re.findall(r'optionalFieldOf\("([^"]+)"', config_source)))
+
+        self.assertGreater(len(config_keys), 0)
+        for key in config_keys:
+            self.assertIn(f"`{key}`", reference, f"docs/reference.md should document config key {key}")
+
+    def test_reference_docs_describe_registry_authoritative_focus_loot(self) -> None:
+        reference = (ROOT / "docs" / "reference.md").read_text(encoding="utf-8")
+
+        self.assertIn("FocusDefinition data", reference)
+        self.assertNotIn("AttunedContent.FOCI", reference)
+
+    def test_contributing_describes_current_version_release_notes(self) -> None:
+        contributing = (ROOT / "CONTRIBUTING.md").read_text(encoding="utf-8")
+
+        self.assertIn("## Attuned <mod_version>", contributing)
+        self.assertIn("current-version section", contributing)
 
 
 if __name__ == "__main__":
