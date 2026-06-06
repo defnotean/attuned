@@ -43,11 +43,11 @@ public final class AttunedPlayerCleanup {
 		}
 		initialized = true;
 		ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> {
-			for (Consumer<ServerPlayer> cleanup : PLAYER_CALLBACKS) {
+			for (Consumer<ServerPlayer> cleanup : List.copyOf(PLAYER_CALLBACKS)) {
 				runPlayerCleanup(cleanup, handler.player);
 			}
 			UUID id = handler.player.getUUID();
-			for (Consumer<UUID> cleanup : CALLBACKS) {
+			for (Consumer<UUID> cleanup : List.copyOf(CALLBACKS)) {
 				runUuidCleanup(cleanup, id);
 			}
 		});

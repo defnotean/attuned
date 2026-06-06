@@ -136,6 +136,21 @@ class RuntimeCleanupContractTest {
 	}
 
 	@Test
+	void cleanupCoordinatorsIterateSnapshotsDuringTeardown() throws IOException {
+		String playerCleanup = read(PLAYER_CLEANUP);
+		String serverCleanup = read(SERVER_CLEANUP);
+
+		assertTrue(playerCleanup.contains("for (Consumer<ServerPlayer> cleanup : List.copyOf(PLAYER_CALLBACKS))"),
+			"Player cleanup should iterate a snapshot so callback registration during teardown cannot interrupt cleanup.");
+		assertTrue(playerCleanup.contains("for (Consumer<UUID> cleanup : List.copyOf(CALLBACKS))"),
+			"UUID cleanup should iterate a snapshot so callback registration during teardown cannot interrupt cleanup.");
+		assertTrue(serverCleanup.contains("for (Consumer<MinecraftServer> cleanup : List.copyOf(SERVER_CALLBACKS))"),
+			"Server-aware cleanup should iterate a snapshot so callback registration during teardown cannot interrupt cleanup.");
+		assertTrue(serverCleanup.contains("for (Runnable cleanup : List.copyOf(CALLBACKS))"),
+			"Runnable cleanup should iterate a snapshot so callback registration during teardown cannot interrupt cleanup.");
+	}
+
+	@Test
 	void focusEffectRuntimeRegistersHooksOnce() throws IOException {
 		String effects = read(ATTUNED_EFFECTS);
 

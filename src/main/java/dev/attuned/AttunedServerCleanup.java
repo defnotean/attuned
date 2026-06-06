@@ -39,10 +39,10 @@ public final class AttunedServerCleanup {
 		}
 		initialized = true;
 		ServerLifecycleEvents.SERVER_STOPPED.register(server -> {
-			for (Consumer<MinecraftServer> cleanup : SERVER_CALLBACKS) {
+			for (Consumer<MinecraftServer> cleanup : List.copyOf(SERVER_CALLBACKS)) {
 				runServerCleanup(cleanup, server);
 			}
-			for (Runnable cleanup : CALLBACKS) {
+			for (Runnable cleanup : List.copyOf(CALLBACKS)) {
 				runCleanup(cleanup);
 			}
 		});
