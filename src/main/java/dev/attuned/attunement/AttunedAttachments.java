@@ -92,10 +92,26 @@ public final class AttunedAttachments {
 	}
 
 	public static void setSlot(Player player, int slot, ItemStack stack) {
+		if (slot < 0 || slot >= AttunedInv.SIZE) {
+			return;
+		}
+		if (stack == null || stack.isEmpty()) {
+			player.setAttached(INVENTORY, getInventory(player).with(slot, ItemStack.EMPTY));
+			return;
+		}
+		if (Attunement.definitionFor(player, stack).isEmpty()) {
+			return;
+		}
 		// Read through getInventory (never null — falls back to an empty inventory),
 		// then replace the whole value. Do not use modifyAttached here: it passes
 		// null to its operator when the attachment has never been set.
-		player.setAttached(INVENTORY, getInventory(player).with(slot, stack));
+		player.setAttached(INVENTORY, getInventory(player).with(slot, cappedSlotStack(stack)));
+	}
+
+	private static ItemStack cappedSlotStack(ItemStack stack) {
+		ItemStack copy = stack.copy();
+		copy.setCount(Math.min(copy.getCount(), 1));
+		return copy;
 	}
 
 	/** Whether the player has already claimed the milestone with the given id. */

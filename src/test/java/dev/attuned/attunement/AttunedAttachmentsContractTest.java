@@ -58,6 +58,24 @@ class AttunedAttachmentsContractTest {
 			"Resonance clamping should preserve the zero floor and one ceiling.");
 	}
 
+	@Test
+	void focusSlotWritesIgnoreInvalidSlotsAndNormalizeStacks() throws IOException {
+		String attachments = read(ATTACHMENTS);
+
+		assertTrue(attachments.contains("if (slot < 0 || slot >= AttunedInv.SIZE)"),
+			"Attachment slot writes should ignore out-of-range slot indices instead of throwing.");
+		assertTrue(attachments.contains("if (stack == null || stack.isEmpty())"),
+			"Attachment slot writes should treat null or empty stacks as an explicit clear.");
+		assertTrue(attachments.contains("Attunement.definitionFor(player, stack).isEmpty()"),
+			"Attachment slot writes should reject non-Focus stacks at the public boundary.");
+		assertTrue(attachments.contains("getInventory(player).with(slot, cappedSlotStack(stack))"),
+			"Attachment slot writes should normalize valid Focus stacks before persisting them.");
+		assertTrue(attachments.contains("private static ItemStack cappedSlotStack(ItemStack stack)"),
+			"Focus slot stack normalization should be centralized in a named helper.");
+		assertTrue(attachments.contains("copy.setCount(Math.min(copy.getCount(), 1))"),
+			"Attachment slot writes should preserve the one-Focus-per-slot invariant.");
+	}
+
 	private static String read(Path file) throws IOException {
 		assertTrue(Files.isRegularFile(file), "Expected file to exist: " + file);
 		return Files.readString(file, StandardCharsets.UTF_8);
