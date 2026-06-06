@@ -29,6 +29,9 @@ public record FocusDefinition(
 
 	public FocusDefinition {
 		item = Objects.requireNonNull(item, "item");
+		if (cost < 0 || cost > 64) {
+			throw new IllegalArgumentException("Focus cost must be between 0 and 64");
+		}
 		affinity = Objects.requireNonNull(affinity, "affinity");
 		faction = Objects.requireNonNull(faction, "faction");
 		modifiers = List.copyOf(Objects.requireNonNull(modifiers, "modifiers"));
