@@ -191,6 +191,9 @@ public class AltarMenu extends AbstractContainerMenu {
 
 	@Override
 	public ItemStack quickMoveStack(Player player, int slotIndex) {
+		if (slotIndex < 0 || slotIndex >= this.slots.size()) {
+			return ItemStack.EMPTY;
+		}
 		ItemStack moved = ItemStack.EMPTY;
 		Slot slot = this.slots.get(slotIndex);
 		if (slot != null && slot.hasItem()) {

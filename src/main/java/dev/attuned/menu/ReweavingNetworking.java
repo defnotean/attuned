@@ -49,6 +49,9 @@ public final class ReweavingNetworking {
 			if (!(level instanceof ServerLevel serverLevel)) {
 				return;
 			}
+			if (player.level() != serverLevel) {
+				return;
+			}
 			BlockState state = serverLevel.getBlockState(pos);
 			if (!state.is(AttunedContent.ALTAR_OF_REWEAVING)) {
 				return;

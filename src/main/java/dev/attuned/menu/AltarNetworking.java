@@ -72,6 +72,9 @@ public final class AltarNetworking {
 			if (!(level instanceof ServerLevel serverLevel)) {
 				return;
 			}
+			if (player.level() != serverLevel) {
+				return;
+			}
 			BlockState state = serverLevel.getBlockState(pos);
 			if (!state.is(AttunedContent.ATTUNEMENT_ALTAR)) {
 				return;

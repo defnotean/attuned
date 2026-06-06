@@ -15,6 +15,12 @@ class ReweavingContentContractTest {
 		Path.of("src/main/java/dev/attuned/Attuned.java");
 	private static final Path MENU_TYPE_SOURCE =
 		Path.of("src/main/java/dev/attuned/menu/ReweavingMenuType.java");
+	private static final Path ALTAR_MENU_SOURCE =
+		Path.of("src/main/java/dev/attuned/menu/AltarMenu.java");
+	private static final Path REWEAVING_MENU_SOURCE =
+		Path.of("src/main/java/dev/attuned/menu/ReweavingMenu.java");
+	private static final Path ALTAR_NETWORKING_SOURCE =
+		Path.of("src/main/java/dev/attuned/menu/AltarNetworking.java");
 	private static final Path NETWORKING_SOURCE =
 		Path.of("src/main/java/dev/attuned/menu/ReweavingNetworking.java");
 	private static final Path SCREEN_REGISTRATION_SOURCE =
@@ -52,5 +58,31 @@ class ReweavingContentContractTest {
 		assertTrue(lang.contains("\"item.attuned.altar_of_reweaving\""));
 		assertTrue(lang.contains("\"container.attuned.reweaving_altar\""));
 		assertTrue(lang.contains("\"screen.attuned.reweaving_altar.reweave\""));
+	}
+
+	@Test
+	void customMenusIgnoreInvalidQuickMoveSlots() throws IOException {
+		assertQuickMoveSlotGuard(Files.readString(ALTAR_MENU_SOURCE, StandardCharsets.UTF_8), "AltarMenu");
+		assertQuickMoveSlotGuard(Files.readString(REWEAVING_MENU_SOURCE, StandardCharsets.UTF_8), "ReweavingMenu");
+	}
+
+	@Test
+	void customMenuPayloadsRejectStaleDimensionAccess() throws IOException {
+		assertStaleDimensionGuard(
+			Files.readString(ALTAR_NETWORKING_SOURCE, StandardCharsets.UTF_8), "AltarNetworking");
+		assertStaleDimensionGuard(
+			Files.readString(NETWORKING_SOURCE, StandardCharsets.UTF_8), "ReweavingNetworking");
+	}
+
+	private static void assertQuickMoveSlotGuard(String source, String menuName) {
+		assertTrue(source.contains("if (slotIndex < 0 || slotIndex >= this.slots.size())"),
+			menuName + " should reject invalid quick-move slot indexes before reading the slot list.");
+		assertTrue(source.contains("return ItemStack.EMPTY;"),
+			menuName + " should ignore invalid quick-move requests without moving items.");
+	}
+
+	private static void assertStaleDimensionGuard(String source, String handlerName) {
+		assertTrue(source.contains("if (player.level() != serverLevel)"),
+			handlerName + " should reject stale menu access from a different server level.");
 	}
 }
