@@ -2,9 +2,16 @@ package dev.attuned.combat;
 
 import dev.attuned.AttunedAdvancements;
 import dev.attuned.api.focus.Affinity;
+import dev.attuned.api.focus.FocusDefinition;
 import dev.attuned.attunement.AttunedAttachments;
+import dev.attuned.attunement.AttunedInv;
 import dev.attuned.attunement.Attunement;
+import dev.attuned.attunement.BudgetResolver;
+import java.util.ArrayList;
+import java.util.EnumSet;
+import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.minecraft.server.MinecraftServer;
@@ -44,6 +51,17 @@ public final class Resonance {
 	/** Per-tick idle decay — gauge falls to zero in about 200 seconds at rest. */
 	private static final float DECAY_PER_TICK = 0.00025F;
 	private static boolean initialized;
+
+	private record PlayerCombatState(Optional<Affinity> committed, boolean discord,
+			Optional<Apex.Capstone> capstone) {
+		boolean isAt(Apex.Capstone target) {
+			return capstone.filter(value -> value == target).isPresent();
+		}
+
+		boolean hasAffinityPressure() {
+			return committed.isPresent() || discord;
+		}
+	}
 
 	/** Registers the event hooks and the per-tick decay. */
 	public static void init() {
@@ -87,25 +105,32 @@ public final class Resonance {
 		if (attacker == defender) {
 			return;
 		}
+		PlayerCombatState defenderState = null;
+		if (defender instanceof Player defenderPlayer) {
+			defenderState = playerState(defenderPlayer);
+		}
+		PlayerCombatState attackerState = null;
+		if (attacker instanceof Player attackerPlayer) {
+			attackerState = playerState(attackerPlayer);
+		}
 		// Attacker side — gain when the matchup empowers us. Maelstrom uses a
 		// generic combat path because Discord deliberately has no single lane.
 		if (attacker instanceof Player attackerPlayer) {
-			Optional<Apex.Capstone> attackerCapstone = Apex.capstoneOf(attackerPlayer);
-			if (attackerCapstone.filter(capstone -> capstone == Apex.Capstone.MAELSTROM).isPresent()
-					&& CombatTargets.hasAffinity(defender)) {
+			if (attackerState.isAt(Apex.Capstone.MAELSTROM)
+					&& hasAffinityPressure(defender, defenderState)) {
 				add(attackerPlayer, dealtDamage * HIT_EMPOWERED_GAIN_PER_DAMAGE);
-			} else if (matchup(attackerPlayer, defender) == Matchup.EMPOWERED) {
+			} else if (matchup(attackerState, defender, defenderState) == Matchup.EMPOWERED) {
 				add(attackerPlayer, dealtDamage * HIT_EMPOWERED_GAIN_PER_DAMAGE);
 			}
 		}
 		// Defender side — drain when the matchup neutralizes us.
 		if (defender instanceof Player defenderPlayer && attacker != null
-				&& matchup(defenderPlayer, attacker) == Matchup.NEUTRALIZED) {
+				&& matchup(defenderState, attacker, attackerState) == Matchup.NEUTRALIZED) {
 			add(defenderPlayer, -HIT_NEUTRALIZED_LOSS);
 		}
 		if (defender instanceof Player defenderPlayer && attacker != null
-				&& Apex.capstoneOf(defenderPlayer).filter(capstone -> capstone == Apex.Capstone.STILLPOINT).isPresent()
-				&& Apex.hasAffinityPressure(attacker)) {
+				&& defenderState.isAt(Apex.Capstone.STILLPOINT)
+				&& hasAffinityPressure(attacker, attackerState)) {
 			add(defenderPlayer, KILL_NEUTRAL_GAIN);
 		}
 	}
@@ -116,8 +141,11 @@ public final class Resonance {
 		if (!(attacker instanceof Player player) || entity == player) {
 			return;
 		}
-		Optional<Apex.Capstone> capstone = Apex.capstoneOf(player);
-		switch (matchup(player, entity)) {
+		PlayerCombatState attackerState = playerState(player);
+		PlayerCombatState targetState = entity instanceof Player targetPlayer
+			? playerState(targetPlayer)
+			: null;
+		switch (matchup(attackerState, entity, targetState)) {
 			case EMPOWERED -> {
 				add(player, KILL_EMPOWERED_GAIN);
 				if (player instanceof ServerPlayer serverPlayer) {
@@ -125,9 +153,8 @@ public final class Resonance {
 				}
 			}
 			case NORMAL -> {
-				if (capstone
-						.filter(apex -> apex == Apex.Capstone.MAELSTROM
-							&& CombatTargets.hasAffinity(entity)).isPresent()) {
+				if (attackerState.isAt(Apex.Capstone.MAELSTROM)
+						&& hasAffinityPressure(entity, targetState)) {
 					add(player, KILL_EMPOWERED_GAIN);
 				} else {
 					add(player, KILL_NEUTRAL_GAIN);
@@ -147,12 +174,15 @@ public final class Resonance {
 	}
 
 	/** How a player's committed affinity fares against another combatant's. */
-	private static Matchup matchup(Player player, LivingEntity other) {
-		Optional<Affinity> mine = Attunement.committedAffinity(player);
+	private static Matchup matchup(PlayerCombatState player, LivingEntity other,
+			PlayerCombatState otherState) {
+		Optional<Affinity> mine = player.committed();
 		if (mine.isEmpty()) {
 			return Matchup.NORMAL;
 		}
-		Optional<Affinity> theirs = AttunedCombat.affinityOf(other);
+		Optional<Affinity> theirs = otherState != null
+			? otherState.committed()
+			: AttunedCombat.affinityOf(other);
 		if (theirs.isEmpty()) {
 			return Matchup.NORMAL;
 		}
@@ -165,6 +195,37 @@ public final class Resonance {
 			return Matchup.NEUTRALIZED;
 		}
 		return Matchup.NORMAL;
+	}
+
+	private static boolean hasAffinityPressure(LivingEntity entity, PlayerCombatState state) {
+		return state != null ? state.hasAffinityPressure() : CombatTargets.hasAffinity(entity);
+	}
+
+	private static PlayerCombatState playerState(Player player) {
+		BudgetResolver.Resolution resolution = Attunement.resolution(player);
+		List<Integer> activeSlots = resolution.activeSlots();
+		List<Optional<Affinity>> orderedActiveAffinities = new ArrayList<>(activeSlots.size());
+		Set<Affinity> activeAffinities = EnumSet.noneOf(Affinity.class);
+		AttunedInv inv = AttunedAttachments.getInventory(player);
+		int used = 0;
+		for (int slot : activeSlots) {
+			Optional<FocusDefinition> maybeDefinition = Attunement.definitionFor(player, inv.get(slot));
+			if (maybeDefinition.isEmpty()) {
+				orderedActiveAffinities.add(Optional.empty());
+				continue;
+			}
+			FocusDefinition definition = maybeDefinition.get();
+			used += definition.cost();
+			Optional<Affinity> affinity = definition.affinity();
+			orderedActiveAffinities.add(affinity);
+			affinity.ifPresent(activeAffinities::add);
+		}
+		Optional<Affinity> committed = activeAffinities.size() == 1
+			? Optional.of(activeAffinities.iterator().next())
+			: Optional.empty();
+		boolean discord = activeAffinities.size() >= 2;
+		return new PlayerCombatState(committed, discord,
+			Apex.resolveCapstone(orderedActiveAffinities, used, Attunement.capacity(player)));
 	}
 
 	private enum Matchup { EMPOWERED, NORMAL, NEUTRALIZED }
