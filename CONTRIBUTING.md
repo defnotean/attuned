@@ -69,4 +69,4 @@ Keep local secrets in environment variables or untracked `.env` files. The Modri
 
 ## Release notes
 
-Update `CHANGELOG.md` before publishing. The top non-empty `## Attuned <mod_version>` section must match `gradle.properties`, and the Modrinth task uploads only that current-version section as its release notes.
+Update `CHANGELOG.md` before publishing. It must contain a non-empty `## Attuned <mod_version>` section matching `gradle.properties`, and the Modrinth task uploads only that current-version section as its release notes.

@@ -2,7 +2,11 @@ package dev.attuned.client.hud;
 
 import dev.attuned.Attuned;
 import dev.attuned.api.focus.Affinity;
+import dev.attuned.api.focus.FocusDefinition;
+import dev.attuned.attunement.AttunedAttachments;
+import dev.attuned.attunement.AttunedInv;
 import dev.attuned.attunement.Attunement;
+import dev.attuned.attunement.BudgetResolver;
 import dev.attuned.client.AttunedClientConfig;
 import dev.attuned.combat.Apex;
 import dev.attuned.combat.MobAffinities;
@@ -18,8 +22,12 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.ArrayList;
+import java.util.EnumSet;
+import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
+import java.util.Set;
 
 /**
  * The combat heads-up overlay: a compact panel anchored above the hotbar that
@@ -88,6 +96,21 @@ public final class CombatHud {
 	private enum Matchup { EMPOWERED, NEUTRAL, NEUTRALIZED, NONE }
 	private static boolean initialized;
 
+	private record OwnStance(Optional<Affinity> committed, boolean discord,
+			Optional<Apex.Capstone> capstone, float resonance) {
+		static OwnStance hidden() {
+			return new OwnStance(Optional.empty(), false, Optional.empty(), 0.0F);
+		}
+
+		boolean hasCombatSignal() {
+			return committed.isPresent() || discord || resonance > 0.0F;
+		}
+
+		boolean apexArmed() {
+			return capstone.isPresent() && resonance >= Resonance.APEX_THRESHOLD;
+		}
+	}
+
 	private record TargetStance(@Nullable Affinity affinity, boolean discord,
 			@Nullable Apex.Capstone capstone, boolean apexArmed) {
 		Optional<Affinity> matchupAffinity() {
@@ -134,27 +157,24 @@ public final class CombatHud {
 
 		LivingEntity target = showEnemy ? targetedLiving(minecraft, player) : null;
 		TargetStance targetStance = showEnemy ? targetedStance(target) : null;
+		OwnStance ownStance = showOwn ? ownStance(player) : OwnStance.hidden();
 		boolean hasTarget = targetStance != null;
 		Optional<Affinity> targetAffinity = hasTarget ? targetStance.matchupAffinity() : Optional.empty();
-		// Cheapest gate first — a plain float read off the player attachment.
-		float resonance = Resonance.get(player);
-		Optional<Affinity> committed = Attunement.committedAffinity(player);
-		boolean discord = Attunement.isDiscord(player);
+		// Own stance is already resolved above so the draw path does not re-walk
+		// Focus slots for committed affinity, Discord, and Apex separately.
 		// Skip the panel entirely for unattuned players with no resonance — there
 		// is nothing combat-relevant to telegraph.
-		if (showOwn && committed.isEmpty() && !discord && resonance <= 0.0F && !hasTarget) {
+		if (showOwn && !ownStance.hasCombatSignal() && !hasTarget) {
 			return;
 		}
 		if (!showOwn && !hasTarget) {
 			return;
 		}
-		Optional<Apex.Capstone> capstone = Apex.capstoneOf(player);
-		boolean apexArmed = capstone.isPresent() && Resonance.atApex(player);
 
 		// The affinity actually painted on the player gem — committed first, then
 		// the Apex fallback for legacy state, so the glyph routing matches the
 		// bezel colour rather than diverging from it.
-		Matchup matchup = matchup(committed, targetAffinity);
+		Matchup matchup = matchup(ownStance.committed(), targetAffinity);
 
 		int screenW = graphics.guiWidth();
 		int screenH = graphics.guiHeight();
@@ -176,12 +196,13 @@ public final class CombatHud {
 		// top in the visual stack and never gets clipped by the bar.
 		if (showOwn) {
 			drawResonanceBar(graphics, rowX + 3, rowY + PLAYER_GEM_SIZE - 3,
-				RESONANCE_BAR_W, resonance);
+				RESONANCE_BAR_W, ownStance.resonance());
 
 		// Player gem with a dark bezel — same construction as the Focus panel gem.
 		// The player's own gem is never "targeted" — that flag is for the mob gem.
 			drawPlayerGem(graphics, rowX, rowY, PLAYER_GEM_SIZE,
-				committed.orElse(null), discord, capstone.orElse(null), apexArmed);
+				ownStance.committed().orElse(null), ownStance.discord(),
+				ownStance.capstone().orElse(null), ownStance.apexArmed());
 
 		// Matchup state markers — gold pulse halo for empowered, red dim overlay
 		// for neutralized. Neutral and "no target" cases leave the gem plain.
@@ -201,6 +222,36 @@ public final class CombatHud {
 			}
 			drawTargetGem(graphics, targetX, targetY, TARGET_GEM_SIZE, targetStance);
 		}
+	}
+
+	private static OwnStance ownStance(Player player) {
+		float resonance = Resonance.get(player);
+		AttunedInv inv = AttunedAttachments.getInventory(player);
+		BudgetResolver.Resolution resolution = Attunement.resolution(player);
+		List<Integer> activeSlots = resolution.activeSlots();
+		List<Optional<Affinity>> activeAffinities = new ArrayList<>(activeSlots.size());
+		Set<Affinity> distinctAffinities = EnumSet.noneOf(Affinity.class);
+		int used = 0;
+		for (int slot : activeSlots) {
+			Optional<FocusDefinition> definition = Attunement.definitionFor(player, inv.get(slot));
+			if (definition.isEmpty()) {
+				activeAffinities.add(Optional.empty());
+				continue;
+			}
+			FocusDefinition focus = definition.get();
+			used += focus.cost();
+			Optional<Affinity> affinity = focus.affinity();
+			activeAffinities.add(affinity);
+			affinity.ifPresent(distinctAffinities::add);
+		}
+		Optional<Affinity> committed = distinctAffinities.size() == 1
+			? Optional.of(distinctAffinities.iterator().next())
+			: Optional.empty();
+		return new OwnStance(
+			committed,
+			distinctAffinities.size() >= 2,
+			Apex.resolveCapstone(activeAffinities, used, Attunement.capacity(player)),
+			resonance);
 	}
 
 	private static TargetStance targetedStance(@Nullable LivingEntity target) {

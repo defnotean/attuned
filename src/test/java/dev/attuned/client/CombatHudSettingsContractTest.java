@@ -1,5 +1,6 @@
 package dev.attuned.client;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
@@ -40,5 +41,35 @@ class CombatHudSettingsContractTest {
 			"PvP targets with active neutral Foci should still show a neutral target marker.");
 		assertTrue(source.contains("drawTargetGem("),
 			"Target rendering should support player Discord/Apex/neutral stance sprites, not only mob affinity sprites.");
+	}
+
+	@Test
+	void combatHudReusesOneOwnAttunementSnapshotPerFrame() throws IOException {
+		String source = Files.readString(COMBAT_HUD_SOURCE, StandardCharsets.UTF_8);
+
+		assertEquals(1, countOccurrences(source, "Attunement.resolution(player)"),
+			"Own Combat HUD stance should resolve active Focus slots once per rendered frame.");
+		assertEquals(0, countOccurrences(source, "Attunement.committedAffinity(player)"),
+			"Own Combat HUD stance should derive committed affinity from its resolved active slots.");
+		assertEquals(0, countOccurrences(source, "Attunement.isDiscord(player)"),
+			"Own Combat HUD stance should derive Discord from its resolved active slots.");
+		assertEquals(0, countOccurrences(source, "Apex.capstoneOf(player)"),
+			"Own Combat HUD stance should derive Apex from its resolved active slots.");
+		assertEquals(0, countOccurrences(source, "Resonance.atApex(player)"),
+			"Own Combat HUD stance should reuse the resonance value already read for the frame.");
+		assertTrue(source.contains("OwnStance ownStance = showOwn ? ownStance(player) : OwnStance.hidden()"),
+			"Own stance should be skipped entirely when the player HUD section is hidden.");
+		assertTrue(source.contains("Apex.resolveCapstone(activeAffinities, used, Attunement.capacity(player))"),
+			"Own Combat HUD stance should resolve Apex from the ordered active affinities and cached used budget.");
+	}
+
+	private static int countOccurrences(String value, String needle) {
+		int count = 0;
+		int index = 0;
+		while ((index = value.indexOf(needle, index)) >= 0) {
+			count++;
+			index += needle.length();
+		}
+		return count;
 	}
 }
