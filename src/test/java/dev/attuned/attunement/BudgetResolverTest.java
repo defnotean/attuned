@@ -1,6 +1,7 @@
 package dev.attuned.attunement;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import dev.attuned.attunement.BudgetResolver.Candidate;
 import dev.attuned.attunement.BudgetResolver.DormantReason;
@@ -116,5 +117,13 @@ class BudgetResolverTest {
 	@Test
 	void noCandidatesResolvesEmpty() {
 		assertEquals(List.of(), BudgetResolver.resolve(List.of(), 20));
+	}
+
+	@Test
+	void candidateRejectsInvalidSlotAndCost() {
+		assertThrows(IllegalArgumentException.class, () -> new Candidate<>(-1, 1, false, "focus"),
+			"Budget candidates should not represent negative inventory slots.");
+		assertThrows(IllegalArgumentException.class, () -> new Candidate<>(0, -1, false, "focus"),
+			"Budget candidates should not represent negative attunement costs.");
 	}
 }

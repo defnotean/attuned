@@ -36,7 +36,16 @@ public final class BudgetResolver {
 	 * @param unique   whether at most one copy of this Focus may be active
 	 * @param identity the token identifying "the same Focus" for the unique rule
 	 */
-	public record Candidate<I>(int slot, int cost, boolean unique, I identity) {}
+	public record Candidate<I>(int slot, int cost, boolean unique, I identity) {
+		public Candidate {
+			if (slot < 0) {
+				throw new IllegalArgumentException("slot must be non-negative");
+			}
+			if (cost < 0) {
+				throw new IllegalArgumentException("cost must be non-negative");
+			}
+		}
+	}
 
 	/** Why an occupied Focus slot was skipped during budget resolution. */
 	public enum DormantReason {
