@@ -27,8 +27,14 @@ class FociHudCooldownContractTest {
 			"The client should receive server-authoritative ability cooldown status.");
 		assertTrue(state.contains("remainingTicks") && state.contains("totalTicks"),
 			"The client should keep both remaining and total cooldown ticks.");
-		assertTrue(state.contains("tick()"),
+		assertTrue(state.contains("tick(Minecraft client)"),
 			"The client should locally count down between server sync packets.");
+		assertTrue(state.contains("client.level == null || client.player == null"),
+			"The client cooldown mirror should reset when no world or player is active.");
+		assertTrue(state.contains("slot = FocusAbilityStatusPayload.NO_ABILITY_SLOT"),
+			"The cooldown reset should clear the selected ability slot.");
+		assertTrue(state.contains("remainingTicks = 0") && state.contains("totalTicks = 0"),
+			"The cooldown reset should clear stale progress from the previous session.");
 		assertTrue(hud.contains("FocusAbilityClientState"),
 			"The Foci HUD should read the client cooldown state.");
 		assertTrue(hud.contains("drawCooldownRing"),
