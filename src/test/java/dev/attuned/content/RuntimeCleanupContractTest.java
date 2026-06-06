@@ -177,6 +177,15 @@ class RuntimeCleanupContractTest {
 	}
 
 	@Test
+	void focusEffectCleanupRegistersBeforeBehaviorFallbackCleanup() throws IOException {
+		String source = read(ATTUNED);
+
+		assertBefore(source, "AttunedPlayerCleanup.init()", "AttunedEffects.init()");
+		assertBefore(source, "AttunedServerCleanup.init()", "AttunedEffects.init()");
+		assertBefore(source, "AttunedEffects.init()", "AttunedContent.init()");
+	}
+
+	@Test
 	void rawServerStopHooksStayCentralized() throws IOException {
 		List<String> hooks = directServerStopHooks();
 
@@ -211,6 +220,14 @@ class RuntimeCleanupContractTest {
 			offset += needle.length();
 		}
 		assertEquals(expected, count, "Expected " + expected + " occurrences of: " + needle);
+	}
+
+	private static void assertBefore(String source, String earlier, String later) {
+		int earlierIndex = source.indexOf(earlier);
+		int laterIndex = source.indexOf(later);
+		assertTrue(earlierIndex >= 0, "Expected source to contain: " + earlier);
+		assertTrue(laterIndex >= 0, "Expected source to contain: " + later);
+		assertTrue(earlierIndex < laterIndex, "Expected " + earlier + " before " + later);
 	}
 
 	private static List<String> directServerStopHooks() throws IOException {

@@ -38,10 +38,11 @@ public class Attuned implements ModInitializer {
 		AttunedAttachments.init();
 		AttunedPlayerCleanup.init();
 		AttunedServerCleanup.init();
+		// Register generic Focus teardown before Focus behaviors add fallback cleanup callbacks.
+		AttunedEffects.init();
 		AttunedContent.init();
 		AltarAnimations.init();
 		AttunedLoot.init();
-		AttunedEffects.init();
 		AttunedCommands.init();
 		AttunedCombat.init();
 		UnseenCombat.init();
