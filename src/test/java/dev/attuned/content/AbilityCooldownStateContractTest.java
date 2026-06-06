@@ -70,6 +70,24 @@ class AbilityCooldownStateContractTest {
 			"The cooldown status payload should be registered clientbound.");
 	}
 
+	@Test
+	void abilityBehaviorCallbacksAreIsolatedAndLogged() throws IOException {
+		String state = read(ABILITY_STATE);
+
+		assertTrue(state.contains("runAbility(selection.behavior(), player, selection.stack())"),
+			"Ability execution should go through an isolated helper.");
+		assertTrue(state.contains("hasActiveAbility(behavior, player, stack)"),
+			"Ability availability checks should go through an isolated helper.");
+		assertTrue(state.contains("abilityCooldownTicks(selection.behavior(), player, selection.stack())"),
+			"Ability cooldown lookups should go through an isolated helper.");
+		assertTrue(state.contains("catch (RuntimeException e)"),
+			"Ability behavior failures should not escape the packet handler or server tick.");
+		assertTrue(state.contains("Attuned.LOGGER.warn(\"Attuned Focus ability"),
+			"Ability behavior failures should be logged.");
+		assertTrue(state.contains("return Math.max(0, behavior.abilityCooldownTicks())"),
+			"Cooldown values should be clamped before HUD sync and storage.");
+	}
+
 	private static String read(Path path) throws IOException {
 		assertTrue(Files.isRegularFile(path), "Expected file to exist: " + path);
 		return Files.readString(path, StandardCharsets.UTF_8);

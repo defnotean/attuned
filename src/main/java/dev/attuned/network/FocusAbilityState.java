@@ -1,5 +1,6 @@
 package dev.attuned.network;
 
+import dev.attuned.Attuned;
 import dev.attuned.AttunedPlayerCleanup;
 import dev.attuned.AttunedRegistries;
 import dev.attuned.AttunedServerCleanup;
@@ -61,13 +62,13 @@ public final class FocusAbilityState {
 			return;
 		}
 
-		boolean fired = selection.behavior().onAbility(player, selection.stack());
+		boolean fired = runAbility(selection.behavior(), player, selection.stack());
 		if (!fired) {
-			sync(player, selection.slot(), 0, selection.behavior().abilityCooldownTicks());
+			sync(player, selection.slot(), 0, abilityCooldownTicks(selection.behavior(), player, selection.stack()));
 			return;
 		}
 
-		int total = Math.max(0, selection.behavior().abilityCooldownTicks());
+		int total = abilityCooldownTicks(selection.behavior(), player, selection.stack());
 		if (total > 0) {
 			long endsAt = player.level().getGameTime() + total;
 			COOLDOWNS.put(player.getUUID(), new Cooldown(endsAt, total));
@@ -86,7 +87,7 @@ public final class FocusAbilityState {
 				.flatMap(FocusDefinition::behavior)
 				.map(AttunedRegistries::getBehavior)
 				.orElse(null);
-			if (behavior != null && behavior.hasActiveAbility()) {
+			if (behavior != null && hasActiveAbility(behavior, player, stack)) {
 				return new AbilitySelection(slot, stack, behavior);
 			}
 		}
@@ -122,11 +123,44 @@ public final class FocusAbilityState {
 			Cooldown cooldown = COOLDOWNS.get(player.getUUID());
 			if (cooldown != null) {
 				total = cooldown.totalTicks();
-			} else if (selection.behavior().hasActiveAbility()) {
-				total = selection.behavior().abilityCooldownTicks();
+			} else if (hasActiveAbility(selection.behavior(), player, selection.stack())) {
+				total = abilityCooldownTicks(selection.behavior(), player, selection.stack());
 			}
 			sync(player, selection.slot(), remaining, total);
 		}
+	}
+
+	private static boolean hasActiveAbility(FocusBehavior behavior, ServerPlayer player, ItemStack stack) {
+		try {
+			return behavior.hasActiveAbility();
+		} catch (RuntimeException e) {
+			logAbilityFailure("availability", behavior, player, stack, e);
+			return false;
+		}
+	}
+
+	private static int abilityCooldownTicks(FocusBehavior behavior, ServerPlayer player, ItemStack stack) {
+		try {
+			return Math.max(0, behavior.abilityCooldownTicks());
+		} catch (RuntimeException e) {
+			logAbilityFailure("cooldown", behavior, player, stack, e);
+			return 0;
+		}
+	}
+
+	private static boolean runAbility(FocusBehavior behavior, ServerPlayer player, ItemStack stack) {
+		try {
+			return behavior.onAbility(player, stack);
+		} catch (RuntimeException e) {
+			logAbilityFailure("execution", behavior, player, stack, e);
+			return false;
+		}
+	}
+
+	private static void logAbilityFailure(String phase, FocusBehavior behavior,
+			ServerPlayer player, ItemStack stack, RuntimeException e) {
+		Attuned.LOGGER.warn("Attuned Focus ability {} failed for {} using {} ({})",
+			phase, player.getUUID(), stack.getItem(), behavior.getClass().getName(), e);
 	}
 
 	private static void sync(ServerPlayer player, int slot, int remainingTicks, int totalTicks) {

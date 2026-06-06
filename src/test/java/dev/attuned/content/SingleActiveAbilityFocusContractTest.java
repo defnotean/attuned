@@ -62,9 +62,9 @@ class SingleActiveAbilityFocusContractTest {
 
 		assertTrue(networking.contains("FocusAbilityState.trigger(player)"),
 			"The server receiver should delegate to the singular active ability state path.");
-		assertTrue(state.contains("behavior.hasActiveAbility()"),
+		assertTrue(state.contains("hasActiveAbility(behavior, player, stack)"),
 			"The server should ignore passive/tick-only behaviors when choosing the ability Focus.");
-		assertTrue(state.contains("boolean fired = selection.behavior().onAbility(player, selection.stack())")
+		assertTrue(state.contains("boolean fired = runAbility(selection.behavior(), player, selection.stack())")
 				&& state.contains("return new AbilitySelection"),
 			"The server should stop after firing the first active ability Focus.");
 		assertTrue(!networking.contains("triggers FocusBehavior#onAbility")
