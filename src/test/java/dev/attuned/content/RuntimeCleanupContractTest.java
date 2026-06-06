@@ -149,8 +149,12 @@ class RuntimeCleanupContractTest {
 		assertContains(read(APEX), "AttunedServerCleanup.onStop(() -> {");
 		assertContains(read(APEX), "maelstromScrambles.clear();");
 		assertContains(read(APEX), "key.playerId().equals(uuid) || key.targetId().equals(uuid)");
-		assertContains(read(PACTS), "AttunedServerCleanup.onStop(() -> {");
-		assertContains(read(PACTS), "windrunnerRuns.clear();");
+		String pacts = read(PACTS);
+		assertContains(pacts, "AttunedServerCleanup.onStopServer(server -> {");
+		assertContains(pacts, "for (ServerPlayer player : server.getPlayerList().getPlayers())");
+		assertContains(pacts, "removeWindrunnerStepHeight(player);");
+		assertContains(pacts, "AttunedPlayerCleanup.onForgetPlayer(player -> {");
+		assertContains(pacts, "windrunnerRuns.clear();");
 		assertContains(read(FOCUS_ABILITY_STATE), "AttunedServerCleanup.onStop(() -> {");
 		assertContains(read(FOCUS_ABILITY_STATE), "COOLDOWNS.clear();");
 		assertContains(read(ALTAR_ANIMATIONS), "AttunedServerCleanup.onStop(() -> {");

@@ -148,13 +148,18 @@ public final class Pacts {
 				applyWindrunnerStepHeight(player);
 			}
 		});
-		AttunedServerCleanup.onStop(() -> {
+		AttunedServerCleanup.onStopServer(server -> {
+			for (ServerPlayer player : server.getPlayerList().getPlayers()) {
+				removeWindrunnerStepHeight(player);
+			}
 			ticks = 0;
 			pactState.clear();
 			pyreswornFireMarks.clear();
 			windrunnerRuns.clear();
 		});
-		AttunedPlayerCleanup.onForget(id -> {
+		AttunedPlayerCleanup.onForgetPlayer(player -> {
+			UUID id = player.getUUID();
+			removeWindrunnerStepHeight(player);
 			pactState.remove(id);
 			windrunnerRuns.remove(id);
 			pyreswornFireMarks.entrySet().removeIf(entry -> entry.getValue().playerId().equals(id));
