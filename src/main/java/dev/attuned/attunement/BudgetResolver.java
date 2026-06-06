@@ -77,6 +77,7 @@ public final class BudgetResolver {
 	 * {@code candidates} must be in priority order.
 	 */
 	public static <I> Resolution resolveDetailed(List<Candidate<I>> candidates, int budget) {
+		requireNonNegativeBudget(budget);
 		int used = 0;
 		Set<I> activeUnique = new HashSet<>();
 		List<Integer> active = new ArrayList<>();
@@ -99,5 +100,11 @@ public final class BudgetResolver {
 			}
 		}
 		return new Resolution(active, dormantReasons);
+	}
+
+	private static void requireNonNegativeBudget(int budget) {
+		if (budget < 0) {
+			throw new IllegalArgumentException("budget must be non-negative");
+		}
 	}
 }

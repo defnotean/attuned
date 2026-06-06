@@ -38,6 +38,16 @@ class BudgetResolverTest {
 	}
 
 	@Test
+	void negativeBudgetIsRejected() {
+		assertThrows(IllegalArgumentException.class,
+			() -> BudgetResolver.resolve(List.of(focus(0, 0)), -1),
+			"Attunement budget should not represent negative capacity.");
+		assertThrows(IllegalArgumentException.class,
+			() -> BudgetResolver.resolveDetailed(List.of(focus(0, 0)), -1),
+			"Detailed attunement budget should not represent negative capacity.");
+	}
+
+	@Test
 	void overBudgetFocusGoesDormant() {
 		// Budget 5: costs 3 + 3 — the second does not fit.
 		assertEquals(List.of(0), BudgetResolver.resolve(
