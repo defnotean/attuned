@@ -9,9 +9,9 @@ import dev.attuned.attunement.AttunedAttachments;
 import dev.attuned.attunement.Attunement;
 import dev.attuned.menu.AltarMenuType;
 import dev.attuned.onboarding.Onboarding;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.DustParticleOptions;
@@ -81,7 +81,7 @@ public class AttunementAltarBlock extends Block {
 	private static final double PROXIMITY_PULSE_RADIUS = 5.0;
 	private static final long PROXIMITY_PULSE_COOLDOWN_TICKS = 100L;
 	private static final long PROXIMITY_PULSE_RETENTION_TICKS = PROXIMITY_PULSE_COOLDOWN_TICKS * 4;
-	private static final Map<ProximityPulseKey, Long> PROXIMITY_PULSE_TICKS = new HashMap<>();
+	private static final Map<ProximityPulseKey, Long> PROXIMITY_PULSE_TICKS = new ConcurrentHashMap<>();
 
 	static {
 		AttunedServerCleanup.onStop(PROXIMITY_PULSE_TICKS::clear);
