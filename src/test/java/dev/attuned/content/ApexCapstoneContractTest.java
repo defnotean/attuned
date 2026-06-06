@@ -109,6 +109,13 @@ class ApexCapstoneContractTest {
 		NullPointerException missingAffinity = assertThrows(NullPointerException.class,
 			() -> Apex.resolveCapstone(activeAffinities, 11, 12));
 		assertEquals("affinity", missingAffinity.getMessage());
+
+		List<Optional<Affinity>> shortMalformedBuild = new ArrayList<>();
+		shortMalformedBuild.add(null);
+
+		NullPointerException shortMissingAffinity = assertThrows(NullPointerException.class,
+			() -> Apex.resolveCapstone(shortMalformedBuild, 0, 0));
+		assertEquals("affinity", shortMissingAffinity.getMessage());
 	}
 
 	private static Optional<Affinity> focus(Affinity affinity) {
