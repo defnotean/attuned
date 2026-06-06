@@ -2,6 +2,7 @@ package dev.attuned.content;
 
 import com.mojang.serialization.MapCodec;
 import dev.attuned.AttunedConfig;
+import dev.attuned.AttunedServerCleanup;
 import dev.attuned.api.focus.Affinity;
 import dev.attuned.api.focus.AffinityColors;
 import dev.attuned.attunement.AttunedAttachments;
@@ -81,6 +82,10 @@ public class AttunementAltarBlock extends Block {
 	private static final long PROXIMITY_PULSE_COOLDOWN_TICKS = 100L;
 	private static final long PROXIMITY_PULSE_RETENTION_TICKS = PROXIMITY_PULSE_COOLDOWN_TICKS * 4;
 	private static final Map<ProximityPulseKey, Long> PROXIMITY_PULSE_TICKS = new HashMap<>();
+
+	static {
+		AttunedServerCleanup.onStop(PROXIMITY_PULSE_TICKS::clear);
+	}
 
 	// Mirrors the solid-block monument 3D model element-for-element so the
 	// raytrace hits every visible surface — full 16x1 base slab and top plate,

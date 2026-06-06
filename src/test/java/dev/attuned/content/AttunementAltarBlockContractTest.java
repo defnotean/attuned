@@ -42,6 +42,8 @@ class AttunementAltarBlockContractTest {
 			"Altar proximity pulse cooldown should include dimension and position");
 		assertTrue(source.contains("pruneProximityPulseCooldowns"),
 			"Altar proximity pulse cooldown entries should be pruned");
+		assertTrue(source.contains("AttunedServerCleanup.onStop(PROXIMITY_PULSE_TICKS::clear)"),
+			"Altar proximity pulse cooldowns should clear when the server stops");
 		assertTrue(proximitySource.contains("level.addParticle("),
 			"Altar proximity pulse should remain client-side particle ambience");
 		assertTrue(!proximitySource.contains("playSound("),
