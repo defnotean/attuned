@@ -61,6 +61,14 @@ class AttunedInvTest {
 			"The public items view should return copied ItemStack values.");
 	}
 
+	@Test
+	void getCopiesMutableItemStack() throws IOException {
+		String source = readSource();
+
+		assertTrue(source.contains("return copyStack(items.get(slot));"),
+			"get should not expose the stored mutable ItemStack from the immutable snapshot.");
+	}
+
 	private static String readSource() throws IOException {
 		assertTrue(Files.isRegularFile(SOURCE), "Expected file to exist: " + SOURCE);
 		return Files.readString(SOURCE, StandardCharsets.UTF_8);

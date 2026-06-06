@@ -85,12 +85,13 @@ public final class AttunedTooltips {
 							.withStyle(ChatFormatting.GRAY)));
 				}
 
-				// Equipped status: only when this exact stack occupies a Focus slot.
+				// Equipped status: AttunedInv returns defensive stack copies, so compare
+				// item/components instead of relying on the mutable stack identity.
 				var player = Minecraft.getInstance().player;
 				if (player != null) {
 					AttunedInv inv = AttunedAttachments.getInventory(player);
 					for (int slot = 0; slot < AttunedInv.SIZE; slot++) {
-						if (inv.get(slot) == stack) {
+						if (ItemStack.matches(inv.get(slot), stack)) {
 							lines.add(Component.empty());
 							lines.add(Component.translatable("tooltip.attuned.equipped_slot", slot + 1)
 								.withStyle(ChatFormatting.AQUA));

@@ -64,7 +64,7 @@ public record AttunedInv(List<ItemStack> items) {
 	}
 
 	public ItemStack get(int slot) {
-		return items.get(slot);
+		return copyStack(items.get(slot));
 	}
 
 	public AttunedInv with(int slot, ItemStack stack) {

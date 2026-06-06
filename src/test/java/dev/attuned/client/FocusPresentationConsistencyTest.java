@@ -62,6 +62,16 @@ class FocusPresentationConsistencyTest {
 	}
 
 	@Test
+	void focusTooltipsMatchDefensiveInventoryStackCopies() throws IOException {
+		String source = Files.readString(TOOLTIP_SOURCE, StandardCharsets.UTF_8);
+
+		assertTrue(source.contains("ItemStack.matches(inv.get(slot), stack)"),
+			"Tooltip equipped detection should work when AttunedInv returns defensive stack copies.");
+		assertTrue(!source.contains("inv.get(slot) == stack"),
+			"Tooltip equipped detection should not rely on mutable stack identity from AttunedInv.");
+	}
+
+	@Test
 	void everyShippedModifierAttributeHasTooltipName() throws IOException {
 		JsonObject lang = languageRoot();
 		Set<String> attributes = modifierAttributePaths();
