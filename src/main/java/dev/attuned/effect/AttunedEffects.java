@@ -68,9 +68,15 @@ public final class AttunedEffects {
 
 	/** Server-wide tick counter used to throttle the aura. */
 	private static int auraTick;
+	private static boolean initialized;
 
 	/** Registers the tick and respawn hooks that drive the effect system. */
 	public static void init() {
+		if (initialized) {
+			return;
+		}
+		initialized = true;
+
 		ServerTickEvents.END_SERVER_TICK.register(server -> {
 			auraTick++;
 			for (ServerPlayer player : server.getPlayerList().getPlayers()) {

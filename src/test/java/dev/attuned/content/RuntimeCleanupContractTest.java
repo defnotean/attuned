@@ -123,6 +123,22 @@ class RuntimeCleanupContractTest {
 	}
 
 	@Test
+	void focusEffectRuntimeRegistersHooksOnce() throws IOException {
+		String effects = read(ATTUNED_EFFECTS);
+
+		assertTrue(effects.contains("private static boolean initialized;"),
+			"Focus effects should guard against duplicate tick, respawn, and cleanup hook registration");
+		assertTrue(effects.contains("if (initialized)"),
+			"Focus effects should skip repeated init calls");
+		assertTrue(effects.contains("initialized = true;"),
+			"Focus effects should mark hooks as registered before installing callbacks");
+		assertBefore(effects, "initialized = true;", "ServerTickEvents.END_SERVER_TICK.register");
+		assertBefore(effects, "initialized = true;", "ServerPlayerEvents.AFTER_RESPAWN.register");
+		assertBefore(effects, "initialized = true;", "AttunedPlayerCleanup.onForgetPlayer");
+		assertBefore(effects, "initialized = true;", "AttunedServerCleanup.onStopServer");
+	}
+
+	@Test
 	void runtimeCachesRegisterServerStopCleanup() throws IOException {
 		String effects = read(ATTUNED_EFFECTS);
 		assertContains(effects, "deactivateTrackedFoci(oldPlayer)");
