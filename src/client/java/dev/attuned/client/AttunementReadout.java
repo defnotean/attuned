@@ -142,6 +142,14 @@ public final class AttunementReadout {
 			Attunement.committedAffinity(player));
 	}
 
+	/** Filled width for attunement budget bars, clamped to the painted track. */
+	public static int budgetFillWidth(int trackWidth, int used, int capacity) {
+		if (trackWidth <= 0 || used <= 0 || capacity <= 0) {
+			return 0;
+		}
+		return Math.min(trackWidth, Math.max(1, Math.round(trackWidth * Math.min(1.0F, used / (float) capacity))));
+	}
+
 	// How many Foci are active: one, a few, many, or the full six.
 	private static String countWord(int activeFoci) {
 		if (activeFoci <= 1) {

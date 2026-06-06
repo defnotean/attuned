@@ -33,6 +33,8 @@ class UiAssetContractTest {
 		Path.of("src/main/java/dev/attuned/command/AttunedCommands.java");
 	private static final Path FOCUS_PANEL_SOURCE =
 		Path.of("src/client/java/dev/attuned/client/FocusPanel.java");
+	private static final Path ATTUNEMENT_READOUT_SOURCE =
+		Path.of("src/client/java/dev/attuned/client/AttunementReadout.java");
 	private static final Path COMBAT_HUD_SOURCE =
 		Path.of("src/client/java/dev/attuned/client/hud/CombatHud.java");
 	private static final Path FOCI_HUD_SOURCE =
@@ -98,6 +100,25 @@ class UiAssetContractTest {
 		assertSourceContains(REWEAVING_MENU_SOURCE, "private static final int OUTPUT_SLOT_Y = OUTPUT_WELL_Y + OUTPUT_SLOT_INSET + OUTPUT_VISUAL_OFFSET_Y");
 		assertSourceContains(REWEAVING_SCREEN_SOURCE, "private static final int BUTTON_X = 134");
 		assertSourceContains(REWEAVING_SCREEN_SOURCE, "private static final int BUTTON_Y = 83");
+	}
+
+	@Test
+	void budgetBarsClampFillInsideTheirTracks() throws IOException {
+		String readout = Files.readString(ATTUNEMENT_READOUT_SOURCE, StandardCharsets.UTF_8);
+		String focusPanel = Files.readString(FOCUS_PANEL_SOURCE, StandardCharsets.UTF_8);
+		String altarScreen = Files.readString(ALTAR_SCREEN_SOURCE, StandardCharsets.UTF_8);
+
+		assertTrue(readout.contains("public static int budgetFillWidth(int trackWidth, int used, int capacity)"),
+			"Budget bar fill clamping should live in a shared presentation helper.");
+		assertTrue(readout.contains("if (trackWidth <= 0 || used <= 0 || capacity <= 0)"),
+			"Budget bar fill should reject empty tracks, unused budget, and zero capacity.");
+		assertTrue(readout.contains(
+			"Math.min(trackWidth, Math.max(1, Math.round(trackWidth * Math.min(1.0F, used / (float) capacity))))"),
+			"Budget bar fill should never exceed its painted track width.");
+		assertTrue(focusPanel.contains("AttunementReadout.budgetFillWidth(barX1 - barX0, used, capacity)"),
+			"The Focus panel budget bar should use the shared clamped fill helper.");
+		assertTrue(altarScreen.contains("AttunementReadout.budgetFillWidth(BAR_W, used, capacity)"),
+			"The Altar screen budget bar should use the shared clamped fill helper.");
 	}
 
 	@Test

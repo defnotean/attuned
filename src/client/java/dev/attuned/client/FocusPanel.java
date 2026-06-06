@@ -183,8 +183,8 @@ public final class FocusPanel {
 		int barX1 = leftPos + slotX + FocusLayout.SLOT;
 		int barY0 = y1 - PAD_Y + (PAD_Y - BAR_HEIGHT) / 2;
 		graphics.fill(barX0, barY0, barX1, barY0 + BAR_HEIGHT, WELL_SHADOW);
-		if (capacity > 0 && used > 0) {
-			int fill = Math.max(1, Math.round((barX1 - barX0) * (used / (float) capacity)));
+		int fill = AttunementReadout.budgetFillWidth(barX1 - barX0, used, capacity);
+		if (fill > 0) {
 			graphics.fill(barX0, barY0, barX0 + fill, barY0 + BAR_HEIGHT, affinityColor);
 		}
 	}

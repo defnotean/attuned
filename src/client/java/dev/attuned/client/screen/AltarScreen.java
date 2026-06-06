@@ -166,8 +166,8 @@ public class AltarScreen extends AbstractContainerScreen<AltarMenu> {
 			graphics.fill(barX, barY, barX + BAR_W, barY + BAR_H, BAR_TRACK);
 			int capacity = Attunement.capacity(player);
 			int used = Attunement.used(player);
-			if (capacity > 0 && used > 0) {
-				int fill = Math.max(1, Math.round(BAR_W * (used / (float) capacity)));
+			int fill = AttunementReadout.budgetFillWidth(BAR_W, used, capacity);
+			if (fill > 0) {
 				graphics.fill(barX, barY, barX + fill, barY + BAR_H, stance);
 			}
 
