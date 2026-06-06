@@ -87,6 +87,52 @@ class VerifyRepositoryContractTest(unittest.TestCase):
             self.assertIn("advertises 1 Foci", problems[0])
             self.assertIn("ships 2 FocusDefinition files", problems[0])
 
+    def test_current_changelog_section_excludes_prior_release_notes(self) -> None:
+        changelog = (
+            "# Changelog\n\n"
+            "## Attuned 1.2.7 - Current release\n\n"
+            "- Current note\n\n"
+            "## Attuned 1.2.6 - Prior release\n\n"
+            "- Stale note\n"
+        )
+
+        section = verify_repository.current_changelog_section(changelog, "1.2.7")
+
+        self.assertIn("Attuned 1.2.7", section)
+        self.assertIn("Current note", section)
+        self.assertNotIn("Attuned 1.2.6", section)
+        self.assertNotIn("Stale note", section)
+
+    def test_modrinth_changelog_problems_report_whole_file_uploads(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            (root / "gradle.properties").write_text("mod_version=1.2.7\n", encoding="utf-8")
+            (root / "CHANGELOG.md").write_text(
+                "# Changelog\n\n"
+                "## Attuned 1.2.7 - Current release\n\n"
+                "- Current note\n\n"
+                "## Attuned 1.2.6 - Prior release\n\n"
+                "- Stale note\n",
+                encoding="utf-8",
+            )
+            (root / "build.gradle").write_text(
+                "modrinth {\n"
+                "    changelog = providers.fileContents(layout.projectDirectory.file(\"CHANGELOG.md\")).asText.get()\n"
+                "}\n",
+                encoding="utf-8",
+            )
+
+            problems = verify_repository.modrinth_changelog_problems(root)
+
+            self.assertEqual(len(problems), 1)
+            self.assertIn("current Attuned 1.2.7 changelog section", problems[0])
+
+    def test_gradle_changelog_match_uses_version_boundary(self) -> None:
+        build_gradle = (ROOT / "build.gradle").read_text(encoding="utf-8")
+
+        self.assertIn("it == headingPrefix || it.startsWith(headingPrefix + \" \")", build_gradle)
+        self.assertNotIn("it.startsWith(headingPrefix) }", build_gradle)
+
     def test_modrinth_gallery_pngs_report_missing_or_wrong_sized_panels(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
             root = Path(temp_dir)

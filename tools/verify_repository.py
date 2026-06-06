@@ -18,6 +18,9 @@ MODRINTH_GALLERY_RELATIVE_DIR = Path("docs/modrinth-gallery")
 PYTHON_ROOTS = (ROOT / "tools", ROOT / "tests")
 SOURCE_SCAN_ROOTS = (ROOT / "src", ROOT / "tools", ROOT / "tests", ROOT / ".github")
 FOCUS_DEFINITION_RELATIVE_DIR = Path("src/main/resources/data/attuned/attuned/focus")
+GRADLE_PROPERTIES_RELATIVE_FILE = Path("gradle.properties")
+BUILD_GRADLE_RELATIVE_FILE = Path("build.gradle")
+CHANGELOG_RELATIVE_FILE = Path("CHANGELOG.md")
 EXPECTED_MODRINTH_GALLERY_PNGS = (
     "attuned-all-foci-real-assets.png",
     "attuned-apex-discord-neutral.png",
@@ -102,6 +105,11 @@ ASSIGNMENT_PATTERN = re.compile(
     re.IGNORECASE,
 )
 README_FOCI_PATTERN = re.compile(r"\b(?P<count>\d+)\s+Foci\b")
+CHANGELOG_HEADING_PATTERN = re.compile(r"^##\s+Attuned\s+(?P<version>\S+)\b", re.MULTILINE)
+MODRINTH_CHANGELOG_PROVIDER_PATTERN = re.compile(
+    r"^\s*changelog\s*=\s*providers\.provider\s*\{[^}]*currentChangelogSection\([^}]*\}\.get\(\)",
+    re.MULTILINE | re.DOTALL,
+)
 
 
 class CheckFailed(Exception):
@@ -424,12 +432,80 @@ def check_readme_focus_count() -> str:
     return f"README Focus count: {shipped_focus_definition_count()} Foci"
 
 
+def gradle_properties(root: Path = ROOT) -> dict[str, str]:
+    properties_path = root / GRADLE_PROPERTIES_RELATIVE_FILE
+    properties: dict[str, str] = {}
+    for line in properties_path.read_text(encoding="utf-8").splitlines():
+        stripped = line.strip()
+        if not stripped or stripped.startswith("#") or "=" not in stripped:
+            continue
+        key, value = stripped.split("=", 1)
+        properties[key.strip()] = value.strip()
+    return properties
+
+
+def current_changelog_section(changelog: str, version: str) -> str:
+    headings = list(CHANGELOG_HEADING_PATTERN.finditer(changelog))
+    for index, match in enumerate(headings):
+        if match.group("version") != version:
+            continue
+        end = headings[index + 1].start() if index + 1 < len(headings) else len(changelog)
+        section = changelog[match.start():end].strip()
+        body = section.splitlines()[1:]
+        if not any(line.strip() for line in body):
+            raise ValueError(f"CHANGELOG.md: empty Attuned {version} changelog section")
+        return section
+    raise ValueError(f"CHANGELOG.md: missing Attuned {version} changelog section")
+
+
+def modrinth_changelog_problems(root: Path = ROOT) -> list[str]:
+    problems: list[str] = []
+    try:
+        version = gradle_properties(root).get("mod_version")
+    except OSError as exc:
+        return [f"gradle.properties: {exc}"]
+    if not version:
+        return ["gradle.properties: missing mod_version"]
+
+    try:
+        section = current_changelog_section((root / CHANGELOG_RELATIVE_FILE).read_text(encoding="utf-8"), version)
+    except (OSError, ValueError) as exc:
+        problems.append(str(exc))
+        section = ""
+    if section and any(match.group("version") != version for match in CHANGELOG_HEADING_PATTERN.finditer(section)):
+        problems.append(f"CHANGELOG.md: Attuned {version} section includes another release heading")
+
+    try:
+        build_gradle = (root / BUILD_GRADLE_RELATIVE_FILE).read_text(encoding="utf-8")
+    except OSError as exc:
+        problems.append(f"build.gradle: {exc}")
+        return problems
+    if re.search(r"^\s*changelog\s*=.*fileContents\(.*CHANGELOG\.md.*asText\.get\(\)", build_gradle, re.MULTILINE):
+        problems.append(
+            f"build.gradle: Modrinth changelog must use the current Attuned {version} changelog section"
+        )
+    elif not MODRINTH_CHANGELOG_PROVIDER_PATTERN.search(build_gradle):
+        problems.append(
+            f"build.gradle: Modrinth changelog must be provided by currentChangelogSection for Attuned {version}"
+        )
+    return problems
+
+
+def check_modrinth_changelog() -> str:
+    problems = modrinth_changelog_problems()
+    if problems:
+        raise CheckFailed("Modrinth changelog", problems)
+    version = gradle_properties().get("mod_version", "unknown")
+    return f"Modrinth changelog: Attuned {version} section"
+
+
 def run_checks() -> int:
     checks = (
         check_src_json,
         check_png_resources,
         check_modrinth_gallery_pngs,
         check_readme_focus_count,
+        check_modrinth_changelog,
         check_issue_markers,
         check_assignment_risks,
         check_python_caches,

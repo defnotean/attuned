@@ -7,6 +7,24 @@ plugins {
 version = project.mod_version
 group = project.maven_group
 
+String currentChangelogSection(String changelog, String releaseVersion) {
+	def lines = changelog.readLines()
+	def headingPrefix = "## Attuned ${releaseVersion}"
+	int start = lines.findIndexOf { it == headingPrefix || it.startsWith(headingPrefix + " ") }
+	if (start < 0) {
+		throw new GradleException("CHANGELOG.md is missing an Attuned ${releaseVersion} section")
+	}
+	int end = lines.findIndexOf(start + 1) { it.startsWith("## ") }
+	if (end < 0) {
+		end = lines.size()
+	}
+	String section = lines.subList(start, end).join(System.lineSeparator()).trim()
+	if (section.readLines().drop(1).every { it.trim().isEmpty() }) {
+		throw new GradleException("CHANGELOG.md Attuned ${releaseVersion} section is empty")
+	}
+	return section
+}
+
 repositories {
 	// Loom adds the Minecraft/Fabric repositories automatically; Maven Central
 	// is declared here for ordinary library dependencies such as JUnit.
@@ -128,7 +146,10 @@ modrinth {
 	versionNumber = project.version
 	versionType = "release"
 	versionName = "Attuned ${project.version}"
-	changelog = providers.fileContents(layout.projectDirectory.file("CHANGELOG.md")).asText.get()
+	def changelogFile = layout.projectDirectory.file("CHANGELOG.md")
+	changelog = providers.provider {
+		currentChangelogSection(changelogFile.asFile.getText("UTF-8"), project.version.toString())
+	}.get()
 	uploadFile = file("build/libs/${project.name}-${project.version}.jar")
 	gameVersions = ["26.1.2"]
 	loaders = ["fabric"]
