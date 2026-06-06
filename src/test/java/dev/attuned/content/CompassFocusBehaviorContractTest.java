@@ -17,6 +17,8 @@ import org.junit.jupiter.api.Test;
 class CompassFocusBehaviorContractTest {
 	private static final Path BEACON_SOURCE =
 		Path.of("src/main/java/dev/attuned/content/behavior/BeaconBehavior.java");
+	private static final Path DRIFTGLASS_SOURCE =
+		Path.of("src/main/java/dev/attuned/content/behavior/DriftglassBehavior.java");
 	private static final Path WAYSTONE_SOURCE =
 		Path.of("src/main/java/dev/attuned/content/behavior/WaystoneBehavior.java");
 	private static final Path LANG_FILE =
@@ -44,8 +46,34 @@ class CompassFocusBehaviorContractTest {
 			"Beacon should apply only to held vanilla compasses");
 		assertTrue(source.contains("AttunedPlayerCleanup.onForgetPlayer(this::restorePlayer)"),
 			"Beacon should restore changed compasses through the central player cleanup coordinator");
+		assertTrue(source.contains("AttunedServerCleanup.onStop(this::restoreAllCompasses)"),
+			"Beacon should restore any redirected compass stacks when the server stops");
+		assertTrue(source.contains("private void restoreAllCompasses()"),
+			"Beacon should centralize full compass restoration in a named helper");
+		assertTrue(source.contains("changedCompasses.clear();"),
+			"Beacon should drop remembered compass snapshots after full restoration");
 		assertFalse(source.contains("ServerPlayConnectionEvents.DISCONNECT.register"),
 			"Beacon should not register its own duplicate disconnect hook");
+	}
+
+	@Test
+	void driftglassCompassUsesReturnPointAndRestoresOnServerStop() throws IOException {
+		String source = read(DRIFTGLASS_SOURCE);
+
+		assertTrue(source.contains("new LodestoneTracker(Optional.of(point), false)"),
+			"Driftglass should create an untracked lodestone target from the latest return point");
+		assertTrue(source.contains("compass.set(DataComponents.LODESTONE_TRACKER, tracker)"),
+			"Driftglass should write the vanilla tracker component that drives compass angle rendering");
+		assertTrue(source.contains("compass.set(DataComponents.CUSTOM_NAME, DRIFTGLASS_COMPASS_NAME)"),
+			"Driftglass should give redirected compasses a mod-specific display name");
+		assertTrue(source.contains("AttunedServerCleanup.onStop(this::restoreAllCompasses)"),
+			"Driftglass should restore any redirected compass stacks when the server stops");
+		assertTrue(source.contains("changedCompasses.clear();"),
+			"Driftglass should drop remembered compass snapshots after full restoration");
+		assertTrue(source.contains("points.clear();"),
+			"Driftglass should drop saved return points when the server stops");
+		assertFalse(source.contains("ServerPlayConnectionEvents.DISCONNECT.register"),
+			"Driftglass should not register its own duplicate disconnect hook");
 	}
 
 	@Test
@@ -68,6 +96,12 @@ class CompassFocusBehaviorContractTest {
 			"Waystone should restore player-supplied custom names");
 		assertTrue(source.contains("return stack.is(Items.COMPASS);"),
 			"Waystone should update any held compass stack, matching Beacon behavior");
+		assertTrue(source.contains("AttunedServerCleanup.onStop(this::restoreAllCompasses)"),
+			"Waystone should restore any redirected compass stacks when the server stops");
+		assertTrue(source.contains("private void restoreAllCompasses()"),
+			"Waystone should centralize full compass restoration in a named helper");
+		assertTrue(source.contains("changedCompasses.clear();"),
+			"Waystone should drop remembered compass snapshots after full restoration");
 		assertFalse(source.contains("getCount() == 1"),
 			"Waystone should not require the player to split a compass stack before the needle turns");
 	}
@@ -80,6 +114,8 @@ class CompassFocusBehaviorContractTest {
 			"Beacon's temporary compass name should resolve in English");
 		assertTrue(lang.contains("\"item.attuned.waystone_compass\": \"Waystone Compass\""),
 			"Waystone's temporary compass name should resolve in English");
+		assertTrue(lang.contains("\"item.attuned.driftglass_compass\": \"Driftglass Compass\""),
+			"Driftglass's temporary compass name should resolve in English");
 	}
 
 	private static String read(Path file) throws IOException {

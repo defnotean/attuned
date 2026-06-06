@@ -1,10 +1,12 @@
 package dev.attuned.content.behavior;
 
 import dev.attuned.AttunedPlayerCleanup;
+import dev.attuned.AttunedServerCleanup;
 import dev.attuned.api.focus.FocusBehavior;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.ItemStack;
 
@@ -19,6 +21,7 @@ public final class SoftstepBehavior implements FocusBehavior {
 
 	public SoftstepBehavior() {
 		AttunedPlayerCleanup.onForgetPlayer(this::restore);
+		AttunedServerCleanup.onStopServer(this::restoreAllPlayers);
 	}
 
 	@Override
@@ -42,5 +45,12 @@ public final class SoftstepBehavior implements FocusBehavior {
 		if (wasSilent != null) {
 			player.setSilent(wasSilent);
 		}
+	}
+
+	private void restoreAllPlayers(MinecraftServer server) {
+		for (ServerPlayer player : server.getPlayerList().getPlayers()) {
+			restore(player);
+		}
+		originalSilent.clear();
 	}
 }

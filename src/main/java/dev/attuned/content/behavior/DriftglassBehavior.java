@@ -1,6 +1,7 @@
 package dev.attuned.content.behavior;
 
 import dev.attuned.AttunedPlayerCleanup;
+import dev.attuned.AttunedServerCleanup;
 import dev.attuned.api.focus.FocusBehavior;
 import java.util.HashMap;
 import java.util.IdentityHashMap;
@@ -35,6 +36,7 @@ public final class DriftglassBehavior implements FocusBehavior {
 			points.remove(player.getUUID());
 			restorePlayer(player);
 		});
+		AttunedServerCleanup.onStop(this::restoreAllCompasses);
 	}
 
 	@Override
@@ -129,6 +131,14 @@ public final class DriftglassBehavior implements FocusBehavior {
 			return;
 		}
 		snapshots.forEach(this::restoreIfStillFocusTracker);
+	}
+
+	private void restoreAllCompasses() {
+		for (Map<ItemStack, TrackerSnapshot> snapshots : changedCompasses.values()) {
+			snapshots.forEach(this::restoreIfStillFocusTracker);
+		}
+		changedCompasses.clear();
+		points.clear();
 	}
 
 	private void forget(UUID playerId, ItemStack compass) {

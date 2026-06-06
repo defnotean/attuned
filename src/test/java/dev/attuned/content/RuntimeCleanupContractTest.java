@@ -49,6 +49,8 @@ class RuntimeCleanupContractTest {
 		Path.of("src/main/java/dev/attuned/content/behavior/TremorBehavior.java");
 	private static final Path VEIL =
 		Path.of("src/main/java/dev/attuned/content/behavior/VeilBehavior.java");
+	private static final Path SOFTSTEP =
+		Path.of("src/main/java/dev/attuned/content/behavior/SoftstepBehavior.java");
 
 	@Test
 	void playerCleanupRegistersDisconnectHookOnceAndRejectsNullCallbacks() throws IOException {
@@ -133,6 +135,9 @@ class RuntimeCleanupContractTest {
 		assertContains(read(VEIL), "AttunedServerCleanup.onStopServer(VeilBehavior::forgetAllPlayers)");
 		assertContains(read(VEIL), "STATES.clear();");
 		assertContains(read(VEIL), "BLOCKED_UNTIL.clear();");
+		assertContains(read(SOFTSTEP), "AttunedServerCleanup.onStopServer(this::restoreAllPlayers)");
+		assertContains(read(SOFTSTEP), "player.setSilent(wasSilent);");
+		assertContains(read(SOFTSTEP), "originalSilent.clear();");
 	}
 
 	@Test

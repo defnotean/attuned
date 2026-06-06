@@ -1,6 +1,7 @@
 package dev.attuned.content.behavior;
 
 import dev.attuned.AttunedPlayerCleanup;
+import dev.attuned.AttunedServerCleanup;
 import dev.attuned.api.focus.FocusBehavior;
 import java.util.HashMap;
 import java.util.IdentityHashMap;
@@ -35,6 +36,7 @@ public final class BeaconBehavior implements FocusBehavior {
 
 	public BeaconBehavior() {
 		AttunedPlayerCleanup.onForgetPlayer(this::restorePlayer);
+		AttunedServerCleanup.onStop(this::restoreAllCompasses);
 	}
 
 	@Override
@@ -128,6 +130,13 @@ public final class BeaconBehavior implements FocusBehavior {
 			return;
 		}
 		snapshots.forEach(this::restoreIfStillBeaconTracker);
+	}
+
+	private void restoreAllCompasses() {
+		for (Map<ItemStack, TrackerSnapshot> snapshots : changedCompasses.values()) {
+			snapshots.forEach(this::restoreIfStillBeaconTracker);
+		}
+		changedCompasses.clear();
 	}
 
 	private void forget(UUID playerId, ItemStack compass) {

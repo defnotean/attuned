@@ -2,6 +2,7 @@ package dev.attuned.content.behavior;
 
 import dev.attuned.Attuned;
 import dev.attuned.AttunedPlayerCleanup;
+import dev.attuned.AttunedServerCleanup;
 import dev.attuned.api.focus.FocusBehavior;
 import dev.attuned.attunement.AttunedAttachments;
 import dev.attuned.attunement.AttunedInv;
@@ -37,6 +38,7 @@ public final class WaystoneBehavior implements FocusBehavior {
 
 	public WaystoneBehavior() {
 		AttunedPlayerCleanup.onForgetPlayer(this::restorePlayer);
+		AttunedServerCleanup.onStop(this::restoreAllCompasses);
 	}
 
 	@Override
@@ -143,6 +145,13 @@ public final class WaystoneBehavior implements FocusBehavior {
 			return;
 		}
 		snapshots.forEach(this::restoreIfStillFocusTracker);
+	}
+
+	private void restoreAllCompasses() {
+		for (Map<ItemStack, TrackerSnapshot> snapshots : changedCompasses.values()) {
+			snapshots.forEach(this::restoreIfStillFocusTracker);
+		}
+		changedCompasses.clear();
 	}
 
 	private void forget(UUID playerId, ItemStack compass) {
