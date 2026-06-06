@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -84,6 +85,35 @@ class ReweavingResultPickerTest {
 			() -> new ReweavingResultPicker.WeightedCandidate(null, 1));
 		assertThrows(IllegalArgumentException.class,
 			() -> new ReweavingResultPicker.WeightedCandidate("attuned:edge_focus", 0));
+	}
+
+	@Test
+	void pickerMethodsRejectNullInputsClearly() {
+		List<ReweavingResultPicker.Candidate> pool = List.of(
+			new ReweavingResultPicker.Candidate("attuned:edge_focus", Optional.of("fury")));
+
+		NullPointerException missingPool = assertThrows(NullPointerException.class,
+			() -> ReweavingResultPicker.pick(null, Set.of(), Optional.empty(), new FixedRandom(0)));
+		assertEquals("pool", missingPool.getMessage());
+
+		NullPointerException missingSacrificedIds = assertThrows(NullPointerException.class,
+			() -> ReweavingResultPicker.pick(pool, null, Optional.empty(), new FixedRandom(0)));
+		assertEquals("sacrificedIds", missingSacrificedIds.getMessage());
+
+		NullPointerException missingCommittedAffinity = assertThrows(NullPointerException.class,
+			() -> ReweavingResultPicker.pick(pool, Set.of(), null, new FixedRandom(0)));
+		assertEquals("committedAffinity", missingCommittedAffinity.getMessage());
+
+		NullPointerException missingRandom = assertThrows(NullPointerException.class,
+			() -> ReweavingResultPicker.pick(List.of(), Set.of(), Optional.empty(), null));
+		assertEquals("random", missingRandom.getMessage());
+
+		List<ReweavingResultPicker.Candidate> candidates = new ArrayList<>();
+		candidates.add(null);
+
+		NullPointerException missingCandidate = assertThrows(NullPointerException.class,
+			() -> ReweavingResultPicker.weightedCandidates(candidates, Set.of(), Optional.empty()));
+		assertEquals("candidate", missingCandidate.getMessage());
 	}
 
 	private static Optional<String> pickWithRoll(List<ReweavingResultPicker.Candidate> pool, int roll) {

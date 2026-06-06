@@ -36,6 +36,7 @@ public final class ReweavingResultPicker {
 		Optional<String> committedAffinity,
 		RandomGenerator random
 	) {
+		Objects.requireNonNull(random, "random");
 		List<WeightedCandidate> candidates = weightedCandidates(pool, sacrificedIds, committedAffinity);
 		if (candidates.isEmpty() && !sacrificedIds.isEmpty()) {
 			candidates = weightedCandidates(pool, Set.of(), committedAffinity);
@@ -63,7 +64,11 @@ public final class ReweavingResultPicker {
 		Set<String> sacrificedIds,
 		Optional<String> committedAffinity
 	) {
+		Objects.requireNonNull(pool, "pool");
+		Objects.requireNonNull(sacrificedIds, "sacrificedIds");
+		Objects.requireNonNull(committedAffinity, "committedAffinity");
 		return pool.stream()
+			.map(candidate -> Objects.requireNonNull(candidate, "candidate"))
 			.filter(candidate -> !sacrificedIds.contains(candidate.id()))
 			.map(candidate -> new WeightedCandidate(candidate.id(), weight(candidate, committedAffinity)))
 			.toList();
