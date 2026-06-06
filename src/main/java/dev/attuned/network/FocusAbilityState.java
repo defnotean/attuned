@@ -57,7 +57,7 @@ public final class FocusAbilityState {
 		if (remaining > 0) {
 			Cooldown cooldown = COOLDOWNS.get(player.getUUID());
 			player.sendOverlayMessage(Component.translatable(
-				"item.attuned.focus_ability.cooldown", Math.max(1, (remaining + 19) / 20)));
+				"item.attuned.focus_ability.cooldown", cooldownSecondsForMessage(remaining)));
 			sync(player, selection.slot(), remaining, cooldown.totalTicks());
 			return;
 		}
@@ -105,6 +105,13 @@ public final class FocusAbilityState {
 			return 0;
 		}
 		return remaining;
+	}
+
+	static int cooldownSecondsForMessage(int remainingTicks) {
+		if (remainingTicks <= 0) {
+			return 0;
+		}
+		return (int) Math.max(1L, ((long) remainingTicks + 19L) / 20L);
 	}
 
 	private static void tick(MinecraftServer server) {
