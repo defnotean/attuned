@@ -2,6 +2,7 @@ package dev.attuned.menu;
 
 import dev.attuned.attunement.AttunedAttachments;
 import dev.attuned.attunement.AttunedInv;
+import dev.attuned.attunement.Attunement;
 import net.minecraft.world.Container;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
@@ -78,13 +79,29 @@ public final class FocusContainer implements Container {
 		if (slot < 0 || slot >= AttunedInv.SIZE) {
 			return;
 		}
-		AttunedAttachments.setSlot(player, slot, stack);
+		if (stack == null || stack.isEmpty()) {
+			AttunedAttachments.setSlot(player, slot, ItemStack.EMPTY);
+			return;
+		}
+		if (Attunement.definitionFor(player, stack).isEmpty()) {
+			return;
+		}
+		AttunedAttachments.setSlot(player, slot, cappedStack(stack));
 	}
 
 	@Override
 	public int getMaxStackSize() {
 		// Focus slots only ever hold a single accessory.
 		return 1;
+	}
+
+	private ItemStack cappedStack(ItemStack stack) {
+		if (stack == null || stack.isEmpty()) {
+			return ItemStack.EMPTY;
+		}
+		ItemStack copy = stack.copy();
+		copy.setCount(Math.min(copy.getCount(), getMaxStackSize()));
+		return copy;
 	}
 
 	@Override
