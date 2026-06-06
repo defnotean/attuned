@@ -124,10 +124,21 @@ class RuntimeCleanupContractTest {
 
 	@Test
 	void runtimeCachesRegisterServerStopCleanup() throws IOException {
-		assertContains(read(ATTUNED_EFFECTS), "AttunedServerCleanup.onStop(() -> {");
-		assertContains(read(ATTUNED_EFFECTS), "ACTIVE.clear();");
-		assertContains(read(ATTUNED_EFFECTS), "DORMANT.clear();");
-		assertContains(read(ATTUNED_EFFECTS), "auraTick = 0;");
+		String effects = read(ATTUNED_EFFECTS);
+		assertContains(effects, "deactivateTrackedFoci(oldPlayer)");
+		assertContains(effects, "AttunedPlayerCleanup.onForgetPlayer(AttunedEffects::deactivateTrackedFoci)");
+		assertContains(effects, "AttunedServerCleanup.onStopServer(AttunedEffects::deactivateAllTrackedFoci)");
+		assertContains(effects, "private static void deactivateAllTrackedFoci(MinecraftServer server)");
+		assertContains(effects, "private static void deactivateTrackedFoci(ServerPlayer player)");
+		assertContains(effects, "removeFocus(player, entry.getKey(), entry.getValue())");
+		assertContains(effects, "Attuned.LOGGER.warn(\"Attuned Focus deactivation failed");
+		assertContains(effects, "ACTIVE.clear();");
+		assertContains(effects, "DORMANT.clear();");
+		assertContains(effects, "auraTick = 0;");
+		assertTrue(!effects.contains("AttunedPlayerCleanup.onForget(ACTIVE::remove)"),
+			"Player cleanup should deactivate tracked Foci before dropping active snapshots");
+		assertTrue(!effects.contains("AttunedPlayerCleanup.onForget(DORMANT::remove)"),
+			"Player cleanup should use the deactivation helper instead of raw dormant-state removal");
 		assertContains(read(ATTUNED_COMBAT), "AttunedServerCleanup.onStop(() -> {");
 		assertContains(read(ATTUNED_COMBAT), "LAST_AFFINITY_SPARK.clear();");
 		assertContains(read(UNSEEN_COMBAT), "AttunedServerCleanup.onStop(LAST_NEEDLE::clear)");

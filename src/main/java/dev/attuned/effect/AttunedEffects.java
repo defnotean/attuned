@@ -21,6 +21,7 @@ import net.minecraft.core.particles.DustParticleOptions;
 import net.minecraft.core.particles.ParticleOptions;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.resources.Identifier;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
@@ -77,22 +78,18 @@ public final class AttunedEffects {
 			}
 		});
 
-		// A respawned player is a fresh entity with no transient modifiers; drop the
-		// tracked state so the next tick reapplies every active Focus from scratch.
+		// A respawned player is a fresh entity with no transient modifiers; tear
+		// down the old entity, then reapply Foci from scratch on the next tick.
 		ServerPlayerEvents.AFTER_RESPAWN.register((oldPlayer, newPlayer, alive) -> {
+			deactivateTrackedFoci(oldPlayer);
 			ACTIVE.remove(newPlayer.getUUID());
 			DORMANT.remove(newPlayer.getUUID());
 		});
 
-		// Drop a disconnecting player's snapshot too — like respawn, a reconnecting
-		// player is a fresh entity whose active Foci must be reapplied from scratch.
-		AttunedPlayerCleanup.onForget(ACTIVE::remove);
-		AttunedPlayerCleanup.onForget(DORMANT::remove);
-		AttunedServerCleanup.onStop(() -> {
-			ACTIVE.clear();
-			DORMANT.clear();
-			auraTick = 0;
-		});
+		// A disconnecting player will not tick again, so active behavior teardown
+		// must run here rather than waiting for a future diff.
+		AttunedPlayerCleanup.onForgetPlayer(AttunedEffects::deactivateTrackedFoci);
+		AttunedServerCleanup.onStopServer(AttunedEffects::deactivateAllTrackedFoci);
 	}
 
 	private static void tickPlayer(ServerPlayer player) {
@@ -281,6 +278,32 @@ public final class AttunedEffects {
 				behavior.onDeactivate(player, stack);
 			}
 		});
+	}
+
+	private static void deactivateAllTrackedFoci(MinecraftServer server) {
+		for (ServerPlayer player : server.getPlayerList().getPlayers()) {
+			deactivateTrackedFoci(player);
+		}
+		ACTIVE.clear();
+		DORMANT.clear();
+		auraTick = 0;
+	}
+
+	private static void deactivateTrackedFoci(ServerPlayer player) {
+		UUID id = player.getUUID();
+		Map<Integer, ItemStack> tracked = ACTIVE.remove(id);
+		DORMANT.remove(id);
+		if (tracked == null) {
+			return;
+		}
+		for (Map.Entry<Integer, ItemStack> entry : tracked.entrySet()) {
+			try {
+				removeFocus(player, entry.getKey(), entry.getValue());
+			} catch (RuntimeException e) {
+				Attuned.LOGGER.warn("Attuned Focus deactivation failed for {} slot {}",
+					id, entry.getKey(), e);
+			}
+		}
 	}
 
 	private static void tickFocus(ServerPlayer player, ItemStack stack) {
