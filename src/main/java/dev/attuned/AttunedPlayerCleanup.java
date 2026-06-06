@@ -44,12 +44,28 @@ public final class AttunedPlayerCleanup {
 		initialized = true;
 		ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> {
 			for (Consumer<ServerPlayer> cleanup : PLAYER_CALLBACKS) {
-				cleanup.accept(handler.player);
+				runPlayerCleanup(cleanup, handler.player);
 			}
 			UUID id = handler.player.getUUID();
 			for (Consumer<UUID> cleanup : CALLBACKS) {
-				cleanup.accept(id);
+				runUuidCleanup(cleanup, id);
 			}
 		});
+	}
+
+	private static void runPlayerCleanup(Consumer<ServerPlayer> cleanup, ServerPlayer player) {
+		try {
+			cleanup.accept(player);
+		} catch (RuntimeException e) {
+			Attuned.LOGGER.warn("Attuned player cleanup callback failed for {}", player.getUUID(), e);
+		}
+	}
+
+	private static void runUuidCleanup(Consumer<UUID> cleanup, UUID id) {
+		try {
+			cleanup.accept(id);
+		} catch (RuntimeException e) {
+			Attuned.LOGGER.warn("Attuned UUID cleanup callback failed for {}", id, e);
+		}
 	}
 }

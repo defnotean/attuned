@@ -40,11 +40,27 @@ public final class AttunedServerCleanup {
 		initialized = true;
 		ServerLifecycleEvents.SERVER_STOPPED.register(server -> {
 			for (Consumer<MinecraftServer> cleanup : SERVER_CALLBACKS) {
-				cleanup.accept(server);
+				runServerCleanup(cleanup, server);
 			}
 			for (Runnable cleanup : CALLBACKS) {
-				cleanup.run();
+				runCleanup(cleanup);
 			}
 		});
+	}
+
+	private static void runServerCleanup(Consumer<MinecraftServer> cleanup, MinecraftServer server) {
+		try {
+			cleanup.accept(server);
+		} catch (RuntimeException e) {
+			Attuned.LOGGER.warn("Attuned server cleanup callback failed", e);
+		}
+	}
+
+	private static void runCleanup(Runnable cleanup) {
+		try {
+			cleanup.run();
+		} catch (RuntimeException e) {
+			Attuned.LOGGER.warn("Attuned server cleanup callback failed", e);
+		}
 	}
 }

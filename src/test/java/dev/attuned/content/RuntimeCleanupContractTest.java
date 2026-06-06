@@ -60,6 +60,14 @@ class RuntimeCleanupContractTest {
 			"Player cleanup should own the disconnect event hook");
 		assertTrue(source.contains("Objects.requireNonNull(cleanup, \"cleanup\")"),
 			"Player cleanup callback registration should reject null callbacks immediately");
+		assertTrue(source.contains("runPlayerCleanup(cleanup, handler.player)"),
+			"Player cleanup callbacks should be isolated so one failure does not block later callbacks");
+		assertTrue(source.contains("runUuidCleanup(cleanup, id)"),
+			"UUID cleanup callbacks should be isolated so one failure does not block later callbacks");
+		assertTrue(source.contains("catch (RuntimeException e)"),
+			"Player cleanup should catch runtime failures from registered callbacks");
+		assertTrue(source.contains("Attuned.LOGGER.warn(\"Attuned player cleanup callback failed"),
+			"Player cleanup failures should be logged");
 	}
 
 	@Test
@@ -82,6 +90,14 @@ class RuntimeCleanupContractTest {
 			"Server-aware cleanup callbacks should receive the stopping server");
 		assertTrue(source.contains("Objects.requireNonNull(cleanup, \"cleanup\")"),
 			"Server cleanup callback registration should reject null callbacks immediately");
+		assertTrue(source.contains("runServerCleanup(cleanup, server)"),
+			"Server-aware cleanup callbacks should be isolated from each other");
+		assertTrue(source.contains("runCleanup(cleanup)"),
+			"Runnable cleanup callbacks should be isolated from each other");
+		assertTrue(source.contains("catch (RuntimeException e)"),
+			"Server cleanup should catch runtime failures from registered callbacks");
+		assertTrue(source.contains("Attuned.LOGGER.warn(\"Attuned server cleanup callback failed"),
+			"Server cleanup failures should be logged");
 		assertTrue(read(ATTUNED).contains("AttunedServerCleanup.init()"),
 			"The mod initializer should install the central server cleanup hook");
 	}
