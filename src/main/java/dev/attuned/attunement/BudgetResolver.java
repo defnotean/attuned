@@ -95,7 +95,7 @@ public final class BudgetResolver {
 				continue;
 			}
 			// An over-budget Focus is dormant and consumes nothing.
-			if (used + candidate.cost() > budget) {
+			if (candidate.cost() > budget - used) {
 				dormantReasons.put(candidate.slot(), DormantReason.NOT_ENOUGH_CAPACITY);
 				continue;
 			}

@@ -56,6 +56,15 @@ class BudgetResolverTest {
 	}
 
 	@Test
+	void overBudgetCheckDoesNotOverflowWhenUsedBudgetIsLarge() {
+		BudgetResolver.Resolution resolution = BudgetResolver.resolveDetailed(
+			List.of(focus(0, Integer.MAX_VALUE), focus(1, 1)), Integer.MAX_VALUE);
+
+		assertEquals(List.of(0), resolution.activeSlots());
+		assertEquals(Map.of(1, DormantReason.NOT_ENOUGH_CAPACITY), resolution.dormantReasons());
+	}
+
+	@Test
 	void aLaterCheaperFocusStillFitsAfterADormantOne() {
 		// Budget 5: 3 fits (used 3), 3 does not, 2 fits (used 5).
 		assertEquals(List.of(0, 2), BudgetResolver.resolve(
