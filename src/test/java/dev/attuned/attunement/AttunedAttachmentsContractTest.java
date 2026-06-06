@@ -1,0 +1,49 @@
+package dev.attuned.attunement;
+
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import org.junit.jupiter.api.Test;
+
+class AttunedAttachmentsContractTest {
+	private static final Path ATTACHMENTS =
+		Path.of("src/main/java/dev/attuned/attunement/AttunedAttachments.java");
+	private static final Path COMMANDS =
+		Path.of("src/main/java/dev/attuned/command/AttunedCommands.java");
+
+	@Test
+	void capacityReadsAndWritesRespectConfiguredCap() throws IOException {
+		String attachments = read(ATTACHMENTS);
+
+		assertTrue(attachments.contains("return clampCapacity(player.getAttachedOrElse(CAPACITY, 0));"),
+			"Capacity reads should clamp old persisted values to the configured cap.");
+		assertTrue(attachments.contains("player.setAttached(CAPACITY, clampCapacity(value));"),
+			"Capacity writes should not persist values above the configured cap.");
+		assertTrue(attachments.contains("private static int clampCapacity(int value)"),
+			"Capacity clamping should be centralized in a named helper.");
+		assertTrue(attachments.contains("Math.min(AttunedConfig.get().capacityCap(), Math.max(0, value))"),
+			"Capacity clamping should preserve the zero floor and configured cap ceiling.");
+	}
+
+	@Test
+	void capacityCommandReportsTheClampedValue() throws IOException {
+		String commands = read(COMMANDS);
+
+		assertTrue(commands.contains("AttunedAttachments.setCapacity(player, amount);"),
+			"The capacity command should still write through the attachment boundary.");
+		assertTrue(commands.contains("int capacity = AttunedAttachments.getCapacity(player);"),
+			"The capacity command should read back the actual clamped value.");
+		assertTrue(commands.contains("\"Attunement capacity set to \" + capacity"),
+			"The capacity command should report the value that was actually stored.");
+		assertTrue(commands.contains("return capacity;"),
+			"The capacity command should return the clamped value to command automation.");
+	}
+
+	private static String read(Path file) throws IOException {
+		assertTrue(Files.isRegularFile(file), "Expected file to exist: " + file);
+		return Files.readString(file, StandardCharsets.UTF_8);
+	}
+}

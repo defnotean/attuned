@@ -100,9 +100,10 @@ public final class AttunedCommands {
 							ServerPlayer player = ctx.getSource().getPlayerOrException();
 							int amount = IntegerArgumentType.getInteger(ctx, "amount");
 							AttunedAttachments.setCapacity(player, amount);
+							int capacity = AttunedAttachments.getCapacity(player);
 							ctx.getSource().sendSuccess(
-								() -> Component.literal("Attunement capacity set to " + amount), false);
-							return amount;
+								() -> Component.literal("Attunement capacity set to " + capacity), false);
+							return capacity;
 						})))
 				.then(Commands.literal("status")
 					.requires(Commands.hasPermission(Commands.LEVEL_GAMEMASTERS))

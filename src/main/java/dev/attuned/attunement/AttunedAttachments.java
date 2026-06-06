@@ -76,11 +76,15 @@ public final class AttunedAttachments {
 	public static void init() {}
 
 	public static int getCapacity(Player player) {
-		return player.getAttachedOrElse(CAPACITY, 0);
+		return clampCapacity(player.getAttachedOrElse(CAPACITY, 0));
 	}
 
 	public static void setCapacity(Player player, int value) {
-		player.setAttached(CAPACITY, Math.max(0, value));
+		player.setAttached(CAPACITY, clampCapacity(value));
+	}
+
+	private static int clampCapacity(int value) {
+		return Math.min(AttunedConfig.get().capacityCap(), Math.max(0, value));
 	}
 
 	public static AttunedInv getInventory(Player player) {
