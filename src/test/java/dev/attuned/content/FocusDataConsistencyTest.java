@@ -182,6 +182,7 @@ class FocusDataConsistencyTest {
 			"AttunedFocusBehaviors should skip duplicate init work");
 		assertTrue(registrations.contains("initialized = true;"),
 			"AttunedFocusBehaviors should mark successful registration as complete");
+		assertBefore(registrations, "initialized = true;", "register(\"tide\", new TideBehavior())");
 	}
 
 	@Test
@@ -390,6 +391,14 @@ class FocusDataConsistencyTest {
 		assertNotNull(image, "Block texture should be a readable PNG: " + texture);
 		assertEquals(expectedWidth, image.getWidth(), "Block texture width should be upgraded: " + texture);
 		assertEquals(expectedHeight, image.getHeight(), "Block texture height should be upgraded: " + texture);
+	}
+
+	private static void assertBefore(String source, String earlier, String later) {
+		int earlierIndex = source.indexOf(earlier);
+		int laterIndex = source.indexOf(later);
+		assertTrue(earlierIndex >= 0, "Expected source to contain: " + earlier);
+		assertTrue(laterIndex >= 0, "Expected source to contain: " + later);
+		assertTrue(earlierIndex < laterIndex, "Expected " + earlier + " before " + later);
 	}
 
 	private static Map<String, String> registeredFocusItemsByField(String source) {

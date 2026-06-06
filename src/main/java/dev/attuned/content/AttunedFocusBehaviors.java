@@ -42,6 +42,8 @@ final class AttunedFocusBehaviors {
 		if (initialized) {
 			return;
 		}
+		initialized = true;
+
 		register("tide", new TideBehavior());
 		register("galespur", new GalespurBehavior());
 		register("rainstep", new RainstepBehavior());
@@ -74,7 +76,6 @@ final class AttunedFocusBehaviors {
 		register("threshold", new RadiantFocusBehaviors.Threshold());
 		register("epitaph", new RevenantFocusBehaviors.Epitaph());
 		register("hollowstep", new RevenantFocusBehaviors.Hollowstep());
-		initialized = true;
 	}
 
 	private static void register(String name, FocusBehavior behavior) {
