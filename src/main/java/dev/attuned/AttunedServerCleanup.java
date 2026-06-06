@@ -32,13 +32,13 @@ public final class AttunedServerCleanup {
 		SERVER_CALLBACKS.add(Objects.requireNonNull(cleanup, "cleanup"));
 	}
 
-	/** Registers the server-stop hook. Called from the mod initializer. */
+	/** Registers the server-stopping hook. Called from the mod initializer. */
 	public static void init() {
 		if (initialized) {
 			return;
 		}
 		initialized = true;
-		ServerLifecycleEvents.SERVER_STOPPED.register(server -> {
+		ServerLifecycleEvents.SERVER_STOPPING.register(server -> {
 			for (Consumer<MinecraftServer> cleanup : List.copyOf(SERVER_CALLBACKS)) {
 				runServerCleanup(cleanup, server);
 			}

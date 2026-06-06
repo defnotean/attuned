@@ -102,10 +102,11 @@ public final class AttunedEffects {
 		AttunedInv inv = AttunedAttachments.getInventory(player);
 		BudgetResolver.Resolution resolution = Attunement.resolution(player);
 		List<Integer> currentActive = resolution.activeSlots();
+		Map<Integer, FocusDefinition> activeDefinitions = activeDefinitions(player, inv, currentActive);
 		boolean wasTracked = ACTIVE.containsKey(player.getUUID());
 		Map<Integer, AppliedFocus> tracked =
 			ACTIVE.computeIfAbsent(player.getUUID(), id -> new HashMap<>());
-		Set<Affinity> activeAffinities = activeAffinities(player, inv, currentActive);
+		Set<Affinity> activeAffinities = activeAffinities(activeDefinitions.values());
 
 		// A subtle ambient aura while the player has anything active.
 		if (!currentActive.isEmpty() && auraTick % AURA_INTERVAL == 0) {
@@ -115,8 +116,10 @@ public final class AttunedEffects {
 		// Build this tick's active snapshot from the currently-loaded definitions.
 		Map<Integer, AppliedFocus> nextState = new HashMap<>();
 		for (int slot : currentActive) {
-			appliedFocusFor(player, inv.get(slot))
-				.ifPresent(applied -> nextState.put(slot, applied));
+			if (activeDefinitions.containsKey(slot)) {
+				AppliedFocus now = appliedFocusFor(inv.get(slot), activeDefinitions.get(slot));
+				nextState.put(slot, now);
+			}
 		}
 		Map<Integer, BudgetResolver.DormantReason> dormantReasons = resolution.dormantReasons();
 		if (!currentActive.isEmpty()) {
@@ -210,12 +213,20 @@ public final class AttunedEffects {
 		};
 	}
 
-	private static Set<Affinity> activeAffinities(ServerPlayer player, AttunedInv inv, List<Integer> activeSlots) {
-		Set<Affinity> affinities = EnumSet.noneOf(Affinity.class);
+	private static Map<Integer, FocusDefinition> activeDefinitions(ServerPlayer player,
+			AttunedInv inv, List<Integer> activeSlots) {
+		Map<Integer, FocusDefinition> definitions = new HashMap<>();
 		for (int slot : activeSlots) {
 			Attunement.definitionFor(player, inv.get(slot))
-				.flatMap(FocusDefinition::affinity)
-				.ifPresent(affinities::add);
+				.ifPresent(definition -> definitions.put(slot, definition));
+		}
+		return definitions;
+	}
+
+	private static Set<Affinity> activeAffinities(Iterable<FocusDefinition> activeDefinitions) {
+		Set<Affinity> affinities = EnumSet.noneOf(Affinity.class);
+		for (FocusDefinition definition : activeDefinitions) {
+			definition.affinity().ifPresent(affinities::add);
 		}
 		return affinities;
 	}
@@ -235,9 +246,8 @@ public final class AttunedEffects {
 		return Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "slot_" + slot + "_mod_" + index);
 	}
 
-	private static Optional<AppliedFocus> appliedFocusFor(ServerPlayer player, ItemStack stack) {
-		return Attunement.definitionFor(player, stack)
-			.map(def -> new AppliedFocus(stack.copy(), List.copyOf(def.modifiers()), def.behavior()));
+	private static AppliedFocus appliedFocusFor(ItemStack stack, FocusDefinition def) {
+		return new AppliedFocus(stack.copy(), List.copyOf(def.modifiers()), def.behavior());
 	}
 
 	private static boolean sameAppliedFocus(AppliedFocus previous, AppliedFocus now) {

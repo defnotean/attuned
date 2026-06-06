@@ -76,7 +76,7 @@ class RuntimeCleanupContractTest {
 	private static final List<String> RUNTIME_EVENT_HOOKS = List.of(
 		"PlayerBlockBreakEvents.AFTER.register",
 		"ServerEntityLevelChangeEvents.AFTER_PLAYER_CHANGE_LEVEL.register",
-		"ServerLifecycleEvents.SERVER_STOPPED.register",
+		"ServerLifecycleEvents.SERVER_STOPPING.register",
 		"ServerLivingEntityEvents.ALLOW_DAMAGE.register",
 		"ServerLivingEntityEvents.ALLOW_DEATH.register",
 		"ServerLivingEntityEvents.AFTER_DAMAGE.register",
@@ -121,8 +121,8 @@ class RuntimeCleanupContractTest {
 			"Server cleanup should skip repeated init calls");
 		assertTrue(source.contains("initialized = true;"),
 			"Server cleanup should mark the server-stop hook as registered");
-		assertTrue(source.contains("ServerLifecycleEvents.SERVER_STOPPED.register"),
-			"Server cleanup should own the server-stop event hook");
+		assertTrue(source.contains("ServerLifecycleEvents.SERVER_STOPPING.register"),
+			"Server cleanup should run while live players and worlds are still available");
 		assertTrue(source.contains("private static final List<Consumer<MinecraftServer>> SERVER_CALLBACKS"),
 			"Server cleanup should support callbacks that need the stopping server");
 		assertTrue(source.contains("public static void onStopServer(Consumer<MinecraftServer> cleanup)"),
@@ -280,8 +280,8 @@ class RuntimeCleanupContractTest {
 		assertEquals(1, hooks.size(), "Only AttunedServerCleanup should own raw server-stop hooks: " + hooks);
 		assertTrue(hooks.stream().anyMatch(hook ->
 				hook.contains("AttunedServerCleanup.java")
-					&& hook.contains("ServerLifecycleEvents.SERVER_STOPPED.register")),
-			"The central server cleanup coordinator should own the ordinary server-stop hook");
+					&& hook.contains("ServerLifecycleEvents.SERVER_STOPPING.register")),
+			"The central server cleanup coordinator should own the ordinary server-stopping hook");
 	}
 
 	@Test
@@ -337,7 +337,7 @@ class RuntimeCleanupContractTest {
 					.toList()) {
 				String[] lines = read(file).split("\\R");
 				for (int i = 0; i < lines.length; i++) {
-					if (lines[i].contains("ServerLifecycleEvents.SERVER_STOPPED.register")) {
+					if (lines[i].contains("ServerLifecycleEvents.SERVER_STOPPING.register")) {
 						hooks.add(file.toString() + ":" + (i + 1) + ": " + lines[i].trim());
 					}
 				}

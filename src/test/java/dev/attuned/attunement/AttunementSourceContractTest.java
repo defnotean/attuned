@@ -1,5 +1,6 @@
 package dev.attuned.attunement;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
@@ -64,6 +65,40 @@ class AttunementSourceContractTest {
 	}
 
 	@Test
+	void effectsTickReusesActiveDefinitionsAcrossPerPlayerPasses() throws IOException {
+		String source = Files.readString(EFFECTS_SOURCE, StandardCharsets.UTF_8);
+		String tickPlayer = methodRegion(source, "private static void tickPlayer",
+			"private static void announceNewDormantSlots");
+		String activeDefinitions = methodRegion(source,
+			"private static Map<Integer, FocusDefinition> activeDefinitions",
+			"private static Set<Affinity> activeAffinities");
+		String activeAffinities = methodRegion(source, "private static Set<Affinity> activeAffinities",
+			"private static Optional<Affinity> committedAffinity");
+		String appliedFocusFor = methodRegion(source, "private static AppliedFocus appliedFocusFor",
+			"private static boolean sameAppliedFocus");
+
+		assertTrue(tickPlayer.contains(
+				"Map<Integer, FocusDefinition> activeDefinitions = activeDefinitions(player, inv, currentActive);"),
+			"The per-player tick should resolve active Focus definitions once for all later passes.");
+		assertTrue(tickPlayer.contains("Set<Affinity> activeAffinities = activeAffinities(activeDefinitions.values());"),
+			"Aura and Discord checks should use the shared active definitions.");
+		assertTrue(tickPlayer.contains("AppliedFocus now = appliedFocusFor(inv.get(slot), activeDefinitions.get(slot));"),
+			"Effect snapshots should use the shared active definitions.");
+		assertTrue(!tickPlayer.contains("activeAffinities(player, inv, currentActive)"),
+			"Affinity derivation should not perform its own definition lookup pass.");
+		assertTrue(!tickPlayer.contains("appliedFocusFor(player,"),
+			"Applied snapshot construction should not perform its own definition lookup pass.");
+		assertEquals(1, countOccurrences(source, "Attunement.definitionFor(player, inv.get(slot))"),
+			"AttunedEffects should look up each active Focus definition through one shared helper.");
+		assertTrue(activeDefinitions.contains("Attunement.definitionFor(player, inv.get(slot))"),
+			"The shared helper should be the only place that loads active definitions.");
+		assertTrue(!activeAffinities.contains("Attunement.definitionFor"),
+			"Affinity derivation should consume already-loaded definitions.");
+		assertTrue(!appliedFocusFor.contains("Attunement.definitionFor"),
+			"Applied Focus snapshots should consume already-loaded definitions.");
+	}
+
+	@Test
 	void focusBehaviorCallbacksAreIsolated() throws IOException {
 		String source = Files.readString(EFFECTS_SOURCE, StandardCharsets.UTF_8);
 
@@ -107,5 +142,15 @@ class AttunementSourceContractTest {
 		assertTrue(startIndex >= 0, "Expected source to contain: " + start);
 		assertTrue(endIndex > startIndex, "Expected source to contain after " + start + ": " + end);
 		return source.substring(startIndex, endIndex);
+	}
+
+	private static int countOccurrences(String source, String needle) {
+		int count = 0;
+		int index = 0;
+		while ((index = source.indexOf(needle, index)) >= 0) {
+			count++;
+			index += needle.length();
+		}
+		return count;
 	}
 }

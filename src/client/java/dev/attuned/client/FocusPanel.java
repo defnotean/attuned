@@ -136,7 +136,7 @@ public final class FocusPanel {
 		Optional<Apex.Capstone> capstone =
 			Apex.resolveCapstone(orderedActiveAffinities, used, capacity);
 		float resonance = Resonance.get(player);
-		boolean atApex = resonance >= Resonance.APEX_THRESHOLD;
+		boolean atApex = capstone.isPresent() && resonance >= Resonance.APEX_THRESHOLD;
 		int affinityColor = AttunementReadout.stanceArgb(capstone, discord, committed);
 		Optional<Affinity> pactStabilityAffinity = pactStabilityAffinity(discord, activeAffinityCounts);
 
@@ -176,7 +176,7 @@ public final class FocusPanel {
 		int gemX0 = leftPos + slotX + FocusLayout.SLOT / 2 - GEM_SIZE / 2;
 		CombatHud.drawPlayerGem(graphics, gemX0, y0, GEM_SIZE,
 			committed.orElse(null), discord, capstone.orElse(null),
-			capstone.isPresent() && atApex);
+			atApex);
 
 		// Resonance ring: a 1-pixel square border traced one pixel outside the
 		// gem's bezel. The full ring is laid down as a faint track, then overlaid

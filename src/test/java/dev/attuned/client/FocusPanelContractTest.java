@@ -35,6 +35,8 @@ class FocusPanelContractTest {
 			"The Focus panel should read resonance once per draw.");
 		assertEquals(0, countOccurrences(source, "Resonance.atApex(player)"),
 			"The Focus panel should derive Apex readiness from the cached resonance value.");
+		assertTrue(source.contains("boolean atApex = capstone.isPresent() && resonance >= Resonance.APEX_THRESHOLD;"),
+			"The Focus panel should brighten Apex resonance only when a capstone is actually available.");
 		assertTrue(source.contains("drawResonanceRing(graphics, gemX0, y0, affinityColor, resonance, atApex)"),
 			"The resonance ring should reuse the frame's cached resonance state.");
 	}
