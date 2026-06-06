@@ -122,6 +122,12 @@ class FociHudContractTest {
 		assertTrue(combatHud.contains("FociHud.isVisible(player)")
 				&& combatHud.contains("secondarySidecarX"),
 			"The Combat HUD should avoid the Foci HUD sidecar when both are visible.");
+		assertTrue(combatHud.contains("int fociY = Math.max(SCREEN_MARGIN, screenH - FOCI_HUD_HEIGHT - SCREEN_MARGIN);"),
+			"Narrow screens should stack Combat HUD above the bottom-anchored Foci HUD.");
+		assertTrue(combatHud.contains("return Math.max(SCREEN_MARGIN, fociY - HUD_BACKPLATE_H - SCREEN_MARGIN);"),
+			"The no-sidecar fallback should leave a margin between the two HUD rectangles.");
+		assertTrue(!combatHud.contains("SCREEN_MARGIN + FOCI_HUD_HEIGHT + SCREEN_MARGIN"),
+			"The no-sidecar fallback should not stack from the top edge while Foci HUD is bottom-anchored.");
 	}
 
 	@Test

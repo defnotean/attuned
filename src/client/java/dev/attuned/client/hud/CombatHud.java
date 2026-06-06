@@ -314,9 +314,8 @@ public final class CombatHud {
 
 	private static int secondarySidecarY(int screenW, int screenH, int backplateW) {
 		if (!hasSidecarRoom(screenW, backplateW)) {
-			return Math.min(
-				Math.max(SCREEN_MARGIN, screenH - HUD_BACKPLATE_H - SCREEN_MARGIN),
-				SCREEN_MARGIN + FOCI_HUD_HEIGHT + SCREEN_MARGIN);
+			int fociY = Math.max(SCREEN_MARGIN, screenH - FOCI_HUD_HEIGHT - SCREEN_MARGIN);
+			return Math.max(SCREEN_MARGIN, fociY - HUD_BACKPLATE_H - SCREEN_MARGIN);
 		}
 		return sidecarY(screenW, screenH, backplateW);
 	}

@@ -12,6 +12,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.item.ItemStack;
 
 /**
@@ -115,7 +116,9 @@ public final class VeilBehavior implements FocusBehavior {
 		}
 		state.veiled = false;
 		if (state.appliedInvisibility) {
-			player.setInvisible(false);
+			if (!player.hasEffect(MobEffects.INVISIBILITY)) {
+				player.setInvisible(false);
+			}
 			state.appliedInvisibility = false;
 		}
 		if (broken) {
