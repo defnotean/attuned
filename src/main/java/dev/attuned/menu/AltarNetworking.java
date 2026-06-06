@@ -25,6 +25,8 @@ import net.minecraft.world.level.block.state.BlockState;
 public final class AltarNetworking {
 	private AltarNetworking() {}
 
+	private static boolean initialized;
+
 	/**
 	 * Minimum number of server ticks between two accepted binds from the same
 	 * player. A short window — enough to absorb a forged-client spam burst
@@ -41,6 +43,10 @@ public final class AltarNetworking {
 
 	/** Registers the bind payload type and its server-side receiver. */
 	public static void init() {
+		if (initialized) {
+			return;
+		}
+		initialized = true;
 		PayloadTypeRegistry.serverboundPlay().register(BindShardPayload.TYPE, BindShardPayload.CODEC);
 		ServerPlayNetworking.registerGlobalReceiver(BindShardPayload.TYPE, (payload, context) -> {
 			ServerPlayer player = context.player();

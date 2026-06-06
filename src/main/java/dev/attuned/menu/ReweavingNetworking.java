@@ -25,9 +25,15 @@ import net.minecraft.world.level.block.state.BlockState;
 
 /** Server-side handler for the Altar of Reweaving's result roll. */
 public final class ReweavingNetworking {
+	private static boolean initialized;
+
 	private ReweavingNetworking() {}
 
 	public static void init() {
+		if (initialized) {
+			return;
+		}
+		initialized = true;
 		PayloadTypeRegistry.serverboundPlay().register(ReweavePayload.TYPE, ReweavePayload.CODEC);
 		ServerPlayNetworking.registerGlobalReceiver(ReweavePayload.TYPE, (payload, context) -> {
 			ServerPlayer player = context.player();

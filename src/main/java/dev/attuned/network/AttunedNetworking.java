@@ -14,10 +14,16 @@ import net.minecraft.server.level.ServerPlayer;
  * ever fires the single ability the player legitimately has active.
  */
 public final class AttunedNetworking {
+	private static boolean initialized;
+
 	private AttunedNetworking() {}
 
 	/** Registers the ability payload type and its server-side receiver. */
 	public static void init() {
+		if (initialized) {
+			return;
+		}
+		initialized = true;
 		PayloadTypeRegistry.serverboundPlay().register(AbilityPayload.TYPE, AbilityPayload.CODEC);
 		ServerPlayNetworking.registerGlobalReceiver(AbilityPayload.TYPE, (payload, context) -> {
 			ServerPlayer player = context.player();
