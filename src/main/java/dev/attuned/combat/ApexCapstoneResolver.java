@@ -3,6 +3,7 @@ package dev.attuned.combat;
 import dev.attuned.api.focus.Affinity;
 import java.util.EnumMap;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 /** Resolves the active Focus layout and attunement budget into an Apex capstone. */
@@ -14,6 +15,7 @@ final class ApexCapstoneResolver {
 
 	static Optional<Apex.Capstone> resolve(List<Optional<Affinity>> activeAffinities,
 			int used, int capacity) {
+		Objects.requireNonNull(activeAffinities, "activeAffinities");
 		if (!hasEnoughActiveFoci(activeAffinities) || !isNearFullBudget(used, capacity)) {
 			return Optional.empty();
 		}
@@ -44,6 +46,7 @@ final class ApexCapstoneResolver {
 			EnumMap<Affinity, Integer> counts = new EnumMap<>(Affinity.class);
 			int neutral = 0;
 			for (Optional<Affinity> affinity : activeAffinities) {
+				Objects.requireNonNull(affinity, "affinity");
 				if (affinity.isPresent()) {
 					counts.merge(affinity.get(), 1, Integer::sum);
 				} else {

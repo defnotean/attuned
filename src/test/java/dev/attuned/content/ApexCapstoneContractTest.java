@@ -1,10 +1,12 @@
 package dev.attuned.content;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import dev.attuned.api.focus.Affinity;
 import dev.attuned.combat.Apex;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
@@ -90,6 +92,23 @@ class ApexCapstoneContractTest {
 		assertTrue(Apex.Capstone.STILLPOINT.description().contains("Absorption"));
 		assertTrue(Apex.Capstone.MAELSTROM.affinity().isEmpty());
 		assertTrue(Apex.Capstone.STILLPOINT.affinity().isEmpty());
+	}
+
+	@Test
+	void apexResolverRejectsNullAffinityInputsClearly() {
+		NullPointerException missingList = assertThrows(NullPointerException.class,
+			() -> Apex.resolveCapstone(null, 11, 12));
+		assertEquals("activeAffinities", missingList.getMessage());
+
+		List<Optional<Affinity>> activeAffinities = new ArrayList<>();
+		activeAffinities.add(focus(Affinity.FURY));
+		activeAffinities.add(focus(Affinity.FURY));
+		activeAffinities.add(null);
+		activeAffinities.add(focus(Affinity.FURY));
+
+		NullPointerException missingAffinity = assertThrows(NullPointerException.class,
+			() -> Apex.resolveCapstone(activeAffinities, 11, 12));
+		assertEquals("affinity", missingAffinity.getMessage());
 	}
 
 	private static Optional<Affinity> focus(Affinity affinity) {
