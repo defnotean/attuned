@@ -19,9 +19,15 @@ public final class AttunedKeybinds {
 	private static KeyMapping toggleOwnAffinityHudKey;
 	private static KeyMapping toggleEnemyAffinityHudKey;
 	private static KeyMapping toggleFociHudKey;
+	private static boolean initialized;
 
 	/** Registers the keybind and the tick watcher that sends the ability packet. */
 	public static void init() {
+		if (initialized) {
+			return;
+		}
+		initialized = true;
+
 		abilityKey = KeyMappingHelper.registerKeyMapping(new KeyMapping(
 			"key.attuned.ability", GLFW.GLFW_KEY_R, KeyMapping.Category.GAMEPLAY));
 		toggleOwnAffinityHudKey = KeyMappingHelper.registerKeyMapping(new KeyMapping(

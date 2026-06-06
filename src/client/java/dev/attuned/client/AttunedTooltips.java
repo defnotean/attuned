@@ -31,7 +31,14 @@ import java.util.Locale;
 public final class AttunedTooltips {
 	private AttunedTooltips() {}
 
+	private static boolean initialized;
+
 	public static void init() {
+		if (initialized) {
+			return;
+		}
+		initialized = true;
+
 		ItemTooltipCallback.EVENT.register((stack, context, type, lines) -> {
 			Identifier id = BuiltInRegistries.ITEM.getKey(stack.getItem());
 			if (id == null || !id.getNamespace().equals(Attuned.MOD_ID)) {

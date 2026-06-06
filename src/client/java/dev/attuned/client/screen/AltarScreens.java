@@ -13,8 +13,15 @@ import net.minecraft.client.gui.screens.MenuScreens;
 public final class AltarScreens {
 	private AltarScreens() {}
 
+	private static boolean initialized;
+
 	/** Registers the Altar's screen factory against its menu type. */
 	public static void init() {
+		if (initialized) {
+			return;
+		}
+		initialized = true;
+
 		MenuScreens.register(AltarMenuType.TYPE, AltarScreen::new);
 		MenuScreens.register(ReweavingMenuType.TYPE, ReweavingScreen::new);
 	}

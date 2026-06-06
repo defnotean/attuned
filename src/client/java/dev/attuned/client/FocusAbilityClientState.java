@@ -13,10 +13,16 @@ public final class FocusAbilityClientState {
 	private static int slot = FocusAbilityStatusPayload.NO_ABILITY_SLOT;
 	private static int remainingTicks;
 	private static int totalTicks;
+	private static boolean initialized;
 
 	private FocusAbilityClientState() {}
 
 	public static void init() {
+		if (initialized) {
+			return;
+		}
+		initialized = true;
+
 		ClientPlayNetworking.registerGlobalReceiver(FocusAbilityStatusPayload.TYPE, (payload, context) ->
 			context.client().execute(() -> accept(payload)));
 		ClientTickEvents.END_CLIENT_TICK.register(FocusAbilityClientState::tick);

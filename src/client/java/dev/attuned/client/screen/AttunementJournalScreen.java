@@ -24,6 +24,7 @@ import net.minecraft.util.FormattedCharSequence;
 public final class AttunementJournalScreen extends Screen {
 	private static final Identifier BACKGROUND_TEXTURE =
 		Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "textures/gui/attunement_journal.png");
+	private static boolean initialized;
 
 	private static final int PANEL_WIDTH = 336;
 	private static final int PANEL_HEIGHT = 214;
@@ -103,6 +104,11 @@ public final class AttunementJournalScreen extends Screen {
 	}
 
 	public static void initNetworking() {
+		if (initialized) {
+			return;
+		}
+		initialized = true;
+
 		ClientPlayNetworking.registerGlobalReceiver(OpenJournalPayload.TYPE, (payload, context) ->
 			context.client().execute(() ->
 				context.client().setScreen(new AttunementJournalScreen())));

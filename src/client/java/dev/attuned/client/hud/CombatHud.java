@@ -86,6 +86,7 @@ public final class CombatHud {
 
 	// The matchup of the player's affinity against the targeted entity's.
 	private enum Matchup { EMPOWERED, NEUTRAL, NEUTRALIZED, NONE }
+	private static boolean initialized;
 
 	private record TargetStance(@Nullable Affinity affinity, boolean discord,
 			@Nullable Apex.Capstone capstone, boolean apexArmed) {
@@ -100,6 +101,11 @@ public final class CombatHud {
 	 * status bars. Called once from the client mod initializer.
 	 */
 	public static void init() {
+		if (initialized) {
+			return;
+		}
+		initialized = true;
+
 		Identifier id = Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "combat_hud");
 		HudElementRegistry.attachElementAfter(VanillaHudElements.HOTBAR, id, CombatHud::renderLayer);
 	}

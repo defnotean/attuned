@@ -27,10 +27,16 @@ public final class TremorOreOutlines {
 	private static BlockPos orePos;
 	private static ClientLevel highlightedLevel;
 	private static long expiresAt;
+	private static boolean initialized;
 
 	private TremorOreOutlines() {}
 
 	public static void init() {
+		if (initialized) {
+			return;
+		}
+		initialized = true;
+
 		ClientPlayNetworking.registerGlobalReceiver(TremorOreHintPayload.TYPE, (payload, context) ->
 			context.client().execute(() -> highlight(payload.orePos())));
 		LevelRenderEvents.END_MAIN.register(TremorOreOutlines::render);

@@ -63,8 +63,14 @@ public final class FociHud {
 	private static final int APEX_MARK = 0xD8F4D06A;
 	private static final int FRAME_GLOW = 0xB46D4FD8;
 	private static final int FRAME_EDGE = 0xD49FC8FF;
+	private static boolean initialized;
 
 	public static void init() {
+		if (initialized) {
+			return;
+		}
+		initialized = true;
+
 		Identifier id = Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "foci_hud");
 		HudElementRegistry.attachElementAfter(VanillaHudElements.HOTBAR, id, FociHud::renderLayer);
 	}
