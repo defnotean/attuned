@@ -4,11 +4,8 @@ import dev.attuned.Attuned;
 import dev.attuned.AttunedRegistries;
 import dev.attuned.api.focus.Affinity;
 import dev.attuned.api.focus.FocusDefinition;
-import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.IdentityHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.function.Predicate;
 import net.fabricmc.fabric.api.creativetab.v1.FabricCreativeModeTab;
@@ -50,7 +47,7 @@ final class AttunedCreativeTabs {
 			"attuned_utility",
 			Component.translatable("itemGroup.attuned.utility_foci"),
 			AttunedContent.LINECAST_FOCUS,
-			definition -> definition == null || definition.affinity().isEmpty(),
+			definition -> definition.affinity().isEmpty(),
 			true);
 	}
 
@@ -82,32 +79,21 @@ final class AttunedCreativeTabs {
 	 * Returns the Foci in display order for a creative tab: grouped by
 	 * affinity (Fury, then Bastion, then Zephyr, then Holy, then neutral), and sorted
 	 * within each group by attunement cost ascending, then by registry id
-	 * alphabetically as a tiebreak. A Focus whose definition is missing from
-	 * the supplied lookup falls into the neutral group at the maximum cost so
-	 * it sorts to the very end.
+	 * alphabetically as a tiebreak.
 	 */
 	private static List<Item> fociInDisplayOrder(HolderLookup.RegistryLookup<FocusDefinition> lookup,
 			Predicate<FocusDefinition> include) {
-		Map<Item, FocusDefinition> byItem = new IdentityHashMap<>();
-		lookup.listElements().forEach(holder -> byItem.put(holder.value().item().value(), holder.value()));
-		Comparator<Item> byAffinity = Comparator.comparingInt(item -> {
-			FocusDefinition def = byItem.get(item);
-			return affinityOrder(def == null ? Optional.empty() : def.affinity());
-		});
-		Comparator<Item> byCost = Comparator.comparingInt(item -> {
-			FocusDefinition def = byItem.get(item);
-			return def == null ? Integer.MAX_VALUE : def.cost();
-		});
-		Comparator<Item> byKey = Comparator.comparing(item -> BuiltInRegistries.ITEM.getKey(item).toString());
-		List<Item> sorted = new ArrayList<>();
-		for (Item item : AttunedContent.FOCI) {
-			FocusDefinition definition = byItem.get(item);
-			if (include.test(definition)) {
-				sorted.add(item);
-			}
-		}
-		sorted.sort(byAffinity.thenComparing(byCost).thenComparing(byKey));
-		return sorted;
+		Comparator<FocusDefinition> byAffinity =
+			Comparator.comparingInt(definition -> affinityOrder(definition.affinity()));
+		Comparator<FocusDefinition> byCost = Comparator.comparingInt(FocusDefinition::cost);
+		Comparator<FocusDefinition> byKey =
+			Comparator.comparing(definition -> BuiltInRegistries.ITEM.getKey(definition.item().value()).toString());
+		return lookup.listElements()
+			.map(holder -> holder.value())
+			.filter(include)
+			.sorted(byAffinity.thenComparing(byCost).thenComparing(byKey))
+			.map(definition -> definition.item().value())
+			.toList();
 	}
 
 	/**

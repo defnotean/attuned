@@ -26,6 +26,8 @@ import org.junit.jupiter.api.Test;
  * per-player chest mods such as Lootr.
  */
 class AttunedLootCompatibilityTest {
+	private static final Path LOOT_SOURCE =
+		Path.of("src/main/java/dev/attuned/content/AttunedLoot.java");
 	private static final Path FOCUS_DATA_DIR =
 		Path.of("src/main/resources/data/attuned/attuned/focus");
 	private static final Path FABRIC_MOD_JSON =
@@ -48,6 +50,16 @@ class AttunedLootCompatibilityTest {
 					focus.getKey() + " should stay eligible in " + table);
 			}
 		}
+	}
+
+	@Test
+	void lootFocusUniverseComesFromFocusDefinitionRegistry() throws IOException {
+		String source = Files.readString(LOOT_SOURCE, StandardCharsets.UTF_8);
+
+		assertTrue(source.contains("lookup.listElements()"),
+			"Loot injection should build Focus candidates from the synced FocusDefinition registry.");
+		assertTrue(!source.contains("AttunedContent.FOCI"),
+			"Loot injection should not cap drops to the static shipped-Foci list.");
 	}
 
 	@Test

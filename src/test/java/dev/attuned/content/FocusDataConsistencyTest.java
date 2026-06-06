@@ -210,6 +210,10 @@ class FocusDataConsistencyTest {
 			"/attuned validate should report duplicate FocusDefinition item keys clearly");
 		assertTrue(!validateContent.contains("byItem.put(def.item().value(), def);"),
 			"/attuned validate should not silently overwrite duplicate FocusDefinition item keys");
+		assertTrue(!validateContent.contains("AttunedContent.FOCI"),
+			"/attuned validate should not reject datapack FocusDefinitions outside the static shipped-Foci list");
+		assertTrue(!validateContent.contains("AttunedContent.isFocus("),
+			"/attuned validate should not use static Focus item membership as registry authority");
 	}
 
 	@Test
@@ -228,6 +232,10 @@ class FocusDataConsistencyTest {
 			"Utility Focus tab should use a dedicated translated title");
 		assertTrue(source.contains("ALTAR_OF_REWEAVING"),
 			"Utility tab should keep the Altar of Reweaving reachable");
+		assertTrue(!source.contains("AttunedContent.FOCI"),
+			"Creative tabs should display Foci from the synced FocusDefinition registry, not the static shipped-Foci list");
+		assertTrue(!source.contains("definition == null"),
+			"Creative tab filters should only evaluate real FocusDefinition entries from the registry");
 		assertLanguageKey(lang, "itemGroup.attuned.affinity_foci");
 		assertLanguageKey(lang, "itemGroup.attuned.utility_foci");
 	}

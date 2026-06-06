@@ -207,18 +207,6 @@ public final class AttunedCommands {
 			});
 		});
 
-		for (net.minecraft.world.item.Item focus : AttunedContent.FOCI) {
-			if (!byItem.containsKey(focus)) {
-				problems.add("Missing FocusDefinition for " + BuiltInRegistries.ITEM.getKey(focus));
-			}
-		}
-		for (net.minecraft.world.item.Item item : byItem.keySet()) {
-			if (!AttunedContent.isFocus(item)) {
-				problems.add("FocusDefinition item is not in AttunedContent.FOCI: "
-					+ BuiltInRegistries.ITEM.getKey(item));
-			}
-		}
-
 		if (problems.isEmpty()) {
 			source.sendSuccess(() -> Component.literal(
 				"Attuned validation passed: " + byItem.size() + " Focus definitions checked."), false);

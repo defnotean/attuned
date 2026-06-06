@@ -5,12 +5,14 @@ import dev.attuned.Attuned;
 import dev.attuned.AttunedRegistries;
 import dev.attuned.api.focus.Affinity;
 import dev.attuned.api.focus.FocusDefinition;
-import java.util.IdentityHashMap;
+import java.util.Comparator;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import net.fabricmc.fabric.api.loot.v3.FabricLootTableBuilder;
 import net.fabricmc.fabric.api.loot.v3.LootTableEvents;
 import net.minecraft.core.HolderLookup;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.Identifier;
 import net.minecraft.util.Mth;
 import net.minecraft.world.item.Item;
@@ -72,6 +74,7 @@ public final class AttunedLoot {
 		Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "seafarers");
 
 	private record FocusMeta(Affinity affinity, Identifier faction) {}
+	private record FocusEntry(Item item, FocusMeta meta) {}
 
 	/** Vanilla loot tables that gain a chance at a Focus. Grouped by source family. */
 	private static final Map<Identifier, Drop> TARGETS = Map.ofEntries(
@@ -159,14 +162,14 @@ public final class AttunedLoot {
 			AttunedConfig config = AttunedConfig.get();
 			float chance = focusChance(config, drop);
 			float fragmentChance = fragmentChance(config, chance);
-			Map<Item, FocusMeta> focusMetadata = focusMetadata(
+			List<FocusEntry> focusEntries = focusEntries(
 				registries.lookupOrThrow(AttunedRegistries.FOCUS_DEFINITIONS));
 			if (modifiesExistingPools(key.identifier())) {
 				((FabricLootTableBuilder) tableBuilder).modifyPools(pool -> {
-					float focusEntryChance = chance / Math.max(1, AttunedContent.FOCI.size());
-					for (Item focus : AttunedContent.FOCI) {
-						pool.add(LootItem.lootTableItem(focus)
-							.setWeight(weightFor(focus, drop, focusMetadata))
+					float focusEntryChance = chance / Math.max(1, focusEntries.size());
+					for (FocusEntry focus : focusEntries) {
+						pool.add(LootItem.lootTableItem(focus.item())
+							.setWeight(weightFor(focus, drop))
 							.when(LootItemRandomChanceCondition.randomChance(focusEntryChance)));
 					}
 					pool.add(LootItem.lootTableItem(AttunedContent.ATTUNEMENT_SHARD_FRAGMENT)
@@ -178,8 +181,8 @@ public final class AttunedLoot {
 			LootPool.Builder pool = LootPool.lootPool()
 				.setRolls(ConstantValue.exactly(1.0F))
 				.when(LootItemRandomChanceCondition.randomChance(chance));
-			for (Item focus : AttunedContent.FOCI) {
-				pool.add(LootItem.lootTableItem(focus).setWeight(weightFor(focus, drop, focusMetadata)));
+			for (FocusEntry focus : focusEntries) {
+				pool.add(LootItem.lootTableItem(focus.item()).setWeight(weightFor(focus, drop)));
 			}
 			tableBuilder.withPool(pool);
 
@@ -211,24 +214,22 @@ public final class AttunedLoot {
 	}
 
 	/** Affinities and factions from the synced datapack registry, keyed by Focus item. */
-	private static Map<Item, FocusMeta> focusMetadata(HolderLookup.RegistryLookup<FocusDefinition> lookup) {
-		Map<Item, FocusMeta> metadata = new IdentityHashMap<>();
-		lookup.listElements().forEach(holder -> {
-			FocusDefinition definition = holder.value();
-			metadata.put(definition.item().value(), new FocusMeta(
-				definition.affinity().orElse(null),
-				definition.faction().orElse(null)));
-		});
-		return metadata;
+	private static List<FocusEntry> focusEntries(HolderLookup.RegistryLookup<FocusDefinition> lookup) {
+		return lookup.listElements()
+			.map(holder -> {
+				FocusDefinition definition = holder.value();
+				return new FocusEntry(definition.item().value(), new FocusMeta(
+					definition.affinity().orElse(null),
+					definition.faction().orElse(null)));
+			})
+			.sorted(Comparator.comparing(focus ->
+				BuiltInRegistries.ITEM.getKey(focus.item()).toString()))
+			.toList();
 	}
 
 	/** The pool weight for a Focus in a structure with the given affinity theme. */
-	private static int weightFor(Item focus, Drop drop, Map<Item, FocusMeta> focusMetadata) {
-		FocusMeta meta = focusMetadata.get(focus);
-		return weightForMeta(
-			meta == null ? null : meta.affinity(),
-			meta == null ? null : meta.faction(),
-			drop);
+	private static int weightFor(FocusEntry focus, Drop drop) {
+		return weightForMeta(focus.meta().affinity(), focus.meta().faction(), drop);
 	}
 
 	static int weightForMeta(Affinity affinity, Identifier faction, Drop drop) {
