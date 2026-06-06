@@ -66,12 +66,19 @@ public record AttunedInv(List<ItemStack> items) {
 	}
 
 	public ItemStack get(int slot) {
-		return copyStack(items.get(slot));
+		return copyStack(items.get(requireSlot(slot)));
 	}
 
 	public AttunedInv with(int slot, ItemStack stack) {
 		List<ItemStack> copy = new ArrayList<>(items);
-		copy.set(slot, copyStack(stack));
+		copy.set(requireSlot(slot), copyStack(stack));
 		return new AttunedInv(copy);
+	}
+
+	private static int requireSlot(int slot) {
+		if (slot < 0 || slot >= SIZE) {
+			throw new IllegalArgumentException("slot must be between 0 and " + (SIZE - 1));
+		}
+		return slot;
 	}
 }

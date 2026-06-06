@@ -55,7 +55,7 @@ class AttunedInvTest {
 	void withCopiesMutableItemStacks() throws IOException {
 		String source = readSource();
 
-		assertTrue(source.contains("copy.set(slot, copyStack(stack));"),
+		assertTrue(source.contains("copy.set(requireSlot(slot), copyStack(stack));"),
 			"with should copy incoming mutable ItemStack values before storing them.");
 	}
 
@@ -73,8 +73,21 @@ class AttunedInvTest {
 	void getCopiesMutableItemStack() throws IOException {
 		String source = readSource();
 
-		assertTrue(source.contains("return copyStack(items.get(slot));"),
+		assertTrue(source.contains("return copyStack(items.get(requireSlot(slot)));"),
 			"get should not expose the stored mutable ItemStack from the immutable snapshot.");
+	}
+
+	@Test
+	void invalidSlotsFailWithClearMessage() {
+		AttunedInv inv = AttunedInv.empty();
+
+		IllegalArgumentException negativeGet =
+			assertThrows(IllegalArgumentException.class, () -> inv.get(-1));
+		IllegalArgumentException upperSet =
+			assertThrows(IllegalArgumentException.class, () -> inv.with(AttunedInv.SIZE, ItemStack.EMPTY));
+
+		assertEquals("slot must be between 0 and 5", negativeGet.getMessage());
+		assertEquals("slot must be between 0 and 5", upperSet.getMessage());
 	}
 
 	private static String readSource() throws IOException {
