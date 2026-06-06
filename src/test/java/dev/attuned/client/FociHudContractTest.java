@@ -66,7 +66,7 @@ class FociHudContractTest {
 			"The HUD should read the equipped Focus inventory.");
 		assertTrue(hud.contains("graphics.item("),
 			"The HUD should render actual equipped item stacks.");
-		assertTrue(hud.contains("Attunement.dormantReasons(player)"),
+		assertTrue(hud.contains("dormantReasons"),
 			"The HUD should distinguish active and dormant equipped Foci.");
 		assertTrue(hud.contains("drawDormantOverlay"),
 			"Dormant or over-budget Foci should be visibly dimmed.");
@@ -80,6 +80,34 @@ class FociHudContractTest {
 			"The resonance bar should remain visible even while empty.");
 		assertTrue(hud.contains("return AttunedClientConfig.get().showFociHud();"),
 			"The HUD frame should remain visible when toggled on, even before any Focus is equipped.");
+	}
+
+	@Test
+	void fociHudReusesOneAttunementResolutionPerFrame() throws IOException {
+		String hud = read(FOCI_HUD);
+
+		assertEquals(1, countOccurrences(hud, "Attunement.resolution(player)"),
+			"The HUD should resolve active and dormant Focus budget state once per rendered frame.");
+		assertEquals(0, countOccurrences(hud, "Attunement.activeSlots(player)"),
+			"The HUD should not recompute active slots after resolving the frame budget.");
+		assertEquals(0, countOccurrences(hud, "Attunement.dormantReasons(player)"),
+			"The HUD should not recompute dormant reasons after resolving the frame budget.");
+		assertTrue(hud.contains("drawAbilityWell(graphics, player, inv, activeSlots,"),
+			"The ability well should reuse the frame's resolved active slots.");
+		assertTrue(hud.contains("selectedAbilitySlot(Player player, AttunedInv inv, List<Integer> activeSlots,"),
+			"Ability fallback selection should receive resolved active slots instead of querying again.");
+		assertTrue(hud.contains("for (int slot : activeSlots)"),
+			"Ability fallback selection should iterate the already-resolved active slots.");
+		assertEquals(1, countOccurrences(hud, "Attunement.definitionFor(player,"),
+			"The HUD should cache active slot Focus definitions for ability, color, and Apex rendering.");
+		assertEquals(0, countOccurrences(hud, "Apex.capstoneOf(player)"),
+			"The HUD should derive Apex state from cached active slot definitions.");
+		assertEquals(0, countOccurrences(hud, "Attunement.committedAffinity(player)"),
+			"The HUD should derive committed affinity from cached active slot definitions.");
+		assertEquals(0, countOccurrences(hud, "Attunement.isDiscord(player)"),
+			"The HUD should derive Discord state from cached active slot definitions.");
+		assertTrue(hud.contains("Apex.resolveCapstone(activeAffinities.ordered(), used, Attunement.capacity(player))"),
+			"The HUD should resolve Apex state from its cached ordered active affinities.");
 	}
 
 	@Test
@@ -104,6 +132,16 @@ class FociHudContractTest {
 	private static String read(Path path) throws IOException {
 		assertTrue(Files.isRegularFile(path), "Expected file to exist: " + path);
 		return Files.readString(path, StandardCharsets.UTF_8);
+	}
+
+	private static int countOccurrences(String value, String needle) {
+		int count = 0;
+		int index = 0;
+		while ((index = value.indexOf(needle, index)) >= 0) {
+			count++;
+			index += needle.length();
+		}
+		return count;
 	}
 
 	private static void assertPngSize(Path path, int width, int height) throws IOException {

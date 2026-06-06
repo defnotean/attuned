@@ -15,9 +15,12 @@ import dev.attuned.client.FocusAbilityClientState;
 import dev.attuned.combat.Apex;
 import dev.attuned.combat.Resonance;
 import dev.attuned.menu.FocusLayout;
+import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry;
 import net.fabricmc.fabric.api.client.rendering.v1.hud.VanillaHudElements;
 import net.minecraft.client.DeltaTracker;
@@ -97,12 +100,21 @@ public final class FociHud {
 		drawFrameGlow(graphics, x, y);
 
 		AttunedInv inv = AttunedAttachments.getInventory(player);
-		List<Integer> activeSlots = Attunement.activeSlots(player);
-		Map<Integer, BudgetResolver.DormantReason> dormantReasons = Attunement.dormantReasons(player);
+		BudgetResolver.Resolution resolution = Attunement.resolution(player);
+		List<Integer> activeSlots = resolution.activeSlots();
+		Map<Integer, BudgetResolver.DormantReason> dormantReasons = resolution.dormantReasons();
+		FocusDefinition[] slotDefinitions = activeSlotDefinitions(player, inv, activeSlots);
+		ActiveAffinities activeAffinities = activeAffinities(slotDefinitions, activeSlots);
+		int used = used(slotDefinitions, activeSlots);
+		Optional<Apex.Capstone> capstone =
+			Apex.resolveCapstone(activeAffinities.ordered(), used, Attunement.capacity(player));
 
-		drawAbilityWell(graphics, player, inv, x + ABILITY_WELL_X, y + ABILITY_WELL_Y);
-		drawApexBar(graphics, player, x + APEX_GEM_X, y + APEX_GEM_Y, x + APEX_BAR_X, y + APEX_BAR_Y);
-		drawFocusGrid(graphics, player, inv, activeSlots, dormantReasons, x + FOCUS_GRID_X, y + FOCUS_GRID_Y);
+		drawAbilityWell(graphics, player, inv, activeSlots, slotDefinitions,
+			x + ABILITY_WELL_X, y + ABILITY_WELL_Y);
+		drawApexBar(graphics, player, capstone, activeAffinities.committed(), activeAffinities.discord(),
+			x + APEX_GEM_X, y + APEX_GEM_Y, x + APEX_BAR_X, y + APEX_BAR_Y);
+		drawFocusGrid(graphics, inv, activeSlots, dormantReasons, slotDefinitions,
+			x + FOCUS_GRID_X, y + FOCUS_GRID_Y);
 	}
 
 	static int primarySidecarX(int screenW, int hudWidth) {
@@ -113,6 +125,47 @@ public final class FociHud {
 		return Math.max(SCREEN_MARGIN, screenH - HUD_H - SCREEN_MARGIN);
 	}
 
+	private static FocusDefinition[] activeSlotDefinitions(Player player, AttunedInv inv, List<Integer> activeSlots) {
+		FocusDefinition[] definitions = new FocusDefinition[AttunedInv.SIZE];
+		for (int slot : activeSlots) {
+			definitions[slot] = Attunement.definitionFor(player, inv.get(slot)).orElse(null);
+		}
+		return definitions;
+	}
+
+	private static ActiveAffinities activeAffinities(FocusDefinition[] slotDefinitions, List<Integer> activeSlots) {
+		List<Optional<Affinity>> ordered = new ArrayList<>(activeSlots.size());
+		Set<Affinity> distinct = EnumSet.noneOf(Affinity.class);
+		for (int slot : activeSlots) {
+			Optional<Affinity> affinity = affinityOf(slotDefinitions[slot]);
+			ordered.add(affinity);
+			affinity.ifPresent(distinct::add);
+		}
+		Optional<Affinity> committed = distinct.size() == 1
+			? Optional.of(distinct.iterator().next())
+			: Optional.empty();
+		return new ActiveAffinities(ordered, committed, distinct.size() >= 2);
+	}
+
+	private static Optional<Affinity> affinityOf(FocusDefinition definition) {
+		return definition == null ? Optional.empty() : definition.affinity();
+	}
+
+	private static int used(FocusDefinition[] slotDefinitions, List<Integer> activeSlots) {
+		int total = 0;
+		for (int slot : activeSlots) {
+			FocusDefinition definition = slotDefinitions[slot];
+			if (definition != null) {
+				total += definition.cost();
+			}
+		}
+		return total;
+	}
+
+	private record ActiveAffinities(List<Optional<Affinity>> ordered,
+			Optional<Affinity> committed, boolean discord) {
+	}
+
 	private static void drawFrameGlow(GuiGraphicsExtractor graphics, int x, int y) {
 		graphics.fill(x + 4, y, x + HUD_W - 4, y + 1, FRAME_EDGE);
 		graphics.fill(x + 4, y + HUD_H - 1, x + HUD_W - 4, y + HUD_H, FRAME_EDGE);
@@ -121,8 +174,9 @@ public final class FociHud {
 		graphics.fill(x + 4, y + 34, x + HUD_W - 4, y + 35, FRAME_GLOW);
 	}
 
-	private static void drawAbilityWell(GuiGraphicsExtractor graphics, Player player, AttunedInv inv, int x, int y) {
-		int slot = selectedAbilitySlot(player, inv);
+	private static void drawAbilityWell(GuiGraphicsExtractor graphics, Player player, AttunedInv inv,
+			List<Integer> activeSlots, FocusDefinition[] slotDefinitions, int x, int y) {
+		int slot = selectedAbilitySlot(player, inv, activeSlots, slotDefinitions);
 		if (slot >= 0) {
 			ItemStack stack = inv.get(slot);
 			graphics.item(stack, x + (ABILITY_WELL_SIZE - 16) / 2, y + (ABILITY_WELL_SIZE - 16) / 2);
@@ -138,17 +192,18 @@ public final class FociHud {
 		return FocusAbilityClientState.remainingTicks();
 	}
 
-	private static int selectedAbilitySlot(Player player, AttunedInv inv) {
+	private static int selectedAbilitySlot(Player player, AttunedInv inv, List<Integer> activeSlots,
+			FocusDefinition[] slotDefinitions) {
 		int syncedSlot = FocusAbilityClientState.slot();
 		if (syncedSlot >= 0 && syncedSlot < AttunedInv.SIZE && !inv.get(syncedSlot).isEmpty()) {
 			return syncedSlot;
 		}
-		for (int slot : Attunement.activeSlots(player)) {
+		for (int slot : activeSlots) {
 			ItemStack stack = inv.get(slot);
-			FocusBehavior behavior = Attunement.definitionFor(player, stack)
-				.flatMap(FocusDefinition::behavior)
-				.map(AttunedRegistries::getBehavior)
-				.orElse(null);
+			FocusDefinition definition = slotDefinitions[slot];
+			FocusBehavior behavior = definition == null
+				? null
+				: definition.behavior().map(AttunedRegistries::getBehavior).orElse(null);
 			if (behavior != null && hasActiveAbility(behavior, player, stack)) {
 				return slot;
 			}
@@ -166,8 +221,9 @@ public final class FociHud {
 		}
 	}
 
-	private static void drawFocusGrid(GuiGraphicsExtractor graphics, Player player, AttunedInv inv,
-			List<Integer> activeSlots, Map<Integer, BudgetResolver.DormantReason> dormantReasons, int x, int y) {
+	private static void drawFocusGrid(GuiGraphicsExtractor graphics, AttunedInv inv,
+			List<Integer> activeSlots, Map<Integer, BudgetResolver.DormantReason> dormantReasons,
+			FocusDefinition[] slotDefinitions, int x, int y) {
 		for (int slot = 0; slot < AttunedInv.SIZE; slot++) {
 			int column = slot % FOCUS_GRID_COLUMNS;
 			int row = slot / FOCUS_GRID_COLUMNS;
@@ -181,7 +237,7 @@ public final class FociHud {
 				continue;
 			}
 			if (activeSlots.contains(slot)) {
-				drawActiveGlow(graphics, sx, sy, focusColor(player, stack));
+				drawActiveGlow(graphics, sx, sy, focusColor(slotDefinitions[slot]));
 			} else if (dormantReasons.containsKey(slot)) {
 				drawDormantOverlay(graphics, sx, sy);
 			}
@@ -189,9 +245,8 @@ public final class FociHud {
 		}
 	}
 
-	private static int focusColor(Player player, ItemStack stack) {
-		return Attunement.definitionFor(player, stack)
-			.flatMap(FocusDefinition::affinity)
+	private static int focusColor(FocusDefinition definition) {
+		return affinityOf(definition)
 			.map(Affinity::argb)
 			.orElse(AffinityColors.NEUTRAL_ARGB);
 	}
@@ -210,10 +265,9 @@ public final class FociHud {
 		graphics.fill(x + 1, y + 1, x + FocusLayout.SLOT - 1, y + FocusLayout.SLOT - 1, DORMANT_DIM);
 	}
 
-	private static void drawApexBar(GuiGraphicsExtractor graphics, Player player, int gemX, int gemY, int barX, int barY) {
-		Optional<Apex.Capstone> capstone = Apex.capstoneOf(player);
-		Optional<Affinity> committed = Attunement.committedAffinity(player);
-		boolean discord = Attunement.isDiscord(player);
+	private static void drawApexBar(GuiGraphicsExtractor graphics, Player player,
+			Optional<Apex.Capstone> capstone, Optional<Affinity> committed, boolean discord,
+			int gemX, int gemY, int barX, int barY) {
 		boolean atApex = capstone.isPresent() && Resonance.atApex(player);
 		CombatHud.drawPlayerGem(graphics, gemX, gemY, APEX_GEM_SIZE,
 			committed.orElse(null), discord, capstone.orElse(null), atApex);
