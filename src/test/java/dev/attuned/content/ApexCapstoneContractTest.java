@@ -118,6 +118,20 @@ class ApexCapstoneContractTest {
 		assertEquals("affinity", shortMissingAffinity.getMessage());
 	}
 
+	@Test
+	void apexResolverRejectsNegativeBudgetInputsClearly() {
+		List<Optional<Affinity>> activeAffinities =
+			List.of(focus(Affinity.FURY), focus(Affinity.FURY), focus(Affinity.FURY), focus(Affinity.FURY));
+
+		IllegalArgumentException negativeUsed = assertThrows(IllegalArgumentException.class,
+			() -> Apex.resolveCapstone(activeAffinities, -1, 12));
+		assertEquals("used budget must be non-negative", negativeUsed.getMessage());
+
+		IllegalArgumentException negativeCapacity = assertThrows(IllegalArgumentException.class,
+			() -> Apex.resolveCapstone(activeAffinities, 0, -1));
+		assertEquals("capacity must be non-negative", negativeCapacity.getMessage());
+	}
+
 	private static Optional<Affinity> focus(Affinity affinity) {
 		return Optional.of(affinity);
 	}

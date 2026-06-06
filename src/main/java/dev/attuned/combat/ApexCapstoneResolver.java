@@ -17,6 +17,7 @@ final class ApexCapstoneResolver {
 			int used, int capacity) {
 		Objects.requireNonNull(activeAffinities, "activeAffinities");
 		requireValidAffinities(activeAffinities);
+		requireNonNegativeBudget(used, capacity);
 		if (!hasEnoughActiveFoci(activeAffinities) || !isNearFullBudget(used, capacity)) {
 			return Optional.empty();
 		}
@@ -37,6 +38,15 @@ final class ApexCapstoneResolver {
 	private static void requireValidAffinities(List<Optional<Affinity>> activeAffinities) {
 		for (Optional<Affinity> affinity : activeAffinities) {
 			Objects.requireNonNull(affinity, "affinity");
+		}
+	}
+
+	private static void requireNonNegativeBudget(int used, int capacity) {
+		if (used < 0) {
+			throw new IllegalArgumentException("used budget must be non-negative");
+		}
+		if (capacity < 0) {
+			throw new IllegalArgumentException("capacity must be non-negative");
 		}
 	}
 
