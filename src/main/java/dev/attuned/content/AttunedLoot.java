@@ -7,6 +7,7 @@ import dev.attuned.api.focus.Affinity;
 import dev.attuned.api.focus.FocusDefinition;
 import java.util.IdentityHashMap;
 import java.util.Map;
+import java.util.Objects;
 import net.fabricmc.fabric.api.loot.v3.FabricLootTableBuilder;
 import net.fabricmc.fabric.api.loot.v3.LootTableEvents;
 import net.minecraft.core.HolderLookup;
@@ -52,7 +53,11 @@ public final class AttunedLoot {
 	}
 
 	/** A targeted loot table: how rich it is, which affinity and faction it favours. */
-	record Drop(Tier tier, Affinity theme, boolean unseenTheme, boolean fishingTheme) {}
+	record Drop(Tier tier, Affinity theme, boolean unseenTheme, boolean fishingTheme) {
+		Drop {
+			tier = Objects.requireNonNull(tier, "tier");
+		}
+	}
 
 	// Pool weights: a Focus matching the structure's theme is favoured, neutral Foci
 	// fit anywhere, and off-theme Foci are still possible but rarer.

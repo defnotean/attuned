@@ -1,6 +1,7 @@
 package dev.attuned.content;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.google.gson.JsonElement;
@@ -175,6 +176,13 @@ class AttunedLootCompatibilityTest {
 		int neutralWeight = AttunedLoot.weightForMeta(neutral.affinity(), neutral.faction(), fishing);
 		assertTrue(seafarerWeight > neutralWeight,
 			"Fishing treasure should gently bias Seafarers Foci without excluding other Foci");
+	}
+
+	@Test
+	void dropRecordsRejectMissingTier() {
+		NullPointerException missingTier = assertThrows(NullPointerException.class,
+			() -> new AttunedLoot.Drop(null, null, false, false));
+		assertEquals("tier", missingTier.getMessage());
 	}
 
 	private static Map<String, FocusData> focusDataByItemId() throws IOException {
