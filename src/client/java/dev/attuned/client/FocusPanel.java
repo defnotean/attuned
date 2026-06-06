@@ -17,6 +17,7 @@ import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.player.Player;
 
+import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.EnumSet;
 import java.util.List;
@@ -108,27 +109,34 @@ public final class FocusPanel {
 		AttunedInv inv = AttunedAttachments.getInventory(player);
 		List<Integer> activeSlotsList = Attunement.activeSlots(player);
 		FocusDefinition[] slotDefinitions = new FocusDefinition[AttunedInv.SIZE];
+		List<Optional<Affinity>> orderedActiveAffinities = new ArrayList<>(activeSlotsList.size());
 		int used = 0;
-		Set<Affinity> activeAffinities = EnumSet.noneOf(Affinity.class);
+		Set<Affinity> distinctActiveAffinities = EnumSet.noneOf(Affinity.class);
 		EnumMap<Affinity, Integer> activeAffinityCounts = new EnumMap<>(Affinity.class);
 		for (int slot : activeSlotsList) {
 			FocusDefinition def = Attunement.definitionFor(player, inv.get(slot)).orElse(null);
 			if (def == null) {
+				orderedActiveAffinities.add(Optional.empty());
 				continue;
 			}
 			slotDefinitions[slot] = def;
 			used += def.cost();
-			def.affinity().ifPresent(affinity -> {
-				activeAffinities.add(affinity);
-				activeAffinityCounts.merge(affinity, 1, Integer::sum);
+			Optional<Affinity> affinity = def.affinity();
+			orderedActiveAffinities.add(affinity);
+			affinity.ifPresent(activeAffinity -> {
+				distinctActiveAffinities.add(activeAffinity);
+				activeAffinityCounts.merge(activeAffinity, 1, Integer::sum);
 			});
 		}
 		int capacity = Attunement.capacity(player);
-		boolean discord = activeAffinities.size() >= 2;
-		Optional<Affinity> committed = activeAffinities.size() == 1
-			? Optional.of(activeAffinities.iterator().next())
+		boolean discord = distinctActiveAffinities.size() >= 2;
+		Optional<Affinity> committed = distinctActiveAffinities.size() == 1
+			? Optional.of(distinctActiveAffinities.iterator().next())
 			: Optional.empty();
-		Optional<Apex.Capstone> capstone = Apex.capstoneOf(player);
+		Optional<Apex.Capstone> capstone =
+			Apex.resolveCapstone(orderedActiveAffinities, used, capacity);
+		float resonance = Resonance.get(player);
+		boolean atApex = resonance >= Resonance.APEX_THRESHOLD;
 		int affinityColor = AttunementReadout.stanceArgb(capstone, discord, committed);
 		Optional<Affinity> pactStabilityAffinity = pactStabilityAffinity(discord, activeAffinityCounts);
 
@@ -168,14 +176,14 @@ public final class FocusPanel {
 		int gemX0 = leftPos + slotX + FocusLayout.SLOT / 2 - GEM_SIZE / 2;
 		CombatHud.drawPlayerGem(graphics, gemX0, y0, GEM_SIZE,
 			committed.orElse(null), discord, capstone.orElse(null),
-			capstone.isPresent() && Resonance.atApex(player));
+			capstone.isPresent() && atApex);
 
 		// Resonance ring: a 1-pixel square border traced one pixel outside the
 		// gem's bezel. The full ring is laid down as a faint track, then overlaid
 		// with a coloured arc whose length scales with the player's resonance.
 		// At Apex the overlay is the full affinity colour; below threshold it sits
 		// dim so the build's gating state reads at a glance.
-		drawResonanceRing(graphics, gemX0, y0, affinityColor, player);
+		drawResonanceRing(graphics, gemX0, y0, affinityColor, resonance, atApex);
 
 		// Budget bar, centred in the panel's bottom padding band: a dark track
 		// with a fill proportional to the attunement points in use.
@@ -316,7 +324,7 @@ public final class FocusPanel {
 	 * {@code left} writes (rx0, ry1-1) -> (rx0, ry0+1).</p>
 	 */
 	private static void drawResonanceRing(GuiGraphicsExtractor graphics, int gemX0, int gemY0,
-			int affinityColor, Player player) {
+			int affinityColor, float resonance, boolean atApex) {
 		int rx0 = gemX0 - 1;
 		int ry0 = gemY0 - 1;
 		int rx1 = gemX0 + GEM_SIZE + 1;
@@ -330,12 +338,12 @@ public final class FocusPanel {
 		graphics.fill(rx0, ry0 + 1, rx0 + 1, ry1 - 1, RESONANCE_TRACK_ARGB);
 		graphics.fill(rx1 - 1, ry0 + 1, rx1, ry1 - 1, RESONANCE_TRACK_ARGB);
 
-		float resonance = Math.max(0.0F, Math.min(1.0F, Resonance.get(player)));
-		if (resonance <= 0.0F) {
+		float clampedResonance = Math.max(0.0F, Math.min(1.0F, resonance));
+		if (clampedResonance <= 0.0F) {
 			return;
 		}
 
-		int alpha = Resonance.atApex(player) ? RESONANCE_ALPHA_APEX : RESONANCE_ALPHA_DIM;
+		int alpha = atApex ? RESONANCE_ALPHA_APEX : RESONANCE_ALPHA_DIM;
 		int fillArgb = (alpha << 24) | (affinityColor & 0x00FFFFFF);
 
 		// Trace the border clockwise from the top-left corner. Each edge owns its
@@ -345,7 +353,7 @@ public final class FocusPanel {
 		int sideLen = GEM_SIZE + 2;
 		int edgeMax = sideLen - 1;
 		int total = 4 * edgeMax;
-		int filled = Math.max(1, Math.round(total * resonance));
+		int filled = Math.max(1, Math.round(total * clampedResonance));
 
 		// Top edge, left-to-right, owning the top-left corner (rx0, ry0).
 		int onEdge = Math.min(filled, edgeMax);
