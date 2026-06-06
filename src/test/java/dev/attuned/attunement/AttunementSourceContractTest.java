@@ -67,15 +67,45 @@ class AttunementSourceContractTest {
 	void focusBehaviorCallbacksAreIsolated() throws IOException {
 		String source = Files.readString(EFFECTS_SOURCE, StandardCharsets.UTF_8);
 
-		assertTrue(source.contains("runBehaviorActivate(behavior, player, stack)"),
+		assertTrue(source.contains("runBehaviorActivate(behavior, player, focus.stack())"),
 			"Focus activation callbacks should be isolated through a logged helper");
-		assertTrue(source.contains("runBehaviorDeactivate(behavior, player, stack)"),
+		assertTrue(source.contains("runBehaviorDeactivate(behavior, player, focus.stack())"),
 			"Focus deactivation callbacks should be isolated through a logged helper");
-		assertTrue(source.contains("runBehaviorTick(behavior, player, stack)"),
+		assertTrue(source.contains("runBehaviorTick(behavior, player, focus.stack())"),
 			"Focus tick callbacks should be isolated through a logged helper");
 		assertTrue(source.contains("catch (RuntimeException e)"),
 			"Focus behavior callback failures should be caught so one Focus cannot stop the whole tick");
 		assertTrue(source.contains("Attuned.LOGGER.warn(\"Attuned Focus behavior"),
 			"Focus behavior callback failures should be logged");
+	}
+
+	@Test
+	void appliedFocusSnapshotDrivesRemovalAndTicks() throws IOException {
+		String source = Files.readString(EFFECTS_SOURCE, StandardCharsets.UTF_8);
+		String removeFocus = methodRegion(source, "private static void removeFocus", "private static void deactivateAllTrackedFoci");
+		String tickFocus = methodRegion(source, "private static void tickFocus", "private record AppliedFocus");
+
+		assertTrue(source.contains("private static final Map<UUID, Map<Integer, AppliedFocus>> ACTIVE"),
+			"Active Focus state should store the effect payload that was actually applied");
+		assertTrue(source.contains("new AppliedFocus(stack.copy(), List.copyOf(def.modifiers()), def.behavior())"),
+			"Applied Focus snapshots should defensively copy the stack and modifier payload");
+		assertTrue(source.contains("private record AppliedFocus(ItemStack stack, List<ModifierEntry> modifiers, Optional<Identifier> behavior)"),
+			"Applied Focus snapshots should remember stack, modifiers, and behavior id");
+		assertTrue(source.contains("sameAppliedFocus(previous, now)"),
+			"Effect diffing should notice definition payload changes, not only stack changes");
+		assertTrue(source.contains("private static void removeFocus(ServerPlayer player, int slot, AppliedFocus focus)"),
+			"Focus removal should consume the applied snapshot rather than a bare stack");
+		assertTrue(!removeFocus.contains("Attunement.definitionFor"),
+			"Focus removal should not re-resolve the live datapack definition during teardown");
+		assertTrue(!tickFocus.contains("Attunement.definitionFor"),
+			"Focus ticking should use the behavior id that belongs to the active applied snapshot");
+	}
+
+	private static String methodRegion(String source, String start, String end) {
+		int startIndex = source.indexOf(start);
+		int endIndex = source.indexOf(end, startIndex);
+		assertTrue(startIndex >= 0, "Expected source to contain: " + start);
+		assertTrue(endIndex > startIndex, "Expected source to contain after " + start + ": " + end);
+		return source.substring(startIndex, endIndex);
 	}
 }

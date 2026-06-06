@@ -58,11 +58,11 @@ public final class AttunedEffects {
 	private static final int AURA_INTERVAL = 16;
 
 	/**
-	 * Per-player snapshot of which slots were active last tick and the exact stack
-	 * that was active in each. Stack values are defensive copies so later in-world
-	 * mutations cannot alias the tracked state.
+	 * Per-player snapshot of which Focus effects were active last tick. Each value
+	 * stores the exact stack plus the definition payload that was applied, so
+	 * datapack reloads cannot make teardown look up a different modifier set.
 	 */
-	private static final Map<UUID, Map<Integer, ItemStack>> ACTIVE = new HashMap<>();
+	private static final Map<UUID, Map<Integer, AppliedFocus>> ACTIVE = new HashMap<>();
 	/** Per-player dormant slot set from last tick, for one-shot dormancy hints. */
 	private static final Map<UUID, Set<Integer>> DORMANT = new HashMap<>();
 
@@ -97,7 +97,7 @@ public final class AttunedEffects {
 		BudgetResolver.Resolution resolution = Attunement.resolution(player);
 		List<Integer> currentActive = resolution.activeSlots();
 		boolean wasTracked = ACTIVE.containsKey(player.getUUID());
-		Map<Integer, ItemStack> tracked =
+		Map<Integer, AppliedFocus> tracked =
 			ACTIVE.computeIfAbsent(player.getUUID(), id -> new HashMap<>());
 		Set<Affinity> activeAffinities = activeAffinities(player, inv, currentActive);
 
@@ -106,10 +106,11 @@ public final class AttunedEffects {
 			spawnAura(player, activeAffinities);
 		}
 
-		// Build this tick's active snapshot: slot -> current stack in that slot.
-		Map<Integer, ItemStack> nextState = new HashMap<>();
+		// Build this tick's active snapshot from the currently-loaded definitions.
+		Map<Integer, AppliedFocus> nextState = new HashMap<>();
 		for (int slot : currentActive) {
-			nextState.put(slot, inv.get(slot));
+			appliedFocusFor(player, inv.get(slot))
+				.ifPresent(applied -> nextState.put(slot, applied));
 		}
 		Map<Integer, BudgetResolver.DormantReason> dormantReasons = resolution.dormantReasons();
 		if (!currentActive.isEmpty()) {
@@ -127,12 +128,12 @@ public final class AttunedEffects {
 		boolean anyDeactivated = false;
 
 		// Removals: slots that were active last tick but are no longer active, or
-		// whose stack changed (the old stack must be torn down with its own data).
-		for (Map.Entry<Integer, ItemStack> entry : tracked.entrySet()) {
+		// whose stack/definition payload changed.
+		for (Map.Entry<Integer, AppliedFocus> entry : tracked.entrySet()) {
 			int slot = entry.getKey();
-			ItemStack previous = entry.getValue();
-			ItemStack now = nextState.get(slot);
-			if (now == null || !ItemStack.matches(previous, now)) {
+			AppliedFocus previous = entry.getValue();
+			AppliedFocus now = nextState.get(slot);
+			if (now == null || !sameAppliedFocus(previous, now)) {
 				removeFocus(player, slot, previous);
 				anyDeactivated = true;
 			}
@@ -140,23 +141,24 @@ public final class AttunedEffects {
 
 		// Applications and ticks: walk the currently-active slots.
 		for (int slot : currentActive) {
-			ItemStack now = nextState.get(slot);
-			ItemStack previous = tracked.get(slot);
-			if (previous != null && ItemStack.matches(previous, now)) {
-				// Unchanged: still active with the same stack — just tick its behaviour.
+			AppliedFocus now = nextState.get(slot);
+			if (now == null) {
+				continue;
+			}
+			AppliedFocus previous = tracked.get(slot);
+			if (previous != null && sameAppliedFocus(previous, now)) {
+				// Unchanged: still active with the same applied effect.
 				tickFocus(player, now);
 			} else {
-				// Newly active, or the stack in this slot changed.
+				// Newly active, or the stack/definition payload in this slot changed.
 				applyFocus(player, slot, now);
 				anyActivated = true;
 			}
 		}
 
-		// Commit this tick's snapshot as defensive copies for next-tick diffing.
+		// Commit this tick's already-defensive snapshot for next-tick diffing.
 		tracked.clear();
-		for (Map.Entry<Integer, ItemStack> entry : nextState.entrySet()) {
-			tracked.put(entry.getKey(), entry.getValue().copy());
-		}
+		tracked.putAll(nextState);
 
 		// Chime for real activation changes — but stay silent on the first-tick
 		// reapply after a login or respawn, when every active Focus reads as new.
@@ -227,16 +229,20 @@ public final class AttunedEffects {
 		return Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "slot_" + slot + "_mod_" + index);
 	}
 
-	private static void applyFocus(ServerPlayer player, int slot, ItemStack stack) {
-		Optional<FocusDefinition> definition = Attunement.definitionFor(player, stack);
-		if (definition.isEmpty()) {
-			return;
-		}
-		FocusDefinition def = definition.get();
+	private static Optional<AppliedFocus> appliedFocusFor(ServerPlayer player, ItemStack stack) {
+		return Attunement.definitionFor(player, stack)
+			.map(def -> new AppliedFocus(stack.copy(), List.copyOf(def.modifiers()), def.behavior()));
+	}
 
-		List<ModifierEntry> modifiers = def.modifiers();
-		for (int i = 0; i < modifiers.size(); i++) {
-			ModifierEntry entry = modifiers.get(i);
+	private static boolean sameAppliedFocus(AppliedFocus previous, AppliedFocus now) {
+		return ItemStack.matches(previous.stack(), now.stack())
+			&& previous.modifiers().equals(now.modifiers())
+			&& previous.behavior().equals(now.behavior());
+	}
+
+	private static void applyFocus(ServerPlayer player, int slot, AppliedFocus focus) {
+		for (int i = 0; i < focus.modifiers().size(); i++) {
+			ModifierEntry entry = focus.modifiers().get(i);
 			AttributeInstance ai = player.getAttribute(entry.attribute());
 			if (ai == null) {
 				continue;
@@ -247,24 +253,17 @@ public final class AttunedEffects {
 			}
 		}
 
-		def.behavior().ifPresent(behaviorId -> {
+		focus.behavior().ifPresent(behaviorId -> {
 			FocusBehavior behavior = AttunedRegistries.getBehavior(behaviorId);
 			if (behavior != null) {
-				runBehaviorActivate(behavior, player, stack);
+				runBehaviorActivate(behavior, player, focus.stack());
 			}
 		});
 	}
 
-	private static void removeFocus(ServerPlayer player, int slot, ItemStack stack) {
-		Optional<FocusDefinition> definition = Attunement.definitionFor(player, stack);
-		if (definition.isEmpty()) {
-			return;
-		}
-		FocusDefinition def = definition.get();
-
-		List<ModifierEntry> modifiers = def.modifiers();
-		for (int i = 0; i < modifiers.size(); i++) {
-			ModifierEntry entry = modifiers.get(i);
+	private static void removeFocus(ServerPlayer player, int slot, AppliedFocus focus) {
+		for (int i = 0; i < focus.modifiers().size(); i++) {
+			ModifierEntry entry = focus.modifiers().get(i);
 			AttributeInstance ai = player.getAttribute(entry.attribute());
 			if (ai == null) {
 				continue;
@@ -272,10 +271,10 @@ public final class AttunedEffects {
 			ai.removeModifier(modifierId(slot, i));
 		}
 
-		def.behavior().ifPresent(behaviorId -> {
+		focus.behavior().ifPresent(behaviorId -> {
 			FocusBehavior behavior = AttunedRegistries.getBehavior(behaviorId);
 			if (behavior != null) {
-				runBehaviorDeactivate(behavior, player, stack);
+				runBehaviorDeactivate(behavior, player, focus.stack());
 			}
 		});
 	}
@@ -291,12 +290,12 @@ public final class AttunedEffects {
 
 	private static void deactivateTrackedFoci(ServerPlayer player) {
 		UUID id = player.getUUID();
-		Map<Integer, ItemStack> tracked = ACTIVE.remove(id);
+		Map<Integer, AppliedFocus> tracked = ACTIVE.remove(id);
 		DORMANT.remove(id);
 		if (tracked == null) {
 			return;
 		}
-		for (Map.Entry<Integer, ItemStack> entry : tracked.entrySet()) {
+		for (Map.Entry<Integer, AppliedFocus> entry : tracked.entrySet()) {
 			try {
 				removeFocus(player, entry.getKey(), entry.getValue());
 			} catch (RuntimeException e) {
@@ -306,12 +305,13 @@ public final class AttunedEffects {
 		}
 	}
 
-	private static void tickFocus(ServerPlayer player, ItemStack stack) {
-		Attunement.definitionFor(player, stack)
-			.flatMap(FocusDefinition::behavior)
+	private static void tickFocus(ServerPlayer player, AppliedFocus focus) {
+		focus.behavior()
 			.map(AttunedRegistries::getBehavior)
-			.ifPresent(behavior -> runBehaviorTick(behavior, player, stack));
+			.ifPresent(behavior -> runBehaviorTick(behavior, player, focus.stack()));
 	}
+
+	private record AppliedFocus(ItemStack stack, List<ModifierEntry> modifiers, Optional<Identifier> behavior) {}
 
 	private static void runBehaviorActivate(FocusBehavior behavior, ServerPlayer player, ItemStack stack) {
 		try {
