@@ -13,6 +13,7 @@ import net.minecraft.world.item.ItemStack;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Per-player attunement state: the attunement capacity and the six Focus slots.
@@ -116,18 +117,25 @@ public final class AttunedAttachments {
 
 	/** Whether the player has already claimed the milestone with the given id. */
 	public static boolean hasMilestone(Player player, String id) {
-		return player.getAttachedOrElse(MILESTONES, List.of()).contains(id);
+		return normalizedAttachmentId(id)
+			.map(milestoneId -> player.getAttachedOrElse(MILESTONES, List.of()).contains(milestoneId))
+			.orElse(false);
 	}
 
 	/** Records a milestone id as claimed. A no-op if it was already claimed. */
 	public static void addMilestone(Player player, String id) {
+		Optional<String> normalized = normalizedAttachmentId(id);
+		if (normalized.isEmpty()) {
+			return;
+		}
+		String milestoneId = normalized.get();
 		List<String> claimed = player.getAttachedOrElse(MILESTONES, List.of());
-		if (claimed.contains(id)) {
+		if (claimed.contains(milestoneId)) {
 			return;
 		}
 		List<String> updated = new ArrayList<>(claimed);
-		updated.add(id);
-		player.setAttached(MILESTONES, updated);
+		updated.add(milestoneId);
+		player.setAttached(MILESTONES, List.copyOf(updated));
 	}
 
 	public static float getResonance(Player player) {
@@ -147,17 +155,32 @@ public final class AttunedAttachments {
 
 	/** Whether this player has already seen the onboarding toast with the given id. */
 	public static boolean sawOnboarding(Player player, String id) {
-		return player.getAttachedOrElse(ONBOARDING, List.of()).contains(id);
+		return normalizedAttachmentId(id)
+			.map(onboardingId -> player.getAttachedOrElse(ONBOARDING, List.of()).contains(onboardingId))
+			.orElse(false);
 	}
 
 	/** Records an onboarding toast id as seen. A no-op if it was already seen. */
 	public static void markOnboarding(Player player, String id) {
+		Optional<String> normalized = normalizedAttachmentId(id);
+		if (normalized.isEmpty()) {
+			return;
+		}
+		String onboardingId = normalized.get();
 		List<String> seen = player.getAttachedOrElse(ONBOARDING, List.of());
-		if (seen.contains(id)) {
+		if (seen.contains(onboardingId)) {
 			return;
 		}
 		List<String> updated = new ArrayList<>(seen);
-		updated.add(id);
-		player.setAttached(ONBOARDING, updated);
+		updated.add(onboardingId);
+		player.setAttached(ONBOARDING, List.copyOf(updated));
+	}
+
+	private static Optional<String> normalizedAttachmentId(String id) {
+		if (id == null) {
+			return Optional.empty();
+		}
+		String normalized = id.trim();
+		return normalized.isEmpty() ? Optional.empty() : Optional.of(normalized);
 	}
 }

@@ -76,6 +76,28 @@ class AttunedAttachmentsContractTest {
 			"Attachment slot writes should preserve the one-Focus-per-slot invariant.");
 	}
 
+	@Test
+	void listAttachmentIdsAreNormalizedBeforeReadsAndWrites() throws IOException {
+		String attachments = read(ATTACHMENTS);
+
+		assertTrue(attachments.contains("import java.util.Optional;"),
+			"Milestone and onboarding ids should use an explicit absent-id type.");
+		assertTrue(attachments.contains("private static Optional<String> normalizedAttachmentId(String id)"),
+			"Milestone and onboarding id normalization should be centralized in a named helper.");
+		assertTrue(attachments.contains("String normalized = id.trim();"),
+			"List attachment ids should trim accidental whitespace before persisting or checking them.");
+		assertTrue(attachments.contains("return normalized.isEmpty() ? Optional.empty() : Optional.of(normalized);"),
+			"Blank list attachment ids should be rejected instead of persisted.");
+		assertTrue(attachments.contains("normalizedAttachmentId(id)"),
+			"Milestone and onboarding APIs should normalize ids before touching persistent attachments.");
+		assertTrue(attachments.contains(".orElse(false)"),
+			"Milestone and onboarding reads should report invalid ids as unseen instead of throwing.");
+		assertTrue(attachments.contains("player.setAttached(MILESTONES, List.copyOf(updated));"),
+			"Milestone writes should persist an immutable defensive snapshot.");
+		assertTrue(attachments.contains("player.setAttached(ONBOARDING, List.copyOf(updated));"),
+			"Onboarding writes should persist an immutable defensive snapshot.");
+	}
+
 	private static String read(Path file) throws IOException {
 		assertTrue(Files.isRegularFile(file), "Expected file to exist: " + file);
 		return Files.readString(file, StandardCharsets.UTF_8);
