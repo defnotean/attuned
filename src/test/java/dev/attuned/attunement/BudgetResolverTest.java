@@ -136,4 +136,10 @@ class BudgetResolverTest {
 		assertThrows(IllegalArgumentException.class, () -> new Candidate<>(0, -1, false, "focus"),
 			"Budget candidates should not represent negative attunement costs.");
 	}
+
+	@Test
+	void uniqueCandidateRejectsNullIdentity() {
+		assertThrows(NullPointerException.class, () -> new Candidate<String>(0, 1, true, null),
+			"Unique budget candidates need a real identity token for duplicate detection.");
+	}
 }

@@ -6,6 +6,7 @@ import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 /**
@@ -43,6 +44,9 @@ public final class BudgetResolver {
 			}
 			if (cost < 0) {
 				throw new IllegalArgumentException("cost must be non-negative");
+			}
+			if (unique) {
+				Objects.requireNonNull(identity, "identity");
 			}
 		}
 	}
