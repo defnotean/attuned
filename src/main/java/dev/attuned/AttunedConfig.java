@@ -36,6 +36,10 @@ public record AttunedConfig(
 		int gravebindCooldownTicks,
 		boolean broadcastPactDeaths) {
 
+	public AttunedConfig {
+		startingCapacity = Math.min(startingCapacity, capacityCap);
+	}
+
 	/** The built-in defaults — also the fallback for any missing key. */
 	public static final AttunedConfig DEFAULT =
 		new AttunedConfig(4, 20, 2, 0.25F, 1.0F, 1.0F, 1.0F, 1.0F, 1.0F, 200, 1200, true);
