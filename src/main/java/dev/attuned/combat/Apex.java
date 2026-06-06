@@ -135,7 +135,8 @@ public final class Apex {
 			apexState.remove(uuid);
 			armedState.remove(uuid);
 			stillpointPulses.remove(uuid);
-			maelstromScrambles.keySet().removeIf(key -> key.playerId().equals(uuid));
+			maelstromScrambles.keySet().removeIf(key ->
+				key.playerId().equals(uuid) || key.targetId().equals(uuid));
 		});
 	}
 

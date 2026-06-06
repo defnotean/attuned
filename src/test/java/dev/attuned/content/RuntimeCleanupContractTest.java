@@ -148,6 +148,7 @@ class RuntimeCleanupContractTest {
 		assertContains(read(ALTAR_NETWORKING), "AttunedServerCleanup.onStop(LAST_BIND_TICK::clear)");
 		assertContains(read(APEX), "AttunedServerCleanup.onStop(() -> {");
 		assertContains(read(APEX), "maelstromScrambles.clear();");
+		assertContains(read(APEX), "key.playerId().equals(uuid) || key.targetId().equals(uuid)");
 		assertContains(read(PACTS), "AttunedServerCleanup.onStop(() -> {");
 		assertContains(read(PACTS), "windrunnerRuns.clear();");
 		assertContains(read(FOCUS_ABILITY_STATE), "AttunedServerCleanup.onStop(() -> {");
