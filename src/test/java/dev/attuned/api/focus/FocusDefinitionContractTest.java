@@ -69,6 +69,24 @@ class FocusDefinitionContractTest {
 			"ModifierEntry should fail clearly when a programmatic modifier amount is invalid.");
 	}
 
+	@Test
+	void modifierEntryCodecRejectsNonFiniteAmounts() throws IOException {
+		String source = read(MODIFIER_ENTRY);
+
+		assertTrue(source.contains("import com.mojang.serialization.DataResult;"),
+			"ModifierEntry should use DataResult so codec failures stay structured.");
+		assertTrue(source.contains("private static final Codec<Double> FINITE_AMOUNT_CODEC"),
+			"ModifierEntry should name the finite-only amount codec.");
+		assertTrue(source.contains("Codec.DOUBLE.validate(ModifierEntry::validateAmount)"),
+			"ModifierEntry should validate datapack amount values before construction.");
+		assertTrue(source.contains("FINITE_AMOUNT_CODEC.fieldOf(\"amount\")"),
+			"ModifierEntry should use the finite-only amount codec for FocusDefinition JSON.");
+		assertTrue(source.contains("private static DataResult<Double> validateAmount(double amount)"),
+			"ModifierEntry should centralize codec amount validation.");
+		assertTrue(source.contains("DataResult.error(() -> \"Modifier amount must be finite\")"),
+			"ModifierEntry codec failures should explain invalid amount values.");
+	}
+
 	private static String read(Path path) throws IOException {
 		assertTrue(Files.isRegularFile(path), "Expected file to exist: " + path);
 		return Files.readString(path, StandardCharsets.UTF_8);

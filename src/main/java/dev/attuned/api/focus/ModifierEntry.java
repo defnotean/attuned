@@ -1,6 +1,7 @@
 package dev.attuned.api.focus;
 
 import com.mojang.serialization.Codec;
+import com.mojang.serialization.DataResult;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import java.util.Objects;
 import net.minecraft.core.Holder;
@@ -14,6 +15,8 @@ import net.minecraft.world.entity.ai.attributes.AttributeModifier;
  */
 public record ModifierEntry(Holder<Attribute> attribute, double amount, AttributeModifier.Operation operation) {
 
+	private static final Codec<Double> FINITE_AMOUNT_CODEC = Codec.DOUBLE.validate(ModifierEntry::validateAmount);
+
 	public ModifierEntry {
 		attribute = Objects.requireNonNull(attribute, "attribute");
 		operation = Objects.requireNonNull(operation, "operation");
@@ -22,9 +25,16 @@ public record ModifierEntry(Holder<Attribute> attribute, double amount, Attribut
 		}
 	}
 
+	private static DataResult<Double> validateAmount(double amount) {
+		if (!Double.isFinite(amount)) {
+			return DataResult.error(() -> "Modifier amount must be finite");
+		}
+		return DataResult.success(amount);
+	}
+
 	public static final Codec<ModifierEntry> CODEC = RecordCodecBuilder.create(instance -> instance.group(
 		BuiltInRegistries.ATTRIBUTE.holderByNameCodec().fieldOf("attribute").forGetter(ModifierEntry::attribute),
-		Codec.DOUBLE.fieldOf("amount").forGetter(ModifierEntry::amount),
+		FINITE_AMOUNT_CODEC.fieldOf("amount").forGetter(ModifierEntry::amount),
 		AttributeModifier.Operation.CODEC.fieldOf("operation").forGetter(ModifierEntry::operation)
 	).apply(instance, ModifierEntry::new));
 }
