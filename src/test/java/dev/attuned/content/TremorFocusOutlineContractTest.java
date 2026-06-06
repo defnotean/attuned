@@ -77,6 +77,12 @@ class TremorFocusOutlineContractTest {
 			"The RenderType invoker mixin should be registered on the client.");
 		assertTrue(source.contains("context.gameRenderer().getMainCamera().position()"),
 			"The outline should be rendered relative to the active camera.");
+		assertTrue(source.contains("private static ClientLevel highlightedLevel"),
+			"Tremor should remember the client level that owns the current outline.");
+		assertTrue(source.contains("minecraft.level != highlightedLevel"),
+			"Tremor should clear stale outline state when the client changes level or world.");
+		assertTrue(source.contains("private static void clear()"),
+			"Tremor should centralize clearing ore position, level, and expiry state.");
 		assertTrue(init.contains("TremorOreOutlines.init()"),
 			"The client initializer should install Tremor's receiver and renderer.");
 	}

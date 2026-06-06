@@ -5,6 +5,7 @@ import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.client.rendering.v1.level.LevelRenderContext;
 import net.fabricmc.fabric.api.client.rendering.v1.level.LevelRenderEvents;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.renderer.ShapeRenderer;
 import net.minecraft.client.renderer.rendertype.RenderType;
 import net.minecraft.core.BlockPos;
@@ -24,6 +25,7 @@ public final class TremorOreOutlines {
 	private static final float LINE_WIDTH = 3.0F;
 
 	private static BlockPos orePos;
+	private static ClientLevel highlightedLevel;
 	private static long expiresAt;
 
 	private TremorOreOutlines() {}
@@ -40,6 +42,7 @@ public final class TremorOreOutlines {
 			return;
 		}
 		orePos = pos.immutable();
+		highlightedLevel = minecraft.level;
 		expiresAt = minecraft.level.getGameTime() + OUTLINE_TICKS;
 	}
 
@@ -48,8 +51,12 @@ public final class TremorOreOutlines {
 		if (minecraft.level == null || orePos == null) {
 			return;
 		}
+		if (minecraft.level != highlightedLevel) {
+			clear();
+			return;
+		}
 		if (minecraft.level.getGameTime() > expiresAt || !minecraft.level.getBlockState(orePos).is(ORES)) {
-			orePos = null;
+			clear();
 			return;
 		}
 
@@ -67,5 +74,11 @@ public final class TremorOreOutlines {
 			OUTLINE_COLOR,
 			LINE_WIDTH);
 		context.bufferSource().endBatch(outline);
+	}
+
+	private static void clear() {
+		orePos = null;
+		highlightedLevel = null;
+		expiresAt = 0L;
 	}
 }
