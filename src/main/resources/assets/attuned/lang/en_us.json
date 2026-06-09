@@ -158,6 +158,8 @@
 	"screen.attuned.equipped": "Equipped",
 	"screen.attuned.builds": "Builds",
 	"screen.attuned.builds.empty": "No builds yet",
+	"screen.attuned.builds.name": "Build name",
+	"screen.attuned.builds.name_hint": "Name…",
 
 	"tooltip.attuned.equipped_slot": "Equipped: Slot %s",
 	"tooltip.attuned.status.active": "Status: Active",

@@ -85,10 +85,23 @@ class SatchelScreenContractTest {
 	}
 
 	@Test
-	void satchelSaveCreatesDistinctDefaultNamesUntilThePresetCap() throws IOException {
+	void buildsCanBeNamedBeforeSaving() throws IOException {
 		String screen = read(SCREEN);
-		assertTrue(screen.contains("new SavePresetPayload(nextPresetName())"),
-			"Save should choose a live, unused default name instead of replacing the same build every time.");
+		assertTrue(screen.contains("new EditBox"),
+			"There should be a text field for naming a build.");
+		assertTrue(screen.contains("this.nameField.getValue()"),
+			"Save should use the typed build name.");
+		assertTrue(screen.contains("setMaxLength"),
+			"The name field should cap length to match the preset name limit.");
+		assertTrue(screen.contains("canConsumeInput"),
+			"Typing in the name field must not trigger inventory hotkeys or close the screen.");
+	}
+
+	@Test
+	void satchelSaveFallsBackToDistinctDefaultNamesUntilThePresetCap() throws IOException {
+		String screen = read(SCREEN);
+		assertTrue(screen.contains("nextPresetName()"),
+			"Save should fall back to a live, unused default name when the name field is blank.");
 		assertTrue(screen.contains("private String nextPresetName()"),
 			"Default build naming should live in a small helper for contract coverage.");
 		assertTrue(screen.contains("Set<String> usedNames"),
@@ -127,6 +140,8 @@ class SatchelScreenContractTest {
 		assertTrue(lang.has("screen.attuned.equipped"), "Equipped section label.");
 		assertTrue(lang.has("screen.attuned.builds"), "Builds section label.");
 		assertTrue(lang.has("screen.attuned.builds.empty"), "Empty-builds hint.");
+		assertTrue(lang.has("screen.attuned.builds.name"), "Build name field label.");
+		assertTrue(lang.has("screen.attuned.builds.name_hint"), "Build name field hint.");
 	}
 
 	private static String read(Path file) throws IOException {

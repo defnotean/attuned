@@ -5,6 +5,7 @@ import dev.attuned.attunement.AttunedAttachments;
 import dev.attuned.attunement.FocusPreset;
 import dev.attuned.menu.ApplyPresetPayload;
 import dev.attuned.menu.DeletePresetPayload;
+import dev.attuned.menu.FocusSlot;
 import dev.attuned.menu.SatchelMenu;
 import dev.attuned.menu.SavePresetPayload;
 import java.util.ArrayList;
@@ -15,24 +16,27 @@ import java.util.function.BooleanSupplier;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
+import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.player.Inventory;
 
 /**
- * Screen for the Focus Reliquary. Foci move by native drag-and-drop between the
- * reliquary grid, the equipped Focus column (left), and the player inventory.
- * Saved loadouts ("builds") render as a clickable list on the right; click a name
- * to select it, then Apply.
+ * Screen for the Focus Reliquary. Foci move by native slot interaction between
+ * the reliquary grid, the equipped Focus column (left), and the player inventory:
+ * left-click grabs a Focus onto the cursor and click again to drop it anywhere,
+ * drag to move it directly, or shift-click to send it across. Saved loadouts
+ * ("builds") render as a clickable list on the right; type a name, Save, then
+ * click a build to select it and Apply.
  */
 public class SatchelScreen extends AbstractContainerScreen<SatchelMenu> {
 	private static final Identifier BACKGROUND_TEXTURE =
 		Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "textures/gui/satchel.png");
 	private static final int IMAGE_WIDTH = 176;
 	private static final int IMAGE_HEIGHT = 166;
-	private static final int BODY_TEXT = 0xFFE3D8F5;
 	private static final int LABEL_TEXT = 0xFFB8ACC8;
 	private static final int SELECTED_TEXT = 0xFFFFD37A;
 	private static final int SCREEN_BACKDROP = 0xB0101218;
@@ -41,6 +45,7 @@ public class SatchelScreen extends AbstractContainerScreen<SatchelMenu> {
 	private static final int WELL_EDGE = 0xFF3A3346;
 	private static final int BUTTON_HOVER_ARGB = 0xC0FFFFFF;
 	private static final int SELECTED_FILL_ARGB = 0x40FFD37A;
+	private static final int NAME_FIELD_TEXT = 0xFFE3D8F5;
 
 	// Equipped Focus column, mirroring SatchelMenu's equipped slot geometry.
 	private static final int EQUIPPED_X = SatchelMenu.EQUIPPED_X;
@@ -48,16 +53,18 @@ public class SatchelScreen extends AbstractContainerScreen<SatchelMenu> {
 
 	// Builds panel, drawn to the right of the reliquary window.
 	private static final int BUILDS_X = 180;
-	private static final int BUILDS_LABEL_Y = 6;
-	private static final int BUILDS_LIST_Y = 18;
+	private static final int BUILDS_LABEL_Y = 4;
+	private static final int NAME_Y = 14;
+	private static final int SAVE_Y = 28;
+	private static final int BUILDS_LIST_Y = 44;
 	private static final int BUILD_ROW_H = 11;
 	private static final int BUILD_ROW_INNER_H = 10;
 	private static final int BUILDS_W = 66;
 	private static final int ACTION_H = 12;
-	private static final int SAVE_Y = 120;
-	private static final int APPLY_Y = 133;
-	private static final int DELETE_Y = 146;
+	private static final int ACTION_ROW_Y = 146;
+	private static final int HALF_W = 32;
 
+	private EditBox nameField;
 	private Button saveButton;
 	private Button applyButton;
 	private Button deleteButton;
@@ -75,22 +82,51 @@ public class SatchelScreen extends AbstractContainerScreen<SatchelMenu> {
 	@Override
 	protected void init() {
 		super.init();
+		// The equipped Focus slots share FocusSlot's suppression flag with the survival
+		// inventory panel; make sure they are active (clickable/drawn) in this screen.
+		FocusSlot.setSuppressed(false);
+
+		this.nameField = new EditBox(this.font, this.leftPos + BUILDS_X, this.topPos + NAME_Y, BUILDS_W, ACTION_H,
+			Component.translatable("screen.attuned.builds.name"));
+		this.nameField.setMaxLength(32);
+		this.nameField.setTextColor(NAME_FIELD_TEXT);
+		this.nameField.setHint(Component.translatable("screen.attuned.builds.name_hint"));
+		this.addRenderableWidget(this.nameField);
+
 		this.saveButton = new PresetButton(this.leftPos + BUILDS_X, this.topPos + SAVE_Y, BUILDS_W, ACTION_H,
-			Component.translatable("screen.attuned.preset.save"),
-			button -> ClientPlayNetworking.send(new SavePresetPayload(nextPresetName())));
-		this.applyButton = new PresetButton(this.leftPos + BUILDS_X, this.topPos + APPLY_Y, BUILDS_W, ACTION_H,
+			Component.translatable("screen.attuned.preset.save"), button -> saveBuild());
+		this.applyButton = new PresetButton(this.leftPos + BUILDS_X, this.topPos + ACTION_ROW_Y, HALF_W, ACTION_H,
 			Component.translatable("screen.attuned.preset.apply"),
 			button -> ClientPlayNetworking.send(new ApplyPresetPayload(selectedIndex)));
-		this.deleteButton = new PresetButton(this.leftPos + BUILDS_X, this.topPos + DELETE_Y, BUILDS_W, ACTION_H,
+		this.deleteButton = new PresetButton(this.leftPos + BUILDS_X + HALF_W + 2, this.topPos + ACTION_ROW_Y, HALF_W, ACTION_H,
 			Component.translatable("screen.attuned.preset.delete"),
 			button -> ClientPlayNetworking.send(new DeletePresetPayload(selectedIndex)));
 		this.addRenderableWidget(this.saveButton);
 		this.addRenderableWidget(this.applyButton);
 		this.addRenderableWidget(this.deleteButton);
+
 		this.buildButtons.clear();
 		this.buildSignature = "";
 		refreshBuildButtons();
 		refreshPresetState();
+	}
+
+	private void saveBuild() {
+		String typed = this.nameField.getValue().trim();
+		String name = typed.isEmpty() ? nextPresetName() : typed;
+		ClientPlayNetworking.send(new SavePresetPayload(name));
+		this.nameField.setValue("");
+	}
+
+	@Override
+	public boolean keyPressed(KeyEvent event) {
+		// Give the name field keyboard priority so typing (e.g. the inventory key 'e'
+		// or a number) edits the build name instead of closing the screen or swapping hotbar.
+		if (this.nameField != null
+				&& (this.nameField.keyPressed(event) || this.nameField.canConsumeInput())) {
+			return true;
+		}
+		return super.keyPressed(event);
 	}
 
 	@Override
@@ -150,7 +186,7 @@ public class SatchelScreen extends AbstractContainerScreen<SatchelMenu> {
 		graphics.blit(RenderPipelines.GUI_TEXTURED, BACKGROUND_TEXTURE, this.leftPos, this.topPos,
 			0.0F, 0.0F, IMAGE_WIDTH, IMAGE_HEIGHT, IMAGE_WIDTH, IMAGE_HEIGHT);
 
-		// Equipped Focus column (left of the window): a small backing panel plus a well per slot.
+		// Equipped Focus column (left of the window): a backing panel plus a well per slot.
 		graphics.fill(this.leftPos + EQUIPPED_X - 3, this.topPos + EQUIPPED_Y - 3,
 			this.leftPos + EQUIPPED_X + 19, this.topPos + EQUIPPED_Y + 6 * 18 - 1, PANEL_FILL);
 		for (int i = 0; i < 6; i++) {
@@ -158,8 +194,8 @@ public class SatchelScreen extends AbstractContainerScreen<SatchelMenu> {
 		}
 
 		// Builds panel (right of the window).
-		graphics.fill(this.leftPos + BUILDS_X - 3, this.topPos + BUILDS_LIST_Y - 3,
-			this.leftPos + BUILDS_X + BUILDS_W + 3, this.topPos + DELETE_Y + ACTION_H + 3, PANEL_FILL);
+		graphics.fill(this.leftPos + BUILDS_X - 3, this.topPos + BUILDS_LABEL_Y + 8,
+			this.leftPos + BUILDS_X + BUILDS_W + 3, this.topPos + ACTION_ROW_Y + ACTION_H + 3, PANEL_FILL);
 	}
 
 	@Override
@@ -203,7 +239,7 @@ public class SatchelScreen extends AbstractContainerScreen<SatchelMenu> {
 	private static String signatureOf(List<FocusPreset> presets) {
 		StringBuilder builder = new StringBuilder();
 		for (FocusPreset preset : presets) {
-			builder.append(preset.name()).append(' ');
+			builder.append(preset.name()).append(' ');
 		}
 		return builder.toString();
 	}

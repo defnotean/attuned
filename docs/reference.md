@@ -232,7 +232,7 @@ The `/attuned capacity` command reads or sets a player's capacity for testing.
 | Attunement Shard | Diamond surrounded by amethyst shards, or four Attunement Shard Fragments | Raises capacity when bound at an Altar. |
 | Attunement Shard Fragment | Vanilla loot injected alongside Foci | Four craft into one Attunement Shard; using one tells the player their current fragment count. |
 | Attunement Journal | Book + amethyst shard | Opens as a readable book with the core Attuned rules. |
-| Focus Reliquary | Leather pouch around an amethyst shard | A stack-bound bag for spare Foci. Drag Foci between the reliquary grid, the equipped Focus column, and your inventory (or shift-click to move them). Save the current loadout as a named **build**, then click a build in the list to select it and Apply. |
+| Focus Reliquary | Leather pouch around an amethyst shard | A stack-bound bag for spare Foci. Move Foci between the reliquary grid, the equipped Focus column, and your inventory by dragging, by click-to-grab then click-to-drop, or by shift-click. Type a name and Save the current loadout as a **build**, then click a build to select it and Apply or Delete. |
 
 ## Loot and Lootr compatibility
 
