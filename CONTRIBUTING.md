@@ -38,6 +38,16 @@ PYTHONDONTWRITEBYTECODE=1 python tools/minecraft_runtime_smoke.py --accept-eula
 
 The smoke check starts the Fabric `runServer` task, waits for the server-ready signal, stops it, and fails on fatal server, mixin, or resource-load errors.
 
+## Pre-push clean-checkout check
+
+Enable the repo's git hooks so each push is checked for the "passes locally, fails on CI" trap — a committed file (often a contract test) that reads a path which exists in your working tree but was never committed, so a clean CI checkout cannot see it:
+
+```sh
+git config core.hooksPath .githooks
+```
+
+The `pre-push` hook runs `python tools/check_untracked_references.py`, which fails if any committed file references an untracked path. Either `git add` the file (or, for genuinely local-only files, add it to `.gitignore`). To push past it deliberately, use `git push --no-verify`.
+
 ## Dependency updates
 
 Gradle dependency locking and dependency verification are enabled. After intentionally changing Gradle dependency versions, refresh and review the locks with:

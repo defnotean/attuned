@@ -1,0 +1,11 @@
+#!/bin/sh
+# Clean-checkout sanity check: block pushes whose committed files depend on
+# untracked (uncommitted) files. Those pass locally but fail on a clean CI
+# checkout. Bypass intentionally with: git push --no-verify
+python tools/check_untracked_references.py
+status=$?
+if [ "$status" -ne 0 ]; then
+	echo "pre-push: clean-checkout sanity check failed (see above)." >&2
+	echo "Commit or .gitignore the files, or override with: git push --no-verify" >&2
+	exit 1
+fi
