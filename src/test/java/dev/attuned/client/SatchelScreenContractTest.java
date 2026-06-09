@@ -48,68 +48,64 @@ class SatchelScreenContractTest {
 	}
 
 	@Test
-	void satchelScreenCanSendClickMovesToAndFromTheSelectedEquippedSlot() throws IOException {
+	void fociMoveByNativeDragNotBlindClicks() throws IOException {
 		String screen = read(SCREEN);
-		assertTrue(screen.contains("import dev.attuned.menu.MoveFocusPayload;"),
-			"The satchel screen should wire the move payload it already has server support for.");
-		assertTrue(screen.contains("private int selectedEquippedSlot = 0"),
-			"The click mover should track which equipped Focus slot is targeted.");
-		assertTrue(screen.contains("selectEquippedSlot("),
-			"The screen should expose clickable equipped-slot selectors.");
-		assertTrue(screen.contains("satchelSlotAt("),
-			"Satchel clicks should resolve the clicked satchel slot before sending a move.");
-		assertTrue(screen.contains("new MoveFocusPayload(0, satchelSlot, selectedEquippedSlot)"),
-			"Primary-clicking a satchel slot should ask the server to equip that Focus.");
-		assertTrue(screen.contains("new MoveFocusPayload(1, satchelSlot, selectedEquippedSlot)"),
-			"Secondary-clicking a satchel slot should ask the server to store the selected equipped Focus.");
+		assertFalse(screen.contains("MoveFocusPayload"),
+			"Foci now move via native slot drag-and-drop, so the screen no longer sends per-click move payloads.");
+		assertFalse(screen.contains("selectedEquippedSlot"),
+			"Drag-and-drop targets a slot directly, so there is no single selected equipped slot.");
+		assertFalse(screen.contains("satchelSlotAt"),
+			"The screen no longer hit-tests satchel slots to send blind click moves.");
+	}
+
+	@Test
+	void equippedFocusColumnIsDrawnAsRealDropTargets() throws IOException {
+		String screen = read(SCREEN);
+		assertTrue(screen.contains("SatchelMenu.EQUIPPED_X"),
+			"The equipped column should mirror the menu's equipped slot geometry so drops line up.");
+		assertTrue(screen.contains("drawWell("),
+			"The equipped Focus slots, drawn beside the window, need slot wells.");
+		assertTrue(screen.contains("screen.attuned.equipped"),
+			"The equipped section should be labelled.");
+	}
+
+	@Test
+	void savedBuildsRenderAsAClickableSelectableList() throws IOException {
+		String screen = read(SCREEN);
+		assertTrue(screen.contains("refreshBuildButtons"),
+			"Each saved build should become a clickable button, rebuilt when the synced list changes.");
+		assertTrue(screen.contains("selectBuild("),
+			"Clicking a build name should select that build.");
+		assertTrue(screen.contains("selectedIndex = index"),
+			"Selecting a build should set the selected index used by Apply/Delete.");
+		assertTrue(screen.contains("screen.attuned.builds"),
+			"The builds section should be labelled.");
+		assertTrue(screen.contains("() -> selectedIndex == index"),
+			"The selected build button should highlight.");
 	}
 
 	@Test
 	void satchelSaveCreatesDistinctDefaultNamesUntilThePresetCap() throws IOException {
 		String screen = read(SCREEN);
 		assertTrue(screen.contains("new SavePresetPayload(nextPresetName())"),
-			"Save should choose a live, unused default name instead of replacing the same preset every time.");
+			"Save should choose a live, unused default name instead of replacing the same build every time.");
 		assertTrue(screen.contains("private String nextPresetName()"),
-			"Default preset naming should live in a small helper for contract coverage.");
+			"Default build naming should live in a small helper for contract coverage.");
 		assertTrue(screen.contains("Set<String> usedNames"),
-			"Preset naming should compare against the synced preset names.");
+			"Build naming should compare against the synced build names.");
 		assertTrue(screen.contains("AttunedAttachments.MAX_PRESETS"),
-			"Preset naming should honor the shared preset cap.");
-		assertTrue(screen.contains("\"Preset \" + i"),
-			"Additional default presets should get numbered names.");
-		assertFalse(screen.contains("new SavePresetPayload(\"Preset\")"),
-			"The client should not always send the same preset name.");
+			"Build naming should honor the shared preset cap.");
+		assertTrue(screen.contains("\"Build \" + i"),
+			"Additional default builds should get numbered names.");
+		assertFalse(screen.contains("new SavePresetPayload(\"Build\")"),
+			"The client should not always send the same build name.");
 	}
 
 	@Test
-	void satchelPresetControlsCanCycleAndDisplayTheSelectedPreset() throws IOException {
+	void satchelTitleIsNotPaintedOverThePanels() throws IOException {
 		String screen = read(SCREEN);
-		assertTrue(screen.contains("cyclePreset(-1)"), "The screen should expose a previous-preset control.");
-		assertTrue(screen.contains("cyclePreset(1)"), "The screen should expose a next-preset control.");
-		assertTrue(screen.contains("Math.floorMod(selectedIndex + delta, presets.size())"),
-			"Preset selection should wrap through every synced preset.");
-		assertTrue(screen.contains("FocusPreset preset = presets.get(selectedIndex)"),
-			"The compact readout should draw the selected preset, not always index zero.");
-		assertTrue(screen.contains("selectedIndex + 1") && screen.contains("presets.size()"),
-			"The readout should show which preset index is selected.");
-	}
-
-	@Test
-	void presetReadoutStaysInSeparatorStripBelowSatchelSlots() throws IOException {
-		String screen = read(SCREEN);
-		assertTrue(screen.contains("private static final int PRESET_Y = 74"),
-			"Preset text should sit in the separator strip, below the satchel slot rows.");
-		assertTrue(screen.contains("int rows = Math.min(1, presets.size())"),
-			"Compact satchel GUI should draw one selected preset row so it does not collide with inventory slots.");
-	}
-
-	@Test
-	void topActionRowDoesNotAlsoPaintTheScreenTitle() throws IOException {
-		String screen = read(SCREEN);
-		assertTrue(screen.contains("private static final int BUTTON_Y = 4"),
-			"The compact satchel texture reserves the top strip for preset action buttons.");
 		assertFalse(screen.contains("graphics.text(this.font, this.title"),
-			"The satchel title should not paint underneath the Save/Apply/Delete buttons in the compact top strip.");
+			"The reliquary screen should not paint the window title over the side panels.");
 	}
 
 	@Test
@@ -128,6 +124,9 @@ class SatchelScreenContractTest {
 		assertTrue(lang.has("screen.attuned.preset.apply"), "Apply label.");
 		assertTrue(lang.has("screen.attuned.preset.delete"), "Delete label.");
 		assertTrue(lang.has("screen.attuned.preset.missing"), "Missing-focus feedback string.");
+		assertTrue(lang.has("screen.attuned.equipped"), "Equipped section label.");
+		assertTrue(lang.has("screen.attuned.builds"), "Builds section label.");
+		assertTrue(lang.has("screen.attuned.builds.empty"), "Empty-builds hint.");
 	}
 
 	private static String read(Path file) throws IOException {

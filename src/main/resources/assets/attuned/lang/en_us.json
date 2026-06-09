@@ -155,6 +155,9 @@
 	"screen.attuned.preset.apply": "Apply",
 	"screen.attuned.preset.delete": "Delete",
 	"screen.attuned.preset.missing": "Missing Foci: %s",
+	"screen.attuned.equipped": "Equipped",
+	"screen.attuned.builds": "Builds",
+	"screen.attuned.builds.empty": "No builds yet",
 
 	"tooltip.attuned.equipped_slot": "Equipped: Slot %s",
 	"tooltip.attuned.status.active": "Status: Active",
