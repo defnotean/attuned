@@ -32,14 +32,20 @@ public record AttunedClientConfig(
 			try {
 				JsonElement element = JsonParser.parseString(Files.readString(path));
 				current = readConfig(element);
+				// Rewrite only when normalization changed the on-disk shape
+				// (missing/invalid keys); a clean load needs no write.
+				if (!GSON.toJson(toJson(current)).equals(Files.readString(path))) {
+					save();
+				}
 			} catch (Exception e) {
 				Attuned.LOGGER.error("Invalid {} - using default client HUD settings.", path, e);
 				current = DEFAULT;
+				save();
 			}
 		} else {
 			current = DEFAULT;
+			save();
 		}
-		save();
 	}
 
 	public static void toggleOwnAffinityHud() {
@@ -70,17 +76,21 @@ public record AttunedClientConfig(
 	}
 
 	public static void save() {
-		JsonObject json = new JsonObject();
-		json.addProperty("show_own_affinity_hud", current.showOwnAffinityHud());
-		json.addProperty("show_enemy_affinity_hud", current.showEnemyAffinityHud());
-		json.addProperty("show_foci_hud", current.showFociHud());
 		Path path = path();
 		try {
 			Files.createDirectories(path.getParent());
-			Files.writeString(path, GSON.toJson(json));
+			Files.writeString(path, GSON.toJson(toJson(current)));
 		} catch (Exception e) {
 			Attuned.LOGGER.error("Could not write {}", path, e);
 		}
+	}
+
+	private static JsonObject toJson(AttunedClientConfig config) {
+		JsonObject json = new JsonObject();
+		json.addProperty("show_own_affinity_hud", config.showOwnAffinityHud());
+		json.addProperty("show_enemy_affinity_hud", config.showEnemyAffinityHud());
+		json.addProperty("show_foci_hud", config.showFociHud());
+		return json;
 	}
 
 	private static AttunedClientConfig readConfig(JsonElement element) {

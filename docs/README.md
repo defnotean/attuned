@@ -22,6 +22,9 @@ add a Focus.
   smaller loot reward; four craft into one shard.
 - The **Attunement Journal** is a crafted in-game guide and opens like a normal
   readable book.
+- The **Focus Reliquary** is a craftable bag that stores spare Foci, shows your
+  six equipped slots beside it, and saves named loadout **builds** you can
+  re-apply with one click.
 - Creative inventory content is split into **Attuned: Affinity Foci** and
   **Attuned: Utility Foci** so combat builds and neutral tools are easier to
   scan.

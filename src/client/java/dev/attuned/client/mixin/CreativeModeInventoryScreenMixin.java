@@ -49,6 +49,7 @@ public abstract class CreativeModeInventoryScreenMixin
 	 */
 	@ModifyArgs(
 		method = "selectTab",
+		require = 1,
 		at = @At(
 			value = "INVOKE",
 			target = "Lnet/minecraft/client/gui/screens/inventory/CreativeModeInventoryScreen$SlotWrapper;<init>(Lnet/minecraft/world/inventory/Slot;III)V"

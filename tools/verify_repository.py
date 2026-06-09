@@ -5,6 +5,7 @@ import os
 import py_compile
 import re
 import struct
+import subprocess
 import sys
 import tempfile
 import zlib
@@ -61,7 +62,20 @@ SOURCE_SKIP_DIRS = {
     "run",
     "__pycache__",
 }
-TRANSIENT_SKIP_DIRS = {".git"}
+TRANSIENT_SKIP_DIRS = {
+    ".git",
+    # Heavy generated trees that can never ship; scanning them only slows the
+    # gate down. Cache files in scanned dirs are still filtered through git's
+    # ignore rules so locally-ignored __pycache__ from a pytest run never fails
+    # the gate, while a cache that git would actually pick up still does.
+    ".gradle",
+    ".codex-remote-attachments",
+    ".superpowers",
+    "build",
+    "out",
+    "run",
+    "tmp",
+}
 PNG_SIGNATURE = b"\x89PNG\r\n\x1a\n"
 MAX_REASONABLE_PNG_DIMENSION = 8192
 ISSUE_WORDS = ("TO" + "DO", "FIX" + "ME", "HA" + "CK")
@@ -346,27 +360,52 @@ def check_assignment_risks() -> str:
     return f"sensitive assignment scan: {len(files)} files"
 
 
+def git_ignored_paths(candidates: list[Path]) -> set[str]:
+    """Return the subset of candidate paths (as repo-relative posix strings)
+    that git ignores. Falls back to an empty set when git is unavailable so the
+    cache check stays conservative."""
+    if not candidates:
+        return set()
+    relative_paths = [relative(path) for path in candidates]
+    try:
+        # NUL-separated mode avoids Windows newline translation mangling paths.
+        result = subprocess.run(
+            ["git", "-C", str(ROOT), "check-ignore", "--stdin", "-z"],
+            input="\0".join(relative_paths).encode("utf-8"),
+            capture_output=True,
+            check=False,
+        )
+    except OSError:
+        return set()
+    return {
+        entry.decode("utf-8")
+        for entry in result.stdout.split(b"\0")
+        if entry
+    }
+
+
 def check_python_caches() -> str:
-    problems: list[str] = []
+    candidates: list[Path] = []
     scanned_files = 0
     for path in iter_files(ROOT, TRANSIENT_SKIP_DIRS):
         scanned_files += 1
         if path.suffix.lower() in {".pyc", ".pyo"}:
-            problems.append(relative(path))
+            candidates.append(path)
         if path.parent.name == "__pycache__":
-            cache_dir = path.parent
-            marker = relative(cache_dir)
-            if marker not in problems:
-                problems.append(marker)
+            candidates.append(path.parent)
     for dirpath, dirnames, _filenames in os.walk(ROOT):
         dirnames[:] = sorted(name for name in dirnames if name not in TRANSIENT_SKIP_DIRS)
         current = Path(dirpath)
         if current.name == "__pycache__":
-            marker = relative(current)
-            if marker not in problems:
-                problems.append(marker)
+            candidates.append(current)
+    # Locally-ignored caches (e.g. __pycache__ from a pytest run) can never be
+    # committed, so only caches git would actually pick up fail the gate.
+    ignored = git_ignored_paths(candidates)
+    problems = sorted({
+        relative(path) for path in candidates if relative(path) not in ignored
+    })
     if problems:
-        raise CheckFailed("Python transient cache scan", sorted(problems))
+        raise CheckFailed("Python transient cache scan", problems)
     return f"Python transient cache scan: {scanned_files} filesystem entries"
 
 

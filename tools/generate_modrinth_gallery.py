@@ -61,11 +61,21 @@ def load_font(name: str, size: int) -> ImageFont.FreeTypeFont | ImageFont.ImageF
 		Path("C:/Windows/Fonts") / name,
 		Path("C:/Windows/Fonts/segoeui.ttf"),
 		Path("C:/Windows/Fonts/arial.ttf"),
+		# Linux/macOS fallbacks so the generator stays usable off-Windows.
+		Path("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf" if "b" in name else
+			"/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"),
+		Path("/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf"),
+		Path("/System/Library/Fonts/Helvetica.ttc"),
 	]
 	for candidate in candidates:
 		if candidate.exists():
 			return ImageFont.truetype(str(candidate), size)
-	return ImageFont.load_default()
+	try:
+		# Pillow >= 10.1 supports sized default fonts; without a size the
+		# bitmap default lacks .size and breaks draw_text's line metrics.
+		return ImageFont.load_default(size=size)
+	except TypeError:
+		return ImageFont.load_default()
 
 
 FONT_TITLE = load_font("segoeuib.ttf", 52)
@@ -94,6 +104,8 @@ def load_foci() -> list[Focus]:
 		data = json.loads(path.read_text(encoding="utf-8"))
 		item_id = data["item"].split(":", 1)[1]
 		key = f"item.attuned.{item_id}"
+		if key not in lang:
+			raise KeyError(f"Missing language entry '{key}' for {path.name} in {LANG_FILE}")
 		texture = ITEM_TEXTURE_DIR / f"{item_id}.png"
 		if not texture.exists():
 			raise FileNotFoundError(f"Missing texture for {item_id}: {texture}")

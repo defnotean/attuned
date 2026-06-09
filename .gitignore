@@ -56,3 +56,11 @@ replay_*.log
 # claude
 
 .claude/
+
+# agent/tooling scratch dirs
+/tmp/
+/.codex-remote-attachments/
+/.superpowers/
+
+# stray root-level resource-pack experiments (real assets live in src/main/resources)
+/assets/

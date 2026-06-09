@@ -61,11 +61,4 @@ public final class FocusAbilityClientState {
 	public static int totalTicks() {
 		return totalTicks;
 	}
-
-	public static float cooldownProgress() {
-		if (remainingTicks <= 0 || totalTicks <= 0) {
-			return 0.0F;
-		}
-		return Math.max(0.0F, Math.min(1.0F, remainingTicks / (float) totalTicks));
-	}
 }

@@ -297,7 +297,16 @@ def blender_script() -> str:
 
 		def render(render_path: Path) -> None:
 			scene = bpy.context.scene
-			scene.render.engine = "BLENDER_EEVEE"
+			# Blender renamed the engine id across versions (BLENDER_EEVEE ->
+			# BLENDER_EEVEE_NEXT in 4.2-4.4); probe instead of hardcoding.
+			engine_ids = {
+				item.identifier
+				for item in bpy.types.RenderSettings.bl_rna.properties["engine"].enum_items
+			}
+			for engine in ("BLENDER_EEVEE", "BLENDER_EEVEE_NEXT", "CYCLES"):
+				if engine in engine_ids:
+					scene.render.engine = engine
+					break
 			if hasattr(scene, "eevee"):
 				scene.eevee.taa_render_samples = 64
 			scene.render.resolution_x = 1024

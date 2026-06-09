@@ -23,9 +23,11 @@ import net.minecraft.world.entity.player.Player;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
+import java.util.EnumMap;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
@@ -87,6 +89,9 @@ public final class CombatHud {
 		Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "hud/hud_link_neutralized");
 	private static final Identifier HUD_BACKPLATE_TEXTURE =
 		Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "textures/gui/hud_backplate.png");
+	// Capstone gem sprites, precomputed so the per-frame draw path never builds
+	// identifier strings. Keys resolve to hud/<capstone> in the GUI sprite atlas.
+	private static final Map<Apex.Capstone, Identifier> CAPSTONE_SPRITES = buildCapstoneSprites();
 	private static final Identifier RESONANCE_TRACK_TEXTURE =
 		Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "textures/gui/sprites/hud/hud_resonance_track.png");
 	private static final Identifier RESONANCE_FILL_TEXTURE =
@@ -388,8 +393,16 @@ public final class CombatHud {
 	}
 
 	private static Identifier capstoneSpriteFor(Apex.Capstone capstone) {
-		return Identifier.fromNamespaceAndPath(Attuned.MOD_ID,
-			"hud/" + capstone.name().toLowerCase(Locale.ROOT));
+		return CAPSTONE_SPRITES.get(capstone);
+	}
+
+	private static Map<Apex.Capstone, Identifier> buildCapstoneSprites() {
+		Map<Apex.Capstone, Identifier> sprites = new EnumMap<>(Apex.Capstone.class);
+		for (Apex.Capstone capstone : Apex.Capstone.values()) {
+			sprites.put(capstone, Identifier.fromNamespaceAndPath(Attuned.MOD_ID,
+				"hud/" + capstone.name().toLowerCase(Locale.ROOT)));
+		}
+		return sprites;
 	}
 
 	private static void drawOverlaySprite(GuiGraphicsExtractor graphics, Identifier sprite, int gemX, int gemY, int size) {

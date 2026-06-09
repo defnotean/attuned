@@ -1,6 +1,7 @@
 package dev.attuned.client;
 
 import dev.attuned.network.TremorOreHintPayload;
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.client.rendering.v1.level.LevelRenderContext;
 import net.fabricmc.fabric.api.client.rendering.v1.level.LevelRenderEvents;
@@ -40,6 +41,9 @@ public final class TremorOreOutlines {
 		ClientPlayNetworking.registerGlobalReceiver(TremorOreHintPayload.TYPE, (payload, context) ->
 			context.client().execute(() -> highlight(payload.orePos())));
 		LevelRenderEvents.END_MAIN.register(TremorOreOutlines::render);
+		// Drop the highlighted-level reference on disconnect; render() does not run
+		// on the title screen, so without this the old ClientLevel would stay pinned.
+		ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> clear());
 	}
 
 	private static void highlight(BlockPos pos) {

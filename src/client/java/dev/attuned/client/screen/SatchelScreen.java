@@ -23,6 +23,7 @@ import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.player.Inventory;
+import org.lwjgl.glfw.GLFW;
 
 /**
  * Screen for the Focus Reliquary. The reliquary grid and inventory render under
@@ -127,6 +128,10 @@ public class SatchelScreen extends AbstractContainerScreen<SatchelMenu> {
 
 	@Override
 	public boolean keyPressed(KeyEvent event) {
+		// ESC must always close the screen, even while the name field is focused.
+		if (event.key() == GLFW.GLFW_KEY_ESCAPE) {
+			return super.keyPressed(event);
+		}
 		// Give the name field keyboard priority so typing (e.g. the inventory key 'e'
 		// or a number) edits the build name instead of closing the screen or swapping hotbar.
 		if (this.nameField != null
@@ -170,10 +175,10 @@ public class SatchelScreen extends AbstractContainerScreen<SatchelMenu> {
 
 	private void refreshPresetState() {
 		List<FocusPreset> presets = presets();
-		if (presets.isEmpty()) {
+		if (selectedIndex >= presets.size()) {
+			// The selected build was deleted (or the list shrank): clear the selection
+			// instead of silently retargeting Apply/Delete at another build.
 			selectedIndex = -1;
-		} else if (selectedIndex < 0 || selectedIndex >= presets.size()) {
-			selectedIndex = 0;
 		}
 		boolean hasSelection = selectedIndex >= 0 && selectedIndex < presets.size();
 		if (this.saveButton != null) {
@@ -242,9 +247,11 @@ public class SatchelScreen extends AbstractContainerScreen<SatchelMenu> {
 	}
 
 	private static String signatureOf(List<FocusPreset> presets) {
-		StringBuilder builder = new StringBuilder();
+		// '\0' cannot be typed in the name field, so joining with it (plus the count)
+		// cannot collide the way a space-joined signature could ("A B" vs "A","B").
+		StringBuilder builder = new StringBuilder().append(presets.size());
 		for (FocusPreset preset : presets) {
-			builder.append(preset.name()).append(' ');
+			builder.append('\0').append(preset.name());
 		}
 		return builder.toString();
 	}

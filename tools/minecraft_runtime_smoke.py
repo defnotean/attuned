@@ -504,6 +504,11 @@ def main(argv: Sequence[str] | None = None) -> int:
     if args.gradle is None and not wrapper_path.exists():
         print(f"Gradle wrapper not found: {wrapper_path}", file=sys.stderr)
         return 2
+    if args.gradle is None:
+        # Popen resolves the executable against the parent's cwd, not the cwd=
+        # argument, so a relative "gradlew.bat" breaks when this script is run
+        # from outside the project root. Use the absolute wrapper path.
+        gradle_executable = str(wrapper_path)
     if args.accept_eula:
         eula_path, changed = ensure_eula_accepted(project_root)
         action = "wrote" if changed else "found"

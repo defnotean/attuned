@@ -184,12 +184,8 @@ public final class FociHud {
 		int remaining = FocusAbilityClientState.remainingTicks();
 		int total = FocusAbilityClientState.totalTicks();
 		if (remaining > 0 && total > 0) {
-			drawCooldownRing(graphics, x, y, ABILITY_WELL_SIZE, remainingTicks(), total);
+			drawCooldownRing(graphics, x, y, ABILITY_WELL_SIZE, remaining, total);
 		}
-	}
-
-	private static int remainingTicks() {
-		return FocusAbilityClientState.remainingTicks();
 	}
 
 	private static int selectedAbilitySlot(Player player, AttunedInv inv, List<Integer> activeSlots,
@@ -282,7 +278,9 @@ public final class FociHud {
 				.orElse(committed.map(Affinity::argb).orElse(AffinityColors.NEUTRAL_ARGB));
 			graphics.fill(barX, barY, barX + fill, barY + APEX_BAR_H, 0xD0000000 | (color & 0x00FFFFFF));
 		}
-		int thresholdX = barX + Math.round(APEX_BAR_W * Resonance.APEX_THRESHOLD);
+		// Clamp so a threshold at/near 1.0 stays on the bar track instead of
+		// painting one pixel past it into the border.
+		int thresholdX = barX + Math.min(APEX_BAR_W - 1, Math.round(APEX_BAR_W * Resonance.APEX_THRESHOLD));
 		graphics.fill(thresholdX, barY - 1, thresholdX + 1, barY + APEX_BAR_H + 1, APEX_MARK);
 	}
 

@@ -98,6 +98,18 @@ public final class AttunementJournalScreen extends Screen {
 		new Chapter("HUD", 32)
 	);
 
+	static {
+		// Chapter start indices are hand-maintained; fail fast if a page insert
+		// or reorder silently shifts a chapter to the wrong landing page.
+		for (Chapter chapter : CHAPTERS) {
+			if (!PAGES.get(chapter.firstPage()).chapter().equals(chapter.name())) {
+				throw new IllegalStateException("Journal chapter '" + chapter.name()
+					+ "' points at page " + chapter.firstPage() + " which belongs to chapter '"
+					+ PAGES.get(chapter.firstPage()).chapter() + "'");
+			}
+		}
+	}
+
 	private final List<Button> chapterButtons = new ArrayList<>();
 	private int pageIndex;
 	private Button previousButton;
