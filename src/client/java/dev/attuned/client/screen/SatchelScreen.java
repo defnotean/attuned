@@ -25,44 +25,51 @@ import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.player.Inventory;
 
 /**
- * Screen for the Focus Reliquary. Foci move by native slot interaction between
- * the reliquary grid, the equipped Focus column (left), and the player inventory:
- * left-click grabs a Focus onto the cursor and click again to drop it anywhere,
- * drag to move it directly, or shift-click to send it across. Saved loadouts
- * ("builds") render as a clickable list on the right; type a name, Save, then
- * click a build to select it and Apply.
+ * Screen for the Focus Reliquary. The reliquary grid and inventory render under
+ * the leather texture (left); the equipped Focus slots (a 3x2 grid) and the saved
+ * "builds" panel render in the right half of the window. Every slot stays inside
+ * the window bounds so Foci move by native drag, click-to-grab/drop, or shift-click
+ * without ever being dropped on the ground. Type a name, Save, then click a build
+ * to select and Apply it.
  */
 public class SatchelScreen extends AbstractContainerScreen<SatchelMenu> {
 	private static final Identifier BACKGROUND_TEXTURE =
 		Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "textures/gui/satchel.png");
-	private static final int IMAGE_WIDTH = 176;
-	private static final int IMAGE_HEIGHT = 166;
+	// Logical window encloses the leather texture (left) plus the equipped/builds panel (right),
+	// so the whole UI is centred and on-screen and no slot sits outside the click bounds.
+	private static final int IMAGE_WIDTH = 252;
+	private static final int IMAGE_HEIGHT = 200;
+	private static final int TEX_W = 176;
+	private static final int TEX_H = 166;
 	private static final int LABEL_TEXT = 0xFFB8ACC8;
 	private static final int SELECTED_TEXT = 0xFFFFD37A;
 	private static final int SCREEN_BACKDROP = 0xB0101218;
-	private static final int PANEL_FILL = 0xC01A1622;
+	private static final int WINDOW_FILL = 0xE01A1622;
 	private static final int WELL_FILL = 0xFF0E0B14;
 	private static final int WELL_EDGE = 0xFF3A3346;
 	private static final int BUTTON_HOVER_ARGB = 0xC0FFFFFF;
 	private static final int SELECTED_FILL_ARGB = 0x40FFD37A;
 	private static final int NAME_FIELD_TEXT = 0xFFE3D8F5;
 
-	// Equipped Focus column, mirroring SatchelMenu's equipped slot geometry.
+	// Equipped Focus 3x2 grid, mirroring SatchelMenu's equipped slot geometry.
 	private static final int EQUIPPED_X = SatchelMenu.EQUIPPED_X;
 	private static final int EQUIPPED_Y = SatchelMenu.EQUIPPED_Y;
+	private static final int EQUIPPED_COLS = SatchelMenu.EQUIPPED_COLS;
 
-	// Builds panel, drawn to the right of the reliquary window.
-	private static final int BUILDS_X = 180;
-	private static final int BUILDS_LABEL_Y = 4;
-	private static final int NAME_Y = 14;
-	private static final int SAVE_Y = 28;
-	private static final int BUILDS_LIST_Y = 44;
-	private static final int BUILD_ROW_H = 11;
-	private static final int BUILD_ROW_INNER_H = 10;
-	private static final int BUILDS_W = 66;
-	private static final int ACTION_H = 12;
-	private static final int ACTION_ROW_Y = 146;
-	private static final int HALF_W = 32;
+	// Builds panel (right half of the window).
+	private static final int EQUIPPED_LABEL_Y = 8;
+	private static final int BUILDS_X = 178;
+	private static final int BUILDS_W = 70;
+	private static final int BUILDS_LABEL_Y = 56;
+	private static final int NAME_Y = 66;
+	private static final int FIELD_H = 12;
+	private static final int SAVE_Y = 82;
+	private static final int BUILDS_LIST_Y = 98;
+	private static final int BUILD_ROW_H = 10;
+	private static final int BUILD_ROW_INNER_H = 9;
+	private static final int ACTION_ROW_Y = 189;
+	private static final int ACTION_H = 10;
+	private static final int HALF_W = 34;
 
 	private EditBox nameField;
 	private Button saveButton;
@@ -86,14 +93,14 @@ public class SatchelScreen extends AbstractContainerScreen<SatchelMenu> {
 		// inventory panel; make sure they are active (clickable/drawn) in this screen.
 		FocusSlot.setSuppressed(false);
 
-		this.nameField = new EditBox(this.font, this.leftPos + BUILDS_X, this.topPos + NAME_Y, BUILDS_W, ACTION_H,
+		this.nameField = new EditBox(this.font, this.leftPos + BUILDS_X, this.topPos + NAME_Y, BUILDS_W, FIELD_H,
 			Component.translatable("screen.attuned.builds.name"));
 		this.nameField.setMaxLength(32);
 		this.nameField.setTextColor(NAME_FIELD_TEXT);
 		this.nameField.setHint(Component.translatable("screen.attuned.builds.name_hint"));
 		this.addRenderableWidget(this.nameField);
 
-		this.saveButton = new PresetButton(this.leftPos + BUILDS_X, this.topPos + SAVE_Y, BUILDS_W, ACTION_H,
+		this.saveButton = new PresetButton(this.leftPos + BUILDS_X, this.topPos + SAVE_Y, BUILDS_W, FIELD_H,
 			Component.translatable("screen.attuned.preset.save"), button -> saveBuild());
 		this.applyButton = new PresetButton(this.leftPos + BUILDS_X, this.topPos + ACTION_ROW_Y, HALF_W, ACTION_H,
 			Component.translatable("screen.attuned.preset.apply"),
@@ -183,25 +190,23 @@ public class SatchelScreen extends AbstractContainerScreen<SatchelMenu> {
 	@Override
 	public void extractBackground(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
 		graphics.fill(0, 0, this.width, this.height, SCREEN_BACKDROP);
+		// Solid window base so the right-hand panel reads as part of the window, then the
+		// leather reliquary texture over the grid/inventory in the left half.
+		graphics.fill(this.leftPos, this.topPos, this.leftPos + IMAGE_WIDTH, this.topPos + IMAGE_HEIGHT, WINDOW_FILL);
 		graphics.blit(RenderPipelines.GUI_TEXTURED, BACKGROUND_TEXTURE, this.leftPos, this.topPos,
-			0.0F, 0.0F, IMAGE_WIDTH, IMAGE_HEIGHT, IMAGE_WIDTH, IMAGE_HEIGHT);
+			0.0F, 0.0F, TEX_W, TEX_H, TEX_W, TEX_H);
 
-		// Equipped Focus column (left of the window): a backing panel plus a well per slot.
-		graphics.fill(this.leftPos + EQUIPPED_X - 3, this.topPos + EQUIPPED_Y - 3,
-			this.leftPos + EQUIPPED_X + 19, this.topPos + EQUIPPED_Y + 6 * 18 - 1, PANEL_FILL);
 		for (int i = 0; i < 6; i++) {
-			drawWell(graphics, this.leftPos + EQUIPPED_X - 1, this.topPos + EQUIPPED_Y - 1 + i * 18);
+			int col = i % EQUIPPED_COLS;
+			int row = i / EQUIPPED_COLS;
+			drawWell(graphics, this.leftPos + EQUIPPED_X - 1 + col * 18, this.topPos + EQUIPPED_Y - 1 + row * 18);
 		}
-
-		// Builds panel (right of the window).
-		graphics.fill(this.leftPos + BUILDS_X - 3, this.topPos + BUILDS_LABEL_Y + 8,
-			this.leftPos + BUILDS_X + BUILDS_W + 3, this.topPos + ACTION_ROW_Y + ACTION_H + 3, PANEL_FILL);
 	}
 
 	@Override
 	protected void extractLabels(GuiGraphicsExtractor graphics, int mouseX, int mouseY) {
 		graphics.text(this.font, Component.translatable("screen.attuned.equipped"),
-			EQUIPPED_X - 2, EQUIPPED_Y - 12, LABEL_TEXT, false);
+			EQUIPPED_X - 2, EQUIPPED_LABEL_Y, LABEL_TEXT, false);
 		graphics.text(this.font, Component.translatable("screen.attuned.builds"),
 			BUILDS_X, BUILDS_LABEL_Y, LABEL_TEXT, false);
 		if (presets().isEmpty()) {

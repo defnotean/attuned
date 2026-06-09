@@ -25,9 +25,10 @@ public class SatchelMenu extends AbstractContainerMenu {
 	public static final int SATCHEL_Y = 18;
 	public static final int INVENTORY_X = 8;
 	public static final int INVENTORY_Y = 84;
-	/** Equipped Focus slots sit in a column to the left of the reliquary window. */
-	public static final int EQUIPPED_X = -26;
+	/** Equipped Focus slots sit in a 3x2 grid in the right panel, inside the window bounds. */
+	public static final int EQUIPPED_X = 182;
 	public static final int EQUIPPED_Y = 18;
+	public static final int EQUIPPED_COLS = 3;
 
 	/** Menu index of the first equipped Focus slot (the satchel grid takes 0..n-1). */
 	public static final int EQUIPPED_START = AttunedComponents.SATCHEL_SIZE;
@@ -80,7 +81,8 @@ public class SatchelMenu extends AbstractContainerMenu {
 		// at one item and rejects non-Foci (and so the reliquary item too, which is not a Focus).
 		FocusContainer equipped = new FocusContainer(inventory.player);
 		for (int i = 0; i < AttunedInv.SIZE; i++) {
-			this.addSlot(new FocusSlot(equipped, i, EQUIPPED_X, EQUIPPED_Y + i * 18));
+			this.addSlot(new FocusSlot(equipped, i,
+				EQUIPPED_X + (i % EQUIPPED_COLS) * 18, EQUIPPED_Y + (i / EQUIPPED_COLS) * 18));
 		}
 
 		this.addStandardInventorySlots(inventory, INVENTORY_X, INVENTORY_Y);
