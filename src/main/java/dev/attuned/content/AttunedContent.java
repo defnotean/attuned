@@ -125,6 +125,8 @@ public final class AttunedContent {
 		register("attunement_shard_fragment", AttunementShardFragmentItem::new);
 	/** A lightweight in-game guide to Foci, affinities, Pacts and Apex. */
 	public static final Item ATTUNEMENT_JOURNAL = register("attunement_journal", AttunementJournalItem::new);
+	/** A portable, stack-bound holder for spare Foci. */
+	public static final Item SATCHEL_OF_FOCI = register("satchel_of_foci", SatchelItem::new);
 
 	/** The Attunement Altar — the home block where shards are bound into capacity. */
 	public static final Block ATTUNEMENT_ALTAR = registerAltar();

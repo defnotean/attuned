@@ -258,7 +258,8 @@ class RuntimeCleanupContractTest {
 		assertContains(read(LANTERN), "AttunedServerCleanup.onStop(ticks::clear)");
 		assertContains(read(STORMCALL), "AttunedServerCleanup.onStop(ticks::clear)");
 		String radiantBehaviors = read(RADIANT_BEHAVIORS);
-		assertOccurrences(radiantBehaviors, "AttunedServerCleanup.onStop(state::clear)", 2);
+		assertOccurrences(radiantBehaviors, "AttunedServerCleanup.onStop(state::clear)", 1);
+		assertContains(radiantBehaviors, "AttunedServerCleanup.onStop(STATE::clear)");
 		assertContains(radiantBehaviors, "AttunedServerCleanup.onStop(cooldowns::clear)");
 		assertContains(radiantBehaviors, "AttunedServerCleanup.onStop(ticks::clear)");
 		assertContains(radiantBehaviors, "AttunedServerCleanup.onStop(states::clear)");

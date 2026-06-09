@@ -1,5 +1,6 @@
 {
 	"item": "attuned:cinder_focus",
 	"cost": 3,
+	"unique": true,
 	"affinity": "fury"
 }

@@ -3,11 +3,6 @@
 	"cost": 3,
 	"affinity": "fury",
 	"faction": "attuned:ashen_forge",
-	"modifiers": [
-		{
-			"attribute": "minecraft:attack_damage",
-			"amount": 1.0,
-			"operation": "add_value"
-		}
-	]
+	"unique": true,
+	"behavior": "attuned:temper"
 }

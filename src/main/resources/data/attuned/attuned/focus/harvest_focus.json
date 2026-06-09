@@ -1,5 +1,6 @@
 {
 	"item": "attuned:harvest_focus",
+	"unique": true,
 	"cost": 2,
 	"behavior": "attuned:harvest"
 }

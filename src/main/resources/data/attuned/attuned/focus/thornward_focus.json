@@ -1,5 +1,6 @@
 {
 	"item": "attuned:thornward_focus",
 	"cost": 4,
+	"unique": true,
 	"affinity": "fury"
 }

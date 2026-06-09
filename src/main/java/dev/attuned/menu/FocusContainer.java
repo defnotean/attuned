@@ -111,7 +111,7 @@ public final class FocusContainer implements Container {
 
 	@Override
 	public boolean stillValid(Player who) {
-		return true;
+		return who == player;
 	}
 
 	@Override

@@ -74,6 +74,7 @@ public final class RevenantCombat {
 				|| source.getDirectEntity() != attacker
 				|| !isDirectMelee(source)
 				|| defender == attacker
+				|| !CombatTargets.isHostileOrPvpOpponent(defender, attacker)
 				|| !hasActiveFocus(attacker, ASHEN_DEBT_FOCUS)) {
 			return amount;
 		}
@@ -97,7 +98,11 @@ public final class RevenantCombat {
 			return;
 		}
 		if (defender instanceof ServerPlayer player && hasActiveFocus(player, ASHEN_DEBT_FOCUS)) {
-			DEBTS.put(player.getUUID(), new Debt(attacker.getUUID(), player.level().getGameTime() + DEBT_WINDOW_TICKS));
+			if (!CombatTargets.isHostileOrPvpOpponent(attacker, player)) {
+				return;
+			}
+			DEBTS.put(player.getUUID(), new Debt(attacker.getUUID(),
+				player.level().getGameTime() + DEBT_WINDOW_TICKS));
 		}
 		if (defender instanceof ServerPlayer player && hasActiveFocus(player, BONECHILL_FOCUS)
 				&& canChillAttacker(player, attacker)) {

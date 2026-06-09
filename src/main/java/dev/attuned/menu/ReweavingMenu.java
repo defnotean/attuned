@@ -30,9 +30,9 @@ public class ReweavingMenu extends AbstractContainerMenu {
 	private static final int PAINTED_OUTPUT_WELL_SIZE = 26;
 	private static final int SLOT_INSET = (PAINTED_INPUT_WELL_SIZE - SLOT_ITEM_SIZE) / 2;
 	private static final int OUTPUT_SLOT_INSET = (PAINTED_OUTPUT_WELL_SIZE - SLOT_ITEM_SIZE) / 2;
-	private static final int SLOT_VISUAL_OFFSET_Y = 2;
-	private static final int OUTPUT_VISUAL_OFFSET_X = 2;
-	private static final int OUTPUT_VISUAL_OFFSET_Y = 1;
+	private static final int SLOT_VISUAL_OFFSET_Y = 0;
+	private static final int OUTPUT_VISUAL_OFFSET_X = 0;
+	private static final int OUTPUT_VISUAL_OFFSET_Y = 0;
 
 	private static final int[] FOCUS_WELL_X = {26, 53, 80};
 	private static final int FOCUS_WELL_Y = 56;
@@ -100,12 +100,19 @@ public class ReweavingMenu extends AbstractContainerMenu {
 	}
 
 	public boolean hasAllInputs() {
+		if (!hasAllFocusInputs()) {
+			return false;
+		}
+		return this.container.getItem(CATALYST_SLOT).is(AttunedContent.ATTUNEMENT_SHARD_FRAGMENT);
+	}
+
+	public boolean hasAllFocusInputs() {
 		for (int i = 0; i < FOCUS_INPUTS; i++) {
 			if (!this.isFocusInput(this.container.getItem(i))) {
 				return false;
 			}
 		}
-		return this.container.getItem(CATALYST_SLOT).is(AttunedContent.ATTUNEMENT_SHARD_FRAGMENT);
+		return true;
 	}
 
 	public ItemStack outputStack() {

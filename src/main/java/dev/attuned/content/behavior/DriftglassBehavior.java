@@ -1,8 +1,12 @@
 package dev.attuned.content.behavior;
 
+import dev.attuned.Attuned;
 import dev.attuned.AttunedPlayerCleanup;
 import dev.attuned.AttunedServerCleanup;
 import dev.attuned.api.focus.FocusBehavior;
+import dev.attuned.attunement.AttunedAttachments;
+import dev.attuned.attunement.AttunedInv;
+import dev.attuned.attunement.Attunement;
 import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.Iterator;
@@ -12,7 +16,9 @@ import java.util.Optional;
 import java.util.UUID;
 import net.minecraft.core.GlobalPos;
 import net.minecraft.core.component.DataComponents;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.vehicle.boat.AbstractBoat;
@@ -25,6 +31,10 @@ import net.minecraft.world.item.component.LodestoneTracker;
  * boating return point, then restore cleanly when the Focus deactivates.
  */
 public final class DriftglassBehavior implements FocusBehavior {
+	private static final Identifier BEACON_FOCUS =
+		Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "beacon_focus");
+	private static final Identifier WAYSTONE_FOCUS =
+		Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "waystone_focus");
 	private static final Component DRIFTGLASS_COMPASS_NAME =
 		Component.translatable("item.attuned.driftglass_compass");
 
@@ -41,6 +51,10 @@ public final class DriftglassBehavior implements FocusBehavior {
 
 	@Override
 	public void onTick(ServerPlayer player, ItemStack focus) {
+		if (hasHigherPriorityCompassFocus(player)) {
+			restorePlayer(player);
+			return;
+		}
 		if (player.getVehicle() instanceof AbstractBoat || player.fishing != null) {
 			points.put(player.getUUID(), GlobalPos.of(player.level().dimension(), player.blockPosition()));
 		}
@@ -62,6 +76,25 @@ public final class DriftglassBehavior implements FocusBehavior {
 	@Override
 	public void onDeactivate(ServerPlayer player, ItemStack focus) {
 		restorePlayer(player);
+	}
+
+	private static boolean hasHigherPriorityCompassFocus(ServerPlayer player) {
+		boolean beaconCanTrack = player.getRespawnConfig() != null;
+		boolean waystoneCanTrack = player.getLastDeathLocation().isPresent();
+		if (!beaconCanTrack && !waystoneCanTrack) {
+			return false;
+		}
+		AttunedInv inv = AttunedAttachments.getInventory(player);
+		for (int slot : Attunement.activeSlots(player)) {
+			Identifier id = BuiltInRegistries.ITEM.getKey(inv.get(slot).getItem());
+			if (beaconCanTrack && BEACON_FOCUS.equals(id)) {
+				return true;
+			}
+			if (waystoneCanTrack && WAYSTONE_FOCUS.equals(id)) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	private void applyTracker(UUID playerId, ItemStack compass, LodestoneTracker tracker) {

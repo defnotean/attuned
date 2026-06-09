@@ -13,6 +13,8 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import javax.imageio.ImageIO;
 import org.junit.jupiter.api.Test;
 
@@ -20,10 +22,12 @@ class AssetCustomizerContractTest {
 	private static final Path ROOT = Path.of("").toAbsolutePath().normalize();
 	private static final Path CUSTOMIZER = Path.of("tools/asset_customizer");
 	private static final Path MANIFEST = CUSTOMIZER.resolve("asset-manifest.json");
+	private static final Path GUI_FIXTURES = CUSTOMIZER.resolve("gui-fixtures.json");
 	private static final Path INDEX = CUSTOMIZER.resolve("index.html");
 	private static final Path SCRIPT = CUSTOMIZER.resolve("asset-customizer.js");
 	private static final Path STYLES = CUSTOMIZER.resolve("styles.css");
 	private static final Path SERVER = CUSTOMIZER.resolve("serve.py");
+	private static final Path GUI_PREVIEW_RENDERER = Path.of("tools/render_gui_previews.py");
 	private static final Path OFFSHORE_ASSETS =
 		Path.of("docs/superpowers/assets/offshore-harpoon");
 	private static final Path HARPOON_FOCUS_TEXTURE =
@@ -71,14 +75,54 @@ class AssetCustomizerContractTest {
 
 		assertTrue(html.contains("previewCanvas"), "Customizer should render to a canvas");
 		assertTrue(html.contains("assetSelect"), "Customizer should let us switch assets");
+		assertTrue(html.contains("guiSelect"), "Customizer should let us switch GUI preview fixtures");
 		assertTrue(html.contains("viewMode"), "Customizer should offer multiple preview modes");
+		assertTrue(html.contains("value=\"gui\""), "Customizer should offer an out-of-game GUI preview mode");
 		assertTrue(html.contains("value=\"firstperson\""), "Customizer should offer first-person held previews");
 		assertTrue(html.contains("value=\"thirdperson\""), "Customizer should offer third-person held previews");
 		assertTrue(html.contains("copyTransform"), "Customizer should expose transform-copy workflow");
 		assertTrue(script.contains("fetchJson(\"asset-manifest.json\")"),
 			"Customizer should load the manifest at runtime");
+		assertTrue(script.contains("fetchJson(\"gui-fixtures.json\")"),
+			"Customizer should load GUI preview fixtures at runtime");
 		assertTrue(script.contains("applyPresetForView"),
 			"Customizer should map preview modes to Minecraft display presets");
+		assertTrue(script.contains("selectGuiFixture"),
+			"Customizer should switch between GUI preview fixtures without reloading the page");
+		assertTrue(script.contains("drawGuiPreview"),
+			"Customizer should render real GUI textures to the canvas");
+		assertTrue(script.contains("const guiInteractiveControls = [\"zoom\", \"offsetX\", \"offsetY\"]"),
+			"GUI preview mode should keep pan and zoom controls enabled for inspection.");
+		assertTrue(script.contains("canvas.addEventListener(\"pointerdown\", startGuiDrag)"),
+			"GUI preview canvas should support click-and-drag positioning.");
+		assertTrue(script.contains("canvas.addEventListener(\"wheel\", resizeGuiPreview)"),
+			"GUI preview canvas should support wheel resizing.");
+		assertTrue(script.contains("function startGuiDrag"),
+			"GUI preview should track the start of drag gestures.");
+		assertTrue(script.contains("function updateGuiDrag"),
+			"GUI preview should update pan controls while dragging.");
+		assertTrue(script.contains("function resizeGuiPreview"),
+			"GUI preview should resize from pointer wheel gestures.");
+		assertTrue(script.contains("function resetGuiView"),
+			"GUI preview should reset pan and zoom without affecting item model transforms.");
+		assertTrue(script.contains("function buildEditableGuiBoxes"),
+			"GUI preview should expand fixture slots and regions into editable boxes.");
+		assertTrue(script.contains("function hitTestGuiBox"),
+			"GUI preview should hit-test individual overlay boxes before panning the whole canvas.");
+		assertTrue(script.contains("function updateGuiBoxDrag"),
+			"GUI preview should drag selected overlay boxes.");
+		assertTrue(script.contains("function updateGuiBoxResize"),
+			"GUI preview should resize selected overlay boxes.");
+		assertTrue(script.contains("if ((guiDrag || guiBoxDrag) && event.pointerId != null)"),
+			"GUI preview should release pointer capture after both canvas pans and individual box drags.");
+		assertTrue(script.contains("function drawGuiBoxHandles"),
+			"GUI preview should draw resize handles on the selected overlay box.");
+		assertTrue(script.contains("selectedGuiBox"),
+			"GUI preview should track which individual overlay box is selected.");
+		assertTrue(script.contains("drawGuiSlotOverlay"),
+			"Customizer should overlay Minecraft slot hitboxes on GUI previews");
+		assertTrue(script.contains("drawGuiSampleItems"),
+			"Customizer should draw deterministic sample inventory items for alignment checks");
 		assertTrue(script.contains("firstperson_righthand"),
 			"Customizer should use the same first-person transform key as Minecraft item models");
 		assertTrue(script.contains("thirdperson_righthand"),
@@ -141,6 +185,139 @@ class AssetCustomizerContractTest {
 		assertTrue(sawOceanRelic, "Customizer manifest should include the Ocean Relic Trident source model");
 		assertTrue(sawOceanRelicThrowing, "Customizer manifest should include the Ocean Relic Trident throwing pose");
 		assertTrue(sawFrostbound, "Customizer manifest should include the Meshy Frostbound Trident conversion");
+	}
+
+	@Test
+	void guiPreviewFixturesPointAtRealMenusAndOfflineRenderer() throws IOException {
+		assertTrue(Files.isRegularFile(GUI_FIXTURES), "Customizer should have GUI preview fixtures");
+		assertTrue(Files.isRegularFile(GUI_PREVIEW_RENDERER), "Repo should have an offline GUI screenshot renderer");
+		String renderer = read(GUI_PREVIEW_RENDERER);
+		assertTrue(renderer.contains("gui-fixtures.json"),
+			"Offline renderer should share the browser preview fixture data");
+		assertTrue(renderer.contains("build/gui-previews"),
+			"Offline renderer should write previews to a build output directory");
+		assertTrue(renderer.contains("render_fixture"),
+			"Offline renderer should render each fixture independently");
+		assertTrue(renderer.contains("draw_slot_overlay"),
+			"Offline renderer should draw slot hitboxes for layout inspection");
+		assertTrue(renderer.contains("draw_sample_items"),
+			"Offline renderer should draw deterministic sample items for layout inspection");
+
+		JsonArray fixtures = JsonParser.parseString(read(GUI_FIXTURES)).getAsJsonArray();
+		assertEquals(4, fixtures.size(), "GUI preview should cover altar, reweaving altar, satchel, and journal");
+		boolean sawAltar = false;
+		boolean sawReweaving = false;
+		boolean sawSatchel = false;
+		boolean sawJournal = false;
+		for (JsonElement element : fixtures) {
+			JsonObject fixture = element.getAsJsonObject();
+			String id = fixture.get("id").getAsString();
+			sawAltar |= "altar".equals(id);
+			sawReweaving |= "reweaving".equals(id);
+			sawSatchel |= "satchel".equals(id);
+			sawJournal |= "journal".equals(id);
+
+			Path texture = assertRelativeCustomizerFileExists(fixture.get("texture").getAsString());
+			BufferedImage image = ImageIO.read(texture.toFile());
+			assertNotNull(image, "GUI fixture texture should decode: " + texture);
+			assertEquals(fixture.get("width").getAsInt(), image.getWidth(),
+				"GUI fixture width should match the shipped texture: " + id);
+			assertEquals(fixture.get("height").getAsInt(), image.getHeight(),
+				"GUI fixture height should match the shipped texture: " + id);
+			assertTrue(fixture.has("regions"), "GUI fixture should expose named inspection regions: " + id);
+			if (!"journal".equals(id)) {
+				assertTrue(fixture.getAsJsonArray("slotGroups").size() >= 1,
+					"Container GUI fixtures should include slot group overlays: " + id);
+			}
+			if ("satchel".equals(id)) {
+				JsonArray regions = fixture.getAsJsonArray("regions");
+				assertRegion(regions, "Previous preset", 8, 72, 14, 12);
+				assertRegion(regions, "Equipped slot selectors", 24, 72, 65, 12);
+				assertRegion(regions, "Selected preset", 94, 74, 36, 10);
+				assertRegion(regions, "Preset index", 132, 74, 18, 10);
+				assertRegion(regions, "Next preset", 154, 72, 14, 12);
+			}
+		}
+		assertTrue(sawAltar, "GUI preview should include the Attunement Altar");
+		assertTrue(sawReweaving, "GUI preview should include the Reweaving Altar");
+		assertTrue(sawSatchel, "GUI preview should include the Satchel of Foci");
+		assertTrue(sawJournal, "GUI preview should include the Attunement Journal");
+	}
+
+	@Test
+	void altarInventoryPreviewCoordinatesStayAlignedWithMenuAndGenerator() throws IOException {
+		String altarMenu = read(Path.of("src/main/java/dev/attuned/menu/AltarMenu.java"));
+		int inventoryX = sourceIntConstant(altarMenu, "INVENTORY_X");
+		int inventoryY = sourceIntConstant(altarMenu, "INVENTORY_Y");
+
+		JsonObject altar = guiFixture("altar");
+		JsonObject inventoryGroup = slotGroup(altar, "Inventory");
+		JsonObject hotbarGroup = slotGroup(altar, "Hotbar");
+		assertEquals(inventoryX, inventoryGroup.get("x").getAsInt(),
+			"Altar preview inventory X should match the real menu slot coordinate");
+		assertEquals(inventoryY, inventoryGroup.get("y").getAsInt(),
+			"Altar preview inventory Y should match the real menu slot coordinate");
+		assertEquals(inventoryX, hotbarGroup.get("x").getAsInt(),
+			"Altar preview hotbar X should match the real menu slot coordinate");
+		assertEquals(inventoryY + 58, hotbarGroup.get("y").getAsInt(),
+			"Altar preview hotbar Y should match AbstractContainerMenu.addStandardInventorySlots");
+
+		String generator = read(Path.of("tools/generate_ui_art.py"));
+		String altarGenerator = sourceBetween(generator, "def altar():", "\ndef focus_panel():");
+		Matcher inventory = Pattern.compile(
+			"slot_well\\(draw,\\s*(\\d+)\\s*\\+\\s*col\\s*\\*\\s*18,\\s*(\\d+)\\s*\\+\\s*row\\s*\\*\\s*18\\)")
+			.matcher(altarGenerator);
+		assertTrue(inventory.find(), "Altar art generator should paint the player inventory wells");
+		assertEquals(inventoryX, Integer.parseInt(inventory.group(1)),
+			"Generated altar inventory art should use the real menu X coordinate");
+		assertEquals(inventoryY, Integer.parseInt(inventory.group(2)),
+			"Generated altar inventory art should use the real menu Y coordinate");
+
+		Matcher hotbar = Pattern.compile(
+			"slot_well\\(draw,\\s*(\\d+)\\s*\\+\\s*col\\s*\\*\\s*18,\\s*(\\d+)\\)")
+			.matcher(altarGenerator);
+		assertTrue(hotbar.find(), "Altar art generator should paint the hotbar wells");
+		assertEquals(inventoryX, Integer.parseInt(hotbar.group(1)),
+			"Generated altar hotbar art should use the real menu X coordinate");
+		assertEquals(inventoryY + 58, Integer.parseInt(hotbar.group(2)),
+			"Generated altar hotbar art should use AbstractContainerMenu.addStandardInventorySlots spacing");
+	}
+
+	@Test
+	void guiPreviewBoxEditsExportAReusableFixtureAndRendererHonorsIndividualSlots() throws IOException {
+		String script = read(SCRIPT);
+		String renderer = read(GUI_PREVIEW_RENDERER);
+
+		assertTrue(script.contains("function fixtureFromEditableGuiBoxes"),
+			"GUI preview edits should be exportable as a reusable fixture JSON object.");
+		assertTrue(script.contains("fixture: fixtureFromEditableGuiBoxes()"),
+			"The GUI-mode output should include the full edited fixture, not only the selected box.");
+		assertTrue(script.contains("for (const slot of fixture.slots || [])"),
+			"The browser preview should reload explicit per-box slot fixtures.");
+		assertTrue(script.contains("slots: editableGuiBoxes.filter((box) => box.kind === \"slot\")"),
+			"The exported fixture should preserve individually moved/resized slot boxes.");
+		assertTrue(script.contains("regions: editableGuiBoxes.filter((box) => box.kind === \"region\")"),
+			"The exported fixture should preserve individually moved/resized region boxes.");
+		assertTrue(renderer.contains("for slot in fixture.get(\"slots\", [])"),
+			"The offline preview renderer should render explicit per-box slot fixtures.");
+		assertTrue(renderer.contains("slot.get(\"w\", 16)") && renderer.contains("slot.get(\"h\", 16)"),
+			"The offline preview renderer should honor resized slot boxes.");
+	}
+
+	@Test
+	void guiPreviewHitTestingPrioritizesIndividualSlotsOverBroadRegions() throws IOException {
+		String script = read(SCRIPT);
+
+		assertTrue(script.contains("for (const box of guiHitTestOrder())"),
+			"GUI preview hit testing should use an explicit priority order instead of raw draw order.");
+		assertTrue(script.contains("function guiHitTestOrder"),
+			"GUI preview should centralize hit-test ordering.");
+		assertTrue(script.contains("function guiBoxHitPriority"),
+			"GUI preview should rank individual editable box kinds.");
+		assertTrue(script.contains("return box.kind === \"slot\" ? 2 : 1"),
+			"Individual slot boxes should be hit-tested before broad inspection regions.");
+		assertTrue(!script.contains("for (const box of [...editableGuiBoxes].reverse())"),
+			"Broad regions appended after slots should not steal clicks from individual slot boxes.");
 	}
 
 	@Test
@@ -383,6 +560,67 @@ class AssetCustomizerContractTest {
 			"Customizer asset path should stay inside the repo: " + path);
 		assertTrue(Files.isRegularFile(path),
 			"Customizer manifest should point at an existing " + key + ": " + path);
+	}
+
+	private static Path assertRelativeCustomizerFileExists(String relativePath) {
+		Path path = CUSTOMIZER.resolve(relativePath).normalize();
+		assertTrue(path.toAbsolutePath().normalize().startsWith(ROOT),
+			"Customizer path should stay inside the repo: " + path);
+		assertTrue(Files.isRegularFile(path),
+			"Customizer path should point at an existing file: " + path);
+		return path;
+	}
+
+	private static void assertRegion(JsonArray regions, String name, int x, int y, int w, int h) {
+		for (JsonElement element : regions) {
+			JsonObject region = element.getAsJsonObject();
+			if (!name.equals(region.get("name").getAsString())) {
+				continue;
+			}
+			assertEquals(x, region.get("x").getAsInt(), name + " x");
+			assertEquals(y, region.get("y").getAsInt(), name + " y");
+			assertEquals(w, region.get("w").getAsInt(), name + " width");
+			assertEquals(h, region.get("h").getAsInt(), name + " height");
+			return;
+		}
+		throw new AssertionError("Missing GUI fixture region: " + name);
+	}
+
+	private static JsonObject guiFixture(String id) throws IOException {
+		JsonArray fixtures = JsonParser.parseString(read(GUI_FIXTURES)).getAsJsonArray();
+		for (JsonElement element : fixtures) {
+			JsonObject fixture = element.getAsJsonObject();
+			if (id.equals(fixture.get("id").getAsString())) {
+				return fixture;
+			}
+		}
+		throw new AssertionError("Missing GUI fixture: " + id);
+	}
+
+	private static JsonObject slotGroup(JsonObject fixture, String name) {
+		for (JsonElement element : fixture.getAsJsonArray("slotGroups")) {
+			JsonObject group = element.getAsJsonObject();
+			if (name.equals(group.get("name").getAsString())) {
+				return group;
+			}
+		}
+		throw new AssertionError("Missing slot group: " + name);
+	}
+
+	private static int sourceIntConstant(String source, String name) {
+		Matcher matcher = Pattern.compile(
+			"\\b" + Pattern.quote(name) + "\\s*=\\s*(\\d+)\\s*;")
+			.matcher(source);
+		assertTrue(matcher.find(), "Missing integer constant " + name);
+		return Integer.parseInt(matcher.group(1));
+	}
+
+	private static String sourceBetween(String source, String start, String end) {
+		int startIndex = source.indexOf(start);
+		assertTrue(startIndex >= 0, "Missing source start marker " + start);
+		int endIndex = source.indexOf(end, startIndex + start.length());
+		assertTrue(endIndex >= 0, "Missing source end marker " + end);
+		return source.substring(startIndex, endIndex);
 	}
 
 	private static void assertFrameAnimation(BufferedImage image) {

@@ -1,5 +1,6 @@
 {
 	"item": "attuned:tremor_focus",
+	"unique": true,
 	"cost": 3,
 	"behavior": "attuned:tremor"
 }

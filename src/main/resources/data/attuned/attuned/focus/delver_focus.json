@@ -1,5 +1,6 @@
 {
 	"item": "attuned:delver_focus",
 	"cost": 3,
+	"unique": true,
 	"behavior": "attuned:delver"
 }

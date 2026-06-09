@@ -1,12 +1,7 @@
 {
 	"item": "attuned:bloom_focus",
 	"cost": 2,
+	"unique": true,
 	"faction": "attuned:verdant_choir",
-	"modifiers": [
-		{
-			"attribute": "minecraft:luck",
-			"amount": 0.5,
-			"operation": "add_value"
-		}
-	]
+	"behavior": "attuned:bloom"
 }

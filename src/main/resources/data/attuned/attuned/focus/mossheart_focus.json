@@ -2,11 +2,6 @@
 	"item": "attuned:mossheart_focus",
 	"cost": 3,
 	"faction": "attuned:verdant_choir",
-	"modifiers": [
-		{
-			"attribute": "minecraft:armor",
-			"amount": 1.0,
-			"operation": "add_value"
-		}
-	]
+	"unique": true,
+	"behavior": "attuned:mossheart"
 }

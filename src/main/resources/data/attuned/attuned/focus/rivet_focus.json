@@ -1,13 +1,8 @@
 {
 	"item": "attuned:rivet_focus",
 	"cost": 2,
+	"unique": true,
 	"affinity": "bastion",
 	"faction": "attuned:ashen_forge",
-	"modifiers": [
-		{
-			"attribute": "minecraft:knockback_resistance",
-			"amount": 0.15,
-			"operation": "add_value"
-		}
-	]
+	"behavior": "attuned:rivet"
 }

@@ -1,7 +1,6 @@
 package dev.attuned.command;
 
 import com.mojang.brigadier.arguments.IntegerArgumentType;
-import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import dev.attuned.api.focus.Affinity;
 import dev.attuned.api.focus.FocusDefinition;
 import dev.attuned.AttunedRegistries;
@@ -10,12 +9,7 @@ import dev.attuned.attunement.AttunedInv;
 import dev.attuned.attunement.Attunement;
 import dev.attuned.combat.Apex;
 import dev.attuned.combat.Resonance;
-import dev.attuned.content.AttunedContent;
 import dev.attuned.content.AttunementJournalItem;
-import dev.attuned.menu.AltarMenu;
-import dev.attuned.menu.AltarMenuType;
-import dev.attuned.menu.ReweavingMenu;
-import dev.attuned.menu.ReweavingMenuType;
 import dev.attuned.pacts.Pact;
 import dev.attuned.pacts.Pacts;
 import java.util.ArrayList;
@@ -31,9 +25,6 @@ import net.minecraft.commands.Commands;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.SimpleContainer;
-import net.minecraft.world.SimpleMenuProvider;
-import net.minecraft.world.inventory.ContainerLevelAccess;
 import net.minecraft.world.item.ItemStack;
 
 /**
@@ -59,12 +50,6 @@ public final class AttunedCommands {
 						AttunementJournalItem.showGuide(player);
 						return 1;
 					}))
-				.then(Commands.literal("gui")
-					.requires(Commands.hasPermission(Commands.LEVEL_GAMEMASTERS))
-					.then(Commands.literal("altar")
-						.executes(ctx -> openAltarGuiPreview(ctx.getSource())))
-					.then(Commands.literal("reweaving")
-						.executes(ctx -> openReweavingGuiPreview(ctx.getSource()))))
 				.then(Commands.literal("focus")
 					.then(Commands.literal("up")
 						.then(Commands.argument("slot", IntegerArgumentType.integer(1, AttunedInv.SIZE))
@@ -121,41 +106,6 @@ public final class AttunedCommands {
 				.then(Commands.literal("validate")
 					.requires(Commands.hasPermission(Commands.LEVEL_GAMEMASTERS))
 					.executes(ctx -> validateContent(ctx.getSource())))));
-	}
-
-	private static int openAltarGuiPreview(CommandSourceStack source) throws CommandSyntaxException {
-		ServerPlayer player = source.getPlayerOrException();
-		player.openMenu(new SimpleMenuProvider(
-			(containerId, inventory, ignored) -> new AltarMenu(containerId, inventory, previewAltarInput(), ContainerLevelAccess.NULL),
-			AltarMenuType.DISPLAY_NAME));
-		source.sendSuccess(() -> Component.literal("Opened Attunement Altar GUI preview."), false);
-		return 1;
-	}
-
-	private static SimpleContainer previewAltarInput() {
-		SimpleContainer input = new SimpleContainer(AltarMenu.INPUT_SIZE);
-		input.setItem(AltarMenu.INPUT_SLOT, new ItemStack(AttunedContent.ATTUNEMENT_SHARD, 8));
-		return input;
-	}
-
-	private static int openReweavingGuiPreview(CommandSourceStack source) throws CommandSyntaxException {
-		ServerPlayer player = source.getPlayerOrException();
-		player.openMenu(new SimpleMenuProvider(
-			(containerId, inventory, ignored) -> new ReweavingMenu(containerId, inventory, previewReweavingContainer(), ContainerLevelAccess.NULL),
-			ReweavingMenuType.DISPLAY_NAME));
-		source.sendSuccess(() -> Component.literal("Opened Altar of Reweaving GUI preview."), false);
-		return 1;
-	}
-
-	private static SimpleContainer previewReweavingContainer() {
-		SimpleContainer container = new SimpleContainer(ReweavingMenu.CONTAINER_SIZE);
-		container.setItem(0, new ItemStack(AttunedContent.SWIFT_FOCUS));
-		container.setItem(1, new ItemStack(AttunedContent.EDGE_FOCUS));
-		container.setItem(2, new ItemStack(AttunedContent.IRON_FOCUS));
-		container.setItem(ReweavingMenu.CATALYST_SLOT,
-			new ItemStack(AttunedContent.ATTUNEMENT_SHARD_FRAGMENT, 8));
-		container.setItem(ReweavingMenu.OUTPUT_SLOT, new ItemStack(AttunedContent.BEACON_FOCUS));
-		return container;
 	}
 
 	private static int moveFocus(CommandSourceStack source, ServerPlayer player, int from, int to) {

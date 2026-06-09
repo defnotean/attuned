@@ -37,26 +37,39 @@ public final class AegisBehavior implements FocusBehavior {
 
 	@Override
 	public void onActivate(ServerPlayer player, ItemStack focus) {
-		// Grant immediately on equip, then begin the recharge cycle.
-		ticksSinceGrant.put(player.getUUID(), RECHARGE_TICKS);
+		grantAbsorption(player);
+		ticksSinceGrant.put(player.getUUID(), 0);
 	}
 
 	@Override
 	public void onTick(ServerPlayer player, ItemStack focus) {
 		UUID id = player.getUUID();
-		int ticks = ticksSinceGrant.getOrDefault(id, 0) + 1;
-		if (ticks >= RECHARGE_TICKS) {
-			ticks = 0;
-			if (!player.hasEffect(MobEffects.ABSORPTION)) {
-				player.addEffect(new MobEffectInstance(
-					MobEffects.ABSORPTION, ABSORPTION_DURATION, 0, true, true, true));
-			}
+		int prior = ticksSinceGrant.getOrDefault(id, 0);
+		if (rechargesAfter(prior)) {
+			grantAbsorption(player);
 		}
-		ticksSinceGrant.put(id, ticks);
+		ticksSinceGrant.put(id, advance(prior));
+	}
+
+	/** Whether the tick following {@code priorTicks} active ticks reaches the recharge threshold. */
+	static boolean rechargesAfter(int priorTicks) {
+		return priorTicks + 1 >= RECHARGE_TICKS;
+	}
+
+	/** The stored counter after one active tick: resets to 0 on a recharge, otherwise increments. */
+	static int advance(int priorTicks) {
+		return rechargesAfter(priorTicks) ? 0 : priorTicks + 1;
 	}
 
 	@Override
 	public void onDeactivate(ServerPlayer player, ItemStack focus) {
 		ticksSinceGrant.remove(player.getUUID());
+	}
+
+	private static void grantAbsorption(ServerPlayer player) {
+		if (!player.hasEffect(MobEffects.ABSORPTION)) {
+			player.addEffect(new MobEffectInstance(
+				MobEffects.ABSORPTION, ABSORPTION_DURATION, 0, true, true, true));
+		}
 	}
 }

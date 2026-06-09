@@ -11,7 +11,9 @@ import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.ExperienceOrb;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 
 /** Small Revenant faction behaviors for death-memory utility and spectral movement. */
@@ -64,8 +66,7 @@ public final class RevenantFocusBehaviors {
 			Vec3 destination = null;
 			for (double distance = MAX_DISTANCE; distance >= 1.0D; distance -= 0.5D) {
 				Vec3 candidate = origin.add(look.scale(distance));
-				AABB box = player.getBoundingBox().move(candidate.subtract(origin));
-				if (level.noCollision(player, box)) {
+				if (canPhaseTo(level, player, origin, candidate)) {
 					destination = candidate;
 					break;
 				}
@@ -88,6 +89,25 @@ public final class RevenantFocusBehaviors {
 		private static void spectralTrail(ServerLevel level, Vec3 at) {
 			level.sendParticles(ParticleTypes.SOUL, at.x, at.y + 0.9D, at.z, 24, 0.35D, 0.55D, 0.35D, 0.07D);
 			level.sendParticles(ParticleTypes.REVERSE_PORTAL, at.x, at.y + 0.9D, at.z, 18, 0.25D, 0.45D, 0.25D, 0.08D);
+		}
+
+		private static boolean canPhaseTo(ServerLevel level, ServerPlayer player, Vec3 origin, Vec3 candidate) {
+			if (pathBlocked(level, player, origin, candidate)) {
+				return false;
+			}
+			AABB box = player.getBoundingBox().move(candidate.subtract(origin));
+			return level.noCollision(player, box);
+		}
+
+		private static boolean pathBlocked(ServerLevel level, ServerPlayer player, Vec3 origin, Vec3 candidate) {
+			double bodyY = Math.max(0.1D, player.getBbHeight() * 0.5D);
+			HitResult hit = level.clip(new ClipContext(
+				origin.add(0.0D, bodyY, 0.0D),
+				candidate.add(0.0D, bodyY, 0.0D),
+				ClipContext.Block.COLLIDER,
+				ClipContext.Fluid.NONE,
+				player));
+			return hit.getType() == HitResult.Type.BLOCK;
 		}
 	}
 }

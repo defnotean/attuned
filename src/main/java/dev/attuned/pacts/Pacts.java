@@ -14,6 +14,7 @@ import dev.attuned.combat.Apex;
 import dev.attuned.combat.AttunedCombat;
 import dev.attuned.combat.CombatContext;
 import dev.attuned.combat.CombatTargets;
+import dev.attuned.content.behavior.MaskBehavior;
 import dev.attuned.combat.MobAffinities;
 import dev.attuned.combat.Resonance;
 import java.util.EnumMap;
@@ -51,7 +52,6 @@ import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.npc.villager.AbstractVillager;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.gamerules.GameRules;
 
 /**
  * The Pacts system: detection, activation announcement, per-tick effects and
@@ -341,6 +341,7 @@ public final class Pacts {
 	private static void radiantCovenantReveal(Player attacker, LivingEntity defender, DamageSource source) {
 		if (!defender.isAlive() || !CombatTargets.isHostileOrPvpOpponent(defender, attacker)
 				|| !isDirectChargedMelee(attacker, source, RADIANT_COVENANT_SWING_THRESHOLD)
+				|| MaskBehavior.resistsReveal(defender)
 				|| isOwnPet(defender, attacker) || defender instanceof AbstractVillager) {
 			return;
 		}
@@ -388,13 +389,15 @@ public final class Pacts {
 		if (attacker.getAttackStrengthScale(0.5F) < PYRESWORN_CHARGED_SWING_THRESHOLD) {
 			return;
 		}
+		if (!CombatTargets.isHostileOrPvpOpponent(defender, attacker)) {
+			return;
+		}
 		// Friendly-fire and PvP guards: never ignite the attacker's own pets or
 		// any villager, and only ignite another player when the world's PvP
 		// game rule allows it. AFTER_DAMAGE is server-side, so the level here
 		// is always a ServerLevel.
-		if (defender instanceof Player) {
-			if (defender.level() instanceof ServerLevel serverLevel
-					&& !serverLevel.getGameRules().get(GameRules.PVP)) {
+		if (defender instanceof Player targetPlayer) {
+			if (!CombatTargets.canAffectPlayer(attacker, targetPlayer)) {
 				return;
 			}
 		} else if (defender instanceof TamableAnimal pet) {

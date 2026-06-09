@@ -1,5 +1,6 @@
 {
 	"item": "attuned:hearth_focus",
+	"unique": true,
 	"cost": 2,
 	"behavior": "attuned:hearth"
 }

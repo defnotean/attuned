@@ -4,6 +4,7 @@ const ctx = canvas.getContext("2d");
 const controls = {
 	assetSelect: document.querySelector("#assetSelect"),
 	viewMode: document.querySelector("#viewMode"),
+	guiSelect: document.querySelector("#guiSelect"),
 	displayPreset: document.querySelector("#displayPreset"),
 	rotX: document.querySelector("#rotX"),
 	rotY: document.querySelector("#rotY"),
@@ -30,19 +31,30 @@ const labels = {
 	frame: document.querySelector("#frameValue")
 };
 
+const guiInteractiveControls = ["zoom", "offsetX", "offsetY"];
+const GUI_MIN_SCALE = 1;
+const GUI_MAX_SCALE = 8;
+
 const statusLabel = document.querySelector("#assetStatus");
 const assetName = document.querySelector("#assetName");
 const assetKind = document.querySelector("#assetKind");
 const assetPaths = document.querySelector("#assetPaths");
 
 let manifest = [];
+let guiFixtures = [];
 let selectedAsset = null;
 let selectedModel = null;
 let selectedTexture = null;
+let selectedGuiFixture = null;
+let selectedGuiTexture = null;
+let editableGuiBoxes = [];
+let selectedGuiBox = null;
 let textureData = null;
 let frameCount = 1;
 let playing = false;
 let playTimer = 0;
+let guiDrag = null;
+let guiBoxDrag = null;
 
 init().catch((error) => {
 	statusLabel.textContent = error.message;
@@ -51,26 +63,55 @@ init().catch((error) => {
 
 async function init() {
 	manifest = await fetchJson("asset-manifest.json");
+	guiFixtures = await fetchJson("gui-fixtures.json");
 	for (const asset of manifest) {
 		const option = document.createElement("option");
 		option.value = asset.id;
 		option.textContent = asset.name;
 		controls.assetSelect.append(option);
 	}
+	for (const fixture of guiFixtures) {
+		const option = document.createElement("option");
+		option.value = fixture.id;
+		option.textContent = fixture.name;
+		controls.guiSelect.append(option);
+	}
 
 	bindControls();
 	await selectAsset(manifest[0].id);
+	await selectGuiFixture(guiFixtures[0].id);
+	updateModeVisibility();
 }
 
 function bindControls() {
 	controls.assetSelect.addEventListener("change", () => selectAsset(controls.assetSelect.value));
-	controls.viewMode.addEventListener("change", applyPresetForView);
+	controls.viewMode.addEventListener("change", () => {
+		void handleViewModeChange();
+	});
+	controls.guiSelect.addEventListener("change", () => selectGuiFixture(controls.guiSelect.value));
 	controls.displayPreset.addEventListener("change", () => applyPreset(controls.displayPreset.value));
-	controls.resetView.addEventListener("click", () => applyPreset(controls.displayPreset.value));
-	controls.refreshAsset.addEventListener("click", () => selectAsset(controls.assetSelect.value));
+	controls.resetView.addEventListener("click", () => {
+		if (controls.viewMode.value === "gui") {
+			resetGuiView();
+		} else {
+			applyPreset(controls.displayPreset.value);
+		}
+	});
+	controls.refreshAsset.addEventListener("click", () => {
+		if (controls.viewMode.value === "gui") {
+			void selectGuiFixture(controls.guiSelect.value);
+		} else {
+			void selectAsset(controls.assetSelect.value);
+		}
+	});
 	controls.copyTransform.addEventListener("click", copyTransform);
 	controls.exportPng.addEventListener("click", exportPng);
 	controls.playToggle.addEventListener("click", togglePlay);
+	canvas.addEventListener("pointerdown", startGuiDrag);
+	canvas.addEventListener("pointermove", updateGuiDrag);
+	canvas.addEventListener("pointerup", stopGuiDrag);
+	canvas.addEventListener("pointerleave", stopGuiDrag);
+	canvas.addEventListener("wheel", resizeGuiPreview);
 	for (const key of ["rotX", "rotY", "rotZ", "zoom", "offsetX", "offsetY", "frame"]) {
 		controls[key].addEventListener("input", () => {
 			updateLabels();
@@ -97,13 +138,38 @@ async function selectAsset(assetId) {
 	controls.frame.max = Math.max(0, frameCount - 1).toString();
 	controls.frame.value = "0";
 	populatePresets();
-	applyPresetForView();
+	if (controls.viewMode.value === "gui") {
+		updateLabels();
+		updateTransformOutput();
+	} else {
+		applyPresetForView();
+	}
 
 	assetName.textContent = selectedAsset.name;
 	assetKind.textContent = selectedModel.parent || selectedAsset.kind;
 	assetPaths.textContent = `${selectedAsset.texture} | ${selectedAsset.model}`;
 	statusLabel.textContent = `${selectedTexture.width}x${selectedTexture.height}, ${frameCount} frame${frameCount === 1 ? "" : "s"}`;
 	render();
+}
+
+async function selectGuiFixture(fixtureId) {
+	selectedGuiFixture = guiFixtures.find((fixture) => fixture.id === fixtureId);
+	if (!selectedGuiFixture) {
+		throw new Error(`Unknown GUI fixture: ${fixtureId}`);
+	}
+	controls.guiSelect.value = selectedGuiFixture.id;
+	selectedGuiTexture = await loadImage(cacheBust(selectedGuiFixture.texture));
+	editableGuiBoxes = buildEditableGuiBoxes(selectedGuiFixture);
+	selectedGuiBox = editableGuiBoxes[0] || null;
+	if (controls.viewMode.value === "gui") {
+		assetName.textContent = selectedGuiFixture.name;
+		assetKind.textContent = "gui fixture";
+		assetPaths.textContent = selectedGuiFixture.texture;
+		statusLabel.textContent = `${selectedGuiFixture.width}x${selectedGuiFixture.height} GUI fixture`;
+		updateLabels();
+		updateTransformOutput();
+		render();
+	}
 }
 
 function populatePresets() {
@@ -138,6 +204,11 @@ function applyPreset(name) {
 
 function applyPresetForView() {
 	const mode = controls.viewMode.value;
+	updateModeVisibility();
+	if (mode === "gui") {
+		render();
+		return;
+	}
 	if (mode === "firstperson" && selectedModel.display?.firstperson_righthand) {
 		controls.displayPreset.value = "firstperson_righthand";
 	} else if (mode === "thirdperson" && selectedModel.display?.thirdperson_righthand) {
@@ -148,20 +219,149 @@ function applyPresetForView() {
 	applyPreset(controls.displayPreset.value);
 }
 
+async function handleViewModeChange() {
+	updateModeVisibility();
+	if (controls.viewMode.value === "gui") {
+		await selectGuiFixture(controls.guiSelect.value || guiFixtures[0].id);
+		return;
+	}
+	assetName.textContent = selectedAsset.name;
+	assetKind.textContent = selectedModel.parent || selectedAsset.kind;
+	assetPaths.textContent = `${selectedAsset.texture} | ${selectedAsset.model}`;
+	statusLabel.textContent = `${selectedTexture.width}x${selectedTexture.height}, ${frameCount} frame${frameCount === 1 ? "" : "s"}`;
+	applyPresetForView();
+}
+
+function updateModeVisibility() {
+	const guiMode = controls.viewMode.value === "gui";
+	document.body.classList.toggle("gui-mode", guiMode);
+	controls.guiSelect.disabled = !guiMode;
+	controls.assetSelect.disabled = guiMode;
+	controls.displayPreset.disabled = guiMode;
+	for (const key of ["rotX", "rotY", "rotZ", "zoom", "offsetX", "offsetY", "frame"]) {
+		controls[key].disabled = guiMode && !guiInteractiveControls.includes(key);
+	}
+}
+
+function resetGuiView() {
+	controls.zoom.value = "26";
+	controls.offsetX.value = "0";
+	controls.offsetY.value = "0";
+	updateLabels();
+	updateTransformOutput();
+	render();
+}
+
+function startGuiDrag(event) {
+	if (controls.viewMode.value !== "gui" || event.button !== 0) {
+		return;
+	}
+	const point = canvasPoint(event);
+	const hit = hitTestGuiBox(point);
+	if (hit) {
+		selectedGuiBox = hit.box;
+		guiBoxDrag = {
+			mode: hit.handle ? "resize" : "move",
+			x: point.x,
+			y: point.y,
+			box: hit.box,
+			startX: hit.box.x,
+			startY: hit.box.y,
+			startW: hit.box.w,
+			startH: hit.box.h
+		};
+		canvas.setPointerCapture?.(event.pointerId);
+		updateTransformOutput();
+		render();
+		event.preventDefault();
+		return;
+	}
+	selectedGuiBox = null;
+	guiDrag = {
+		x: point.x,
+		y: point.y,
+		offsetX: numberValue("offsetX"),
+		offsetY: numberValue("offsetY")
+	};
+	canvas.setPointerCapture?.(event.pointerId);
+	event.preventDefault();
+}
+
+function updateGuiDrag(event) {
+	if (guiBoxDrag && controls.viewMode.value === "gui") {
+		if (guiBoxDrag.mode === "resize") {
+			updateGuiBoxResize(event);
+		} else {
+			updateGuiBoxDrag(event);
+		}
+		return;
+	}
+	if (!guiDrag || controls.viewMode.value !== "gui") {
+		return;
+	}
+	const point = canvasPoint(event);
+	controls.offsetX.value = clamp(Math.round(guiDrag.offsetX + point.x - guiDrag.x),
+		Number(controls.offsetX.min), Number(controls.offsetX.max));
+	controls.offsetY.value = clamp(Math.round(guiDrag.offsetY + point.y - guiDrag.y),
+		Number(controls.offsetY.min), Number(controls.offsetY.max));
+	updateLabels();
+	updateTransformOutput();
+	render();
+	event.preventDefault();
+}
+
+function stopGuiDrag(event) {
+	if ((guiDrag || guiBoxDrag) && event.pointerId != null) {
+		try {
+			canvas.releasePointerCapture?.(event.pointerId);
+		} catch {
+			// Pointer capture may already be released if the browser cancelled the drag.
+		}
+	}
+	guiDrag = null;
+	guiBoxDrag = null;
+}
+
+function resizeGuiPreview(event) {
+	if (controls.viewMode.value !== "gui") {
+		return;
+	}
+	const direction = event.deltaY < 0 ? 1 : -1;
+	const next = clamp(numberValue("zoom") + direction * 2,
+		Number(controls.zoom.min), Number(controls.zoom.max));
+	controls.zoom.value = next.toString();
+	updateLabels();
+	updateTransformOutput();
+	render();
+	event.preventDefault();
+}
+
+function canvasPoint(event) {
+	const rect = canvas.getBoundingClientRect();
+	return {
+		x: (event.clientX - rect.left) * (canvas.width / rect.width),
+		y: (event.clientY - rect.top) * (canvas.height / rect.height)
+	};
+}
+
 function render() {
 	clear();
 	drawBackdrop();
-	drawGrid();
 	const mode = controls.viewMode.value;
-	if (mode === "texture") {
+	if (mode === "gui") {
+		drawGuiPreview();
+	} else if (mode === "texture") {
+		drawGrid();
 		drawTextureAtlas();
 	} else if (mode === "slot") {
+		drawGrid();
 		drawInventorySlot();
 	} else if (mode === "firstperson") {
 		drawHeldItemScene("firstperson");
 	} else if (mode === "thirdperson") {
 		drawHeldItemScene("thirdperson");
 	} else if (hasBlockElements()) {
+		drawGrid();
 		drawBlockModel({
 			originX: canvas.width / 2 + numberValue("offsetX"),
 			originY: canvas.height / 2 + numberValue("offsetY"),
@@ -169,6 +369,7 @@ function render() {
 			depthSkew: 0.28
 		});
 	} else {
+		drawGrid();
 		drawReadableGeneratedItem({
 			originX: canvas.width / 2 + numberValue("offsetX"),
 			originY: canvas.height / 2 + numberValue("offsetY"),
@@ -176,6 +377,259 @@ function render() {
 			shadow: 5
 		});
 	}
+}
+
+function drawGuiPreview() {
+	if (!selectedGuiFixture || !selectedGuiTexture) {
+		return;
+	}
+	const frame = guiPreviewFrame();
+	drawChecker(frame.x, frame.y, frame.width, frame.height, Math.max(8, 8 * frame.scale));
+	ctx.drawImage(selectedGuiTexture, frame.x, frame.y, frame.width, frame.height);
+	drawGuiSampleItems(frame.x, frame.y, frame.scale);
+	drawGuiSlotOverlay(frame.x, frame.y, frame.scale);
+	drawGuiRegions(frame.x, frame.y, frame.scale);
+	drawGuiBoxHandles(frame.x, frame.y, frame.scale);
+}
+
+function guiPreviewFrame() {
+	const margin = 44;
+	const fit = Math.min(
+		(canvas.width - margin * 2) / selectedGuiFixture.width,
+		(canvas.height - margin * 2) / selectedGuiFixture.height
+	);
+	const scale = guiPreviewScale(fit);
+	const width = selectedGuiFixture.width * scale;
+	const height = selectedGuiFixture.height * scale;
+	const x = Math.floor(canvas.width / 2 - width / 2 + numberValue("offsetX"));
+	const y = Math.floor(canvas.height / 2 - height / 2 + numberValue("offsetY"));
+	return {x, y, width, height, scale};
+}
+
+function guiPreviewScale(fit) {
+	const scaled = fit * numberValue("zoom") / 26;
+	return clamp(Math.max(GUI_MIN_SCALE, Math.round(scaled)), GUI_MIN_SCALE, GUI_MAX_SCALE);
+}
+
+function drawGuiSlotOverlay(originX, originY, scale) {
+	ctx.save();
+	ctx.lineWidth = Math.max(1, scale);
+	for (const slot of editableGuiBoxes.filter((box) => box.kind === "slot")) {
+		ctx.strokeStyle = selectedGuiBox === slot ? "rgba(255, 255, 255, 0.98)" : "rgba(50, 208, 212, 0.92)";
+		ctx.strokeRect(originX + slot.x * scale, originY + slot.y * scale, slot.w * scale, slot.h * scale);
+	}
+	ctx.restore();
+}
+
+function drawGuiSampleItems(originX, originY, scale) {
+	for (const slot of editableGuiBoxes.filter((box) => box.kind === "slot")) {
+		const palette = guiSamplePalette(slot.sample, slot.index);
+		const x = originX + (slot.x + 1) * scale;
+		const y = originY + (slot.y + 1) * scale;
+		const size = Math.max(4, Math.min(slot.w, slot.h) - 2) * scale;
+		ctx.fillStyle = "rgba(6, 7, 12, 0.78)";
+		ctx.fillRect(x, y, size, size);
+		ctx.fillStyle = palette.dark;
+		ctx.fillRect(x + scale, y + scale, size - scale * 2, size - scale * 2);
+		ctx.fillStyle = palette.face;
+		ctx.beginPath();
+		ctx.moveTo(x + size / 2, y + scale * 2);
+		ctx.lineTo(x + size - scale * 2, y + size / 2);
+		ctx.lineTo(x + size / 2, y + size - scale * 2);
+		ctx.lineTo(x + scale * 2, y + size / 2);
+		ctx.closePath();
+		ctx.fill();
+		ctx.fillStyle = palette.light;
+		ctx.fillRect(x + size / 2 - scale, y + scale * 3, scale * 2, scale * 3);
+	}
+}
+
+function drawGuiRegions(originX, originY, scale) {
+	ctx.save();
+	ctx.lineWidth = Math.max(1, scale);
+	ctx.fillStyle = "rgba(255, 228, 206, 0.92)";
+	ctx.font = `${Math.max(10, 5 * scale)}px Segoe UI, sans-serif`;
+	for (const region of editableGuiBoxes.filter((box) => box.kind === "region")) {
+		ctx.strokeStyle = selectedGuiBox === region ? "rgba(255, 255, 255, 0.98)" : "rgba(210, 134, 79, 0.96)";
+		const x = originX + region.x * scale;
+		const y = originY + region.y * scale;
+		ctx.strokeRect(x, y, region.w * scale, region.h * scale);
+		ctx.fillText(region.name, x + scale, Math.max(12, y - scale));
+	}
+	ctx.restore();
+}
+
+function drawGuiBoxHandles(originX, originY, scale) {
+	if (!selectedGuiBox) {
+		return;
+	}
+	ctx.save();
+	const handleSize = Math.max(6, 3 * scale);
+	const x = originX + (selectedGuiBox.x + selectedGuiBox.w) * scale - handleSize;
+	const y = originY + (selectedGuiBox.y + selectedGuiBox.h) * scale - handleSize;
+	ctx.fillStyle = "rgba(255, 255, 255, 0.95)";
+	ctx.fillRect(x, y, handleSize, handleSize);
+	ctx.strokeStyle = "rgba(8, 11, 16, 0.92)";
+	ctx.strokeRect(x, y, handleSize, handleSize);
+	ctx.restore();
+}
+
+function buildEditableGuiBoxes(fixture) {
+	const boxes = [];
+	for (const slot of fixture.slots || []) {
+		boxes.push({
+			id: `${fixture.id}:slot:${boxes.length}`,
+			kind: "slot",
+			name: slot.name || "Slot",
+			x: slot.x,
+			y: slot.y,
+			w: slot.w || 16,
+			h: slot.h || 16,
+			sample: slot.sample || "inventory",
+			index: boxes.length
+		});
+	}
+	for (const group of fixture.slotGroups || []) {
+		for (let row = 0; row < group.rows; row++) {
+			for (let col = 0; col < group.columns; col++) {
+				boxes.push({
+					id: `${fixture.id}:slot:${boxes.length}`,
+					kind: "slot",
+					name: group.name,
+					x: group.x + col * group.stepX,
+					y: group.y + row * group.stepY,
+					w: 16,
+					h: 16,
+					sample: group.sample || "inventory",
+					index: boxes.length
+				});
+			}
+		}
+	}
+	for (const region of fixture.regions || []) {
+		boxes.push({
+			id: `${fixture.id}:region:${boxes.length}`,
+			kind: "region",
+			name: region.name,
+			x: region.x,
+			y: region.y,
+			w: region.w,
+			h: region.h,
+			index: boxes.length
+		});
+	}
+	return boxes;
+}
+
+function fixtureFromEditableGuiBoxes() {
+	if (!selectedGuiFixture) {
+		return null;
+	}
+	return {
+		...selectedGuiFixture,
+		slotGroups: [],
+		slots: editableGuiBoxes.filter((box) => box.kind === "slot").map((box) => ({
+			name: box.name,
+			x: box.x,
+			y: box.y,
+			w: box.w,
+			h: box.h,
+			sample: box.sample || "inventory"
+		})),
+		regions: editableGuiBoxes.filter((box) => box.kind === "region").map((box) => ({
+			name: box.name,
+			x: box.x,
+			y: box.y,
+			w: box.w,
+			h: box.h
+		}))
+	};
+}
+
+function hitTestGuiBox(point) {
+	if (!selectedGuiFixture) {
+		return null;
+	}
+	const frame = guiPreviewFrame();
+	const gx = (point.x - frame.x) / frame.scale;
+	const gy = (point.y - frame.y) / frame.scale;
+	for (const box of guiHitTestOrder()) {
+		if (!pointInGuiBox(gx, gy, box)) {
+			continue;
+		}
+		return {
+			box,
+			handle: pointInGuiResizeHandle(gx, gy, box)
+		};
+	}
+	return null;
+}
+
+function guiHitTestOrder() {
+	return [...editableGuiBoxes].sort((left, right) =>
+		guiBoxHitPriority(right) - guiBoxHitPriority(left) || right.index - left.index);
+}
+
+function guiBoxHitPriority(box) {
+	return box.kind === "slot" ? 2 : 1;
+}
+
+function pointInGuiBox(x, y, box) {
+	return x >= box.x && y >= box.y && x <= box.x + box.w && y <= box.y + box.h;
+}
+
+function pointInGuiResizeHandle(x, y, box) {
+	const size = Math.max(3, 10 / guiPreviewFrame().scale);
+	return x >= box.x + box.w - size && y >= box.y + box.h - size;
+}
+
+function updateGuiBoxDrag(event) {
+	const point = canvasPoint(event);
+	const frame = guiPreviewFrame();
+	const dx = (point.x - guiBoxDrag.x) / frame.scale;
+	const dy = (point.y - guiBoxDrag.y) / frame.scale;
+	guiBoxDrag.box.x = clamp(Math.round(guiBoxDrag.startX + dx), -64, selectedGuiFixture.width + 64);
+	guiBoxDrag.box.y = clamp(Math.round(guiBoxDrag.startY + dy), -64, selectedGuiFixture.height + 64);
+	updateTransformOutput();
+	render();
+	event.preventDefault();
+}
+
+function updateGuiBoxResize(event) {
+	const point = canvasPoint(event);
+	const frame = guiPreviewFrame();
+	const dx = (point.x - guiBoxDrag.x) / frame.scale;
+	const dy = (point.y - guiBoxDrag.y) / frame.scale;
+	guiBoxDrag.box.w = clamp(Math.round(guiBoxDrag.startW + dx), 4, selectedGuiFixture.width + 64);
+	guiBoxDrag.box.h = clamp(Math.round(guiBoxDrag.startH + dy), 4, selectedGuiFixture.height + 64);
+	updateTransformOutput();
+	render();
+	event.preventDefault();
+}
+
+function guiSamplePalette(kind, index) {
+	const palettes = {
+		focus: ["#0d1118", "#7957d6", "#d5b8ff"],
+		shard: ["#10151d", "#4fc5e6", "#d4f7ff"],
+		output: ["#10130f", "#d2864f", "#ffe4ce"],
+		hotbar: ["#10151a", "#95d46a", "#e7ffd7"],
+		inventory: ["#10141c", "#4a96d8", "#d4ecff"]
+	};
+	const palette = palettes[kind] || palettes.inventory;
+	const rotate = index % 5;
+	return {
+		dark: palette[0],
+		face: rotate === 0 ? palette[1] : shadeHex(palette[1], 1 - rotate * 0.06),
+		light: palette[2]
+	};
+}
+
+function shadeHex(hex, multiplier) {
+	const value = Number.parseInt(hex.slice(1), 16);
+	const r = clamp(Math.round(((value >> 16) & 0xFF) * multiplier), 0, 255);
+	const g = clamp(Math.round(((value >> 8) & 0xFF) * multiplier), 0, 255);
+	const b = clamp(Math.round((value & 0xFF) * multiplier), 0, 255);
+	return `rgb(${r}, ${g}, ${b})`;
 }
 
 function clear() {
@@ -692,6 +1146,24 @@ function updateLabels() {
 }
 
 function updateTransformOutput() {
+	if (controls.viewMode.value === "gui") {
+		controls.transformOutput.value = JSON.stringify({
+			guiPreview: selectedGuiFixture?.id || null,
+			zoom: numberValue("zoom"),
+			offset: [numberValue("offsetX"), numberValue("offsetY")],
+			fixture: fixtureFromEditableGuiBoxes(),
+			selectedBox: selectedGuiBox ? {
+				id: selectedGuiBox.id,
+				kind: selectedGuiBox.kind,
+				name: selectedGuiBox.name,
+				x: selectedGuiBox.x,
+				y: selectedGuiBox.y,
+				w: selectedGuiBox.w,
+				h: selectedGuiBox.h
+			} : null
+		}, null, "\t");
+		return;
+	}
 	const scale = Number((numberValue("zoom") / 26).toFixed(2));
 	const transform = {
 		rotation: [numberValue("rotX"), numberValue("rotY"), numberValue("rotZ")],
@@ -718,7 +1190,8 @@ async function copyTransform() {
 
 function exportPng() {
 	const link = document.createElement("a");
-	link.download = `${selectedAsset.id}-preview.png`;
+	const id = controls.viewMode.value === "gui" ? selectedGuiFixture.id : selectedAsset.id;
+	link.download = `${id}-preview.png`;
 	link.href = canvas.toDataURL("image/png");
 	link.click();
 }

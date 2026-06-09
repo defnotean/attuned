@@ -29,10 +29,14 @@ public final class AttunementJournalScreen extends Screen {
 	private static final int PANEL_WIDTH = 336;
 	private static final int PANEL_HEIGHT = 214;
 	private static final int NAV_WIDTH = 88;
+	private static final int NAV_X_OFFSET = 34;
 	private static final int PADDING = 12;
 	private static final int CONTENT_GAP = 12;
-	private static final int CHAPTER_BUTTON_HEIGHT = 14;
-	private static final int CHAPTER_BUTTON_GAP = 1;
+	private static final int PAGE_CONTENT_WIDTH = 216;
+	private static final int CHAPTER_BUTTON_Y = 34;
+	private static final int CHAPTER_BUTTON_WIDTH = 62;
+	private static final int CHAPTER_BUTTON_HEIGHT = 12;
+	private static final int CHAPTER_BUTTON_GAP = 2;
 	private static final int PAGE_BUTTON_WIDTH = 66;
 	private static final int PAGE_BUTTON_HEIGHT = 20;
 
@@ -119,12 +123,12 @@ public final class AttunementJournalScreen extends Screen {
 		this.chapterButtons.clear();
 		int left = left();
 		int top = top();
-		int navX = left + PADDING;
-		int y = top + 36;
+		int navX = left + NAV_X_OFFSET;
+		int y = top + CHAPTER_BUTTON_Y;
 		for (int i = 0; i < CHAPTERS.size(); i++) {
 			Chapter chapter = CHAPTERS.get(i);
 			Button button = addJournalButton(Component.literal(chapter.name()),
-				navX, y + i * (CHAPTER_BUTTON_HEIGHT + CHAPTER_BUTTON_GAP), NAV_WIDTH - 10, CHAPTER_BUTTON_HEIGHT,
+				navX, y + i * (CHAPTER_BUTTON_HEIGHT + CHAPTER_BUTTON_GAP), CHAPTER_BUTTON_WIDTH, CHAPTER_BUTTON_HEIGHT,
 				true, btn -> setPage(chapter.firstPage()));
 			this.chapterButtons.add(button);
 		}
@@ -294,7 +298,7 @@ public final class AttunementJournalScreen extends Screen {
 	}
 
 	private int contentWidth() {
-		return PANEL_WIDTH - PADDING * 2 - NAV_WIDTH - CONTENT_GAP;
+		return PAGE_CONTENT_WIDTH;
 	}
 
 	private static final class JournalButton extends Button {

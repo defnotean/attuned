@@ -84,7 +84,7 @@ public class ReweavingScreen extends AbstractContainerScreen<ReweavingMenu> {
 		if (!this.menu.outputStack().isEmpty()) {
 			return Component.translatable("screen.attuned.reweaving_altar.hint.output_blocked");
 		}
-		if (!hasThreeFoci()) {
+		if (!this.menu.hasAllFocusInputs()) {
 			return Component.translatable("screen.attuned.reweaving_altar.hint.missing_foci");
 		}
 		if (!this.menu.container().getItem(ReweavingMenu.CATALYST_SLOT)
@@ -92,15 +92,6 @@ public class ReweavingScreen extends AbstractContainerScreen<ReweavingMenu> {
 			return Component.translatable("screen.attuned.reweaving_altar.hint.missing_fragment");
 		}
 		return Component.translatable("screen.attuned.reweaving_altar.hint.ready");
-	}
-
-	private boolean hasThreeFoci() {
-		for (int i = 0; i < ReweavingMenu.FOCUS_INPUTS; i++) {
-			if (!dev.attuned.content.AttunedContent.FOCI.contains(this.menu.container().getItem(i).getItem())) {
-				return false;
-			}
-		}
-		return true;
 	}
 
 	private void drawTrimmedText(GuiGraphicsExtractor graphics, Component text, int x, int y, int maxWidth, int color) {

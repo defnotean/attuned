@@ -25,6 +25,8 @@ class ReweavingContentContractTest {
 		Path.of("src/main/java/dev/attuned/menu/ReweavingNetworking.java");
 	private static final Path SCREEN_REGISTRATION_SOURCE =
 		Path.of("src/client/java/dev/attuned/client/screen/AltarScreens.java");
+	private static final Path REWEAVING_SCREEN_SOURCE =
+		Path.of("src/client/java/dev/attuned/client/screen/ReweavingScreen.java");
 	private static final Path LANG_FILE =
 		Path.of("src/main/resources/assets/attuned/lang/en_us.json");
 
@@ -78,15 +80,20 @@ class ReweavingContentContractTest {
 	void reweavingFocusChecksUseSyncedDefinitionsInsteadOfStaticContentList() throws IOException {
 		String menu = Files.readString(REWEAVING_MENU_SOURCE, StandardCharsets.UTF_8);
 		String networking = Files.readString(NETWORKING_SOURCE, StandardCharsets.UTF_8);
+		String screen = Files.readString(REWEAVING_SCREEN_SOURCE, StandardCharsets.UTF_8);
 
 		assertTrue(menu.contains("Attunement.definitionFor("),
 			"Reweaving menu slots should accept any item backed by a synced FocusDefinition.");
 		assertTrue(networking.contains("FocusLookup.forItem("),
 			"Server-side reweaving validation should use the FocusDefinition registry.");
+		assertTrue(screen.contains("this.menu.hasAllFocusInputs()"),
+			"Reweaving screen hints should mirror the menu's data-driven FocusDefinition checks.");
 		assertTrue(!menu.contains("AttunedContent.isFocus("),
 			"Reweaving menu slot checks should not be capped to the static shipped-Foci list.");
 		assertTrue(!networking.contains("AttunedContent.isFocus("),
 			"Reweaving sacrifices should not reject datapack-defined Focus items.");
+		assertTrue(!screen.contains("AttunedContent.FOCI"),
+			"Reweaving screen hints should not be capped to the static shipped-Foci list.");
 	}
 
 	private static void assertQuickMoveSlotGuard(String source, String menuName) {

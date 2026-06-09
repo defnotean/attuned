@@ -6,6 +6,7 @@ import dev.attuned.api.focus.AffinityColors;
 import dev.attuned.attunement.AttunedAttachments;
 import dev.attuned.attunement.AttunedInv;
 import dev.attuned.attunement.Attunement;
+import dev.attuned.content.behavior.TemperBehavior;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.minecraft.core.particles.DustParticleOptions;
 import net.minecraft.core.particles.ParticleTypes;
@@ -14,6 +15,7 @@ import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
+import net.minecraft.tags.DamageTypeTags;
 import net.minecraft.tags.EntityTypeTags;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
@@ -62,8 +64,12 @@ public final class AttunedCombat {
 	private static final float CINDER_BURNING_BONUS = 0.20F;
 	/** Extra fully charged direct-melee damage Sunlance deals to its marked prey. */
 	private static final float SUNLANCE_BONUS = 0.10F;
+	/** Extra fully charged direct-melee damage Temper grants after recent forge work. */
+	private static final float TEMPER_BONUS = 0.08F;
 	/** Sunlance asks for a deliberate swing, not spam-click pressure. */
 	private static final float SUNLANCE_CHARGED_SWING_THRESHOLD = 0.9F;
+	/** Temper asks for the same deliberate, fully charged swing cadence. */
+	private static final float TEMPER_CHARGED_SWING_THRESHOLD = 0.9F;
 	/** Minimum delay between repeated affinity feedback bursts for one mob. */
 	private static final long AFFINITY_SPARK_COOLDOWN_TICKS = 40L;
 	/** Maximum age for cached mob feedback throttles. */
@@ -126,16 +132,15 @@ public final class AttunedCombat {
 		if (sunlanceApplies(defender, source, context)) {
 			adjusted *= (1.0F + SUNLANCE_BONUS);
 		}
+		if (temperApplies(source, context)) {
+			adjusted *= (1.0F + TEMPER_BONUS);
+		}
 		return adjusted;
 	}
 
 	private static boolean cinderApplies(LivingEntity defender, DamageSource source,
 			CombatContext context) {
-		if (!(context.attacker() instanceof Player player) || source.getDirectEntity() != player) {
-			return false;
-		}
-		if (source.is(net.minecraft.tags.DamageTypeTags.IS_PROJECTILE)
-				|| source.is(net.minecraft.tags.DamageTypeTags.IS_EXPLOSION)) {
+		if (!(context.attacker() instanceof Player player) || !isDirectMelee(player, source)) {
 			return false;
 		}
 		return defender.isOnFire() && context.hasActiveFocus(player, CINDER_FOCUS);
@@ -151,15 +156,27 @@ public final class AttunedCombat {
 			|| context.affinityOf(defender).filter(affinity -> affinity == Affinity.FURY).isPresent();
 	}
 
-	private static boolean isDirectChargedMelee(Player player, DamageSource source, float threshold) {
-		if (source.getDirectEntity() != player) {
+	private static boolean temperApplies(DamageSource source, CombatContext context) {
+		if (!(context.attacker() instanceof Player player)
+				|| !isDirectChargedMelee(player, source, TEMPER_CHARGED_SWING_THRESHOLD)) {
 			return false;
 		}
-		if (source.is(net.minecraft.tags.DamageTypeTags.IS_PROJECTILE)
-				|| source.is(net.minecraft.tags.DamageTypeTags.IS_EXPLOSION)) {
+		return TemperBehavior.applies(player);
+	}
+
+	private static boolean isDirectChargedMelee(Player player, DamageSource source, float threshold) {
+		if (!isDirectMelee(player, source)) {
 			return false;
 		}
 		return player.getAttackStrengthScale(0.5F) >= threshold;
+	}
+
+	private static boolean isDirectMelee(LivingEntity attacker, DamageSource source) {
+		if (source.getDirectEntity() != attacker) {
+			return false;
+		}
+		return !source.is(DamageTypeTags.IS_PROJECTILE)
+			&& !source.is(DamageTypeTags.IS_EXPLOSION);
 	}
 
 	private static void mobAffinitySpark(ServerLevel level, LivingEntity entity) {
@@ -289,6 +306,7 @@ public final class AttunedCombat {
 		// Thornward: the defender reflects a fraction of the hit back.
 		if (defender instanceof Player defenderPlayer
 				&& hasActiveFocus(defenderPlayer, THORNWARD_FOCUS)
+				&& isDirectMelee(attacker, source)
 				&& attacker.isAlive()) {
 			float reflected = dealtDamage * THORNWARD_REFLECT;
 			if (reflected > 0.0F && attacker.level() instanceof net.minecraft.server.level.ServerLevel serverLevel) {
@@ -308,6 +326,7 @@ public final class AttunedCombat {
 		// Leech: the attacker heals for a fraction of the damage it dealt.
 		if (attacker instanceof Player attackerPlayer
 				&& hasActiveFocus(attackerPlayer, LEECH_FOCUS)
+				&& isDirectMelee(attacker, source)
 				&& !attackerPlayer.isDeadOrDying()) {
 			attackerPlayer.heal(dealtDamage * LEECH_LIFESTEAL);
 		}

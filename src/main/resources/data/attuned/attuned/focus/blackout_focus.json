@@ -1,5 +1,7 @@
 {
 	"item": "attuned:blackout_focus",
 	"cost": 3,
-	"faction": "attuned:unseen"
+	"unique": true,
+	"faction": "attuned:unseen",
+	"behavior": "attuned:blackout"
 }

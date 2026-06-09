@@ -70,6 +70,40 @@ class FocusPvpAvailabilityContractTest {
 	}
 
 	@Test
+	void ashenDebtOnlyRecordsAndSpendsAgainstFoes() throws IOException {
+		String revenant = readSource(REVENANT_COMBAT_SOURCE);
+		String adjustDamage = methodBody(revenant,
+			"public static float adjustDamage(LivingEntity defender, DamageSource source, float amount)");
+		String afterDamage = methodBody(revenant,
+			"private static void afterDamage(LivingEntity defender, DamageSource source,");
+
+		assertTrue(adjustDamage.contains("!CombatTargets.isHostileOrPvpOpponent(defender, attacker)"),
+			"Ashen Debt should not spend a debt bonus against pets, passive mobs, spectators, or friendly-fire-blocked players.");
+		assertTrue(afterDamage.contains("!CombatTargets.isHostileOrPvpOpponent(attacker, player)"),
+			"Ashen Debt should only record debts when the wearer is hurt by a hostile mob or valid PvP opponent.");
+	}
+
+	@Test
+	void pyreswornIgniteUsesVanillaPlayerTargetRules() throws IOException {
+		String pacts = readSource(PACTS_SOURCE);
+		String pyreswornIgnite = methodBody(pacts,
+			"private static void pyreswornIgnite(Player attacker, LivingEntity defender, DamageSource source)");
+		JsonObject lang = JsonParser.parseString(Files.readString(LANG_FILE, StandardCharsets.UTF_8))
+			.getAsJsonObject();
+
+		assertEquals("Your melee hits set foes alight.",
+			lang.get("pact.attuned.pyresworn.description").getAsString());
+		assertTrue(pyreswornIgnite.contains("defender instanceof Player targetPlayer"),
+			"Pyresworn should name player targets before applying the shared PvP predicate.");
+		assertTrue(pyreswornIgnite.contains("!CombatTargets.canAffectPlayer(attacker, targetPlayer)"),
+			"Pyresworn should respect spectators, the PvP gamerule, and vanilla team/friendly-fire checks.");
+		assertTrue(pyreswornIgnite.contains("!CombatTargets.isHostileOrPvpOpponent(defender, attacker)"),
+			"Pyresworn should ignite only hostile mobs or valid PvP opponents, not passive animals.");
+		assertTrue(!pyreswornIgnite.contains("GameRules.PVP"),
+			"Pyresworn should not use a narrower raw PvP gamerule check for player targets.");
+	}
+
+	@Test
 	void pactsAndApexUsePlayerAffinityTargetsForPvp() throws IOException {
 		String pacts = readSource(PACTS_SOURCE);
 		String apex = readSource(APEX_SOURCE);
@@ -89,7 +123,7 @@ class FocusPvpAvailabilityContractTest {
 		JsonObject lang = JsonParser.parseString(Files.readString(LANG_FILE, StandardCharsets.UTF_8))
 			.getAsJsonObject();
 
-		assertEquals("Near bells, reveals visible threats for a short time.",
+		assertEquals("Ringing or standing within 8 blocks of a bell reveals visible threats for a short time.",
 			lang.get("item.attuned.bellwether_focus.effect").getAsString());
 		assertEquals("Fully charged melee hits deal 10% more damage to undead and Fury-aligned foes.",
 			lang.get("item.attuned.sunlance_focus.effect").getAsString());
@@ -104,5 +138,25 @@ class FocusPvpAvailabilityContractTest {
 	private static String readSource(Path source) throws IOException {
 		assertTrue(Files.isRegularFile(source), "Expected source file to exist: " + source);
 		return Files.readString(source, StandardCharsets.UTF_8);
+	}
+
+	private static String methodBody(String source, String signaturePrefix) {
+		int signatureStart = source.indexOf(signaturePrefix);
+		assertTrue(signatureStart >= 0, "Missing method signature: " + signaturePrefix);
+		int bodyStart = source.indexOf('{', signatureStart);
+		assertTrue(bodyStart >= 0, "Missing method body: " + signaturePrefix);
+		int depth = 0;
+		for (int index = bodyStart; index < source.length(); index++) {
+			char current = source.charAt(index);
+			if (current == '{') {
+				depth++;
+			} else if (current == '}') {
+				depth--;
+				if (depth == 0) {
+					return source.substring(bodyStart, index + 1);
+				}
+			}
+		}
+		throw new AssertionError("Unterminated method body: " + signaturePrefix);
 	}
 }

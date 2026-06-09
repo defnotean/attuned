@@ -29,19 +29,17 @@ public class AltarMenu extends AbstractContainerMenu {
 	/** Vanilla item/click area edge length inside a custom painted well. */
 	public static final int SLOT_ITEM_SIZE = 16;
 	/** GUI X-coordinate for the painted shard well. */
-	public static final int INPUT_WELL_X = 112;
+	public static final int INPUT_WELL_X = 127;
 	/** GUI Y-coordinate for the painted shard well. */
-	public static final int INPUT_WELL_Y = 40;
+	public static final int INPUT_WELL_Y = 33;
 	/** Width of the painted shard well supplied by the custom GUI art. */
-	public static final int INPUT_WELL_WIDTH = 28;
+	public static final int INPUT_WELL_WIDTH = 20;
 	/** Height of the painted shard well supplied by the custom GUI art. */
-	public static final int INPUT_WELL_HEIGHT = 28;
-	/** The item sprite reads a touch high in this painted bowl, so bias it down. */
-	public static final int INPUT_SLOT_VISUAL_OFFSET_Y = 2;
+	public static final int INPUT_WELL_HEIGHT = 20;
 	/** GUI X-coordinate for the shard input item/click box centered in the painted well. */
 	public static final int INPUT_SLOT_X = INPUT_WELL_X + (INPUT_WELL_WIDTH - SLOT_ITEM_SIZE) / 2;
 	/** GUI Y-coordinate for the shard input item/click box centered in the painted well. */
-	public static final int INPUT_SLOT_Y = INPUT_WELL_Y + (INPUT_WELL_HEIGHT - SLOT_ITEM_SIZE) / 2 + INPUT_SLOT_VISUAL_OFFSET_Y;
+	public static final int INPUT_SLOT_Y = INPUT_WELL_Y + (INPUT_WELL_HEIGHT - SLOT_ITEM_SIZE) / 2;
 	/** GUI X-coordinate for the player inventory grid. */
 	public static final int INVENTORY_X = 24;
 	/** GUI Y-coordinate for the player inventory grid. */

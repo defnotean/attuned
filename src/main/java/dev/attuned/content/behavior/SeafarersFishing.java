@@ -1,9 +1,14 @@
 package dev.attuned.content.behavior;
 
+import dev.attuned.AttunedPlayerCleanup;
+import dev.attuned.AttunedServerCleanup;
 import dev.attuned.attunement.AttunedAttachments;
 import dev.attuned.attunement.AttunedInv;
 import dev.attuned.attunement.Attunement;
 import dev.attuned.content.AttunedContent;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
@@ -14,12 +19,20 @@ import net.minecraft.world.item.Items;
 /** Catch-time hooks for the peaceful Seafarers fishing Foci. */
 public final class SeafarersFishing {
 	private static final float LINECAST_EXTRA_FISH_CHANCE = 0.20F;
-	private static final float NETMENDER_PREVENT_DAMAGE_CHANCE = 0.35F;
+	private static final float NETMENDER_REPAIR_CHANCE = 0.35F;
+	private static final int NETMENDER_REPAIR_COOLDOWN_TICKS = 100;
 	private static final int LINECAST_LUCK_OF_THE_SEA_BONUS = 2;
 	private static final int NETMENDER_LUCK_OF_THE_SEA_BONUS = 1;
 	private static final int HARBORLIGHT_LUCK_OF_THE_SEA_BONUS = 1;
 	private static final int DRIFTGLASS_LUCK_OF_THE_SEA_BONUS = 1;
 	private static final int MAX_LUCK_OF_THE_SEA_BONUS = 5;
+
+	private static final Map<UUID, Long> netmenderCooldowns = new HashMap<>();
+
+	static {
+		AttunedPlayerCleanup.onForget(netmenderCooldowns::remove);
+		AttunedServerCleanup.onStop(netmenderCooldowns::clear);
+	}
 
 	private SeafarersFishing() {}
 
@@ -55,10 +68,20 @@ public final class SeafarersFishing {
 			player.level().addFreshEntity(extra);
 		}
 		if (hasActive(player, AttunedContent.NETMENDER_FOCUS)
-				&& player.getRandom().nextFloat() < NETMENDER_PREVENT_DAMAGE_CHANCE) {
-			return Math.max(0, damage - 1);
+				&& canRepairWithNetmender(player, rod)
+				&& player.getRandom().nextFloat() < NETMENDER_REPAIR_CHANCE) {
+			rod.setDamageValue(rod.getDamageValue() - 1);
+			netmenderCooldowns.put(player.getUUID(), player.level().getGameTime() + NETMENDER_REPAIR_COOLDOWN_TICKS);
+			return 0;
 		}
 		return damage;
+	}
+
+	private static boolean canRepairWithNetmender(ServerPlayer player, ItemStack rod) {
+		Long readyAt = netmenderCooldowns.get(player.getUUID());
+		return rod.isDamageableItem()
+			&& rod.getDamageValue() > 0
+			&& (readyAt == null || player.level().getGameTime() >= readyAt);
 	}
 
 	private static boolean hasActive(Player player, Item focus) {

@@ -66,6 +66,7 @@ final class AttunedCreativeTabs {
 					output.accept(AttunedContent.ATTUNEMENT_SHARD);
 					output.accept(AttunedContent.ATTUNEMENT_SHARD_FRAGMENT);
 					output.accept(AttunedContent.ATTUNEMENT_JOURNAL);
+					output.accept(AttunedContent.SATCHEL_OF_FOCI);
 					output.accept(AttunedContent.ATTUNEMENT_ALTAR);
 					output.accept(AttunedContent.ALTAR_OF_REWEAVING);
 				}

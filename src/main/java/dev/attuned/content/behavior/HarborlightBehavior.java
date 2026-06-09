@@ -14,6 +14,8 @@ import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.BlockState;
 
 /**
  * Harborlight Focus: a gentle night-vision utility for players carrying a
@@ -43,7 +45,8 @@ public final class HarborlightBehavior implements FocusBehavior {
 		if (!nearWater(player)) {
 			return;
 		}
-		if (!holdsLantern(player) || player.level().getMaxLocalRawBrightness(player.blockPosition()) > MAX_LIGHT) {
+		if (!(holdsLantern(player) || nearLantern(player))
+				|| player.level().getMaxLocalRawBrightness(player.blockPosition()) > MAX_LIGHT) {
 			return;
 		}
 		player.addEffect(new MobEffectInstance(MobEffects.NIGHT_VISION, DURATION, 0, true, false, false));
@@ -60,6 +63,17 @@ public final class HarborlightBehavior implements FocusBehavior {
 
 	private static boolean isLantern(Item item) {
 		return item == Items.LANTERN || item == Items.SOUL_LANTERN;
+	}
+
+	private static boolean nearLantern(ServerPlayer player) {
+		BlockPos center = player.blockPosition();
+		for (BlockPos pos : BlockPos.betweenClosed(center.offset(-3, -1, -3), center.offset(3, 2, 3))) {
+			BlockState state = player.level().getBlockState(pos);
+			if (state.is(Blocks.LANTERN) || state.is(Blocks.SOUL_LANTERN)) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	private static boolean nearWater(ServerPlayer player) {

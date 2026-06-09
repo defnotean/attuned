@@ -169,7 +169,10 @@ class HarpoonBehaviorContractTest {
 			"Broad entity cleanup cadence should be isolated in a named helper");
 		assertTrue(behavior.contains("return now % ENTITY_CLEANUP_INTERVAL_TICKS == 0L;"),
 			"Broad entity cleanup should not scan every tick while a harpoon is active");
-		assertBefore(behavior, "pruneActiveHarpoons(now);", "if (ACTIVE_HARPOONS.isEmpty())");
+		String tickServer = methodBody(behavior, "private static void tickServer(MinecraftServer server)");
+		assertBefore(tickServer, "if (ACTIVE_HARPOONS.isEmpty())", "cleanupActiveInventories(server, now);");
+		assertBefore(tickServer, "cleanupActiveInventories(server, now);", "pruneActiveHarpoons(now);");
+		assertBefore(tickServer, "cleanupEntities(server, now);", "pruneActiveHarpoons(now);");
 		assertTrue(behavior.contains("if (ACTIVE_HARPOONS.isEmpty())"),
 			"Global harpoon cleanup should skip player/entity scans when no temporary harpoon is active");
 		assertTrue(behavior.contains("cleanupActiveInventories(server, now);"),
@@ -178,6 +181,15 @@ class HarpoonBehaviorContractTest {
 			"Global harpoon cleanup should not scan every online player inventory every server tick");
 		assertTrue(behavior.contains("cleanupEntities(server, now);"),
 			"Tick cleanup should still scan entities when the broad-scan gate allows it");
+		assertTrue(behavior.contains("cleanupTransferredInventories(server, now);"),
+			"Broad tick cleanup should sweep online inventories for temporary harpoons that changed hands");
+		assertBefore(tickServer, "cleanupTransferredInventories(server, now);", "cleanupEntities(server, now);");
+		String transferredInventoryCleanup =
+			methodBody(behavior, "private static void cleanupTransferredInventories(MinecraftServer server, long now)");
+		assertTrue(transferredInventoryCleanup.contains("for (ServerPlayer player : server.getPlayerList().getPlayers())"),
+			"Transferred harpoon cleanup should inspect online player inventories on the bounded broad-scan cadence");
+		assertTrue(transferredInventoryCleanup.contains("removeInventoryHarpoons(player, player.getUUID(), now, false)"),
+			"Transferred harpoon cleanup should remove expired own harpoons and still-active foreign harpoons");
 		assertTrue(behavior.contains(
 				"AttunedServerCleanup.onStopServer(HarpoonBehavior::removeAllTemporaryHarpoons)"),
 			"Server stop cleanup should use the central coordinator while still receiving the stopping server");
@@ -189,6 +201,22 @@ class HarpoonBehaviorContractTest {
 			"Server stop cleanup should inspect online player inventories");
 		assertTrue(behavior.contains("removeInventoryHarpoons(player, player.getUUID(), Long.MAX_VALUE, true)"),
 			"Server stop cleanup should force-remove marked inventory harpoons");
+		String inventoryCleanup = methodBody(behavior, "private static void removeInventoryHarpoons(");
+		assertTrue(inventoryCleanup.contains("removeMarkedStack(player.getOffhandItem(), owner, now, force, true)"),
+			"Inventory cleanup should remove expired/deactivated temporary harpoons after players move them to offhand");
+		String ownerCleanup = methodBody(behavior, "private static void removeForPlayer(ServerPlayer player)");
+		assertTrue(ownerCleanup.contains("removePlayerInventoriesForOwner(level.getServer(), owner)"),
+			"Owner cleanup should remove that player's temporary harpoons even after another online player picks them up");
+		String ownerInventoryCleanup =
+			methodBody(behavior, "private static void removePlayerInventoriesForOwner(MinecraftServer server, UUID owner)");
+		assertTrue(ownerInventoryCleanup.contains("for (ServerPlayer player : server.getPlayerList().getPlayers())"),
+			"Owner cleanup should inspect online player inventories for transferred owner-marked stacks");
+		assertTrue(ownerInventoryCleanup.contains("removeInventoryHarpoonsForOwner(player, owner, Long.MAX_VALUE, true)"),
+			"Owner cleanup should force-remove only stacks that belong to the deactivating/disconnecting owner");
+		String ownedInventoryCleanup =
+			methodBody(behavior, "private static void removeInventoryHarpoonsForOwner(");
+		assertTrue(ownedInventoryCleanup.contains("removeMarkedStack(player.getOffhandItem(), owner, now, force, false)"),
+			"Owner-specific cleanup should not remove unrelated players' own temporary harpoons");
 		assertTrue(behavior.contains("AttunedPlayerCleanup.onForgetPlayer"),
 			"Harpoon behavior should remove the item when a player disconnects");
 		assertTrue(behavior.contains("server.getAllLevels()"),
@@ -282,5 +310,25 @@ class HarpoonBehaviorContractTest {
 		assertTrue(earlierIndex >= 0, "Expected source to contain: " + earlier);
 		assertTrue(laterIndex >= 0, "Expected source to contain: " + later);
 		assertTrue(earlierIndex < laterIndex, "Expected " + earlier + " before " + later);
+	}
+
+	private static String methodBody(String source, String signaturePrefix) {
+		int signatureStart = source.indexOf(signaturePrefix);
+		assertTrue(signatureStart >= 0, "Expected method signature: " + signaturePrefix);
+		int bodyStart = source.indexOf('{', signatureStart);
+		assertTrue(bodyStart >= 0, "Expected method body: " + signaturePrefix);
+		int depth = 0;
+		for (int index = bodyStart; index < source.length(); index++) {
+			char current = source.charAt(index);
+			if (current == '{') {
+				depth++;
+			} else if (current == '}') {
+				depth--;
+				if (depth == 0) {
+					return source.substring(bodyStart, index + 1);
+				}
+			}
+		}
+		throw new AssertionError("Unterminated method body: " + signaturePrefix);
 	}
 }

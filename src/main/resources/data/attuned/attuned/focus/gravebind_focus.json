@@ -1,5 +1,6 @@
 {
 	"item": "attuned:gravebind_focus",
+	"unique": true,
 	"cost": 5,
 	"affinity": "bastion",
 	"faction": "attuned:revenant"

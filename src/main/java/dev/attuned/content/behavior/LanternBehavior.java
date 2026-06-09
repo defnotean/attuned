@@ -50,6 +50,7 @@ public final class LanternBehavior implements FocusBehavior {
 		AABB area = player.getBoundingBox().inflate(RADIUS);
 		List<LivingEntity> targets = level.getEntitiesOfClass(LivingEntity.class, area, target ->
 			target.isAlive() && CombatTargets.isHostileOrPvpOpponent(target, player)
+				&& !MaskBehavior.resistsReveal(target)
 				&& player.hasLineOfSight(target));
 		for (LivingEntity target : targets) {
 			target.addEffect(new MobEffectInstance(MobEffects.GLOWING, GLOW_DURATION, 0, true, false, false));

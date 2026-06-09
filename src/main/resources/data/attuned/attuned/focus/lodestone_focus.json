@@ -1,5 +1,6 @@
 {
 	"item": "attuned:lodestone_focus",
 	"cost": 3,
+	"unique": true,
 	"behavior": "attuned:lodestone"
 }

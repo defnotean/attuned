@@ -1,5 +1,6 @@
 {
 	"item": "attuned:waystone_focus",
 	"cost": 2,
+	"unique": true,
 	"behavior": "attuned:waystone"
 }

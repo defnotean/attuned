@@ -135,27 +135,37 @@ examples to copy from:
 | `attuned:galespur`   | `GalespurBehavior`       | Doubles the speed of living mounts while riding. |
 | `attuned:rainstep`   | `RainstepBehavior`       | Movement speed in rain, water, or waterlogged blocks. |
 | `attuned:anchor`     | `AnchorBehavior`         | Knockback resistance while sneaking or blocking. |
+| `attuned:rivet`      | `RivetBehavior`          | Grounded knockback resistance while crouching, blocking, or standing on metal blocks. |
+| `attuned:kilnward`   | `KilnwardBehavior`       | Hostile hits near lit furnaces, magma, or lava grant brief Resistance. |
+| `attuned:temper`     | `TemperBehavior`         | Forge-block use briefly empowers fully charged melee hits. |
 | `attuned:hearth`     | `HearthBehavior`         | Campfire-adjacent regeneration while well fed. |
-| `attuned:harborlight` | `HarborlightBehavior`    | Near water, a held lantern grants gentle night vision in low light. |
+| `attuned:rootstep`   | `RootstepBehavior`       | Movement and fall-damage help while standing on natural blocks. |
+| `attuned:harborlight` | `HarborlightBehavior`    | Near water, a held or nearby placed lantern grants gentle night vision in low light. |
 | `attuned:driftglass` | `DriftglassBehavior`     | Held compasses point back to the latest fishing or boating return point. |
 | `attuned:lantern`    | `LanternBehavior`        | Briefly marks visible threats in darkness while holding a torch or lantern. |
 | `attuned:votive`     | `RadiantFocusBehaviors`  | Bright light or lit candles grant a short absorption shield on cooldown. |
 | `attuned:bellwether` | `RadiantFocusBehaviors`  | Bells reveal visible threats nearby. |
 | `attuned:oathguard`  | `RadiantFocusBehaviors`  | Blocking grants a short absorption shield on cooldown. |
 | `attuned:censer`     | `RadiantFocusBehaviors`  | Bright light or campfires trim poison and wither durations. |
+| `attuned:namesake`   | `RadiantFocusBehaviors`  | Custom-named carried items or nearby named non-player mobs grant Luck. |
 | `attuned:threshold`  | `RadiantFocusBehaviors`  | Crossing from low light into bright light grants a short shield. |
 | `attuned:epitaph`    | `RevenantFocusBehaviors` | Pulls nearby experience orbs gently toward the player. |
 | `attuned:hollowstep` | `RevenantFocusBehaviors` | Ability-key spectral step up to 5 blocks through entities, never through walls. |
 | `attuned:bloodfury`  | `BloodfuryBehavior`      | Attack speed scaled by missing health. |
 | `attuned:harvest`    | `HarvestBehavior`        | Speeds up nearby crops. |
 | `attuned:forager`    | `ForagerBehavior`        | Sometimes adds small food or seed rewards while gathering plants. |
+| `attuned:bloom`      | `BloomBehavior`          | Rare seeds, flowers, or honeycomb while gathering plants. |
+| `attuned:mossheart`  | `MossheartBehavior`      | Hostile hits grant brief Resistance while standing on moss, grass, or leaves. |
 | `attuned:tremor`     | `TremorBehavior`         | Mining stone may hint when ore is nearby. |
 | `attuned:aegis`      | `AegisBehavior`          | Periodic absorption shield (uses a cooldown). |
 | `attuned:lodestone`  | `LodestoneBehavior`      | Pulls nearby dropped items in. |
 | `attuned:beacon`     | `BeaconBehavior`         | Points a held compass at your bed. |
 | `attuned:waystone`   | `WaystoneBehavior`       | Points a single held compass at your last death, deferring to Beacon if both are active. |
 | `attuned:veil`       | `VeilBehavior`           | Crouch still in low light to become invisible until broken. |
+| `attuned:blackout`   | `BlackoutBehavior`       | Ability-key compact smoke pulse that briefly blinds nearby targeting mobs and drops target. |
+| `attuned:mask`       | `MaskBehavior`           | Crouching in low light briefly resists reveal and Glowing effects. |
 | `attuned:smoke`      | `SmokeBehavior`          | Ability-key smoke burst that drops mobs with broken line of sight. |
+| `attuned:whisper`    | `WhisperBehavior`        | Ability-key hush that briefly softens broken-sight mob detection. |
 | `attuned:stormcall`  | `StormcallBehavior`      | Lightning while sprinting in rain. |
 | `attuned:voidstep`   | `VoidstepBehavior`       | Blinks forward on the Focus Ability keybind. |
 | `attuned:harpoon`    | `HarpoonBehavior`       | Ability key summons a temporary custom-model trident for 30 seconds, then removes it from inventory, drops, or projectile state. |
@@ -172,6 +182,11 @@ their own classes — read these if your idea resembles them:
   opening-hit bonus and breaks Veil when combat starts.
 - **Revenant combat** - `combat/RevenantCombat.java` handles Ashen Debt's
   revenge window, Last Rites cleansing, and Bonechill slowing.
+- **Seafarers fishing** — `content/behavior/SeafarersFishing.java` handles
+  fishing-Focus perks that hook the catch event: Netmender repairs one point of
+  fishing-rod durability on a successful catch (on a cooldown), and Linecast adds a
+  chance for a bonus fish plus a Luck of the Sea boost. Neither uses a `behavior`
+  id, so they do not appear in the Behaviors table above.
 
 ## Numbers you can tune
 
@@ -217,6 +232,7 @@ The `/attuned capacity` command reads or sets a player's capacity for testing.
 | Attunement Shard | Diamond surrounded by amethyst shards, or four Attunement Shard Fragments | Raises capacity when bound at an Altar. |
 | Attunement Shard Fragment | Vanilla loot injected alongside Foci | Four craft into one Attunement Shard; using one tells the player their current fragment count. |
 | Attunement Journal | Book + amethyst shard | Opens as a readable book with the core Attuned rules. |
+| Satchel of Foci | Leather pouch around an amethyst shard | A stack-bound bag for spare Foci. Its screen moves Foci to and from the six equipped slots (left-click equips, right-click stores, shift+left-click returns a Focus to the inventory) and saves, applies, and deletes equipped-loadout presets. |
 
 ## Loot and Lootr compatibility
 

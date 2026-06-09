@@ -1,5 +1,6 @@
 {
 	"item": "attuned:beacon_focus",
 	"cost": 2,
+	"unique": true,
 	"behavior": "attuned:beacon"
 }

@@ -14,6 +14,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
+import net.minecraft.tags.DamageTypeTags;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
@@ -57,8 +58,8 @@ public final class UnseenCombat {
 
 	public static float adjustDamage(LivingEntity defender, DamageSource source, float amount) {
 		if (!(source.getEntity() instanceof ServerPlayer attacker)
-				|| source.getDirectEntity() != attacker
-				|| defender == attacker) {
+				|| defender == attacker
+				|| !isDirectHit(attacker, source)) {
 			return amount;
 		}
 		boolean wasVeiled = VeilBehavior.isVeiled(attacker);
@@ -69,6 +70,14 @@ public final class UnseenCombat {
 		LAST_NEEDLE.put(attacker.getUUID(), attacker.level().getGameTime());
 		needleFeedback(attacker, defender);
 		return amount * NEEDLE_MULTIPLIER;
+	}
+
+	private static boolean isDirectHit(ServerPlayer attacker, DamageSource source) {
+		if (source.getDirectEntity() != attacker) {
+			return false;
+		}
+		return !source.is(DamageTypeTags.IS_PROJECTILE)
+			&& !source.is(DamageTypeTags.IS_EXPLOSION);
 	}
 
 	private static boolean canNeedle(ServerPlayer attacker, LivingEntity defender, boolean wasVeiled) {

@@ -61,6 +61,26 @@ class AttunementJournalUiContractTest {
 			"Journal UI should render chapter/page controls with codex-style custom buttons");
 		assertTrue(screenSource.contains("extractContents(GuiGraphicsExtractor"),
 			"Journal buttons should draw their own face through the render extraction API");
+		assertTrue(screenSource.contains("private static final int NAV_X_OFFSET = 34"),
+			"Chapter buttons should align to the painted journal navigation rail");
+		assertTrue(screenSource.contains("private static final int CHAPTER_BUTTON_Y = 34"),
+			"Chapter buttons should start on the first painted journal tab");
+		assertTrue(screenSource.contains("private static final int CHAPTER_BUTTON_WIDTH = 62"),
+			"Chapter buttons should fit inside the painted journal tabs");
+		assertTrue(screenSource.contains("private static final int CHAPTER_BUTTON_HEIGHT = 12"),
+			"Chapter buttons should be compact enough to stay within the journal panel");
+		assertTrue(screenSource.contains("private static final int CHAPTER_BUTTON_GAP = 2"),
+			"Chapter buttons should leave visible separation between the painted journal tabs");
+		assertTrue(screenSource.contains("private static final int PAGE_CONTENT_WIDTH = 216"),
+			"Page content width should match the generated journal texture and preview fixture");
+		assertTrue(screenSource.contains("int navX = left + NAV_X_OFFSET"),
+			"Chapter button X should come from the painted rail offset, not the outer panel padding");
+		assertTrue(screenSource.contains("int y = top + CHAPTER_BUTTON_Y"),
+			"Chapter button Y should come from the painted tab offset");
+		assertTrue(screenSource.contains("CHAPTER_BUTTON_WIDTH, CHAPTER_BUTTON_HEIGHT"),
+			"Chapter buttons should use the painted tab width and height");
+		assertTrue(screenSource.contains("return PAGE_CONTENT_WIDTH;"),
+			"Page navigation and text should use the painted 216px page region, not derived padding math");
 		assertTrue(screenSource.contains("Component.translatable(\"screen.attuned.journal.previous\")"),
 			"Previous page button should use translatable screen copy");
 		assertTrue(screenSource.contains("Component.translatable(\"screen.attuned.journal.next\")"),

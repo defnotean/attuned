@@ -22,6 +22,8 @@ import java.util.Optional;
 public final class AttunedAttachments {
 	private AttunedAttachments() {}
 
+	public static final int MAX_PRESETS = 9;
+
 	public static final AttachmentType<Integer> CAPACITY = AttachmentRegistry.create(
 		Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "capacity"),
 		builder -> builder
@@ -37,6 +39,16 @@ public final class AttunedAttachments {
 			.initializer(AttunedInv::empty)
 			.persistent(AttunedInv.CODEC)
 			.syncWith(AttunedInv.STREAM_CODEC, AttachmentSyncPredicate.targetOnly())
+			.copyOnDeath()
+	);
+
+	/** The first synced list attachment: named Focus loadouts for the owning client. */
+	public static final AttachmentType<List<FocusPreset>> PRESETS = AttachmentRegistry.create(
+		Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "presets"),
+		builder -> builder
+			.initializer(() -> List.of())
+			.persistent(FocusPreset.CODEC.listOf())
+			.syncWith(FocusPreset.STREAM_CODEC.apply(ByteBufCodecs.list()), AttachmentSyncPredicate.targetOnly())
 			.copyOnDeath()
 	);
 
@@ -113,6 +125,54 @@ public final class AttunedAttachments {
 		ItemStack copy = stack.copy();
 		copy.setCount(Math.min(copy.getCount(), 1));
 		return copy;
+	}
+
+	public static List<FocusPreset> getPresets(Player player) {
+		return normalizePresets(player.getAttachedOrElse(PRESETS, List.of()));
+	}
+
+	private static List<FocusPreset> normalizePresets(List<FocusPreset> presets) {
+		if (presets == null || presets.isEmpty()) {
+			return List.of();
+		}
+		List<FocusPreset> normalized = new ArrayList<>(Math.min(MAX_PRESETS, presets.size()));
+		for (int i = 0; i < Math.min(MAX_PRESETS, presets.size()); i++) {
+			FocusPreset preset = presets.get(i);
+			if (preset != null) {
+				normalized.add(new FocusPreset(preset.name(), preset.slots()));
+			}
+		}
+		return List.copyOf(normalized);
+	}
+
+	public static void savePreset(Player player, FocusPreset preset) {
+		if (preset == null) {
+			return;
+		}
+		List<FocusPreset> current = getPresets(player);
+		List<FocusPreset> updated = new ArrayList<>(current);
+		for (int i = 0; i < updated.size(); i++) {
+			if (updated.get(i).name().equals(preset.name())) {
+				updated.set(i, preset);
+				player.setAttached(PRESETS, List.copyOf(updated));
+				return;
+			}
+		}
+		if (updated.size() >= MAX_PRESETS) {
+			return;
+		}
+		updated.add(preset);
+		player.setAttached(PRESETS, List.copyOf(updated));
+	}
+
+	public static void deletePreset(Player player, int index) {
+		List<FocusPreset> current = getPresets(player);
+		if (index < 0 || index >= current.size()) {
+			return;
+		}
+		List<FocusPreset> updated = new ArrayList<>(current);
+		updated.remove(index);
+		player.setAttached(PRESETS, List.copyOf(updated));
 	}
 
 	/** Whether the player has already claimed the milestone with the given id. */

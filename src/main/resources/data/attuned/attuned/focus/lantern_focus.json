@@ -1,5 +1,6 @@
 {
 	"item": "attuned:lantern_focus",
+	"unique": true,
 	"cost": 2,
 	"behavior": "attuned:lantern"
 }

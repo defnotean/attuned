@@ -10,13 +10,17 @@ import dev.attuned.combat.Resonance;
 import dev.attuned.combat.UnseenCombat;
 import dev.attuned.command.AttunedCommands;
 import dev.attuned.content.AltarAnimations;
+import dev.attuned.content.AttunedComponents;
 import dev.attuned.content.AttunedContent;
 import dev.attuned.content.AttunedLoot;
 import dev.attuned.effect.AttunedEffects;
 import dev.attuned.menu.AltarMenuType;
 import dev.attuned.menu.AltarNetworking;
+import dev.attuned.menu.PresetNetworking;
 import dev.attuned.menu.ReweavingMenuType;
 import dev.attuned.menu.ReweavingNetworking;
+import dev.attuned.menu.SatchelMenuType;
+import dev.attuned.menu.SatchelNetworking;
 import dev.attuned.network.AttunedNetworking;
 import dev.attuned.network.JournalNetworking;
 import dev.attuned.onboarding.Onboarding;
@@ -40,6 +44,7 @@ public class Attuned implements ModInitializer {
 		AttunedServerCleanup.init();
 		// Register generic Focus teardown before Focus behaviors add fallback cleanup callbacks.
 		AttunedEffects.init();
+		AttunedComponents.init();
 		AttunedContent.init();
 		AltarAnimations.init();
 		AttunedLoot.init();
@@ -54,7 +59,10 @@ public class Attuned implements ModInitializer {
 		AttunedNetworking.init();
 		JournalNetworking.init();
 		AltarMenuType.init();
+		SatchelMenuType.init();
 		AltarNetworking.init();
+		SatchelNetworking.init();
+		PresetNetworking.init();
 		ReweavingMenuType.init();
 		ReweavingNetworking.init();
 		GravebindSave.init();

@@ -45,6 +45,14 @@ class FocusSlotContractTest {
 			"FocusContainer should clamp oversized Focus stacks to the same one-item cap as FocusSlot.");
 	}
 
+	@Test
+	void focusContainerOnlyStaysValidForItsOwningPlayer() throws IOException {
+		String container = read(FOCUS_CONTAINER);
+
+		assertTrue(container.contains("return who == player;"),
+			"FocusContainer should not allow another player/menu context to interact with this player's attachment.");
+	}
+
 	private static String read(Path file) throws IOException {
 		assertTrue(Files.isRegularFile(file), "Expected file to exist: " + file);
 		return Files.readString(file, StandardCharsets.UTF_8);

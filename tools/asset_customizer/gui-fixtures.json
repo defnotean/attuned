@@ -1,0 +1,75 @@
+[
+	{
+		"id": "altar",
+		"name": "Attunement Altar",
+		"texture": "../../src/main/resources/assets/attuned/textures/gui/altar.png",
+		"width": 216,
+		"height": 190,
+		"slotGroups": [
+			{"name": "Shard input", "x": 129, "y": 35, "columns": 1, "rows": 1, "stepX": 18, "stepY": 18, "sample": "shard"},
+			{"name": "Inventory", "x": 24, "y": 101, "columns": 9, "rows": 3, "stepX": 18, "stepY": 18, "sample": "inventory"},
+			{"name": "Hotbar", "x": 24, "y": 159, "columns": 9, "rows": 1, "stepX": 18, "stepY": 18, "sample": "hotbar"}
+		],
+		"regions": [
+			{"name": "Painted shard socket", "x": 127, "y": 33, "w": 20, "h": 20},
+			{"name": "Bind button", "x": 151, "y": 31, "w": 50, "h": 20},
+			{"name": "Player inventory", "x": 14, "y": 101, "w": 189, "h": 78}
+		]
+	},
+	{
+		"id": "reweaving",
+		"name": "Altar of Reweaving",
+		"texture": "../../src/main/resources/assets/attuned/textures/gui/altar_of_reweaving.png",
+		"width": 216,
+		"height": 190,
+		"slotGroups": [
+			{"name": "Focus inputs", "x": 30, "y": 60, "columns": 3, "rows": 1, "stepX": 27, "stepY": 18, "sample": "focus"},
+			{"name": "Catalyst", "x": 111, "y": 60, "columns": 1, "rows": 1, "stepX": 18, "stepY": 18, "sample": "shard"},
+			{"name": "Output", "x": 156, "y": 52, "columns": 1, "rows": 1, "stepX": 18, "stepY": 18, "sample": "output"},
+			{"name": "Inventory", "x": 27, "y": 108, "columns": 9, "rows": 3, "stepX": 18, "stepY": 18, "sample": "inventory"},
+			{"name": "Hotbar", "x": 27, "y": 166, "columns": 9, "rows": 1, "stepX": 18, "stepY": 18, "sample": "hotbar"}
+		],
+		"regions": [
+			{"name": "Focus wells", "x": 26, "y": 56, "w": 78, "h": 24},
+			{"name": "Catalyst well", "x": 107, "y": 56, "w": 24, "h": 24},
+			{"name": "Output well", "x": 151, "y": 47, "w": 26, "h": 26},
+			{"name": "Reweave button", "x": 134, "y": 83, "w": 54, "h": 16}
+		]
+	},
+	{
+		"id": "satchel",
+		"name": "Satchel of Foci",
+		"texture": "../../src/main/resources/assets/attuned/textures/gui/satchel.png",
+		"width": 176,
+		"height": 166,
+		"slotGroups": [
+			{"name": "Satchel contents", "x": 8, "y": 18, "columns": 9, "rows": 3, "stepX": 18, "stepY": 18, "sample": "focus"},
+			{"name": "Inventory", "x": 8, "y": 84, "columns": 9, "rows": 3, "stepX": 18, "stepY": 18, "sample": "inventory"},
+			{"name": "Hotbar", "x": 8, "y": 142, "columns": 9, "rows": 1, "stepX": 18, "stepY": 18, "sample": "hotbar"}
+		],
+		"regions": [
+			{"name": "Save button", "x": 24, "y": 4, "w": 48, "h": 14},
+			{"name": "Apply button", "x": 74, "y": 4, "w": 48, "h": 14},
+			{"name": "Delete button", "x": 124, "y": 4, "w": 48, "h": 14},
+			{"name": "Previous preset", "x": 8, "y": 72, "w": 14, "h": 12},
+			{"name": "Equipped slot selectors", "x": 24, "y": 72, "w": 65, "h": 12},
+			{"name": "Selected preset", "x": 94, "y": 74, "w": 36, "h": 10},
+			{"name": "Preset index", "x": 132, "y": 74, "w": 18, "h": 10},
+			{"name": "Next preset", "x": 154, "y": 72, "w": 14, "h": 12}
+		]
+	},
+	{
+		"id": "journal",
+		"name": "Attunement Journal",
+		"texture": "../../src/main/resources/assets/attuned/textures/gui/attunement_journal.png",
+		"width": 336,
+		"height": 214,
+		"slotGroups": [],
+		"regions": [
+			{"name": "Chapter buttons", "x": 34, "y": 34, "w": 62, "h": 166},
+			{"name": "Page content", "x": 112, "y": 12, "w": 216, "h": 170},
+			{"name": "Previous", "x": 112, "y": 182, "w": 66, "h": 20},
+			{"name": "Next", "x": 262, "y": 182, "w": 66, "h": 20}
+		]
+	}
+]

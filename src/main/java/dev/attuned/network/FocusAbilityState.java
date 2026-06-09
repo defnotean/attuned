@@ -14,6 +14,7 @@ import java.util.Map;
 import java.util.UUID;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
@@ -23,7 +24,7 @@ import net.minecraft.world.item.ItemStack;
 public final class FocusAbilityState {
 	private static final int SYNC_INTERVAL_TICKS = 5;
 
-	private static final Map<UUID, Cooldown> COOLDOWNS = new HashMap<>();
+	private static final Map<AbilityCooldownKey, Cooldown> COOLDOWNS = new HashMap<>();
 	private static final Map<UUID, FocusAbilityStatusPayload> LAST_SENT = new HashMap<>();
 	private static boolean initialized;
 
@@ -40,7 +41,7 @@ public final class FocusAbilityState {
 			LAST_SENT.clear();
 		});
 		AttunedPlayerCleanup.onForget(uuid -> {
-			COOLDOWNS.remove(uuid);
+			COOLDOWNS.keySet().removeIf(key -> key.playerId().equals(uuid));
 			LAST_SENT.remove(uuid);
 		});
 	}
@@ -53,12 +54,13 @@ public final class FocusAbilityState {
 			return;
 		}
 
-		int remaining = cooldownRemaining(player);
+		int remaining = cooldownRemaining(player, selection);
 		if (remaining > 0) {
-			Cooldown cooldown = COOLDOWNS.get(player.getUUID());
+			Cooldown cooldown = COOLDOWNS.get(selection.cooldownKey(player.getUUID()));
 			player.sendOverlayMessage(Component.translatable(
 				"item.attuned.focus_ability.cooldown", cooldownSecondsForMessage(remaining)));
-			sync(player, selection.slot(), remaining, cooldown.totalTicks());
+			sync(player, selection.slot(), remaining,
+				cooldown == null ? abilityCooldownTicks(selection.behavior(), player, selection.stack()) : cooldown.totalTicks());
 			return;
 		}
 
@@ -71,10 +73,10 @@ public final class FocusAbilityState {
 		int total = abilityCooldownTicks(selection.behavior(), player, selection.stack());
 		if (total > 0) {
 			long endsAt = player.level().getGameTime() + total;
-			COOLDOWNS.put(player.getUUID(), new Cooldown(endsAt, total));
+			COOLDOWNS.put(selection.cooldownKey(player.getUUID()), new Cooldown(endsAt, total));
 			sync(player, selection.slot(), total, total);
 		} else {
-			COOLDOWNS.remove(player.getUUID());
+			COOLDOWNS.remove(selection.cooldownKey(player.getUUID()));
 			sync(player, selection.slot(), 0, 0);
 		}
 	}
@@ -88,20 +90,26 @@ public final class FocusAbilityState {
 				.map(AttunedRegistries::getBehavior)
 				.orElse(null);
 			if (behavior != null && hasActiveAbility(behavior, player, stack)) {
-				return new AbilitySelection(slot, stack, behavior);
+				String itemId = BuiltInRegistries.ITEM.getKey(stack.getItem()).toString();
+				return new AbilitySelection(slot, stack, behavior, itemId);
 			}
 		}
 		return null;
 	}
 
 	static int cooldownRemaining(ServerPlayer player) {
-		Cooldown cooldown = COOLDOWNS.get(player.getUUID());
+		AbilitySelection selection = firstActiveAbility(player);
+		return selection == null ? 0 : cooldownRemaining(player, selection);
+	}
+
+	static int cooldownRemaining(ServerPlayer player, AbilitySelection selection) {
+		Cooldown cooldown = COOLDOWNS.get(selection.cooldownKey(player.getUUID()));
 		if (cooldown == null) {
 			return 0;
 		}
 		int remaining = (int) Math.max(0, cooldown.endsAt() - player.level().getGameTime());
 		if (remaining <= 0) {
-			COOLDOWNS.remove(player.getUUID());
+			COOLDOWNS.remove(selection.cooldownKey(player.getUUID()));
 			return 0;
 		}
 		return remaining;
@@ -125,9 +133,9 @@ public final class FocusAbilityState {
 				sync(player, FocusAbilityStatusPayload.NO_ABILITY_SLOT, 0, 0);
 				continue;
 			}
-			int remaining = cooldownRemaining(player);
+			int remaining = cooldownRemaining(player, selection);
 			int total = 0;
-			Cooldown cooldown = COOLDOWNS.get(player.getUUID());
+			Cooldown cooldown = COOLDOWNS.get(selection.cooldownKey(player.getUUID()));
 			if (cooldown != null) {
 				total = cooldown.totalTicks();
 			} else if (hasActiveAbility(selection.behavior(), player, selection.stack())) {
@@ -181,7 +189,13 @@ public final class FocusAbilityState {
 			payload.remainingTicks(), payload.totalTicks()));
 	}
 
-	record AbilitySelection(int slot, ItemStack stack, FocusBehavior behavior) {
+	record AbilitySelection(int slot, ItemStack stack, FocusBehavior behavior, String itemId) {
+		AbilityCooldownKey cooldownKey(UUID playerId) {
+			return new AbilityCooldownKey(playerId, itemId);
+		}
+	}
+
+	private record AbilityCooldownKey(UUID playerId, String itemId) {
 	}
 
 	private record Cooldown(long endsAt, int totalTicks) {

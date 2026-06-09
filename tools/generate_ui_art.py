@@ -85,9 +85,9 @@ def altar():
     inset(draw, 127, 33, 20, 20, (74, 68, 86, 255))
     rect(draw, (130, 36, 143, 49), (55, 48, 72, 255))
     draw.rectangle((131, 37, 142, 48), outline=AMETHYST_DARK)
-    bevel(draw, 151, 31, 58, 24, (66, 59, 77, 255))
-    rect(draw, (154, 34, 205, 51), (39, 36, 46, 255))
-    draw.rectangle((155, 35, 204, 50), outline=(110, 91, 152, 255))
+    bevel(draw, 151, 31, 50, 20, (66, 59, 77, 255))
+    rect(draw, (154, 34, 197, 47), (39, 36, 46, 255))
+    draw.rectangle((155, 35, 196, 46), outline=(110, 91, 152, 255))
 
     # Inventory deck.
     rect(draw, (8, 94, 208, 95), STONE_DARK)
@@ -95,9 +95,9 @@ def altar():
     draw.rectangle((14, 101, 202, 178), outline=(122, 114, 138, 255))
     for row in range(3):
         for col in range(9):
-            slot_well(draw, 27 + col * 18, 108 + row * 18)
+            slot_well(draw, 24 + col * 18, 101 + row * 18)
     for col in range(9):
-        slot_well(draw, 27 + col * 18, 166)
+        slot_well(draw, 24 + col * 18, 159)
 
     # Amethyst corner teeth.
     for x, y, sx, sy in ((3, 3, 1, 1), (212, 3, -1, 1), (3, 186, 1, -1), (212, 186, -1, -1)):
@@ -106,6 +106,91 @@ def altar():
         draw.point((x + sx * 2, y + sy * 2), fill=AMETHYST)
 
     img.save(TEXTURES / "gui/altar.png")
+
+
+def reweaving_well(draw, x, y, w=24, h=24, accent=ZEPHYR):
+    inset(draw, x, y, w, h, (31, 33, 40, 255))
+    rect(draw, (x + 3, y + 3, x + w - 4, y + h - 4), (13, 15, 20, 255))
+    draw.rectangle((x + 4, y + 4, x + w - 5, y + h - 5), outline=(77, 72, 86, 255))
+    draw.point((x + 3, y + 3), fill=accent)
+    draw.point((x + w - 4, y + h - 4), fill=STONE_DARK)
+
+
+def reweaving_gui():
+    img = Image.new("RGBA", (216, 190), CLEAR)
+    draw = ImageDraw.Draw(img)
+
+    panel = (27, 30, 36, 255)
+    panel_mid = (41, 43, 51, 255)
+    panel_light = (70, 68, 78, 255)
+    teal = (48, 188, 190, 255)
+    teal_dark = (19, 88, 98, 255)
+    violet = (150, 108, 224, 255)
+
+    bevel(draw, 0, 0, 216, 190, panel_mid, (9, 11, 15, 255), panel_light)
+    deterministic_speckles(draw, 216, 190, (56, 58, 66, 255), 53)
+    rect(draw, (9, 12, 206, 20), (11, 14, 19, 255))
+    draw.line((18, 18, 82, 18), fill=teal_dark)
+    draw.line((134, 18, 198, 18), fill=teal_dark)
+    draw.line((29, 21, 58, 41), fill=teal)
+    draw.line((159, 21, 129, 41), fill=teal)
+
+    # Top crest and corner pillars.
+    bevel(draw, 3, 3, 18, 31, (37, 40, 48, 255), (8, 9, 12, 255), panel_light)
+    bevel(draw, 195, 3, 18, 31, (37, 40, 48, 255), (8, 9, 12, 255), panel_light)
+    for cx in (100, 108, 116):
+        draw.polygon([(cx, 6), (cx + 6, 12), (cx, 18), (cx - 6, 12)],
+            fill=(38, 34, 48, 255), outline=(12, 12, 18, 255))
+    draw.line((29, 15, 88, 15), fill=(102, 95, 114, 255))
+    draw.line((128, 15, 187, 15), fill=(102, 95, 114, 255))
+
+    # Side runes and lower stone columns.
+    for y in range(48, 102, 10):
+        draw.line((11, y, 16, y + 5), fill=teal_dark)
+        draw.line((16, y + 5, 11, y + 10), fill=teal)
+        draw.line((205, y, 200, y + 5), fill=teal_dark)
+        draw.line((200, y + 5, 205, y + 10), fill=teal)
+    for x in (3, 196):
+        bevel(draw, x, 154, 17, 31, (43, 45, 52, 255), (8, 9, 12, 255), (79, 78, 88, 255))
+
+    # Functional wells mirror ReweavingMenu's painted well constants.
+    for x in (26, 53, 80):
+        reweaving_well(draw, x, 56, 24, 24, teal)
+        draw.line((x + 12, 41, x + 12, 54), fill=teal_dark)
+        draw.point((x + 12, 39), fill=teal)
+    reweaving_well(draw, 107, 56, 24, 24, violet)
+    draw.polygon([(119, 38), (126, 49), (121, 61), (116, 61), (111, 49)],
+        fill=AMETHYST, outline=AMETHYST_DARK)
+    reweaving_well(draw, 151, 47, 26, 26, teal)
+    draw.line((137, 59, 147, 59), fill=teal_dark)
+    draw.line((144, 55, 149, 59), fill=teal)
+    draw.line((144, 63, 149, 59), fill=teal)
+
+    # Reweave button and hint channel.
+    bevel(draw, 134, 83, 54, 16, (36, 38, 46, 255), (9, 11, 15, 255), (77, 72, 86, 255))
+    rect(draw, (137, 86, 185, 95), (15, 18, 23, 255))
+    draw.line((138, 87, 184, 87), fill=teal_dark)
+    rect(draw, (14, 84, 127, 97), (25, 27, 34, 255))
+    draw.line((15, 85, 126, 85), fill=(61, 57, 72, 255))
+
+    # Player inventory and hotbar.
+    rect(draw, (17, 101, 199, 185), (28, 30, 37, 255))
+    draw.rectangle((17, 101, 199, 185), outline=(77, 72, 86, 255))
+    draw.line((25, 104, 101, 104), fill=teal_dark)
+    draw.line((115, 104, 191, 104), fill=teal_dark)
+    draw.polygon([(108, 100), (113, 105), (108, 110), (103, 105)], fill=AMETHYST, outline=AMETHYST_DARK)
+    for row in range(3):
+        for col in range(9):
+            slot_well(draw, 27 + col * 18, 108 + row * 18)
+    for col in range(9):
+        slot_well(draw, 27 + col * 18, 166)
+
+    for x, y, sx, sy in ((5, 5, 1, 1), (210, 5, -1, 1), (5, 184, 1, -1), (210, 184, -1, -1)):
+        draw.line((x, y, x + sx * 7, y), fill=teal)
+        draw.line((x, y, x, y + sy * 7), fill=teal_dark)
+        draw.point((x + sx * 2, y + sy * 2), fill=AMETHYST_LIGHT)
+
+    img.save(TEXTURES / "gui/altar_of_reweaving.png")
 
 
 def focus_panel():
@@ -123,6 +208,147 @@ def focus_panel():
     rect(draw, (5, 114, 22, 119), STONE_DARK)
     rect(draw, (6, 115, 21, 118), (40, 37, 48, 255))
     img.save(TEXTURES / "gui/focus_panel.png")
+
+
+def satchel_gui():
+    img = Image.new("RGBA", (176, 166), CLEAR)
+    draw = ImageDraw.Draw(img)
+
+    leather_dark = (34, 21, 17, 255)
+    leather_shadow = (59, 35, 24, 255)
+    leather = (104, 59, 35, 255)
+    leather_light = (168, 111, 61, 255)
+    brass = (214, 158, 68, 255)
+    brass_light = (247, 211, 111, 255)
+    panel = (33, 31, 38, 255)
+    panel_light = (74, 68, 80, 255)
+
+    # Pixel-cleaned from the image-generated leather/amethyst satchel concept,
+    # while preserving the exact slot coordinates used by SatchelMenu.
+    bevel(draw, 0, 0, 176, 166, leather, (12, 8, 7, 255), leather_light)
+    rect(draw, (3, 3, 172, 162), leather_shadow)
+    deterministic_speckles(draw, 176, 166, (126, 75, 39, 255), 47)
+    draw.rectangle((4, 4, 171, 161), outline=(18, 12, 10, 255))
+
+    rect(draw, (7, 3, 168, 17), (42, 25, 20, 255))
+    draw.line((9, 16, 166, 16), fill=AMETHYST_DARK)
+    for x in range(14, 164, 12):
+        draw.line((x, 7, x + 4, 7), fill=brass)
+        draw.point((x + 1, 8), fill=brass_light)
+
+    for x, y in ((8, 5), (158, 5), (8, 153), (158, 153)):
+        draw.polygon([(x + 5, y), (x + 10, y + 5), (x + 5, y + 10), (x, y + 5)],
+            fill=AMETHYST_DARK, outline=(12, 8, 18, 255))
+        draw.polygon([(x + 5, y + 2), (x + 8, y + 5), (x + 5, y + 8), (x + 2, y + 5)],
+            fill=AMETHYST)
+        draw.point((x + 4, y + 4), fill=AMETHYST_LIGHT)
+
+    rect(draw, (7, 17, 169, 73), panel)
+    draw.rectangle((7, 17, 169, 73), outline=panel_light)
+    draw.line((8, 18, 168, 18), fill=(95, 73, 122, 255))
+    for row in range(3):
+        for col in range(9):
+            slot_well(draw, 8 + col * 18, 18 + row * 18)
+
+    rect(draw, (7, 75, 169, 82), (42, 25, 20, 255))
+    draw.line((10, 76, 70, 76), fill=brass)
+    draw.line((106, 76, 166, 76), fill=brass)
+    draw.line((8, 81, 168, 81), fill=(17, 10, 9, 255))
+    draw.polygon([(88, 74), (94, 79), (88, 84), (82, 79)], fill=AMETHYST, outline=AMETHYST_DARK)
+
+    rect(draw, (7, 83, 169, 161), panel)
+    draw.rectangle((7, 83, 169, 161), outline=panel_light)
+    draw.line((8, 84, 168, 84), fill=(95, 73, 122, 255))
+    for row in range(3):
+        for col in range(9):
+            slot_well(draw, 8 + col * 18, 84 + row * 18)
+    for col in range(9):
+        slot_well(draw, 8 + col * 18, 142)
+
+    for y in range(21, 152, 13):
+        draw.line((3, y, 3, y + 5), fill=brass)
+        draw.line((172, y, 172, y + 5), fill=brass)
+    for x in range(20, 154, 18):
+        draw.line((x, 162, x + 7, 162), fill=brass)
+        draw.point((x + 1, 161), fill=brass_light)
+
+    img.save(TEXTURES / "gui/satchel.png")
+
+
+def journal_gui():
+    img = Image.new("RGBA", (336, 214), CLEAR)
+    draw = ImageDraw.Draw(img)
+
+    frame = (31, 27, 40, 255)
+    frame_dark = (9, 9, 13, 255)
+    frame_light = (87, 78, 101, 255)
+    page = (144, 132, 119, 255)
+    page_shadow = (93, 78, 77, 255)
+    page_line = (112, 92, 104, 255)
+    tab_face = (40, 35, 51, 255)
+    teal = (48, 188, 190, 255)
+    violet = (150, 108, 224, 255)
+
+    bevel(draw, 0, 0, 336, 214, frame, frame_dark, frame_light)
+    deterministic_speckles(draw, 336, 214, (51, 45, 64, 255), 67)
+    rect(draw, (8, 12, 104, 202), (18, 16, 25, 255))
+    draw.rectangle((8, 12, 104, 202), outline=(74, 62, 93, 255))
+    rect(draw, (112, 12, 328, 181), page)
+    draw.rectangle((112, 12, 328, 181), outline=page_shadow)
+    deterministic_speckles(draw, 328, 181, (131, 116, 111, 255), 71)
+
+    # Parchment chips and page-line decoration inside the 216px page region.
+    draw.line((118, 18, 322, 18), fill=(164, 148, 132, 255))
+    draw.line((118, 176, 322, 176), fill=(103, 87, 87, 255))
+    for y in range(24, 160, 16):
+        draw.point((315, y), fill=page_line)
+        draw.point((318, y + 5), fill=(96, 80, 88, 255))
+    for offset in range(0, 36, 4):
+        draw.point((323 - offset // 2, 22 + offset), fill=(103, 87, 87, 255))
+        draw.point((321 - offset // 2, 172 - offset), fill=(103, 87, 87, 255))
+    draw.ellipse((260, 132, 316, 188), outline=(116, 100, 100, 120))
+    draw.arc((272, 140, 306, 174), 200, 340, fill=(116, 100, 100, 140))
+    draw.line((288, 137, 288, 172), fill=(116, 100, 100, 120))
+
+    # Spine and chapter rail. Constants match AttunementJournalScreen.
+    bevel(draw, 94, 5, 18, 204, (49, 36, 55, 255), frame_dark, (111, 82, 125, 255))
+    for y in range(18, 192, 18):
+        draw.line((98, y, 108, y), fill=(111, 82, 125, 255))
+        draw.line((98, y + 2, 108, y + 2), fill=(21, 17, 26, 255))
+
+    for i in range(12):
+        y = 34 + i * 14
+        bevel(draw, 34, y, 62, 12, tab_face, frame_dark, (83, 74, 100, 255))
+        draw.polygon([(42, y + 2), (47, y + 6), (42, y + 10), (37, y + 6)],
+            fill=violet if i % 3 else teal, outline=(12, 12, 18, 255))
+        draw.line((51, y + 6, 88, y + 6), fill=(94, 82, 112, 255))
+
+    # Page navigation button wells.
+    for x in (112, 262):
+        bevel(draw, x, 182, 66, 20, (41, 36, 50, 255), frame_dark, frame_light)
+        rect(draw, (116 if x == 112 else 266, 187, x + 61, 196), (19, 17, 25, 255))
+        draw.line((x + 5, 188, x + 60, 188), fill=(95, 81, 122, 255))
+    draw.polygon([(126, 192), (136, 186), (136, 198)], fill=violet)
+    draw.polygon([(314, 192), (304, 186), (304, 198)], fill=violet)
+    draw.polygon([(220, 181), (230, 192), (220, 203), (210, 192)], fill=violet, outline=AMETHYST_DARK)
+
+    # Left-side ritual sketching keeps the page from looking empty before text renders.
+    draw.arc((33, 163, 65, 196), 200, 340, fill=(97, 69, 126, 255))
+    draw.arc((55, 150, 89, 194), 200, 340, fill=(97, 69, 126, 255))
+    draw.line((47, 149, 47, 182), fill=(104, 82, 126, 255))
+    draw.line((73, 143, 73, 183), fill=(104, 82, 126, 255))
+    draw.ellipse((44, 139, 50, 145), outline=AMETHYST_LIGHT)
+    draw.ellipse((70, 132, 76, 138), outline=AMETHYST_LIGHT)
+
+    # Corner gems.
+    for x, y in ((8, 8), (319, 8), (8, 195), (319, 195)):
+        draw.polygon([(x + 8, y), (x + 15, y + 8), (x + 8, y + 15), (x + 1, y + 8)],
+            fill=AMETHYST_DARK, outline=frame_dark)
+        draw.polygon([(x + 8, y + 2), (x + 13, y + 8), (x + 8, y + 13), (x + 3, y + 8)],
+            fill=AMETHYST)
+        draw.point((x + 7, y + 5), fill=AMETHYST_LIGHT)
+
+    img.save(TEXTURES / "gui/attunement_journal.png")
 
 
 def hud_backplate():
@@ -204,9 +430,56 @@ def journal():
     img.save(TEXTURES / "item/attunement_journal.png")
 
 
+def satchel_item():
+    img = Image.new("RGBA", (16, 16), CLEAR)
+    draw = ImageDraw.Draw(img)
+    leather_dark = (54, 34, 26, 255)
+    leather = (112, 70, 43, 255)
+    leather_light = (176, 121, 70, 255)
+    leather_shadow = (31, 19, 15, 255)
+    stitch = (226, 178, 104, 255)
+
+    # Pixel-cleaned from the image-generated item source: chunky leather body,
+    # brass clasp/stitches, and a readable amethyst foci socket.
+    rect(draw, (3, 5, 12, 14), leather_shadow)
+    rect(draw, (2, 7, 13, 13), leather_dark)
+    rect(draw, (3, 5, 12, 12), leather)
+    draw.line((4, 5, 11, 5), fill=leather_light)
+    draw.line((3, 12, 12, 12), fill=(42, 25, 19, 255))
+    draw.line((2, 8, 2, 12), fill=(22, 14, 12, 255))
+    draw.line((13, 8, 13, 12), fill=(22, 14, 12, 255))
+
+    draw.arc((4, 1, 11, 8), 188, 352, fill=leather_light)
+    draw.arc((5, 2, 10, 8), 188, 352, fill=leather_dark)
+    draw.point((5, 3), fill=(218, 154, 79, 255))
+    draw.point((10, 3), fill=(218, 154, 79, 255))
+
+    draw.line((4, 7, 11, 7), fill=(80, 45, 31, 255))
+    draw.line((4, 8, 11, 8), fill=AMETHYST_DARK)
+    draw.point((5, 8), fill=AMETHYST)
+    draw.point((10, 8), fill=AMETHYST)
+
+    draw.polygon([(8, 9), (11, 11), (8, 14), (5, 11)], fill=AMETHYST_DARK, outline=leather_dark)
+    draw.polygon([(8, 10), (10, 11), (8, 13), (6, 11)], fill=AMETHYST)
+    draw.line((8, 10, 8, 13), fill=AMETHYST_LIGHT)
+
+    rect(draw, (6, 6, 9, 8), (88, 50, 31, 255))
+    rect(draw, (7, 6, 8, 7), stitch)
+    draw.point((7, 7), fill=(255, 231, 132, 255))
+    for x in (4, 6, 10, 12):
+        draw.point((x, 11), fill=stitch)
+    draw.point((4, 6), fill=(214, 158, 68, 255))
+    draw.point((12, 6), fill=(214, 158, 68, 255))
+    img.save(TEXTURES / "item/satchel_of_foci.png")
+
+
 if __name__ == "__main__":
     ensure_dirs()
     altar()
+    reweaving_gui()
     focus_panel()
+    satchel_gui()
+    journal_gui()
     hud_backplate()
     journal()
+    satchel_item()

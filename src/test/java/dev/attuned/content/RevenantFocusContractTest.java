@@ -104,7 +104,10 @@ class RevenantFocusContractTest {
 		assertTrue(behaviors.contains("MAX_DISTANCE = 5"),
 			"Hollowstep should stay shorter than Voidstep");
 		assertTrue(behaviors.contains("level.noCollision(player, box)"),
-			"Hollowstep should not phase through walls");
+			"Hollowstep should ensure the destination space fits the player");
+		assertTrue(behaviors.contains("ClipContext.Block.COLLIDER")
+				&& behaviors.contains("HitResult.Type.BLOCK"),
+			"Hollowstep should not phase through walls before reaching that destination");
 	}
 
 	@Test

@@ -1,6 +1,7 @@
 {
 	"item": "attuned:bloodfury_focus",
 	"cost": 4,
+	"unique": true,
 	"affinity": "fury",
 	"behavior": "attuned:bloodfury"
 }

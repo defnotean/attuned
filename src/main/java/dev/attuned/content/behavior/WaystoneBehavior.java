@@ -43,7 +43,7 @@ public final class WaystoneBehavior implements FocusBehavior {
 
 	@Override
 	public void onTick(ServerPlayer player, ItemStack focus) {
-		if (hasActiveBeacon(player)) {
+		if (hasActiveBeaconTarget(player)) {
 			restorePlayer(player);
 			return;
 		}
@@ -67,7 +67,10 @@ public final class WaystoneBehavior implements FocusBehavior {
 		restorePlayer(player);
 	}
 
-	private static boolean hasActiveBeacon(ServerPlayer player) {
+	private static boolean hasActiveBeaconTarget(ServerPlayer player) {
+		if (player.getRespawnConfig() == null) {
+			return false;
+		}
 		AttunedInv inv = AttunedAttachments.getInventory(player);
 		for (int slot : Attunement.activeSlots(player)) {
 			Identifier id = BuiltInRegistries.ITEM.getKey(inv.get(slot).getItem());

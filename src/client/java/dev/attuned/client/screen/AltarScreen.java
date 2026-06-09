@@ -55,8 +55,8 @@ public class AltarScreen extends AbstractContainerScreen<AltarMenu> {
 	// Bind button geometry, positioned over the generated button recess.
 	private static final int BUTTON_W = 50;
 	private static final int BUTTON_H = 20;
-	private static final int BUTTON_X = 147;
-	private static final int BUTTON_Y = 42;
+	private static final int BUTTON_X = 151;
+	private static final int BUTTON_Y = 31;
 
 	// Budget bar, drawn above the lower status strip.
 	private static final int BAR_X = 14;

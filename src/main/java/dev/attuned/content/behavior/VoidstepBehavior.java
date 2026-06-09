@@ -8,7 +8,9 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 
 /**
@@ -43,8 +45,7 @@ public final class VoidstepBehavior implements FocusBehavior {
 		// Walk inward from the full distance to the first spot the player fits.
 		for (int dist = MAX_DISTANCE; dist >= 1; dist--) {
 			Vec3 candidate = origin.add(look.scale(dist));
-			AABB box = player.getBoundingBox().move(candidate.subtract(origin));
-			if (level.noCollision(player, box)) {
+			if (canBlinkTo(level, player, origin, candidate)) {
 				destination = candidate;
 				break;
 			}
@@ -65,5 +66,24 @@ public final class VoidstepBehavior implements FocusBehavior {
 
 	private static void spawnTrail(ServerLevel level, Vec3 at) {
 		level.sendParticles(ParticleTypes.PORTAL, at.x, at.y + 1.0, at.z, 30, 0.3, 0.6, 0.3, 0.4);
+	}
+
+	private static boolean canBlinkTo(ServerLevel level, ServerPlayer player, Vec3 origin, Vec3 candidate) {
+		if (pathBlocked(level, player, origin, candidate)) {
+			return false;
+		}
+		AABB box = player.getBoundingBox().move(candidate.subtract(origin));
+		return level.noCollision(player, box);
+	}
+
+	private static boolean pathBlocked(ServerLevel level, ServerPlayer player, Vec3 origin, Vec3 candidate) {
+		double bodyY = Math.max(0.1D, player.getBbHeight() * 0.5D);
+		HitResult hit = level.clip(new ClipContext(
+			origin.add(0.0D, bodyY, 0.0D),
+			candidate.add(0.0D, bodyY, 0.0D),
+			ClipContext.Block.COLLIDER,
+			ClipContext.Fluid.NONE,
+			player));
+		return hit.getType() == HitResult.Type.BLOCK;
 	}
 }

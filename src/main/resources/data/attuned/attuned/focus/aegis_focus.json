@@ -1,6 +1,7 @@
 {
 	"item": "attuned:aegis_focus",
 	"cost": 6,
+	"unique": true,
 	"affinity": "bastion",
 	"behavior": "attuned:aegis"
 }

@@ -33,6 +33,8 @@ class FocusPresentationConsistencyTest {
 			lang.get("item.attuned.voidstep_focus.effect").getAsString());
 		assertEquals("Press the Focus Ability key to release smoke. Mobs that have lost sight may drop target.",
 			lang.get("item.attuned.smoke_focus.effect").getAsString());
+		assertEquals("Press the Focus Ability key to pulse blackout smoke. Nearby mobs are briefly blinded and drop target.",
+			lang.get("item.attuned.blackout_focus.effect").getAsString());
 		assertEquals("Press the Focus Ability key to phase 5 blocks forward through entities, not walls.",
 			lang.get("item.attuned.hollowstep_focus.effect").getAsString());
 		assertEquals("No active Focus Ability. Equip an awake ability Focus.",

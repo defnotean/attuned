@@ -1,5 +1,6 @@
 {
 	"item": "attuned:leech_focus",
 	"cost": 5,
+	"unique": true,
 	"affinity": "fury"
 }

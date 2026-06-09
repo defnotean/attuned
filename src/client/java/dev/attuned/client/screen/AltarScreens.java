@@ -2,6 +2,7 @@ package dev.attuned.client.screen;
 
 import dev.attuned.menu.AltarMenuType;
 import dev.attuned.menu.ReweavingMenuType;
+import dev.attuned.menu.SatchelMenuType;
 import net.minecraft.client.gui.screens.MenuScreens;
 
 /**
@@ -24,5 +25,6 @@ public final class AltarScreens {
 
 		MenuScreens.register(AltarMenuType.TYPE, AltarScreen::new);
 		MenuScreens.register(ReweavingMenuType.TYPE, ReweavingScreen::new);
+		MenuScreens.register(SatchelMenuType.TYPE, SatchelScreen::new);
 	}
 }

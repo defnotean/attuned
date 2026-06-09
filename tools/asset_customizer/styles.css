@@ -148,6 +148,20 @@ button:hover {
 	background: #14212c;
 }
 
+body.gui-mode .control-grid,
+body.gui-mode #displayPreset,
+body.gui-mode #assetSelect {
+	opacity: 0.48;
+}
+
+body.gui-mode canvas {
+	cursor: grab;
+}
+
+body.gui-mode canvas:active {
+	cursor: grabbing;
+}
+
 button.active {
 	border-color: var(--copper);
 	color: #ffe4ce;

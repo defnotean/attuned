@@ -40,6 +40,15 @@ class FocusDataConsistencyTest {
 		Path.of("src/main/java/dev/attuned/command/AttunedCommands.java");
 	private static final Path FOCUS_LOOKUP_SOURCE =
 		Path.of("src/main/java/dev/attuned/attunement/FocusLookup.java");
+	private static final Path REFERENCE_DOC =
+		Path.of("docs/reference.md");
+	private static final Path BLACKOUT_BEHAVIOR_SOURCE =
+		Path.of("src/main/java/dev/attuned/content/behavior/BlackoutBehavior.java");
+	private static final List<Path> DIRECT_FOCUS_HOOK_SOURCES = List.of(
+		Path.of("src/main/java/dev/attuned/combat/AttunedCombat.java"),
+		Path.of("src/main/java/dev/attuned/combat/RevenantCombat.java"),
+		Path.of("src/main/java/dev/attuned/combat/GravebindSave.java"),
+		Path.of("src/main/java/dev/attuned/combat/UnseenCombat.java"));
 	private static final Path FOCUS_DATA_DIR =
 		Path.of("src/main/resources/data/attuned/attuned/focus");
 	private static final Path ITEM_DEFINITION_DIR =
@@ -197,6 +206,79 @@ class FocusDataConsistencyTest {
 			"FocusLookup should detect duplicate FocusDefinition item keys before caching lookups");
 		assertTrue(source.contains("Duplicate FocusDefinition item"),
 			"Duplicate FocusDefinition item keys should produce a clear startup error");
+	}
+
+	@Test
+	void shippedFociDeclareGameplayEffectsOrDirectRuntimeHooks() throws IOException {
+		Map<String, String> registeredFieldsByItem = new TreeMap<>();
+		registeredFocusItemsByField(Files.readString(CONTENT_SOURCE, StandardCharsets.UTF_8))
+			.forEach((field, item) -> registeredFieldsByItem.put(item, field));
+		String directHookSources = directFocusHookSources();
+		Set<String> inertItems = new TreeSet<>();
+		try (Stream<Path> paths = Files.list(FOCUS_DATA_DIR)) {
+			for (Path file : paths
+					.filter(path -> path.getFileName().toString().endsWith(".json"))
+					.sorted()
+					.toList()) {
+				JsonObject root = focusDefinitionRoot(file);
+				String itemId = root.get("item").getAsString();
+				String directField = registeredFieldsByItem.get(itemId);
+				if (hasNonEmptyArray(root, "modifiers")
+						|| root.has("behavior")
+						|| directHookSources.contains(attunedPath(itemId))
+						|| (directField != null && directHookSources.contains(directField))) {
+					continue;
+				}
+				inertItems.add(itemId);
+			}
+		}
+		assertEquals(Set.of(), inertItems,
+			"Every shipped Focus should have modifiers, a behavior id, or a direct gameplay hook");
+	}
+
+	@Test
+	void blackoutFocusStaysAWeakerSmokeAbility() throws IOException {
+		JsonObject root = focusDefinitionRoot(FOCUS_DATA_DIR.resolve("blackout_focus.json"));
+		String registrations = Files.readString(BEHAVIOR_REGISTRATION_SOURCE, StandardCharsets.UTF_8);
+
+		assertEquals(3, root.get("cost").getAsInt(), "Blackout should stay a low-cost Unseen option");
+		assertTrue(!root.has("affinity"), "Blackout should stay neutral for mixed builds");
+		assertEquals("attuned:unseen", root.get("faction").getAsString());
+		JsonElement behaviorId = root.get("behavior");
+		assertNotNull(behaviorId, "Blackout should declare its behavior id");
+		assertEquals("attuned:blackout", behaviorId.getAsString(),
+			"Blackout should use its own weaker smoke ability");
+		assertTrue(registrations.contains("import dev.attuned.content.behavior.BlackoutBehavior;"),
+			"Blackout behavior should be registered with the other shipped behavior ids");
+		assertTrue(registrations.contains("register(\"blackout\", new BlackoutBehavior())"),
+			"Blackout should not silently share Smoke's stronger behavior");
+
+		assertTrue(Files.isRegularFile(BLACKOUT_BEHAVIOR_SOURCE),
+			"Blackout behavior source should exist");
+		String behavior = Files.readString(BLACKOUT_BEHAVIOR_SOURCE, StandardCharsets.UTF_8);
+		assertTrue(behavior.contains("BLACKOUT_TICKS = 40"),
+			"Blackout should disrupt sight for the designed 40-tick window");
+		assertTrue(behavior.contains("RADIUS = 3.5D"),
+			"Blackout should stay smaller than Smoke's 6-block radius");
+		assertTrue(behavior.contains("MobEffects.BLINDNESS"),
+			"Blackout should apply a real short sight disruption");
+		assertTrue(behavior.contains("mob.setTarget(null)"),
+			"Blackout should clear disrupted mob targets");
+	}
+
+	@Test
+	void referenceDocsListEveryRegisteredFocusBehavior() throws IOException {
+		String registrations = Files.readString(BEHAVIOR_REGISTRATION_SOURCE, StandardCharsets.UTF_8);
+		String reference = Files.readString(REFERENCE_DOC, StandardCharsets.UTF_8);
+		Set<String> missing = new TreeSet<>();
+		for (String behaviorId : registeredBehaviorIds(registrations)) {
+			if (!reference.contains("`" + behaviorId + "`")) {
+				missing.add(behaviorId);
+			}
+		}
+
+		assertEquals(Set.of(), missing,
+			"docs/reference.md should list every shipped Focus behavior id");
 	}
 
 	@Test
@@ -520,6 +602,20 @@ class FocusDataConsistencyTest {
 			assertTrue(!behaviorIds.isEmpty(), "Could not find any FocusDefinition behavior ids");
 			return behaviorIds;
 		}
+	}
+
+	private static String directFocusHookSources() throws IOException {
+		StringBuilder sources = new StringBuilder();
+		for (Path source : DIRECT_FOCUS_HOOK_SOURCES) {
+			assertTrue(Files.isRegularFile(source), "Expected direct Focus hook source: " + source);
+			sources.append(Files.readString(source, StandardCharsets.UTF_8)).append('\n');
+		}
+		return sources.toString();
+	}
+
+	private static boolean hasNonEmptyArray(JsonObject root, String key) {
+		JsonElement element = root.get(key);
+		return element != null && element.isJsonArray() && !element.getAsJsonArray().isEmpty();
 	}
 
 	private static JsonObject focusDefinitionRoot(Path file) throws IOException {

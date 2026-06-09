@@ -1,5 +1,6 @@
 {
 	"item": "attuned:forager_focus",
+	"unique": true,
 	"cost": 2,
 	"behavior": "attuned:forager"
 }

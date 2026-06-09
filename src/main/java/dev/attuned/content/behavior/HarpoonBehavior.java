@@ -140,14 +140,15 @@ public final class HarpoonBehavior implements FocusBehavior {
 
 	private static void tickServer(MinecraftServer server) {
 		long now = server.overworld().getGameTime();
-		pruneActiveHarpoons(now);
 		if (ACTIVE_HARPOONS.isEmpty()) {
 			return;
 		}
 		cleanupActiveInventories(server, now);
 		if (shouldSweepEntities(now)) {
+			cleanupTransferredInventories(server, now);
 			cleanupEntities(server, now);
 		}
+		pruneActiveHarpoons(now);
 	}
 
 	private static void cleanupActiveInventories(MinecraftServer server, long now) {
@@ -161,6 +162,12 @@ public final class HarpoonBehavior implements FocusBehavior {
 
 	private static boolean shouldSweepEntities(long now) {
 		return now % ENTITY_CLEANUP_INTERVAL_TICKS == 0L;
+	}
+
+	private static void cleanupTransferredInventories(MinecraftServer server, long now) {
+		for (ServerPlayer player : server.getPlayerList().getPlayers()) {
+			removeInventoryHarpoons(player, player.getUUID(), now, false);
+		}
 	}
 
 	private static void pruneActiveHarpoons(long now) {
@@ -193,6 +200,7 @@ public final class HarpoonBehavior implements FocusBehavior {
 		UUID owner = player.getUUID();
 		removeInventoryHarpoons(player, owner, Long.MAX_VALUE, true);
 		if (player.level() instanceof ServerLevel level) {
+			removePlayerInventoriesForOwner(level.getServer(), owner);
 			removeEntitiesForOwner(level.getServer(), owner);
 		}
 		ACTIVE_HARPOONS.remove(owner);
@@ -205,9 +213,25 @@ public final class HarpoonBehavior implements FocusBehavior {
 
 	private static void removeInventoryHarpoons(ServerPlayer player, UUID owner, long now, boolean force) {
 		removeMarkedStack(player.getMainHandItem(), owner, now, force, true);
+		removeMarkedStack(player.getOffhandItem(), owner, now, force, true);
 		Inventory inventory = player.getInventory();
 		for (int slot = 0; slot < inventory.getContainerSize(); slot++) {
 			removeMarkedStack(inventory.getItem(slot), owner, now, force, true);
+		}
+	}
+
+	private static void removePlayerInventoriesForOwner(MinecraftServer server, UUID owner) {
+		for (ServerPlayer player : server.getPlayerList().getPlayers()) {
+			removeInventoryHarpoonsForOwner(player, owner, Long.MAX_VALUE, true);
+		}
+	}
+
+	private static void removeInventoryHarpoonsForOwner(ServerPlayer player, UUID owner, long now, boolean force) {
+		removeMarkedStack(player.getMainHandItem(), owner, now, force, false);
+		removeMarkedStack(player.getOffhandItem(), owner, now, force, false);
+		Inventory inventory = player.getInventory();
+		for (int slot = 0; slot < inventory.getContainerSize(); slot++) {
+			removeMarkedStack(inventory.getItem(slot), owner, now, force, false);
 		}
 	}
 

@@ -77,6 +77,24 @@ class CompassFocusBehaviorContractTest {
 	}
 
 	@Test
+	void driftglassDefersToHigherPriorityCompassFoci() throws IOException {
+		String source = read(DRIFTGLASS_SOURCE);
+
+		assertTrue(source.contains("hasHigherPriorityCompassFocus(player)"),
+			"Driftglass should not nest a temporary tracker over Beacon or Waystone");
+		assertTrue(source.contains("restorePlayer(player);"),
+			"Driftglass should restore its own redirected compasses while deferring");
+		assertTrue(source.contains("BEACON_FOCUS.equals(id)"),
+			"Beacon should have priority over Driftglass for compass control");
+		assertTrue(source.contains("WAYSTONE_FOCUS.equals(id)"),
+			"Waystone should have priority over Driftglass for compass control");
+		assertTrue(source.contains("player.getRespawnConfig() != null"),
+			"Driftglass should defer to Beacon only when Beacon has a respawn target");
+		assertTrue(source.contains("player.getLastDeathLocation().isPresent()"),
+			"Driftglass should defer to Waystone only when Waystone has a death target");
+	}
+
+	@Test
 	void waystoneCompassUsesLastDeathTrackerAndSupportsHeldStacks() throws IOException {
 		String source = read(WAYSTONE_SOURCE);
 
@@ -104,6 +122,18 @@ class CompassFocusBehaviorContractTest {
 			"Waystone should drop remembered compass snapshots after full restoration");
 		assertFalse(source.contains("getCount() == 1"),
 			"Waystone should not require the player to split a compass stack before the needle turns");
+	}
+
+	@Test
+	void waystoneDefersToBeaconOnlyWhenBeaconHasTarget() throws IOException {
+		String source = read(WAYSTONE_SOURCE);
+
+		assertTrue(source.contains("hasActiveBeaconTarget(player)"),
+			"Waystone should defer to Beacon only when Beacon can actually point home");
+		assertTrue(source.contains("player.getRespawnConfig() == null"),
+			"Waystone should not let a targetless Beacon block last-death tracking");
+		assertTrue(source.contains("BEACON_FOCUS.equals(id)"),
+			"Waystone should still give Beacon priority when Beacon has a respawn target");
 	}
 
 	@Test

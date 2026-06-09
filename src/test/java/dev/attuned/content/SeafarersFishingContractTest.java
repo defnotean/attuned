@@ -18,6 +18,8 @@ class SeafarersFishingContractTest {
 		Path.of("src/main/java/dev/attuned/mixin/FishingRodItemMixin.java");
 	private static final Path SEAFARERS_FISHING =
 		Path.of("src/main/java/dev/attuned/content/behavior/SeafarersFishing.java");
+	private static final Path LANG =
+		Path.of("src/main/resources/assets/attuned/lang/en_us.json");
 
 	@Test
 	void seafarersBoostLuckOfTheSeaWhenCastingRod() throws IOException {
@@ -39,5 +41,37 @@ class SeafarersFishingContractTest {
 			"Harborlight should contribute to the broader Seafarers fishing setup");
 		assertTrue(source.contains("DRIFTGLASS_LUCK_OF_THE_SEA_BONUS"),
 			"Driftglass should contribute to the broader Seafarers fishing setup");
+	}
+
+	@Test
+	void netmenderRepairsFishingRodsWithCooldownInsteadOfOnlyPreventingCatchDamage() throws IOException {
+		String source = Files.readString(SEAFARERS_FISHING, StandardCharsets.UTF_8);
+
+		assertTrue(source.contains("NETMENDER_REPAIR_COOLDOWN_TICKS"),
+			"Netmender should have a short explicit mend cooldown");
+		assertTrue(source.contains("netmenderCooldowns"),
+			"Netmender should track per-player cooldown state");
+		assertTrue(source.contains("player.level().getGameTime()"),
+			"Netmender should compare cooldowns against server game time");
+		assertTrue(source.contains("rod.isDamageableItem()"),
+			"Netmender should only try to mend damageable fishing rod stacks");
+		assertTrue(source.contains("rod.getDamageValue() > 0"),
+			"Netmender should only spend a mend proc when the rod actually has damage to repair");
+		assertTrue(source.contains("rod.setDamageValue(rod.getDamageValue() - 1)"),
+			"Netmender should restore one existing durability point on the rod stack");
+		assertTrue(source.contains("AttunedPlayerCleanup.onForget(netmenderCooldowns::remove)"),
+			"Netmender cooldown state should be forgotten on disconnect");
+		assertTrue(source.contains("AttunedServerCleanup.onStop(netmenderCooldowns::clear)"),
+			"Netmender cooldown state should be cleared between server lifetimes");
+	}
+
+	@Test
+	void netmenderTooltipDescribesRepairInsteadOfDamagePrevention() throws IOException {
+		String lang = Files.readString(LANG, StandardCharsets.UTF_8);
+
+		assertTrue(lang.contains("\"item.attuned.netmender_focus.effect\": \"Grants +1 Luck and a Luck of the Sea boost; fish catches may restore 1 rod durability.\""),
+			"Netmender tooltip should describe the active repair behavior");
+		assertTrue(!lang.contains("prevent rod damage"),
+			"Netmender tooltip should not describe the old damage-prevention behavior");
 	}
 }

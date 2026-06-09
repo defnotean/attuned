@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "A": "minecraft:amethyst_shard",
+    "L": "minecraft:leather"
+  },
+  "pattern": [
+    "LAL",
+    "L L",
+    "LLL"
+  ],
+  "result": {
+    "id": "attuned:satchel_of_foci"
+  }
+}

@@ -3,11 +3,6 @@
 	"cost": 3,
 	"affinity": "zephyr",
 	"faction": "attuned:unseen",
-	"modifiers": [
-		{
-			"attribute": "minecraft:sneaking_speed",
-			"amount": 0.15,
-			"operation": "add_multiplied_base"
-		}
-	]
+	"unique": true,
+	"behavior": "attuned:mask"
 }
