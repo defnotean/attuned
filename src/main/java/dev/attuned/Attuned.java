@@ -20,7 +20,6 @@ import dev.attuned.menu.PresetNetworking;
 import dev.attuned.menu.ReweavingMenuType;
 import dev.attuned.menu.ReweavingNetworking;
 import dev.attuned.menu.SatchelMenuType;
-import dev.attuned.menu.SatchelNetworking;
 import dev.attuned.network.AttunedNetworking;
 import dev.attuned.network.JournalNetworking;
 import dev.attuned.onboarding.Onboarding;
@@ -61,7 +60,6 @@ public class Attuned implements ModInitializer {
 		AltarMenuType.init();
 		SatchelMenuType.init();
 		AltarNetworking.init();
-		SatchelNetworking.init();
 		PresetNetworking.init();
 		ReweavingMenuType.init();
 		ReweavingNetworking.init();
