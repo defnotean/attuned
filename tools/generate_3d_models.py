@@ -211,51 +211,54 @@ def frostbound_elements():
 
 
 # --- Harpoon Focus -------------------------------------------------------------
-# A pocket-sized emblem of the Ocean Relic it summons: an upright miniature
-# trident threaded through a coiled rope ring, on the same voxel palette so the
-# Focus visibly "contains" the weapon. Sized to read inside a 16px GUI slot.
+# A Focus should read as a worn talisman, not a weapon: this is a circular
+# driftwood-and-bronze medallion on a cord loop, with a dark sea-glass face and
+# a small trident RELIEF set into it — amulet first, summons emblem second.
+# Same voxel palette as the Ocean Relic so the pair visibly belong together.
 
 def harpoon_focus_elements():
 	e = []
-	# Miniature shaft and butt.
-	e.append(cube("mini_shaft", (7.3, 0.6, 7.6), (8.7, 9.8, 9.0), pal_shaded((0, 1), (1, 1))))
-	e.append(cube("mini_butt", (6.9, 0.0, 7.2), (9.1, 1.0, 9.4), pal_shaded((12, 0), (13, 0))))
-	# Rope coil: an octagon of small driftwood-rope segments around the shaft.
-	ring = [
-		((5.6, 3.4, 7.5), (7.3, 4.6, 9.1)),
-		((8.7, 3.4, 7.5), (10.4, 4.6, 9.1)),
-		((6.4, 3.4, 6.4), (9.6, 4.6, 7.6)),
-		((6.4, 3.4, 9.0), (9.6, 4.6, 10.2)),
+	# Medallion ring: an octagonal hoop ~12 wide, alternating driftwood/bronze.
+	rim = [
+		("n", (4.9, 12.2, 7.6), (11.1, 13.8, 9.0), pal_shaded((15, 0), (13, 0))),
+		("s", (4.9, 1.2, 7.6), (11.1, 2.8, 9.0), pal_shaded((15, 0), (13, 0))),
+		("w", (2.6, 4.4, 7.6), (4.2, 10.6, 9.0), pal_shaded((2, 1), (1, 1))),
+		("e", (11.8, 4.4, 7.6), (13.4, 10.6, 9.0), pal_shaded((2, 1), (1, 1))),
+		("nw", (3.4, 9.8, 7.6), (5.8, 12.6, 9.0), pal_shaded((12, 0), (13, 0))),
+		("ne", (10.2, 9.8, 7.6), (12.6, 12.6, 9.0), pal_shaded((12, 0), (13, 0))),
+		("sw", (3.4, 2.4, 7.6), (5.8, 5.2, 9.0), pal_shaded((12, 0), (13, 0))),
+		("se", (10.2, 2.4, 7.6), (12.6, 5.2, 9.0), pal_shaded((12, 0), (13, 0))),
 	]
-	for i, (frm, to) in enumerate(ring):
-		e.append(cube(f"rope_coil_{i}", frm, to, pal_shaded((15, 0), (13, 0))))
-	e.append(cube("rope_coil_knot", (9.8, 3.0, 7.7), (11.0, 5.0, 8.9),
-		pal(12, 0), rotation=yrot(22.5, (10.4, 4.0, 8.3))))
-	# Collar and a tiny crown gem.
-	e.append(cube("mini_collar", (6.9, 9.8, 7.2), (9.1, 10.9, 9.4), pal_shaded((12, 0), (13, 0))))
-	e.append(cube("mini_gem", (7.45, 10.9, 7.75), (8.55, 12.0, 8.85), pal(1, 0)))
-	e.append(cube("mini_gem_shell", (7.45, 10.9, 7.75), (8.55, 12.0, 8.85), pal(0, 0),
-		rotation=yrot(45, (8, 11.45, 8.3))))
-	# Head plate and three tines.
-	e.append(cube("mini_plate", (4.6, 12.0, 7.5), (11.4, 13.0, 9.1), pal_shaded((12, 0), (13, 0))))
-	e.append(cube("mini_center_tine", (7.55, 13.0, 7.8), (8.45, 15.4, 8.8), pal_shaded((7, 0), (8, 0))))
-	e.append(cube("mini_center_tip", (7.8, 15.4, 8.0), (8.2, 16.0, 8.6), pal(0, 0)))
-	for side, x0 in (("w", 5.0), ("e", 10.0)):
-		e.append(cube(f"mini_prong_{side}", (x0, 13.0, 7.8), (x0 + 1.0, 15.0, 8.8),
-			pal_shaded((7, 0), (9, 0))))
-		fin_x = x0 - 0.45 if side == "w" else x0 + 1.0
-		e.append(cube(f"mini_fin_{side}", (fin_x, 13.2, 8.0), (fin_x + 0.45, 14.6, 8.6), pal(14, 0)))
+	for name, frm, to, tone in rim:
+		e.append(cube(f"rim_{name}", frm, to, tone))
+	# Cord loop and knot above the medallion.
+	e.append(cube("cord_loop", (6.9, 13.8, 7.8), (9.1, 15.6, 8.8), pal_shaded((2, 1), (1, 1))))
+	e.append(cube("cord_knot", (7.4, 13.4, 7.7), (8.6, 14.2, 8.9), pal(13, 0),
+		rotation=yrot(22.5, (8, 13.8, 8.3))))
+	# Dark sea-glass face recessed inside the ring.
+	e.append(cube("face_plate", (4.4, 2.6, 7.85), (11.6, 12.4, 8.75), pal_shaded((6, 0), (9, 0))))
+	# Trident relief, slightly proud of the face: shaft, crossbar, three tines, gem.
+	e.append(cube("relief_shaft", (7.6, 3.4, 8.55), (8.4, 8.2, 9.05), pal_shaded((0, 1), (1, 1))))
+	e.append(cube("relief_gem", (7.5, 8.2, 8.5), (8.5, 9.2, 9.1), pal(1, 0)))
+	e.append(cube("relief_plate", (5.6, 9.2, 8.55), (10.4, 10.0, 9.05), pal(12, 0)))
+	e.append(cube("relief_center_tine", (7.7, 10.0, 8.55), (8.3, 11.9, 9.05), pal(7, 0)))
+	e.append(cube("relief_tine_w", (6.0, 10.0, 8.55), (6.7, 11.3, 9.05), pal(8, 0)))
+	e.append(cube("relief_tine_e", (9.3, 10.0, 8.55), (10.0, 11.3, 9.05), pal(8, 0)))
+	# Glow studs at the ring's cardinal points, like sea-light set in the bezel.
+	for name, (x, y) in (("n", (7.6, 12.6)), ("s", (7.6, 1.6)), ("w", (3.0, 7.1)), ("e", (12.2, 7.1))):
+		e.append(cube(f"glow_stud_{name}", (x, y, 7.45), (x + 0.8, y + 0.8, 9.15), pal(3, 0)))
 	return e
 
 
 HARPOON_FOCUS_DISPLAY = {
-	"gui": {"rotation": [18, -35, -3], "translation": [0, -1.2, 0], "scale": [0.92, 0.92, 0.92]},
-	"firstperson_righthand": {"rotation": [0, -60, 10], "translation": [1.5, 2.5, 1], "scale": [0.55, 0.55, 0.55]},
-	"firstperson_lefthand": {"rotation": [0, 60, -10], "translation": [8.5, 2.5, 1], "scale": [0.55, 0.55, 0.55]},
-	"thirdperson_righthand": {"rotation": [0, 60, 0], "translation": [0, 2.0, 0.5], "scale": [0.45, 0.45, 0.45]},
-	"thirdperson_lefthand": {"rotation": [0, 60, 0], "translation": [0, 2.0, 0.5], "scale": [0.45, 0.45, 0.45]},
+	# Mostly face-on in the GUI so the medallion-and-relief reads at slot size.
+	"gui": {"rotation": [6, -18, 0], "translation": [0, -0.8, 0], "scale": [0.95, 0.95, 0.95]},
+	"firstperson_righthand": {"rotation": [0, -35, 8], "translation": [1.5, 2.5, 1], "scale": [0.55, 0.55, 0.55]},
+	"firstperson_lefthand": {"rotation": [0, 35, -8], "translation": [8.5, 2.5, 1], "scale": [0.55, 0.55, 0.55]},
+	"thirdperson_righthand": {"rotation": [0, 45, 0], "translation": [0, 2.0, 0.5], "scale": [0.45, 0.45, 0.45]},
+	"thirdperson_lefthand": {"rotation": [0, 45, 0], "translation": [0, 2.0, 0.5], "scale": [0.45, 0.45, 0.45]},
 	"ground": {"rotation": [0, 0, 0], "translation": [0, 3, 0], "scale": [0.4, 0.4, 0.4]},
-	"fixed": {"rotation": [0, 180, 0], "translation": [0, -1.5, 0], "scale": [0.85, 0.85, 0.85]},
+	"fixed": {"rotation": [0, 180, 0], "translation": [0, -0.5, 0], "scale": [0.9, 0.9, 0.9]},
 }
 
 
