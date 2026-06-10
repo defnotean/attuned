@@ -11,11 +11,11 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 /** Captures attack charge before vanilla resets it during Player.attack. */
 @Mixin(Player.class)
 public abstract class PlayerAttackMixin {
-	@Inject(method = "attack", at = @At(
-		value = "INVOKE",
-		target = "Lnet/minecraft/world/entity/player/Player;resetAttackStrengthTicker()V",
-		shift = At.Shift.BEFORE
-	))
+	// HEAD, not an INVOKE on resetAttackStrengthTicker: in 26.1.2 Player.attack never
+	// calls the reset itself (it happens outside the method), so an INVOKE anchor finds
+	// zero targets and hard-fails injection. At method entry the ticker is still
+	// un-reset, so the captured charge equals what vanilla reads during the attack.
+	@Inject(method = "attack", at = @At("HEAD"))
 	private void attuned$captureMeleeCharge(Entity target, CallbackInfo ci) {
 		Player self = (Player) (Object) this;
 		// Player.attack also runs client-side for swing prediction; the snapshot map is

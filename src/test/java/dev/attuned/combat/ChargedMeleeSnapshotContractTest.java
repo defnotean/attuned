@@ -29,10 +29,12 @@ class ChargedMeleeSnapshotContractTest {
 			"The snapshot must hook the vanilla player attack method.");
 		assertTrue(mixin.contains("method = \"attack\""),
 			"The snapshot should be captured at the real attack boundary.");
-		assertTrue(mixin.contains("target = \"Lnet/minecraft/world/entity/player/Player;resetAttackStrengthTicker()V\""),
-			"The injection point must be anchored to vanilla's reset call.");
-		assertTrue(mixin.contains("shift = At.Shift.BEFORE"),
-			"The charge must be read before vanilla resets the attack strength ticker.");
+		assertTrue(mixin.contains("at = @At(\"HEAD\")"),
+			"The injection must anchor at method entry: 26.1.2's Player.attack never invokes "
+				+ "resetAttackStrengthTicker itself, so an INVOKE anchor scans zero targets and "
+				+ "hard-fails injection at class load (caught by the server smoke check).");
+		assertTrue(mixin.contains("isClientSide()"),
+			"Only the server thread may write the snapshot map.");
 		assertTrue(mixin.contains("getAttackStrengthScale(0.5F)"),
 			"The mixin should snapshot the same partial tick scale used by charged-hit thresholds.");
 		assertTrue(mixin.contains("AttunedCombat.rememberMeleeCharge("),
