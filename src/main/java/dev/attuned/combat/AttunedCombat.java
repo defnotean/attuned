@@ -1,6 +1,7 @@
 package dev.attuned.combat;
 
 import dev.attuned.AttunedServerCleanup;
+import dev.attuned.AttunedPlayerCleanup;
 import dev.attuned.api.focus.Affinity;
 import dev.attuned.api.focus.AffinityColors;
 import dev.attuned.attunement.AttunedAttachments;
@@ -88,8 +89,12 @@ public final class AttunedCombat {
 	private static final ThreadLocal<Boolean> REFLECTING = ThreadLocal.withInitial(() -> false);
 	/** Last game-time a mob affinity spark was shown for an entity. */
 	private static final Map<UUID, Long> LAST_AFFINITY_SPARK = new HashMap<>();
+	private static final Map<UUID, MeleeChargeSnapshot> MELEE_CHARGE_SNAPSHOTS = new HashMap<>();
+	private static final long MELEE_CHARGE_SNAPSHOT_TTL_TICKS = 2L;
 	private static long lastAffinitySparkPrune;
 	private static boolean initialized;
+
+	public record MeleeChargeSnapshot(UUID targetId, float charge, long gameTime) {}
 
 	/** Registers the combat event handlers. Called from the mod initializer. */
 	public static void init() {
@@ -101,10 +106,21 @@ public final class AttunedCombat {
 		ServerLivingEntityEvents.AFTER_DAMAGE.register(AttunedCombat::afterDamage);
 		ServerLivingEntityEvents.AFTER_DEATH.register((entity, source) ->
 			LAST_AFFINITY_SPARK.remove(entity.getUUID()));
+		AttunedPlayerCleanup.onForget(MELEE_CHARGE_SNAPSHOTS::remove);
 		AttunedServerCleanup.onStop(() -> {
 			LAST_AFFINITY_SPARK.clear();
+			MELEE_CHARGE_SNAPSHOTS.clear();
 			lastAffinitySparkPrune = 0L;
 		});
+	}
+
+	public static void rememberMeleeCharge(Player attacker, Entity target, float charge) {
+		MELEE_CHARGE_SNAPSHOTS.put(attacker.getUUID(),
+			new MeleeChargeSnapshot(target.getUUID(), charge, attacker.level().getGameTime()));
+	}
+
+	public static boolean isReflecting() {
+		return REFLECTING.get();
 	}
 
 	/**
@@ -118,6 +134,9 @@ public final class AttunedCombat {
 
 	public static float applyAffinity(ServerLevel level, LivingEntity defender,
 			DamageSource source, float amount, CombatContext context) {
+		if (AttunedCombat.isReflecting()) {
+			return amount;
+		}
 		float multiplier = affinityMultiplier(defender, source, context);
 		if (multiplier != 1.0F) {
 			matchupFeedback(level, defender, source, multiplier, context);
@@ -132,7 +151,7 @@ public final class AttunedCombat {
 		if (sunlanceApplies(defender, source, context)) {
 			adjusted *= (1.0F + SUNLANCE_BONUS);
 		}
-		if (temperApplies(source, context)) {
+		if (temperApplies(defender, source, context)) {
 			adjusted *= (1.0F + TEMPER_BONUS);
 		}
 		return adjusted;
@@ -148,7 +167,7 @@ public final class AttunedCombat {
 
 	private static boolean sunlanceApplies(LivingEntity defender, DamageSource source,
 			CombatContext context) {
-		if (!(context.attacker() instanceof Player player) || !isDirectChargedMelee(player, source,
+		if (!(context.attacker() instanceof Player player) || !isChargedDirectMelee(player, defender, source,
 				SUNLANCE_CHARGED_SWING_THRESHOLD) || !context.hasActiveFocus(player, SUNLANCE_FOCUS)) {
 			return false;
 		}
@@ -156,19 +175,32 @@ public final class AttunedCombat {
 			|| context.affinityOf(defender).filter(affinity -> affinity == Affinity.FURY).isPresent();
 	}
 
-	private static boolean temperApplies(DamageSource source, CombatContext context) {
+	private static boolean temperApplies(LivingEntity defender, DamageSource source,
+			CombatContext context) {
 		if (!(context.attacker() instanceof Player player)
-				|| !isDirectChargedMelee(player, source, TEMPER_CHARGED_SWING_THRESHOLD)) {
+				|| !isChargedDirectMelee(player, defender, source, TEMPER_CHARGED_SWING_THRESHOLD)) {
 			return false;
 		}
 		return TemperBehavior.applies(player);
 	}
 
-	private static boolean isDirectChargedMelee(Player player, DamageSource source, float threshold) {
-		if (!isDirectMelee(player, source)) {
-			return false;
+	public static boolean isChargedDirectMelee(Player attacker, LivingEntity defender,
+			DamageSource source, float threshold) {
+		return isDirectMelee(attacker, source)
+			&& meleeCharge(attacker, defender) >= threshold;
+	}
+
+	private static float meleeCharge(Player attacker, LivingEntity defender) {
+		MeleeChargeSnapshot snapshot = MELEE_CHARGE_SNAPSHOTS.get(attacker.getUUID());
+		if (snapshot == null || !snapshot.targetId().equals(defender.getUUID())) {
+			return 0.0F;
 		}
-		return player.getAttackStrengthScale(0.5F) >= threshold;
+		long now = attacker.level().getGameTime();
+		if (now - snapshot.gameTime() > MELEE_CHARGE_SNAPSHOT_TTL_TICKS) {
+			MELEE_CHARGE_SNAPSHOTS.remove(attacker.getUUID());
+			return 0.0F;
+		}
+		return snapshot.charge();
 	}
 
 	private static boolean isDirectMelee(LivingEntity attacker, DamageSource source) {

@@ -276,7 +276,7 @@ public final class Pacts {
 
 	public static float adjustDamage(LivingEntity defender, DamageSource source, float amount,
 			CombatContext context) {
-		if (amount <= 0.0F) {
+		if (amount <= 0.0F || AttunedCombat.isReflecting()) {
 			return amount;
 		}
 		// Stoneheart: a defender-side dampen on everything, no matchup gating.
@@ -299,7 +299,7 @@ public final class Pacts {
 					&& !(defender instanceof Player)
 					&& isHostile(defender)
 					&& defender.typeHolder().is(EntityTypeTags.UNDEAD)
-					&& isDirectChargedMelee(attackerPlayer, source, RADIANT_COVENANT_SWING_THRESHOLD)) {
+					&& AttunedCombat.isChargedDirectMelee(attackerPlayer, defender, source, RADIANT_COVENANT_SWING_THRESHOLD)) {
 				amount *= (1.0F + RADIANT_COVENANT_UNDEAD_BONUS);
 			}
 		}
@@ -313,7 +313,7 @@ public final class Pacts {
 	 */
 	private static void afterDamage(LivingEntity defender, DamageSource source,
 			float originalDamage, float dealtDamage, boolean blocked) {
-		if (dealtDamage <= 0.0F) {
+		if (dealtDamage <= 0.0F || AttunedCombat.isReflecting()) {
 			return;
 		}
 		LivingEntity livingAttacker = AttunedCombat.attackerOf(source);
@@ -340,7 +340,7 @@ public final class Pacts {
 
 	private static void radiantCovenantReveal(Player attacker, LivingEntity defender, DamageSource source) {
 		if (!defender.isAlive() || !CombatTargets.isHostileOrPvpOpponent(defender, attacker)
-				|| !isDirectChargedMelee(attacker, source, RADIANT_COVENANT_SWING_THRESHOLD)
+				|| !AttunedCombat.isChargedDirectMelee(attacker, defender, source, RADIANT_COVENANT_SWING_THRESHOLD)
 				|| MaskBehavior.resistsReveal(defender)
 				|| isOwnPet(defender, attacker) || defender instanceof AbstractVillager) {
 			return;
@@ -352,17 +352,6 @@ public final class Pacts {
 				defender.getX(), defender.getY() + defender.getBbHeight() * 0.65, defender.getZ(),
 				5, 0.25, 0.25, 0.25, 0.0);
 		}
-	}
-
-	private static boolean isDirectChargedMelee(Player attacker, DamageSource source, float threshold) {
-		if (source.getDirectEntity() != attacker) {
-			return false;
-		}
-		if (source.is(net.minecraft.tags.DamageTypeTags.IS_PROJECTILE)
-				|| source.is(net.minecraft.tags.DamageTypeTags.IS_EXPLOSION)) {
-			return false;
-		}
-		return attacker.getAttackStrengthScale(0.5F) >= threshold;
 	}
 
 	private static boolean isOwnPet(LivingEntity defender, Player attacker) {
@@ -386,7 +375,7 @@ public final class Pacts {
 			return;
 		}
 		// Only on at-least-half-charged swings — discourages the most extreme spam-clicking.
-		if (attacker.getAttackStrengthScale(0.5F) < PYRESWORN_CHARGED_SWING_THRESHOLD) {
+		if (!AttunedCombat.isChargedDirectMelee(attacker, defender, source, PYRESWORN_CHARGED_SWING_THRESHOLD)) {
 			return;
 		}
 		if (!CombatTargets.isHostileOrPvpOpponent(defender, attacker)) {

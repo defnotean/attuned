@@ -57,7 +57,8 @@ public final class UnseenCombat {
 	}
 
 	public static float adjustDamage(LivingEntity defender, DamageSource source, float amount) {
-		if (!(source.getEntity() instanceof ServerPlayer attacker)
+		if (AttunedCombat.isReflecting()
+				|| !(source.getEntity() instanceof ServerPlayer attacker)
 				|| defender == attacker
 				|| !isDirectHit(attacker, source)) {
 			return amount;

@@ -8,6 +8,7 @@
 		"FishingRodItemMixin",
 		"LivingEntityHurtMixin",
 		"LivingEntityKnockbackMixin",
+		"PlayerAttackMixin",
 		"ServerGamePacketListenerImplMixin",
 		"ThrownTridentMixin"
 	],

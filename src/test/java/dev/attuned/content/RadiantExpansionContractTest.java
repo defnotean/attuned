@@ -501,8 +501,8 @@ class RadiantExpansionContractTest {
 		assertTrue(combat.contains("TEMPER_BONUS = 0.08F"),
 			"Temper should use the planned 8% damage bonus");
 		assertTrue(combat.contains("TemperBehavior.applies(player)")
-				&& combat.contains("isDirectChargedMelee(player, source"),
-			"Temper should apply only to direct fully charged melee hits in the existing damage shaper");
+				&& combat.contains("isChargedDirectMelee(player, defender, source"),
+			"Temper should apply only to direct fully charged melee hits using the pre-reset charge snapshot");
 
 		String lang = Files.readString(LANG_FILE, StandardCharsets.UTF_8);
 		assertTrue(lang.contains("item.attuned.temper_focus.effect")

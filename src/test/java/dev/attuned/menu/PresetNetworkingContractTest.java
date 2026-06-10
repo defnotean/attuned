@@ -15,6 +15,7 @@ class PresetNetworkingContractTest {
 	private static final Path DELETE = Path.of("src/main/java/dev/attuned/menu/DeletePresetPayload.java");
 	private static final Path NET = Path.of("src/main/java/dev/attuned/menu/PresetNetworking.java");
 	private static final Path BOOTSTRAP = Path.of("src/main/java/dev/attuned/Attuned.java");
+	private static final Path SATCHEL_SCREEN = Path.of("src/client/java/dev/attuned/client/screen/SatchelScreen.java");
 
 	@Test
 	void payloadsCarryMinimalSanitizedData() throws IOException {
@@ -22,7 +23,10 @@ class PresetNetworkingContractTest {
 		assertTrue(read(SAVE).contains("ByteBufCodecs.STRING_UTF8"), "Save name serializes as UTF-8.");
 		assertTrue(read(SAVE).contains(".cast()"), "STRING_UTF8 composite must cast to the RegistryFriendlyByteBuf field type.");
 		assertTrue(read(APPLY).contains("record ApplyPresetPayload(int index)"), "Apply carries only an index.");
-		assertTrue(read(DELETE).contains("record DeletePresetPayload(int index)"), "Delete carries only an index.");
+		assertTrue(read(DELETE).contains("record DeletePresetPayload(int index, String name)"),
+			"Delete carries the selected name as an idempotency guard for duplicate clicks.");
+		assertTrue(read(DELETE).contains("ByteBufCodecs.STRING_UTF8"),
+			"Delete name serializes as UTF-8.");
 	}
 
 	@Test
@@ -56,12 +60,14 @@ class PresetNetworkingContractTest {
 		String net = read(NET);
 		assertTrue(net.contains("lookupOrThrow(AttunedRegistries.FOCUS_DEFINITIONS)"),
 			"Apply must resolve focus ids against the world registry server-side.");
-		assertTrue(net.contains("SatchelState satchel = satchelState(player, registeredFocusIds);"),
-			"Apply should pass the registered Focus id set into satchel reads for malformed component filtering.");
-		assertTrue(net.contains("private static SatchelState satchelState(ServerPlayer player, Set<String> registeredFocusIds)"),
-			"Satchel component reads should have registry context for validation.");
-		assertTrue(net.contains("ids.add(registeredFocusIds.contains(id) ? id : \"\");"),
-			"Malformed non-Focus stacks in a satchel component should not survive preset apply writeback.");
+		assertTrue(net.contains("SatchelState satchel = satchelState(player);"),
+			"Apply should preserve stored satchel stacks even when a Focus definition failed to load.");
+		assertTrue(net.contains("private static SatchelState satchelState(ServerPlayer player)"),
+			"Satchel component reads should not need registry context that would erase definitionless Foci.");
+		assertTrue(net.contains("ids.add(id);") && net.contains("stacks.add(stack);"),
+			"Definitionless satchel stacks should survive preset apply writeback.");
+		assertTrue(!net.contains("ids.add(registeredFocusIds.contains(id) ? id : \"\");"),
+			"Preset apply must not erase unregistered satchel ids before the resolver can preserve them.");
 		assertTrue(net.contains("AttunedAttachments.setSlot(player"),
 			"Apply must re-equip through the validated setSlot boundary.");
 		assertTrue(!net.contains("new ItemStack(item)"),
@@ -85,9 +91,24 @@ class PresetNetworkingContractTest {
 	}
 
 	@Test
+	void deleteRequiresTheSelectedPresetNameSoDuplicateClicksCannotDeleteTheShiftedNextPreset() throws IOException {
+		String net = read(NET);
+		String screen = read(SATCHEL_SCREEN);
+
+		assertTrue(screen.contains("new DeletePresetPayload(selectedIndex, presets().get(selectedIndex).name())"),
+			"Client delete should send the name currently shown at the selected index.");
+		assertTrue(net.contains("List<FocusPreset> presets = AttunedAttachments.getPresets(player);"),
+			"Server delete should re-read the authoritative preset list.");
+		assertTrue(net.contains("if (!presets.get(payload.index()).name().equals(payload.name()))"),
+			"A stale duplicate delete packet should no-op once another preset shifts into that index.");
+		assertTrue(net.contains("AttunedAttachments.deletePreset(player, payload.index());"),
+			"Deletion should still route through the attachment helper after validation.");
+	}
+
+	@Test
 	void applyPreservesSameSlotEquippedStacksBeforeConsumingDuplicateSatchelCopies() throws IOException {
 		String net = read(NET);
-		assertTrue(net.contains("List<ItemStack> currentEquippedStacks = equippedStacks(player, registeredFocusIds);"),
+		assertTrue(net.contains("List<ItemStack> currentEquippedStacks = equippedStacks(player);"),
 			"Apply should snapshot current equipped stacks separately so same-slot matches can keep their components.");
 		assertTrue(net.contains("availableSatchelStacks(satchel, registeredFocusIds)"),
 			"Satchel stacks should stay in their own source pool instead of being merged with equipped stacks first.");
@@ -98,6 +119,23 @@ class PresetNetworkingContractTest {
 		assertBefore(net, "matchingEquippedStack(currentEquippedStacks, slot, id)", "takeStack(satchelStacks, id)");
 		assertTrue(!net.contains("availableSatchelAndEquippedStacks"),
 			"Preset apply should not merge satchel and equipped stacks before same-slot preservation.");
+	}
+
+	@Test
+	void applyPreservesDefinitionlessSatchelAndEquippedStacksAsStorageOnlyItems() throws IOException {
+		String net = read(NET);
+
+		assertTrue(net.contains("List<ItemStack> currentEquippedStacks = equippedStacks(player);"),
+			"Current equipped stacks must be snapshotted without registry filtering so definitionless Foci can be displaced.");
+		assertTrue(net.contains("private static List<ItemStack> equippedStacks(ServerPlayer player)"),
+			"Equipped stack snapshots should not need the definition registry.");
+		assertTrue(net.contains("stacks.add(stack.copy());"),
+			"Definitionless equipped stacks should remain available for satchel/inventory return.");
+		assertTrue(net.contains("addStack(stacks, stack);"),
+			"Satchel and displaced equipped source pools should keep any stored stack by id.");
+		assertTrue(!net.contains("private static void addStack(Map<String, Deque<ItemStack>> stacks, ItemStack stack,\n"
+				+ "\t\t\tSet<String> registeredFocusIds)"),
+			"Storage-only source pools must not filter through registered Focus definitions.");
 	}
 
 	private static void assertBefore(String source, String earlier, String later) {

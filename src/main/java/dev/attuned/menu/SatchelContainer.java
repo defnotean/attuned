@@ -59,10 +59,7 @@ public final class SatchelContainer implements Container {
 	}
 
 	private ItemStack focusStackAt(int slot) {
-		ItemStack stack = holder().get(slot);
-		return stack.isEmpty() || Attunement.definitionFor(player, stack).isEmpty()
-			? ItemStack.EMPTY
-			: stack;
+		return holder().get(slot);
 	}
 
 	@Override

@@ -200,7 +200,7 @@ public final class Apex {
 
 	public static float adjustDamage(LivingEntity defender, DamageSource source, float amount,
 			CombatContext context) {
-		if (amount <= 0.0F) {
+		if (amount <= 0.0F || AttunedCombat.isReflecting()) {
 			return amount;
 		}
 		LivingEntity attacker = context.attacker();

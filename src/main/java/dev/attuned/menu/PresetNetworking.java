@@ -97,7 +97,7 @@ public final class PresetNetworking {
 		Registry<FocusDefinition> registry =
 			player.level().registryAccess().lookupOrThrow(AttunedRegistries.FOCUS_DEFINITIONS);
 		Set<String> registeredFocusIds = registeredFocusIds(registry);
-		SatchelState satchel = satchelState(player, registeredFocusIds);
+		SatchelState satchel = satchelState(player);
 		Map<String, Integer> inventoryCounts = inventoryFocusCounts(player, registeredFocusIds);
 		PresetApplicationResolver.Result result = PresetApplicationResolver.apply(
 			presets.get(payload.index()).slots(),
@@ -106,7 +106,7 @@ public final class PresetNetworking {
 			inventoryCounts,
 			registeredFocusIds);
 
-		List<ItemStack> currentEquippedStacks = equippedStacks(player, registeredFocusIds);
+		List<ItemStack> currentEquippedStacks = equippedStacks(player);
 		Map<String, Deque<ItemStack>> satchelStacks =
 			availableSatchelStacks(satchel, registeredFocusIds);
 		Map<String, Deque<ItemStack>> displacedEquippedStacks =
@@ -144,6 +144,13 @@ public final class PresetNetworking {
 		if (!hasOpenLiveSatchel(player)) {
 			return;
 		}
+		List<FocusPreset> presets = AttunedAttachments.getPresets(player);
+		if (payload.index() < 0 || payload.index() >= presets.size()) {
+			return;
+		}
+		if (!presets.get(payload.index()).name().equals(payload.name())) {
+			return;
+		}
 		AttunedAttachments.deletePreset(player, payload.index());
 	}
 
@@ -172,7 +179,7 @@ public final class PresetNetworking {
 		return ids;
 	}
 
-	private static SatchelState satchelState(ServerPlayer player, Set<String> registeredFocusIds) {
+	private static SatchelState satchelState(ServerPlayer player) {
 		if (!(player.containerMenu instanceof SatchelMenu menu)) {
 			return new SatchelState(ItemStack.EMPTY, List.of(), List.of());
 		}
@@ -189,8 +196,8 @@ public final class PresetNetworking {
 		for (int i = 0; i < AttunedComponents.SATCHEL_SIZE; i++) {
 			ItemStack stack = holder.get(i);
 			String id = idFor(stack);
-			ids.add(registeredFocusIds.contains(id) ? id : "");
-			stacks.add(registeredFocusIds.contains(id) ? stack : ItemStack.EMPTY);
+			ids.add(id);
+			stacks.add(stack);
 		}
 		return new SatchelState(satchel, ids, stacks);
 	}
@@ -215,13 +222,12 @@ public final class PresetNetworking {
 		return BuiltInRegistries.ITEM.getKey(stack.getItem()).toString();
 	}
 
-	private static List<ItemStack> equippedStacks(ServerPlayer player, Set<String> registeredFocusIds) {
+	private static List<ItemStack> equippedStacks(ServerPlayer player) {
 		List<ItemStack> stacks = new ArrayList<>(AttunedInv.SIZE);
 		AttunedInv inv = AttunedAttachments.getInventory(player);
 		for (int slot = 0; slot < AttunedInv.SIZE; slot++) {
 			ItemStack stack = inv.get(slot);
-			String id = idFor(stack);
-			stacks.add(registeredFocusIds.contains(id) ? stack.copy() : ItemStack.EMPTY);
+			stacks.add(stack.copy());
 		}
 		return stacks;
 	}
@@ -230,7 +236,7 @@ public final class PresetNetworking {
 			SatchelState satchel, Set<String> registeredFocusIds) {
 		Map<String, Deque<ItemStack>> stacks = new HashMap<>();
 		for (ItemStack stack : satchel.stacks()) {
-			addStack(stacks, stack, registeredFocusIds);
+			addStack(stacks, stack);
 		}
 		return stacks;
 	}
@@ -244,7 +250,7 @@ public final class PresetNetworking {
 			if (idFor(stack).equals(targetId)) {
 				continue;
 			}
-			addStack(stacks, stack, registeredFocusIds);
+			addStack(stacks, stack);
 		}
 		return stacks;
 	}
@@ -319,10 +325,9 @@ public final class PresetNetworking {
 		return id.equals(idFor(stack)) ? stack.copy() : ItemStack.EMPTY;
 	}
 
-	private static void addStack(Map<String, Deque<ItemStack>> stacks, ItemStack stack,
-			Set<String> registeredFocusIds) {
+	private static void addStack(Map<String, Deque<ItemStack>> stacks, ItemStack stack) {
 		String id = idFor(stack);
-		if (!registeredFocusIds.contains(id)) {
+		if (id.isEmpty()) {
 			return;
 		}
 		stacks.computeIfAbsent(id, ignored -> new ArrayDeque<>()).addLast(stack.copy());

@@ -108,7 +108,7 @@ public class SatchelScreen extends AbstractContainerScreen<SatchelMenu> {
 			button -> ClientPlayNetworking.send(new ApplyPresetPayload(selectedIndex)));
 		this.deleteButton = new PresetButton(this.leftPos + BUILDS_X + HALF_W + 2, this.topPos + ACTION_ROW_Y, HALF_W, ACTION_H,
 			Component.translatable("screen.attuned.preset.delete"),
-			button -> ClientPlayNetworking.send(new DeletePresetPayload(selectedIndex)));
+			button -> ClientPlayNetworking.send(new DeletePresetPayload(selectedIndex, presets().get(selectedIndex).name())));
 		this.addRenderableWidget(this.saveButton);
 		this.addRenderableWidget(this.applyButton);
 		this.addRenderableWidget(this.deleteButton);

@@ -29,6 +29,10 @@
 ### Fixed
 - Tightened GUI alignment for the Attunement Table, Reweaving Altar, and Attunement Journal.
 - Corrected the Harborlight tooltip ("at night" -> "in low light") to match its light-level trigger.
+- Fixed charged-hit combat checks so Sunlance, Temper, Pyresworn, and Radiant Covenant read the player's pre-reset melee charge instead of vanilla's post-hit reset value.
+- Prevented Thornward reflected damage from re-entering player-attack proc pipelines such as Apex Execute, Pyresworn, Needle, and resonance credit.
+- Preset application and Reliquary storage now preserve definitionless Foci as stored items instead of silently deleting them when a datapack definition is missing.
+- Double-clicking Delete on a saved build now removes only the selected build instead of deleting the next shifted build too.
 
 ### Internal
 - Added the reusable Focus holder, the satchel-contents data component, the reliquary menu/screen, the preset networking, and Minecraft-free resolver/cooldown tests behind the Reliquary.

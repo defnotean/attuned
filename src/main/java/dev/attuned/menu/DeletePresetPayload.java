@@ -7,10 +7,14 @@ import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.Identifier;
 
-public record DeletePresetPayload(int index) implements CustomPacketPayload {
+public record DeletePresetPayload(int index, String name) implements CustomPacketPayload {
 	public DeletePresetPayload {
 		if (index < 0) {
 			index = -1;
+		}
+		name = name == null ? "" : name.trim();
+		if (name.length() > 32) {
+			name = name.substring(0, 32);
 		}
 	}
 
@@ -18,7 +22,10 @@ public record DeletePresetPayload(int index) implements CustomPacketPayload {
 		new Type<>(Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "delete_preset"));
 
 	public static final StreamCodec<RegistryFriendlyByteBuf, DeletePresetPayload> CODEC =
-		StreamCodec.composite(ByteBufCodecs.VAR_INT, DeletePresetPayload::index, DeletePresetPayload::new).cast();
+		StreamCodec.composite(
+			ByteBufCodecs.VAR_INT, DeletePresetPayload::index,
+			ByteBufCodecs.STRING_UTF8, DeletePresetPayload::name,
+			DeletePresetPayload::new).cast();
 
 	@Override
 	public Type<DeletePresetPayload> type() {

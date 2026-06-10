@@ -77,7 +77,7 @@ public final class PresetApplicationResolver {
 		List<String> ids = new ArrayList<>(satchelSize);
 		for (int i = 0; i < satchelSize; i++) {
 			String normalized = normalize(source == null || i >= source.size() ? "" : source.get(i));
-			ids.add(!normalized.isEmpty() && registered.contains(normalized) ? normalized : "");
+			ids.add(normalized);
 		}
 		return ids;
 	}
@@ -87,7 +87,7 @@ public final class PresetApplicationResolver {
 		for (int slot = 0; slot < equipped.size(); slot++) {
 			String id = equipped.get(slot);
 			String targetId = slot < target.size() ? target.get(slot) : "";
-			if (!id.isEmpty() && registered.contains(id) && !id.equals(targetId)) {
+			if (!id.isEmpty() && (!id.equals(targetId) || !registered.contains(id))) {
 				displaced.add(id);
 			}
 		}

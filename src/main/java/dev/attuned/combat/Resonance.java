@@ -98,7 +98,7 @@ public final class Resonance {
 	/** AFTER_DAMAGE: gain on empowered hits dealt, drain on neutralized hits taken. */
 	private static void afterDamage(LivingEntity defender, DamageSource source,
 			float originalDamage, float dealtDamage, boolean blocked) {
-		if (dealtDamage <= 0.0F) {
+		if (dealtDamage <= 0.0F || AttunedCombat.isReflecting()) {
 			return;
 		}
 		LivingEntity attacker = AttunedCombat.attackerOf(source);

@@ -79,14 +79,15 @@ class PresetApplicationResolverTest {
 	}
 
 	@Test
-	void unregisteredSourceIdsDoNotSurviveInTheResidualSatchel() {
+	void unregisteredSourceIdsStayInStorageWhenDefinitionsAreMissing() {
 		PresetApplicationResolver.Result r = PresetApplicationResolver.apply(
 			List.of("", "", "", "", "", ""),
 			List.of("attuned:deleted_focus", "", "", "", "", ""),
-			List.of("attuned:deleted_focus", "attuned:edge_focus"), Map.of(),
+			List.of("attuned:deleted_focus", "", "attuned:edge_focus"), Map.of(),
 			java.util.Set.of("attuned:edge_focus"));
-		assertTrue(!r.satchel().contains("attuned:deleted_focus"),
-			"Malformed or removed Focus ids should be dropped from source pools, not written back to satchel data.");
+		long preservedUnknownCopies = r.satchel().stream().filter("attuned:deleted_focus"::equals).count();
+		assertEquals(2, preservedUnknownCopies,
+			"Definitionless Foci should stay in storage instead of being silently deleted.");
 		assertTrue(r.satchel().contains("attuned:edge_focus"),
 			"Registered source ids should remain available in the satchel residual.");
 	}
