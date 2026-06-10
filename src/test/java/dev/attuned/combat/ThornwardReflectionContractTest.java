@@ -16,6 +16,7 @@ class ThornwardReflectionContractTest {
 	private static final Path PACTS = Path.of("src/main/java/dev/attuned/pacts/Pacts.java");
 	private static final Path RESONANCE = Path.of("src/main/java/dev/attuned/combat/Resonance.java");
 	private static final Path UNSEEN = Path.of("src/main/java/dev/attuned/combat/UnseenCombat.java");
+	private static final Path REVENANT = Path.of("src/main/java/dev/attuned/combat/RevenantCombat.java");
 
 	@Test
 	void reflectedThornwardDamageCannotReenterPlayerAttackProcPipelines() throws IOException {
@@ -54,6 +55,16 @@ class ThornwardReflectionContractTest {
 			"public static float adjustDamage(LivingEntity defender, DamageSource source, float amount)")
 				.contains("AttunedCombat.isReflecting()"),
 			"Reflected damage should not spend Needle opener resources.");
+
+		String revenant = read(REVENANT);
+		assertTrue(methodBody(revenant,
+			"public static float adjustDamage(LivingEntity defender, DamageSource source, float amount)")
+				.contains("AttunedCombat.isReflecting()"),
+			"Reflected damage should not spend or multiply Ashen Debt.");
+		assertTrue(methodBody(revenant,
+			"private static void afterDamage(LivingEntity defender, DamageSource source,")
+				.contains("AttunedCombat.isReflecting()"),
+			"Reflected damage should not register Ashen Debts or proc Bonechill.");
 	}
 
 	private static String read(Path path) throws IOException {

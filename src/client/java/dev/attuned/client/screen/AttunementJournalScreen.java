@@ -235,7 +235,7 @@ public final class AttunementJournalScreen extends Screen {
 				x + 18, y, TEXT_TITLE, false);
 		}
 		graphics.fill(x, y + 18, x + w, y + 19, LINE);
-		graphics.fill(x, y + 18, x + Math.min(w + x, x + 76), y + 19, accent);
+		graphics.fill(x, y + 18, x + Math.min(w, 76), y + 19, accent);
 
 		int bodyY = y + 30;
 		for (String paragraph : text.body().split("\\n")) {

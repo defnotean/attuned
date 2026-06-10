@@ -1,7 +1,17 @@
+from __future__ import annotations
+
+import importlib.util
 import json
 import unittest
+from pathlib import Path
 
-from tools import publish_curseforge
+ROOT = Path(__file__).resolve().parents[1]
+MODULE_PATH = ROOT / "tools" / "publish_curseforge.py"
+
+spec = importlib.util.spec_from_file_location("publish_curseforge", MODULE_PATH)
+publish_curseforge = importlib.util.module_from_spec(spec)
+assert spec.loader is not None
+spec.loader.exec_module(publish_curseforge)
 
 
 class PublishCurseForgeTest(unittest.TestCase):

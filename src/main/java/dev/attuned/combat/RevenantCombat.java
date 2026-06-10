@@ -70,6 +70,9 @@ public final class RevenantCombat {
 	}
 
 	public static float adjustDamage(LivingEntity defender, DamageSource source, float amount) {
+		if (AttunedCombat.isReflecting()) {
+			return amount;
+		}
 		if (!(source.getEntity() instanceof ServerPlayer attacker)
 				|| source.getDirectEntity() != attacker
 				|| !isDirectMelee(source)
@@ -79,7 +82,7 @@ public final class RevenantCombat {
 			return amount;
 		}
 		Debt debt = DEBTS.get(attacker.getUUID());
-		if (debt == null || debt.target() != defender.getUUID()
+		if (debt == null || !debt.target().equals(defender.getUUID())
 				|| attacker.level().getGameTime() > debt.expiresAt()) {
 			return amount;
 		}
@@ -90,7 +93,7 @@ public final class RevenantCombat {
 
 	private static void afterDamage(LivingEntity defender, DamageSource source,
 			float originalDamage, float dealtDamage, boolean blocked) {
-		if (dealtDamage <= 0.0F) {
+		if (dealtDamage <= 0.0F || AttunedCombat.isReflecting()) {
 			return;
 		}
 		LivingEntity attacker = AttunedCombat.attackerOf(source);

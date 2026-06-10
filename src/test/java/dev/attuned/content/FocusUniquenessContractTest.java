@@ -27,6 +27,7 @@ class FocusUniquenessContractTest {
 		"cinder_focus",
 		"delver_focus",
 		"emberward_focus",
+		"epitaph_focus",
 		"forager_focus",
 		"gravebind_focus",
 		"harvest_focus",

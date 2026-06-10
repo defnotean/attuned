@@ -95,8 +95,10 @@ class PresetNetworkingContractTest {
 		String net = read(NET);
 		String screen = read(SATCHEL_SCREEN);
 
-		assertTrue(screen.contains("new DeletePresetPayload(selectedIndex, presets().get(selectedIndex).name())"),
+		assertTrue(screen.contains("new DeletePresetPayload(selectedIndex, presets.get(selectedIndex).name())"),
 			"Client delete should send the name currently shown at the selected index.");
+		assertTrue(screen.contains("if (selectedIndex >= 0 && selectedIndex < presets.size())"),
+			"Client delete should re-validate the selection against the live synced list before sending.");
 		assertTrue(net.contains("List<FocusPreset> presets = AttunedAttachments.getPresets(player);"),
 			"Server delete should re-read the authoritative preset list.");
 		assertTrue(net.contains("if (!presets.get(payload.index()).name().equals(payload.name()))"),

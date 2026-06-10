@@ -104,11 +104,9 @@ public class SatchelScreen extends AbstractContainerScreen<SatchelMenu> {
 		this.saveButton = new PresetButton(this.leftPos + BUILDS_X, this.topPos + SAVE_Y, BUILDS_W, FIELD_H,
 			Component.translatable("screen.attuned.preset.save"), button -> saveBuild());
 		this.applyButton = new PresetButton(this.leftPos + BUILDS_X, this.topPos + ACTION_ROW_Y, HALF_W, ACTION_H,
-			Component.translatable("screen.attuned.preset.apply"),
-			button -> ClientPlayNetworking.send(new ApplyPresetPayload(selectedIndex)));
+			Component.translatable("screen.attuned.preset.apply"), button -> applySelectedBuild());
 		this.deleteButton = new PresetButton(this.leftPos + BUILDS_X + HALF_W + 2, this.topPos + ACTION_ROW_Y, HALF_W, ACTION_H,
-			Component.translatable("screen.attuned.preset.delete"),
-			button -> ClientPlayNetworking.send(new DeletePresetPayload(selectedIndex, presets().get(selectedIndex).name())));
+			Component.translatable("screen.attuned.preset.delete"), button -> deleteSelectedBuild());
 		this.addRenderableWidget(this.saveButton);
 		this.addRenderableWidget(this.applyButton);
 		this.addRenderableWidget(this.deleteButton);
@@ -117,6 +115,21 @@ public class SatchelScreen extends AbstractContainerScreen<SatchelMenu> {
 		this.buildSignature = "";
 		refreshBuildButtons();
 		refreshPresetState();
+	}
+
+	private void applySelectedBuild() {
+		// Re-validate against the live synced list: a sync packet can shrink it between
+		// the tick that enabled this button and the click being processed.
+		if (selectedIndex >= 0 && selectedIndex < presets().size()) {
+			ClientPlayNetworking.send(new ApplyPresetPayload(selectedIndex));
+		}
+	}
+
+	private void deleteSelectedBuild() {
+		List<FocusPreset> presets = presets();
+		if (selectedIndex >= 0 && selectedIndex < presets.size()) {
+			ClientPlayNetworking.send(new DeletePresetPayload(selectedIndex, presets.get(selectedIndex).name()));
+		}
 	}
 
 	private void saveBuild() {

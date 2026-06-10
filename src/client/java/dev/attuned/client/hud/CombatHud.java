@@ -264,12 +264,12 @@ public final class CombatHud {
 			return null;
 		}
 		if (target instanceof Player targetPlayer) {
+			Optional<Apex.Capstone> capstone = Apex.capstoneOf(targetPlayer);
 			if (Attunement.activeSlots(targetPlayer).isEmpty()
 					&& Resonance.get(targetPlayer) <= 0.0F
-					&& Apex.capstoneOf(targetPlayer).isEmpty()) {
+					&& capstone.isEmpty()) {
 				return null;
 			}
-			Optional<Apex.Capstone> capstone = Apex.capstoneOf(targetPlayer);
 			return new TargetStance(
 				Attunement.committedAffinity(targetPlayer).orElse(null),
 				Attunement.isDiscord(targetPlayer),

@@ -41,7 +41,10 @@ public final class AttunedKeybinds {
 			InputConstants.UNKNOWN.getType(), InputConstants.UNKNOWN.getValue(), KeyMapping.Category.GAMEPLAY));
 		ClientTickEvents.END_CLIENT_TICK.register(client -> {
 			while (abilityKey.consumeClick()) {
-				ClientPlayNetworking.send(new AbilityPayload());
+				// Buffered clicks can drain after a disconnect; only send with a live player.
+				if (client.player != null) {
+					ClientPlayNetworking.send(new AbilityPayload());
+				}
 			}
 			while (toggleOwnAffinityHudKey.consumeClick()) {
 				AttunedClientConfig.toggleOwnAffinityHud();
