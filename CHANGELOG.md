@@ -7,7 +7,7 @@
 - Tremor now outlines the whole connected ore vein instead of a single block (stone and deepslate variants trace as one vein, mined blocks drop off the outline individually), and triggers from blackstone, basalt, and calcite so ancient-debris tunnels and geodes reveal too.
 
 ### Changed
-- Rebuilt the showcase 3D models: the Ocean Relic Trident gets a hand-authored silhouette with tapered tines, barbed prongs, glow fins, and kelp ribbons; the Frostbound Trident graduates from a flat sprite to a full icy voxel model; the Harpoon Focus becomes a pocket-sized voxel emblem of the trident it summons; and both the Attunement Altar and Altar of Reweaving get far richer multi-element geometry (floating gems, rune panels, loom arch).
+- Rebuilt the showcase 3D models: the Ocean Relic Trident gets a hand-authored silhouette with tapered tines, barbed prongs, glow fins, and kelp ribbons; the Frostbound Trident graduates from a flat sprite to a full icy voxel model; and both the Attunement Altar and Altar of Reweaving get far richer multi-element geometry (floating gems, rune panels, loom arch).
 
 ### Internal
 - Added a server-side attunement resolution cache keyed by player, immutable inventory identity, and current capacity.
