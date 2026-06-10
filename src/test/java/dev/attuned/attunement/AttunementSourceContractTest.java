@@ -36,8 +36,10 @@ class AttunementSourceContractTest {
 
 		assertTrue(source.contains("public static BudgetResolver.Resolution resolution(Player player)"),
 			"Attunement should expose one detailed resolution for callers that need active and dormant data");
-		assertTrue(source.contains("return BudgetResolver.resolveDetailed(candidates(player), capacity(player));"),
-			"The shared resolution should gather candidates once and resolve active plus dormant slots");
+		assertTrue(source.contains("BudgetResolver.Resolution resolution = BudgetResolver.resolveDetailed(candidates(player, inv), capacity);"),
+			"The shared resolution should gather candidates once from the already-read inventory and resolve active plus dormant slots");
+		assertTrue(source.contains("RESOLUTION_CACHE.put(player.getUUID(), new CachedResolution(inv, capacity, resolution));"),
+			"The shared resolution should cache the current inventory/capacity result for later callers");
 		assertTrue(source.contains("return resolution(player).activeSlots();"),
 			"activeSlots should delegate to the shared current resolution");
 		assertTrue(source.contains("return resolution(player).dormantReasons();"),

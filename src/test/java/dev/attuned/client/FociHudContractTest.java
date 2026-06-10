@@ -86,12 +86,16 @@ class FociHudContractTest {
 	void fociHudReusesOneAttunementResolutionPerFrame() throws IOException {
 		String hud = read(FOCI_HUD);
 
-		assertEquals(1, countOccurrences(hud, "Attunement.resolution(player)"),
-			"The HUD should resolve active and dormant Focus budget state once per rendered frame.");
+		assertEquals(1, countOccurrences(hud, "AttunementReadout.cached(player)"),
+			"The HUD should reuse the local-player readout snapshot once per rendered frame.");
+		assertEquals(0, countOccurrences(hud, "Attunement.resolution(player)"),
+			"The HUD should not own budget resolution after the shared readout cache is available.");
 		assertEquals(0, countOccurrences(hud, "Attunement.activeSlots(player)"),
 			"The HUD should not recompute active slots after resolving the frame budget.");
 		assertEquals(0, countOccurrences(hud, "Attunement.dormantReasons(player)"),
 			"The HUD should not recompute dormant reasons after resolving the frame budget.");
+		assertTrue(hud.contains("List<Integer> activeSlots = readout.activeSlots()"),
+			"The HUD should take active slots from the shared readout.");
 		assertTrue(hud.contains("drawAbilityWell(graphics, player, inv, activeSlots,"),
 			"The ability well should reuse the frame's resolved active slots.");
 		assertTrue(hud.contains("selectedAbilitySlot(Player player, AttunedInv inv, List<Integer> activeSlots,"),
@@ -106,8 +110,8 @@ class FociHudContractTest {
 			"The HUD should derive committed affinity from cached active slot definitions.");
 		assertEquals(0, countOccurrences(hud, "Attunement.isDiscord(player)"),
 			"The HUD should derive Discord state from cached active slot definitions.");
-		assertTrue(hud.contains("Apex.resolveCapstone(activeAffinities.ordered(), used, Attunement.capacity(player))"),
-			"The HUD should resolve Apex state from its cached ordered active affinities.");
+		assertTrue(hud.contains("drawApexBar(graphics, readout,"),
+			"The HUD should draw Apex and resonance state from the shared readout.");
 	}
 
 	@Test

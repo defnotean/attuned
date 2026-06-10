@@ -46,7 +46,7 @@ public final class StormcallBehavior implements FocusBehavior {
 	public void onTick(ServerPlayer player, ItemStack focus) {
 		UUID id = player.getUUID();
 		ServerLevel level = (ServerLevel) player.level();
-		if (!player.isSprinting() || !level.isRainingAt(player.blockPosition())) {
+		if (!player.isSprinting() || !isOpenRainAt(player, level)) {
 			ticks.remove(id);
 			return;
 		}
@@ -62,6 +62,10 @@ public final class StormcallBehavior implements FocusBehavior {
 	@Override
 	public void onDeactivate(ServerPlayer player, ItemStack focus) {
 		ticks.remove(player.getUUID());
+	}
+
+	private static boolean isOpenRainAt(ServerPlayer player, ServerLevel level) {
+		return level.isRainingAt(player.blockPosition().above());
 	}
 
 	private void strike(ServerPlayer player, ServerLevel level) {

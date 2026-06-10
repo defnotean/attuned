@@ -19,6 +19,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
@@ -34,12 +35,25 @@ import net.minecraft.world.entity.player.Player;
  * nothing is active, so every reachable build reads as a distinct title.</p>
  */
 public final class AttunementReadout {
+	private static UUID cachedPlayerId;
+	private static int cachedTick = -1;
+	private static Snapshot cachedSnapshot;
+
 	private AttunementReadout() {}
 
-	public record Snapshot(int capacity, int used, int active,
+	public record Snapshot(int capacity, int used, List<Integer> activeSlots,
 			Map<Integer, BudgetResolver.DormantReason> dormantReasons,
 			Optional<Affinity> committed, boolean discord, Optional<Apex.Capstone> capstone,
 			float resonance, Optional<Pact> pact, Optional<Component> pactPreview) {
+		public Snapshot {
+			activeSlots = List.copyOf(activeSlots);
+			dormantReasons = Map.copyOf(dormantReasons);
+		}
+
+		public int active() {
+			return activeSlots.size();
+		}
+
 		public int remaining() {
 			return Math.max(0, capacity - used);
 		}
@@ -55,6 +69,16 @@ public final class AttunementReadout {
 		public int stanceArgb() {
 			return AttunementReadout.apexAwareStanceArgb(this);
 		}
+	}
+
+	public static Snapshot cached(Player player) {
+		UUID playerId = player.getUUID();
+		if (cachedSnapshot == null || cachedTick != player.tickCount || !playerId.equals(cachedPlayerId)) {
+			cachedPlayerId = playerId;
+			cachedTick = player.tickCount;
+			cachedSnapshot = snapshot(player);
+		}
+		return cachedSnapshot;
 	}
 
 	public static Snapshot snapshot(Player player) {
@@ -90,7 +114,7 @@ public final class AttunementReadout {
 			Apex.resolveCapstone(orderedActiveAffinities, used, capacity);
 		Optional<Pact> pact = Pacts.activeOf(activeAffinityCounts);
 		int remaining = Math.max(0, capacity - used);
-		return new Snapshot(capacity, used, activeSlots.size(), dormantReasons, committed, discord,
+		return new Snapshot(capacity, used, activeSlots, dormantReasons, committed, discord,
 			capstone, Resonance.get(player), pact,
 			Pacts.previewOf(player, pact, discord, activeAffinityCounts, remaining));
 	}

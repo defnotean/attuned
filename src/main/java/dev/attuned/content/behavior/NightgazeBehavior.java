@@ -16,7 +16,7 @@ import net.minecraft.world.item.ItemStack;
 public final class NightgazeBehavior implements FocusBehavior {
 
 	/** Refreshed duration in ticks — comfortably longer than the refresh interval. */
-	private static final int DURATION = 40;
+	private static final int DURATION = 600;
 
 	@Override
 	public void onTick(ServerPlayer player, ItemStack focus) {

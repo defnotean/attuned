@@ -11,16 +11,13 @@ import dev.attuned.attunement.AttunedInv;
 import dev.attuned.attunement.Attunement;
 import dev.attuned.attunement.BudgetResolver;
 import dev.attuned.client.AttunedClientConfig;
+import dev.attuned.client.AttunementReadout;
 import dev.attuned.client.FocusAbilityClientState;
-import dev.attuned.combat.Apex;
 import dev.attuned.combat.Resonance;
 import dev.attuned.menu.FocusLayout;
-import java.util.ArrayList;
-import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry;
 import net.fabricmc.fabric.api.client.rendering.v1.hud.VanillaHudElements;
 import net.minecraft.client.DeltaTracker;
@@ -100,18 +97,14 @@ public final class FociHud {
 		drawFrameGlow(graphics, x, y);
 
 		AttunedInv inv = AttunedAttachments.getInventory(player);
-		BudgetResolver.Resolution resolution = Attunement.resolution(player);
-		List<Integer> activeSlots = resolution.activeSlots();
-		Map<Integer, BudgetResolver.DormantReason> dormantReasons = resolution.dormantReasons();
+		AttunementReadout.Snapshot readout = AttunementReadout.cached(player);
+		List<Integer> activeSlots = readout.activeSlots();
+		Map<Integer, BudgetResolver.DormantReason> dormantReasons = readout.dormantReasons();
 		FocusDefinition[] slotDefinitions = activeSlotDefinitions(player, inv, activeSlots);
-		ActiveAffinities activeAffinities = activeAffinities(slotDefinitions, activeSlots);
-		int used = used(slotDefinitions, activeSlots);
-		Optional<Apex.Capstone> capstone =
-			Apex.resolveCapstone(activeAffinities.ordered(), used, Attunement.capacity(player));
 
 		drawAbilityWell(graphics, player, inv, activeSlots, slotDefinitions,
 			x + ABILITY_WELL_X, y + ABILITY_WELL_Y);
-		drawApexBar(graphics, player, capstone, activeAffinities.committed(), activeAffinities.discord(),
+		drawApexBar(graphics, readout,
 			x + APEX_GEM_X, y + APEX_GEM_Y, x + APEX_BAR_X, y + APEX_BAR_Y);
 		drawFocusGrid(graphics, inv, activeSlots, dormantReasons, slotDefinitions,
 			x + FOCUS_GRID_X, y + FOCUS_GRID_Y);
@@ -133,37 +126,8 @@ public final class FociHud {
 		return definitions;
 	}
 
-	private static ActiveAffinities activeAffinities(FocusDefinition[] slotDefinitions, List<Integer> activeSlots) {
-		List<Optional<Affinity>> ordered = new ArrayList<>(activeSlots.size());
-		Set<Affinity> distinct = EnumSet.noneOf(Affinity.class);
-		for (int slot : activeSlots) {
-			Optional<Affinity> affinity = affinityOf(slotDefinitions[slot]);
-			ordered.add(affinity);
-			affinity.ifPresent(distinct::add);
-		}
-		Optional<Affinity> committed = distinct.size() == 1
-			? Optional.of(distinct.iterator().next())
-			: Optional.empty();
-		return new ActiveAffinities(ordered, committed, distinct.size() >= 2);
-	}
-
 	private static Optional<Affinity> affinityOf(FocusDefinition definition) {
 		return definition == null ? Optional.empty() : definition.affinity();
-	}
-
-	private static int used(FocusDefinition[] slotDefinitions, List<Integer> activeSlots) {
-		int total = 0;
-		for (int slot : activeSlots) {
-			FocusDefinition definition = slotDefinitions[slot];
-			if (definition != null) {
-				total += definition.cost();
-			}
-		}
-		return total;
-	}
-
-	private record ActiveAffinities(List<Optional<Affinity>> ordered,
-			Optional<Affinity> committed, boolean discord) {
 	}
 
 	private static void drawFrameGlow(GuiGraphicsExtractor graphics, int x, int y) {
@@ -261,21 +225,18 @@ public final class FociHud {
 		graphics.fill(x + 1, y + 1, x + FocusLayout.SLOT - 1, y + FocusLayout.SLOT - 1, DORMANT_DIM);
 	}
 
-	private static void drawApexBar(GuiGraphicsExtractor graphics, Player player,
-			Optional<Apex.Capstone> capstone, Optional<Affinity> committed, boolean discord,
+	private static void drawApexBar(GuiGraphicsExtractor graphics, AttunementReadout.Snapshot readout,
 			int gemX, int gemY, int barX, int barY) {
-		boolean atApex = capstone.isPresent() && Resonance.atApex(player);
 		CombatHud.drawPlayerGem(graphics, gemX, gemY, APEX_GEM_SIZE,
-			committed.orElse(null), discord, capstone.orElse(null), atApex);
+			readout.committed().orElse(null), readout.discord(), readout.capstone().orElse(null), readout.atApex());
 
 		graphics.fill(barX - 1, barY - 1, barX + APEX_BAR_W + 1, barY + APEX_BAR_H + 1, BAR_EMPTY_FILL);
 		graphics.fill(barX, barY, barX + APEX_BAR_W, barY + APEX_BAR_H, BAR_TRACK);
 		graphics.fill(barX + 1, barY + 1, barX + APEX_BAR_W - 1, barY + APEX_BAR_H - 1, BAR_EMPTY_FILL);
-		float resonance = Math.max(0.0F, Math.min(1.0F, Resonance.get(player)));
+		float resonance = Math.max(0.0F, Math.min(1.0F, readout.resonance()));
 		int fill = Math.round(APEX_BAR_W * resonance);
 		if (fill > 0) {
-			int color = capstone.map(Apex.Capstone::argb)
-				.orElse(committed.map(Affinity::argb).orElse(AffinityColors.NEUTRAL_ARGB));
+			int color = readout.stanceArgb();
 			graphics.fill(barX, barY, barX + fill, barY + APEX_BAR_H, 0xD0000000 | (color & 0x00FFFFFF));
 		}
 		// Clamp so a threshold at/near 1.0 stays on the bar track instead of

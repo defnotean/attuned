@@ -9,7 +9,6 @@ import java.util.UUID;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.tags.FluidTags;
-import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -23,7 +22,7 @@ import net.minecraft.world.level.block.state.BlockState;
  */
 public final class HarborlightBehavior implements FocusBehavior {
 	private static final int CHECK_INTERVAL = 40;
-	private static final int DURATION = 80;
+	private static final int DURATION = 600;
 	private static final int MAX_LIGHT = 10;
 
 	private final Map<UUID, Integer> ticks = new HashMap<>();
@@ -49,7 +48,7 @@ public final class HarborlightBehavior implements FocusBehavior {
 				|| player.level().getMaxLocalRawBrightness(player.blockPosition()) > MAX_LIGHT) {
 			return;
 		}
-		player.addEffect(new MobEffectInstance(MobEffects.NIGHT_VISION, DURATION, 0, true, false, false));
+		PassiveEffectRefresher.refresh(player, MobEffects.NIGHT_VISION, DURATION, 0, true, false, false);
 	}
 
 	@Override

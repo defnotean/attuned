@@ -2,12 +2,8 @@ package dev.attuned.client.hud;
 
 import dev.attuned.Attuned;
 import dev.attuned.api.focus.Affinity;
-import dev.attuned.api.focus.FocusDefinition;
-import dev.attuned.attunement.AttunedAttachments;
-import dev.attuned.attunement.AttunedInv;
-import dev.attuned.attunement.Attunement;
-import dev.attuned.attunement.BudgetResolver;
 import dev.attuned.client.AttunedClientConfig;
+import dev.attuned.client.AttunementReadout;
 import dev.attuned.combat.Apex;
 import dev.attuned.combat.MobAffinities;
 import dev.attuned.combat.Resonance;
@@ -22,14 +18,10 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.ArrayList;
 import java.util.EnumMap;
-import java.util.EnumSet;
-import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 
 /**
  * The combat heads-up overlay: a compact panel anchored above the hotbar that
@@ -230,33 +222,8 @@ public final class CombatHud {
 	}
 
 	private static OwnStance ownStance(Player player) {
-		float resonance = Resonance.get(player);
-		AttunedInv inv = AttunedAttachments.getInventory(player);
-		BudgetResolver.Resolution resolution = Attunement.resolution(player);
-		List<Integer> activeSlots = resolution.activeSlots();
-		List<Optional<Affinity>> activeAffinities = new ArrayList<>(activeSlots.size());
-		Set<Affinity> distinctAffinities = EnumSet.noneOf(Affinity.class);
-		int used = 0;
-		for (int slot : activeSlots) {
-			Optional<FocusDefinition> definition = Attunement.definitionFor(player, inv.get(slot));
-			if (definition.isEmpty()) {
-				activeAffinities.add(Optional.empty());
-				continue;
-			}
-			FocusDefinition focus = definition.get();
-			used += focus.cost();
-			Optional<Affinity> affinity = focus.affinity();
-			activeAffinities.add(affinity);
-			affinity.ifPresent(distinctAffinities::add);
-		}
-		Optional<Affinity> committed = distinctAffinities.size() == 1
-			? Optional.of(distinctAffinities.iterator().next())
-			: Optional.empty();
-		return new OwnStance(
-			committed,
-			distinctAffinities.size() >= 2,
-			Apex.resolveCapstone(activeAffinities, used, Attunement.capacity(player)),
-			resonance);
+		AttunementReadout.Snapshot readout = AttunementReadout.cached(player);
+		return new OwnStance(readout.committed(), readout.discord(), readout.capstone(), readout.resonance());
 	}
 
 	private static TargetStance targetedStance(@Nullable LivingEntity target) {
@@ -264,17 +231,17 @@ public final class CombatHud {
 			return null;
 		}
 		if (target instanceof Player targetPlayer) {
-			Optional<Apex.Capstone> capstone = Apex.capstoneOf(targetPlayer);
-			if (Attunement.activeSlots(targetPlayer).isEmpty()
-					&& Resonance.get(targetPlayer) <= 0.0F
-					&& capstone.isEmpty()) {
+			AttunementReadout.Snapshot readout = AttunementReadout.snapshot(targetPlayer);
+			if (readout.activeSlots().isEmpty()
+					&& readout.resonance() <= 0.0F
+					&& readout.capstone().isEmpty()) {
 				return null;
 			}
 			return new TargetStance(
-				Attunement.committedAffinity(targetPlayer).orElse(null),
-				Attunement.isDiscord(targetPlayer),
-				capstone.orElse(null),
-				capstone.isPresent() && Resonance.atApex(targetPlayer));
+				readout.committed().orElse(null),
+				readout.discord(),
+				readout.capstone().orElse(null),
+				readout.atApex());
 		}
 		return MobAffinities.of(target)
 			.map(affinity -> new TargetStance(affinity, false, null, false))

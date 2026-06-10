@@ -138,7 +138,7 @@ public class AltarScreen extends AbstractContainerScreen<AltarMenu> {
 		// need the player's stance colour, so resolve it once here.
 		Player player = this.minecraft != null ? this.minecraft.player : null;
 		if (player != null) {
-			AttunementReadout.Snapshot readout = AttunementReadout.snapshot(player);
+			AttunementReadout.Snapshot readout = AttunementReadout.cached(player);
 			int stance = AttunementReadout.apexAwareStanceArgb(readout);
 
 			// Stance-tinted inner border around the shard well, sitting one pixel
@@ -209,7 +209,7 @@ public class AltarScreen extends AbstractContainerScreen<AltarMenu> {
 			return;
 		}
 
-		AttunementReadout.Snapshot readout = AttunementReadout.snapshot(player);
+		AttunementReadout.Snapshot readout = AttunementReadout.cached(player);
 		int capacity = readout.capacity();
 		int used = readout.used();
 		int cap = this.menu.capacityCap();

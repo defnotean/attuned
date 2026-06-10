@@ -1,6 +1,8 @@
 package dev.attuned.attunement;
 
+import dev.attuned.AttunedPlayerCleanup;
 import dev.attuned.AttunedRegistries;
+import dev.attuned.AttunedServerCleanup;
 import dev.attuned.api.focus.Affinity;
 import dev.attuned.api.focus.FocusDefinition;
 import net.minecraft.core.Registry;
@@ -14,6 +16,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Read-side computation over a player's attunement state: the budget, which
@@ -25,7 +29,21 @@ import java.util.Set;
  * affinity is a committed lane, and two or more is Discord.
  */
 public final class Attunement {
+	// ConcurrentHashMap, and server-side entries only: in singleplayer the client
+	// render thread (FocusPanel/tooltips via AttunementReadout) and the server
+	// thread share this static, and they see different AttunedInv instances for
+	// the same player UUID — a plain HashMap would race and the entries would
+	// thrash. Client lookups bypass the cache entirely.
+	private static final Map<UUID, CachedResolution> RESOLUTION_CACHE = new ConcurrentHashMap<>();
+
+	static {
+		AttunedPlayerCleanup.onForget(RESOLUTION_CACHE::remove);
+		AttunedServerCleanup.onStop(RESOLUTION_CACHE::clear);
+	}
+
 	private Attunement() {}
+
+	private record CachedResolution(AttunedInv inv, int capacity, BudgetResolver.Resolution resolution) {}
 
 	public static int capacity(Player player) {
 		return AttunedAttachments.getCapacity(player);
@@ -43,7 +61,18 @@ public final class Attunement {
 
 	/** Full active/dormant resolution for the player's current Focus inventory. */
 	public static BudgetResolver.Resolution resolution(Player player) {
-		return BudgetResolver.resolveDetailed(candidates(player), capacity(player));
+		AttunedInv inv = AttunedAttachments.getInventory(player);
+		int capacity = capacity(player);
+		if (player.level().isClientSide()) {
+			return BudgetResolver.resolveDetailed(candidates(player, inv), capacity);
+		}
+		CachedResolution cached = RESOLUTION_CACHE.get(player.getUUID());
+		if (cached != null && cached.inv() == inv && cached.capacity() == capacity) {
+			return cached.resolution();
+		}
+		BudgetResolver.Resolution resolution = BudgetResolver.resolveDetailed(candidates(player, inv), capacity);
+		RESOLUTION_CACHE.put(player.getUUID(), new CachedResolution(inv, capacity, resolution));
+		return resolution;
 	}
 
 	/**
@@ -65,6 +94,10 @@ public final class Attunement {
 
 	private static List<BudgetResolver.Candidate<Item>> candidates(Player player) {
 		AttunedInv inv = AttunedAttachments.getInventory(player);
+		return candidates(player, inv);
+	}
+
+	private static List<BudgetResolver.Candidate<Item>> candidates(Player player, AttunedInv inv) {
 		List<BudgetResolver.Candidate<Item>> candidates = new ArrayList<>();
 		for (int slot = 0; slot < AttunedInv.SIZE; slot++) {
 			ItemStack stack = inv.get(slot);

@@ -18,26 +18,27 @@ class FocusPanelContractTest {
 	void focusPanelReusesCachedAttunementStateForApexAndResonance() throws IOException {
 		String source = Files.readString(FOCUS_PANEL, StandardCharsets.UTF_8);
 
-		assertEquals(1, countOccurrences(source, "Attunement.activeSlots(player)"),
-			"The Focus panel should resolve active slots once per draw.");
+		assertEquals(1, countOccurrences(source, "AttunementReadout.cached(player)"),
+			"The Focus panel should reuse the local-player readout snapshot once per draw.");
+		assertEquals(0, countOccurrences(source, "Attunement.activeSlots(player)"),
+			"The Focus panel should not own active slot resolution after the shared readout cache is available.");
 		assertEquals(0, countOccurrences(source, "Attunement.used(player)"),
 			"The Focus panel should derive used budget from cached active Focus definitions.");
 		assertEquals(0, countOccurrences(source, "Apex.capstoneOf(player)"),
 			"The Focus panel should derive Apex from cached active Focus definitions.");
-		assertTrue(source.contains("List<Optional<Affinity>> orderedActiveAffinities"),
-			"Apex resolution should preserve the active slot order and neutral Focus entries.");
-		assertTrue(source.contains("orderedActiveAffinities.add(Optional.empty())")
-				&& source.contains("orderedActiveAffinities.add(affinity)"),
-			"Neutral active Foci should remain Optional.empty() entries for Stillpoint resolution.");
-		assertTrue(source.contains("Apex.resolveCapstone(orderedActiveAffinities, used, capacity)"),
-			"The Focus panel should resolve Apex from cached ordered affinities and used budget.");
-		assertEquals(1, countOccurrences(source, "Resonance.get(player)"),
-			"The Focus panel should read resonance once per draw.");
+		assertTrue(source.contains("List<Integer> activeSlotsList = readout.activeSlots()"),
+			"The Focus panel should take active slots from the shared readout.");
+		assertTrue(source.contains("int affinityColor = readout.stanceArgb()"),
+			"The Focus panel should take stance colour from the shared readout.");
+		assertEquals(0, countOccurrences(source, "Apex.resolveCapstone("),
+			"The Focus panel should not duplicate Apex resolution after the shared readout cache is available.");
+		assertEquals(0, countOccurrences(source, "Resonance.get(player)"),
+			"The Focus panel should not reread resonance after the shared readout cache is available.");
 		assertEquals(0, countOccurrences(source, "Resonance.atApex(player)"),
 			"The Focus panel should derive Apex readiness from the cached resonance value.");
-		assertTrue(source.contains("boolean atApex = capstone.isPresent() && resonance >= Resonance.APEX_THRESHOLD;"),
-			"The Focus panel should brighten Apex resonance only when a capstone is actually available.");
-		assertTrue(source.contains("drawResonanceRing(graphics, gemX0, y0, affinityColor, resonance, atApex)"),
+		assertTrue(source.contains("readout.atApex()"),
+			"The Focus panel should brighten Apex resonance only when the shared readout says Apex is active.");
+		assertTrue(source.contains("drawResonanceRing(graphics, gemX0, y0, affinityColor, resonance, readout.atApex())"),
 			"The resonance ring should reuse the frame's cached resonance state.");
 	}
 

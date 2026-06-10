@@ -7,22 +7,17 @@ import dev.attuned.api.focus.FocusDefinition;
 import dev.attuned.attunement.AttunedAttachments;
 import dev.attuned.attunement.AttunedInv;
 import dev.attuned.attunement.Attunement;
-import dev.attuned.combat.Resonance;
-import dev.attuned.combat.Apex;
 import dev.attuned.client.hud.CombatHud;
 import dev.attuned.menu.FocusLayout;
+import dev.attuned.pacts.Pact;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.player.Player;
 
-import java.util.ArrayList;
-import java.util.EnumMap;
-import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 
 /**
  * Draws the Focus side panel: a custom-textured inventory extension with six
@@ -50,7 +45,6 @@ public final class FocusPanel {
 	private static final int WELL_SHADOW = 0xFF373737;
 	private static final int DORMANT_DIM = 0x55000000;
 	private static final int PRIORITY_TICK_DIM = 0x80373737;
-	private static final int SINGLE_AFFINITY_PACT_THRESHOLD = 3;
 
 	// Idle-glow pulse: a sine modulation across PULSE_PERIOD_TICKS whose alpha
 	// breathes between two narrow bounds so the highlight reads as ambient rather
@@ -107,38 +101,18 @@ public final class FocusPanel {
 		// Attunement calls are needed for the entire draw — used, capacity, the
 		// stance colour and the per-slot glow colours are all derived locally.
 		AttunedInv inv = AttunedAttachments.getInventory(player);
-		List<Integer> activeSlotsList = Attunement.activeSlots(player);
+		AttunementReadout.Snapshot readout = AttunementReadout.cached(player);
+		List<Integer> activeSlotsList = readout.activeSlots();
 		FocusDefinition[] slotDefinitions = new FocusDefinition[AttunedInv.SIZE];
-		List<Optional<Affinity>> orderedActiveAffinities = new ArrayList<>(activeSlotsList.size());
-		int used = 0;
-		Set<Affinity> distinctActiveAffinities = EnumSet.noneOf(Affinity.class);
-		EnumMap<Affinity, Integer> activeAffinityCounts = new EnumMap<>(Affinity.class);
 		for (int slot : activeSlotsList) {
 			FocusDefinition def = Attunement.definitionFor(player, inv.get(slot)).orElse(null);
-			if (def == null) {
-				orderedActiveAffinities.add(Optional.empty());
-				continue;
-			}
 			slotDefinitions[slot] = def;
-			used += def.cost();
-			Optional<Affinity> affinity = def.affinity();
-			orderedActiveAffinities.add(affinity);
-			affinity.ifPresent(activeAffinity -> {
-				distinctActiveAffinities.add(activeAffinity);
-				activeAffinityCounts.merge(activeAffinity, 1, Integer::sum);
-			});
 		}
-		int capacity = Attunement.capacity(player);
-		boolean discord = distinctActiveAffinities.size() >= 2;
-		Optional<Affinity> committed = distinctActiveAffinities.size() == 1
-			? Optional.of(distinctActiveAffinities.iterator().next())
-			: Optional.empty();
-		Optional<Apex.Capstone> capstone =
-			Apex.resolveCapstone(orderedActiveAffinities, used, capacity);
-		float resonance = Resonance.get(player);
-		boolean atApex = capstone.isPresent() && resonance >= Resonance.APEX_THRESHOLD;
-		int affinityColor = AttunementReadout.stanceArgb(capstone, discord, committed);
-		Optional<Affinity> pactStabilityAffinity = pactStabilityAffinity(discord, activeAffinityCounts);
+		int used = readout.used();
+		int capacity = readout.capacity();
+		float resonance = readout.resonance();
+		int affinityColor = readout.stanceArgb();
+		Optional<Affinity> pactStabilityAffinity = readout.pact().flatMap(Pact::affinity);
 
 		for (int i = 0; i < AttunedInv.SIZE; i++) {
 			int sx = leftPos + slotX;
@@ -175,15 +149,15 @@ public final class FocusPanel {
 		// with a custom status glyph inside it.
 		int gemX0 = leftPos + slotX + FocusLayout.SLOT / 2 - GEM_SIZE / 2;
 		CombatHud.drawPlayerGem(graphics, gemX0, y0, GEM_SIZE,
-			committed.orElse(null), discord, capstone.orElse(null),
-			atApex);
+			readout.committed().orElse(null), readout.discord(), readout.capstone().orElse(null),
+			readout.atApex());
 
 		// Resonance ring: a 1-pixel square border traced one pixel outside the
 		// gem's bezel. The full ring is laid down as a faint track, then overlaid
 		// with a coloured arc whose length scales with the player's resonance.
 		// At Apex the overlay is the full affinity colour; below threshold it sits
 		// dim so the build's gating state reads at a glance.
-		drawResonanceRing(graphics, gemX0, y0, affinityColor, resonance, atApex);
+		drawResonanceRing(graphics, gemX0, y0, affinityColor, resonance, readout.atApex());
 
 		// Budget bar, centred in the panel's bottom padding band: a dark track
 		// with a fill proportional to the attunement points in use.
@@ -258,23 +232,6 @@ public final class FocusPanel {
 	 */
 	private static int focusAffinityColor(FocusDefinition definition) {
 		return definition.affinity().map(Affinity::argb).orElse(AffinityColors.NEUTRAL_ARGB);
-	}
-
-	/**
-	 * The affinity whose active Focus wells should receive the Pact stability cue.
-	 * This mirrors the single-affinity Pact wake condition while reusing the slot
-	 * scan already done by draw(): at least three active affinity-bearing Foci,
-	 * all from one lane. Discord and Untethered deliberately stay quiet.
-	 */
-	private static Optional<Affinity> pactStabilityAffinity(boolean discord,
-			EnumMap<Affinity, Integer> activeAffinityCounts) {
-		if (discord || activeAffinityCounts.size() != 1) {
-			return Optional.empty();
-		}
-		var only = activeAffinityCounts.entrySet().iterator().next();
-		return only.getValue() >= SINGLE_AFFINITY_PACT_THRESHOLD
-			? Optional.of(only.getKey())
-			: Optional.empty();
 	}
 
 	private static boolean hasPactStability(FocusDefinition definition, Optional<Affinity> pactAffinity) {

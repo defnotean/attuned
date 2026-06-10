@@ -18,8 +18,10 @@ class AltarScreenReadoutContractTest {
 	void altarScreenConsumesReadoutSnapshotForBudgetStanceDormantAndApex() throws IOException {
 		String source = Files.readString(ALTAR_SCREEN, StandardCharsets.UTF_8);
 
-		assertEquals(2, countOccurrences(source, "AttunementReadout.snapshot(player)"),
-			"Background and label passes should each build one shared readout snapshot.");
+		assertEquals(2, countOccurrences(source, "AttunementReadout.cached(player)"),
+			"Background and label passes should each reuse the shared local-player readout snapshot.");
+		assertEquals(0, countOccurrences(source, "AttunementReadout.snapshot(player)"),
+			"The altar should not rebuild local-player readouts inside both render passes.");
 		assertTrue(source.contains("AttunementReadout.budgetFillWidth(BAR_W, used, capacity)"),
 			"The altar budget bar should use the pre-resolved readout budget.");
 		assertTrue(source.contains("CombatHud.drawPlayerGem(graphics, stanceGemX, stanceGemY, stanceGemSize"),

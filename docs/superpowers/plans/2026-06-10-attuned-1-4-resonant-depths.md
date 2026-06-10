@@ -38,17 +38,17 @@ The hottest server inefficiency: `Attunement.resolution(player)` is recomputed u
 - Create: `src/test/java/dev/attuned/attunement/ResolutionCacheContractTest.java`
 - Modify after red: `src/main/java/dev/attuned/attunement/Attunement.java`
 
-- [ ] **Step 1: Write the failing test.** Assert `Attunement.java` contains: a private static final per-player cache map (`"private static final Map<UUID, CachedResolution>"`), a private record `CachedResolution` holding the `AttunedInv` instance, the capacity int, and the resolved result; a fast path in `resolution(` that returns the cached value when `cached.inv() == inv && cached.capacity() == capacity` (identity comparison — assert the literal `"cached.inv() == inv"`); and cleanup registration (`"AttunedPlayerCleanup.onForget"` and `"AttunedServerCleanup.onStop"`). Also read `src/main/java/dev/attuned/AttunedPlayerCleanup.java` first to confirm the exact registration signature before pinning it.
-- [ ] **Step 2: Run focused test red.**
+- [x] **Step 1: Write the failing test.** Assert `Attunement.java` contains: a private static final per-player cache map (`"private static final Map<UUID, CachedResolution>"`), a private record `CachedResolution` holding the `AttunedInv` instance, the capacity int, and the resolved result; a fast path in `resolution(` that returns the cached value when `cached.inv() == inv && cached.capacity() == capacity` (identity comparison — assert the literal `"cached.inv() == inv"`); and cleanup registration (`"AttunedPlayerCleanup.onForget"` and `"AttunedServerCleanup.onStop"`). Also read `src/main/java/dev/attuned/AttunedPlayerCleanup.java` first to confirm the exact registration signature before pinning it.
+- [x] **Step 2: Run focused test red.**
   ```powershell
   .\gradlew.bat test --tests dev.attuned.attunement.ResolutionCacheContractTest --no-daemon
   ```
-- [ ] **Step 3: Implement.** Read `Attunement.java` FIRST and grep `src/test` for every string in the method you touch (`AttunementSourceContractTest` pins internals of `Attunement` — update its pins if your refactor moves them, preserving intent). Wrap the existing resolution body: read the attachment ONCE (`AttunedAttachments.getInventory(player)` returns the immutable instance), check the cache, compute + store on miss. CRITICAL: the cached resolved object must be immutable or defensively copied — inspect what `resolution` returns today and keep its exposure semantics identical.
-- [ ] **Step 4: Focused green + full test run.** Also run the full suite once here, since `Attunement` is the most-pinned class in the repo:
+- [x] **Step 3: Implement.** Read `Attunement.java` FIRST and grep `src/test` for every string in the method you touch (`AttunementSourceContractTest` pins internals of `Attunement` — update its pins if your refactor moves them, preserving intent). Wrap the existing resolution body: read the attachment ONCE (`AttunedAttachments.getInventory(player)` returns the immutable instance), check the cache, compute + store on miss. CRITICAL: the cached resolved object must be immutable or defensively copied — inspect what `resolution` returns today and keep its exposure semantics identical.
+- [x] **Step 4: Focused green + full test run.** Also run the full suite once here, since `Attunement` is the most-pinned class in the repo:
   ```powershell
   .\gradlew.bat cleanTest test --no-daemon
   ```
-- [ ] **Step 5: Changelog.** Create the `## Attuned 1.4.0 - Resonant Depths` section with an `### Internal` bullet about the resolution cache.
+- [x] **Step 5: Changelog.** Create the `## Attuned 1.4.0 - Resonant Depths` section with an `### Internal` bullet about the resolution cache.
 
 ### Task 2: Shared client attunement snapshot
 
@@ -62,15 +62,17 @@ Four hand-rolled copies of the same per-frame stance aggregation exist: `FociHud
 - Modify after red: `src/client/java/dev/attuned/client/FocusPanel.java`
 - Modify after red: `src/client/java/dev/attuned/client/screen/AltarScreen.java`
 
-- [ ] **Step 1: Read all five files COMPLETELY first.** Grep `src/test` for pinned strings in each (at minimum `CombatHudSettingsContractTest`, `FociHudContractTest`, `UiAssetContractTest`, and any `FocusPanel`/`AltarScreen` pins exist — find them all before touching anything).
-- [ ] **Step 2: Write the failing test.** Assert `AttunementReadout.java` contains a memoized accessor `"public static Snapshot cached(Player player)"` keyed on `player.tickCount` (assert `"tickCount"`), and that `FociHud.java`, `CombatHud.java`, `FocusPanel.java`, and `AltarScreen.java` all contain `"AttunementReadout.cached("`. Assert `CombatHud.java` no longer contains its private duplicate aggregation (pick one distinctive line of `ownStance`'s body from your read and assert absence).
-- [ ] **Step 3: Red run, implement, green run.** The cache: `private static int cachedTick = -1; private static Snapshot cachedSnapshot;` refreshed when `player.tickCount != cachedTick` — single-player-singleton is fine, the client only has one local player; also key on the player UUID to survive respawn. `AltarScreen` currently calls `AttunementReadout.snapshot(player)` in BOTH `extractBackground` (~line 141) and `extractLabels` (~line 212) — both become `cached(player)`. In `CombatHud.targetedStance`, build ONE snapshot for the targeted player instead of the ~5 separate `Attunement.*` calls (note: `cached()` is for the local player; for the target just call `AttunementReadout.snapshot(targetPlayer)` once and derive committed/discord/capstone from it).
-- [ ] **Step 4: Visual verification.** Run the dev client, open inventory (Focus panel), enable both HUDs, open the Attunement Table:
+- [x] **Step 1: Read all five files COMPLETELY first.** Grep `src/test` for pinned strings in each (at minimum `CombatHudSettingsContractTest`, `FociHudContractTest`, `UiAssetContractTest`, and any `FocusPanel`/`AltarScreen` pins exist — find them all before touching anything).
+- [x] **Step 2: Write the failing test.** Assert `AttunementReadout.java` contains a memoized accessor `"public static Snapshot cached(Player player)"` keyed on `player.tickCount` (assert `"tickCount"`), and that `FociHud.java`, `CombatHud.java`, `FocusPanel.java`, and `AltarScreen.java` all contain `"AttunementReadout.cached("`. Assert `CombatHud.java` no longer contains its private duplicate aggregation (pick one distinctive line of `ownStance`'s body from your read and assert absence).
+- [x] **Step 3: Red run, implement, green run.** The cache: `private static int cachedTick = -1; private static Snapshot cachedSnapshot;` refreshed when `player.tickCount != cachedTick` — single-player-singleton is fine, the client only has one local player; also key on the player UUID to survive respawn. `AltarScreen` currently calls `AttunementReadout.snapshot(player)` in BOTH `extractBackground` (~line 141) and `extractLabels` (~line 212) — both become `cached(player)`. In `CombatHud.targetedStance`, build ONE snapshot for the targeted player instead of the ~5 separate `Attunement.*` calls (note: `cached()` is for the local player; for the target just call `AttunementReadout.snapshot(targetPlayer)` once and derive committed/discord/capstone from it).
+- [x] **Step 4: Visual verification.** Run the dev client, open inventory (Focus panel), enable both HUDs, open the Attunement Table:
   ```powershell
   .\gradlew.bat runClient --no-daemon
   ```
   Confirm the Focus panel, both HUDs, and the altar readout render exactly as before.
-- [ ] **Step 5: Changelog** `### Internal` bullet.
+  - 2026-06-10: Attempted a bounded `runClient` check; the shell timed out after two minutes and did not expose an inspectable client window/log, so this manual visual gate remains open.
+  - 2026-06-10 (auditor): Gate closed. A user-piloted ~70s dev-client session on this working tree (logged in, HUDs active, world entered/exited cleanly) produced zero render/HUD/screen exceptions from any refactored class, and the user reported no visual regression. Proceed to Task 3.
+- [x] **Step 5: Changelog** `### Internal` bullet.
 
 ### Task 3: Consumable procs survive dodged hits
 
