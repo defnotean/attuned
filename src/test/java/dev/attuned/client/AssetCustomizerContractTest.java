@@ -414,9 +414,34 @@ class AssetCustomizerContractTest {
 	@Test
 	void generatedWeaponTransformsStayReadableInsteadOfEdgeOn() throws IOException {
 		assertReadableGeneratedWeaponTransforms(
-			Path.of("src/main/resources/assets/attuned/models/item/frostbound_trident.json"));
-		assertReadableGeneratedWeaponTransforms(
 			Path.of("src/main/resources/assets/attuned/models/item/offshore_harpoon.json"));
+	}
+
+	@Test
+	void frostboundTridentUsesAReadableVoxelCuboidModel() throws IOException {
+		// Frostbound graduated from a flat generated sprite to a real voxel model;
+		// its readability contract now mirrors the Ocean Relic's: real cuboids on a
+		// palette texture, plus the hand-tuned trident display poses.
+		Path modelPath = Path.of("src/main/resources/assets/attuned/models/item/frostbound_trident.json");
+		JsonObject model = JsonParser.parseString(read(modelPath)).getAsJsonObject();
+		assertTrue(!model.has("parent"),
+			"Frostbound should render as a real cuboid voxel model, not a flat generated sprite");
+		assertEquals("attuned:item/frostbound_trident_voxel_palette",
+			model.getAsJsonObject("textures").get("palette").getAsString(),
+			"Frostbound should use its generated ice palette texture");
+		assertEquals("attuned:item/frostbound_trident_voxel_palette",
+			model.getAsJsonObject("textures").get("particle").getAsString(),
+			"Frostbound should define a particle texture to avoid missing-texture warnings");
+		assertTrue(model.getAsJsonArray("elements").size() >= 30,
+			"Frostbound should contain a real cuboid trident silhouette");
+		assertCuboidCoordinatesInMinecraftBounds(modelPath, model.getAsJsonArray("elements"));
+		JsonObject display = model.getAsJsonObject("display");
+		assertTrue(display.has("gui") && display.has("firstperson_righthand")
+				&& display.has("thirdperson_righthand"),
+			"Frostbound should keep the hand-tuned trident display transforms");
+		assertTrue(Files.isRegularFile(
+			Path.of("src/main/resources/assets/attuned/textures/item/frostbound_trident_voxel_palette.png")),
+			"Frostbound's ice palette texture should ship with the model");
 	}
 
 	@Test
