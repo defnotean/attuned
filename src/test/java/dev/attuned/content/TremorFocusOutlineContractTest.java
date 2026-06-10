@@ -33,8 +33,16 @@ class TremorFocusOutlineContractTest {
 
 		assertTrue(source.contains("nearestOre(server, pos)"),
 			"Tremor should select the nearest matching ore block.");
-		assertTrue(source.contains("ServerPlayNetworking.send(serverPlayer, new TremorOreHintPayload(orePos))"),
-			"Tremor should send the exact ore position to the mining player.");
+		assertTrue(source.contains("collectVein(server, orePos)"),
+			"Tremor should expand the nearest ore into its whole connected vein.");
+		assertTrue(source.contains("ServerPlayNetworking.send(serverPlayer, new TremorOreHintPayload(vein))"),
+			"Tremor should send every vein position to the mining player.");
+		assertTrue(source.contains("MAX_VEIN_BLOCKS"),
+			"The vein flood fill must be capped so a giant deposit cannot flood the packet.");
+		assertTrue(source.contains("path.startsWith(\"deepslate_\")"),
+			"Stone and deepslate variants of one ore should outline as a single vein.");
+		assertTrue(source.contains("Blocks.BLACKSTONE") && source.contains("Blocks.BASALT"),
+			"Ancient-debris tunnels run through blackstone and basalt, so those count as stone-like.");
 		assertTrue(!source.contains("private static boolean nearOre"),
 			"Tremor should not stop at a boolean near-ore hint.");
 	}
@@ -44,10 +52,10 @@ class TremorFocusOutlineContractTest {
 		String payload = read(TREMOR_PAYLOAD);
 		String networking = read(JOURNAL_NETWORKING);
 
-		assertTrue(payload.contains("record TremorOreHintPayload(BlockPos orePos)"),
-			"The clientbound payload should carry the ore block position.");
-		assertTrue(payload.contains("BlockPos.STREAM_CODEC.map"),
-			"The payload should use the vanilla BlockPos stream codec.");
+		assertTrue(payload.contains("record TremorOreHintPayload(List<BlockPos> orePositions)"),
+			"The clientbound payload should carry every vein block position.");
+		assertTrue(payload.contains("BlockPos.STREAM_CODEC.apply(ByteBufCodecs.list())"),
+			"The payload should use the vanilla BlockPos stream codec in list form.");
 		assertTrue(networking.contains("PayloadTypeRegistry.clientboundPlay().register(TremorOreHintPayload.TYPE"),
 			"Common networking should register Tremor's clientbound payload type.");
 	}
@@ -91,8 +99,8 @@ class TremorFocusOutlineContractTest {
 	void tremorTooltipPromisesTheOreOutline() throws IOException {
 		String lang = read(LANG_FILE);
 
-		assertTrue(lang.contains("\"item.attuned.tremor_focus.effect\": \"Mining stone outlines the nearest ore for a short time.\""),
-			"Tremor's tooltip should describe the actual ore outline reveal.");
+		assertTrue(lang.contains("\"item.attuned.tremor_focus.effect\": \"Mining stone outlines the nearest ore vein for a short time.\""),
+			"Tremor's tooltip should describe the actual ore-vein outline reveal.");
 	}
 
 	private static String read(Path path) throws IOException {

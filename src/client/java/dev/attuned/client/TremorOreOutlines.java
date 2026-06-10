@@ -1,6 +1,8 @@
 package dev.attuned.client;
 
 import dev.attuned.network.TremorOreHintPayload;
+import java.util.ArrayList;
+import java.util.List;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.client.rendering.v1.level.LevelRenderContext;
@@ -25,7 +27,7 @@ public final class TremorOreOutlines {
 	private static final int OUTLINE_COLOR = 0xCCB266FF;
 	private static final float LINE_WIDTH = 3.0F;
 
-	private static BlockPos orePos;
+	private static final List<BlockPos> orePositions = new ArrayList<>();
 	private static ClientLevel highlightedLevel;
 	private static long expiresAt;
 	private static boolean initialized;
@@ -39,55 +41,61 @@ public final class TremorOreOutlines {
 		initialized = true;
 
 		ClientPlayNetworking.registerGlobalReceiver(TremorOreHintPayload.TYPE, (payload, context) ->
-			context.client().execute(() -> highlight(payload.orePos())));
+			context.client().execute(() -> highlight(payload.orePositions())));
 		LevelRenderEvents.END_MAIN.register(TremorOreOutlines::render);
 		// Drop the highlighted-level reference on disconnect; render() does not run
 		// on the title screen, so without this the old ClientLevel would stay pinned.
 		ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> clear());
 	}
 
-	private static void highlight(BlockPos pos) {
+	private static void highlight(List<BlockPos> positions) {
 		Minecraft minecraft = Minecraft.getInstance();
-		if (minecraft.level == null) {
+		if (minecraft.level == null || positions.isEmpty()) {
 			return;
 		}
-		orePos = pos.immutable();
+		orePositions.clear();
+		for (BlockPos pos : positions) {
+			orePositions.add(pos.immutable());
+		}
 		highlightedLevel = minecraft.level;
 		expiresAt = minecraft.level.getGameTime() + OUTLINE_TICKS;
 	}
 
 	private static void render(LevelRenderContext context) {
 		Minecraft minecraft = Minecraft.getInstance();
-		if (minecraft.level == null || orePos == null) {
+		if (minecraft.level == null || orePositions.isEmpty()) {
 			return;
 		}
 		if (minecraft.level != highlightedLevel) {
 			clear();
 			return;
 		}
-		if (minecraft.level.getGameTime() > expiresAt || !minecraft.level.getBlockState(orePos).is(ORES)) {
+		// Mined-out vein blocks drop off individually; the rest of the outline stays.
+		orePositions.removeIf(pos -> !minecraft.level.getBlockState(pos).is(ORES));
+		if (minecraft.level.getGameTime() > expiresAt || orePositions.isEmpty()) {
 			clear();
 			return;
 		}
 
 		Vec3 camera = context.gameRenderer().getMainCamera().position();
-		double x = orePos.getX() - camera.x();
-		double y = orePos.getY() - camera.y();
-		double z = orePos.getZ() - camera.z();
-
 		RenderType outline = TremorOreRenderTypes.oreOutline();
-		ShapeRenderer.renderShape(
-			context.poseStack(),
-			context.bufferSource().getBuffer(outline),
-			Shapes.block(),
-			x, y, z,
-			OUTLINE_COLOR,
-			LINE_WIDTH);
+		for (BlockPos orePos : orePositions) {
+			double x = orePos.getX() - camera.x();
+			double y = orePos.getY() - camera.y();
+			double z = orePos.getZ() - camera.z();
+			ShapeRenderer.renderShape(
+				context.poseStack(),
+				context.bufferSource().getBuffer(outline),
+				Shapes.block(),
+				x, y, z,
+				OUTLINE_COLOR,
+				LINE_WIDTH);
+		}
 		context.bufferSource().endBatch(outline);
 	}
 
 	private static void clear() {
-		orePos = null;
+		orePositions.clear();
 		highlightedLevel = null;
 		expiresAt = 0L;
 	}

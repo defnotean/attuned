@@ -331,7 +331,7 @@
 	"item.attuned.forager_focus.effect": "Sometimes find extra seeds or food while gathering plants.",
 	"item.attuned.tremor_focus.lore": "Stone answers in quiet knocks.",
 	"item.attuned.tremor_focus.lore2": "Not a map. Only a hunch with weight.",
-	"item.attuned.tremor_focus.effect": "Mining stone outlines the nearest ore for a short time.",
+	"item.attuned.tremor_focus.effect": "Mining stone outlines the nearest ore vein for a short time.",
 	"item.attuned.beacon_focus.lore": "Home pulls, even through stone.",
 	"item.attuned.beacon_focus.lore2": "Lost is a direction, not a place.",
 	"item.attuned.beacon_focus.effect": "Aims a held compass at your last bed.",

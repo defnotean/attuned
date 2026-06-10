@@ -156,7 +156,7 @@ examples to copy from:
 | `attuned:forager`    | `ForagerBehavior`        | Sometimes adds small food or seed rewards while gathering plants. |
 | `attuned:bloom`      | `BloomBehavior`          | Rare seeds, flowers, or honeycomb while gathering plants. |
 | `attuned:mossheart`  | `MossheartBehavior`      | Hostile hits grant brief Resistance while standing on moss, grass, or leaves. |
-| `attuned:tremor`     | `TremorBehavior`         | Mining stone may hint when ore is nearby. |
+| `attuned:tremor`     | `TremorBehavior`         | Mining stone briefly outlines the nearest ore vein, including through nether blackstone and basalt. |
 | `attuned:aegis`      | `AegisBehavior`          | Periodic absorption shield (uses a cooldown). |
 | `attuned:lodestone`  | `LodestoneBehavior`      | Pulls nearby dropped items in. |
 | `attuned:beacon`     | `BeaconBehavior`         | Points a held compass at your bed. |

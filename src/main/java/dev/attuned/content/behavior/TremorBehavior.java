@@ -38,6 +38,10 @@ public final class TremorBehavior implements dev.attuned.api.focus.FocusBehavior
 	private static final TagKey<net.minecraft.world.level.block.Block> ORES =
 		TagKey.create(Registries.BLOCK, Identifier.fromNamespaceAndPath("c", "ores"));
 	private static final int RADIUS = 5;
+	/** Cap on outlined blocks per reveal, so a giant deposit cannot flood the packet. */
+	private static final int MAX_VEIN_BLOCKS = 32;
+	/** Veins may extend a little past the scan radius; bound the flood fill anyway. */
+	private static final double MAX_VEIN_REACH_SQ = 10.0 * 10.0;
 	private static final long COOLDOWN_TICKS = 80L;
 	private static final Map<UUID, Long> LAST_SCAN = new HashMap<>();
 	private static boolean initialized;
@@ -72,7 +76,8 @@ public final class TremorBehavior implements dev.attuned.api.focus.FocusBehavior
 		Optional<BlockPos> ore = nearestOre(server, pos);
 		if (ore.isPresent()) {
 			BlockPos orePos = ore.get();
-			ServerPlayNetworking.send(serverPlayer, new TremorOreHintPayload(orePos));
+			java.util.List<BlockPos> vein = collectVein(server, orePos);
+			ServerPlayNetworking.send(serverPlayer, new TremorOreHintPayload(vein));
 			server.sendParticles(ParticleTypes.NOTE,
 				pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5,
 				2, 0.25, 0.25, 0.25, 0.0);
@@ -88,7 +93,50 @@ public final class TremorBehavior implements dev.attuned.api.focus.FocusBehavior
 			|| state.is(Blocks.TUFF)
 			|| state.is(Blocks.GRANITE)
 			|| state.is(Blocks.DIORITE)
-			|| state.is(Blocks.ANDESITE);
+			|| state.is(Blocks.ANDESITE)
+			// Nether depths and geode shells: ancient-debris tunnels run through
+			// blackstone and basalt layers, and amethyst pockets sit in calcite.
+			|| state.is(Blocks.BLACKSTONE)
+			|| state.is(Blocks.BASALT)
+			|| state.is(Blocks.SMOOTH_BASALT)
+			|| state.is(Blocks.CALCITE);
+	}
+
+	/**
+	 * Expands the nearest ore into its whole connected vein: a bounded flood fill
+	 * over the 26-neighborhood collecting blocks of the same ore family, so the
+	 * outline traces the deposit instead of a single block. Stone and deepslate
+	 * variants of the same ore count as one family across the transition border.
+	 */
+	private static java.util.List<BlockPos> collectVein(ServerLevel level, BlockPos seed) {
+		String family = oreFamily(level.getBlockState(seed));
+		java.util.List<BlockPos> vein = new java.util.ArrayList<>();
+		java.util.Set<BlockPos> seen = new java.util.HashSet<>();
+		java.util.ArrayDeque<BlockPos> queue = new java.util.ArrayDeque<>();
+		queue.add(seed.immutable());
+		seen.add(seed.immutable());
+		while (!queue.isEmpty() && vein.size() < MAX_VEIN_BLOCKS) {
+			BlockPos current = queue.removeFirst();
+			vein.add(current);
+			for (BlockPos neighbor : BlockPos.betweenClosed(current.offset(-1, -1, -1), current.offset(1, 1, 1))) {
+				BlockPos candidate = neighbor.immutable();
+				if (seen.contains(candidate) || candidate.distSqr(seed) > MAX_VEIN_REACH_SQ) {
+					continue;
+				}
+				BlockState state = level.getBlockState(candidate);
+				if (state.is(ORES) && oreFamily(state).equals(family)) {
+					seen.add(candidate);
+					queue.addLast(candidate);
+				}
+			}
+		}
+		return vein;
+	}
+
+	/** Same-ore grouping key: deepslate variants collapse onto their stone ore. */
+	private static String oreFamily(BlockState state) {
+		String path = BuiltInRegistries.BLOCK.getKey(state.getBlock()).getPath();
+		return path.startsWith("deepslate_") ? path.substring("deepslate_".length()) : path;
 	}
 
 	private static Optional<BlockPos> nearestOre(ServerLevel level, BlockPos center) {
