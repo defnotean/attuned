@@ -210,6 +210,69 @@ def frostbound_elements():
 	return e
 
 
+# --- Harpoon Focus -------------------------------------------------------------
+# A pocket-sized emblem of the Ocean Relic it summons: an upright miniature
+# trident threaded through a coiled rope ring, on the same voxel palette so the
+# Focus visibly "contains" the weapon. Sized to read inside a 16px GUI slot.
+
+def harpoon_focus_elements():
+	e = []
+	# Miniature shaft and butt.
+	e.append(cube("mini_shaft", (7.3, 0.6, 7.6), (8.7, 9.8, 9.0), pal_shaded((0, 1), (1, 1))))
+	e.append(cube("mini_butt", (6.9, 0.0, 7.2), (9.1, 1.0, 9.4), pal_shaded((12, 0), (13, 0))))
+	# Rope coil: an octagon of small driftwood-rope segments around the shaft.
+	ring = [
+		((5.6, 3.4, 7.5), (7.3, 4.6, 9.1)),
+		((8.7, 3.4, 7.5), (10.4, 4.6, 9.1)),
+		((6.4, 3.4, 6.4), (9.6, 4.6, 7.6)),
+		((6.4, 3.4, 9.0), (9.6, 4.6, 10.2)),
+	]
+	for i, (frm, to) in enumerate(ring):
+		e.append(cube(f"rope_coil_{i}", frm, to, pal_shaded((15, 0), (13, 0))))
+	e.append(cube("rope_coil_knot", (9.8, 3.0, 7.7), (11.0, 5.0, 8.9),
+		pal(12, 0), rotation=yrot(22.5, (10.4, 4.0, 8.3))))
+	# Collar and a tiny crown gem.
+	e.append(cube("mini_collar", (6.9, 9.8, 7.2), (9.1, 10.9, 9.4), pal_shaded((12, 0), (13, 0))))
+	e.append(cube("mini_gem", (7.45, 10.9, 7.75), (8.55, 12.0, 8.85), pal(1, 0)))
+	e.append(cube("mini_gem_shell", (7.45, 10.9, 7.75), (8.55, 12.0, 8.85), pal(0, 0),
+		rotation=yrot(45, (8, 11.45, 8.3))))
+	# Head plate and three tines.
+	e.append(cube("mini_plate", (4.6, 12.0, 7.5), (11.4, 13.0, 9.1), pal_shaded((12, 0), (13, 0))))
+	e.append(cube("mini_center_tine", (7.55, 13.0, 7.8), (8.45, 15.4, 8.8), pal_shaded((7, 0), (8, 0))))
+	e.append(cube("mini_center_tip", (7.8, 15.4, 8.0), (8.2, 16.0, 8.6), pal(0, 0)))
+	for side, x0 in (("w", 5.0), ("e", 10.0)):
+		e.append(cube(f"mini_prong_{side}", (x0, 13.0, 7.8), (x0 + 1.0, 15.0, 8.8),
+			pal_shaded((7, 0), (9, 0))))
+		fin_x = x0 - 0.45 if side == "w" else x0 + 1.0
+		e.append(cube(f"mini_fin_{side}", (fin_x, 13.2, 8.0), (fin_x + 0.45, 14.6, 8.6), pal(14, 0)))
+	return e
+
+
+HARPOON_FOCUS_DISPLAY = {
+	"gui": {"rotation": [18, -35, -3], "translation": [0, -1.2, 0], "scale": [0.92, 0.92, 0.92]},
+	"firstperson_righthand": {"rotation": [0, -60, 10], "translation": [1.5, 2.5, 1], "scale": [0.55, 0.55, 0.55]},
+	"firstperson_lefthand": {"rotation": [0, 60, -10], "translation": [8.5, 2.5, 1], "scale": [0.55, 0.55, 0.55]},
+	"thirdperson_righthand": {"rotation": [0, 60, 0], "translation": [0, 2.0, 0.5], "scale": [0.45, 0.45, 0.45]},
+	"thirdperson_lefthand": {"rotation": [0, 60, 0], "translation": [0, 2.0, 0.5], "scale": [0.45, 0.45, 0.45]},
+	"ground": {"rotation": [0, 0, 0], "translation": [0, 3, 0], "scale": [0.4, 0.4, 0.4]},
+	"fixed": {"rotation": [0, 180, 0], "translation": [0, -1.5, 0], "scale": [0.85, 0.85, 0.85]},
+}
+
+
+def regenerate_harpoon_focus():
+	model = {
+		"credit": "Attuned deterministic model generator (tools/generate_3d_models.py)",
+		"gui_light": "front",
+		"textures": {
+			"palette": "attuned:item/ocean_relic_trident_voxel_palette",
+			"particle": "attuned:item/ocean_relic_trident_voxel_palette",
+		},
+		"elements": harpoon_focus_elements(),
+		"display": HARPOON_FOCUS_DISPLAY,
+	}
+	write_json(MODELS_ITEM / "harpoon_focus.json", model)
+
+
 # --- Attunement Altar ---------------------------------------------------------
 
 def attunement_altar_elements():
@@ -392,6 +455,7 @@ def regenerate_altars():
 def main():
 	regenerate_ocean_relic()
 	regenerate_frostbound()
+	regenerate_harpoon_focus()
 	regenerate_altars()
 
 
