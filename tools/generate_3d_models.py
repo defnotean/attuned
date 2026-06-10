@@ -210,72 +210,6 @@ def frostbound_elements():
 	return e
 
 
-# --- Harpoon Focus -------------------------------------------------------------
-# A Focus should read as a worn talisman, not a weapon: this is a circular
-# driftwood-and-bronze medallion on a cord loop, with a dark sea-glass face and
-# a small trident RELIEF set into it — amulet first, summons emblem second.
-# Same voxel palette as the Ocean Relic so the pair visibly belong together.
-
-def harpoon_focus_elements():
-	e = []
-	# Medallion ring: an octagonal hoop ~12 wide, alternating driftwood/bronze.
-	rim = [
-		("n", (4.9, 12.2, 7.6), (11.1, 13.8, 9.0), pal_shaded((15, 0), (13, 0))),
-		("s", (4.9, 1.2, 7.6), (11.1, 2.8, 9.0), pal_shaded((15, 0), (13, 0))),
-		("w", (2.6, 4.4, 7.6), (4.2, 10.6, 9.0), pal_shaded((2, 1), (1, 1))),
-		("e", (11.8, 4.4, 7.6), (13.4, 10.6, 9.0), pal_shaded((2, 1), (1, 1))),
-		("nw", (3.4, 9.8, 7.6), (5.8, 12.6, 9.0), pal_shaded((12, 0), (13, 0))),
-		("ne", (10.2, 9.8, 7.6), (12.6, 12.6, 9.0), pal_shaded((12, 0), (13, 0))),
-		("sw", (3.4, 2.4, 7.6), (5.8, 5.2, 9.0), pal_shaded((12, 0), (13, 0))),
-		("se", (10.2, 2.4, 7.6), (12.6, 5.2, 9.0), pal_shaded((12, 0), (13, 0))),
-	]
-	for name, frm, to, tone in rim:
-		e.append(cube(f"rim_{name}", frm, to, tone))
-	# Cord loop and knot above the medallion.
-	e.append(cube("cord_loop", (6.9, 13.8, 7.8), (9.1, 15.6, 8.8), pal_shaded((2, 1), (1, 1))))
-	e.append(cube("cord_knot", (7.4, 13.4, 7.7), (8.6, 14.2, 8.9), pal(13, 0),
-		rotation=yrot(22.5, (8, 13.8, 8.3))))
-	# Dark sea-glass face recessed inside the ring.
-	e.append(cube("face_plate", (4.4, 2.6, 7.85), (11.6, 12.4, 8.75), pal_shaded((6, 0), (9, 0))))
-	# Trident relief, slightly proud of the face: shaft, crossbar, three tines, gem.
-	e.append(cube("relief_shaft", (7.6, 3.4, 8.55), (8.4, 8.2, 9.05), pal_shaded((0, 1), (1, 1))))
-	e.append(cube("relief_gem", (7.5, 8.2, 8.5), (8.5, 9.2, 9.1), pal(1, 0)))
-	e.append(cube("relief_plate", (5.6, 9.2, 8.55), (10.4, 10.0, 9.05), pal(12, 0)))
-	e.append(cube("relief_center_tine", (7.7, 10.0, 8.55), (8.3, 11.9, 9.05), pal(7, 0)))
-	e.append(cube("relief_tine_w", (6.0, 10.0, 8.55), (6.7, 11.3, 9.05), pal(8, 0)))
-	e.append(cube("relief_tine_e", (9.3, 10.0, 8.55), (10.0, 11.3, 9.05), pal(8, 0)))
-	# Glow studs at the ring's cardinal points, like sea-light set in the bezel.
-	for name, (x, y) in (("n", (7.6, 12.6)), ("s", (7.6, 1.6)), ("w", (3.0, 7.1)), ("e", (12.2, 7.1))):
-		e.append(cube(f"glow_stud_{name}", (x, y, 7.45), (x + 0.8, y + 0.8, 9.15), pal(3, 0)))
-	return e
-
-
-HARPOON_FOCUS_DISPLAY = {
-	# Mostly face-on in the GUI so the medallion-and-relief reads at slot size.
-	"gui": {"rotation": [6, -18, 0], "translation": [0, -0.8, 0], "scale": [0.95, 0.95, 0.95]},
-	"firstperson_righthand": {"rotation": [0, -35, 8], "translation": [1.5, 2.5, 1], "scale": [0.55, 0.55, 0.55]},
-	"firstperson_lefthand": {"rotation": [0, 35, -8], "translation": [8.5, 2.5, 1], "scale": [0.55, 0.55, 0.55]},
-	"thirdperson_righthand": {"rotation": [0, 45, 0], "translation": [0, 2.0, 0.5], "scale": [0.45, 0.45, 0.45]},
-	"thirdperson_lefthand": {"rotation": [0, 45, 0], "translation": [0, 2.0, 0.5], "scale": [0.45, 0.45, 0.45]},
-	"ground": {"rotation": [0, 0, 0], "translation": [0, 3, 0], "scale": [0.4, 0.4, 0.4]},
-	"fixed": {"rotation": [0, 180, 0], "translation": [0, -0.5, 0], "scale": [0.9, 0.9, 0.9]},
-}
-
-
-def regenerate_harpoon_focus():
-	model = {
-		"credit": "Attuned deterministic model generator (tools/generate_3d_models.py)",
-		"gui_light": "front",
-		"textures": {
-			"palette": "attuned:item/ocean_relic_trident_voxel_palette",
-			"particle": "attuned:item/ocean_relic_trident_voxel_palette",
-		},
-		"elements": harpoon_focus_elements(),
-		"display": HARPOON_FOCUS_DISPLAY,
-	}
-	write_json(MODELS_ITEM / "harpoon_focus.json", model)
-
-
 # --- Attunement Altar ---------------------------------------------------------
 
 def attunement_altar_elements():
@@ -458,7 +392,6 @@ def regenerate_altars():
 def main():
 	regenerate_ocean_relic()
 	regenerate_frostbound()
-	regenerate_harpoon_focus()
 	regenerate_altars()
 
 
