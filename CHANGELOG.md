@@ -13,6 +13,11 @@
 - Added a server-side attunement resolution cache keyed by player, immutable inventory identity, and current capacity.
 - Shared one cached client attunement readout snapshot across the Focus panel, Foci HUD, Combat HUD, and Attunement Altar render passes.
 
+## Attuned 1.3.1 - 26.1.2 Launch Hotfix
+
+### Fixed
+- Fixed the Minecraft 26.1.2 launch crash from `PlayerAttackMixin` by anchoring the melee-charge snapshot at `Player.attack` method entry instead of the removed `resetAttackStrengthTicker` invocation.
+
 ## Attuned 1.3.0 - The Focus Reliquary
 
 ### Added
