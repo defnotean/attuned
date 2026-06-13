@@ -10,6 +10,7 @@
 - **Datapack Confluences** - packs can define their own at `data/<namespace>/attuned/synergy/<id>.json` (members + modifiers + optional behavior).
 
 ### Fixed
+- Dodged or invulnerability-frame hits no longer consume Ashen Debt, the Needle opener cooldown, or break Veil.
 - Lengthened Night Vision refresh windows for Nightgaze and Harborlight so the client no longer constantly flickers, and fixed Stormcall's rain check so lightning can trigger while sprinting in open rain.
 - Tremor now outlines the whole connected ore vein instead of a single block (stone and deepslate variants trace as one vein, mined blocks drop off the outline individually), and triggers from blackstone, basalt, and calcite so ancient-debris tunnels and geodes reveal too.
 

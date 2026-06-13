@@ -46,6 +46,12 @@ public final class RevenantCombat {
 
 	private static final Map<UUID, Debt> DEBTS = new HashMap<>();
 	private static final Map<UUID, Long> LAST_RITES = new HashMap<>();
+	/**
+	 * Pending Ashen Debt spends recorded at the HEAD damage stage. The debt is only
+	 * removed once the hit actually lands in {@link #afterDamage}, so a dodged or
+	 * invulnerability-framed hit wastes the multiplier but keeps the debt charged.
+	 */
+	private static final Map<UUID, PendingProc> PENDING_DEBT = new HashMap<>();
 	private static boolean initialized;
 
 	private RevenantCombat() {}
@@ -62,10 +68,12 @@ public final class RevenantCombat {
 		AttunedPlayerCleanup.onForget(uuid -> {
 			DEBTS.remove(uuid);
 			LAST_RITES.remove(uuid);
+			PENDING_DEBT.remove(uuid);
 		});
 		AttunedServerCleanup.onStop(() -> {
 			DEBTS.clear();
 			LAST_RITES.clear();
+			PENDING_DEBT.clear();
 		});
 	}
 
@@ -86,7 +94,10 @@ public final class RevenantCombat {
 				|| attacker.level().getGameTime() > debt.expiresAt()) {
 			return amount;
 		}
-		DEBTS.remove(attacker.getUUID());
+		// Shape the damage now (it cannot be retro-multiplied) but defer spending the
+		// debt to the after-damage stage so a dodged hit keeps the charge.
+		PENDING_DEBT.put(attacker.getUUID(),
+			new PendingProc(defender.getUUID(), attacker.level().getGameTime()));
 		ashenDebtFeedback(attacker, defender);
 		return amount * DEBT_MULTIPLIER;
 	}
@@ -99,6 +110,14 @@ public final class RevenantCombat {
 		LivingEntity attacker = AttunedCombat.attackerOf(source);
 		if (attacker == null || attacker == defender) {
 			return;
+		}
+		// The hit landed: spend the deferred Ashen Debt now. A dodged or
+		// invulnerability-framed hit (dealtDamage <= 0, handled above) left it charged.
+		PendingProc pendingDebt = PENDING_DEBT.remove(attacker.getUUID());
+		if (pendingDebt != null
+				&& pendingDebt.target().equals(defender.getUUID())
+				&& pendingDebt.gameTime() == attacker.level().getGameTime()) {
+			DEBTS.remove(attacker.getUUID());
 		}
 		if (defender instanceof ServerPlayer player && hasActiveFocus(player, ASHEN_DEBT_FOCUS)) {
 			if (!CombatTargets.isHostileOrPvpOpponent(attacker, player)) {
@@ -119,6 +138,8 @@ public final class RevenantCombat {
 
 	private static void afterDeath(LivingEntity entity, DamageSource source) {
 		DEBTS.values().removeIf(debt -> debt.target().equals(entity.getUUID()));
+		PENDING_DEBT.remove(entity.getUUID());
+		PENDING_DEBT.values().removeIf(pending -> pending.target().equals(entity.getUUID()));
 		if (!(source.getEntity() instanceof ServerPlayer player)
 				|| !hasActiveFocus(player, LAST_RITES_FOCUS)
 				|| !CombatTargets.isHostileOrPvpOpponent(entity, player)) {
@@ -205,5 +226,13 @@ public final class RevenantCombat {
 	}
 
 	private record Debt(UUID target, long expiresAt) {
+	}
+
+	/**
+	 * An Ashen Debt spend shaped at the HEAD damage stage and awaiting confirmation
+	 * in the after-damage stage. Matched by target UUID and the game tick of the
+	 * swing, so only a genuinely landed hit removes the debt.
+	 */
+	private record PendingProc(UUID target, long gameTime) {
 	}
 }
