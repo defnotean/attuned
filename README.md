@@ -8,7 +8,7 @@ Equip **Foci** into six inventory slots, but mind your **attunement capacity**. 
 
 ## At a glance
 
-- 61 Foci across mobility, defense, combat, stealth, holy, seafaring, and utility
+- 66 Foci across mobility, defense, combat, stealth, holy, seafaring, shadow, and utility
 - **The Unseen**: a stealth faction built around quiet movement, low-light veils, smoke misdirection, and ambush openings
 - Four **affinities** (Fury, Bastion, Zephyr, Holy) in a counter-combat cycle, plus the cross-affinity **Discord** stance
 - **Pacts**: set bonuses that wake when you commit (Pyresworn, Stoneheart, Windrunner, Untethered)

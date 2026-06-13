@@ -1,0 +1,7 @@
+{
+	"item": "attuned:gloomstride_focus",
+	"cost": 4,
+	"affinity": "zephyr",
+	"faction": "attuned:umbral",
+	"behavior": "attuned:gloomstride"
+}

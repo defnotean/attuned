@@ -84,6 +84,7 @@ Attuned currently ships these factions:
 | `attuned:verdant_choir` | Roots, bloom, moss, patient growth | Broad natural utility with small travel and survival numbers. | A little hunger restored while standing on grass, on a 60s cooldown. |
 | `attuned:ashen_forge` | Heat, craft, rivets, tempering | Craft-flavoured Fury/Bastion tools with restrained stat bonuses. | Fire Resistance near a lit forge, magma, or lava. |
 | `attuned:revenant` | Unfinished endings, debts, rites, grave-cold reprisals | Utility and controlled combat pressure through short revenge windows, cleansing, slowness, and one active movement ability. | Nearby undead are slowed (Slowness I). |
+| `attuned:umbral` | Shadow, darkness, stealth that rewards committing to the dark | Stronger the deeper the dark — movement, armor, and damage that only wake in low light, so it never out-scales a lit build. | (No set bonus yet.) |
 
 ## Attribute modifiers
 
@@ -195,6 +196,11 @@ examples to copy from:
 | `attuned:stormcall`  | `StormcallBehavior`      | Lightning while sprinting in rain. |
 | `attuned:voidstep`   | `VoidstepBehavior`       | Blinks forward on the Focus Ability keybind. |
 | `attuned:harpoon`    | `HarpoonBehavior`       | Ability key summons a temporary custom-model trident for 30 seconds, then removes it from inventory, drops, or projectile state. |
+| `attuned:gloomstride` | `GloomstrideBehavior`   | Movement speed while standing in low light. |
+| `attuned:duskward`   | `DuskwardBehavior`       | Extra armor while standing in low light. |
+| `attuned:shadowmeld` | `ShadowmeldBehavior`     | Resistance while crouching in low light. |
+| `attuned:dreadfang`  | `DreadfangBehavior`      | A fully charged direct-melee hit on a hostile or PvP foe applies Darkness; the proc fires from the combat after-damage hook. |
+| `attuned:eclipse`    | `EclipseBehavior`        | Strength while standing in total darkness (light level 4 or lower). |
 | `attuned:wildward`   | `WildwardBehavior`       | Confluence (Mossheart + Rootstep): refreshes Resistance I while standing on natural ground. |
 | `attuned:sunwarden`  | `SunwardenBehavior`      | Confluence (Votive + Bellwether): refreshes Regeneration I while standing in bright light. |
 | `attuned:forgewarded` | `ForgewardedBehavior`   | Confluence (Kilnward + Emberward): refreshes Fire Resistance while near a lit forge, magma, or lava. |
@@ -206,7 +212,9 @@ their own classes — read these if your idea resembles them:
 
 - **Death effects** — `combat/GravebindSave.java` hooks the death event.
 - **Affinity combat and hit procs** — `combat/AttunedCombat.java` handles
-  damage between affinities plus Cinder, Thornward, and Leech.
+  damage between affinities plus Cinder, Thornward, Leech, and Dreadfang's
+  charged-hit Darkness (its `attuned:dreadfang` behavior is registered for the
+  framework but its proc fires from the after-damage hook).
 - **Unseen ambush combat** - `combat/UnseenCombat.java` handles Needle's
   opening-hit bonus and breaks Veil when combat starts.
 - **Revenant combat** - `combat/RevenantCombat.java` handles Ashen Debt's
@@ -256,6 +264,7 @@ The ones that ship with Attuned:
 | Wildward (`wildward`) | Mossheart + Rootstep | Resistance I while on natural ground |
 | Sunwarden (`sunwarden`) | Votive + Bellwether | Regeneration I while standing in bright light |
 | Forgewarded (`forgewarded`) | Kilnward + Emberward | Fire Resistance while near a lit forge, magma, or lava |
+| Total Eclipse (`total_eclipse`) | Eclipse + Gloomstride + Duskward | +4 max health and +1 attack damage |
 
 ## Tempering Foci
 

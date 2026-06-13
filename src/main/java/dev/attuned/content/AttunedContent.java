@@ -114,6 +114,13 @@ public final class AttunedContent {
 	public static final Item LAST_RITES_FOCUS = registerFocus("last_rites_focus");
 	public static final Item BONECHILL_FOCUS = registerFocus("bonechill_focus");
 
+	// Umbral Eclipse - shadow Foci that wake in low light and total darkness.
+	public static final Item GLOOMSTRIDE_FOCUS = registerFocus("gloomstride_focus");
+	public static final Item DUSKWARD_FOCUS = registerFocus("duskward_focus");
+	public static final Item SHADOWMELD_FOCUS = registerFocus("shadowmeld_focus");
+	public static final Item DREADFANG_FOCUS = registerFocus("dreadfang_focus");
+	public static final Item ECLIPSE_FOCUS = registerFocus("eclipse_focus");
+
 	/**
 	 * Blank, resource-pack-skinnable Focus items for datapack authors. Each one is a
 	 * real registered Focus item with a neutral default name/model/texture, but ships

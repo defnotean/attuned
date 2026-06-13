@@ -7,6 +7,7 @@ import dev.attuned.api.focus.AffinityColors;
 import dev.attuned.attunement.AttunedAttachments;
 import dev.attuned.attunement.AttunedInv;
 import dev.attuned.attunement.Attunement;
+import dev.attuned.content.behavior.DreadfangBehavior;
 import dev.attuned.content.behavior.TemperBehavior;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.minecraft.core.particles.DustParticleOptions;
@@ -84,6 +85,8 @@ public final class AttunedCombat {
 		Identifier.fromNamespaceAndPath("attuned", "cinder_focus");
 	private static final Identifier SUNLANCE_FOCUS =
 		Identifier.fromNamespaceAndPath("attuned", "sunlance_focus");
+	private static final Identifier DREADFANG_FOCUS =
+		Identifier.fromNamespaceAndPath("attuned", "dreadfang_focus");
 
 	/** Re-entrancy guard so a reflected hit cannot trigger another reflection. */
 	private static final ThreadLocal<Boolean> REFLECTING = ThreadLocal.withInitial(() -> false);
@@ -367,6 +370,16 @@ public final class AttunedCombat {
 				&& isDirectMelee(attacker, source)
 				&& !attackerPlayer.isDeadOrDying()) {
 			attackerPlayer.heal(pooledDamage * LEECH_LIFESTEAL);
+		}
+
+		// Dreadfang: a fully charged direct-melee hit on a hostile/PvP target plunges the
+		// victim into vanilla darkness. Shares the authoritative charge and target guards with
+		// the code procs above (no mixin, no new event), mirroring Sunlance and Temper.
+		if (attacker instanceof Player attackerPlayer
+				&& hasActiveFocus(attackerPlayer, DREADFANG_FOCUS)
+				&& isChargedDirectMelee(attackerPlayer, defender, source, DreadfangBehavior.CHARGED_SWING_THRESHOLD)
+				&& CombatTargets.isHostileOrPvpOpponent(defender, attackerPlayer)) {
+			DreadfangBehavior.applyTo(defender);
 		}
 
 		// Palette on-hit behaviors: datapack-defined attuned:on_hit_effect Foci proc here so they

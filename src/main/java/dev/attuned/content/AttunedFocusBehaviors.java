@@ -10,7 +10,11 @@ import dev.attuned.content.behavior.BloomBehavior;
 import dev.attuned.content.behavior.BlackoutBehavior;
 import dev.attuned.content.behavior.BloodfuryBehavior;
 import dev.attuned.content.behavior.DelverBehavior;
+import dev.attuned.content.behavior.DreadfangBehavior;
 import dev.attuned.content.behavior.DriftglassBehavior;
+import dev.attuned.content.behavior.DuskwardBehavior;
+import dev.attuned.content.behavior.EclipseBehavior;
+import dev.attuned.content.behavior.GloomstrideBehavior;
 import dev.attuned.content.behavior.EmberwardBehavior;
 import dev.attuned.content.behavior.ForagerBehavior;
 import dev.attuned.content.behavior.ForgewardedBehavior;
@@ -30,6 +34,7 @@ import dev.attuned.content.behavior.RainstepBehavior;
 import dev.attuned.content.behavior.RevenantFocusBehaviors;
 import dev.attuned.content.behavior.RivetBehavior;
 import dev.attuned.content.behavior.RootstepBehavior;
+import dev.attuned.content.behavior.ShadowmeldBehavior;
 import dev.attuned.content.behavior.SmokeBehavior;
 import dev.attuned.content.behavior.SoftstepBehavior;
 import dev.attuned.content.behavior.StormcallBehavior;
@@ -98,6 +103,13 @@ final class AttunedFocusBehaviors {
 		register("temper", new TemperBehavior());
 		register("epitaph", new RevenantFocusBehaviors.Epitaph());
 		register("hollowstep", new RevenantFocusBehaviors.Hollowstep());
+
+		// Umbral Eclipse - darkness- and stealth-gated Foci.
+		register("gloomstride", new GloomstrideBehavior());
+		register("duskward", new DuskwardBehavior());
+		register("shadowmeld", new ShadowmeldBehavior());
+		register("dreadfang", new DreadfangBehavior());
+		register("eclipse", new EclipseBehavior());
 
 		// Confluence behaviors (no backing Focus item; tick with ItemStack.EMPTY via Synergies).
 		register("wildward", new WildwardBehavior());

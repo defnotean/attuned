@@ -1,4 +1,5 @@
 import json
+import math
 from pathlib import Path
 
 from PIL import Image, ImageDraw
@@ -28,6 +29,25 @@ BASTION = (226, 178, 72, 255)
 ZEPHYR = (76, 202, 224, 255)
 INK = (10, 9, 14, 255)
 CLEAR = (0, 0, 0, 0)
+
+# Umbral Eclipse Foci — a deep indigo/violet shadow palette shared across the five
+# darkness Foci so the set reads as one family. Each Focus tints its corona with an
+# accent so they stay distinct in the inventory.
+UMBRAL_VOID = (12, 9, 22, 255)
+UMBRAL_DARK = (30, 22, 52, 255)
+UMBRAL_MID = (58, 42, 96, 255)
+UMBRAL_RIM = (92, 70, 150, 255)
+UMBRAL_CORONA = (158, 120, 232, 255)
+UMBRAL_GLINT = (214, 188, 255, 255)
+
+# The five shipped Umbral Eclipse Foci and the accent that tints each one's corona.
+UMBRAL_FOCI = {
+    "gloomstride_focus": (120, 176, 240),
+    "duskward_focus": (150, 140, 224),
+    "shadowmeld_focus": (96, 150, 210),
+    "dreadfang_focus": (208, 92, 168),
+    "eclipse_focus": (176, 122, 248),
+}
 
 
 def ensure_dirs():
@@ -544,6 +564,84 @@ def _custom_focus_frame(accent, accent_light, accent_dark, rim):
     return img
 
 
+def _lerp(a, b, t):
+    """Linear blend between two RGB(A) tuples."""
+    return tuple(round(a[i] + (b[i] - a[i]) * t) for i in range(len(a)))
+
+
+def _umbral_focus_frame(accent, phase):
+    """Draws one 64x64 Umbral Eclipse medallion frame at animation `phase` in [0,1).
+
+    A round shadow medallion with a central eclipse: a dark occluding disc sits over a
+    violet corona whose brightness pulses, an accent-tinted ring whose glow swells, and a
+    bright glint that orbits the rim. Every visual element is driven by `phase`, so the
+    eight frames differ across far more than the 16 pixels the consistency gate requires —
+    while the geometry stays byte-deterministic for reproducible rebuilds.
+    """
+    img = Image.new("RGBA", (64, 64), CLEAR)
+    draw = ImageDraw.Draw(img)
+
+    cx, cy = 32, 32
+    # Brightness pulse for the corona/ring and the swelling shadow disc.
+    pulse = (math.sin(phase * math.tau) + 1.0) / 2.0
+    accent_rgba = accent + (255,)
+
+    # Outer rim of the medallion.
+    draw.ellipse((2, 2, 61, 61), fill=UMBRAL_VOID, outline=INK)
+    draw.ellipse((4, 4, 59, 59), fill=UMBRAL_DARK)
+
+    # Corona: an accent-tinted ring that brightens and dims with the pulse.
+    corona = _lerp(UMBRAL_MID, _lerp(UMBRAL_CORONA, accent_rgba, 0.55), 0.35 + pulse * 0.65)
+    draw.ellipse((8, 8, 55, 55), fill=corona)
+    ring = _lerp(UMBRAL_RIM, accent_rgba, 0.4 + pulse * 0.5)
+    draw.ellipse((11, 11, 52, 52), outline=ring, width=2)
+
+    # The eclipse: a dark disc whose radius breathes so the corona ring waxes and wanes.
+    shadow_r = 15 + pulse * 5.0
+    draw.ellipse((cx - shadow_r, cy - shadow_r, cx + shadow_r, cy + shadow_r),
+                 fill=UMBRAL_VOID, outline=INK)
+
+    # A faint diamond facet over the shadow, fading with the pulse, so the centre never
+    # reads as a flat hole and shifts frame to frame.
+    facet = _lerp(UMBRAL_VOID, UMBRAL_MID, 0.25 + (1.0 - pulse) * 0.4)
+    draw.polygon([(cx, cy - 9), (cx + 9, cy), (cx, cy + 9), (cx - 9, cy)], fill=facet)
+
+    # Orbiting glint: a bright bead that travels the corona ring, the strongest per-frame
+    # mover, guaranteeing each frame differs from the first well past the 16-pixel gate.
+    angle = phase * math.tau
+    gx = cx + math.cos(angle) * 22.0
+    gy = cy + math.sin(angle) * 22.0
+    glint = _lerp(UMBRAL_GLINT, accent_rgba, 0.3)
+    draw.ellipse((gx - 3, gy - 3, gx + 3, gy + 3), fill=glint)
+    draw.point((gx, gy), fill=UMBRAL_GLINT)
+
+    # A trailing spark opposite the glint to keep both sides of the ring animated.
+    tx = cx + math.cos(angle + math.pi) * 22.0
+    ty = cy + math.sin(angle + math.pi) * 22.0
+    spark = _lerp(corona, UMBRAL_GLINT, 0.5)
+    draw.ellipse((tx - 2, ty - 2, tx + 2, ty + 2), fill=spark)
+
+    return img
+
+
+def generate_umbral_focus_textures():
+    """Generates the deterministic 64x512 eight-frame animated art for the Umbral Eclipse
+    Foci, plus the matching `.png.mcmeta` (frametime 2, interpolate true). Mirrors the
+    shipped 64x512 animated Focus format the consistency gate validates; the item/model
+    JSON for these Foci is authored by hand alongside their definitions."""
+    frames = 8
+    for name, accent in UMBRAL_FOCI.items():
+        sheet = Image.new("RGBA", (64, 64 * frames), CLEAR)
+        for frame in range(frames):
+            phase = frame / frames
+            sheet.alpha_composite(_umbral_focus_frame(accent, phase), (0, frame * 64))
+        sheet.save(TEXTURES / "item" / f"{name}.png")
+
+        mcmeta = {"animation": {"frametime": 2, "interpolate": True}}
+        (TEXTURES / "item" / f"{name}.png.mcmeta").write_text(
+            json.dumps(mcmeta, indent=2) + "\n", encoding="utf-8")
+
+
 def generate_custom_focus_textures():
     """Generates the deterministic default art + model/item JSON for the blank,
     resource-pack-skinnable Focus pool (attuned:custom_focus_1..N)."""
@@ -585,3 +683,4 @@ if __name__ == "__main__":
     satchel_item()
     grand_satchel_item()
     generate_custom_focus_textures()
+    generate_umbral_focus_textures()
