@@ -14,6 +14,7 @@ import dev.attuned.attunement.AttunedInv;
 import dev.attuned.attunement.AttunedAttachments;
 import dev.attuned.attunement.Attunement;
 import dev.attuned.attunement.BudgetResolver;
+import dev.attuned.content.AttunedComponents;
 import dev.attuned.onboarding.Onboarding;
 import net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
@@ -56,6 +57,9 @@ public final class AttunedEffects {
 
 	/** Ticks between aura particle bursts. */
 	private static final int AURA_INTERVAL = 16;
+
+	/** Strength multiplier applied to every attribute modifier of a Tempered Focus. */
+	private static final double TEMPERED_MODIFIER_MULTIPLIER = 1.25; // * 1.25
 
 	/**
 	 * Per-player snapshot of which Focus effects were active last tick. Each value
@@ -257,6 +261,10 @@ public final class AttunedEffects {
 	}
 
 	private static void applyFocus(ServerPlayer player, int slot, AppliedFocus focus) {
+		// A Tempered Focus amplifies every declarative attribute modifier. Removal
+		// keys off the slot/index id, never the amount, so the boosted modifier is
+		// still torn down exactly when the slot goes dormant.
+		boolean tempered = focus.stack().has(AttunedComponents.TEMPERED);
 		for (int i = 0; i < focus.modifiers().size(); i++) {
 			ModifierEntry entry = focus.modifiers().get(i);
 			AttributeInstance ai = player.getAttribute(entry.attribute());
@@ -265,7 +273,8 @@ public final class AttunedEffects {
 			}
 			Identifier id = modifierId(slot, i);
 			if (ai.getModifier(id) == null) {
-				ai.addTransientModifier(new AttributeModifier(id, entry.amount(), entry.operation()));
+				double amount = tempered ? entry.amount() * TEMPERED_MODIFIER_MULTIPLIER : entry.amount();
+				ai.addTransientModifier(new AttributeModifier(id, amount, entry.operation()));
 			}
 		}
 

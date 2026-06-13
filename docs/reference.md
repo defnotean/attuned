@@ -256,6 +256,25 @@ The ones that ship with Attuned:
 | Wildward (`wildward`) | Mossheart + Rootstep | Resistance I while on natural ground |
 | Sunwarden (`sunwarden`) | Votive + Bellwether | Regeneration I while standing in bright light |
 | Forgewarded (`forgewarded`) | Kilnward + Emberward | Fire Resistance while near a lit forge, magma, or lava |
+
+## Tempering Foci
+
+The **Altar of Reweaving** can also *temper* a Focus. Place two copies of the
+**same** untempered Focus in the first two Focus slots, leave the third empty,
+add an Attunement Shard Fragment as the catalyst, and reweave: the two copies
+fuse into one **Tempered** copy and the catalyst is consumed.
+
+A Tempered Focus is a stronger, costlier variant of the same Focus:
+
+- Every declarative attribute modifier is amplified by **+25%** (`× 1.25`).
+- It costs **+1 attunement** on top of the base cost, so dormancy and the
+  capacity readout account for the surcharge automatically.
+- Its name renders in gold and its tooltip carries a **Tempered** line.
+
+Tempering is marked by the `attuned:tempered` data component. Only untempered
+copies can be tempered, and a Tempered Focus cannot be tempered again. Reweaving
+three different Foci (the standard roll) is unaffected.
+
 ## Behavior palette (no Java)
 
 Most behaviors are Java classes. The **behavior palette** lets a datapack define

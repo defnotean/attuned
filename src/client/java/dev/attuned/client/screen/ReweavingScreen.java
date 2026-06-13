@@ -70,19 +70,26 @@ public class ReweavingScreen extends AbstractContainerScreen<ReweavingMenu> {
 	protected void extractLabels(GuiGraphicsExtractor graphics, int mouseX, int mouseY) {
 		graphics.text(this.font, this.title, this.titleLabelX, this.titleLabelY, TITLE_TEXT, false);
 		Component hint = hint();
-		int color = this.menu.hasAllInputs() && this.menu.outputStack().isEmpty() ? BODY_TEXT : WARNING_TEXT;
+		int color = canCommit() ? BODY_TEXT : WARNING_TEXT;
 		drawTrimmedText(graphics, hint, HINT_X, HINT_Y, HINT_MAX_WIDTH, color);
 	}
 
 	private void refreshButtonState() {
 		if (this.reweaveButton != null) {
-			this.reweaveButton.active = this.menu.hasAllInputs() && this.menu.outputStack().isEmpty();
+			this.reweaveButton.active = canCommit();
 		}
+	}
+
+	private boolean canCommit() {
+		return (this.menu.hasAllInputs() || this.menu.canTemper()) && this.menu.outputStack().isEmpty();
 	}
 
 	private Component hint() {
 		if (!this.menu.outputStack().isEmpty()) {
 			return Component.translatable("screen.attuned.reweaving_altar.hint.output_blocked");
+		}
+		if (this.menu.canTemper()) {
+			return Component.translatable("screen.attuned.reweaving_altar.hint.temper");
 		}
 		if (!this.menu.hasAllFocusInputs()) {
 			return Component.translatable("screen.attuned.reweaving_altar.hint.missing_foci");

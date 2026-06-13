@@ -10,6 +10,7 @@ import dev.attuned.attunement.AttunedInv;
 import dev.attuned.attunement.Attunement;
 import dev.attuned.attunement.BudgetResolver;
 import dev.attuned.attunement.FocusLookup;
+import dev.attuned.content.AttunedComponents;
 import net.fabricmc.fabric.api.client.item.v1.ItemTooltipCallback;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
@@ -60,6 +61,16 @@ public final class AttunedTooltips {
 			// Affinity and attunement cost on items that are registered Foci.
 			FocusDefinition definition = definitionFor(stack);
 			if (definition != null) {
+				// A Tempered Focus reads as a gold-named, stronger, costlier variant.
+				if (stack.has(AttunedComponents.TEMPERED)) {
+					if (!lines.isEmpty()) {
+						// Recolor the name line (index 0) gold to mark the Tempered variant.
+						lines.set(0, lines.get(0).copy().withStyle(ChatFormatting.GOLD));
+					}
+					lines.add(Component.empty());
+					lines.add(Component.translatable("tooltip.attuned.tempered")
+						.withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD));
+				}
 				if (!definition.modifiers().isEmpty()) {
 					lines.add(Component.empty());
 					lines.add(Component.translatable("tooltip.attuned.modifier.header")

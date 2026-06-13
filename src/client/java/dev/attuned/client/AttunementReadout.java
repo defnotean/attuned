@@ -105,7 +105,7 @@ public final class AttunementReadout {
 				continue;
 			}
 			FocusDefinition focus = definition.get();
-			used += focus.cost();
+			used += Attunement.effectiveCost(focus, inv.get(slot));
 			activeFocusIds.add(BuiltInRegistries.ITEM.getKey(focus.item().value()).toString());
 			Optional<Affinity> affinity = focus.affinity();
 			orderedActiveAffinities.add(affinity);

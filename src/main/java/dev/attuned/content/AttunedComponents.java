@@ -6,6 +6,7 @@ import net.minecraft.core.Registry;
 import net.minecraft.core.component.DataComponentType;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.Identifier;
+import net.minecraft.util.Unit;
 
 /** Registers custom item data components used by Attuned items. */
 public final class AttunedComponents {
@@ -16,6 +17,9 @@ public final class AttunedComponents {
 	public static final int SATCHEL_SIZE = 27;
 
 	public static DataComponentType<FocusHolder> SATCHEL_CONTENTS;
+
+	/** Marker on a Focus that has been tempered at the Altar of Reweaving. */
+	public static DataComponentType<Unit> TEMPERED;
 
 	public static FocusHolder emptyContents() {
 		return FocusHolder.empty(SATCHEL_SIZE, 1);
@@ -31,6 +35,12 @@ public final class AttunedComponents {
 			DataComponentType.<FocusHolder>builder()
 				.persistent(FocusHolder.codec(SATCHEL_SIZE, 1))
 				.networkSynchronized(FocusHolder.streamCodec(SATCHEL_SIZE, 1))
+				.build());
+		TEMPERED = Registry.register(BuiltInRegistries.DATA_COMPONENT_TYPE,
+			Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "tempered"),
+			DataComponentType.<Unit>builder()
+				.persistent(Unit.CODEC)
+				.networkSynchronized(Unit.STREAM_CODEC)
 				.build());
 	}
 }

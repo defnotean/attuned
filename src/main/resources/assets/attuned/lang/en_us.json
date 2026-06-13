@@ -232,6 +232,7 @@
 	"screen.attuned.reweaving_altar.hint.missing_foci": "Add three Foci.",
 	"screen.attuned.reweaving_altar.hint.missing_fragment": "Add a Shard Fragment.",
 	"screen.attuned.reweaving_altar.hint.output_blocked": "Take the result first.",
+	"screen.attuned.reweaving_altar.hint.temper": "Ready to temper.",
 	"screen.attuned.reweaving_altar.hint.ready": "Ready to reweave.",
 	"screen.attuned.satchel.empty": "Empty",
 	"screen.attuned.satchel.full": "Full",
@@ -246,6 +247,7 @@
 	"screen.attuned.builds.name": "Build name",
 	"screen.attuned.builds.name_hint": "Name…",
 
+	"tooltip.attuned.tempered": "Tempered - modifiers strengthened, +1 attunement cost",
 	"tooltip.attuned.equipped_slot": "Equipped: Slot %s",
 	"tooltip.attuned.status.active": "Status: Active",
 	"tooltip.attuned.status.dormant": "Status: Dormant - %s",
