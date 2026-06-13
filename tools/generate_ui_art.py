@@ -282,46 +282,34 @@ def journal_gui():
     frame = (31, 27, 40, 255)
     frame_dark = (9, 9, 13, 255)
     frame_light = (87, 78, 101, 255)
-    page = (144, 132, 119, 255)
-    page_shadow = (93, 78, 77, 255)
-    page_line = (112, 92, 104, 255)
-    tab_face = (40, 35, 51, 255)
-    teal = (48, 188, 190, 255)
+    page = (201, 184, 150, 255)
+    page_edge = (224, 209, 178, 255)
+    page_shadow = (120, 104, 84, 255)
+    rail = (20, 17, 28, 255)
+    rail_border = (74, 62, 93, 255)
     violet = (150, 108, 224, 255)
 
     bevel(draw, 0, 0, 336, 214, frame, frame_dark, frame_light)
     deterministic_speckles(draw, 336, 214, (51, 45, 64, 255), 67)
-    rect(draw, (8, 12, 104, 202), (18, 16, 25, 255))
-    draw.rectangle((8, 12, 104, 202), outline=(74, 62, 93, 255))
+
+    # Left chapter rail: a clean recessed panel. The screen draws the tab rows,
+    # so no tab slots are painted here (they are no longer covered/misaligned).
+    rect(draw, (8, 12, 104, 202), rail)
+    draw.rectangle((8, 12, 104, 202), outline=rail_border)
+    draw.line((10, 14, 10, 200), fill=(40, 33, 54, 255))
+
+    # Spine divider between the rail and the reading page.
+    bevel(draw, 104, 5, 8, 204, (49, 36, 55, 255), frame_dark, (111, 82, 125, 255))
+
+    # Reading page: lighter parchment for crisp dark text (matches the mockup).
     rect(draw, (112, 12, 328, 181), page)
     draw.rectangle((112, 12, 328, 181), outline=page_shadow)
-    deterministic_speckles(draw, 328, 181, (131, 116, 111, 255), 71)
+    deterministic_speckles(draw, 328, 181, (186, 169, 138, 255), 71)
+    draw.line((118, 18, 322, 18), fill=page_edge)
+    draw.line((118, 176, 322, 176), fill=(150, 132, 104, 255))
 
-    # Parchment chips and page-line decoration inside the 216px page region.
-    draw.line((118, 18, 322, 18), fill=(164, 148, 132, 255))
-    draw.line((118, 176, 322, 176), fill=(103, 87, 87, 255))
-    for y in range(24, 160, 16):
-        draw.point((315, y), fill=page_line)
-        draw.point((318, y + 5), fill=(96, 80, 88, 255))
-    for offset in range(0, 36, 4):
-        draw.point((323 - offset // 2, 22 + offset), fill=(103, 87, 87, 255))
-        draw.point((321 - offset // 2, 172 - offset), fill=(103, 87, 87, 255))
-    draw.ellipse((260, 132, 316, 188), outline=(116, 100, 100, 120))
-    draw.arc((272, 140, 306, 174), 200, 340, fill=(116, 100, 100, 140))
-    draw.line((288, 137, 288, 172), fill=(116, 100, 100, 120))
-
-    # Spine and chapter rail. Constants match AttunementJournalScreen.
-    bevel(draw, 94, 5, 18, 204, (49, 36, 55, 255), frame_dark, (111, 82, 125, 255))
-    for y in range(18, 192, 18):
-        draw.line((98, y, 108, y), fill=(111, 82, 125, 255))
-        draw.line((98, y + 2, 108, y + 2), fill=(21, 17, 26, 255))
-
-    for i in range(12):
-        y = 34 + i * 14
-        bevel(draw, 34, y, 62, 12, tab_face, frame_dark, (83, 74, 100, 255))
-        draw.polygon([(42, y + 2), (47, y + 6), (42, y + 10), (37, y + 6)],
-            fill=violet if i % 3 else teal, outline=(12, 12, 18, 255))
-        draw.line((51, y + 6, 88, y + 6), fill=(94, 82, 112, 255))
+    # Scrollbar gutter near the right edge of the reading page.
+    rect(draw, (320, 20, 323, 174), (171, 156, 126, 255))
 
     # Page navigation button wells.
     for x in (112, 262):
@@ -331,14 +319,6 @@ def journal_gui():
     draw.polygon([(126, 192), (136, 186), (136, 198)], fill=violet)
     draw.polygon([(314, 192), (304, 186), (304, 198)], fill=violet)
     draw.polygon([(220, 181), (230, 192), (220, 203), (210, 192)], fill=violet, outline=AMETHYST_DARK)
-
-    # Left-side ritual sketching keeps the page from looking empty before text renders.
-    draw.arc((33, 163, 65, 196), 200, 340, fill=(97, 69, 126, 255))
-    draw.arc((55, 150, 89, 194), 200, 340, fill=(97, 69, 126, 255))
-    draw.line((47, 149, 47, 182), fill=(104, 82, 126, 255))
-    draw.line((73, 143, 73, 183), fill=(104, 82, 126, 255))
-    draw.ellipse((44, 139, 50, 145), outline=AMETHYST_LIGHT)
-    draw.ellipse((70, 132, 76, 138), outline=AMETHYST_LIGHT)
 
     # Corner gems.
     for x, y in ((8, 8), (319, 8), (8, 195), (319, 195)):

@@ -24,6 +24,8 @@ class FociHudContractTest {
 		Path.of("src/client/java/dev/attuned/client/hud/FociHud.java");
 	private static final Path COMBAT_HUD =
 		Path.of("src/client/java/dev/attuned/client/hud/CombatHud.java");
+	private static final Path HUD_ANCHOR =
+		Path.of("src/client/java/dev/attuned/client/hud/HudAnchor.java");
 	private static final Path LANG =
 		Path.of("src/main/resources/assets/attuned/lang/en_us.json");
 	private static final Path FOCI_HUD_TEXTURE =
@@ -80,6 +82,10 @@ class FociHudContractTest {
 			"The resonance bar should remain visible even while empty.");
 		assertTrue(hud.contains("return AttunedClientConfig.get().showFociHud();"),
 			"The HUD frame should remain visible when toggled on, even before any Focus is equipped.");
+		assertTrue(hud.contains("readout.activeConfluences()"),
+			"The Foci HUD should read the active-confluence set from the shared readout.");
+		assertTrue(hud.contains("drawConfluenceChip"),
+			"The Foci HUD should paint a confluence count chip.");
 	}
 
 	@Test
@@ -121,8 +127,10 @@ class FociHudContractTest {
 
 		assertTrue(fociHud.contains("primarySidecarX"),
 			"The Foci HUD should own the primary hotbar sidecar.");
-		assertTrue(fociHud.contains("screenW - hudWidth - SCREEN_MARGIN"),
-			"The Foci HUD should pin to the far right edge instead of hugging the hotbar.");
+		assertTrue(read(HUD_ANCHOR).contains("screenW - width - SCREEN_MARGIN"),
+			"The default anchor should pin the Foci HUD to the far right edge instead of hugging the hotbar.");
+		assertTrue(fociHud.contains("HudAnchor.x(screenW, hudWidth, HudAnchor.layout())"),
+			"The Foci HUD should resolve its corner through the shared anchor helper.");
 		assertTrue(combatHud.contains("FociHud.isVisible(player)")
 				&& combatHud.contains("secondarySidecarX"),
 			"The Combat HUD should avoid the Foci HUD sidecar when both are visible.");

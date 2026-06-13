@@ -1,6 +1,7 @@
 package dev.attuned;
 
 import dev.attuned.api.focus.FocusDefinition;
+import dev.attuned.api.synergy.SynergyDefinition;
 import dev.attuned.attunement.AttunedAttachments;
 import dev.attuned.combat.Apex;
 import dev.attuned.combat.AttunedCombat;
@@ -25,6 +26,7 @@ import dev.attuned.network.JournalNetworking;
 import dev.attuned.onboarding.Onboarding;
 import dev.attuned.pacts.PactDeathMessages;
 import dev.attuned.pacts.Pacts;
+import dev.attuned.synergy.Synergies;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.event.registry.DynamicRegistries;
 import org.slf4j.Logger;
@@ -38,6 +40,7 @@ public class Attuned implements ModInitializer {
 	public void onInitialize() {
 		AttunedConfig.load();
 		DynamicRegistries.registerSynced(AttunedRegistries.FOCUS_DEFINITIONS, FocusDefinition.CODEC);
+		DynamicRegistries.registerSynced(AttunedRegistries.SYNERGY_DEFINITIONS, SynergyDefinition.CODEC);
 		AttunedAttachments.init();
 		AttunedPlayerCleanup.init();
 		AttunedServerCleanup.init();
@@ -54,6 +57,7 @@ public class Attuned implements ModInitializer {
 		Apex.init();
 		Resonance.init();
 		Pacts.init();
+		Synergies.init();
 		PactDeathMessages.init();
 		AttunedNetworking.init();
 		JournalNetworking.init();

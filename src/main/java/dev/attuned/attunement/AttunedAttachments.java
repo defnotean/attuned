@@ -85,6 +85,16 @@ public final class AttunedAttachments {
 			.copyOnDeath()
 	);
 
+	/** Confluence ids this player has discovered (each first activation). Synced for the journal. */
+	public static final AttachmentType<List<String>> DISCOVERED_CONFLUENCES = AttachmentRegistry.create(
+		Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "discovered_confluences"),
+		builder -> builder
+			.initializer(() -> List.of())
+			.persistent(Codec.STRING.listOf())
+			.syncWith(ByteBufCodecs.STRING_UTF8.apply(ByteBufCodecs.list()), AttachmentSyncPredicate.targetOnly())
+			.copyOnDeath()
+	);
+
 	/** Forces this class to load so the attachment types register during mod init. */
 	public static void init() {}
 
@@ -234,6 +244,27 @@ public final class AttunedAttachments {
 		List<String> updated = new ArrayList<>(seen);
 		updated.add(onboardingId);
 		player.setAttached(ONBOARDING, List.copyOf(updated));
+	}
+
+	/** Confluence ids this player has discovered, in discovery order. */
+	public static List<String> getDiscoveredConfluences(Player player) {
+		return player.getAttachedOrElse(DISCOVERED_CONFLUENCES, List.of());
+	}
+
+	/** Records a Confluence id as discovered. A no-op if already discovered. Server-side writes only. */
+	public static void markConfluenceDiscovered(Player player, String id) {
+		Optional<String> normalized = normalizedAttachmentId(id);
+		if (normalized.isEmpty()) {
+			return;
+		}
+		String confluenceId = normalized.get();
+		List<String> discovered = player.getAttachedOrElse(DISCOVERED_CONFLUENCES, List.of());
+		if (discovered.contains(confluenceId)) {
+			return;
+		}
+		List<String> updated = new ArrayList<>(discovered);
+		updated.add(confluenceId);
+		player.setAttached(DISCOVERED_CONFLUENCES, List.copyOf(updated));
 	}
 
 	private static Optional<String> normalizedAttachmentId(String id) {

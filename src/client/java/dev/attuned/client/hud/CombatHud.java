@@ -180,7 +180,10 @@ public final class CombatHud {
 		// the gem row's full width includes both gems and the gap between them.
 		int rowWidth = showOwn ? PLAYER_GEM_SIZE + (hasTarget ? GEM_GAP + TARGET_GEM_SIZE : 0) : TARGET_GEM_SIZE;
 		int backplateW = backplateWidth(showOwn, hasTarget);
-		boolean fociHudVisible = FociHud.isVisible(player);
+		// Only dodge the Foci HUD when it is actually docked in the default
+		// bottom-right zone; a user-anchored Foci HUD elsewhere frees the spot.
+		boolean fociHudVisible = FociHud.isVisible(player)
+			&& AttunedClientConfig.get().hudLayout().anchor() == AttunedClientConfig.HudAnchor.BOTTOM_RIGHT;
 		int backplateX = fociHudVisible ? secondarySidecarX(screenW, backplateW) : sidecarX(screenW, backplateW);
 		int backplateY = fociHudVisible ? secondarySidecarY(screenW, screenH, backplateW) : sidecarY(screenW, screenH, backplateW);
 		int rowX = backplateX + (backplateW - rowWidth) / 2;

@@ -11,9 +11,12 @@ import dev.attuned.combat.Apex;
 import dev.attuned.combat.Resonance;
 import dev.attuned.pacts.Pact;
 import dev.attuned.pacts.Pacts;
+import dev.attuned.synergy.SynergyResolver;
+import dev.attuned.synergy.Synergies;
 import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.EnumSet;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -21,6 +24,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import net.minecraft.ChatFormatting;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.world.entity.player.Player;
@@ -44,10 +48,12 @@ public final class AttunementReadout {
 	public record Snapshot(int capacity, int used, List<Integer> activeSlots,
 			Map<Integer, BudgetResolver.DormantReason> dormantReasons,
 			Optional<Affinity> committed, boolean discord, Optional<Apex.Capstone> capstone,
-			float resonance, Optional<Pact> pact, Optional<Component> pactPreview) {
+			float resonance, Optional<Pact> pact, Optional<Component> pactPreview,
+			Optional<Component> confluencePreview, Set<String> activeConfluences) {
 		public Snapshot {
 			activeSlots = List.copyOf(activeSlots);
 			dormantReasons = Map.copyOf(dormantReasons);
+			activeConfluences = Set.copyOf(activeConfluences);
 		}
 
 		public int active() {
@@ -90,6 +96,7 @@ public final class AttunementReadout {
 		List<Optional<Affinity>> orderedActiveAffinities = new ArrayList<>(activeSlots.size());
 		Set<Affinity> distinctActiveAffinities = EnumSet.noneOf(Affinity.class);
 		EnumMap<Affinity, Integer> activeAffinityCounts = new EnumMap<>(Affinity.class);
+		Set<String> activeFocusIds = new HashSet<>();
 		int used = 0;
 		for (int slot : activeSlots) {
 			Optional<FocusDefinition> definition = Attunement.definitionFor(player, inv.get(slot));
@@ -99,6 +106,7 @@ public final class AttunementReadout {
 			}
 			FocusDefinition focus = definition.get();
 			used += focus.cost();
+			activeFocusIds.add(BuiltInRegistries.ITEM.getKey(focus.item().value()).toString());
 			Optional<Affinity> affinity = focus.affinity();
 			orderedActiveAffinities.add(affinity);
 			affinity.ifPresent(activeAffinity -> {
@@ -114,9 +122,15 @@ public final class AttunementReadout {
 			Apex.resolveCapstone(orderedActiveAffinities, used, capacity);
 		Optional<Pact> pact = Pacts.activeOf(activeAffinityCounts);
 		int remaining = Math.max(0, capacity - used);
+		List<SynergyResolver.SynergyDef> confluenceDefs = Synergies.definitions(player);
+		Set<String> activeConfluences = SynergyResolver.activeConfluences(activeFocusIds, confluenceDefs);
+		Set<String> discoveredConfluences = new HashSet<>(AttunedAttachments.getDiscoveredConfluences(player));
+		Optional<Component> confluencePreview =
+			confluencePreview(activeFocusIds, discoveredConfluences, confluenceDefs);
 		return new Snapshot(capacity, used, activeSlots, dormantReasons, committed, discord,
 			capstone, Resonance.get(player), pact,
-			Pacts.previewOf(player, pact, discord, activeAffinityCounts, remaining));
+			Pacts.previewOf(player, pact, discord, activeAffinityCounts, remaining),
+			confluencePreview, activeConfluences);
 	}
 
 	/** The player's build title, coloured by rank tier. */
@@ -187,6 +201,9 @@ public final class AttunementReadout {
 			snapshot.pactPreview().ifPresent(preview -> lines.add(
 				Component.literal("Next Pact: ").withStyle(ChatFormatting.GRAY).append(preview)));
 		}
+
+		snapshot.confluencePreview().ifPresent(preview -> lines.add(
+			Component.literal("Confluence: ").withStyle(ChatFormatting.GRAY).append(preview)));
 
 		Optional<Apex.Capstone> apex = snapshot.capstone();
 		if (apex.isPresent()) {
@@ -335,6 +352,50 @@ public final class AttunementReadout {
 			case ZEPHYR -> ChatFormatting.AQUA;
 			case HOLY -> ChatFormatting.YELLOW;
 		};
+	}
+
+	/**
+	 * A "one active member away from a discovered Confluence" hint, naming the
+	 * Confluence and the missing member Focus. Empty unless exactly one discovered
+	 * Confluence is one member short (the {@link SynergyResolver#previewOf} policy).
+	 */
+	private static Optional<Component> confluencePreview(Set<String> activeFocusIds,
+			Set<String> discovered, List<SynergyResolver.SynergyDef> defs) {
+		Optional<String> previewId = SynergyResolver.previewOf(activeFocusIds, discovered, defs);
+		if (previewId.isEmpty()) {
+			return Optional.empty();
+		}
+		String id = previewId.get();
+		String missingMember = null;
+		for (SynergyResolver.SynergyDef def : defs) {
+			if (def.id().equals(id)) {
+				for (String member : def.members()) {
+					if (!activeFocusIds.contains(member)) {
+						missingMember = member;
+						break;
+					}
+				}
+				break;
+			}
+		}
+		Component confluenceName = Component.translatable("confluence.attuned." + idPath(id) + ".name");
+		Component memberName = missingMember == null
+			? Component.empty()
+			: Component.translatable(itemKey(missingMember));
+		return Optional.of(Component.translatable("confluence.attuned.preview", confluenceName, memberName)
+			.withStyle(ChatFormatting.GRAY));
+	}
+
+	private static String idPath(String id) {
+		int colon = id.indexOf(':');
+		return colon >= 0 ? id.substring(colon + 1) : id;
+	}
+
+	private static String itemKey(String itemId) {
+		int colon = itemId.indexOf(':');
+		String namespace = colon >= 0 ? itemId.substring(0, colon) : "minecraft";
+		String path = colon >= 0 ? itemId.substring(colon + 1) : itemId;
+		return "item." + namespace + "." + path;
 	}
 
 }

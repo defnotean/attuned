@@ -2,6 +2,7 @@ package dev.attuned;
 
 import dev.attuned.api.focus.FocusBehavior;
 import dev.attuned.api.focus.FocusDefinition;
+import dev.attuned.api.synergy.SynergyDefinition;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -18,6 +19,10 @@ public final class AttunedRegistries {
 	/** Datapack registry of Focus definitions ({@code data/<ns>/attuned/focus/<name>.json}). */
 	public static final ResourceKey<Registry<FocusDefinition>> FOCUS_DEFINITIONS =
 		ResourceKey.createRegistryKey(Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "focus"));
+
+	/** Datapack registry of Confluence definitions ({@code data/<ns>/attuned/synergy/<name>.json}). */
+	public static final ResourceKey<Registry<SynergyDefinition>> SYNERGY_DEFINITIONS =
+		ResourceKey.createRegistryKey(Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "synergy"));
 
 	private static final Map<Identifier, FocusBehavior> BEHAVIORS = new HashMap<>();
 

@@ -188,6 +188,43 @@ their own classes — read these if your idea resembles them:
   chance for a bonus fish plus a Luck of the Sea boost. Neither uses a `behavior`
   id, so they do not appear in the Behaviors table above.
 
+## Confluences
+
+A **Confluence** is a small set bonus that wakes when a specific combination of
+2–3 named Foci are all **active at once** (equipped *and* within your attunement
+budget — the same "active" rule the rest of the mod uses). A Confluence costs
+**no attunement budget**: it is an emergent reward for a build you already paid
+for. Wake one and it announces in chat; the first time you wake a given
+Confluence it plays a discovery fanfare, records a hidden advancement, and fills
+in its row in the Attunement Journal's **Confluences** chapter (undiscovered rows
+show only `???` and a member count, so finding them is part of the game).
+
+The Foci HUD paints a small pip per active Confluence, and the Focus panel tooltip
+hints when you are exactly one Focus away from a Confluence you have **already
+discovered** (undiscovered ones are never hinted, so the meta is not spoiled).
+
+Confluences are data-driven, loaded from
+`data/<namespace>/attuned/synergy/<name>.json`:
+
+| Field | Type | Notes |
+|-------|------|-------|
+| `members` | list of item ids | The Focus **item** ids (e.g. `attuned:lantern_focus`) that must all be active. Author 2–3. |
+| `modifiers` | list | Attribute modifiers granted while active, same shape as a Focus's `modifiers`. Optional. |
+| `behavior` | text | Optional `behavior` id into the same registry Foci use, for effects a modifier can't express. |
+
+Member ids are Focus **item** ids, not behavior ids. A Confluence may only
+reference Foci that exist. Keep effects modest — a Confluence should make a themed
+build feel cohesive, never out-scale a focused affinity build.
+
+The ones that ship with Attuned:
+
+| Confluence (`id`) | Members | Effect |
+|-------------------|---------|--------|
+| Immovable (`immovable`) | Anchor + Rivet | +0.1 knockback resistance |
+| Bulwark of Light (`bulwark_of_light`) | Votive + Oathguard | +1 armor |
+| Hunter's Patience (`hunters_patience`) | Lantern + Veil | +4% movement speed |
+| Tempest (`tempest`) | Rainstep + Stormcall | +1 attack damage |
+
 ## Numbers you can tune
 
 Server-side settings live in `config/attuned.json`, written on first launch.
@@ -232,7 +269,7 @@ The `/attuned capacity` command reads or sets a player's capacity for testing.
 | Attunement Shard | Diamond surrounded by amethyst shards, or four Attunement Shard Fragments | Raises capacity when bound at an Altar. |
 | Attunement Shard Fragment | Vanilla loot injected alongside Foci | Four craft into one Attunement Shard; using one tells the player their current fragment count. |
 | Attunement Journal | Book + amethyst shard | Opens as a readable book with the core Attuned rules. |
-| Focus Reliquary | Leather pouch around an amethyst shard | A stack-bound bag for spare Foci. Move Foci between the reliquary grid, the equipped Focus column, and your inventory by dragging, by click-to-grab then click-to-drop, or by shift-click. Type a name and Save the current loadout as a **build**, then click a build to select it and Apply or Delete. |
+| Focus Reliquary | Leather pouch around an amethyst shard | A stack-bound bag for spare Foci. Move Foci between the reliquary grid, the equipped Focus column, and your inventory by dragging, by click-to-grab then click-to-drop, or by shift-click. Type a name and Save the current loadout as a **build**, then click a build to select it and Apply or Delete. Builds 1-3 can also be applied anywhere with the unbound **Apply Build** keybinds (Options > Controls); the apply sources Foci from a reliquary in your inventory. |
 
 ## Loot and Lootr compatibility
 
@@ -287,6 +324,8 @@ Operator commands require game-master permission:
 | `content/AttunementShardFragmentItem.java` | Fragment progress hint behavior |
 | `content/behavior/` | Behavior classes |
 | `data/attuned/attuned/focus/` | Focus definition JSON files |
+| `data/attuned/attuned/synergy/` | Confluence definition JSON files |
+| `synergy/` | Confluence resolver (`SynergyResolver`), runtime (`Synergies`), and the `SynergyDefinition` registry record |
 | `data/attuned/recipe/` | Altar, shard, fragment, and journal recipes |
 | `data/attuned/advancement/attunement/` | Code-awarded Attuned progression advancements |
 | `assets/attuned/items/` + `assets/attuned/models/item/` | Item model files |

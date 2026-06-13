@@ -46,6 +46,7 @@ public final class PresetNetworking {
 		PayloadTypeRegistry.serverboundPlay().register(SavePresetPayload.TYPE, SavePresetPayload.CODEC);
 		PayloadTypeRegistry.serverboundPlay().register(ApplyPresetPayload.TYPE, ApplyPresetPayload.CODEC);
 		PayloadTypeRegistry.serverboundPlay().register(DeletePresetPayload.TYPE, DeletePresetPayload.CODEC);
+		PayloadTypeRegistry.serverboundPlay().register(QuickApplyPresetPayload.TYPE, QuickApplyPresetPayload.CODEC);
 		ServerPlayNetworking.registerGlobalReceiver(SavePresetPayload.TYPE, (payload, context) -> {
 			ServerPlayer player = context.player();
 			player.level().getServer().execute(() -> savePreset(player, payload));
@@ -57,6 +58,10 @@ public final class PresetNetworking {
 		ServerPlayNetworking.registerGlobalReceiver(DeletePresetPayload.TYPE, (payload, context) -> {
 			ServerPlayer player = context.player();
 			player.level().getServer().execute(() -> deletePreset(player, payload));
+		});
+		ServerPlayNetworking.registerGlobalReceiver(QuickApplyPresetPayload.TYPE, (payload, context) -> {
+			ServerPlayer player = context.player();
+			player.level().getServer().execute(() -> quickApplyPreset(player, payload));
 		});
 		AttunedPlayerCleanup.onForget(LAST_APPLY_TICK::remove);
 		AttunedServerCleanup.onStop(LAST_APPLY_TICK::clear);
@@ -83,8 +88,22 @@ public final class PresetNetworking {
 		if (!hasOpenLiveSatchel(player)) {
 			return;
 		}
+		SatchelState satchel = satchelState(player);
+		applyPresetCore(player, payload.index(), satchel);
+	}
+
+	/**
+	 * Hotkey path: no open menu required. The reliquary is sourced from the
+	 * player's inventory (first Focus Reliquary found); equipped and loose
+	 * inventory Foci still participate exactly like the menu apply.
+	 */
+	private static void quickApplyPreset(ServerPlayer player, QuickApplyPresetPayload payload) {
+		applyPresetCore(player, payload.index(), inventorySatchelState(player));
+	}
+
+	private static void applyPresetCore(ServerPlayer player, int index, SatchelState satchel) {
 		List<FocusPreset> presets = AttunedAttachments.getPresets(player);
-		if (payload.index() < 0 || payload.index() >= presets.size()) {
+		if (index < 0 || index >= presets.size()) {
 			return;
 		}
 		UUID id = player.getUUID();
@@ -97,10 +116,9 @@ public final class PresetNetworking {
 		Registry<FocusDefinition> registry =
 			player.level().registryAccess().lookupOrThrow(AttunedRegistries.FOCUS_DEFINITIONS);
 		Set<String> registeredFocusIds = registeredFocusIds(registry);
-		SatchelState satchel = satchelState(player);
 		Map<String, Integer> inventoryCounts = inventoryFocusCounts(player, registeredFocusIds);
 		PresetApplicationResolver.Result result = PresetApplicationResolver.apply(
-			presets.get(payload.index()).slots(),
+			presets.get(index).slots(),
 			equippedIds(player),
 			satchel.ids(),
 			inventoryCounts,
@@ -133,6 +151,8 @@ public final class PresetNetworking {
 		if (player.containerMenu instanceof SatchelMenu menu) {
 			menu.broadcastChanges();
 		}
+		player.sendOverlayMessage(Component.translatable(
+			"screen.attuned.preset.applied", presets.get(index).name()));
 		if (!result.missing().isEmpty()) {
 			player.sendSystemMessage(Component.translatable(
 				"screen.attuned.preset.missing", String.join(", ", result.missing()))
@@ -187,6 +207,26 @@ public final class PresetNetworking {
 		if (satchel.getItem() != AttunedContent.SATCHEL_OF_FOCI) {
 			return new SatchelState(ItemStack.EMPTY, List.of(), List.of());
 		}
+		return satchelStateOf(satchel);
+	}
+
+	/**
+	 * Hotkey-path reliquary lookup: the first Focus Reliquary anywhere in the
+	 * player's inventory. Empty state when the player carries none — the apply
+	 * then sources from equipped and loose inventory Foci only.
+	 */
+	private static SatchelState inventorySatchelState(ServerPlayer player) {
+		Inventory inventory = player.getInventory();
+		for (int slot = 0; slot < inventory.getContainerSize(); slot++) {
+			ItemStack stack = inventory.getItem(slot);
+			if (stack.getItem() == AttunedContent.SATCHEL_OF_FOCI) {
+				return satchelStateOf(stack);
+			}
+		}
+		return new SatchelState(ItemStack.EMPTY, List.of(), List.of());
+	}
+
+	private static SatchelState satchelStateOf(ItemStack satchel) {
 		FocusHolder holder = satchel.get(AttunedComponents.SATCHEL_CONTENTS);
 		if (holder == null) {
 			holder = AttunedComponents.emptyContents();

@@ -2,16 +2,26 @@
 
 ## Attuned 1.4.0 - Resonant Depths
 
+### Added
+- **Focus Confluences** - small set bonuses that wake when a specific 2-3 Focus combination is all active at once, at no attunement cost. Waking one announces in chat; the first time you discover a given Confluence it plays a fanfare and records a hidden advancement. Ships four: **Immovable** (Anchor + Rivet, +knockback resistance), **Bulwark of Light** (Votive + Oathguard, +armor), **Hunter's Patience** (Lantern + Veil, +movement speed), and **Tempest** (Rainstep + Stormcall, +attack damage).
+- **Confluences journal chapter** - a discovery collection: found Confluences show their name and effect, the rest read `??? - undiscovered (N Foci)` until you wake them.
+- **Confluence feedback** - a pip per active Confluence on the Foci HUD, plus a Focus-panel tooltip hint when you are one Focus short of a Confluence you have already discovered.
+- **Datapack Confluences** - packs can define their own at `data/<namespace>/attuned/synergy/<id>.json` (members + modifiers + optional behavior).
+
 ### Fixed
 - Lengthened Night Vision refresh windows for Nightgaze and Harborlight so the client no longer constantly flickers, and fixed Stormcall's rain check so lightning can trigger while sprinting in open rain.
 - Tremor now outlines the whole connected ore vein instead of a single block (stone and deepslate variants trace as one vein, mined blocks drop off the outline individually), and triggers from blackstone, basalt, and calcite so ancient-debris tunnels and geodes reveal too.
 
 ### Changed
 - Rebuilt the showcase 3D models: the Ocean Relic Trident gets a hand-authored silhouette with tapered tines, barbed prongs, glow fins, and kelp ribbons; the Frostbound Trident graduates from a flat sprite to a full icy voxel model; and both the Attunement Altar and Altar of Reweaving get far richer multi-element geometry (floating gems, rune panels, loom arch).
+- **Attunement Journal redesign** - lighter parchment with dark ink (replacing light text on tan), a flat chapter rail with affinity-colored dots and a highlighted current chapter, and a regenerated panel texture. Each chapter is now one continuous, mouse-wheel-scrollable document with a scrollbar; content no longer truncates, and Previous/Next move between chapters.
 
 ### Internal
 - Added a server-side attunement resolution cache keyed by player, immutable inventory identity, and current capacity.
 - Shared one cached client attunement readout snapshot across the Focus panel, Foci HUD, Combat HUD, and Attunement Altar render passes.
+- Added the Confluences engine: a pure `SynergyResolver`, the `Synergies` server-tick runtime, a `SynergyDefinition` datapack registry (`SYNERGY_DEFINITIONS`), and a `DISCOVERED_CONFLUENCES` player attachment.
+- Attunement Journal chapters now own their pages directly, removing the hand-maintained page-index lists and the class-load drift guard.
+- Added `tools/preview_journal.py`, an offline journal-layout harness that composites the real texture with the screen's exact layout math.
 
 ## Attuned 1.3.0 - The Focus Reliquary
 

@@ -1,0 +1,10 @@
+{
+	"members": ["attuned:rainstep_focus", "attuned:stormcall_focus"],
+	"modifiers": [
+		{
+			"attribute": "minecraft:attack_damage",
+			"amount": 1.0,
+			"operation": "add_value"
+		}
+	]
+}

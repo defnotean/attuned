@@ -1,0 +1,19 @@
+{
+	"parent": "attuned:attunement/root",
+	"display": {
+		"icon": {
+			"id": "attuned:anchor_focus"
+		},
+		"title": "Immovable",
+		"description": "Discover the Immovable Confluence.",
+		"frame": "task",
+		"show_toast": true,
+		"announce_to_chat": false,
+		"hidden": true
+	},
+	"criteria": {
+		"done": {
+			"trigger": "minecraft:impossible"
+		}
+	}
+}
