@@ -160,6 +160,9 @@
 	"faction.attuned.set_bonus.revenant": "Set bonus (3+): nearby undead are slowed.",
 
 	"apex.attuned.unlocked_dormant": "Apex unlocked: %s. Build resonance to half full to wake it.",
+	"apex.attuned.maelstrom_nova": "Maelstrom unleashed - a chaos nova erupts.",
+	"apex.attuned.stillpoint_field": "Stillpoint settles - a tranquility field spreads.",
+	"apex.attuned.identity_cooldown": "Apex ability ready in %s s.",
 
 	"inspect.attuned.line": "%s: %s",
 	"inspect.attuned.discord": "Discord",

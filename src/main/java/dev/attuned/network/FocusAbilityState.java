@@ -6,6 +6,7 @@ import dev.attuned.AttunedRegistries;
 import dev.attuned.AttunedServerCleanup;
 import dev.attuned.api.focus.FocusBehavior;
 import dev.attuned.api.focus.FocusDefinition;
+import dev.attuned.combat.Apex;
 import dev.attuned.attunement.AttunedAttachments;
 import dev.attuned.attunement.AttunedInv;
 import dev.attuned.attunement.Attunement;
@@ -49,6 +50,10 @@ public final class FocusAbilityState {
 	public static void trigger(ServerPlayer player) {
 		AbilitySelection selection = firstActiveAbility(player);
 		if (selection == null) {
+			// No active ability Focus: an armed Apex capstone may fire its identity ability.
+			if (Apex.tryIdentityAbility(player)) {
+				return;
+			}
 			player.sendOverlayMessage(Component.translatable("item.attuned.focus_ability.none"));
 			sync(player, FocusAbilityStatusPayload.NO_ABILITY_SLOT, 0, 0);
 			return;

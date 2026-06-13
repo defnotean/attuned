@@ -38,6 +38,19 @@ Holy  beats  Fury  beats  Bastion  beats  Zephyr  beats  Holy
 - A Focus with **no** `affinity` is *neutral* — it never triggers Discord and
   fits any committed lane. Four or more active neutral Foci can reach
   **Stillpoint**, the neutral Apex path.
+
+**Apex identity abilities.** The two affinity-less Apex paths each gain an active
+ability fired from the **Focus Ability** keybind — but only while armed (at Apex
+resonance) and while no awake ability Focus is equipped to claim the key first.
+The affinity capstones (Execute, Unyielding, Untouchable, Judgment) own no such
+ability; their key press still reports that no ability Focus is equipped.
+
+- **Maelstrom** unleashes a **chaos nova**: every nearby hostile (and any
+  PvP-affectable player) is knocked away from you and hit with Weakness for five
+  seconds. On a 30-second cooldown.
+- **Stillpoint** spreads a **tranquility field**: nearby hostile monsters lose
+  their target and are briefly slowed, buying you a moment of calm. On a
+  30-second cooldown.
 - Pick an affinity for combat-flavoured Foci; leave it off for utility Foci.
 
 **Reading an opponent (inspect).** Crouch and hold your crosshair on another
