@@ -2,15 +2,20 @@ package dev.attuned.client.screen;
 
 import dev.attuned.Attuned;
 import dev.attuned.attunement.AttunedAttachments;
+import dev.attuned.attunement.AttunedInv;
 import dev.attuned.attunement.FocusPreset;
+import dev.attuned.content.AttunedComponents;
 import dev.attuned.menu.ApplyPresetPayload;
+import dev.attuned.menu.BuildPreviewResolver;
 import dev.attuned.menu.DeletePresetPayload;
 import dev.attuned.menu.FocusSlot;
 import dev.attuned.menu.SatchelMenu;
 import dev.attuned.menu.SavePresetPayload;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.function.BooleanSupplier;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
@@ -20,9 +25,12 @@ import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.renderer.RenderPipelines;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.inventory.Slot;
+import net.minecraft.world.item.ItemStack;
 import org.lwjgl.glfw.GLFW;
 
 /**
@@ -51,6 +59,18 @@ public class SatchelScreen extends AbstractContainerScreen<SatchelMenu> {
 	private static final int BUTTON_HOVER_ARGB = 0xC0FFFFFF;
 	private static final int SELECTED_FILL_ARGB = 0x40FFD37A;
 	private static final int NAME_FIELD_TEXT = 0xFFE3D8F5;
+	// Greys a build-preview icon whose Focus cannot be sourced for an Apply.
+	private static final int PREVIEW_MISSING_OVERLAY = 0xC81A1622;
+
+	// Hover preview: the six saved Foci as item icons in a single row inside the
+	// logical window, drawn to the LEFT of the hovered build button so the row
+	// never escapes the 252x200 bounds the way the 70px-wide builds panel would.
+	private static final int PREVIEW_SLOTS = AttunedInv.SIZE;
+	private static final int PREVIEW_CELL = 18;
+	private static final int PREVIEW_W = PREVIEW_SLOTS * PREVIEW_CELL;
+	private static final int PREVIEW_PAD = 2;
+	private static final int PREVIEW_GAP = 4;
+	private static final int PREVIEW_PANEL_FILL = 0xF0120E1A;
 
 	// Equipped Focus 3x2 grid, mirroring SatchelMenu's equipped slot geometry.
 	private static final int EQUIPPED_X = SatchelMenu.EQUIPPED_X;
@@ -231,6 +251,77 @@ public class SatchelScreen extends AbstractContainerScreen<SatchelMenu> {
 			graphics.text(this.font, Component.translatable("screen.attuned.builds.empty"),
 				BUILDS_X, BUILDS_LIST_Y, LABEL_TEXT, false);
 		}
+		drawBuildPreview(graphics, mouseX, mouseY);
+	}
+
+	/**
+	 * When a saved build name is hovered, paints its six Foci as item icons in a
+	 * row to the LEFT of that build button, greying any slot whose Focus cannot be
+	 * sourced for an Apply (same multiset rule as {@link BuildPreviewResolver}).
+	 * Coordinates here are window-relative (the labels hook is pre-translated to
+	 * {@code leftPos/topPos}); the row is clamped to the logical window so it never
+	 * leaves the click/draw bounds.
+	 */
+	private void drawBuildPreview(GuiGraphicsExtractor graphics, int mouseX, int mouseY) {
+		int hovered = hoveredBuildIndex(mouseX, mouseY);
+		if (hovered < 0) {
+			return;
+		}
+		List<FocusPreset> presets = presets();
+		if (hovered >= presets.size()) {
+			return;
+		}
+		List<String> slots = presets.get(hovered).slots();
+		List<BuildPreviewResolver.Availability> availability = BuildPreviewResolver.availability(
+			slots, equippedIds(), satchelIds(), inventoryFocusCounts());
+
+		int rowW = PREVIEW_W + PREVIEW_PAD * 2;
+		int rowH = PREVIEW_CELL + PREVIEW_PAD * 2;
+		// Anchor to the LEFT of the builds panel, vertically centred on the hovered
+		// row, then clamp inside the window so the whole strip stays on-screen.
+		int x = BUILDS_X - PREVIEW_GAP - rowW;
+		int rowCentreY = BUILDS_LIST_Y + hovered * BUILD_ROW_H + BUILD_ROW_INNER_H / 2;
+		int y = rowCentreY - rowH / 2;
+		x = Math.max(2, Math.min(x, IMAGE_WIDTH - rowW - 2));
+		y = Math.max(2, Math.min(y, IMAGE_HEIGHT - rowH - 2));
+
+		graphics.fill(x, y, x + rowW, y + rowH, PREVIEW_PANEL_FILL);
+		for (int slot = 0; slot < PREVIEW_SLOTS; slot++) {
+			int cx = x + PREVIEW_PAD + slot * PREVIEW_CELL;
+			int cy = y + PREVIEW_PAD;
+			graphics.fill(cx, cy, cx + PREVIEW_CELL, cy + PREVIEW_CELL, WELL_EDGE);
+			graphics.fill(cx + 1, cy + 1, cx + PREVIEW_CELL - 1, cy + PREVIEW_CELL - 1, WELL_FILL);
+
+			String id = slot < slots.size() ? slots.get(slot) : "";
+			if (id == null || id.isBlank()) {
+				continue;
+			}
+			ItemStack stack = stackFor(id);
+			if (stack.isEmpty()) {
+				continue;
+			}
+			graphics.item(stack, cx + 1, cy + 1);
+			if (slot < availability.size()
+					&& availability.get(slot) == BuildPreviewResolver.Availability.MISSING) {
+				graphics.fill(cx + 1, cy + 1, cx + PREVIEW_CELL - 1, cy + PREVIEW_CELL - 1, PREVIEW_MISSING_OVERLAY);
+			}
+		}
+	}
+
+	/** Index of the build button currently under the cursor, or -1. */
+	private int hoveredBuildIndex(int mouseX, int mouseY) {
+		for (int i = 0; i < buildButtons.size(); i++) {
+			Button button = buildButtons.get(i);
+			if (button.active && button.isMouseOver(mouseX, mouseY)) {
+				return i;
+			}
+		}
+		return -1;
+	}
+
+	/** Resolves a saved Focus id to its item stack for the preview (client registry). */
+	private static ItemStack stackFor(String id) {
+		return BuiltInRegistries.ITEM.getValue(Identifier.parse(id)).getDefaultInstance();
 	}
 
 	private void drawWell(GuiGraphicsExtractor graphics, int x, int y) {
@@ -257,6 +348,55 @@ public class SatchelScreen extends AbstractContainerScreen<SatchelMenu> {
 			return List.of();
 		}
 		return AttunedAttachments.getPresets(this.minecraft.player);
+	}
+
+	// Client-side preview sourcing reads the menu's synced slots so the pool exactly
+	// matches what a server-side Apply would draw from: the six equipped slots, the
+	// reliquary grid, and loose inventory Foci.
+	private List<String> equippedIds() {
+		List<String> ids = new ArrayList<>(AttunedInv.SIZE);
+		for (int i = 0; i < AttunedInv.SIZE; i++) {
+			ids.add(slotId(SatchelMenu.EQUIPPED_START + i));
+		}
+		return ids;
+	}
+
+	private List<String> satchelIds() {
+		List<String> ids = new ArrayList<>(AttunedComponents.SATCHEL_SIZE);
+		for (int i = 0; i < AttunedComponents.SATCHEL_SIZE; i++) {
+			ids.add(slotId(i));
+		}
+		return ids;
+	}
+
+	private Map<String, Integer> inventoryFocusCounts() {
+		Map<String, Integer> counts = new HashMap<>();
+		for (int index = SatchelMenu.EQUIPPED_END; index < this.menu.slots.size(); index++) {
+			Slot slot = this.menu.slots.get(index);
+			ItemStack stack = slot.getItem();
+			if (stack.isEmpty()) {
+				continue;
+			}
+			String id = idFor(stack);
+			if (!id.isEmpty()) {
+				counts.merge(id, stack.getCount(), Integer::sum);
+			}
+		}
+		return counts;
+	}
+
+	private String slotId(int index) {
+		if (index < 0 || index >= this.menu.slots.size()) {
+			return "";
+		}
+		return idFor(this.menu.slots.get(index).getItem());
+	}
+
+	private static String idFor(ItemStack stack) {
+		if (stack == null || stack.isEmpty()) {
+			return "";
+		}
+		return BuiltInRegistries.ITEM.getKey(stack.getItem()).toString();
 	}
 
 	private static String signatureOf(List<FocusPreset> presets) {
