@@ -236,7 +236,7 @@ public final class Resonance {
 				continue;
 			}
 			FocusDefinition definition = maybeDefinition.get();
-			used += definition.cost();
+			used += Attunement.effectiveCost(definition, inv.get(slot));
 			Optional<Affinity> affinity = definition.affinity();
 			orderedActiveAffinities.add(affinity);
 			affinity.ifPresent(activeAffinities::add);

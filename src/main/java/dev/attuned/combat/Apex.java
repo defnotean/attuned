@@ -180,7 +180,7 @@ public final class Apex {
 			}
 			FocusDefinition definition = maybeDefinition.get();
 			activeAffinities.add(definition.affinity());
-			used += definition.cost();
+			used += Attunement.effectiveCost(definition, inv.get(slot));
 		}
 		return resolveCapstone(activeAffinities, used, Attunement.capacity(player));
 	}

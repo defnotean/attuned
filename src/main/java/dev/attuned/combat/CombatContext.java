@@ -136,7 +136,7 @@ public final class CombatContext {
 			}
 			FocusDefinition definition = maybeDefinition.get();
 			activeFocusIds.add(BuiltInRegistries.ITEM.getKey(stack.getItem()));
-			used += definition.cost();
+			used += Attunement.effectiveCost(definition, stack);
 			Optional<Affinity> affinity = definition.affinity();
 			orderedActiveAffinities.add(affinity);
 			affinity.ifPresent(activeAffinity -> {

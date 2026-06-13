@@ -92,9 +92,11 @@ public final class AttunedTooltips {
 					.append(Component.translatableWithFallback(
 						"faction." + faction.getNamespace() + "." + faction.getPath(), faction.toString())
 						.withStyle(ChatFormatting.DARK_PURPLE, ChatFormatting.BOLD))));
+				// Show the effective budget cost this stack consumes, so a Tempered
+				// Focus's tooltip agrees with the budget it actually charges.
 				lines.add(Component.literal("Cost ")
 					.withStyle(ChatFormatting.GRAY)
-					.append(Component.literal(definition.cost() + " attunement")
+					.append(Component.literal(Attunement.effectiveCost(definition, stack) + " attunement")
 						.withStyle(ChatFormatting.AQUA)));
 				if (definition.unique()) {
 					lines.add(Component.literal("Unique")

@@ -35,8 +35,8 @@ class PaletteBreadthContractTest {
 			"build should construct OnHitEffectBehavior for the on_hit_effect type.");
 		assertTrue(source.contains("case FocusBehaviorDef.PeriodicEffect periodic -> new PeriodicEffectBehavior(periodic)"),
 			"build should construct PeriodicEffectBehavior for the periodic_effect type.");
-		assertTrue(source.contains("case FocusBehaviorDef.AttributeWhile attributeWhile -> new AttributeWhileBehavior(attributeWhile)"),
-			"build should construct AttributeWhileBehavior for the attribute_while type.");
+		assertTrue(source.contains("case FocusBehaviorDef.AttributeWhile attributeWhile -> new AttributeWhileBehavior(behaviorId, attributeWhile)"),
+			"build should construct AttributeWhileBehavior for the attribute_while type, passing the behaviour id.");
 	}
 
 	@Test
@@ -55,8 +55,8 @@ class PaletteBreadthContractTest {
 	void attributeWhileTogglesATransientModifierUnderADistinctStableId() throws IOException {
 		String source = read(DATA_BEHAVIORS);
 
-		assertTrue(source.contains("Identifier.fromNamespaceAndPath(Attuned.MOD_ID, \"palette_attr_while\")"),
-			"attribute_while must use a stable, distinct modifier id.");
+		assertTrue(source.contains("\"palette_attr_while\""),
+			"attribute_while must use a stable, distinct modifier-id prefix.");
 		assertFalse(source.contains("\"slot_\""),
 			"attribute_while must use a distinct modifier-id prefix (palette_attr_while) so it never "
 				+ "collides with AttunedEffects' slot_N_mod_N scheme.");
@@ -67,6 +67,27 @@ class PaletteBreadthContractTest {
 		assertTrue(methodBody(source, "public void onDeactivate(ServerPlayer player, ItemStack focus)")
 				.contains("removeModifier("),
 			"attribute_while should strip its modifier on deactivation so unequipping never strands it.");
+	}
+
+	@Test
+	void attributeWhileQualifiesItsModifierIdPerBehaviorSoTwoFociDoNotCollide() throws IOException {
+		String source = read(DATA_BEHAVIORS);
+
+		// The modifier id is derived from the behaviour's registry id, not one shared constant, so
+		// two different attribute_while Foci on the same attribute install independent transient
+		// modifiers and stack instead of one silently dropping the other.
+		assertTrue(source.contains("Identifier attributeWhileModifierId(Identifier behaviorId)"),
+			"attribute_while modifier ids must be derived from the behaviour id.");
+		assertTrue(source.contains("behaviorId.getNamespace()") && source.contains("behaviorId.getPath()"),
+			"the per-behaviour modifier id must incorporate the behaviour's registry id so two "
+				+ "distinct attribute_while behaviours never share one id.");
+		assertTrue(source.contains(
+				"AttributeWhileBehavior(Identifier behaviorId, FocusBehaviorDef.AttributeWhile def)"),
+			"AttributeWhileBehavior must receive the behaviour id to qualify its modifier id.");
+		assertTrue(source.contains("this.modifierId = attributeWhileModifierId(behaviorId)"),
+			"AttributeWhileBehavior must hold a per-instance modifier id.");
+		assertFalse(source.contains("ATTRIBUTE_WHILE_MODIFIER_ID"),
+			"the single shared modifier-id constant must be replaced by the per-behaviour derivation.");
 	}
 
 	@Test

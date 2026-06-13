@@ -29,17 +29,27 @@ public final class DataFocusBehaviors {
 	private DataFocusBehaviors() {}
 
 	/** Stable id prefix for transient {@code attribute_while} modifiers. Distinct from
-	 * {@code AttunedEffects}' {@code slot_N_mod_N} scheme so the two never collide. */
-	private static final Identifier ATTRIBUTE_WHILE_MODIFIER_ID =
-		Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "palette_attr_while");
+	 * {@code AttunedEffects}' {@code slot_N_mod_N} scheme so the two never collide. Qualified
+	 * per behaviour id by {@link #attributeWhileModifierId} so two different {@code attribute_while}
+	 * Foci on the same attribute install independent modifiers instead of clobbering one another. */
+	private static final String ATTRIBUTE_WHILE_MODIFIER_PREFIX = "palette_attr_while";
 
-	/** Builds a passive {@link FocusBehavior} for the given palette definition. */
-	public static FocusBehavior build(FocusBehaviorDef definition) {
+	/** The transient-modifier id a given {@code attribute_while} behaviour owns: the shared prefix
+	 * qualified by the behaviour's registry id, so distinct behaviours never share a modifier id. */
+	static Identifier attributeWhileModifierId(Identifier behaviorId) {
+		return Identifier.fromNamespaceAndPath(Attuned.MOD_ID,
+			ATTRIBUTE_WHILE_MODIFIER_PREFIX + "/" + behaviorId.getNamespace() + "/" + behaviorId.getPath());
+	}
+
+	/** Builds a passive {@link FocusBehavior} for the given palette definition. The behaviour's
+	 * registry {@code behaviorId} qualifies any per-instance state (e.g. the {@code attribute_while}
+	 * modifier id) so two distinct palette behaviours never collide on the same attribute. */
+	public static FocusBehavior build(Identifier behaviorId, FocusBehaviorDef definition) {
 		return switch (definition) {
 			case FocusBehaviorDef.ConditionalMobEffect effect -> new ConditionalMobEffectBehavior(effect);
 			case FocusBehaviorDef.OnHitEffect onHit -> new OnHitEffectBehavior(onHit);
 			case FocusBehaviorDef.PeriodicEffect periodic -> new PeriodicEffectBehavior(periodic);
-			case FocusBehaviorDef.AttributeWhile attributeWhile -> new AttributeWhileBehavior(attributeWhile);
+			case FocusBehaviorDef.AttributeWhile attributeWhile -> new AttributeWhileBehavior(behaviorId, attributeWhile);
 		};
 	}
 
@@ -133,15 +143,19 @@ public final class DataFocusBehaviors {
 
 	/**
 	 * Adds a transient attribute modifier while the condition holds and removes it when it stops,
-	 * flipping it under a stable id so toggling is idempotent. {@code onDeactivate} removes the
-	 * modifier unconditionally, so unequipping the Focus while the condition still holds never
-	 * strands the modifier.
+	 * flipping it under a per-behaviour id so toggling is idempotent. The id is qualified by the
+	 * behaviour's registry id ({@link #attributeWhileModifierId}), so two different
+	 * {@code attribute_while} Foci targeting the same attribute install independent modifiers and
+	 * stack instead of one silently dropping the other. {@code onDeactivate} removes the modifier
+	 * unconditionally, so unequipping the Focus while the condition still holds never strands it.
 	 */
 	static final class AttributeWhileBehavior implements FocusBehavior {
 		private final FocusBehaviorDef.AttributeWhile def;
+		private final Identifier modifierId;
 
-		AttributeWhileBehavior(FocusBehaviorDef.AttributeWhile def) {
+		AttributeWhileBehavior(Identifier behaviorId, FocusBehaviorDef.AttributeWhile def) {
 			this.def = def;
+			this.modifierId = attributeWhileModifierId(behaviorId);
 		}
 
 		@Override
@@ -151,14 +165,14 @@ public final class DataFocusBehaviors {
 			if (ai == null) {
 				return;
 			}
-			boolean present = ai.getModifier(ATTRIBUTE_WHILE_MODIFIER_ID) != null;
+			boolean present = ai.getModifier(modifierId) != null;
 			if (def.condition().test(player)) {
 				if (!present) {
 					ai.addTransientModifier(new AttributeModifier(
-						ATTRIBUTE_WHILE_MODIFIER_ID, modifier.amount(), modifier.operation()));
+						modifierId, modifier.amount(), modifier.operation()));
 				}
 			} else if (present) {
-				ai.removeModifier(ATTRIBUTE_WHILE_MODIFIER_ID);
+				ai.removeModifier(modifierId);
 			}
 		}
 
@@ -166,7 +180,7 @@ public final class DataFocusBehaviors {
 		public void onDeactivate(ServerPlayer player, ItemStack focus) {
 			AttributeInstance ai = player.getAttribute(def.modifier().attribute());
 			if (ai != null) {
-				ai.removeModifier(ATTRIBUTE_WHILE_MODIFIER_ID);
+				ai.removeModifier(modifierId);
 			}
 		}
 

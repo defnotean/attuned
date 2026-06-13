@@ -26,8 +26,9 @@ class ApexSourceContractTest {
 			"Capstone lookup should not recompute active slots through the convenience helper.");
 		assertEquals(0, countOccurrences(capstoneOf, "Attunement.used(player)"),
 			"Capstone lookup should derive used budget while walking the resolved active slots.");
-		assertTrue(capstoneOf.contains("used += definition.cost()"),
-			"Capstone lookup should accumulate used budget from the definitions it already reads.");
+		assertTrue(capstoneOf.contains("used += Attunement.effectiveCost(definition, inv.get(slot))"),
+			"Capstone lookup should accumulate Tempered-aware effective cost so the near-full-budget "
+				+ "gate agrees with BudgetResolver, Attunement.used(), and the readout.");
 		assertTrue(capstoneOf.contains("resolveCapstone(activeAffinities, used, Attunement.capacity(player))"),
 			"Capstone lookup should pass cached used budget into the pure resolver.");
 	}

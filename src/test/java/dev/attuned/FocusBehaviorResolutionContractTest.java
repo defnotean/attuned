@@ -53,8 +53,9 @@ class FocusBehaviorResolutionContractTest {
 			"The funnel must fall back to a data behaviour when no code behaviour exists.");
 		assertTrue(source.contains("registries.lookupOrThrow(FOCUS_BEHAVIORS).getValue(id)"),
 			"The data path must read the definition from the focus_behavior registry by id.");
-		assertTrue(source.contains("DataFocusBehaviors.build(def)"),
-			"The data path must build a runtime FocusBehavior from the palette definition.");
+		assertTrue(source.contains("DataFocusBehaviors.build(id, def)"),
+			"The data path must build a runtime FocusBehavior from the palette definition, passing "
+				+ "the behaviour id so per-instance state (e.g. attribute_while modifier ids) stays distinct.");
 	}
 
 	@Test

@@ -33,6 +33,9 @@ class ResonanceSourceContractTest {
 			"Player combat state should derive Apex from cached active definitions.");
 		assertTrue(playerState.contains("Apex.resolveCapstone(orderedActiveAffinities, used, Attunement.capacity(player))"),
 			"Player combat state should resolve Apex from ordered active affinities and cached used budget.");
+		assertTrue(playerState.contains("used += Attunement.effectiveCost(definition, inv.get(slot))"),
+			"Player combat state should sum Tempered-aware effective cost so the Apex/Resonance gate "
+				+ "matches BudgetResolver and Attunement.used().");
 	}
 
 	@Test

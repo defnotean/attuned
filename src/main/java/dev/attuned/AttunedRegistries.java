@@ -83,7 +83,7 @@ public final class AttunedRegistries {
 			return perAccess.get(id);
 		}
 		FocusBehaviorDef def = registries.lookupOrThrow(FOCUS_BEHAVIORS).getValue(id);
-		FocusBehavior built = def == null ? null : DataFocusBehaviors.build(def);
+		FocusBehavior built = def == null ? null : DataFocusBehaviors.build(id, def);
 		perAccess.put(id, built);
 		return built;
 	}
