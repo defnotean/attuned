@@ -161,6 +161,17 @@
 
 	"apex.attuned.unlocked_dormant": "Apex unlocked: %s. Build resonance to half full to wake it.",
 
+	"inspect.attuned.line": "%s: %s",
+	"inspect.attuned.discord": "Discord",
+	"inspect.attuned.neutral": "Neutral",
+	"inspect.attuned.affinity.fury": "Fury",
+	"inspect.attuned.affinity.bastion": "Bastion",
+	"inspect.attuned.affinity.zephyr": "Zephyr",
+	"inspect.attuned.affinity.holy": "Holy",
+	"inspect.attuned.apex": " · Apex %s (%s)",
+	"inspect.attuned.apex.ready": "ready",
+	"inspect.attuned.apex.dormant": "dormant",
+
 	"screen.attuned.altar.bind": "Bind",
 	"screen.attuned.altar.attunement": "Attunement: ",
 	"screen.attuned.altar.stance": "Stance: ",

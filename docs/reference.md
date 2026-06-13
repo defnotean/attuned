@@ -40,6 +40,14 @@ Holy  beats  Fury  beats  Bastion  beats  Zephyr  beats  Holy
   **Stillpoint**, the neutral Apex path.
 - Pick an affinity for combat-flavoured Foci; leave it off for utility Foci.
 
+**Reading an opponent (inspect).** Crouch and hold your crosshair on another
+player for about 1.5 seconds to read their public stance on your action bar: their
+committed affinity, **Discord**, or **Neutral**, plus their Apex capstone and
+whether it is currently armed. This reveals nothing the Combat HUD's enemy gem
+does not already telegraph — the lookup is server-mediated (attunement state syncs
+only to its owner, so it can never be read client-side), range-limited to 24
+blocks with line of sight, and rate-limited per onlooker.
+
 ## Factions
 
 Factions are optional labels for Foci that share a theme. They show on tooltips
