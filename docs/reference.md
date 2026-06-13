@@ -365,6 +365,9 @@ it its own art. The HUD, tooltips, and Focus Reliquary render any registered Foc
 so a skinned custom Focus works everywhere automatically. These items ship **no**
 bundled `FocusDefinition` — supplying one is the author's job — so they do not count
 toward the advertised shipped-Focus total.
+For a full walkthrough of authoring Foci as a datapack — without editing the JAR —
+see [authoring-foci.md](authoring-foci.md) and the worked
+[example-pack](example-pack/).
 
 ## Numbers you can tune
 
@@ -454,7 +457,7 @@ Operator commands require game-master permission:
 | `/attuned capacity` | Prints your current attunement capacity. |
 | `/attuned capacity <amount>` | Sets your current attunement capacity for testing. |
 | `/attuned status` | Dumps active Foci, stance, Pact, resonance, and Apex state. |
-| `/attuned validate` | Checks shipped Focus registrations, datapack definitions, and behavior ids. |
+| `/attuned validate` | Validates shipped **and** author datapacks file by file: every Focus's `item`, `behavior` (code or palette), and modifier `attribute` ids must resolve, and the `focus_behavior` palette files are walked too. A missing display-name lang key is reported as a *warning*, not a failure — a pack with only warnings still passes, with a warning count. See [authoring-foci.md](authoring-foci.md). |
 
 ## Where everything lives
 

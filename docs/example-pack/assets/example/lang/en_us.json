@@ -1,0 +1,16 @@
+{
+	"item.example.example_warding_focus": "Warding Focus",
+	"item.example.example_warding_focus.lore": "Old shell, older patience.",
+	"item.example.example_warding_focus.lore2": "It takes the blow so you need not.",
+	"item.example.example_warding_focus.effect": "Grants +2 armor.",
+
+	"item.example.example_tide_focus": "Tide Focus",
+	"item.example.example_tide_focus.lore": "The sea lends its breath.",
+	"item.example.example_tide_focus.lore2": "Depths hold no fear for the attuned.",
+	"item.example.example_tide_focus.effect": "Lets you breathe underwater.",
+
+	"item.example.example_warmth_focus": "Warmth Focus",
+	"item.example.example_warmth_focus.lore": "A coal that never cools.",
+	"item.example.example_warmth_focus.lore2": "It wakes only where the world burns.",
+	"item.example.example_warmth_focus.effect": "Grants Fire Resistance while in the Nether."
+}

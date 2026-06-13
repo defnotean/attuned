@@ -1,5 +1,12 @@
 # Adding a new Focus
 
+> **Which guide?** This recipe is for **contributors editing the Attuned JAR** —
+> registering a brand-new item, shipping art, and (optionally) writing a behavior
+> class. If you instead want to add Foci to a world or a published pack **without a
+> JAR rebuild** (reusing existing items, attribute modifiers, the data behavior
+> palette), see [`authoring-foci.md`](authoring-foci.md) and the worked
+> [`example-pack/`](example-pack/).
+
 This is a step-by-step recipe. Follow it top to bottom and you will have a
 working Focus. It uses one running example — a **Stoneskin Focus** that grants
 extra armor — so every step shows real text you can adapt.

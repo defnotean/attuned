@@ -3,6 +3,7 @@ package dev.attuned.command;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import dev.attuned.api.focus.Affinity;
 import dev.attuned.api.focus.FocusDefinition;
+import dev.attuned.api.focus.ModifierEntry;
 import dev.attuned.AttunedRegistries;
 import dev.attuned.attunement.AttunedAttachments;
 import dev.attuned.attunement.AttunedInv;
@@ -140,27 +141,63 @@ public final class AttunedCommands {
 
 	private static int validateContent(CommandSourceStack source) {
 		List<String> problems = new ArrayList<>();
+		List<String> warnings = new ArrayList<>();
 		var registries = source.getServer().registryAccess();
 		var registry = registries.lookupOrThrow(AttunedRegistries.FOCUS_DEFINITIONS);
 		Map<net.minecraft.world.item.Item, FocusDefinition> byItem = new IdentityHashMap<>();
+		// Walk every focus/<name>.json file by file: each problem and each warning
+		// is qualified with the Focus's item key so an author can find the source file.
 		registry.listElements().forEach(holder -> {
 			FocusDefinition def = holder.value();
+			var itemKey = BuiltInRegistries.ITEM.getKey(def.item().value());
+			// An item that failed to resolve to a real registered item.
+			if (!def.item().isBound()) {
+				problems.add("Focus item failed to resolve: " + itemKey);
+			}
 			FocusDefinition previous = byItem.putIfAbsent(def.item().value(), def);
 			if (previous != null) {
-				problems.add("Duplicate FocusDefinition item: "
-					+ BuiltInRegistries.ITEM.getKey(def.item().value()));
+				problems.add("Duplicate FocusDefinition item: " + itemKey);
 			}
+			// Behavior ids resolve code-first-then-data through the single funnel.
 			def.behavior().ifPresent(behaviorId -> {
-				if (dev.attuned.AttunedRegistries.getBehavior(behaviorId, registries) == null) {
-					problems.add("Missing behavior " + behaviorId + " for "
-						+ BuiltInRegistries.ITEM.getKey(def.item().value()));
+				if (AttunedRegistries.getBehavior(behaviorId, registries) == null) {
+					problems.add("Missing behavior " + behaviorId + " for " + itemKey);
 				}
 			});
+			// Attribute ids on every modifier must resolve to a real attribute.
+			for (ModifierEntry modifier : def.modifiers()) {
+				if (!modifier.attribute().isBound()) {
+					problems.add("Modifier attribute failed to resolve on " + itemKey);
+				}
+			}
+			// A missing display-name lang key is a warning, not a hard failure: the
+			// Focus still works, it just shows a raw translation key in game.
+			String langKey = "item." + itemKey.getNamespace() + "." + itemKey.getPath();
+			if (!net.minecraft.locale.Language.getInstance().has(langKey)) {
+				warnings.add("Missing display-name lang key (expected " + langKey + ") for " + itemKey);
+			}
 		});
 
+		// Walk the focus_behavior palette registry too, so a palette file that an
+		// author shipped is reported alongside their focus files. A palette entry that
+		// failed to decode never reaches the registry, so reaching here means it built.
+		var behaviorRegistry = registries.lookupOrThrow(AttunedRegistries.FOCUS_BEHAVIORS);
+		int paletteCount = (int) behaviorRegistry.listElements().count();
+
 		if (problems.isEmpty()) {
-			source.sendSuccess(() -> Component.literal(
-				"Attuned validation passed: " + byItem.size() + " Focus definitions checked."), false);
+			source.sendSuccess(() -> Component.literal("Attuned validation passed: "
+				+ byItem.size() + " Focus definitions and " + paletteCount + " palette behavior(s) checked."), false);
+			if (!warnings.isEmpty()) {
+				source.sendSuccess(() -> Component.literal(
+					"Attuned validation: " + warnings.size() + " warning(s) (missing lang keys)."), false);
+				for (String warning : warnings.subList(0, Math.min(8, warnings.size()))) {
+					source.sendSuccess(() -> Component.literal("- " + warning), false);
+				}
+				if (warnings.size() > 8) {
+					source.sendSuccess(() -> Component.literal(
+						"- ...and " + (warnings.size() - 8) + " more."), false);
+				}
+			}
 			return byItem.size();
 		}
 		source.sendFailure(Component.literal("Attuned validation found " + problems.size() + " issue(s):"));
@@ -169,6 +206,13 @@ public final class AttunedCommands {
 		}
 		if (problems.size() > 8) {
 			source.sendFailure(Component.literal("- ...and " + (problems.size() - 8) + " more."));
+		}
+		if (!warnings.isEmpty()) {
+			source.sendFailure(Component.literal(
+				"Plus " + warnings.size() + " warning(s) (missing lang keys):"));
+			for (String warning : warnings.subList(0, Math.min(8, warnings.size()))) {
+				source.sendFailure(Component.literal("- " + warning));
+			}
 		}
 		return 0;
 	}
