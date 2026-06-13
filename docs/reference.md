@@ -334,6 +334,38 @@ A Focus that grants Speed I while standing in the rain — no Java.
 `/attuned validate` checks palette-backed `behavior` ids too, so a typo in either
 file is caught the same way a missing code behavior is.
 
+## Custom Focus item pool (resource-pack skins)
+
+Minecraft cannot mint new items from a datapack, so a pack that reuses an existing
+item also borrows that item's name and model. To give authors a bespoke Focus
+identity without a JAR, Attuned ships eight blank, skinnable Focus items:
+`attuned:custom_focus_1` through `attuned:custom_focus_8`. They appear in the
+Attuned utility creative tab with a neutral default name and a hue-shifted blank
+medallion texture.
+
+To use one, point a `focus/<name>.json` at it and skin the rest in a resource pack:
+
+```json
+// data/mypack/attuned/focus/frostward_focus.json
+{ "item": "attuned:custom_focus_3", "cost": 4, "affinity": "bastion",
+  "behavior": "mypack:frostward" }
+```
+
+```json
+// assets/mypack/lang/en_us.json (resource pack)
+{ "item.attuned.custom_focus_3": "Frostward Focus",
+  "item.attuned.custom_focus_3.lore": "...",
+  "item.attuned.custom_focus_3.lore2": "...",
+  "item.attuned.custom_focus_3.effect": "..." }
+```
+
+Override `assets/attuned/models/item/custom_focus_3.json` and
+`assets/attuned/textures/item/custom_focus_3.png` in the same resource pack to give
+it its own art. The HUD, tooltips, and Focus Reliquary render any registered Focus,
+so a skinned custom Focus works everywhere automatically. These items ship **no**
+bundled `FocusDefinition` — supplying one is the author's job — so they do not count
+toward the advertised shipped-Focus total.
+
 ## Numbers you can tune
 
 Server-side settings live in `config/attuned.json`, written on first launch.

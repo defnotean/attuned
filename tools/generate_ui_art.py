@@ -1,10 +1,18 @@
+import json
 from pathlib import Path
 
 from PIL import Image, ImageDraw
 
 
 ROOT = Path(__file__).resolve().parents[1]
-TEXTURES = ROOT / "src/main/resources/assets/attuned/textures"
+ASSETS = ROOT / "src/main/resources/assets/attuned"
+TEXTURES = ASSETS / "textures"
+ITEM_DEFINITIONS = ASSETS / "items"
+ITEM_MODELS = ASSETS / "models/item"
+
+# The blank, resource-pack-skinnable Focus pool size. Must stay in step with
+# AttunedContent.registerCustomFocusPool() and GenericFocusItemContractTest.
+CUSTOM_FOCUS_COUNT = 8
 
 
 STONE_DARK = (22, 20, 28, 255)
@@ -25,6 +33,8 @@ CLEAR = (0, 0, 0, 0)
 def ensure_dirs():
     (TEXTURES / "gui").mkdir(parents=True, exist_ok=True)
     (TEXTURES / "item").mkdir(parents=True, exist_ok=True)
+    ITEM_DEFINITIONS.mkdir(parents=True, exist_ok=True)
+    ITEM_MODELS.mkdir(parents=True, exist_ok=True)
 
 
 def rect(draw, box, fill, outline=None):
@@ -453,6 +463,63 @@ def satchel_item():
     img.save(TEXTURES / "item/satchel_of_foci.png")
 
 
+def _custom_focus_frame(accent, accent_light, accent_dark, rim):
+    """Draws one 16x16 blank Focus medallion in a single accent palette.
+
+    A neutral, deliberately featureless talisman so a resource pack can repaint or
+    replace it; the per-item hue keeps the eight defaults visually distinct in the
+    creative tab without implying any built-in identity.
+    """
+    img = Image.new("RGBA", (16, 16), CLEAR)
+    draw = ImageDraw.Draw(img)
+
+    # Stone medallion body with a chunky bevel, matching the Focus art density.
+    bevel(draw, 2, 2, 12, 12, STONE_FACE, STONE_DARK, STONE_LIGHT)
+    deterministic_speckles(draw, 16, 16, STONE_SHADOW, 23)
+
+    # Recessed gem well, then a faceted accent gem in the centre.
+    inset(draw, 4, 4, 8, 8, (60, 56, 68, 255))
+    draw.polygon([(8, 4), (12, 8), (8, 12), (4, 8)], fill=accent_dark, outline=INK)
+    draw.polygon([(8, 5), (11, 8), (8, 11), (5, 8)], fill=accent)
+    draw.line((8, 5, 8, 11), fill=accent_light)
+    draw.point((7, 7), fill=accent_light)
+    draw.point((9, 9), fill=accent_dark)
+
+    # Accent rim sparks at the cardinal points so the hue reads on the frame too.
+    for x, y in ((8, 1), (8, 14), (1, 8), (14, 8)):
+        draw.point((x, y), fill=rim)
+    return img
+
+
+def generate_custom_focus_textures():
+    """Generates the deterministic default art + model/item JSON for the blank,
+    resource-pack-skinnable Focus pool (attuned:custom_focus_1..N)."""
+    import colorsys
+
+    for n in range(1, CUSTOM_FOCUS_COUNT + 1):
+        name = f"custom_focus_{n}"
+        # Deterministic, byte-stable hue spread so all N differ and re-running is
+        # reproducible. The pool ships static 16x16 art (no animation), unlike the
+        # bespoke 64x512 shipped Foci.
+        hue = ((n - 1) * 360 // CUSTOM_FOCUS_COUNT) / 360.0
+        accent = tuple(round(c * 255) for c in colorsys.hsv_to_rgb(hue, 0.62, 0.86)) + (255,)
+        accent_light = tuple(round(c * 255) for c in colorsys.hsv_to_rgb(hue, 0.34, 1.0)) + (255,)
+        accent_dark = tuple(round(c * 255) for c in colorsys.hsv_to_rgb(hue, 0.78, 0.48)) + (255,)
+        rim = tuple(round(c * 255) for c in colorsys.hsv_to_rgb(hue, 0.5, 0.96)) + (255,)
+
+        _custom_focus_frame(accent, accent_light, accent_dark, rim).save(
+            TEXTURES / "item" / f"{name}.png")
+
+        model = {"parent": "minecraft:item/generated",
+                 "textures": {"layer0": f"attuned:item/{name}"}}
+        (ITEM_MODELS / f"{name}.json").write_text(
+            json.dumps(model, indent=2) + "\n", encoding="utf-8")
+
+        definition = {"model": {"type": "minecraft:model", "model": f"attuned:item/{name}"}}
+        (ITEM_DEFINITIONS / f"{name}.json").write_text(
+            json.dumps(definition, indent=2) + "\n", encoding="utf-8")
+
+
 if __name__ == "__main__":
     ensure_dirs()
     altar()
@@ -463,3 +530,4 @@ if __name__ == "__main__":
     hud_backplate()
     journal()
     satchel_item()
+    generate_custom_focus_textures()

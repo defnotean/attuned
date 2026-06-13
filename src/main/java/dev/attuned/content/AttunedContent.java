@@ -114,6 +114,24 @@ public final class AttunedContent {
 	public static final Item LAST_RITES_FOCUS = registerFocus("last_rites_focus");
 	public static final Item BONECHILL_FOCUS = registerFocus("bonechill_focus");
 
+	/**
+	 * Blank, resource-pack-skinnable Focus items for datapack authors. Each one is a
+	 * real registered Focus item with a neutral default name/model/texture, but ships
+	 * <em>no</em> bundled {@code FocusDefinition} — an author points a
+	 * {@code focus/<name>.json} at one and skins its name, lore, and art with a
+	 * resource pack, getting a bespoke Focus identity without a JAR. They register
+	 * before the {@link #FOCI} snapshot so {@link #isFocus(Item)} includes them.
+	 */
+	public static final List<Item> CUSTOM_FOCI = registerCustomFocusPool();
+
+	private static List<Item> registerCustomFocusPool() {
+		List<Item> pool = new ArrayList<>();
+		for (int n = 1; n <= 8; n++) {
+			pool.add(registerFocus("custom_focus_" + n));
+		}
+		return List.copyOf(pool);
+	}
+
 	/** Every Focus item, in display order for creative tabs and survival loot. */
 	public static final List<Item> FOCI = List.copyOf(REGISTERED_FOCI);
 	private static final Set<Item> FOCI_SET = Set.copyOf(REGISTERED_FOCI);

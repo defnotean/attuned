@@ -13,6 +13,7 @@
 - **Confluence feedback** - a pip per active Confluence on the Foci HUD, plus a Focus-panel tooltip hint when you are one Focus short of a Confluence you have already discovered.
 - **Datapack Confluences** - packs can define their own at `data/<namespace>/attuned/synergy/<id>.json` (members + modifiers + optional behavior).
 - **Behavior palette** - datapacks can now define some Focus behaviors as data instead of Java, via the synced `data/<ns>/attuned/focus_behavior/<id>.json` registry. The first palette type, `attuned:conditional_mob_effect`, keeps a mob effect refreshed while a composable condition (`in_rain`, `underwater`, `low_light`, `sneaking`, `on_block_tag`, `in_biome_tag`) holds. A Focus's `behavior` id now resolves code-first-then-data, so palette entries and the shipped code behaviors never collide. See `docs/reference.md`.
+- **Custom Focus item pool** - eight blank, resource-pack-skinnable Focus items (`attuned:custom_focus_1` through `custom_focus_8`) so datapack authors can point a `focus/<name>.json` at one and skin its name, lore, art, and model with a resource pack, getting a bespoke Focus identity without a JAR. They ship a neutral default name and texture (so they are never raw keys) and carry no bundled definition, so the advertised Focus count is unchanged. See `docs/reference.md`.
 
 ### Fixed
 - Dodged or invulnerability-frame hits no longer consume Ashen Debt, the Needle opener cooldown, or break Veil.
