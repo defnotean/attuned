@@ -166,9 +166,15 @@ public final class Resonance {
 
 	private static void tick(MinecraftServer server) {
 		for (ServerPlayer player : server.getPlayerList().getPlayers()) {
+			// Batch idle decay: apply 20x the per-tick rate once every 20 ticks
+			// instead of writing the synced attachment every tick. The average
+			// drain — and so the ~200s rest-to-zero curve — is unchanged.
+			if (player.tickCount % 20 != 0) {
+				continue;
+			}
 			float current = get(player);
 			if (current > 0.0F) {
-				set(player, current - DECAY_PER_TICK);
+				set(player, current - DECAY_PER_TICK * 20);
 			}
 		}
 	}

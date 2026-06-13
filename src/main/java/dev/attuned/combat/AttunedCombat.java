@@ -335,12 +335,18 @@ public final class AttunedCombat {
 			return;
 		}
 
+		// Clamp to the victim's pool before scaling: a one-shot kill can report
+		// far more dealt damage than the victim's health (Apex Execute applies a
+		// 100000 sentinel), which would otherwise let Thornward/Leech reflect or
+		// heal tens of thousands in PvP.
+		float pooledDamage = Math.min(dealtDamage, defender.getMaxHealth());
+
 		// Thornward: the defender reflects a fraction of the hit back.
 		if (defender instanceof Player defenderPlayer
 				&& hasActiveFocus(defenderPlayer, THORNWARD_FOCUS)
 				&& isDirectMelee(attacker, source)
 				&& attacker.isAlive()) {
-			float reflected = dealtDamage * THORNWARD_REFLECT;
+			float reflected = pooledDamage * THORNWARD_REFLECT;
 			if (reflected > 0.0F && attacker.level() instanceof net.minecraft.server.level.ServerLevel serverLevel) {
 				REFLECTING.set(true);
 				try {
@@ -360,7 +366,7 @@ public final class AttunedCombat {
 				&& hasActiveFocus(attackerPlayer, LEECH_FOCUS)
 				&& isDirectMelee(attacker, source)
 				&& !attackerPlayer.isDeadOrDying()) {
-			attackerPlayer.heal(dealtDamage * LEECH_LIFESTEAL);
+			attackerPlayer.heal(pooledDamage * LEECH_LIFESTEAL);
 		}
 	}
 

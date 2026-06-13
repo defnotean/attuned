@@ -12,6 +12,7 @@
 
 ### Fixed
 - Dodged or invulnerability-frame hits no longer consume Ashen Debt, the Needle opener cooldown, or break Veil.
+- Thornward reflect and Leech lifesteal now clamp the hit to the victim's health pool before scaling, so an Apex Execute kill can no longer reflect or heal tens of thousands of damage in PvP.
 - Lengthened Night Vision refresh windows for Nightgaze and Harborlight so the client no longer constantly flickers, and fixed Stormcall's rain check so lightning can trigger while sprinting in open rain.
 - Tremor now outlines the whole connected ore vein instead of a single block (stone and deepslate variants trace as one vein, mined blocks drop off the outline individually), and triggers from blackstone, basalt, and calcite so ancient-debris tunnels and geodes reveal too.
 
@@ -25,6 +26,7 @@
 - Added the Confluences engine: a pure `SynergyResolver`, the `Synergies` server-tick runtime, a `SynergyDefinition` datapack registry (`SYNERGY_DEFINITIONS`), and a `DISCOVERED_CONFLUENCES` player attachment.
 - Attunement Journal chapters now own their pages directly, removing the hand-maintained page-index lists and the class-load drift guard.
 - Added `tools/preview_journal.py`, an offline journal-layout harness that composites the real texture with the screen's exact layout math.
+- Trimmed combat hot paths: the Lodestone item-pull query now runs every other tick, and idle Resonance decay batches into one synced write every 20 ticks (same rest-decay curve) instead of writing the attachment every tick.
 
 ## Attuned 1.3.0 - The Focus Reliquary
 
