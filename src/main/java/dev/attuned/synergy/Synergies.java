@@ -52,6 +52,7 @@ public final class Synergies {
 	private static boolean initialized;
 	private static int ticks;
 	private static final Map<UUID, Set<String>> synergyState = new HashMap<>();
+	private static final Map<UUID, List<FocusBehavior>> activeBehaviors = new HashMap<>();
 
 	/** Registers the tick handler, the on-join reconcile, and cleanup callbacks. */
 	public static void init() {
@@ -62,20 +63,24 @@ public final class Synergies {
 
 		ServerTickEvents.END_SERVER_TICK.register(Synergies::tick);
 		ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> reconcileOnJoin(handler.player));
-		AttunedPlayerCleanup.onForgetPlayer(player -> synergyState.remove(player.getUUID()));
+		AttunedPlayerCleanup.onForgetPlayer(player -> {
+			synergyState.remove(player.getUUID());
+			activeBehaviors.remove(player.getUUID());
+		});
 		AttunedServerCleanup.onStopServer(server -> {
 			for (ServerPlayer player : server.getPlayerList().getPlayers()) {
 				reconcileOnJoin(player);
 			}
 			ticks = 0;
 			synergyState.clear();
+			activeBehaviors.clear();
 		});
 	}
 
 	private static void tick(MinecraftServer server) {
 		ticks++;
 		if (ticks % 20 != 0) {
-			return; // Confluences have no per-tick work; resolve once a second.
+			return; // Confluences resolve, and tick their behaviors, once a second.
 		}
 		for (ServerPlayer player : server.getPlayerList().getPlayers()) {
 			tickPlayer(player);
@@ -115,6 +120,39 @@ public final class Synergies {
 			}
 		}
 		synergyState.put(player.getUUID(), Set.copyOf(now)); // put-after-detect
+		tickActiveBehaviors(player, now, byId);
+	}
+
+	/**
+	 * Resolves the behaviors of every currently-active Confluence and ticks each one with an
+	 * empty backing stack — Confluence behaviors carry no item, so they must tolerate
+	 * {@link ItemStack#EMPTY}. Rebuilt from the freshly-diffed active set each throttled tick so
+	 * a behavior dropped this tick stops ticking immediately; the cached list is cleaned per
+	 * player/server alongside {@code synergyState}.
+	 */
+	private static void tickActiveBehaviors(ServerPlayer player, Set<String> now,
+			Map<String, SynergyDefinition> byId) {
+		List<FocusBehavior> behaviors = new ArrayList<>();
+		for (String id : now) {
+			SynergyDefinition def = byId.get(id);
+			if (def == null) {
+				continue;
+			}
+			def.behavior().ifPresent(behaviorId -> {
+				FocusBehavior behavior = AttunedRegistries.getBehavior(behaviorId);
+				if (behavior != null) {
+					behaviors.add(behavior);
+				}
+			});
+		}
+		if (behaviors.isEmpty()) {
+			activeBehaviors.remove(player.getUUID());
+			return;
+		}
+		activeBehaviors.put(player.getUUID(), behaviors);
+		for (FocusBehavior behavior : behaviors) {
+			behavior.onTick(player, ItemStack.EMPTY); // a Confluence has no backing stack
+		}
 	}
 
 	private static void onGain(ServerPlayer player, String confluenceId, SynergyDefinition def) {
@@ -186,6 +224,7 @@ public final class Synergies {
 			removeModifiers(player, registry.getKey(def).toString(), def);
 		});
 		synergyState.remove(player.getUUID());
+		activeBehaviors.remove(player.getUUID());
 	}
 
 	private static void maybeFanfare(ServerPlayer player, String confluenceId) {

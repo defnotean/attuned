@@ -169,6 +169,9 @@ examples to copy from:
 | `attuned:stormcall`  | `StormcallBehavior`      | Lightning while sprinting in rain. |
 | `attuned:voidstep`   | `VoidstepBehavior`       | Blinks forward on the Focus Ability keybind. |
 | `attuned:harpoon`    | `HarpoonBehavior`       | Ability key summons a temporary custom-model trident for 30 seconds, then removes it from inventory, drops, or projectile state. |
+| `attuned:wildward`   | `WildwardBehavior`       | Confluence (Mossheart + Rootstep): refreshes Resistance I while standing on natural ground. |
+| `attuned:sunwarden`  | `SunwardenBehavior`      | Confluence (Votive + Bellwether): refreshes Regeneration I while standing in bright light. |
+| `attuned:forgewarded` | `ForgewardedBehavior`   | Confluence (Kilnward + Emberward): refreshes Fire Resistance while near a lit forge, magma, or lava. |
 
 ### When a power is not a behavior
 
@@ -224,6 +227,9 @@ The ones that ship with Attuned:
 | Bulwark of Light (`bulwark_of_light`) | Votive + Oathguard | +1 armor |
 | Hunter's Patience (`hunters_patience`) | Lantern + Veil | +4% movement speed |
 | Tempest (`tempest`) | Rainstep + Stormcall | +1 attack damage |
+| Wildward (`wildward`) | Mossheart + Rootstep | Resistance I while on natural ground |
+| Sunwarden (`sunwarden`) | Votive + Bellwether | Regeneration I while standing in bright light |
+| Forgewarded (`forgewarded`) | Kilnward + Emberward | Fire Resistance while near a lit forge, magma, or lava |
 
 ## Numbers you can tune
 

@@ -4,6 +4,7 @@
 
 ### Added
 - **Focus Confluences** - small set bonuses that wake when a specific 2-3 Focus combination is all active at once, at no attunement cost. Waking one announces in chat; the first time you discover a given Confluence it plays a fanfare and records a hidden advancement. Ships four: **Immovable** (Anchor + Rivet, +knockback resistance), **Bulwark of Light** (Votive + Oathguard, +armor), **Hunter's Patience** (Lantern + Veil, +movement speed), and **Tempest** (Rainstep + Stormcall, +attack damage).
+- **Conditional Confluences** - three more Confluences whose payoff is a context-sensitive buff kept refreshed while active: **Wildward** (Mossheart + Rootstep, Resistance I on natural ground), **Sunwarden** (Votive + Bellwether, Regeneration I in bright light), and **Forgewarded** (Kilnward + Emberward, Fire Resistance near a lit forge, magma, or lava).
 - **Confluences journal chapter** - a discovery collection: found Confluences show their name and effect, the rest read `??? - undiscovered (N Foci)` until you wake them.
 - **Confluence feedback** - a pip per active Confluence on the Foci HUD, plus a Focus-panel tooltip hint when you are one Focus short of a Confluence you have already discovered.
 - **Datapack Confluences** - packs can define their own at `data/<namespace>/attuned/synergy/<id>.json` (members + modifiers + optional behavior).

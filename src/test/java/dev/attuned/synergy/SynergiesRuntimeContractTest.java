@@ -101,6 +101,21 @@ class SynergiesRuntimeContractTest {
 	}
 
 	@Test
+	void activeBehaviorsAreTickedEveryThrottledTickWithAnEmptyStack() throws IOException {
+		String synergies = read(SYNERGIES);
+		assertTrue(synergies.contains("Map<UUID, List<FocusBehavior>> activeBehaviors"),
+			"A per-player active-behaviors map drives the per-tick Confluence onTick dispatch.");
+		String tickPlayer = methodBody(synergies, "private static void tickPlayer(");
+		assertTrue(tickPlayer.contains("tickActiveBehaviors("),
+			"tickPlayer must tick every active Confluence behavior after diffing.");
+		String tickActive = methodBody(synergies, "private static void tickActiveBehaviors(");
+		assertTrue(tickActive.contains("AttunedRegistries.getBehavior("),
+			"Active behaviors resolve through the single behavior registry funnel.");
+		assertTrue(tickActive.contains("behavior.onTick(player, ItemStack.EMPTY)"),
+			"An active Confluence ticks its behavior with an empty backing stack each throttled tick.");
+	}
+
+	@Test
 	void onJoinReconcileStripsStaleModifiers() throws IOException {
 		String synergies = read(SYNERGIES);
 		String reconcile = methodBody(synergies, "private static void reconcileOnJoin(");
@@ -136,6 +151,8 @@ class SynergiesRuntimeContractTest {
 		assertTrue(synergies.contains("AttunedServerCleanup.onStopServer("),
 			"Server-wide state must be cleaned on stop.");
 		assertTrue(synergies.contains("synergyState.clear();"), "Stop clears the state map.");
+		assertTrue(synergies.contains("activeBehaviors.clear();"),
+			"Stop clears the active-behaviors map.");
 		assertTrue(synergies.contains("ticks = 0;"), "Stop resets the tick counter.");
 	}
 

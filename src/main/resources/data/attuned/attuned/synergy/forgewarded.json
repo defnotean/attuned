@@ -1,0 +1,4 @@
+{
+	"members": ["attuned:kilnward_focus", "attuned:emberward_focus"],
+	"behavior": "attuned:forgewarded"
+}

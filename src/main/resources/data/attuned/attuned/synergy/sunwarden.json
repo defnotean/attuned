@@ -1,0 +1,4 @@
+{
+	"members": ["attuned:votive_focus", "attuned:bellwether_focus"],
+	"behavior": "attuned:sunwarden"
+}
