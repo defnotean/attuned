@@ -15,6 +15,7 @@ import dev.attuned.content.AltarAnimations;
 import dev.attuned.content.AttunedComponents;
 import dev.attuned.content.AttunedContent;
 import dev.attuned.content.AttunedLoot;
+import dev.attuned.content.behavior.FactionSetBonuses;
 import dev.attuned.effect.AttunedEffects;
 import dev.attuned.menu.AltarMenuType;
 import dev.attuned.menu.AltarNetworking;
@@ -48,6 +49,7 @@ public class Attuned implements ModInitializer {
 		AttunedServerCleanup.init();
 		// Register generic Focus teardown before Focus behaviors add fallback cleanup callbacks.
 		AttunedEffects.init();
+		FactionSetBonuses.init();
 		AttunedComponents.init();
 		AttunedContent.init();
 		AltarAnimations.init();

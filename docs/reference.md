@@ -46,18 +46,23 @@ Factions are optional labels for Foci that share a theme. They show on tooltips
 and can be used by loot weighting, but they are not affinities and never change
 the Holy/Fury/Bastion/Zephyr cycle.
 
+When **three or more ACTIVE Foci share a faction**, that faction grants a small,
+free passive **set bonus** — no extra attunement cost. The bonus is a modest
+vanilla effect (icon-hidden, kept refreshed) and most are conditional on context.
+Drop below three active Foci of the faction and the bonus simply stops.
+
 Attuned currently ships these factions:
 
-| Faction id | Theme | Balance role |
-|------------|-------|--------------|
-| `attuned:unseen` | Stealth, stillness, smoke, ambush openings | Rewards setup and positioning without replacing armor, speed, or raw damage builds. |
-| `attuned:seafarers` | Fishing, shore travel, return points | Peaceful Luck and water utility without PvP pressure. |
-| `attuned:offshore` | Salvage, storms, wreck maps, deep-water risk | Utility with danger: temporary tools, water pressure, and anti-drowned/guardian space without becoming a permanent weapon line. |
-| `attuned:radiant` | Holy vows, light, witness, judgment | Reveals and protects in short windows rather than adding broad damage. |
-| `attuned:reliquary` | Names, relics, rites, thresholds | Utility-side Holy tools that reward preparation and place. |
-| `attuned:verdant_choir` | Roots, bloom, moss, patient growth | Broad natural utility with small travel and survival numbers. |
-| `attuned:ashen_forge` | Heat, craft, rivets, tempering | Craft-flavoured Fury/Bastion tools with restrained stat bonuses. |
-| `attuned:revenant` | Unfinished endings, debts, rites, grave-cold reprisals | Utility and controlled combat pressure through short revenge windows, cleansing, slowness, and one active movement ability. |
+| Faction id | Theme | Balance role | Set bonus (3+) |
+|------------|-------|--------------|----------------|
+| `attuned:unseen` | Stealth, stillness, smoke, ambush openings | Rewards setup and positioning without replacing armor, speed, or raw damage builds. | Speed I while sneaking. |
+| `attuned:seafarers` | Fishing, shore travel, return points | Peaceful Luck and water utility without PvP pressure. | Luck I while in or near water. |
+| `attuned:offshore` | Salvage, storms, wreck maps, deep-water risk | Utility with danger: temporary tools, water pressure, and anti-drowned/guardian space without becoming a permanent weapon line. | Water Breathing while submerged. |
+| `attuned:radiant` | Holy vows, light, witness, judgment | Reveals and protects in short windows rather than adding broad damage. | A brief Regeneration I in bright light (light level >= 12), on a 60s cooldown. |
+| `attuned:reliquary` | Names, relics, rites, thresholds | Utility-side Holy tools that reward preparation and place. | Luck I. |
+| `attuned:verdant_choir` | Roots, bloom, moss, patient growth | Broad natural utility with small travel and survival numbers. | A little hunger restored while standing on grass, on a 60s cooldown. |
+| `attuned:ashen_forge` | Heat, craft, rivets, tempering | Craft-flavoured Fury/Bastion tools with restrained stat bonuses. | Fire Resistance near a lit forge, magma, or lava. |
+| `attuned:revenant` | Unfinished endings, debts, rites, grave-cold reprisals | Utility and controlled combat pressure through short revenge windows, cleansing, slowness, and one active movement ability. | Nearby undead are slowed (Slowness I). |
 
 ## Attribute modifiers
 

@@ -150,6 +150,14 @@
 	"faction.attuned.verdant_choir": "Verdant Choir",
 	"faction.attuned.ashen_forge": "Ashen Forge",
 	"faction.attuned.revenant": "The Revenant",
+	"faction.attuned.set_bonus.unseen": "Set bonus (3+): Speed I while sneaking.",
+	"faction.attuned.set_bonus.seafarers": "Set bonus (3+): Luck I while in or near water.",
+	"faction.attuned.set_bonus.offshore": "Set bonus (3+): Water Breathing while submerged.",
+	"faction.attuned.set_bonus.radiant": "Set bonus (3+): a brief Regeneration I in bright light.",
+	"faction.attuned.set_bonus.reliquary": "Set bonus (3+): Luck I.",
+	"faction.attuned.set_bonus.verdant_choir": "Set bonus (3+): a little hunger restored while on grass.",
+	"faction.attuned.set_bonus.ashen_forge": "Set bonus (3+): Fire Resistance near a lit forge, magma, or lava.",
+	"faction.attuned.set_bonus.revenant": "Set bonus (3+): nearby undead are slowed.",
 
 	"apex.attuned.unlocked_dormant": "Apex unlocked: %s. Build resonance to half full to wake it.",
 
