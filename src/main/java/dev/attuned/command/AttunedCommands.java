@@ -140,7 +140,8 @@ public final class AttunedCommands {
 
 	private static int validateContent(CommandSourceStack source) {
 		List<String> problems = new ArrayList<>();
-		var registry = source.getServer().registryAccess().lookupOrThrow(AttunedRegistries.FOCUS_DEFINITIONS);
+		var registries = source.getServer().registryAccess();
+		var registry = registries.lookupOrThrow(AttunedRegistries.FOCUS_DEFINITIONS);
 		Map<net.minecraft.world.item.Item, FocusDefinition> byItem = new IdentityHashMap<>();
 		registry.listElements().forEach(holder -> {
 			FocusDefinition def = holder.value();
@@ -150,7 +151,7 @@ public final class AttunedCommands {
 					+ BuiltInRegistries.ITEM.getKey(def.item().value()));
 			}
 			def.behavior().ifPresent(behaviorId -> {
-				if (dev.attuned.AttunedRegistries.getBehavior(behaviorId) == null) {
+				if (dev.attuned.AttunedRegistries.getBehavior(behaviorId, registries) == null) {
 					problems.add("Missing behavior " + behaviorId + " for "
 						+ BuiltInRegistries.ITEM.getKey(def.item().value()));
 				}

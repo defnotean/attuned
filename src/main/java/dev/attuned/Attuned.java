@@ -1,5 +1,6 @@
 package dev.attuned;
 
+import dev.attuned.api.focus.FocusBehaviorDef;
 import dev.attuned.api.focus.FocusDefinition;
 import dev.attuned.api.synergy.SynergyDefinition;
 import dev.attuned.attunement.AttunedAttachments;
@@ -41,6 +42,7 @@ public class Attuned implements ModInitializer {
 		AttunedConfig.load();
 		DynamicRegistries.registerSynced(AttunedRegistries.FOCUS_DEFINITIONS, FocusDefinition.CODEC);
 		DynamicRegistries.registerSynced(AttunedRegistries.SYNERGY_DEFINITIONS, SynergyDefinition.CODEC);
+		DynamicRegistries.registerSynced(AttunedRegistries.FOCUS_BEHAVIORS, FocusBehaviorDef.CODEC);
 		AttunedAttachments.init();
 		AttunedPlayerCleanup.init();
 		AttunedServerCleanup.init();

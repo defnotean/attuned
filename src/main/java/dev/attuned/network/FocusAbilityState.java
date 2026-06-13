@@ -87,7 +87,7 @@ public final class FocusAbilityState {
 			ItemStack stack = inv.get(slot);
 			FocusBehavior behavior = Attunement.definitionFor(player, stack)
 				.flatMap(FocusDefinition::behavior)
-				.map(AttunedRegistries::getBehavior)
+				.map(behaviorId -> AttunedRegistries.getBehavior(behaviorId, player.registryAccess()))
 				.orElse(null);
 			if (behavior != null && hasActiveAbility(behavior, player, stack)) {
 				String itemId = BuiltInRegistries.ITEM.getKey(stack.getItem()).toString();

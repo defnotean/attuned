@@ -270,7 +270,7 @@ public final class AttunedEffects {
 		}
 
 		focus.behavior().ifPresent(behaviorId -> {
-			FocusBehavior behavior = AttunedRegistries.getBehavior(behaviorId);
+			FocusBehavior behavior = AttunedRegistries.getBehavior(behaviorId, player.registryAccess());
 			if (behavior != null) {
 				runBehaviorActivate(behavior, player, focus.stack());
 			}
@@ -288,7 +288,7 @@ public final class AttunedEffects {
 		}
 
 		focus.behavior().ifPresent(behaviorId -> {
-			FocusBehavior behavior = AttunedRegistries.getBehavior(behaviorId);
+			FocusBehavior behavior = AttunedRegistries.getBehavior(behaviorId, player.registryAccess());
 			if (behavior != null) {
 				runBehaviorDeactivate(behavior, player, focus.stack());
 			}
@@ -323,7 +323,7 @@ public final class AttunedEffects {
 
 	private static void tickFocus(ServerPlayer player, AppliedFocus focus) {
 		focus.behavior()
-			.map(AttunedRegistries::getBehavior)
+			.map(behaviorId -> AttunedRegistries.getBehavior(behaviorId, player.registryAccess()))
 			.ifPresent(behavior -> runBehaviorTick(behavior, player, focus.stack()));
 	}
 

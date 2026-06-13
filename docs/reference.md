@@ -230,6 +230,83 @@ The ones that ship with Attuned:
 | Wildward (`wildward`) | Mossheart + Rootstep | Resistance I while on natural ground |
 | Sunwarden (`sunwarden`) | Votive + Bellwether | Regeneration I while standing in bright light |
 | Forgewarded (`forgewarded`) | Kilnward + Emberward | Fire Resistance while near a lit forge, magma, or lava |
+## Behavior palette (no Java)
+
+Most behaviors are Java classes. The **behavior palette** lets a datapack define
+some behaviors as data instead — no code, no rebuild. A palette entry is a small,
+parameterized behavior instance loaded from a synced datapack registry at:
+
+`data/<namespace>/attuned/focus_behavior/<id>.json`
+
+A Focus references it the same way it references a code behavior — with its
+`behavior` field. Resolution is **code-first-then-data**: if a code behavior is
+registered under that id it wins; otherwise Attuned builds the behavior from the
+matching `focus_behavior` entry. So a code behavior and a palette entry can never
+collide, and existing Foci are unaffected.
+
+Each entry has a `type`. v1 ships one type:
+
+### `attuned:conditional_mob_effect`
+
+Keeps a mob effect refreshed on the wearer for as long as a [condition](#conditions)
+holds. Passive only (it owns no Focus Ability key).
+
+| Field            | Type            | Required | Meaning |
+|------------------|-----------------|----------|---------|
+| `type`           | text            | yes      | `attuned:conditional_mob_effect` |
+| `effect`         | mob effect id   | yes      | e.g. `minecraft:speed` |
+| `amplifier`      | int 0–255       | no (0)   | Effect level minus one (0 = level I). |
+| `duration_ticks` | int ≥ 1         | no (40)  | How long each application lasts (20 ticks = 1 s). |
+| `refresh_ticks`  | int ≥ 1         | no (20)  | Re-apply once the remaining duration drops to this. |
+| `condition`      | condition object| yes      | When the effect should be kept up. |
+
+The effect is applied ambient, hidden, and icon-less (like Tide's Water Breathing)
+so it stays unobtrusive. When the condition stops holding the effect is left to
+lapse on its own short duration — keep `duration_ticks` modest.
+
+### Conditions
+
+A `condition` is a small composable predicate. It dispatches on a `condition` field:
+
+| `condition`     | Extra fields           | Holds when… |
+|-----------------|------------------------|-------------|
+| `in_rain`       | —                      | The player is in rain or otherwise wet from the sky. |
+| `underwater`    | —                      | The player's head is submerged. |
+| `low_light`     | `max_light` (0–15, def 7) | Local light level ≤ `max_light`. |
+| `sneaking`      | —                      | The player is crouching. |
+| `on_block_tag`  | `tag` (block tag id)   | The block at the player's feet is in the tag. |
+| `in_biome_tag`  | `tag` (biome tag id)   | The player stands in a biome in the tag. |
+
+### Worked example
+
+A Focus that grants Speed I while standing in the rain — no Java.
+
+`data/attuned/attuned/focus_behavior/rainspeed.json`:
+
+```json
+{
+  "type": "attuned:conditional_mob_effect",
+  "effect": "minecraft:speed",
+  "amplifier": 0,
+  "duration_ticks": 40,
+  "refresh_ticks": 20,
+  "condition": { "condition": "in_rain" }
+}
+```
+
+`data/attuned/attuned/focus/rainspeed_focus.json`:
+
+```json
+{
+  "item": "attuned:tide_focus",
+  "cost": 2,
+  "affinity": "zephyr",
+  "behavior": "attuned:rainspeed"
+}
+```
+
+`/attuned validate` checks palette-backed `behavior` ids too, so a typo in either
+file is caught the same way a missing code behavior is.
 
 ## Numbers you can tune
 
