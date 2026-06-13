@@ -7,6 +7,7 @@ import dev.attuned.attunement.AttunedAttachments;
 import dev.attuned.combat.Apex;
 import dev.attuned.combat.AttunedCombat;
 import dev.attuned.combat.GravebindSave;
+import dev.attuned.combat.ResonantSurges;
 import dev.attuned.combat.RevenantCombat;
 import dev.attuned.combat.Resonance;
 import dev.attuned.combat.UnseenCombat;
@@ -60,6 +61,7 @@ public class Attuned implements ModInitializer {
 		RevenantCombat.init();
 		Apex.init();
 		Resonance.init();
+		ResonantSurges.init();
 		Pacts.init();
 		Synergies.init();
 		PactDeathMessages.init();

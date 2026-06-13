@@ -196,6 +196,8 @@
 	"apex.attuned.stillpoint_field": "Stillpoint settles - a tranquility field spreads.",
 	"apex.attuned.identity_cooldown": "Apex ability ready in %s s.",
 
+	"surge.attuned.faded": "The resonance surge fades.",
+
 	"inspect.attuned.line": "%s: %s",
 	"inspect.attuned.discord": "Discord",
 	"inspect.attuned.neutral": "Neutral",

@@ -95,6 +95,21 @@ public final class Resonance {
 		set(player, get(player) + delta);
 	}
 
+	/**
+	 * Environmental resonance grant for a resonant surge — the same clamped fill
+	 * as combat gains, exposed as a named hook so {@link ResonantSurges} feeds the
+	 * gauge through this class rather than poking the attachment directly.
+	 *
+	 * @param player the player standing inside a live surge
+	 * @param amount the (already surge-multiplied) resonance to grant
+	 */
+	public static void grantSurge(Player player, float amount) {
+		if (amount <= 0.0F) {
+			return;
+		}
+		add(player, amount);
+	}
+
 	/** AFTER_DAMAGE: gain on empowered hits dealt, drain on neutralized hits taken. */
 	private static void afterDamage(LivingEntity defender, DamageSource source,
 			float originalDamage, float dealtDamage, boolean blocked) {

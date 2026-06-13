@@ -504,6 +504,9 @@ Every key is optional and falls back to a built-in default:
 | `voidstep_cooldown_ticks` | 200 | Cooldown of the Voidstep blink, in ticks. |
 | `gravebind_cooldown_ticks` | 1200 | Cooldown of the Gravebind death-save, in ticks. |
 | `broadcast_pact_deaths` | true | If true, Pact death messages are broadcast to nearby players; if false, only the dying player sees them. |
+| `surge_interval_ticks` | 12000 | Minimum ticks between resonant surges (one surge live at a time, server-wide). |
+| `surge_duration_ticks` | 1200 | How long a resonant surge stays live, in ticks. |
+| `surge_radius` | 16 | Radius, in blocks, of the resonant surge field that grants 4x resonance. |
 
 Loot chances are clamped between 0 and 1 after all scales are applied. With
 defaults, the appended Focus-pool roll chances stay unchanged: low 8.75%,

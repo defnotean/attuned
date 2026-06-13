@@ -34,7 +34,10 @@ public record AttunedConfig(
 		float shardFragmentLootMultiplier,
 		int voidstepCooldownTicks,
 		int gravebindCooldownTicks,
-		boolean broadcastPactDeaths) {
+		boolean broadcastPactDeaths,
+		int surgeIntervalTicks,
+		int surgeDurationTicks,
+		int surgeRadius) {
 
 	private static final int MIN_STARTING_CAPACITY = 0;
 	private static final int MAX_STARTING_CAPACITY = 256;
@@ -48,6 +51,12 @@ public record AttunedConfig(
 	private static final float MAX_LOOT_MULTIPLIER = 128.0F;
 	private static final int MIN_COOLDOWN_TICKS = 0;
 	private static final int MAX_COOLDOWN_TICKS = 1728000;
+	private static final int MIN_SURGE_INTERVAL_TICKS = 200;
+	private static final int MAX_SURGE_INTERVAL_TICKS = 1728000;
+	private static final int MIN_SURGE_DURATION_TICKS = 200;
+	private static final int MAX_SURGE_DURATION_TICKS = 72000;
+	private static final int MIN_SURGE_RADIUS = 4;
+	private static final int MAX_SURGE_RADIUS = 64;
 
 	public AttunedConfig {
 		startingCapacity = requireIntRange(
@@ -65,12 +74,17 @@ public record AttunedConfig(
 			"shardFragmentLootMultiplier", shardFragmentLootMultiplier);
 		voidstepCooldownTicks = requireCooldownTicks("voidstepCooldownTicks", voidstepCooldownTicks);
 		gravebindCooldownTicks = requireCooldownTicks("gravebindCooldownTicks", gravebindCooldownTicks);
+		surgeIntervalTicks = requireIntRange(
+			"surgeIntervalTicks", surgeIntervalTicks, MIN_SURGE_INTERVAL_TICKS, MAX_SURGE_INTERVAL_TICKS);
+		surgeDurationTicks = requireIntRange(
+			"surgeDurationTicks", surgeDurationTicks, MIN_SURGE_DURATION_TICKS, MAX_SURGE_DURATION_TICKS);
+		surgeRadius = requireIntRange("surgeRadius", surgeRadius, MIN_SURGE_RADIUS, MAX_SURGE_RADIUS);
 		startingCapacity = Math.min(startingCapacity, capacityCap);
 	}
 
 	/** The built-in defaults — also the fallback for any missing key. */
 	public static final AttunedConfig DEFAULT =
-		new AttunedConfig(4, 20, 2, 0.25F, 1.0F, 1.0F, 1.0F, 1.0F, 1.0F, 200, 1200, true);
+		new AttunedConfig(4, 20, 2, 0.25F, 1.0F, 1.0F, 1.0F, 1.0F, 1.0F, 200, 1200, true, 12000, 1200, 16);
 
 	private static final Codec<Float> LOOT_MULTIPLIER =
 		Codec.floatRange(MIN_LOOT_MULTIPLIER, MAX_LOOT_MULTIPLIER);
@@ -105,7 +119,16 @@ public record AttunedConfig(
 			.optionalFieldOf("gravebind_cooldown_ticks", DEFAULT.gravebindCooldownTicks())
 			.forGetter(AttunedConfig::gravebindCooldownTicks),
 		Codec.BOOL.optionalFieldOf("broadcast_pact_deaths", DEFAULT.broadcastPactDeaths())
-			.forGetter(AttunedConfig::broadcastPactDeaths)
+			.forGetter(AttunedConfig::broadcastPactDeaths),
+		Codec.intRange(MIN_SURGE_INTERVAL_TICKS, MAX_SURGE_INTERVAL_TICKS)
+			.optionalFieldOf("surge_interval_ticks", DEFAULT.surgeIntervalTicks())
+			.forGetter(AttunedConfig::surgeIntervalTicks),
+		Codec.intRange(MIN_SURGE_DURATION_TICKS, MAX_SURGE_DURATION_TICKS)
+			.optionalFieldOf("surge_duration_ticks", DEFAULT.surgeDurationTicks())
+			.forGetter(AttunedConfig::surgeDurationTicks),
+		Codec.intRange(MIN_SURGE_RADIUS, MAX_SURGE_RADIUS)
+			.optionalFieldOf("surge_radius", DEFAULT.surgeRadius())
+			.forGetter(AttunedConfig::surgeRadius)
 	).apply(in, AttunedConfig::new));
 
 	private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
@@ -178,6 +201,9 @@ public record AttunedConfig(
 		json.addProperty("voidstep_cooldown_ticks", current.voidstepCooldownTicks());
 		json.addProperty("gravebind_cooldown_ticks", current.gravebindCooldownTicks());
 		json.addProperty("broadcast_pact_deaths", current.broadcastPactDeaths());
+		json.addProperty("surge_interval_ticks", current.surgeIntervalTicks());
+		json.addProperty("surge_duration_ticks", current.surgeDurationTicks());
+		json.addProperty("surge_radius", current.surgeRadius());
 		Path path = path();
 		try {
 			Files.createDirectories(path.getParent());
