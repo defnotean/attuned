@@ -270,7 +270,15 @@ registered under that id it wins; otherwise Attuned builds the behavior from the
 matching `focus_behavior` entry. So a code behavior and a palette entry can never
 collide, and existing Foci are unaffected.
 
-Each entry has a `type`. v1 ships one type:
+Each entry has a `type`. The shipped palette is **passive only** (no Focus Ability
+key — active-ability authoring is a later version) and ships four types:
+
+| `type`                            | Gates on        | Effect |
+|-----------------------------------|-----------------|--------|
+| `attuned:conditional_mob_effect`  | a [condition](#conditions) | Keep a mob effect refreshed while the condition holds. |
+| `attuned:on_hit_effect`           | a charged, hostile-only melee hit | Apply a mob effect to the victim (or self) on the hit. |
+| `attuned:periodic_effect`         | a fixed tick cadence | Keep a flat mob effect refreshed — an unconditional buff. |
+| `attuned:attribute_while`         | a [condition](#conditions) | Apply an attribute modifier only while the condition holds. |
 
 ### `attuned:conditional_mob_effect`
 
@@ -289,6 +297,62 @@ holds. Passive only (it owns no Focus Ability key).
 The effect is applied ambient, hidden, and icon-less (like Tide's Water Breathing)
 so it stays unobtrusive. When the condition stops holding the effect is left to
 lapse on its own short duration — keep `duration_ticks` modest.
+
+### `attuned:on_hit_effect`
+
+Applies a mob effect on a **fully charged, direct-melee** hit. It reuses the same
+charge and target guards as the code combat Foci: the swing must be charged past
+`charge_threshold`, and (by default) the victim must be a hostile mob or a valid
+PvP opponent. Passive only.
+
+| Field             | Type          | Required | Meaning |
+|-------------------|---------------|----------|---------|
+| `type`            | text          | yes      | `attuned:on_hit_effect` |
+| `effect`          | mob effect id | yes      | e.g. `minecraft:weakness` |
+| `amplifier`       | int 0–255     | no (0)   | Effect level minus one. |
+| `duration_ticks`  | int ≥ 1       | no (60)  | How long the applied effect lasts. |
+| `charge_threshold`| float 0–1     | no (0.9) | Swing charge the hit must reach (1.0 = fully charged). |
+| `target_self`     | bool          | no (false)| Apply to the attacker instead of the victim (e.g. a hit-and-heal buff). |
+| `hostile_only`    | bool          | no (true) | Only proc against hostile mobs / valid PvP opponents. |
+
+The proc runs from Attuned's existing post-damage combat hook — no mixin — so it
+never fires on a swing the code combat path would reject (reflected hits, projectiles,
+explosions, uncharged taps).
+
+### `attuned:periodic_effect`
+
+Keeps a flat mob effect refreshed on a fixed cadence — an unconditional buff (a
+gentle Regeneration, a steady Night Vision). Like `conditional_mob_effect` but with
+no gating condition. Passive only.
+
+| Field            | Type          | Required | Meaning |
+|------------------|---------------|----------|---------|
+| `type`           | text          | yes      | `attuned:periodic_effect` |
+| `effect`         | mob effect id | yes      | e.g. `minecraft:regeneration` |
+| `amplifier`      | int 0–255     | no (0)   | Effect level minus one. |
+| `duration_ticks` | int ≥ 1       | no (80)  | How long each application lasts. |
+| `refresh_ticks`  | int ≥ 1       | no (40)  | Re-apply every this many ticks. |
+
+The effect is applied ambient, hidden, and icon-less. Keep `duration_ticks`
+comfortably above `refresh_ticks` so the buff never visibly lapses between refreshes.
+
+### `attuned:attribute_while`
+
+Applies a transient attribute modifier only while a [condition](#conditions) holds,
+adding it when the condition becomes true and removing it when it stops (and on
+unequip). The conditional twin of a Focus's declarative `modifiers`. Passive only.
+
+| Field       | Type             | Required | Meaning |
+|-------------|------------------|----------|---------|
+| `type`      | text             | yes      | `attuned:attribute_while` |
+| `modifier`  | modifier object  | yes      | Same shape as a `modifiers[]` entry: `attribute`, `amount`, `operation`. |
+| `condition` | condition object | yes      | When the modifier should apply. |
+
+The `modifier` object matches the Focus `modifiers` schema — `attribute` (an
+`minecraft:` attribute id), `amount` (a finite number), and `operation`
+(`add_value`, `add_multiplied_base`, or `add_multiplied_total`). The modifier is
+applied under a stable, palette-specific id, so it is removed cleanly the moment the
+condition breaks or the Focus is unequipped.
 
 ### Conditions
 
@@ -331,8 +395,60 @@ A Focus that grants Speed I while standing in the rain — no Java.
 }
 ```
 
-`/attuned validate` checks palette-backed `behavior` ids too, so a typo in either
-file is caught the same way a missing code behavior is.
+#### `on_hit_effect` — Weakness on a charged blow
+
+A Focus that saps the target with Weakness I (5 s) on a fully charged hit against a
+hostile mob.
+
+`data/mypack/attuned/focus_behavior/sapping.json`:
+
+```json
+{
+  "type": "attuned:on_hit_effect",
+  "effect": "minecraft:weakness",
+  "amplifier": 0,
+  "duration_ticks": 100,
+  "charge_threshold": 0.9,
+  "hostile_only": true
+}
+```
+
+#### `periodic_effect` — a gentle steady Regeneration
+
+A Focus that drips Regeneration I, refreshed every two seconds.
+
+`data/mypack/attuned/focus_behavior/mending_aura.json`:
+
+```json
+{
+  "type": "attuned:periodic_effect",
+  "effect": "minecraft:regeneration",
+  "amplifier": 0,
+  "duration_ticks": 80,
+  "refresh_ticks": 40
+}
+```
+
+#### `attribute_while` — extra armor while crouched
+
+A Focus that grants +2 armor only while the wearer is sneaking.
+
+`data/mypack/attuned/focus_behavior/turtle_stance.json`:
+
+```json
+{
+  "type": "attuned:attribute_while",
+  "modifier": {
+    "attribute": "minecraft:armor",
+    "amount": 2,
+    "operation": "add_value"
+  },
+  "condition": { "condition": "sneaking" }
+}
+```
+
+`/attuned validate` checks palette-backed `behavior` ids too, so a typo in any of
+these files is caught the same way a missing code behavior is.
 
 ## Custom Focus item pool (resource-pack skins)
 

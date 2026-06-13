@@ -368,6 +368,10 @@ public final class AttunedCombat {
 				&& !attackerPlayer.isDeadOrDying()) {
 			attackerPlayer.heal(pooledDamage * LEECH_LIFESTEAL);
 		}
+
+		// Palette on-hit behaviors: datapack-defined attuned:on_hit_effect Foci proc here so they
+		// share the live charge/target guards with the code procs above (no mixin, no new event).
+		PaletteCombat.onMeleeHit(attacker, defender, source, dealtDamage);
 	}
 
 	/** The committed affinity of a living entity — player attunement or mob mapping. */
