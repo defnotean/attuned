@@ -58,6 +58,17 @@ class VerifyRepositoryContractTest(unittest.TestCase):
             self.assertEqual(len(problems), 1)
             self.assertIn("sample.py:1", problems[0])
 
+    def test_source_marker_scan_ignores_marker_substrings_in_identifiers(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            sample = Path(temp_dir) / "sample.json"
+            # The vanilla worldgen key `use_expansion_hack` embeds a marker word
+            # as a substring but is not itself a tracked work marker.
+            sample.write_text('{ "use_expansion_hack": false }\n', encoding="utf-8")
+
+            problems = verify_repository.scan_issue_markers([sample], Path(temp_dir))
+
+            self.assertEqual(problems, [])
+
     def test_sensitive_assignment_scan_omits_assigned_value(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
             sample = Path(temp_dir) / "sample.properties"

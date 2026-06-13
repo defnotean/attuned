@@ -1,0 +1,14 @@
+{
+  "placement": {
+    "type": "minecraft:random_spread",
+    "salt": 471020683,
+    "separation": 24,
+    "spacing": 48
+  },
+  "structures": [
+    {
+      "structure": "attuned:attunement_sanctum",
+      "weight": 1
+    }
+  ]
+}

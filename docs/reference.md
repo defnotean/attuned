@@ -574,6 +574,18 @@ The Unseen Foci are weighted a little higher in stealth-flavoured structures and
 ruins such as mineshafts, strongholds, outposts, ancient cities, end cities, and
 archaeology sites, but they remain possible anywhere Attuned Focus loot can roll.
 
+The **Attunement Sanctum** is Attuned's own exploration site: a small data-driven
+jigsaw structure (one 15x8x15 piece of polished deepslate bricks, four amethyst
+pillars, and a central chiseled-deepslate altar) that generates rarely in lush
+caves, forests, and dark forests. Its template is generated deterministically by
+`tools/generate_sanctum_template.py` and committed as
+`data/attuned/structure/sanctum.nbt`; the datapack triple lives under
+`data/attuned/worldgen/{structure,structure_set,template_pool}/` with the biome
+list in `data/attuned/tags/worldgen/biome/has_sanctum.json`. The altar chest uses
+its own `attuned:chests/sanctum` loot table (not a vanilla injection): two rolls
+over light- and depth-themed Foci plus one roll of 1-3 Attunement Shard
+Fragments. Find the nearest one with `/locate structure attuned:attunement_sanctum`.
+
 Lootr stays an optional/suggested dependency in `fabric.mod.json`. Attuned only
 needs Lootr's native behavior for vanilla loot-table containers; a direct Lootr
 API dependency would only be needed if Attuned added custom loot containers.
