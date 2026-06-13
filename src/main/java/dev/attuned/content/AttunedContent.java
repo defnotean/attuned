@@ -145,6 +145,8 @@ public final class AttunedContent {
 	public static final Item ATTUNEMENT_JOURNAL = register("attunement_journal", AttunementJournalItem::new);
 	/** A portable, stack-bound holder for spare Foci. */
 	public static final Item SATCHEL_OF_FOCI = register("satchel_of_foci", SatchelItem::new);
+	/** A second-tier reliquary with twice the storage (54 slots) of the satchel. */
+	public static final Item GRAND_SATCHEL_OF_FOCI = register("grand_satchel_of_foci", SatchelItem::grand);
 
 	/** The Attunement Altar — the home block where shards are bound into capacity. */
 	public static final Block ATTUNEMENT_ALTAR = registerAltar();

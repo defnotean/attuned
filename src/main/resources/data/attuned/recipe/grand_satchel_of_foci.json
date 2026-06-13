@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "S": "attuned:satchel_of_foci",
+    "A": "minecraft:amethyst_block",
+    "L": "minecraft:leather"
+  },
+  "pattern": [
+    "LAL",
+    "LSL",
+    "LLL"
+  ],
+  "result": {
+    "id": "attuned:grand_satchel_of_foci"
+  }
+}

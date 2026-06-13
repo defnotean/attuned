@@ -463,6 +463,59 @@ def satchel_item():
     img.save(TEXTURES / "item/satchel_of_foci.png")
 
 
+def grand_satchel_item():
+    """A palette-shifted variant of satchel_item() for the Grand Focus Reliquary:
+    the same chunky leather body redrawn deterministically with a richer gold trim
+    so the second tier reads as an upgrade at a glance."""
+    img = Image.new("RGBA", (16, 16), CLEAR)
+    draw = ImageDraw.Draw(img)
+    # Deeper, warmer leather + a full gold (brass) trim instead of the satchel's
+    # muted stitching, so the grand tier is distinct but clearly the same family.
+    leather_dark = (44, 28, 18, 255)
+    leather = (96, 60, 34, 255)
+    leather_light = (158, 108, 58, 255)
+    leather_shadow = (26, 16, 11, 255)
+    gold = (236, 196, 96, 255)
+    gold_light = (255, 232, 150, 255)
+    gold_dark = (176, 128, 52, 255)
+
+    rect(draw, (3, 5, 12, 14), leather_shadow)
+    rect(draw, (2, 7, 13, 13), leather_dark)
+    rect(draw, (3, 5, 12, 12), leather)
+    draw.line((4, 5, 11, 5), fill=leather_light)
+    draw.line((3, 12, 12, 12), fill=(34, 21, 15, 255))
+    draw.line((2, 8, 2, 12), fill=(18, 11, 9, 255))
+    draw.line((13, 8, 13, 12), fill=(18, 11, 9, 255))
+
+    # Gold clasp arc instead of the satchel's leather flap.
+    draw.arc((4, 1, 11, 8), 188, 352, fill=gold)
+    draw.arc((5, 2, 10, 8), 188, 352, fill=gold_dark)
+    draw.point((5, 3), fill=gold_light)
+    draw.point((10, 3), fill=gold_light)
+
+    draw.line((4, 7, 11, 7), fill=gold_dark)
+    draw.line((4, 8, 11, 8), fill=AMETHYST_DARK)
+    draw.point((5, 8), fill=AMETHYST)
+    draw.point((10, 8), fill=AMETHYST)
+
+    # A larger amethyst foci socket, ringed in gold.
+    draw.polygon([(8, 9), (11, 11), (8, 14), (5, 11)], fill=AMETHYST_DARK, outline=gold_dark)
+    draw.polygon([(8, 10), (10, 11), (8, 13), (6, 11)], fill=AMETHYST)
+    draw.line((8, 10, 8, 13), fill=AMETHYST_LIGHT)
+
+    rect(draw, (6, 6, 9, 8), (80, 46, 28, 255))
+    rect(draw, (7, 6, 8, 7), gold)
+    draw.point((7, 7), fill=gold_light)
+    # Gold stud trim along the body seam and corners.
+    for x in (4, 6, 10, 12):
+        draw.point((x, 11), fill=gold)
+    draw.point((4, 6), fill=gold)
+    draw.point((12, 6), fill=gold)
+    draw.point((3, 13), fill=gold_dark)
+    draw.point((12, 13), fill=gold_dark)
+    img.save(TEXTURES / "item/grand_satchel_of_foci.png")
+
+
 def _custom_focus_frame(accent, accent_light, accent_dark, rim):
     """Draws one 16x16 blank Focus medallion in a single accent palette.
 
@@ -530,4 +583,5 @@ if __name__ == "__main__":
     hud_backplate()
     journal()
     satchel_item()
+    grand_satchel_item()
     generate_custom_focus_textures()

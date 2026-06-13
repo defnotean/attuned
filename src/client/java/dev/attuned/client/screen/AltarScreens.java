@@ -26,5 +26,6 @@ public final class AltarScreens {
 		MenuScreens.register(AltarMenuType.TYPE, AltarScreen::new);
 		MenuScreens.register(ReweavingMenuType.TYPE, ReweavingScreen::new);
 		MenuScreens.register(SatchelMenuType.TYPE, SatchelScreen::new);
+		MenuScreens.register(SatchelMenuType.GRAND_TYPE, SatchelScreen::new);
 	}
 }

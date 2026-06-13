@@ -49,8 +49,12 @@ class PresetNetworkingContractTest {
 			"Preset mutation packets should share one open-menu/live-held-satchel guard.");
 		assertTrue(net.contains("player.containerMenu instanceof SatchelMenu menu"),
 			"Preset mutation packets should only apply while the satchel menu is open.");
-		assertTrue(net.contains("player.getItemInHand(menu.hand()).getItem() == AttunedContent.SATCHEL_OF_FOCI"),
-			"Preset mutation packets should re-read the held satchel from the menu hand before mutating.");
+		// The open-menu guard re-reads the held reliquary from the menu hand; the per-tier
+		// item check (small satchel or Grand Reliquary) is centralized in isReliquary().
+		assertTrue(net.contains("isReliquary(player.getItemInHand(menu.hand()))"),
+			"Preset mutation packets should re-read the held reliquary from the menu hand before mutating.");
+		assertTrue(net.contains("stack.getItem() == AttunedContent.SATCHEL_OF_FOCI"),
+			"isReliquary should still recognize the small Focus Reliquary item.");
 		assertEquals(3, countOccurrences(net, "if (!hasOpenLiveSatchel(player))"),
 			"Save, apply, and delete should all reject spoofed/out-of-menu preset packets.");
 	}

@@ -88,6 +88,10 @@
 	"item.attuned.satchel_of_foci.lore": "A leather reliquary humming with stored attunement.",
 	"item.attuned.satchel_of_foci.lore2": "Every Focus within waits to be called.",
 	"item.attuned.satchel_of_foci.effect": "Stores spare Foci. Open it to swap your equipped Foci and save named builds.",
+	"item.attuned.grand_satchel_of_foci": "Grand Focus Reliquary",
+	"item.attuned.grand_satchel_of_foci.lore": "A vast reliquary, its leather worn smooth by countless rites.",
+	"item.attuned.grand_satchel_of_foci.lore2": "Twice the chambers, twice the Foci kept ready.",
+	"item.attuned.grand_satchel_of_foci.effect": "Stores up to 54 spare Foci. Open it to swap your equipped Foci and save named builds.",
 	"item.attuned.custom_focus_1": "Custom Focus I",
 	"item.attuned.custom_focus_1.lore": "A blank Focus awaiting a maker's hand.",
 	"item.attuned.custom_focus_1.lore2": "Skin its name, art, and lore with a resource pack.",
@@ -127,6 +131,7 @@
 	"container.attuned.altar": "Attunement Altar",
 	"container.attuned.reweaving_altar": "Altar of Reweaving",
 	"container.attuned.satchel": "Focus Reliquary",
+	"container.attuned.grand_satchel": "Grand Focus Reliquary",
 
 	"pact.attuned.pyresworn.name": "Pyresworn",
 	"pact.attuned.pyresworn.description": "Your melee hits set foes alight.",
