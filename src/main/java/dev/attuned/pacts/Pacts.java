@@ -381,8 +381,11 @@ public final class Pacts {
 			forgeboundSear(attacker, defender, source);
 		}
 		if (attackerPact == Pact.UNTETHERED
+				&& !Apex.isAt(attacker, Apex.Capstone.MAELSTROM)
 				&& canAffectCombatTarget(attacker, defender)
 				&& hasAffinityPressure(defender)) {
+			// Mirror the adjustDamage amplifier suppression: a Discord-Apex (Maelstrom)
+			// attacker's Untethered bonus is suppressed there, so it shows no sparkle here.
 			untetheredImpactSparkle(defender);
 		}
 		if (attackerPact == Pact.RADIANT_COVENANT) {
