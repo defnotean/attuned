@@ -1,6 +1,7 @@
 package dev.attuned.client;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.google.gson.JsonElement;
@@ -86,19 +87,24 @@ class FocusPresentationConsistencyTest {
 	}
 
 	@Test
-	void focusTooltipsRenderAspectCounterInformation() throws IOException {
+	void focusTooltipsShowAspectIdentityButLeaveMatchupsToJournal() throws IOException {
 		String source = Files.readString(TOOLTIP_SOURCE, StandardCharsets.UTF_8);
+		JsonObject lang = languageRoot();
 
 		assertTrue(source.contains("definition.aspect().ifPresent"),
 			"Tooltip should render optional Aspect metadata for FocusDefinitions that declare it.");
 		assertTrue(source.contains("tooltip.attuned.aspect.line"),
-			"Tooltip should use one translated Aspect line.");
-		assertTrue(source.contains("tooltip.attuned.aspect.matchups"),
-			"Tooltip should show what each Aspect counters and what counters it.");
-		assertTrue(source.contains("aspect.strongAgainst()"),
-			"Tooltip should derive counter names from the Aspect matrix instead of hand-written item lore.");
-		assertTrue(source.contains("aspect.weakAgainst()"),
-			"Tooltip should derive weakness names from the Aspect matrix instead of hand-written item lore.");
+			"Tooltip should use one translated Aspect identity line.");
+		assertFalse(source.contains("tooltip.attuned.aspect.matchups"),
+			"Focus item tooltips should not list who the Aspect counters; the journal owns matchups.");
+		assertFalse(source.contains("aspect.strongAgainst()"),
+			"Focus item tooltips should not derive or display strength matchup names.");
+		assertFalse(source.contains("aspect.weakAgainst()"),
+			"Focus item tooltips should not derive or display weakness matchup names.");
+		assertFalse(source.contains("aspectList("),
+			"Tooltip code should not keep a helper solely for rendering matchup lists.");
+		assertFalse(lang.has("tooltip.attuned.aspect.matchups"),
+			"Unused matchup tooltip text should be removed so item descriptions stay clean.");
 	}
 
 	private static Set<String> modifierAttributePaths() throws IOException {

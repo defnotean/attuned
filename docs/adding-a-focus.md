@@ -81,9 +81,9 @@ This file sets the cost, the affinity, the optional Aspect counter identity, and
 - `affinity` — `fury`, `bastion`, `zephyr`, or `holy`. **Leave this line out** for a
   neutral utility Focus.
 - `aspect` — optional expanded counter identity such as `attuned:tide`,
-  `attuned:forge`, `attuned:verdant`, or `attuned:umbral`. Tooltips use it to
-  show what the Focus is strong and weak against. It is separate from affinity,
-  Pact, and Discord math.
+  `attuned:forge`, `attuned:verdant`, or `attuned:umbral`. Tooltips show the
+  Focus's Aspect name only; the Attunement Journal owns the full matchup
+  reference. Aspect is separate from affinity, Pact, and Discord math.
 - `unique` - set to `true` when only one copy of this Focus should be active
   at a time.
 - `faction` - optional story/gameplay family such as `attuned:unseen`. Factions

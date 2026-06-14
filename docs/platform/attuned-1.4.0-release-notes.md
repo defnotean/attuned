@@ -1,8 +1,8 @@
 ## Attuned 1.4.0 - Resonant Depths
 
 ### Added
-- **Aspect counter wheel** - Foci can now declare an `aspect` separate from their old affinity, exposing the Wheel of Refusals in tooltips: every Aspect counters two others and is countered by two others. The first batch adds 12 new Tide, Forge, Verdant, and Umbral Foci with matching animated medallion art.
-- **Aspect tooltip readouts** - Aspect-bearing Foci now show their Aspect, what they are strong against, and what they are weak against directly in the item tooltip, so counterplay is visible in-game instead of living only in docs.
+- **Aspect counter wheel** - Foci can now declare an `aspect` separate from their old affinity. Tooltips show the Focus's Aspect identity, while the Attunement Journal owns the full Wheel of Refusals matchup reference. The first batch adds 12 new Tide, Forge, Verdant, and Umbral Foci with matching animated medallion art.
+- **Journal-owned Aspect reference** - Aspect-bearing Foci no longer list matchup details in item descriptions. The Attunement Journal now explains which Aspects beat or answer each other in one place.
 - **Tide / Forge / Verdant / Umbral Focus batch** - 12 new real Foci ship as registered items, data definitions, models, language, behavior-palette entries, and animated textures: Undertow, Riptide Heart, Pearlguard, Slagbrand, Anvilheart, Sparkweld, Thornwake, Seedcall, Bramblegate, Nullveil, Cinderthief, and Snaremoon.
 - **Aspect Focus art pass** - the new Aspect Foci ship with polished 64x512 animated Minecraft item sheets, stronger medallion silhouettes, and inventory-scale readability checks.
 - **Attunement Sanctum** - a small, hand-built jigsaw shrine (one 15x8x15 piece of polished deepslate, amethyst pillars, and a chiseled-deepslate altar) that generates rarely in lush caves, forests, and dark forests. Its altar chest rolls two light- and depth-themed Foci plus a few Attunement Shard Fragments from a dedicated `attuned:chests/sanctum` table. `/locate structure attuned:attunement_sanctum` finds the nearest one.

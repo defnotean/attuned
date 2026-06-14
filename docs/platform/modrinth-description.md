@@ -8,7 +8,7 @@ Equip **Foci** into six inventory slots, manage your **attunement capacity**, an
 
 - **78 Foci** across mobility, defense, combat, stealth, holy, seafaring, shadow, utility, and the new Aspect counter wheel.
 - **Four core affinities** — Fury, Bastion, Zephyr, and Holy — form the original combat counter cycle, with Discord for risky mixed-affinity builds.
-- **New Aspect counter wheel** — Fury, Bastion, Zephyr, Holy, Tide, Forge, Verdant, and Umbral each counter two Aspects and are countered by two others. Aspect tooltips show strengths and weaknesses in-game.
+- **New Aspect counter wheel** — Fury, Bastion, Zephyr, Holy, Tide, Forge, Verdant, and Umbral appear as broader Focus identities. Individual Focus descriptions show only the Aspect name; the Attunement Journal carries the matchup reference.
 - **12 new Aspect Foci** in the first Tide / Forge / Verdant / Umbral batch: Undertow, Riptide Heart, Pearlguard, Slagbrand, Anvilheart, Sparkweld, Thornwake, Seedcall, Bramblegate, Nullveil, Cinderthief, and Snaremoon.
 - **Refreshed original Focus art** for the new Aspect Foci, imported into animated 64x512 Minecraft item sheets so the new icons fit the existing medallion/talisman theme.
 - **Pacts and Apex capstones** reward commitment, including Maelstrom for full Discord builds and Stillpoint for neutral builds.
@@ -20,7 +20,7 @@ Equip **Foci** into six inventory slots, manage your **attunement capacity**, an
 
 ## How it plays
 
-Attuned is about building a kit, not wearing a pile of stats. A Focus can be active, dormant, part of a Pact, part of a Confluence, tied to a faction, and now part of an Aspect counter identity. The tooltip system explains those layers so players can understand why a build works and what counters it.
+Attuned is about building a kit, not wearing a pile of stats. A Focus can be active, dormant, part of a Pact, part of a Confluence, tied to a faction, and now part of an Aspect identity. Tooltips keep the Focus-specific readout clean, while the Attunement Journal explains the matchup web.
 
 ## Requirements
 
