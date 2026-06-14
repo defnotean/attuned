@@ -25,9 +25,8 @@ A datapack **can**:
 - Grant **attribute modifiers** (armor, speed, max health, attack damage, …) — pure
   data, fully supported.
 - Reference any **shipped behavior** id (the special powers the mod ships).
-- Add an optional `aspect` such as `attuned:tide` or `attuned:umbral` so the Focus
-  participates in the Aspect system without changing affinity math. The tooltip
-  shows only the Aspect name; the Attunement Journal owns the matchup reference.
+- Set an **affinity** (one of the eight) so the Focus joins the counter wheel; the
+  Attunement Journal owns the matchup reference.
 - Define **palette behaviors** — parameterized passive behaviors built from data, no
   code. See [the behavior palette](#define-a-palette-behavior).
 
@@ -62,7 +61,6 @@ The simplest Focus. Reuse an item and grant stat modifiers.
   "item": "minecraft:turtle_helmet",
   "cost": 4,
   "affinity": "bastion",
-  "aspect": "attuned:bastion",
   "modifiers": [
     { "attribute": "minecraft:armor", "amount": 2, "operation": "add_value" }
   ]
@@ -72,13 +70,10 @@ The simplest Focus. Reuse an item and grant stat modifiers.
 - `item` — **required.** Any registered item id. This Focus *is* that item, so the
   item still keeps its own name unless you re-skin it (see [Naming](#name-it)).
 - `cost` — attunement points it uses, usually 2–6. Defaults to 1.
-- `affinity` — `fury`, `bastion`, `zephyr`, or `holy`. Leave it out for a neutral
+- `affinity` — one of `fury`, `bastion`, `zephyr`, `holy`, `tide`, `forge`,
+  `verdant`, or `umbral`. Each counters two others and is countered by two; the
+  Attunement Journal owns the matchup reference. Leave it out for a neutral
   utility Focus.
-- `aspect` — optional visible counter identity (`attuned:fury`, `attuned:bastion`,
-  `attuned:zephyr`, `attuned:holy`, `attuned:tide`, `attuned:forge`,
-  `attuned:verdant`, or `attuned:umbral`). Tooltips show only the Aspect name;
-  the Attunement Journal owns the matchup reference. Affinity/Pact/Discord
-  behavior is unchanged.
 - `unique` — set `true` to allow only one copy active at a time.
 - `faction` — optional story/family tag such as `attuned:unseen`. Add a
   `faction.<namespace>.<path>` lang key if you invent a new one.
@@ -210,6 +205,5 @@ This guide covers the no-Java lanes that work today. Attuned now ships the blank
 `attuned:custom_focus_1` through `attuned:custom_focus_8` item pool for packs that
 need bespoke resource-pack art without registering a new item, the passive
 behavior palette (`conditional_mob_effect`, `on_hit_effect`, `periodic_effect`,
-and `attribute_while`), and optional `aspect` metadata for journal-referenced
-Aspect identity. Active-ability authoring (cooldowns and Focus Ability key handlers) is
+and `attribute_while`). Active-ability authoring (cooldowns and Focus Ability key handlers) is
 still code-only.

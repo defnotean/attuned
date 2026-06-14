@@ -56,7 +56,7 @@ place: affinity Foci go to **Attuned: Affinity Foci**, and neutral Foci go to
 
 ## Step 3 — Create the Focus definition
 
-This file sets the cost, the affinity, the optional Aspect counter identity, and the stats. It is the heart of a Focus.
+This file sets the cost, the affinity, and the stats. It is the heart of a Focus.
 
 **Create:** `src/main/resources/data/attuned/attuned/focus/stoneskin_focus.json`
 
@@ -65,7 +65,6 @@ This file sets the cost, the affinity, the optional Aspect counter identity, and
 	"item": "attuned:stoneskin_focus",
 	"cost": 3,
 	"affinity": "bastion",
-	"aspect": "attuned:bastion",
 	"modifiers": [
 		{
 			"attribute": "minecraft:armor",
@@ -78,12 +77,10 @@ This file sets the cost, the affinity, the optional Aspect counter identity, and
 
 - `item` — always `attuned:` followed by your name. **Required.**
 - `cost` — attunement points this Focus uses, usually 2–6. Defaults to 1 if left out.
-- `affinity` — `fury`, `bastion`, `zephyr`, or `holy`. **Leave this line out** for a
+- `affinity` — one of `fury`, `bastion`, `zephyr`, `holy`, `tide`, `forge`,
+  `verdant`, or `umbral`. Each counters two others and is countered by two; the
+  Attunement Journal owns the full matchup reference. **Leave this line out** for a
   neutral utility Focus.
-- `aspect` — optional expanded counter identity such as `attuned:tide`,
-  `attuned:forge`, `attuned:verdant`, or `attuned:umbral`. Tooltips show the
-  Focus's Aspect name only; the Attunement Journal owns the full matchup
-  reference. Aspect is separate from affinity, Pact, and Discord math.
 - `unique` - set to `true` when only one copy of this Focus should be active
   at a time.
 - `faction` - optional story/gameplay family such as `attuned:unseen`. Factions

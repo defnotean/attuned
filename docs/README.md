@@ -12,13 +12,12 @@ add a Focus.
   a **cost**. The combined cost of equipped Foci has to fit inside the budget.
 - Go over budget and your lowest-priority Foci fall **dormant** — still equipped,
   but switched off. Slot order, top to bottom, is the priority order.
-- Most combat Foci carry an **affinity**: Holy, Fury, Bastion, or Zephyr. Active
-  affinity Foci that share one lane commit the build; mixed active affinities
-  become **Discord**, which is risky but still valid.
-- Some Foci also carry an **Aspect**: Fury, Bastion, Zephyr, Holy, Tide, Forge,
-  Verdant, or Umbral. Tooltips show only the Aspect name; the Attunement Journal
-  carries the broader counter web so Focus descriptions stay clean. Aspects do
-  not replace affinity, Pact, or Discord math.
+- Most combat Foci carry an **affinity**: Fury, Bastion, Zephyr, Holy, Tide,
+  Forge, Verdant, or Umbral. Each affinity counters two others and is countered
+  by two; tooltips show only the affinity name, while the Attunement Journal
+  carries the full counter web so Focus descriptions stay clean. Active affinity
+  Foci that share one lane commit the build; mixed active affinities become
+  **Discord**, which is risky but still valid.
 - Three matching active affinities can awaken a **Pact**. A fully committed,
   high-capacity build can reach **Apex** during combat. Full mixed-affinity and
   neutral builds have their own Apex paths: **Maelstrom** and **Stillpoint**.
@@ -33,9 +32,9 @@ add a Focus.
   **Attuned: Utility Foci** so combat builds and neutral tools are easier to
   scan.
 - Current release headline: **Attuned 1.4.1 — Journal Clarity** keeps the
-  Resonant Depths feature set and moves explicit Aspect matchup details into the
+  Resonant Depths feature set and moves explicit affinity matchup details into the
   Attunement Journal. Attuned still ships 78 Foci, including 12 Tide/Forge/
-  Verdant/Umbral Aspect Foci, Focus Confluences, Tempering, Grand Reliquary
+  Verdant/Umbral affinity Foci, Focus Confluences, Tempering, Grand Reliquary
   storage, Attunement Sanctums, resonant surges, and datapack behavior palettes.
 
 That is the whole idea: a Focus is a trade-off, never a free bonus.
