@@ -26,6 +26,11 @@ public final class LodestoneBehavior implements FocusBehavior {
 
 	@Override
 	public void onTick(ServerPlayer player, ItemStack focus) {
+		// Throttle the entity query to every other tick (mirrors Epitaph's % 2
+		// gate); the pull stays smooth at half the polling cost.
+		if (player.tickCount % 2 != 0) {
+			return;
+		}
 		AABB area = player.getBoundingBox().inflate(RANGE);
 		List<ItemEntity> items = player.level().getEntitiesOfClass(ItemEntity.class, area);
 		Vec3 target = player.position().add(0.0, player.getBbHeight() * 0.5, 0.0);

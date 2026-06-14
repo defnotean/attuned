@@ -1,16 +1,21 @@
 package dev.attuned;
 
 import dev.attuned.api.focus.FocusBehavior;
+import dev.attuned.api.focus.FocusBehaviorDef;
 import dev.attuned.api.focus.FocusDefinition;
+import dev.attuned.api.synergy.SynergyDefinition;
+import dev.attuned.content.behavior.DataFocusBehaviors;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.WeakHashMap;
 import net.minecraft.core.Registry;
+import net.minecraft.core.RegistryAccess;
 import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
 
 /**
- * Registry keys and code-behaviour lookups for Attuned.
+ * Registry keys and the single code-first-then-data Focus behaviour funnel for Attuned.
  */
 public final class AttunedRegistries {
 	private AttunedRegistries() {}
@@ -19,7 +24,22 @@ public final class AttunedRegistries {
 	public static final ResourceKey<Registry<FocusDefinition>> FOCUS_DEFINITIONS =
 		ResourceKey.createRegistryKey(Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "focus"));
 
+	/** Datapack registry of Confluence definitions ({@code data/<ns>/attuned/synergy/<name>.json}). */
+	public static final ResourceKey<Registry<SynergyDefinition>> SYNERGY_DEFINITIONS =
+		ResourceKey.createRegistryKey(Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "synergy"));
+	/**
+	 * Synced datapack registry of parameterized behaviour palette instances
+	 * ({@code data/<ns>/attuned/focus_behavior/<id>.json}). A Focus's {@code behavior} id is
+	 * resolved code-first, then falls back to building a runtime behaviour from this registry.
+	 */
+	public static final ResourceKey<Registry<FocusBehaviorDef>> FOCUS_BEHAVIORS =
+		ResourceKey.createRegistryKey(Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "focus_behavior"));
+
 	private static final Map<Identifier, FocusBehavior> BEHAVIORS = new HashMap<>();
+
+	/** Per-RegistryAccess cache of behaviours built from data palette entries, so ticking never rebuilds. */
+	private static final Map<RegistryAccess, Map<Identifier, FocusBehavior>> DATA_BEHAVIOR_CACHE =
+		new WeakHashMap<>();
 
 	/** Registers a code behaviour under an id that a {@link FocusDefinition} can reference. */
 	public static void registerBehavior(Identifier id, FocusBehavior behavior) {
@@ -31,8 +51,40 @@ public final class AttunedRegistries {
 		}
 	}
 
-	/** Returns the behaviour registered under the given id, or {@code null} if none. */
+	/**
+	 * Returns the code behaviour registered under the given id, or {@code null} if none.
+	 * Code-only lookup; for full code-first-then-data resolution use
+	 * {@link #getBehavior(Identifier, RegistryAccess)}.
+	 */
 	public static FocusBehavior getBehavior(Identifier id) {
 		return BEHAVIORS.get(id);
+	}
+
+	/**
+	 * Resolves a Focus behaviour code-first, then data: returns the registered code behaviour
+	 * for {@code id} if one exists, otherwise builds (and caches) a runtime behaviour from the
+	 * {@code focus_behavior} palette registry. Returns {@code null} if neither has it.
+	 */
+	public static FocusBehavior getBehavior(Identifier id, RegistryAccess registries) {
+		FocusBehavior code = BEHAVIORS.get(id);
+		if (code != null) {
+			return code;
+		}
+		if (registries == null) {
+			return null;
+		}
+		return dataBehavior(id, registries);
+	}
+
+	private static synchronized FocusBehavior dataBehavior(Identifier id, RegistryAccess registries) {
+		Map<Identifier, FocusBehavior> perAccess =
+			DATA_BEHAVIOR_CACHE.computeIfAbsent(registries, key -> new HashMap<>());
+		if (perAccess.containsKey(id)) {
+			return perAccess.get(id);
+		}
+		FocusBehaviorDef def = registries.lookupOrThrow(FOCUS_BEHAVIORS).getValue(id);
+		FocusBehavior built = def == null ? null : DataFocusBehaviors.build(id, def);
+		perAccess.put(id, built);
+		return built;
 	}
 }

@@ -1,0 +1,13 @@
+{
+  "source": "docs/superpowers/assets/umbral-eclipse/umbral-eclipse-foci-concept-source.jpg",
+  "generated_by": "Hermes image_generate (xai grok-imagine-image)",
+  "purpose": "Concept source for the cleaned deterministic Umbral Eclipse focus sprite pass.",
+  "final_textures": [
+    "src/main/resources/assets/attuned/textures/item/gloomstride_focus.png",
+    "src/main/resources/assets/attuned/textures/item/duskward_focus.png",
+    "src/main/resources/assets/attuned/textures/item/shadowmeld_focus.png",
+    "src/main/resources/assets/attuned/textures/item/dreadfang_focus.png",
+    "src/main/resources/assets/attuned/textures/item/eclipse_focus.png"
+  ],
+  "format": "64x512 animated PNG sheets, eight 64x64 frames, frametime 2, interpolate true"
+}

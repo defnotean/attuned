@@ -1,0 +1,16 @@
+{
+	"item": "attuned:cinderthief_focus",
+	"cost": 4,
+	"unique": true,
+	"affinity": "fury",
+	"aspect": "attuned:umbral",
+	"faction": "attuned:umbral",
+	"modifiers": [
+		{
+			"attribute": "minecraft:attack_damage",
+			"amount": 1.0,
+			"operation": "add_value"
+		}
+	],
+	"behavior": "attuned:cinderthief"
+}

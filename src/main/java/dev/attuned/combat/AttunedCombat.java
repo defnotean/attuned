@@ -7,6 +7,7 @@ import dev.attuned.api.focus.AffinityColors;
 import dev.attuned.attunement.AttunedAttachments;
 import dev.attuned.attunement.AttunedInv;
 import dev.attuned.attunement.Attunement;
+import dev.attuned.content.behavior.DreadfangBehavior;
 import dev.attuned.content.behavior.TemperBehavior;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.minecraft.core.particles.DustParticleOptions;
@@ -84,6 +85,8 @@ public final class AttunedCombat {
 		Identifier.fromNamespaceAndPath("attuned", "cinder_focus");
 	private static final Identifier SUNLANCE_FOCUS =
 		Identifier.fromNamespaceAndPath("attuned", "sunlance_focus");
+	private static final Identifier DREADFANG_FOCUS =
+		Identifier.fromNamespaceAndPath("attuned", "dreadfang_focus");
 
 	/** Re-entrancy guard so a reflected hit cannot trigger another reflection. */
 	private static final ThreadLocal<Boolean> REFLECTING = ThreadLocal.withInitial(() -> false);
@@ -335,12 +338,18 @@ public final class AttunedCombat {
 			return;
 		}
 
+		// Clamp to the victim's pool before scaling: a one-shot kill can report
+		// far more dealt damage than the victim's health (Apex Execute applies a
+		// 100000 sentinel), which would otherwise let Thornward/Leech reflect or
+		// heal tens of thousands in PvP.
+		float pooledDamage = Math.min(dealtDamage, defender.getMaxHealth());
+
 		// Thornward: the defender reflects a fraction of the hit back.
 		if (defender instanceof Player defenderPlayer
 				&& hasActiveFocus(defenderPlayer, THORNWARD_FOCUS)
 				&& isDirectMelee(attacker, source)
 				&& attacker.isAlive()) {
-			float reflected = dealtDamage * THORNWARD_REFLECT;
+			float reflected = pooledDamage * THORNWARD_REFLECT;
 			if (reflected > 0.0F && attacker.level() instanceof net.minecraft.server.level.ServerLevel serverLevel) {
 				REFLECTING.set(true);
 				try {
@@ -360,8 +369,22 @@ public final class AttunedCombat {
 				&& hasActiveFocus(attackerPlayer, LEECH_FOCUS)
 				&& isDirectMelee(attacker, source)
 				&& !attackerPlayer.isDeadOrDying()) {
-			attackerPlayer.heal(dealtDamage * LEECH_LIFESTEAL);
+			attackerPlayer.heal(pooledDamage * LEECH_LIFESTEAL);
 		}
+
+		// Dreadfang: a fully charged direct-melee hit on a hostile/PvP target plunges the
+		// victim into vanilla darkness. Shares the authoritative charge and target guards with
+		// the code procs above (no mixin, no new event), mirroring Sunlance and Temper.
+		if (attacker instanceof Player attackerPlayer
+				&& hasActiveFocus(attackerPlayer, DREADFANG_FOCUS)
+				&& isChargedDirectMelee(attackerPlayer, defender, source, DreadfangBehavior.CHARGED_SWING_THRESHOLD)
+				&& CombatTargets.isHostileOrPvpOpponent(defender, attackerPlayer)) {
+			DreadfangBehavior.applyTo(defender);
+		}
+
+		// Palette on-hit behaviors: datapack-defined attuned:on_hit_effect Foci proc here so they
+		// share the live charge/target guards with the code procs above (no mixin, no new event).
+		PaletteCombat.onMeleeHit(attacker, defender, source, dealtDamage);
 	}
 
 	/** The committed affinity of a living entity — player attunement or mob mapping. */

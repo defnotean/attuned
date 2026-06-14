@@ -79,6 +79,10 @@ TRANSIENT_SKIP_DIRS = {
 PNG_SIGNATURE = b"\x89PNG\r\n\x1a\n"
 MAX_REASONABLE_PNG_DIMENSION = 8192
 ISSUE_WORDS = ("TO" + "DO", "FIX" + "ME", "HA" + "CK")
+ISSUE_MARKER_PATTERN = re.compile(
+    r"\b(?:" + "|".join(re.escape(word) for word in ISSUE_WORDS) + r")\b",
+    re.IGNORECASE,
+)
 NAME_PARTS = (
     "api" + "_key",
     "api" + "-key",
@@ -299,11 +303,11 @@ def scan_issue_markers(paths: Iterable[Path], root: Path = ROOT) -> list[str]:
             problems.append(f"{relative(path, root)}: {exc}")
             continue
         for line_number, line in enumerate(text.splitlines(), 1):
-            upper = line.upper()
-            for word in ISSUE_WORDS:
-                if word in upper:
-                    problems.append(f"{relative(path, root)}:{line_number}: remove tracked work marker")
-                    break
+            # Match whole-word markers only, so legitimate identifiers that merely
+            # contain a marker substring (e.g. the vanilla worldgen key
+            # `use_expansion_hack`) are not flagged.
+            if ISSUE_MARKER_PATTERN.search(line):
+                problems.append(f"{relative(path, root)}:{line_number}: remove tracked work marker")
     return problems
 
 

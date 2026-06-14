@@ -15,6 +15,10 @@ add a Focus.
 - Most combat Foci carry an **affinity**: Holy, Fury, Bastion, or Zephyr. Active
   affinity Foci that share one lane commit the build; mixed active affinities
   become **Discord**, which is risky but still valid.
+- Some Foci also carry an **Aspect**: Fury, Bastion, Zephyr, Holy, Tide, Forge,
+  Verdant, or Umbral. Aspects are the broader counter web shown on tooltips —
+  every Aspect is strong into two others and weak into two others — but they do
+  not replace affinity, Pact, or Discord math.
 - Three matching active affinities can awaken a **Pact**. A fully committed,
   high-capacity build can reach **Apex** during combat. Full mixed-affinity and
   neutral builds have their own Apex paths: **Maelstrom** and **Stillpoint**.
@@ -28,6 +32,10 @@ add a Focus.
 - Creative inventory content is split into **Attuned: Affinity Foci** and
   **Attuned: Utility Foci** so combat builds and neutral tools are easier to
   scan.
+- Current release headline: **Attuned 1.4.0 — Resonant Depths** ships 78 Foci,
+  including 12 new Tide/Forge/Verdant/Umbral Aspect Foci, Focus Confluences,
+  Tempering, Grand Reliquary storage, Attunement Sanctums, resonant surges, and
+  datapack behavior palettes.
 
 That is the whole idea: a Focus is a trade-off, never a free bonus.
 

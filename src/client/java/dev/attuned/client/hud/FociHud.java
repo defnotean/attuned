@@ -63,6 +63,14 @@ public final class FociHud {
 	private static final int APEX_MARK = 0xD8F4D06A;
 	private static final int FRAME_GLOW = 0xB46D4FD8;
 	private static final int FRAME_EDGE = 0xD49FC8FF;
+	// Confluence count chip: small pips in the top gap between the ability well and the Apex gem.
+	private static final int CONFLUENCE_CHIP_X = 28;
+	private static final int CONFLUENCE_CHIP_Y = 5;
+	private static final int CONFLUENCE_PIP = 2;
+	private static final int CONFLUENCE_PIP_STEP = 3;
+	private static final int CONFLUENCE_CHIP_COLUMNS = 2;
+	private static final int CONFLUENCE_MAX_PIPS = 6;
+	private static final int CONFLUENCE_PIP_COLOR = 0xE0B9E8FF;
 	private static boolean initialized;
 
 	public static void init() {
@@ -89,8 +97,18 @@ public final class FociHud {
 	}
 
 	private static void draw(GuiGraphicsExtractor graphics, Player player) {
-		int x = primarySidecarX(graphics.guiWidth(), HUD_W);
-		int y = primarySidecarY(graphics.guiWidth(), graphics.guiHeight(), HUD_W);
+		AttunedClientConfig.HudLayout layout = HudAnchor.layout();
+		float scale = layout.scale();
+		boolean scaled = scale != 1.0F;
+		// Position in scaled coordinate space so the anchored corner stays put.
+		int screenW = scaled ? Math.round(graphics.guiWidth() / scale) : graphics.guiWidth();
+		int screenH = scaled ? Math.round(graphics.guiHeight() / scale) : graphics.guiHeight();
+		int x = primarySidecarX(screenW, HUD_W);
+		int y = primarySidecarY(screenW, screenH, HUD_W);
+		if (scaled) {
+			graphics.pose().pushMatrix();
+			graphics.pose().scale(scale, scale);
+		}
 
 		graphics.blit(RenderPipelines.GUI_TEXTURED, FRAME_TEXTURE, x, y,
 			0.0F, 0.0F, HUD_W, HUD_H, HUD_W, HUD_H);
@@ -108,14 +126,22 @@ public final class FociHud {
 			x + APEX_GEM_X, y + APEX_GEM_Y, x + APEX_BAR_X, y + APEX_BAR_Y);
 		drawFocusGrid(graphics, inv, activeSlots, dormantReasons, slotDefinitions,
 			x + FOCUS_GRID_X, y + FOCUS_GRID_Y);
+		drawConfluenceChip(graphics, readout.activeConfluences().size(),
+			x + CONFLUENCE_CHIP_X, y + CONFLUENCE_CHIP_Y);
+
+		if (scaled) {
+			graphics.pose().popMatrix();
+		}
 	}
 
+	// Defaults (bottom_right anchor, zero offset) resolve to the historical
+	// layout: screenW - hudWidth - SCREEN_MARGIN, bottom-aligned.
 	static int primarySidecarX(int screenW, int hudWidth) {
-		return Math.max(SCREEN_MARGIN, screenW - hudWidth - SCREEN_MARGIN);
+		return HudAnchor.x(screenW, hudWidth, HudAnchor.layout());
 	}
 
 	private static int primarySidecarY(int screenW, int screenH, int hudWidth) {
-		return Math.max(SCREEN_MARGIN, screenH - HUD_H - SCREEN_MARGIN);
+		return HudAnchor.y(screenH, HUD_H, HudAnchor.layout());
 	}
 
 	private static FocusDefinition[] activeSlotDefinitions(Player player, AttunedInv inv, List<Integer> activeSlots) {
@@ -223,6 +249,22 @@ public final class FociHud {
 
 	private static void drawDormantOverlay(GuiGraphicsExtractor graphics, int x, int y) {
 		graphics.fill(x + 1, y + 1, x + FocusLayout.SLOT - 1, y + FocusLayout.SLOT - 1, DORMANT_DIM);
+	}
+
+	/**
+	 * Paints one pip per active Confluence (up to a small cap) in the HUD's top gap.
+	 * Fill-only to match the HUD idiom (no font batch); draws nothing when none are active.
+	 */
+	private static void drawConfluenceChip(GuiGraphicsExtractor graphics, int count, int x, int y) {
+		if (count <= 0) {
+			return;
+		}
+		int pips = Math.min(count, CONFLUENCE_MAX_PIPS);
+		for (int i = 0; i < pips; i++) {
+			int px = x + (i % CONFLUENCE_CHIP_COLUMNS) * CONFLUENCE_PIP_STEP;
+			int py = y + (i / CONFLUENCE_CHIP_COLUMNS) * CONFLUENCE_PIP_STEP;
+			graphics.fill(px, py, px + CONFLUENCE_PIP, py + CONFLUENCE_PIP, CONFLUENCE_PIP_COLOR);
+		}
 	}
 
 	private static void drawApexBar(GuiGraphicsExtractor graphics, AttunementReadout.Snapshot readout,

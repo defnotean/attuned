@@ -1,7 +1,10 @@
 package dev.attuned.menu;
 
 import dev.attuned.attunement.Attunement;
+import dev.attuned.content.AttunedComponents;
 import dev.attuned.content.AttunedContent;
+import dev.attuned.content.TemperingResolver;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.Container;
 import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.entity.player.Inventory;
@@ -113,6 +116,35 @@ public class ReweavingMenu extends AbstractContainerMenu {
 			}
 		}
 		return true;
+	}
+
+	/**
+	 * Whether the inputs describe a valid tempering: exactly the first two Focus
+	 * slots hold the same untempered Focus, the third Focus slot is empty, and a
+	 * Shard Fragment catalyst is present. Gated through {@link TemperingResolver}.
+	 */
+	public boolean canTemper() {
+		if (!this.container.getItem(CATALYST_SLOT).is(AttunedContent.ATTUNEMENT_SHARD_FRAGMENT)) {
+			return false;
+		}
+		ItemStack first = this.container.getItem(0);
+		ItemStack second = this.container.getItem(1);
+		if (!this.isFocusInput(first) || !this.isFocusInput(second)) {
+			return false;
+		}
+		if (!this.container.getItem(2).isEmpty()) {
+			return false;
+		}
+		return TemperingResolver.canTemper(
+			focusId(first), focusId(second), isTempered(first), isTempered(second));
+	}
+
+	private static String focusId(ItemStack stack) {
+		return BuiltInRegistries.ITEM.getKey(stack.getItem()).toString();
+	}
+
+	private static boolean isTempered(ItemStack stack) {
+		return stack.has(AttunedComponents.TEMPERED);
 	}
 
 	public ItemStack outputStack() {

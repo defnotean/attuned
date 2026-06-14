@@ -1,0 +1,12 @@
+{
+	"item": "minecraft:turtle_helmet",
+	"cost": 4,
+	"affinity": "bastion",
+	"modifiers": [
+		{
+			"attribute": "minecraft:armor",
+			"amount": 2,
+			"operation": "add_value"
+		}
+	]
+}

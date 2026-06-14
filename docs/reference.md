@@ -13,6 +13,7 @@ Lives in `src/main/resources/data/attuned/attuned/focus/<name>.json`.
 | `cost`      | number  | no (1)   | Attunement points the Focus uses. Usually 2–6. |
 | `unique`    | boolean | no (false) | If true, only one copy of this Focus can be active at once; a duplicate stays dormant. |
 | `affinity`  | text    | no       | `fury`, `bastion`, `zephyr`, or `holy`. Omit for a neutral Focus. |
+| `aspect`    | text    | no       | Optional expanded counter identity, e.g. `attuned:tide`. It is separate from affinity/Pact math. |
 | `faction`   | text    | no       | Optional story/gameplay family, e.g. `attuned:unseen`. It does not change affinity math. |
 | `modifiers` | list    | no ([])  | Stat changes — see [Attribute modifiers](#attribute-modifiers). |
 | `behavior`  | text    | no       | A registered behavior id, e.g. `attuned:stormcall`. |
@@ -38,7 +39,46 @@ Holy  beats  Fury  beats  Bastion  beats  Zephyr  beats  Holy
 - A Focus with **no** `affinity` is *neutral* — it never triggers Discord and
   fits any committed lane. Four or more active neutral Foci can reach
   **Stillpoint**, the neutral Apex path.
+
+**Apex identity abilities.** The two affinity-less Apex paths each gain an active
+ability fired from the **Focus Ability** keybind — but only while armed (at Apex
+resonance) and while no awake ability Focus is equipped to claim the key first.
+The affinity capstones (Execute, Unyielding, Untouchable, Judgment) own no such
+ability; their key press still reports that no ability Focus is equipped.
+
+- **Maelstrom** unleashes a **chaos nova**: every nearby hostile (and any
+  PvP-affectable player) is knocked away from you and hit with Weakness for five
+  seconds. On a 30-second cooldown.
+- **Stillpoint** spreads a **tranquility field**: nearby hostile monsters lose
+  their target and are briefly slowed, buying you a moment of calm. On a
+  30-second cooldown.
 - Pick an affinity for combat-flavoured Foci; leave it off for utility Foci.
+
+**Reading an opponent (inspect).** Crouch and hold your crosshair on another
+player for about 1.5 seconds to read their public stance on your action bar: their
+committed affinity, **Discord**, or **Neutral**, plus their Apex capstone and
+whether it is currently armed. This reveals nothing the Combat HUD's enemy gem
+does not already telegraph — the lookup is server-mediated (attunement state syncs
+only to its owner, so it can never be read client-side), range-limited to 24
+blocks with line of sight, and rate-limited per onlooker.
+
+## Aspects
+
+Aspects are the expanded Focus type/counter layer. They do **not** replace the
+old four affinity/Pact/Discord rules; a Focus may carry both an `affinity` and an
+`aspect`. Tooltips show an Aspect's strengths and weaknesses from the Wheel of
+Refusals.
+
+| Aspect | Counters | Weak to |
+|--------|----------|---------|
+| `attuned:fury` | Bastion, Verdant | Holy, Tide |
+| `attuned:bastion` | Zephyr, Umbral | Fury, Forge |
+| `attuned:zephyr` | Holy, Tide | Bastion, Umbral |
+| `attuned:holy` | Fury, Umbral | Zephyr, Verdant |
+| `attuned:tide` | Fury, Forge | Zephyr, Verdant |
+| `attuned:forge` | Bastion, Verdant | Tide, Umbral |
+| `attuned:verdant` | Tide, Holy | Fury, Forge |
+| `attuned:umbral` | Zephyr, Forge | Bastion, Holy |
 
 ## Factions
 
@@ -46,18 +86,27 @@ Factions are optional labels for Foci that share a theme. They show on tooltips
 and can be used by loot weighting, but they are not affinities and never change
 the Holy/Fury/Bastion/Zephyr cycle.
 
+When **three or more ACTIVE Foci share a faction**, that faction grants a small,
+free passive **set bonus** — no extra attunement cost. The bonus is a modest
+vanilla effect (icon-hidden, kept refreshed) and most are conditional on context.
+Drop below three active Foci of the faction and the bonus simply stops.
+
 Attuned currently ships these factions:
 
-| Faction id | Theme | Balance role |
-|------------|-------|--------------|
-| `attuned:unseen` | Stealth, stillness, smoke, ambush openings | Rewards setup and positioning without replacing armor, speed, or raw damage builds. |
-| `attuned:seafarers` | Fishing, shore travel, return points | Peaceful Luck and water utility without PvP pressure. |
-| `attuned:offshore` | Salvage, storms, wreck maps, deep-water risk | Utility with danger: temporary tools, water pressure, and anti-drowned/guardian space without becoming a permanent weapon line. |
-| `attuned:radiant` | Holy vows, light, witness, judgment | Reveals and protects in short windows rather than adding broad damage. |
-| `attuned:reliquary` | Names, relics, rites, thresholds | Utility-side Holy tools that reward preparation and place. |
-| `attuned:verdant_choir` | Roots, bloom, moss, patient growth | Broad natural utility with small travel and survival numbers. |
-| `attuned:ashen_forge` | Heat, craft, rivets, tempering | Craft-flavoured Fury/Bastion tools with restrained stat bonuses. |
-| `attuned:revenant` | Unfinished endings, debts, rites, grave-cold reprisals | Utility and controlled combat pressure through short revenge windows, cleansing, slowness, and one active movement ability. |
+| Faction id | Theme | Balance role | Set bonus (3+) |
+|------------|-------|--------------|----------------|
+| `attuned:unseen` | Stealth, stillness, smoke, ambush openings | Rewards setup and positioning without replacing armor, speed, or raw damage builds. | Speed I while sneaking. |
+| `attuned:seafarers` | Fishing, shore travel, return points | Peaceful Luck and water utility without PvP pressure. | Luck I while in or near water. |
+| `attuned:offshore` | Salvage, storms, wreck maps, deep-water risk | Utility with danger: temporary tools, water pressure, and anti-drowned/guardian space without becoming a permanent weapon line. | Water Breathing while submerged. |
+| `attuned:tideborn` | Pull, rain, undertow, and pearl-like defense | Combat-facing Tide tools for the Aspect wheel; their counter identity lives in `aspect`, not in the old affinity cycle. | (No set bonus yet.) |
+| `attuned:forgebound` | Brands, anvils, welding sparks, and tempered pressure | Forge-aspect tools that avoid changing the older Ashen Forge set-bonus roster. | (No set bonus yet.) |
+| `attuned:wildroot` | Thorn, seed, bramble, and patient natural counterplay | Verdant-aspect tools that avoid changing the older Verdant Choir set-bonus roster. | (No set bonus yet.) |
+| `attuned:radiant` | Holy vows, light, witness, judgment | Reveals and protects in short windows rather than adding broad damage. | A brief Regeneration I in bright light (light level >= 12), on a 60s cooldown. |
+| `attuned:reliquary` | Names, relics, rites, thresholds | Utility-side Holy tools that reward preparation and place. | Luck I. |
+| `attuned:verdant_choir` | Roots, bloom, moss, patient growth | Broad natural utility with small travel and survival numbers. | A little hunger restored while standing on grass, on a 60s cooldown. |
+| `attuned:ashen_forge` | Heat, craft, rivets, tempering | Craft-flavoured Fury/Bastion tools with restrained stat bonuses. | Fire Resistance near a lit forge, magma, or lava. |
+| `attuned:revenant` | Unfinished endings, debts, rites, grave-cold reprisals | Utility and controlled combat pressure through short revenge windows, cleansing, slowness, and one active movement ability. | Nearby undead are slowed (Slowness I). |
+| `attuned:umbral` | Shadow, darkness, stealth that rewards committing to the dark | Stronger the deeper the dark — movement, armor, and damage that only wake in low light, so it never out-scales a lit build. | (No set bonus yet.) |
 
 ## Attribute modifiers
 
@@ -169,6 +218,26 @@ examples to copy from:
 | `attuned:stormcall`  | `StormcallBehavior`      | Lightning while sprinting in rain. |
 | `attuned:voidstep`   | `VoidstepBehavior`       | Blinks forward on the Focus Ability keybind. |
 | `attuned:harpoon`    | `HarpoonBehavior`       | Ability key summons a temporary custom-model trident for 30 seconds, then removes it from inventory, drops, or projectile state. |
+| `attuned:gloomstride` | `GloomstrideBehavior`   | Movement speed while standing in low light. |
+| `attuned:duskward`   | `DuskwardBehavior`       | Extra armor while standing in low light. |
+| `attuned:shadowmeld` | `ShadowmeldBehavior`     | Resistance while crouching in low light. |
+| `attuned:dreadfang`  | `DreadfangBehavior`      | A fully charged direct-melee hit on a hostile or PvP foe applies Darkness; the proc fires from the combat after-damage hook. |
+| `attuned:eclipse`    | `EclipseBehavior`        | Strength while standing in total darkness (light level 4 or lower). |
+| `attuned:undertow` | `focus_behavior/undertow.json` | Charged melee hits slow hostile targets. |
+| `attuned:riptide_heart` | `focus_behavior/riptide_heart.json` | Keeps Speed refreshed as the Tide starter mobility Focus. |
+| `attuned:pearlguard` | `focus_behavior/pearlguard.json` | Grants Resistance while wet, underwater, or in rain. |
+| `attuned:slagbrand` | `focus_behavior/slagbrand.json` | Charged melee hits weaken hostile targets. |
+| `attuned:anvilheart` | `focus_behavior/anvilheart.json` | Pulses short Resistance windows for a heavy Forge stance. |
+| `attuned:sparkweld` | `focus_behavior/sparkweld.json` | Keeps Haste refreshed as a light Forge work-buff. |
+| `attuned:thornwake` | `focus_behavior/thornwake.json` | Charged melee hits poison hostile targets. |
+| `attuned:seedcall` | `focus_behavior/seedcall.json` | Periodically refreshes a gentle Regeneration pulse. |
+| `attuned:bramblegate` | `focus_behavior/bramblegate.json` | Charged melee hits slow hostile targets for longer. |
+| `attuned:nullveil` | `focus_behavior/nullveil.json` | Grants Invisibility while standing in low light. |
+| `attuned:cinderthief` | `focus_behavior/cinderthief.json` | Charged melee hits steal a short Fire Resistance window. |
+| `attuned:snaremoon` | `focus_behavior/snaremoon.json` | Charged melee hits heavily slow hostile targets. |
+| `attuned:wildward`   | `WildwardBehavior`       | Confluence (Mossheart + Rootstep): refreshes Resistance I while standing on natural ground. |
+| `attuned:sunwarden`  | `SunwardenBehavior`      | Confluence (Votive + Bellwether): refreshes Regeneration I while standing in bright light. |
+| `attuned:forgewarded` | `ForgewardedBehavior`   | Confluence (Kilnward + Emberward): refreshes Fire Resistance while near a lit forge, magma, or lava. |
 
 ### When a power is not a behavior
 
@@ -177,7 +246,9 @@ their own classes — read these if your idea resembles them:
 
 - **Death effects** — `combat/GravebindSave.java` hooks the death event.
 - **Affinity combat and hit procs** — `combat/AttunedCombat.java` handles
-  damage between affinities plus Cinder, Thornward, and Leech.
+  damage between affinities plus Cinder, Thornward, Leech, and Dreadfang's
+  charged-hit Darkness (its `attuned:dreadfang` behavior is registered for the
+  framework but its proc fires from the after-damage hook).
 - **Unseen ambush combat** - `combat/UnseenCombat.java` handles Needle's
   opening-hit bonus and breaks Veil when combat starts.
 - **Revenant combat** - `combat/RevenantCombat.java` handles Ashen Debt's
@@ -187,6 +258,294 @@ their own classes — read these if your idea resembles them:
   fishing-rod durability on a successful catch (on a cooldown), and Linecast adds a
   chance for a bonus fish plus a Luck of the Sea boost. Neither uses a `behavior`
   id, so they do not appear in the Behaviors table above.
+
+## Confluences
+
+A **Confluence** is a small set bonus that wakes when a specific combination of
+2–3 named Foci are all **active at once** (equipped *and* within your attunement
+budget — the same "active" rule the rest of the mod uses). A Confluence costs
+**no attunement budget**: it is an emergent reward for a build you already paid
+for. Wake one and it announces in chat; the first time you wake a given
+Confluence it plays a discovery fanfare, records a hidden advancement, and fills
+in its row in the Attunement Journal's **Confluences** chapter (undiscovered rows
+show only `???` and a member count, so finding them is part of the game).
+
+The Foci HUD paints a small pip per active Confluence, and the Focus panel tooltip
+hints when you are exactly one Focus away from a Confluence you have **already
+discovered** (undiscovered ones are never hinted, so the meta is not spoiled).
+
+Confluences are data-driven, loaded from
+`data/<namespace>/attuned/synergy/<name>.json`:
+
+| Field | Type | Notes |
+|-------|------|-------|
+| `members` | list of item ids | The Focus **item** ids (e.g. `attuned:lantern_focus`) that must all be active. Author 2–3. |
+| `modifiers` | list | Attribute modifiers granted while active, same shape as a Focus's `modifiers`. Optional. |
+| `behavior` | text | Optional `behavior` id into the same registry Foci use, for effects a modifier can't express. |
+
+Member ids are Focus **item** ids, not behavior ids. A Confluence may only
+reference Foci that exist. Keep effects modest — a Confluence should make a themed
+build feel cohesive, never out-scale a focused affinity build.
+
+The ones that ship with Attuned:
+
+| Confluence (`id`) | Members | Effect |
+|-------------------|---------|--------|
+| Immovable (`immovable`) | Anchor + Rivet | +0.1 knockback resistance |
+| Bulwark of Light (`bulwark_of_light`) | Votive + Oathguard | +1 armor |
+| Hunter's Patience (`hunters_patience`) | Lantern + Veil | +4% movement speed |
+| Tempest (`tempest`) | Rainstep + Stormcall | +1 attack damage |
+| Wildward (`wildward`) | Mossheart + Rootstep | Resistance I while on natural ground |
+| Sunwarden (`sunwarden`) | Votive + Bellwether | Regeneration I while standing in bright light |
+| Forgewarded (`forgewarded`) | Kilnward + Emberward | Fire Resistance while near a lit forge, magma, or lava |
+| Total Eclipse (`total_eclipse`) | Eclipse + Gloomstride + Duskward | +4 max health and +1 attack damage |
+
+## Tempering Foci
+
+The **Altar of Reweaving** can also *temper* a Focus. Place two copies of the
+**same** untempered Focus in the first two Focus slots, leave the third empty,
+add an Attunement Shard Fragment as the catalyst, and reweave: the two copies
+fuse into one **Tempered** copy and the catalyst is consumed.
+
+A Tempered Focus is a stronger, costlier variant of the same Focus:
+
+- Every declarative attribute modifier is amplified by **+25%** (`× 1.25`).
+- It costs **+1 attunement** on top of the base cost, so dormancy and the
+  capacity readout account for the surcharge automatically.
+- Its name renders in gold and its tooltip carries a **Tempered** line.
+
+Tempering is marked by the `attuned:tempered` data component. Only untempered
+copies can be tempered, and a Tempered Focus cannot be tempered again. Reweaving
+three different Foci (the standard roll) is unaffected.
+
+## Behavior palette (no Java)
+
+Most behaviors are Java classes. The **behavior palette** lets a datapack define
+some behaviors as data instead — no code, no rebuild. A palette entry is a small,
+parameterized behavior instance loaded from a synced datapack registry at:
+
+`data/<namespace>/attuned/focus_behavior/<id>.json`
+
+A Focus references it the same way it references a code behavior — with its
+`behavior` field. Resolution is **code-first-then-data**: if a code behavior is
+registered under that id it wins; otherwise Attuned builds the behavior from the
+matching `focus_behavior` entry. So a code behavior and a palette entry can never
+collide, and existing Foci are unaffected.
+
+Each entry has a `type`. The shipped palette is **passive only** (no Focus Ability
+key — active-ability authoring is a later version) and ships four types:
+
+| `type`                            | Gates on        | Effect |
+|-----------------------------------|-----------------|--------|
+| `attuned:conditional_mob_effect`  | a [condition](#conditions) | Keep a mob effect refreshed while the condition holds. |
+| `attuned:on_hit_effect`           | a charged, hostile-only melee hit | Apply a mob effect to the victim (or self) on the hit. |
+| `attuned:periodic_effect`         | a fixed tick cadence | Keep a flat mob effect refreshed — an unconditional buff. |
+| `attuned:attribute_while`         | a [condition](#conditions) | Apply an attribute modifier only while the condition holds. |
+
+### `attuned:conditional_mob_effect`
+
+Keeps a mob effect refreshed on the wearer for as long as a [condition](#conditions)
+holds. Passive only (it owns no Focus Ability key).
+
+| Field            | Type            | Required | Meaning |
+|------------------|-----------------|----------|---------|
+| `type`           | text            | yes      | `attuned:conditional_mob_effect` |
+| `effect`         | mob effect id   | yes      | e.g. `minecraft:speed` |
+| `amplifier`      | int 0–255       | no (0)   | Effect level minus one (0 = level I). |
+| `duration_ticks` | int ≥ 1         | no (40)  | How long each application lasts (20 ticks = 1 s). |
+| `refresh_ticks`  | int ≥ 1         | no (20)  | Re-apply once the remaining duration drops to this. |
+| `condition`      | condition object| yes      | When the effect should be kept up. |
+
+The effect is applied ambient, hidden, and icon-less (like Tide's Water Breathing)
+so it stays unobtrusive. When the condition stops holding the effect is left to
+lapse on its own short duration — keep `duration_ticks` modest.
+
+### `attuned:on_hit_effect`
+
+Applies a mob effect on a **fully charged, direct-melee** hit. It reuses the same
+charge and target guards as the code combat Foci: the swing must be charged past
+`charge_threshold`, and (by default) the victim must be a hostile mob or a valid
+PvP opponent. Passive only.
+
+| Field             | Type          | Required | Meaning |
+|-------------------|---------------|----------|---------|
+| `type`            | text          | yes      | `attuned:on_hit_effect` |
+| `effect`          | mob effect id | yes      | e.g. `minecraft:weakness` |
+| `amplifier`       | int 0–255     | no (0)   | Effect level minus one. |
+| `duration_ticks`  | int ≥ 1       | no (60)  | How long the applied effect lasts. |
+| `charge_threshold`| float 0–1     | no (0.9) | Swing charge the hit must reach (1.0 = fully charged). |
+| `target_self`     | bool          | no (false)| Apply to the attacker instead of the victim (e.g. a hit-and-heal buff). |
+| `hostile_only`    | bool          | no (true) | Only proc against hostile mobs / valid PvP opponents. |
+
+The proc runs from Attuned's existing post-damage combat hook — no mixin — so it
+never fires on a swing the code combat path would reject (reflected hits, projectiles,
+explosions, uncharged taps).
+
+### `attuned:periodic_effect`
+
+Keeps a flat mob effect refreshed on a fixed cadence — an unconditional buff (a
+gentle Regeneration, a steady Night Vision). Like `conditional_mob_effect` but with
+no gating condition. Passive only.
+
+| Field            | Type          | Required | Meaning |
+|------------------|---------------|----------|---------|
+| `type`           | text          | yes      | `attuned:periodic_effect` |
+| `effect`         | mob effect id | yes      | e.g. `minecraft:regeneration` |
+| `amplifier`      | int 0–255     | no (0)   | Effect level minus one. |
+| `duration_ticks` | int ≥ 1       | no (80)  | How long each application lasts. |
+| `refresh_ticks`  | int ≥ 1       | no (40)  | Re-apply every this many ticks. |
+
+The effect is applied ambient, hidden, and icon-less. Keep `duration_ticks`
+comfortably above `refresh_ticks` so the buff never visibly lapses between refreshes.
+
+### `attuned:attribute_while`
+
+Applies a transient attribute modifier only while a [condition](#conditions) holds,
+adding it when the condition becomes true and removing it when it stops (and on
+unequip). The conditional twin of a Focus's declarative `modifiers`. Passive only.
+
+| Field       | Type             | Required | Meaning |
+|-------------|------------------|----------|---------|
+| `type`      | text             | yes      | `attuned:attribute_while` |
+| `modifier`  | modifier object  | yes      | Same shape as a `modifiers[]` entry: `attribute`, `amount`, `operation`. |
+| `condition` | condition object | yes      | When the modifier should apply. |
+
+The `modifier` object matches the Focus `modifiers` schema — `attribute` (an
+`minecraft:` attribute id), `amount` (a finite number), and `operation`
+(`add_value`, `add_multiplied_base`, or `add_multiplied_total`). The modifier is
+applied under a stable, palette-specific id, so it is removed cleanly the moment the
+condition breaks or the Focus is unequipped.
+
+### Conditions
+
+A `condition` is a small composable predicate. It dispatches on a `condition` field:
+
+| `condition`     | Extra fields           | Holds when… |
+|-----------------|------------------------|-------------|
+| `in_rain`       | —                      | The player is in rain or otherwise wet from the sky. |
+| `underwater`    | —                      | The player's head is submerged. |
+| `low_light`     | `max_light` (0–15, def 7) | Local light level ≤ `max_light`. |
+| `sneaking`      | —                      | The player is crouching. |
+| `on_block_tag`  | `tag` (block tag id)   | The block at the player's feet is in the tag. |
+| `in_biome_tag`  | `tag` (biome tag id)   | The player stands in a biome in the tag. |
+
+### Worked example
+
+A Focus that grants Speed I while standing in the rain — no Java.
+
+`data/attuned/attuned/focus_behavior/rainspeed.json`:
+
+```json
+{
+  "type": "attuned:conditional_mob_effect",
+  "effect": "minecraft:speed",
+  "amplifier": 0,
+  "duration_ticks": 40,
+  "refresh_ticks": 20,
+  "condition": { "condition": "in_rain" }
+}
+```
+
+`data/attuned/attuned/focus/rainspeed_focus.json`:
+
+```json
+{
+  "item": "attuned:tide_focus",
+  "cost": 2,
+  "affinity": "zephyr",
+  "behavior": "attuned:rainspeed"
+}
+```
+
+#### `on_hit_effect` — Weakness on a charged blow
+
+A Focus that saps the target with Weakness I (5 s) on a fully charged hit against a
+hostile mob.
+
+`data/mypack/attuned/focus_behavior/sapping.json`:
+
+```json
+{
+  "type": "attuned:on_hit_effect",
+  "effect": "minecraft:weakness",
+  "amplifier": 0,
+  "duration_ticks": 100,
+  "charge_threshold": 0.9,
+  "hostile_only": true
+}
+```
+
+#### `periodic_effect` — a gentle steady Regeneration
+
+A Focus that drips Regeneration I, refreshed every two seconds.
+
+`data/mypack/attuned/focus_behavior/mending_aura.json`:
+
+```json
+{
+  "type": "attuned:periodic_effect",
+  "effect": "minecraft:regeneration",
+  "amplifier": 0,
+  "duration_ticks": 80,
+  "refresh_ticks": 40
+}
+```
+
+#### `attribute_while` — extra armor while crouched
+
+A Focus that grants +2 armor only while the wearer is sneaking.
+
+`data/mypack/attuned/focus_behavior/turtle_stance.json`:
+
+```json
+{
+  "type": "attuned:attribute_while",
+  "modifier": {
+    "attribute": "minecraft:armor",
+    "amount": 2,
+    "operation": "add_value"
+  },
+  "condition": { "condition": "sneaking" }
+}
+```
+
+`/attuned validate` checks palette-backed `behavior` ids too, so a typo in any of
+these files is caught the same way a missing code behavior is.
+
+## Custom Focus item pool (resource-pack skins)
+
+Minecraft cannot mint new items from a datapack, so a pack that reuses an existing
+item also borrows that item's name and model. To give authors a bespoke Focus
+identity without a JAR, Attuned ships eight blank, skinnable Focus items:
+`attuned:custom_focus_1` through `attuned:custom_focus_8`. They appear in the
+Attuned utility creative tab with a neutral default name and a hue-shifted blank
+medallion texture.
+
+To use one, point a `focus/<name>.json` at it and skin the rest in a resource pack:
+
+```json
+// data/mypack/attuned/focus/frostward_focus.json
+{ "item": "attuned:custom_focus_3", "cost": 4, "affinity": "bastion",
+  "behavior": "mypack:frostward" }
+```
+
+```json
+// assets/mypack/lang/en_us.json (resource pack)
+{ "item.attuned.custom_focus_3": "Frostward Focus",
+  "item.attuned.custom_focus_3.lore": "...",
+  "item.attuned.custom_focus_3.lore2": "...",
+  "item.attuned.custom_focus_3.effect": "..." }
+```
+
+Override `assets/attuned/models/item/custom_focus_3.json` and
+`assets/attuned/textures/item/custom_focus_3.png` in the same resource pack to give
+it its own art. The HUD, tooltips, and Focus Reliquary render any registered Focus,
+so a skinned custom Focus works everywhere automatically. These items ship **no**
+bundled `FocusDefinition` — supplying one is the author's job — so they do not count
+toward the advertised shipped-Focus total.
+For a full walkthrough of authoring Foci as a datapack — without editing the JAR —
+see [authoring-foci.md](authoring-foci.md) and the worked
+[example-pack](example-pack/).
 
 ## Numbers you can tune
 
@@ -207,6 +566,9 @@ Every key is optional and falls back to a built-in default:
 | `voidstep_cooldown_ticks` | 200 | Cooldown of the Voidstep blink, in ticks. |
 | `gravebind_cooldown_ticks` | 1200 | Cooldown of the Gravebind death-save, in ticks. |
 | `broadcast_pact_deaths` | true | If true, Pact death messages are broadcast to nearby players; if false, only the dying player sees them. |
+| `surge_interval_ticks` | 12000 | Minimum ticks between resonant surges (one surge live at a time, server-wide). |
+| `surge_duration_ticks` | 1200 | How long a resonant surge stays live, in ticks. |
+| `surge_radius` | 16 | Radius, in blocks, of the resonant surge field that grants 4x resonance. |
 
 Loot chances are clamped between 0 and 1 after all scales are applied. With
 defaults, the appended Focus-pool roll chances stay unchanged: low 8.75%,
@@ -232,7 +594,8 @@ The `/attuned capacity` command reads or sets a player's capacity for testing.
 | Attunement Shard | Diamond surrounded by amethyst shards, or four Attunement Shard Fragments | Raises capacity when bound at an Altar. |
 | Attunement Shard Fragment | Vanilla loot injected alongside Foci | Four craft into one Attunement Shard; using one tells the player their current fragment count. |
 | Attunement Journal | Book + amethyst shard | Opens as a readable book with the core Attuned rules. |
-| Focus Reliquary | Leather pouch around an amethyst shard | A stack-bound bag for spare Foci. Move Foci between the reliquary grid, the equipped Focus column, and your inventory by dragging, by click-to-grab then click-to-drop, or by shift-click. Type a name and Save the current loadout as a **build**, then click a build to select it and Apply or Delete. |
+| Focus Reliquary | Leather pouch around an amethyst shard | A stack-bound bag for 27 spare Foci. Move Foci between the reliquary grid, the equipped Focus column, and your inventory by dragging, by click-to-grab then click-to-drop, or by shift-click. Type a name and Save the current loadout as a **build**, then click a build to select it and Apply or Delete. Hovering a build name previews its six Foci as item icons, greying any you cannot currently source for an Apply. Builds 1-3 can also be applied anywhere with the unbound **Apply Build** keybinds (Options > Controls); the apply sources Foci from a reliquary in your inventory. |
+| Grand Focus Reliquary | Leather around an amethyst block with a Focus Reliquary in the center | A second-tier reliquary with a 54-slot (9x6) grid, twice the storage of the Focus Reliquary. Opens the same screen with the same equipped column, build saving/applying, previews, and quick-swap. Neither reliquary can be stored inside the other. |
 
 ## Loot and Lootr compatibility
 
@@ -253,6 +616,18 @@ including Lootr per-player containers.
 The Unseen Foci are weighted a little higher in stealth-flavoured structures and
 ruins such as mineshafts, strongholds, outposts, ancient cities, end cities, and
 archaeology sites, but they remain possible anywhere Attuned Focus loot can roll.
+
+The **Attunement Sanctum** is Attuned's own exploration site: a small data-driven
+jigsaw structure (one 15x8x15 piece of polished deepslate bricks, four amethyst
+pillars, and a central chiseled-deepslate altar) that generates rarely in lush
+caves, forests, and dark forests. Its template is generated deterministically by
+`tools/generate_sanctum_template.py` and committed as
+`data/attuned/structure/sanctum.nbt`; the datapack triple lives under
+`data/attuned/worldgen/{structure,structure_set,template_pool}/` with the biome
+list in `data/attuned/tags/worldgen/biome/has_sanctum.json`. The altar chest uses
+its own `attuned:chests/sanctum` loot table (not a vanilla injection): two rolls
+over light- and depth-themed Foci plus one roll of 1-3 Attunement Shard
+Fragments. Find the nearest one with `/locate structure attuned:attunement_sanctum`.
 
 Lootr stays an optional/suggested dependency in `fabric.mod.json`. Attuned only
 needs Lootr's native behavior for vanilla loot-table containers; a direct Lootr
@@ -276,7 +651,7 @@ Operator commands require game-master permission:
 | `/attuned capacity` | Prints your current attunement capacity. |
 | `/attuned capacity <amount>` | Sets your current attunement capacity for testing. |
 | `/attuned status` | Dumps active Foci, stance, Pact, resonance, and Apex state. |
-| `/attuned validate` | Checks shipped Focus registrations, datapack definitions, and behavior ids. |
+| `/attuned validate` | Validates shipped **and** author datapacks file by file: every Focus's `item`, `behavior` (code or palette), and modifier `attribute` ids must resolve, and the `focus_behavior` palette files are walked too. A missing display-name lang key is reported as a *warning*, not a failure — a pack with only warnings still passes, with a warning count. See [authoring-foci.md](authoring-foci.md). |
 
 ## Where everything lives
 
@@ -287,6 +662,8 @@ Operator commands require game-master permission:
 | `content/AttunementShardFragmentItem.java` | Fragment progress hint behavior |
 | `content/behavior/` | Behavior classes |
 | `data/attuned/attuned/focus/` | Focus definition JSON files |
+| `data/attuned/attuned/synergy/` | Confluence definition JSON files |
+| `synergy/` | Confluence resolver (`SynergyResolver`), runtime (`Synergies`), and the `SynergyDefinition` registry record |
 | `data/attuned/recipe/` | Altar, shard, fragment, and journal recipes |
 | `data/attuned/advancement/attunement/` | Code-awarded Attuned progression advancements |
 | `assets/attuned/items/` + `assets/attuned/models/item/` | Item model files |

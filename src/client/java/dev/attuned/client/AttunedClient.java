@@ -13,6 +13,7 @@ public class AttunedClient implements ClientModInitializer {
 		AttunedTooltips.init();
 		AttunedKeybinds.init();
 		FocusAbilityClientState.init();
+		AffinityInspectClient.init();
 		FociHud.init();
 		CombatHud.init();
 		AltarScreens.init();

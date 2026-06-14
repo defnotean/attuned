@@ -1,0 +1,6 @@
+{
+	"type": "attuned:periodic_effect",
+	"effect": "minecraft:speed",
+	"duration_ticks": 80,
+	"refresh_ticks": 60
+}

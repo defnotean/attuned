@@ -1,5 +1,12 @@
 # Adding a new Focus
 
+> **Which guide?** This recipe is for **contributors editing the Attuned JAR** —
+> registering a brand-new item, shipping art, and (optionally) writing a behavior
+> class. If you instead want to add Foci to a world or a published pack **without a
+> JAR rebuild** (reusing existing items, attribute modifiers, the data behavior
+> palette), see [`authoring-foci.md`](authoring-foci.md) and the worked
+> [`example-pack/`](example-pack/).
+
 This is a step-by-step recipe. Follow it top to bottom and you will have a
 working Focus. It uses one running example — a **Stoneskin Focus** that grants
 extra armor — so every step shows real text you can adapt.
@@ -49,7 +56,7 @@ place: affinity Foci go to **Attuned: Affinity Foci**, and neutral Foci go to
 
 ## Step 3 — Create the Focus definition
 
-This file sets the cost, the affinity, and the stats. It is the heart of a Focus.
+This file sets the cost, the affinity, the optional Aspect counter identity, and the stats. It is the heart of a Focus.
 
 **Create:** `src/main/resources/data/attuned/attuned/focus/stoneskin_focus.json`
 
@@ -58,6 +65,7 @@ This file sets the cost, the affinity, and the stats. It is the heart of a Focus
 	"item": "attuned:stoneskin_focus",
 	"cost": 3,
 	"affinity": "bastion",
+	"aspect": "attuned:bastion",
 	"modifiers": [
 		{
 			"attribute": "minecraft:armor",
@@ -72,6 +80,10 @@ This file sets the cost, the affinity, and the stats. It is the heart of a Focus
 - `cost` — attunement points this Focus uses, usually 2–6. Defaults to 1 if left out.
 - `affinity` — `fury`, `bastion`, `zephyr`, or `holy`. **Leave this line out** for a
   neutral utility Focus.
+- `aspect` — optional expanded counter identity such as `attuned:tide`,
+  `attuned:forge`, `attuned:verdant`, or `attuned:umbral`. Tooltips use it to
+  show what the Focus is strong and weak against. It is separate from affinity,
+  Pact, and Discord math.
 - `unique` - set to `true` when only one copy of this Focus should be active
   at a time.
 - `faction` - optional story/gameplay family such as `attuned:unseen`. Factions
@@ -116,6 +128,12 @@ rename them.
 Current shipped Foci use a 64×512 animated PNG sheet: eight 64×64 item frames
 stacked vertically. Match that format for new shipped art so the Focus sits with
 the existing medallion-style assets.
+
+For new bespoke Foci, follow the current art direction: generate/select an
+image-generation concept first, save the prompt/source under
+`docs/superpowers/assets/<feature>/`, then import/crop/downscale it into the
+Minecraft texture sheet. Do not invent the final icon as code-first/manual sprite
+art; scripts should handle cleanup, formatting, and animation only.
 
 **Create:** `src/main/resources/assets/attuned/textures/item/stoneskin_focus.png.mcmeta`
 

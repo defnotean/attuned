@@ -240,7 +240,10 @@ class AttunedLootCompatibilityTest {
 			shardFragmentLootMultiplier,
 			AttunedConfig.DEFAULT.voidstepCooldownTicks(),
 			AttunedConfig.DEFAULT.gravebindCooldownTicks(),
-			AttunedConfig.DEFAULT.broadcastPactDeaths());
+			AttunedConfig.DEFAULT.broadcastPactDeaths(),
+			AttunedConfig.DEFAULT.surgeIntervalTicks(),
+			AttunedConfig.DEFAULT.surgeDurationTicks(),
+			AttunedConfig.DEFAULT.surgeRadius());
 	}
 
 	private static boolean isSupportedVanillaLootPath(String path) {

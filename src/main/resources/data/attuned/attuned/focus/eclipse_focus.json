@@ -1,0 +1,8 @@
+{
+	"item": "attuned:eclipse_focus",
+	"cost": 6,
+	"unique": true,
+	"affinity": "fury",
+	"faction": "attuned:umbral",
+	"behavior": "attuned:eclipse"
+}

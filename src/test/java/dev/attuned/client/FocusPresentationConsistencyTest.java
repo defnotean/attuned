@@ -85,6 +85,22 @@ class FocusPresentationConsistencyTest {
 		}
 	}
 
+	@Test
+	void focusTooltipsRenderAspectCounterInformation() throws IOException {
+		String source = Files.readString(TOOLTIP_SOURCE, StandardCharsets.UTF_8);
+
+		assertTrue(source.contains("definition.aspect().ifPresent"),
+			"Tooltip should render optional Aspect metadata for FocusDefinitions that declare it.");
+		assertTrue(source.contains("tooltip.attuned.aspect.line"),
+			"Tooltip should use one translated Aspect line.");
+		assertTrue(source.contains("tooltip.attuned.aspect.matchups"),
+			"Tooltip should show what each Aspect counters and what counters it.");
+		assertTrue(source.contains("aspect.strongAgainst()"),
+			"Tooltip should derive counter names from the Aspect matrix instead of hand-written item lore.");
+		assertTrue(source.contains("aspect.weakAgainst()"),
+			"Tooltip should derive weakness names from the Aspect matrix instead of hand-written item lore.");
+	}
+
 	private static Set<String> modifierAttributePaths() throws IOException {
 		Set<String> attributes = new TreeSet<>();
 		try (Stream<Path> paths = Files.list(FOCUS_DATA_DIR)) {

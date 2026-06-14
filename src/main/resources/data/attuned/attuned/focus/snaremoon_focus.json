@@ -1,0 +1,16 @@
+{
+	"item": "attuned:snaremoon_focus",
+	"cost": 4,
+	"unique": true,
+	"affinity": "zephyr",
+	"aspect": "attuned:umbral",
+	"faction": "attuned:umbral",
+	"modifiers": [
+		{
+			"attribute": "minecraft:movement_speed",
+			"amount": 0.05,
+			"operation": "add_multiplied_base"
+		}
+	],
+	"behavior": "attuned:snaremoon"
+}

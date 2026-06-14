@@ -2,15 +2,19 @@ package dev.attuned.client.screen;
 
 import dev.attuned.Attuned;
 import dev.attuned.attunement.AttunedAttachments;
+import dev.attuned.attunement.AttunedInv;
 import dev.attuned.attunement.FocusPreset;
 import dev.attuned.menu.ApplyPresetPayload;
+import dev.attuned.menu.BuildPreviewResolver;
 import dev.attuned.menu.DeletePresetPayload;
 import dev.attuned.menu.FocusSlot;
 import dev.attuned.menu.SatchelMenu;
 import dev.attuned.menu.SavePresetPayload;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.function.BooleanSupplier;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
@@ -20,9 +24,12 @@ import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.renderer.RenderPipelines;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.inventory.Slot;
+import net.minecraft.world.item.ItemStack;
 import org.lwjgl.glfw.GLFW;
 
 /**
@@ -37,11 +44,19 @@ public class SatchelScreen extends AbstractContainerScreen<SatchelMenu> {
 	private static final Identifier BACKGROUND_TEXTURE =
 		Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "textures/gui/satchel.png");
 	// Logical window encloses the leather texture (left) plus the equipped/builds panel (right),
-	// so the whole UI is centred and on-screen and no slot sits outside the click bounds.
+	// so the whole UI is centred and on-screen and no slot sits outside the click bounds. The
+	// height grows with the reliquary's grid rows so the larger Grand tier stays inside bounds.
 	private static final int IMAGE_WIDTH = 252;
 	private static final int IMAGE_HEIGHT = 200;
 	private static final int TEX_W = 176;
 	private static final int TEX_H = 166;
+	// Reliquary grid rows the leather texture already bakes wells for (the small tier).
+	private static final int TEXTURE_GRID_ROWS = 3;
+	// Texture v-extent through the header + 3 grid-row panel (the panel ends at y=73);
+	// the Grand tier blits only this strip and panel-fills the taller body beneath it.
+	private static final int TEX_GRID_BOTTOM = 74;
+	private static final int GRID_X = 8;
+	private static final int GRID_Y = 18;
 	private static final int LABEL_TEXT = 0xFFB8ACC8;
 	private static final int SELECTED_TEXT = 0xFFFFD37A;
 	private static final int SCREEN_BACKDROP = 0xB0101218;
@@ -51,6 +66,18 @@ public class SatchelScreen extends AbstractContainerScreen<SatchelMenu> {
 	private static final int BUTTON_HOVER_ARGB = 0xC0FFFFFF;
 	private static final int SELECTED_FILL_ARGB = 0x40FFD37A;
 	private static final int NAME_FIELD_TEXT = 0xFFE3D8F5;
+	// Greys a build-preview icon whose Focus cannot be sourced for an Apply.
+	private static final int PREVIEW_MISSING_OVERLAY = 0xC81A1622;
+
+	// Hover preview: the six saved Foci as item icons in a single row inside the
+	// logical window, drawn to the LEFT of the hovered build button so the row
+	// never escapes the 252x200 bounds the way the 70px-wide builds panel would.
+	private static final int PREVIEW_SLOTS = AttunedInv.SIZE;
+	private static final int PREVIEW_CELL = 18;
+	private static final int PREVIEW_W = PREVIEW_SLOTS * PREVIEW_CELL;
+	private static final int PREVIEW_PAD = 2;
+	private static final int PREVIEW_GAP = 4;
+	private static final int PREVIEW_PANEL_FILL = 0xF0120E1A;
 
 	// Equipped Focus 3x2 grid, mirroring SatchelMenu's equipped slot geometry.
 	private static final int EQUIPPED_X = SatchelMenu.EQUIPPED_X;
@@ -81,10 +108,22 @@ public class SatchelScreen extends AbstractContainerScreen<SatchelMenu> {
 	private int selectedIndex = -1;
 
 	public SatchelScreen(SatchelMenu menu, Inventory inventory, Component title) {
-		super(menu, inventory, title, IMAGE_WIDTH, IMAGE_HEIGHT);
+		super(menu, inventory, title, IMAGE_WIDTH, logicalHeight(menu));
 		this.titleLabelX = 8;
 		this.titleLabelY = 6;
-		this.inventoryLabelY = SatchelMenu.INVENTORY_Y - 10;
+		this.inventoryLabelY = menu.inventoryY() - 10;
+	}
+
+	/**
+	 * Logical window height: the small tier keeps its pinned 200px window; a larger
+	 * grid (the Grand Reliquary's six rows) extends the window so the relocated player
+	 * inventory and hotbar still sit inside the click/draw bounds.
+	 */
+	private static int logicalHeight(SatchelMenu menu) {
+		// Player inventory (3 rows) + a gap + hotbar (1 row) below the reliquary grid,
+		// then a small margin so the bottom slot stays inside the window.
+		int inventoryBottom = menu.inventoryY() + 3 * 18 + 4 + 18;
+		return Math.max(IMAGE_HEIGHT, inventoryBottom + 8);
 	}
 
 	@Override
@@ -209,10 +248,48 @@ public class SatchelScreen extends AbstractContainerScreen<SatchelMenu> {
 	public void extractBackground(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
 		graphics.fill(0, 0, this.width, this.height, SCREEN_BACKDROP);
 		// Solid window base so the right-hand panel reads as part of the window, then the
-		// leather reliquary texture over the grid/inventory in the left half.
-		graphics.fill(this.leftPos, this.topPos, this.leftPos + IMAGE_WIDTH, this.topPos + IMAGE_HEIGHT, WINDOW_FILL);
-		graphics.blit(RenderPipelines.GUI_TEXTURED, BACKGROUND_TEXTURE, this.leftPos, this.topPos,
-			0.0F, 0.0F, TEX_W, TEX_H, TEX_W, TEX_H);
+		// leather reliquary texture over the grid/inventory in the left half. The window
+		// uses the actual (possibly taller) logical size for the Grand tier.
+		graphics.fill(this.leftPos, this.topPos, this.leftPos + this.imageWidth, this.topPos + this.imageHeight, WINDOW_FILL);
+
+		int rows = this.menu.satchelRows();
+		boolean grand = rows > TEXTURE_GRID_ROWS;
+		if (grand) {
+			// The leather texture bakes wells for only a 3-row grid + a fixed inventory at
+			// y=84. For the taller Grand grid those baked wells would ghost through, so blit
+			// just the header + first 3 grid rows and panel-fill the rest, drawing every well
+			// below the strip programmatically at the real (relocated) slot positions.
+			graphics.blit(RenderPipelines.GUI_TEXTURED, BACKGROUND_TEXTURE, this.leftPos, this.topPos,
+				0.0F, 0.0F, TEX_W, TEX_GRID_BOTTOM, TEX_W, TEX_H);
+			graphics.fill(this.leftPos, this.topPos + TEX_GRID_BOTTOM,
+				this.leftPos + TEX_W, this.topPos + this.imageHeight, WINDOW_FILL);
+		} else {
+			graphics.blit(RenderPipelines.GUI_TEXTURED, BACKGROUND_TEXTURE, this.leftPos, this.topPos,
+				0.0F, 0.0F, TEX_W, TEX_H, TEX_W, TEX_H);
+		}
+
+		// Grid rows the leather texture does not bake wells for (the Grand tier's extra
+		// rows below the small-satchel grid), drawn programmatically like the equipped grid.
+		for (int row = TEXTURE_GRID_ROWS; row < rows; row++) {
+			for (int col = 0; col < 9; col++) {
+				drawWell(graphics, this.leftPos + GRID_X - 1 + col * 18, this.topPos + GRID_Y - 1 + row * 18);
+			}
+		}
+
+		// The Grand tier relocates the player inventory + hotbar below its taller grid, so
+		// the baked texture wells no longer line up — draw fresh wells at the real positions.
+		if (grand) {
+			int invY = this.menu.inventoryY();
+			for (int row = 0; row < 3; row++) {
+				for (int col = 0; col < 9; col++) {
+					drawWell(graphics, this.leftPos + GRID_X - 1 + col * 18, this.topPos + invY - 1 + row * 18);
+				}
+			}
+			int hotbarY = invY + 3 * 18 + 4;
+			for (int col = 0; col < 9; col++) {
+				drawWell(graphics, this.leftPos + GRID_X - 1 + col * 18, this.topPos + hotbarY - 1);
+			}
+		}
 
 		for (int i = 0; i < 6; i++) {
 			int col = i % EQUIPPED_COLS;
@@ -231,6 +308,77 @@ public class SatchelScreen extends AbstractContainerScreen<SatchelMenu> {
 			graphics.text(this.font, Component.translatable("screen.attuned.builds.empty"),
 				BUILDS_X, BUILDS_LIST_Y, LABEL_TEXT, false);
 		}
+		drawBuildPreview(graphics, mouseX, mouseY);
+	}
+
+	/**
+	 * When a saved build name is hovered, paints its six Foci as item icons in a
+	 * row to the LEFT of that build button, greying any slot whose Focus cannot be
+	 * sourced for an Apply (same multiset rule as {@link BuildPreviewResolver}).
+	 * Coordinates here are window-relative (the labels hook is pre-translated to
+	 * {@code leftPos/topPos}); the row is clamped to the logical window so it never
+	 * leaves the click/draw bounds.
+	 */
+	private void drawBuildPreview(GuiGraphicsExtractor graphics, int mouseX, int mouseY) {
+		int hovered = hoveredBuildIndex(mouseX, mouseY);
+		if (hovered < 0) {
+			return;
+		}
+		List<FocusPreset> presets = presets();
+		if (hovered >= presets.size()) {
+			return;
+		}
+		List<String> slots = presets.get(hovered).slots();
+		List<BuildPreviewResolver.Availability> availability = BuildPreviewResolver.availability(
+			slots, equippedIds(), satchelIds(), inventoryFocusCounts());
+
+		int rowW = PREVIEW_W + PREVIEW_PAD * 2;
+		int rowH = PREVIEW_CELL + PREVIEW_PAD * 2;
+		// Anchor to the LEFT of the builds panel, vertically centred on the hovered
+		// row, then clamp inside the window so the whole strip stays on-screen.
+		int x = BUILDS_X - PREVIEW_GAP - rowW;
+		int rowCentreY = BUILDS_LIST_Y + hovered * BUILD_ROW_H + BUILD_ROW_INNER_H / 2;
+		int y = rowCentreY - rowH / 2;
+		x = Math.max(2, Math.min(x, IMAGE_WIDTH - rowW - 2));
+		y = Math.max(2, Math.min(y, IMAGE_HEIGHT - rowH - 2));
+
+		graphics.fill(x, y, x + rowW, y + rowH, PREVIEW_PANEL_FILL);
+		for (int slot = 0; slot < PREVIEW_SLOTS; slot++) {
+			int cx = x + PREVIEW_PAD + slot * PREVIEW_CELL;
+			int cy = y + PREVIEW_PAD;
+			graphics.fill(cx, cy, cx + PREVIEW_CELL, cy + PREVIEW_CELL, WELL_EDGE);
+			graphics.fill(cx + 1, cy + 1, cx + PREVIEW_CELL - 1, cy + PREVIEW_CELL - 1, WELL_FILL);
+
+			String id = slot < slots.size() ? slots.get(slot) : "";
+			if (id == null || id.isBlank()) {
+				continue;
+			}
+			ItemStack stack = stackFor(id);
+			if (stack.isEmpty()) {
+				continue;
+			}
+			graphics.item(stack, cx + 1, cy + 1);
+			if (slot < availability.size()
+					&& availability.get(slot) == BuildPreviewResolver.Availability.MISSING) {
+				graphics.fill(cx + 1, cy + 1, cx + PREVIEW_CELL - 1, cy + PREVIEW_CELL - 1, PREVIEW_MISSING_OVERLAY);
+			}
+		}
+	}
+
+	/** Index of the build button currently under the cursor, or -1. */
+	private int hoveredBuildIndex(int mouseX, int mouseY) {
+		for (int i = 0; i < buildButtons.size(); i++) {
+			Button button = buildButtons.get(i);
+			if (button.active && button.isMouseOver(mouseX, mouseY)) {
+				return i;
+			}
+		}
+		return -1;
+	}
+
+	/** Resolves a saved Focus id to its item stack for the preview (client registry). */
+	private static ItemStack stackFor(String id) {
+		return BuiltInRegistries.ITEM.getValue(Identifier.parse(id)).getDefaultInstance();
 	}
 
 	private void drawWell(GuiGraphicsExtractor graphics, int x, int y) {
@@ -257,6 +405,56 @@ public class SatchelScreen extends AbstractContainerScreen<SatchelMenu> {
 			return List.of();
 		}
 		return AttunedAttachments.getPresets(this.minecraft.player);
+	}
+
+	// Client-side preview sourcing reads the menu's synced slots so the pool exactly
+	// matches what a server-side Apply would draw from: the six equipped slots, the
+	// reliquary grid, and loose inventory Foci.
+	private List<String> equippedIds() {
+		List<String> ids = new ArrayList<>(AttunedInv.SIZE);
+		for (int i = 0; i < AttunedInv.SIZE; i++) {
+			ids.add(slotId(this.menu.equippedStart() + i));
+		}
+		return ids;
+	}
+
+	private List<String> satchelIds() {
+		int size = this.menu.satchelSize();
+		List<String> ids = new ArrayList<>(size);
+		for (int i = 0; i < size; i++) {
+			ids.add(slotId(i));
+		}
+		return ids;
+	}
+
+	private Map<String, Integer> inventoryFocusCounts() {
+		Map<String, Integer> counts = new HashMap<>();
+		for (int index = this.menu.equippedEnd(); index < this.menu.slots.size(); index++) {
+			Slot slot = this.menu.slots.get(index);
+			ItemStack stack = slot.getItem();
+			if (stack.isEmpty()) {
+				continue;
+			}
+			String id = idFor(stack);
+			if (!id.isEmpty()) {
+				counts.merge(id, stack.getCount(), Integer::sum);
+			}
+		}
+		return counts;
+	}
+
+	private String slotId(int index) {
+		if (index < 0 || index >= this.menu.slots.size()) {
+			return "";
+		}
+		return idFor(this.menu.slots.get(index).getItem());
+	}
+
+	private static String idFor(ItemStack stack) {
+		if (stack == null || stack.isEmpty()) {
+			return "";
+		}
+		return BuiltInRegistries.ITEM.getKey(stack.getItem()).toString();
 	}
 
 	private static String signatureOf(List<FocusPreset> presets) {

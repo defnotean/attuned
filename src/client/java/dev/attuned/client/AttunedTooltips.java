@@ -3,6 +3,7 @@ package dev.attuned.client;
 import dev.attuned.Attuned;
 import dev.attuned.AttunedRegistries;
 import dev.attuned.api.focus.Affinity;
+import dev.attuned.api.focus.Aspect;
 import dev.attuned.api.focus.FocusDefinition;
 import dev.attuned.api.focus.ModifierEntry;
 import dev.attuned.attunement.AttunedAttachments;
@@ -10,6 +11,7 @@ import dev.attuned.attunement.AttunedInv;
 import dev.attuned.attunement.Attunement;
 import dev.attuned.attunement.BudgetResolver;
 import dev.attuned.attunement.FocusLookup;
+import dev.attuned.content.AttunedComponents;
 import net.fabricmc.fabric.api.client.item.v1.ItemTooltipCallback;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
@@ -21,7 +23,9 @@ import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.item.ItemStack;
 
+import java.util.Collection;
 import java.util.Locale;
+import java.util.stream.Collectors;
 
 /**
  * Appends Attuned flavour and stats to item tooltips: two lines of lore and a
@@ -60,6 +64,16 @@ public final class AttunedTooltips {
 			// Affinity and attunement cost on items that are registered Foci.
 			FocusDefinition definition = definitionFor(stack);
 			if (definition != null) {
+				// A Tempered Focus reads as a gold-named, stronger, costlier variant.
+				if (stack.has(AttunedComponents.TEMPERED)) {
+					if (!lines.isEmpty()) {
+						// Recolor the name line (index 0) gold to mark the Tempered variant.
+						lines.set(0, lines.get(0).copy().withStyle(ChatFormatting.GOLD));
+					}
+					lines.add(Component.empty());
+					lines.add(Component.translatable("tooltip.attuned.tempered")
+						.withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD));
+				}
 				if (!definition.modifiers().isEmpty()) {
 					lines.add(Component.empty());
 					lines.add(Component.translatable("tooltip.attuned.modifier.header")
@@ -81,9 +95,19 @@ public final class AttunedTooltips {
 					.append(Component.translatableWithFallback(
 						"faction." + faction.getNamespace() + "." + faction.getPath(), faction.toString())
 						.withStyle(ChatFormatting.DARK_PURPLE, ChatFormatting.BOLD))));
+				definition.aspect().ifPresent(aspect -> {
+					lines.add(Component.translatable("tooltip.attuned.aspect.line",
+						aspectName(aspect).withStyle(aspectColor(aspect), ChatFormatting.BOLD))
+						.withStyle(ChatFormatting.GRAY));
+					lines.add(Component.translatable("tooltip.attuned.aspect.matchups",
+						aspectList(aspect.strongAgainst()), aspectList(aspect.weakAgainst()))
+						.withStyle(ChatFormatting.DARK_AQUA));
+				});
+				// Show the effective budget cost this stack consumes, so a Tempered
+				// Focus's tooltip agrees with the budget it actually charges.
 				lines.add(Component.literal("Cost ")
 					.withStyle(ChatFormatting.GRAY)
-					.append(Component.literal(definition.cost() + " attunement")
+					.append(Component.literal(Attunement.effectiveCost(definition, stack) + " attunement")
 						.withStyle(ChatFormatting.AQUA)));
 				if (definition.unique()) {
 					lines.add(Component.literal("Unique")
@@ -148,6 +172,31 @@ public final class AttunedTooltips {
 			case BASTION -> ChatFormatting.GOLD;
 			case ZEPHYR -> ChatFormatting.AQUA;
 			case HOLY -> ChatFormatting.YELLOW;
+		};
+	}
+
+	private static MutableComponent aspectName(Aspect aspect) {
+		return Component.translatableWithFallback(
+			"aspect.attuned." + aspect.getSerializedName(), humanize(aspect.getSerializedName()));
+	}
+
+	private static MutableComponent aspectList(Collection<Aspect> aspects) {
+		String names = aspects.stream()
+			.map(aspect -> humanize(aspect.getSerializedName()))
+			.collect(Collectors.joining(", "));
+		return Component.literal(names);
+	}
+
+	private static ChatFormatting aspectColor(Aspect aspect) {
+		return switch (aspect) {
+			case FURY -> ChatFormatting.RED;
+			case BASTION -> ChatFormatting.GOLD;
+			case ZEPHYR -> ChatFormatting.AQUA;
+			case HOLY -> ChatFormatting.YELLOW;
+			case TIDE -> ChatFormatting.BLUE;
+			case FORGE -> ChatFormatting.DARK_RED;
+			case VERDANT -> ChatFormatting.GREEN;
+			case UMBRAL -> ChatFormatting.DARK_PURPLE;
 		};
 	}
 

@@ -69,7 +69,7 @@ class AttunementJournalUiContractTest {
 			"Chapter buttons should fit inside the painted journal tabs");
 		assertTrue(screenSource.contains("private static final int CHAPTER_BUTTON_HEIGHT = 12"),
 			"Chapter buttons should be compact enough to stay within the journal panel");
-		assertTrue(screenSource.contains("private static final int CHAPTER_BUTTON_GAP = 2"),
+		assertTrue(screenSource.contains("private static final int CHAPTER_BUTTON_GAP = 1"),
 			"Chapter buttons should leave visible separation between the painted journal tabs");
 		assertTrue(screenSource.contains("private static final int PAGE_CONTENT_WIDTH = 216"),
 			"Page content width should match the generated journal texture and preview fixture");
@@ -127,7 +127,7 @@ class AttunementJournalUiContractTest {
 			"Offshore Harpoon journal copy should say the trident cannot be crafted");
 		assertTrue(screenSource.contains("journal.attuned.page32"),
 			"Journal UI should route to the Offshore Harpoon page");
-		assertTrue(screenSource.contains("new Chapter(\"Offshore\""),
+		assertTrue(screenSource.contains("chapter(\"Offshore\""),
 			"Journal UI should expose Offshore as its own chapter");
 		assertTrue(itemSource.contains("\"journal.attuned.page32\""),
 			"Written-book fallback should include the Offshore Harpoon page");
@@ -154,6 +154,23 @@ class AttunementJournalUiContractTest {
 				&& itemSource.indexOf("\"journal.attuned.page31\"")
 				< itemSource.indexOf("\"journal.attuned.page8\""),
 			"Written-book fallback should keep the Apex pages adjacent");
+	}
+
+	@Test
+	void journalReadingPaneScrollsInsteadOfTruncating() throws IOException {
+		String screenSource = read(JOURNAL_SCREEN_SOURCE);
+		assertTrue(screenSource.contains("public boolean mouseScrolled("),
+			"The journal should handle the mouse wheel to scroll long pages");
+		assertTrue(screenSource.contains("this.scrollOffset"),
+			"The journal should track a scroll offset for the reading pane");
+		assertTrue(screenSource.contains("this.maxScroll"),
+			"The journal should clamp scrolling to a computed maximum");
+		assertFalse(screenSource.contains("Component.literal(\"...\")"),
+			"The reading pane should scroll, not truncate content with an ellipsis");
+		assertTrue(screenSource.contains("private void drawChapter("),
+			"Each chapter should render as one continuous, scrollable document");
+		assertTrue(screenSource.contains("CHAPTERS.get(this.chapterIndex)"),
+			"Navigation should be per-chapter (the rail and Previous/Next move between chapters)");
 	}
 
 	private static String read(Path file) throws IOException {

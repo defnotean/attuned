@@ -26,7 +26,12 @@ class SatchelItemContractTest {
 			"SatchelItem must take a single Item.Properties arg to satisfy the register helper's Function<Properties,Item>.");
 		assertTrue(item.contains("properties.stacksTo(1)"),
 			"A bag holding a per-stack component must not stack.");
-		assertTrue(item.contains(".component(AttunedComponents.SATCHEL_CONTENTS, AttunedComponents.emptyContents())"),
+		// The small-satchel public constructor delegates to the parameterized constructor with
+		// the SATCHEL_CONTENTS component and its empty default, so both tiers share one class.
+		assertTrue(item.contains("AttunedComponents.SATCHEL_CONTENTS")
+				&& item.contains("AttunedComponents.emptyContents()"),
+			"The small satchel should attach the empty SATCHEL_CONTENTS component by default.");
+		assertTrue(item.contains(".component(contentsType, emptyContents)"),
 			"The satchel should attach an empty contents component by default, inside its constructor.");
 		assertTrue(item.contains("public InteractionResult use(Level level, Player player, InteractionHand hand)"),
 			"The satchel should open its screen on use.");

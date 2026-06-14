@@ -5,6 +5,8 @@ import dev.attuned.AttunedRegistries;
 import dev.attuned.AttunedServerCleanup;
 import dev.attuned.api.focus.Affinity;
 import dev.attuned.api.focus.FocusDefinition;
+import dev.attuned.content.AttunedComponents;
+import dev.attuned.content.TemperingResolver;
 import net.minecraft.core.Registry;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
@@ -105,10 +107,21 @@ public final class Attunement {
 			if (definition.isPresent()) {
 				FocusDefinition def = definition.get();
 				candidates.add(new BudgetResolver.Candidate<>(
-					slot, def.cost(), def.unique(), stack.getItem()));
+					slot, effectiveCost(def, stack), def.unique(), stack.getItem()));
 			}
 		}
 		return candidates;
+	}
+
+	/**
+	 * The attunement cost a Focus stack consumes from the budget: its base
+	 * {@link FocusDefinition#cost()} plus the Tempered surcharge when the stack
+	 * carries the Tempered marker. Centralised here so budget resolution,
+	 * dormancy reasons, and the {@link #used} readout all agree.
+	 */
+	public static int effectiveCost(FocusDefinition definition, ItemStack stack) {
+		int base = definition.cost();
+		return stack.has(AttunedComponents.TEMPERED) ? TemperingResolver.temperedCost(base) : base;
 	}
 
 	/** Dormant reasons keyed by slot for occupied Focus slots that are not active. */
@@ -131,7 +144,8 @@ public final class Attunement {
 		int total = 0;
 		AttunedInv inv = AttunedAttachments.getInventory(player);
 		for (int slot : activeSlots(player)) {
-			total += definitionFor(player, inv.get(slot)).map(FocusDefinition::cost).orElse(0);
+			ItemStack stack = inv.get(slot);
+			total += definitionFor(player, stack).map(def -> effectiveCost(def, stack)).orElse(0);
 		}
 		return total;
 	}

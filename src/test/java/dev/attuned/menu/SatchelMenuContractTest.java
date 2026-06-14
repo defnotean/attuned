@@ -29,14 +29,18 @@ class SatchelMenuContractTest {
 			"getItem should hide malformed non-Focus component contents from the menu.");
 		assertTrue(container.contains("if (!focusStackAt(i).isEmpty())"),
 			"isEmpty should ignore malformed non-Focus component contents.");
-		assertTrue(container.contains("satchel().set(AttunedComponents.SATCHEL_CONTENTS"),
+		// The container is now parameterized by the contents component type so the same
+		// class backs both the small satchel and the Grand Focus Reliquary tiers.
+		assertTrue(container.contains("satchel().set(contentsType"),
 			"Writes must persist the holder back into the live held stack's component.");
-		assertTrue(container.contains("satchel().get(AttunedComponents.SATCHEL_CONTENTS"),
+		assertTrue(container.contains("satchel().get(contentsType"),
 			"Reads must pull the holder from the live held stack's component.");
+		assertTrue(container.contains("DataComponentType<FocusHolder> contentsType"),
+			"The component type must be a per-instance field so each tier reads its own holder.");
 		assertTrue(container.contains("private boolean hasLiveSatchel()"),
 			"Container reads/writes should refuse to touch a hand stack after the satchel is swapped out.");
-		assertTrue(container.contains("return satchel().getItem() == AttunedContent.SATCHEL_OF_FOCI;"),
-			"The live-hand guard should validate the held item before component access.");
+		assertTrue(container.contains("return satchel().getItem() == reliquaryItem;"),
+			"The live-hand guard should validate the held item (either reliquary tier) before component access.");
 		assertTrue(container.contains("return who == player && hasLiveSatchel();"),
 			"Container validity should match the same live-hand satchel guard as the menu.");
 		assertTrue(container.contains("public int getMaxStackSize()"),
@@ -60,9 +64,12 @@ class SatchelMenuContractTest {
 			"SatchelMenu should remember the inventory owner it was opened for.");
 		assertTrue(menu.contains("private final boolean handUnknown;"),
 			"The client-side menu constructor should record that it does not know the opening hand.");
-		assertTrue(menu.contains("new SimpleContainer(AttunedComponents.SATCHEL_SIZE), InteractionHand.MAIN_HAND, true"),
+		// The client (int, Inventory) constructor still uses a hand-unknown fallback; it now
+		// also threads the registered menu type so the small/grand tiers stay distinct.
+		assertTrue(menu.contains("new SimpleContainer(AttunedComponents.SATCHEL_SIZE)")
+				&& menu.contains("InteractionHand.MAIN_HAND, true, SatchelMenuType.TYPE"),
 			"The client constructor should use a hand-unknown fallback instead of treating MAIN_HAND as authoritative.");
-		assertTrue(menu.contains("this(containerId, inventory, satchel, hand, false);"),
+		assertTrue(menu.contains("this(containerId, inventory, satchel, hand, false, type);"),
 			"The server/provider constructor should keep validating the known interaction hand.");
 		assertTrue(menu.contains("return player == owner && hasLiveSatchel(player);"),
 			"SatchelMenu validity should reject other player contexts as well as a missing held satchel.");
@@ -70,9 +77,13 @@ class SatchelMenuContractTest {
 			"Validity should centralize known-hand and unknown-hand checks.");
 		assertTrue(menu.contains("if (handUnknown)"),
 			"The client fallback should explicitly branch when the opening hand is not known.");
-		assertTrue(menu.contains("player.getMainHandItem().getItem() == AttunedContent.SATCHEL_OF_FOCI")
-				&& menu.contains("player.getOffhandItem().getItem() == AttunedContent.SATCHEL_OF_FOCI"),
-			"Unknown-hand validity should accept a satchel in either hand for offhand opens.");
+		// Unknown-hand validity accepts a reliquary (either tier) in either hand; the
+		// per-tier item check is centralized in isReliquary().
+		assertTrue(menu.contains("isReliquary(player.getMainHandItem())")
+				&& menu.contains("isReliquary(player.getOffhandItem())"),
+			"Unknown-hand validity should accept a reliquary in either hand for offhand opens.");
+		assertTrue(menu.contains("stack.getItem() == AttunedContent.SATCHEL_OF_FOCI"),
+			"isReliquary should still recognize the small Focus Reliquary item.");
 		assertTrue(menu.contains("getItemInHand"),
 			"Validity should check the held satchel stack rather than a block position.");
 		assertTrue(menu.contains("!= AttunedContent.SATCHEL_OF_FOCI"),

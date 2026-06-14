@@ -26,9 +26,25 @@ class AttunedClientConfigContractTest {
 		assertTrue(source.contains("show_enemy_affinity_hud"), "Client config should persist the enemy HUD key.");
 		assertTrue(source.contains("show_foci_hud"), "Client config should persist the Foci HUD key.");
 		assertTrue(source.contains("resolve(\"attuned-client.json\")"), "Client config should load attuned-client.json.");
-		assertTrue(source.contains("DEFAULT = new AttunedClientConfig(true, true, true)"),
-			"Client config should default all HUD elements on.");
+		assertTrue(source.contains("DEFAULT = new AttunedClientConfig(true, true, true, HudLayout.DEFAULT)"),
+			"Client config should default all HUD elements on with the stock layout.");
 		assertTrue(source.contains("save();"), "Client config should write normalized/default settings.");
+	}
+
+	@Test
+	void clientConfigPersistsHudLayoutSettings() throws IOException {
+		String source = read(CLIENT_CONFIG_SOURCE);
+
+		assertTrue(source.contains("hud_anchor"), "Client config should persist the HUD anchor key.");
+		assertTrue(source.contains("hud_offset_x"), "Client config should persist the HUD x offset key.");
+		assertTrue(source.contains("hud_offset_y"), "Client config should persist the HUD y offset key.");
+		assertTrue(source.contains("hud_scale"), "Client config should persist the HUD scale key.");
+		assertTrue(source.contains("new HudLayout(HudAnchor.BOTTOM_RIGHT, 0, 0, 1.0F)"),
+			"The default HUD layout must reproduce the historical bottom-right docking exactly.");
+		assertTrue(source.contains("Math.max(MIN_SCALE, Math.min(MAX_SCALE, scale))"),
+			"HUD scale should clamp to the supported range.");
+		assertTrue(source.contains("Math.round(clamped * 4.0F) / 4.0F"),
+			"HUD scale should snap to quarter steps so layouts stay pixel-crisp.");
 	}
 
 	@Test

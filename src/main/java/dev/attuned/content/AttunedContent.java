@@ -114,6 +114,45 @@ public final class AttunedContent {
 	public static final Item LAST_RITES_FOCUS = registerFocus("last_rites_focus");
 	public static final Item BONECHILL_FOCUS = registerFocus("bonechill_focus");
 
+	// Umbral Eclipse - shadow Foci that wake in low light and total darkness.
+	public static final Item GLOOMSTRIDE_FOCUS = registerFocus("gloomstride_focus");
+	public static final Item DUSKWARD_FOCUS = registerFocus("duskward_focus");
+	public static final Item SHADOWMELD_FOCUS = registerFocus("shadowmeld_focus");
+	public static final Item DREADFANG_FOCUS = registerFocus("dreadfang_focus");
+	public static final Item ECLIPSE_FOCUS = registerFocus("eclipse_focus");
+
+	// Aspect Counter Foci - first Wheel of Refusals batch beyond the original four affinities.
+	public static final Item UNDERTOW_FOCUS = registerFocus("undertow_focus");
+	public static final Item RIPTIDE_HEART_FOCUS = registerFocus("riptide_heart_focus");
+	public static final Item PEARLGUARD_FOCUS = registerFocus("pearlguard_focus");
+	public static final Item SLAGBRAND_FOCUS = registerFocus("slagbrand_focus");
+	public static final Item ANVILHEART_FOCUS = registerFocus("anvilheart_focus");
+	public static final Item SPARKWELD_FOCUS = registerFocus("sparkweld_focus");
+	public static final Item THORNWAKE_FOCUS = registerFocus("thornwake_focus");
+	public static final Item SEEDCALL_FOCUS = registerFocus("seedcall_focus");
+	public static final Item BRAMBLEGATE_FOCUS = registerFocus("bramblegate_focus");
+	public static final Item NULLVEIL_FOCUS = registerFocus("nullveil_focus");
+	public static final Item CINDERTHIEF_FOCUS = registerFocus("cinderthief_focus");
+	public static final Item SNAREMOON_FOCUS = registerFocus("snaremoon_focus");
+
+	/**
+	 * Blank, resource-pack-skinnable Focus items for datapack authors. Each one is a
+	 * real registered Focus item with a neutral default name/model/texture, but ships
+	 * <em>no</em> bundled {@code FocusDefinition} — an author points a
+	 * {@code focus/<name>.json} at one and skins its name, lore, and art with a
+	 * resource pack, getting a bespoke Focus identity without a JAR. They register
+	 * before the {@link #FOCI} snapshot so {@link #isFocus(Item)} includes them.
+	 */
+	public static final List<Item> CUSTOM_FOCI = registerCustomFocusPool();
+
+	private static List<Item> registerCustomFocusPool() {
+		List<Item> pool = new ArrayList<>();
+		for (int n = 1; n <= 8; n++) {
+			pool.add(registerFocus("custom_focus_" + n));
+		}
+		return List.copyOf(pool);
+	}
+
 	/** Every Focus item, in display order for creative tabs and survival loot. */
 	public static final List<Item> FOCI = List.copyOf(REGISTERED_FOCI);
 	private static final Set<Item> FOCI_SET = Set.copyOf(REGISTERED_FOCI);
@@ -127,6 +166,8 @@ public final class AttunedContent {
 	public static final Item ATTUNEMENT_JOURNAL = register("attunement_journal", AttunementJournalItem::new);
 	/** A portable, stack-bound holder for spare Foci. */
 	public static final Item SATCHEL_OF_FOCI = register("satchel_of_foci", SatchelItem::new);
+	/** A second-tier reliquary with twice the storage (54 slots) of the satchel. */
+	public static final Item GRAND_SATCHEL_OF_FOCI = register("grand_satchel_of_foci", SatchelItem::grand);
 
 	/** The Attunement Altar — the home block where shards are bound into capacity. */
 	public static final Block ATTUNEMENT_ALTAR = registerAltar();

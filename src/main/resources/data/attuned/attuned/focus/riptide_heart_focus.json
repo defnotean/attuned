@@ -1,0 +1,21 @@
+{
+	"item": "attuned:riptide_heart_focus",
+	"cost": 3,
+	"unique": true,
+	"affinity": "zephyr",
+	"aspect": "attuned:tide",
+	"faction": "attuned:tideborn",
+	"modifiers": [
+		{
+			"attribute": "minecraft:movement_speed",
+			"amount": 0.08,
+			"operation": "add_multiplied_base"
+		},
+		{
+			"attribute": "minecraft:water_movement_efficiency",
+			"amount": 0.5,
+			"operation": "add_value"
+		}
+	],
+	"behavior": "attuned:riptide_heart"
+}

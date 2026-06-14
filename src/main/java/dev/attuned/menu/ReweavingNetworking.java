@@ -5,6 +5,7 @@ import dev.attuned.AttunedRegistries;
 import dev.attuned.api.focus.FocusDefinition;
 import dev.attuned.attunement.Attunement;
 import dev.attuned.attunement.FocusLookup;
+import dev.attuned.content.AttunedComponents;
 import dev.attuned.content.AttunedContent;
 import dev.attuned.content.ReweavingResultPicker;
 import java.util.List;
@@ -19,6 +20,7 @@ import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.Container;
+import net.minecraft.util.Unit;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -63,8 +65,25 @@ public final class ReweavingNetworking {
 			Container container = menu.container();
 			Registry<FocusDefinition> registry =
 				serverLevel.registryAccess().lookupOrThrow(AttunedRegistries.FOCUS_DEFINITIONS);
-			if (!hasThreeFociAndFragment(container, registry)
-					|| !container.getItem(ReweavingMenu.OUTPUT_SLOT).isEmpty()) {
+			if (!container.getItem(ReweavingMenu.OUTPUT_SLOT).isEmpty()) {
+				return;
+			}
+			// Tempering: two copies of the same untempered Focus fuse into one
+			// stronger Tempered copy. Checked before the three-Focus reweave so the
+			// same-id pair routes here instead of falling through to the roll.
+			if (menu.canTemper()) {
+				ItemStack tempered = temperResult(container);
+				if (tempered.isEmpty()) {
+					return;
+				}
+				container.getItem(0).shrink(1);
+				container.getItem(1).shrink(1);
+				container.getItem(ReweavingMenu.CATALYST_SLOT).shrink(1);
+				container.setItem(ReweavingMenu.OUTPUT_SLOT, tempered);
+				menu.broadcastChanges();
+				return;
+			}
+			if (!hasThreeFociAndFragment(container, registry)) {
 				return;
 			}
 			ItemStack result = rollResult(player, serverLevel, container, registry);
@@ -78,6 +97,21 @@ public final class ReweavingNetworking {
 			container.setItem(ReweavingMenu.OUTPUT_SLOT, result);
 			menu.broadcastChanges();
 		});
+	}
+
+	/**
+	 * A fresh, single Tempered copy of the Focus in the first input slot. Carries
+	 * nothing from the inputs beyond the item itself plus the Tempered marker, so
+	 * the result is deterministic regardless of the sacrificed stacks' components.
+	 */
+	private static ItemStack temperResult(Container container) {
+		ItemStack source = container.getItem(0);
+		if (source.isEmpty()) {
+			return ItemStack.EMPTY;
+		}
+		ItemStack tempered = new ItemStack(source.getItem());
+		tempered.set(AttunedComponents.TEMPERED, Unit.INSTANCE);
+		return tempered;
 	}
 
 	private static boolean hasThreeFociAndFragment(Container container, Registry<FocusDefinition> registry) {

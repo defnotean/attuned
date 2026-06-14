@@ -1,0 +1,16 @@
+{
+	"item": "attuned:thornwake_focus",
+	"cost": 4,
+	"unique": true,
+	"affinity": "bastion",
+	"aspect": "attuned:verdant",
+	"faction": "attuned:wildroot",
+	"modifiers": [
+		{
+			"attribute": "minecraft:armor",
+			"amount": 1.0,
+			"operation": "add_value"
+		}
+	],
+	"behavior": "attuned:thornwake"
+}

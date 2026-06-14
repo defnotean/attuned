@@ -1,0 +1,19 @@
+{
+	"parent": "attuned:attunement/root",
+	"display": {
+		"icon": {
+			"id": "attuned:eclipse_focus"
+		},
+		"title": "Total Eclipse",
+		"description": "Discover the Total Eclipse Confluence.",
+		"frame": "task",
+		"show_toast": true,
+		"announce_to_chat": false,
+		"hidden": true
+	},
+	"criteria": {
+		"done": {
+			"trigger": "minecraft:impossible"
+		}
+	}
+}

@@ -31,8 +31,10 @@ import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.TamableAnimal;
+import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.world.entity.npc.villager.AbstractVillager;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.phys.AABB;
 
 /**
  * Apex capstones: late-build passives gated by Focus layout, nearly full
@@ -113,10 +115,20 @@ public final class Apex {
 	private static final int STILLPOINT_ABSORPTION_TICKS = 60;
 	private static final int STILLPOINT_ABSORPTION_COOLDOWN_TICKS = 160;
 
+	// Apex identity abilities: fired from the Focus Ability key when no ability Focus is active.
+	static final int MAELSTROM_NOVA_COOLDOWN_TICKS = 600;
+	static final int STILLPOINT_FIELD_COOLDOWN_TICKS = 600;
+	private static final double MAELSTROM_NOVA_RADIUS = 5.0D;
+	private static final double STILLPOINT_FIELD_RADIUS = 7.0D;
+	private static final double MAELSTROM_NOVA_KNOCKBACK = 1.4D;
+	private static final int MAELSTROM_NOVA_WEAKNESS_TICKS = 100;
+	private static final int STILLPOINT_FIELD_SLOWNESS_TICKS = 60;
+
 	private static final Map<UUID, Capstone> apexState = new HashMap<>();
 	private static final Map<UUID, Boolean> armedState = new HashMap<>();
 	private static final Map<ScrambleKey, Long> maelstromScrambles = new HashMap<>();
 	private static final Map<UUID, Long> stillpointPulses = new HashMap<>();
+	private static final Map<UUID, Long> identityCooldowns = new HashMap<>();
 	private static boolean initialized;
 
 	private enum Matchup { EMPOWERED, NORMAL, NEUTRALIZED }
@@ -137,11 +149,13 @@ public final class Apex {
 			armedState.clear();
 			maelstromScrambles.clear();
 			stillpointPulses.clear();
+			identityCooldowns.clear();
 		});
 		AttunedPlayerCleanup.onForget(uuid -> {
 			apexState.remove(uuid);
 			armedState.remove(uuid);
 			stillpointPulses.remove(uuid);
+			identityCooldowns.remove(uuid);
 			maelstromScrambles.keySet().removeIf(key ->
 				key.playerId().equals(uuid) || key.targetId().equals(uuid));
 		});
@@ -166,7 +180,7 @@ public final class Apex {
 			}
 			FocusDefinition definition = maybeDefinition.get();
 			activeAffinities.add(definition.affinity());
-			used += definition.cost();
+			used += Attunement.effectiveCost(definition, inv.get(slot));
 		}
 		return resolveCapstone(activeAffinities, used, Attunement.capacity(player));
 	}
@@ -370,6 +384,100 @@ public final class Apex {
 		stillpointPulses.put(player.getUUID(), now);
 		player.addEffect(new MobEffectInstance(MobEffects.ABSORPTION,
 			STILLPOINT_ABSORPTION_TICKS, 0, true, true, true));
+	}
+
+	/**
+	 * Fires the player's Apex identity ability if they are at an armed Maelstrom or
+	 * Stillpoint capstone and off cooldown. Affinity capstones own no identity ability.
+	 *
+	 * @return {@code true} if an identity ability fired or reported its cooldown (the
+	 *     ability key was consumed); {@code false} to let the caller fall through.
+	 */
+	public static boolean tryIdentityAbility(ServerPlayer player) {
+		if (!Resonance.atApex(player)) {
+			return false;
+		}
+		Capstone capstone = capstoneOf(player).orElse(null);
+		if (capstone != Capstone.MAELSTROM && capstone != Capstone.STILLPOINT) {
+			return false;
+		}
+
+		int cooldownTicks = capstone == Capstone.MAELSTROM
+			? MAELSTROM_NOVA_COOLDOWN_TICKS
+			: STILLPOINT_FIELD_COOLDOWN_TICKS;
+		long now = player.level().getGameTime();
+		Long readyAt = identityCooldowns.get(player.getUUID());
+		if (readyAt != null && now < readyAt) {
+			int remaining = (int) (readyAt - now);
+			player.sendOverlayMessage(Component.translatable(
+				"apex.attuned.identity_cooldown", cooldownSeconds(remaining)));
+			return true;
+		}
+
+		ServerLevel level = (ServerLevel) player.level();
+		if (capstone == Capstone.MAELSTROM) {
+			fireMaelstromNova(player, level);
+		} else {
+			fireStillpointField(player, level);
+		}
+		identityCooldowns.put(player.getUUID(), now + cooldownTicks);
+		return true;
+	}
+
+	private static void fireMaelstromNova(ServerPlayer player, ServerLevel level) {
+		AABB area = player.getBoundingBox().inflate(MAELSTROM_NOVA_RADIUS);
+		List<LivingEntity> caught = level.getEntitiesOfClass(LivingEntity.class, area, entity ->
+			entity != player
+				&& entity.isAlive()
+				&& isApexNovaTarget(entity, player));
+		for (LivingEntity victim : caught) {
+			// knockback pushes opposite the (x, z) source vector, so passing the
+			// player's position throws the victim outward, away from the nova.
+			victim.knockback(MAELSTROM_NOVA_KNOCKBACK,
+				player.getX() - victim.getX(), player.getZ() - victim.getZ());
+			victim.addEffect(new MobEffectInstance(MobEffects.WEAKNESS,
+				MAELSTROM_NOVA_WEAKNESS_TICKS, 0, true, true, true));
+		}
+		level.sendParticles(ParticleTypes.EXPLOSION,
+			player.getX(), player.getY() + 1.0, player.getZ(), 8, 1.2, 0.6, 1.2, 0.0);
+		level.sendParticles(ParticleTypes.ELECTRIC_SPARK,
+			player.getX(), player.getY() + 1.0, player.getZ(), 48, 1.6, 0.8, 1.6, 0.4);
+		level.playSound(null, player.blockPosition(),
+			SoundEvents.WARDEN_SONIC_BOOM, SoundSource.PLAYERS, 0.9F, 1.4F);
+		player.sendOverlayMessage(Component.translatable("apex.attuned.maelstrom_nova"));
+	}
+
+	private static void fireStillpointField(ServerPlayer player, ServerLevel level) {
+		AABB area = player.getBoundingBox().inflate(STILLPOINT_FIELD_RADIUS);
+		List<Monster> monsters = level.getEntitiesOfClass(Monster.class, area, monster ->
+			monster.isAlive());
+		for (Monster monster : monsters) {
+			monster.setTarget(null);
+			monster.addEffect(new MobEffectInstance(MobEffects.SLOWNESS,
+				STILLPOINT_FIELD_SLOWNESS_TICKS, 0, true, true, true));
+		}
+		level.sendParticles(ParticleTypes.END_ROD,
+			player.getX(), player.getY() + 1.0, player.getZ(), 36, 1.8, 1.0, 1.8, 0.02);
+		level.sendParticles(ParticleTypes.GLOW,
+			player.getX(), player.getY() + 1.0, player.getZ(), 16, 1.6, 0.8, 1.6, 0.0);
+		level.playSound(null, player.blockPosition(),
+			SoundEvents.BEACON_ACTIVATE, SoundSource.PLAYERS, 0.7F, 1.5F);
+		player.sendOverlayMessage(Component.translatable("apex.attuned.stillpoint_field"));
+	}
+
+	private static boolean isApexNovaTarget(LivingEntity entity, Player player) {
+		if (entity instanceof Player targetPlayer) {
+			return CombatTargets.canAffectPlayer(player, targetPlayer);
+		}
+		return entity instanceof Monster
+			|| hasAffinityPressure(entity);
+	}
+
+	private static int cooldownSeconds(int remainingTicks) {
+		if (remainingTicks <= 0) {
+			return 0;
+		}
+		return (int) Math.max(1L, ((long) remainingTicks + 19L) / 20L);
 	}
 
 	public static boolean ignoresKnockback(LivingEntity entity) {

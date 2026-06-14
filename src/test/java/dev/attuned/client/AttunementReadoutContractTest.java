@@ -72,6 +72,20 @@ class AttunementReadoutContractTest {
 			"Apex-aware colour should accept pre-resolved readout state.");
 	}
 
+	@Test
+	void snapshotExposesActiveConfluencesAndPreview() throws IOException {
+		String source = read();
+
+		assertTrue(source.contains("Set<String> activeConfluences"),
+			"Snapshot must carry the active-confluence id set for the HUD.");
+		assertTrue(source.contains("activeConfluences = Set.copyOf(activeConfluences)"),
+			"Snapshot must defensively copy the confluence set like activeSlots/dormantReasons.");
+		assertTrue(source.contains("SynergyResolver.activeConfluences("),
+			"snapshot() must compute active confluences via the Minecraft-free resolver.");
+		assertTrue(source.contains("SynergyResolver.previewOf("),
+			"snapshot() must compute the discovered-only preview via the resolver policy.");
+	}
+
 	private static String read() throws IOException {
 		return Files.readString(READOUT, StandardCharsets.UTF_8);
 	}
