@@ -1,0 +1,7 @@
+{
+	"type": "attuned:on_hit_effect",
+	"effect": "minecraft:weakness",
+	"duration_ticks": 80,
+	"charge_threshold": 0.9,
+	"hostile_only": true
+}

@@ -20,10 +20,13 @@ Foci showing each lane below. Copy it and adapt.
 A datapack **can**:
 
 - Define new Foci that reuse **any registered item** — a vanilla item, or an
-  existing `attuned:*_focus` item, or another mod's item.
+  existing `attuned:*_focus` item, one of the blank `attuned:custom_focus_1`
+  through `attuned:custom_focus_8` skinnable Focus items, or another mod's item.
 - Grant **attribute modifiers** (armor, speed, max health, attack damage, …) — pure
   data, fully supported.
 - Reference any **shipped behavior** id (the special powers the mod ships).
+- Add an optional `aspect` such as `attuned:tide` or `attuned:umbral` so the Focus
+  participates in the visible counter wheel tooltip without changing affinity math.
 - Define **palette behaviors** — parameterized passive behaviors built from data, no
   code. See [the behavior palette](#define-a-palette-behavior).
 
@@ -58,6 +61,7 @@ The simplest Focus. Reuse an item and grant stat modifiers.
   "item": "minecraft:turtle_helmet",
   "cost": 4,
   "affinity": "bastion",
+  "aspect": "attuned:bastion",
   "modifiers": [
     { "attribute": "minecraft:armor", "amount": 2, "operation": "add_value" }
   ]
@@ -69,6 +73,10 @@ The simplest Focus. Reuse an item and grant stat modifiers.
 - `cost` — attunement points it uses, usually 2–6. Defaults to 1.
 - `affinity` — `fury`, `bastion`, `zephyr`, or `holy`. Leave it out for a neutral
   utility Focus.
+- `aspect` — optional visible counter identity (`attuned:fury`, `attuned:bastion`,
+  `attuned:zephyr`, `attuned:holy`, `attuned:tide`, `attuned:forge`,
+  `attuned:verdant`, or `attuned:umbral`). Tooltips show what it counters and
+  what counters it; affinity/Pact/Discord behavior is unchanged.
 - `unique` — set `true` to allow only one copy active at a time.
 - `faction` — optional story/family tag such as `attuned:unseen`. Add a
   `faction.<namespace>.<path>` lang key if you invent a new one.
@@ -194,11 +202,12 @@ without restarting.
 
 ---
 
-## What's deferred
+## Current shipped authoring support
 
-This guide covers the lanes that work today (the design's *Phase 1*). Later phases of
-[`superpowers/specs/2026-06-12-datapack-defined-foci-design.md`](superpowers/specs/2026-06-12-datapack-defined-foci-design.md)
-add a pool of blank, resource-pack-skinnable Focus items (so you get a bespoke item
-without renaming a vanilla one) and broaden the palette beyond
-`conditional_mob_effect`. Active-ability authoring (cooldowns, the single Focus
-Ability key) stays code-only.
+This guide covers the no-Java lanes that work today. Attuned now ships the blank
+`attuned:custom_focus_1` through `attuned:custom_focus_8` item pool for packs that
+need bespoke resource-pack art without registering a new item, the passive
+behavior palette (`conditional_mob_effect`, `on_hit_effect`, `periodic_effect`,
+and `attribute_while`), and optional `aspect` metadata for the counter-wheel
+tooltip. Active-ability authoring (cooldowns and Focus Ability key handlers) is
+still code-only.

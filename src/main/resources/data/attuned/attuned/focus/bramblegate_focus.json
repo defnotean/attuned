@@ -1,0 +1,16 @@
+{
+	"item": "attuned:bramblegate_focus",
+	"cost": 4,
+	"unique": true,
+	"affinity": "bastion",
+	"aspect": "attuned:verdant",
+	"faction": "attuned:wildroot",
+	"modifiers": [
+		{
+			"attribute": "minecraft:knockback_resistance",
+			"amount": 0.25,
+			"operation": "add_value"
+		}
+	],
+	"behavior": "attuned:bramblegate"
+}

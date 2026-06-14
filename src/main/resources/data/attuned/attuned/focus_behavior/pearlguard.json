@@ -1,0 +1,9 @@
+{
+	"type": "attuned:conditional_mob_effect",
+	"effect": "minecraft:resistance",
+	"duration_ticks": 60,
+	"refresh_ticks": 20,
+	"condition": {
+		"condition": "in_rain"
+	}
+}

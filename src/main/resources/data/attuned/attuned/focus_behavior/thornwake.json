@@ -1,0 +1,7 @@
+{
+	"type": "attuned:on_hit_effect",
+	"effect": "minecraft:poison",
+	"duration_ticks": 60,
+	"charge_threshold": 0.95,
+	"hostile_only": true
+}

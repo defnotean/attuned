@@ -1,0 +1,6 @@
+{
+	"type": "attuned:periodic_effect",
+	"effect": "minecraft:regeneration",
+	"duration_ticks": 40,
+	"refresh_ticks": 120
+}

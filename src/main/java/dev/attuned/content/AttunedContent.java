@@ -121,6 +121,20 @@ public final class AttunedContent {
 	public static final Item DREADFANG_FOCUS = registerFocus("dreadfang_focus");
 	public static final Item ECLIPSE_FOCUS = registerFocus("eclipse_focus");
 
+	// Aspect Counter Foci - first Wheel of Refusals batch beyond the original four affinities.
+	public static final Item UNDERTOW_FOCUS = registerFocus("undertow_focus");
+	public static final Item RIPTIDE_HEART_FOCUS = registerFocus("riptide_heart_focus");
+	public static final Item PEARLGUARD_FOCUS = registerFocus("pearlguard_focus");
+	public static final Item SLAGBRAND_FOCUS = registerFocus("slagbrand_focus");
+	public static final Item ANVILHEART_FOCUS = registerFocus("anvilheart_focus");
+	public static final Item SPARKWELD_FOCUS = registerFocus("sparkweld_focus");
+	public static final Item THORNWAKE_FOCUS = registerFocus("thornwake_focus");
+	public static final Item SEEDCALL_FOCUS = registerFocus("seedcall_focus");
+	public static final Item BRAMBLEGATE_FOCUS = registerFocus("bramblegate_focus");
+	public static final Item NULLVEIL_FOCUS = registerFocus("nullveil_focus");
+	public static final Item CINDERTHIEF_FOCUS = registerFocus("cinderthief_focus");
+	public static final Item SNAREMOON_FOCUS = registerFocus("snaremoon_focus");
+
 	/**
 	 * Blank, resource-pack-skinnable Focus items for datapack authors. Each one is a
 	 * real registered Focus item with a neutral default name/model/texture, but ships

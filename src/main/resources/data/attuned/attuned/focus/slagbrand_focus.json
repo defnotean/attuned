@@ -1,0 +1,16 @@
+{
+	"item": "attuned:slagbrand_focus",
+	"cost": 4,
+	"unique": true,
+	"affinity": "fury",
+	"aspect": "attuned:forge",
+	"faction": "attuned:forgebound",
+	"modifiers": [
+		{
+			"attribute": "minecraft:attack_damage",
+			"amount": 1.0,
+			"operation": "add_value"
+		}
+	],
+	"behavior": "attuned:slagbrand"
+}

@@ -13,6 +13,7 @@ Lives in `src/main/resources/data/attuned/attuned/focus/<name>.json`.
 | `cost`      | number  | no (1)   | Attunement points the Focus uses. Usually 2–6. |
 | `unique`    | boolean | no (false) | If true, only one copy of this Focus can be active at once; a duplicate stays dormant. |
 | `affinity`  | text    | no       | `fury`, `bastion`, `zephyr`, or `holy`. Omit for a neutral Focus. |
+| `aspect`    | text    | no       | Optional expanded counter identity, e.g. `attuned:tide`. It is separate from affinity/Pact math. |
 | `faction`   | text    | no       | Optional story/gameplay family, e.g. `attuned:unseen`. It does not change affinity math. |
 | `modifiers` | list    | no ([])  | Stat changes — see [Attribute modifiers](#attribute-modifiers). |
 | `behavior`  | text    | no       | A registered behavior id, e.g. `attuned:stormcall`. |
@@ -61,6 +62,24 @@ does not already telegraph — the lookup is server-mediated (attunement state s
 only to its owner, so it can never be read client-side), range-limited to 24
 blocks with line of sight, and rate-limited per onlooker.
 
+## Aspects
+
+Aspects are the expanded Focus type/counter layer. They do **not** replace the
+old four affinity/Pact/Discord rules; a Focus may carry both an `affinity` and an
+`aspect`. Tooltips show an Aspect's strengths and weaknesses from the Wheel of
+Refusals.
+
+| Aspect | Counters | Weak to |
+|--------|----------|---------|
+| `attuned:fury` | Bastion, Verdant | Holy, Tide |
+| `attuned:bastion` | Zephyr, Umbral | Fury, Forge |
+| `attuned:zephyr` | Holy, Tide | Bastion, Umbral |
+| `attuned:holy` | Fury, Umbral | Zephyr, Verdant |
+| `attuned:tide` | Fury, Forge | Zephyr, Verdant |
+| `attuned:forge` | Bastion, Verdant | Tide, Umbral |
+| `attuned:verdant` | Tide, Holy | Fury, Forge |
+| `attuned:umbral` | Zephyr, Forge | Bastion, Holy |
+
 ## Factions
 
 Factions are optional labels for Foci that share a theme. They show on tooltips
@@ -79,6 +98,9 @@ Attuned currently ships these factions:
 | `attuned:unseen` | Stealth, stillness, smoke, ambush openings | Rewards setup and positioning without replacing armor, speed, or raw damage builds. | Speed I while sneaking. |
 | `attuned:seafarers` | Fishing, shore travel, return points | Peaceful Luck and water utility without PvP pressure. | Luck I while in or near water. |
 | `attuned:offshore` | Salvage, storms, wreck maps, deep-water risk | Utility with danger: temporary tools, water pressure, and anti-drowned/guardian space without becoming a permanent weapon line. | Water Breathing while submerged. |
+| `attuned:tideborn` | Pull, rain, undertow, and pearl-like defense | Combat-facing Tide tools for the Aspect wheel; their counter identity lives in `aspect`, not in the old affinity cycle. | (No set bonus yet.) |
+| `attuned:forgebound` | Brands, anvils, welding sparks, and tempered pressure | Forge-aspect tools that avoid changing the older Ashen Forge set-bonus roster. | (No set bonus yet.) |
+| `attuned:wildroot` | Thorn, seed, bramble, and patient natural counterplay | Verdant-aspect tools that avoid changing the older Verdant Choir set-bonus roster. | (No set bonus yet.) |
 | `attuned:radiant` | Holy vows, light, witness, judgment | Reveals and protects in short windows rather than adding broad damage. | A brief Regeneration I in bright light (light level >= 12), on a 60s cooldown. |
 | `attuned:reliquary` | Names, relics, rites, thresholds | Utility-side Holy tools that reward preparation and place. | Luck I. |
 | `attuned:verdant_choir` | Roots, bloom, moss, patient growth | Broad natural utility with small travel and survival numbers. | A little hunger restored while standing on grass, on a 60s cooldown. |
@@ -201,6 +223,18 @@ examples to copy from:
 | `attuned:shadowmeld` | `ShadowmeldBehavior`     | Resistance while crouching in low light. |
 | `attuned:dreadfang`  | `DreadfangBehavior`      | A fully charged direct-melee hit on a hostile or PvP foe applies Darkness; the proc fires from the combat after-damage hook. |
 | `attuned:eclipse`    | `EclipseBehavior`        | Strength while standing in total darkness (light level 4 or lower). |
+| `attuned:undertow` | `focus_behavior/undertow.json` | Charged melee hits slow hostile targets. |
+| `attuned:riptide_heart` | `focus_behavior/riptide_heart.json` | Keeps Speed refreshed as the Tide starter mobility Focus. |
+| `attuned:pearlguard` | `focus_behavior/pearlguard.json` | Grants Resistance while wet, underwater, or in rain. |
+| `attuned:slagbrand` | `focus_behavior/slagbrand.json` | Charged melee hits weaken hostile targets. |
+| `attuned:anvilheart` | `focus_behavior/anvilheart.json` | Pulses short Resistance windows for a heavy Forge stance. |
+| `attuned:sparkweld` | `focus_behavior/sparkweld.json` | Keeps Haste refreshed as a light Forge work-buff. |
+| `attuned:thornwake` | `focus_behavior/thornwake.json` | Charged melee hits poison hostile targets. |
+| `attuned:seedcall` | `focus_behavior/seedcall.json` | Periodically refreshes a gentle Regeneration pulse. |
+| `attuned:bramblegate` | `focus_behavior/bramblegate.json` | Charged melee hits slow hostile targets for longer. |
+| `attuned:nullveil` | `focus_behavior/nullveil.json` | Grants Invisibility while standing in low light. |
+| `attuned:cinderthief` | `focus_behavior/cinderthief.json` | Charged melee hits steal a short Fire Resistance window. |
+| `attuned:snaremoon` | `focus_behavior/snaremoon.json` | Charged melee hits heavily slow hostile targets. |
 | `attuned:wildward`   | `WildwardBehavior`       | Confluence (Mossheart + Rootstep): refreshes Resistance I while standing on natural ground. |
 | `attuned:sunwarden`  | `SunwardenBehavior`      | Confluence (Votive + Bellwether): refreshes Regeneration I while standing in bright light. |
 | `attuned:forgewarded` | `ForgewardedBehavior`   | Confluence (Kilnward + Emberward): refreshes Fire Resistance while near a lit forge, magma, or lava. |

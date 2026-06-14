@@ -1,5 +1,18 @@
 # Releasing Attuned
 
+## Platform descriptions
+
+Before publishing a release, keep the long-form project descriptions in sync with
+`README.md` and the current `CHANGELOG.md` section:
+
+- Modrinth project description source: `docs/platform/modrinth-description.md`
+- CurseForge project description source: `docs/platform/curseforge-description.md`
+- Platform release-notes copy for the current release: `docs/platform/attuned-1.4.0-release-notes.md`
+
+Updating these files does **not** update the public project pages by itself. Paste
+or upload the matching description during the platform release step, and do not
+publish or mutate public pages unless that release action is explicitly requested.
+
 ## CurseForge
 
 1. Build and verify the jar:

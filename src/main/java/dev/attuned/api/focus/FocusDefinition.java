@@ -13,9 +13,10 @@ import java.util.Optional;
 
 /**
  * Data-driven definition of a Focus accessory — which item it is, its attunement
- * cost, its affinity, the modifiers it grants, and an optional code behaviour.
+ * cost, its affinity/aspect metadata, the modifiers it grants, and an optional code behaviour.
  * Loaded from datapack JSON at {@code data/<namespace>/attuned/focus/<name>.json}.
  * An empty {@code affinity} means the Focus is affinity-neutral.
+ * An empty {@code aspect} means the Focus has not opted into the expanded counter wheel.
  * An empty {@code faction} means the Focus is not part of a named content family.
  */
 public record FocusDefinition(
@@ -23,6 +24,7 @@ public record FocusDefinition(
 		int cost,
 		boolean unique,
 		Optional<Affinity> affinity,
+		Optional<Aspect> aspect,
 		Optional<Identifier> faction,
 		List<ModifierEntry> modifiers,
 		Optional<Identifier> behavior) {
@@ -36,6 +38,7 @@ public record FocusDefinition(
 			throw new IllegalArgumentException("Focus cost must be between " + MIN_COST + " and " + MAX_COST);
 		}
 		affinity = Objects.requireNonNull(affinity, "affinity");
+		aspect = Objects.requireNonNull(aspect, "aspect");
 		faction = Objects.requireNonNull(faction, "faction");
 		modifiers = List.copyOf(Objects.requireNonNull(modifiers, "modifiers"));
 		behavior = Objects.requireNonNull(behavior, "behavior");
@@ -46,6 +49,7 @@ public record FocusDefinition(
 		Codec.intRange(MIN_COST, MAX_COST).optionalFieldOf("cost", 1).forGetter(FocusDefinition::cost),
 		Codec.BOOL.optionalFieldOf("unique", false).forGetter(FocusDefinition::unique),
 		Affinity.CODEC.optionalFieldOf("affinity").forGetter(FocusDefinition::affinity),
+		Aspect.CODEC.optionalFieldOf("aspect").forGetter(FocusDefinition::aspect),
 		Identifier.CODEC.optionalFieldOf("faction").forGetter(FocusDefinition::faction),
 		ModifierEntry.CODEC.listOf().optionalFieldOf("modifiers", List.of()).forGetter(FocusDefinition::modifiers),
 		Identifier.CODEC.optionalFieldOf("behavior").forGetter(FocusDefinition::behavior)

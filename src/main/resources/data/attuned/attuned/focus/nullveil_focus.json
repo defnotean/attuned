@@ -1,0 +1,16 @@
+{
+	"item": "attuned:nullveil_focus",
+	"cost": 4,
+	"unique": true,
+	"affinity": "zephyr",
+	"aspect": "attuned:umbral",
+	"faction": "attuned:umbral",
+	"modifiers": [
+		{
+			"attribute": "minecraft:sneaking_speed",
+			"amount": 0.2,
+			"operation": "add_multiplied_base"
+		}
+	],
+	"behavior": "attuned:nullveil"
+}

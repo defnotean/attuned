@@ -3,6 +3,7 @@ package dev.attuned.client;
 import dev.attuned.Attuned;
 import dev.attuned.AttunedRegistries;
 import dev.attuned.api.focus.Affinity;
+import dev.attuned.api.focus.Aspect;
 import dev.attuned.api.focus.FocusDefinition;
 import dev.attuned.api.focus.ModifierEntry;
 import dev.attuned.attunement.AttunedAttachments;
@@ -22,7 +23,9 @@ import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.item.ItemStack;
 
+import java.util.Collection;
 import java.util.Locale;
+import java.util.stream.Collectors;
 
 /**
  * Appends Attuned flavour and stats to item tooltips: two lines of lore and a
@@ -92,6 +95,14 @@ public final class AttunedTooltips {
 					.append(Component.translatableWithFallback(
 						"faction." + faction.getNamespace() + "." + faction.getPath(), faction.toString())
 						.withStyle(ChatFormatting.DARK_PURPLE, ChatFormatting.BOLD))));
+				definition.aspect().ifPresent(aspect -> {
+					lines.add(Component.translatable("tooltip.attuned.aspect.line",
+						aspectName(aspect).withStyle(aspectColor(aspect), ChatFormatting.BOLD))
+						.withStyle(ChatFormatting.GRAY));
+					lines.add(Component.translatable("tooltip.attuned.aspect.matchups",
+						aspectList(aspect.strongAgainst()), aspectList(aspect.weakAgainst()))
+						.withStyle(ChatFormatting.DARK_AQUA));
+				});
 				// Show the effective budget cost this stack consumes, so a Tempered
 				// Focus's tooltip agrees with the budget it actually charges.
 				lines.add(Component.literal("Cost ")
@@ -161,6 +172,31 @@ public final class AttunedTooltips {
 			case BASTION -> ChatFormatting.GOLD;
 			case ZEPHYR -> ChatFormatting.AQUA;
 			case HOLY -> ChatFormatting.YELLOW;
+		};
+	}
+
+	private static MutableComponent aspectName(Aspect aspect) {
+		return Component.translatableWithFallback(
+			"aspect.attuned." + aspect.getSerializedName(), humanize(aspect.getSerializedName()));
+	}
+
+	private static MutableComponent aspectList(Collection<Aspect> aspects) {
+		String names = aspects.stream()
+			.map(aspect -> humanize(aspect.getSerializedName()))
+			.collect(Collectors.joining(", "));
+		return Component.literal(names);
+	}
+
+	private static ChatFormatting aspectColor(Aspect aspect) {
+		return switch (aspect) {
+			case FURY -> ChatFormatting.RED;
+			case BASTION -> ChatFormatting.GOLD;
+			case ZEPHYR -> ChatFormatting.AQUA;
+			case HOLY -> ChatFormatting.YELLOW;
+			case TIDE -> ChatFormatting.BLUE;
+			case FORGE -> ChatFormatting.DARK_RED;
+			case VERDANT -> ChatFormatting.GREEN;
+			case UMBRAL -> ChatFormatting.DARK_PURPLE;
 		};
 	}
 

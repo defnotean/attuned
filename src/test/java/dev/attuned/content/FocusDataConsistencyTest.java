@@ -51,6 +51,8 @@ class FocusDataConsistencyTest {
 		Path.of("src/main/java/dev/attuned/combat/UnseenCombat.java"));
 	private static final Path FOCUS_DATA_DIR =
 		Path.of("src/main/resources/data/attuned/attuned/focus");
+	private static final Path FOCUS_BEHAVIOR_DIR =
+		Path.of("src/main/resources/data/attuned/attuned/focus_behavior");
 	private static final Path ITEM_DEFINITION_DIR =
 		Path.of("src/main/resources/assets/attuned/items");
 	private static final Path ITEM_MODEL_DIR =
@@ -100,6 +102,19 @@ class FocusDataConsistencyTest {
 		"attuned:sunlance_focus",
 		"attuned:threshold_focus",
 		"attuned:votive_focus");
+	private static final Map<String, String> ASPECT_COUNTER_FOCUS_ASPECTS = Map.ofEntries(
+		Map.entry("attuned:undertow_focus", "attuned:tide"),
+		Map.entry("attuned:riptide_heart_focus", "attuned:tide"),
+		Map.entry("attuned:pearlguard_focus", "attuned:tide"),
+		Map.entry("attuned:slagbrand_focus", "attuned:forge"),
+		Map.entry("attuned:anvilheart_focus", "attuned:forge"),
+		Map.entry("attuned:sparkweld_focus", "attuned:forge"),
+		Map.entry("attuned:thornwake_focus", "attuned:verdant"),
+		Map.entry("attuned:seedcall_focus", "attuned:verdant"),
+		Map.entry("attuned:bramblegate_focus", "attuned:verdant"),
+		Map.entry("attuned:nullveil_focus", "attuned:umbral"),
+		Map.entry("attuned:cinderthief_focus", "attuned:umbral"),
+		Map.entry("attuned:snaremoon_focus", "attuned:umbral"));
 	private static final Map<String, Double> SEAFARERS_LUCK_AMOUNTS = Map.of(
 		"attuned:driftglass_focus", 1.0D,
 		"attuned:harborlight_focus", 1.0D,
@@ -173,6 +188,7 @@ class FocusDataConsistencyTest {
 		String source = Files.readString(BEHAVIOR_REGISTRATION_SOURCE, StandardCharsets.UTF_8);
 		Set<String> referencedBehaviors = focusDefinitionBehaviorIds();
 		Set<String> registeredBehaviors = registeredBehaviorIds(source);
+		registeredBehaviors.addAll(dataBehaviorIds());
 
 		Set<String> missingBehaviors = new TreeSet<>(referencedBehaviors);
 		missingBehaviors.removeAll(registeredBehaviors);
@@ -452,6 +468,53 @@ class FocusDataConsistencyTest {
 	}
 
 	@Test
+	void aspectCounterFociShipAsARealContentBatch() throws IOException {
+		JsonObject lang = languageRoot();
+		Set<String> actualItems = new TreeSet<>();
+		Map<String, Integer> countsByAspect = new TreeMap<>();
+
+		for (Map.Entry<String, String> entry : ASPECT_COUNTER_FOCUS_ASPECTS.entrySet()) {
+			String itemId = entry.getKey();
+			String aspectId = entry.getValue();
+			String name = attunedPath(itemId);
+			Path file = FOCUS_DATA_DIR.resolve(name + ".json");
+			assertTrue(Files.isRegularFile(file), "Aspect Focus should have FocusDefinition data: " + itemId);
+			JsonObject root = focusDefinitionRoot(file);
+
+			assertEquals(itemId, root.get("item").getAsString(),
+				"Aspect Focus definition item should match file name: " + file);
+			assertTrue(root.has("aspect"), "Aspect Focus should declare counter metadata: " + file);
+			assertEquals(aspectId, root.get("aspect").getAsString(),
+				"Aspect Focus should declare the planned Aspect: " + itemId);
+			assertTrue(NAMESPACED_ID.matcher(aspectId).matches(),
+				"Aspect id should be namespaced: " + file);
+			assertTrue(root.has("unique") && root.get("unique").getAsBoolean(),
+				"Aspect counter Foci should be unique to prevent passive stacking: " + file);
+			assertTrue(root.has("affinity"),
+				"Aspect Foci still need an old affinity for Pact/Discord compatibility: " + file);
+			assertTrue(hasNonEmptyArray(root, "modifiers") || root.has("behavior"),
+				"Aspect Focus should have a real gameplay effect, not only lore metadata: " + file);
+
+			actualItems.add(itemId);
+			countsByAspect.merge(aspectId, 1, Integer::sum);
+			assertLanguageKey(lang, "aspect." + aspectId.replace(':', '.'));
+			assertLanguageKey(lang, "item.attuned." + name);
+			assertLanguageKey(lang, "item.attuned." + name + ".lore");
+			assertLanguageKey(lang, "item.attuned." + name + ".lore2");
+			assertLanguageKey(lang, "item.attuned." + name + ".effect");
+		}
+
+		assertEquals(new TreeSet<>(ASPECT_COUNTER_FOCUS_ASPECTS.keySet()), actualItems,
+			"The first Aspect-counter batch should ship exactly the planned 12 new Foci");
+		assertEquals(Map.of(
+			"attuned:tide", 3,
+			"attuned:forge", 3,
+			"attuned:verdant", 3,
+			"attuned:umbral", 3), countsByAspect,
+			"The starter batch should ship three Foci for each new non-core Aspect");
+	}
+
+	@Test
 	void altarBlockAssetsKeepClosedUndersidesAndReadableReweavingTextures() throws IOException {
 		assertNoDownCullface(BLOCK_MODEL_DIR.resolve("attunement_altar.json"));
 		assertNoDownCullface(BLOCK_MODEL_DIR.resolve("attunement_altar_none.json"));
@@ -544,6 +607,21 @@ class FocusDataConsistencyTest {
 		}
 		assertTrue(!behaviorIds.isEmpty(), "Could not find registered Focus behaviors in AttunedFocusBehaviors");
 		return behaviorIds;
+	}
+
+	private static Set<String> dataBehaviorIds() throws IOException {
+		assertTrue(Files.isDirectory(FOCUS_BEHAVIOR_DIR), "Could not find FocusBehaviorDef data directory");
+		try (Stream<Path> paths = Files.list(FOCUS_BEHAVIOR_DIR)) {
+			Set<String> behaviorIds = new TreeSet<>();
+			for (Path file : paths
+					.filter(path -> path.getFileName().toString().endsWith(".json"))
+					.sorted()
+					.toList()) {
+				behaviorIds.add("attuned:" + file.getFileName().toString().replaceFirst("\\.json$", ""));
+			}
+			assertTrue(!behaviorIds.isEmpty(), "Could not find any datapack FocusBehaviorDef JSON files");
+			return behaviorIds;
+		}
 	}
 
 	private static Set<String> focusDefinitionItems() throws IOException {

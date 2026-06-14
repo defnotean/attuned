@@ -1,0 +1,10 @@
+{
+	"type": "attuned:conditional_mob_effect",
+	"effect": "minecraft:invisibility",
+	"duration_ticks": 60,
+	"refresh_ticks": 20,
+	"condition": {
+		"condition": "low_light",
+		"max_light": 7
+	}
+}

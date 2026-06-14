@@ -1,0 +1,21 @@
+{
+	"item": "attuned:anvilheart_focus",
+	"cost": 5,
+	"unique": true,
+	"affinity": "bastion",
+	"aspect": "attuned:forge",
+	"faction": "attuned:forgebound",
+	"modifiers": [
+		{
+			"attribute": "minecraft:armor_toughness",
+			"amount": 3.0,
+			"operation": "add_value"
+		},
+		{
+			"attribute": "minecraft:knockback_resistance",
+			"amount": 0.15,
+			"operation": "add_value"
+		}
+	],
+	"behavior": "attuned:anvilheart"
+}

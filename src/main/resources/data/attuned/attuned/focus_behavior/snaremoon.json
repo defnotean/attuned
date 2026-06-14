@@ -1,0 +1,8 @@
+{
+	"type": "attuned:on_hit_effect",
+	"effect": "minecraft:slowness",
+	"amplifier": 1,
+	"duration_ticks": 80,
+	"charge_threshold": 0.9,
+	"hostile_only": true
+}
