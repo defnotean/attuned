@@ -32,10 +32,11 @@ add a Focus.
 - Creative inventory content is split into **Attuned: Affinity Foci** and
   **Attuned: Utility Foci** so combat builds and neutral tools are easier to
   scan.
-- Current release headline: **Attuned 1.4.0 — Resonant Depths** ships 78 Foci,
-  including 12 new Tide/Forge/Verdant/Umbral Aspect Foci, Focus Confluences,
-  Tempering, Grand Reliquary storage, Attunement Sanctums, resonant surges, and
-  datapack behavior palettes.
+- Current release headline: **Attuned 1.4.1 — Journal Clarity** keeps the
+  Resonant Depths feature set and moves explicit Aspect matchup details into the
+  Attunement Journal. Attuned still ships 78 Foci, including 12 Tide/Forge/
+  Verdant/Umbral Aspect Foci, Focus Confluences, Tempering, Grand Reliquary
+  storage, Attunement Sanctums, resonant surges, and datapack behavior palettes.
 
 That is the whole idea: a Focus is a trade-off, never a free bonus.
 

@@ -6,6 +6,7 @@ Equip **Foci** into six inventory slots, manage your **attunement capacity**, an
 
 ## Highlights
 
+- **Attuned 1.4.1 patch** — Focus descriptions/tooltips now show only Focus-specific effects plus Aspect identity; the Attunement Journal owns the full Aspect matchup reference.
 - **78 Foci** across mobility, defense, combat, stealth, holy, seafaring, shadow, utility, and the new Aspect counter wheel.
 - **Four core affinities** — Fury, Bastion, Zephyr, and Holy — form the original combat counter cycle, with Discord for risky mixed-affinity builds.
 - **New Aspect counter wheel** — Fury, Bastion, Zephyr, Holy, Tide, Forge, Verdant, and Umbral appear as broader Focus identities. Individual Focus descriptions show only the Aspect name; the Attunement Journal carries the matchup reference.
