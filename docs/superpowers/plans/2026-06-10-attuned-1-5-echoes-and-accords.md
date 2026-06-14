@@ -4,7 +4,7 @@
 >
 > **PREREQUISITE: the 1.4 plan (`2026-06-10-attuned-1-4-resonant-depths.md`) must be fully landed and released before starting this plan.** Several tasks build on 1.4 outputs (Grand Reliquary, faction set bonuses, Sanctum). The "READ THIS FIRST" constraints section of the 1.4 plan applies VERBATIM here — read it first, every constraint is load-bearing.
 
-**Goal:** Ship Attuned 1.5: Trial Pacts (opt-in timed challenges that pay capacity), build sharing (export/import codes), a journal statistics chapter, the Hollow Chorus faction (six echo/sculk-themed Foci with generated art), Sanctum depths (a second, harder structure piece with a warden-elite encounter), and PvP/server balance config flags.
+**Goal:** Ship Attuned 1.5: Trial Pacts (opt-in timed challenges that pay capacity), build sharing (export/import codes), a journal statistics chapter, the Hollow Chorus faction (six echo/sculk-themed Foci with new art), Sanctum depths (a second, harder structure piece with a warden-elite encounter), and PvP/server balance config flags.
 
 **Architecture / Tech Stack:** identical to the 1.4 plan (attachments + components + pure resolvers + idempotent init()s + cleanup-registered maps + source-grep/Minecraft-free test split).
 

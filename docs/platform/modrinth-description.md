@@ -10,7 +10,7 @@ Equip **Foci** into six inventory slots, manage your **attunement capacity**, an
 - **Four core affinities** — Fury, Bastion, Zephyr, and Holy — form the original combat counter cycle, with Discord for risky mixed-affinity builds.
 - **New Aspect counter wheel** — Fury, Bastion, Zephyr, Holy, Tide, Forge, Verdant, and Umbral each counter two Aspects and are countered by two others. Aspect tooltips show strengths and weaknesses in-game.
 - **12 new Aspect Foci** in the first Tide / Forge / Verdant / Umbral batch: Undertow, Riptide Heart, Pearlguard, Slagbrand, Anvilheart, Sparkweld, Thornwake, Seedcall, Bramblegate, Nullveil, Cinderthief, and Snaremoon.
-- **Image-generation-derived Focus art** for the new Aspect Foci, imported into animated 64x512 Minecraft item sheets so the new icons fit the existing medallion/talisman theme.
+- **Refreshed original Focus art** for the new Aspect Foci, imported into animated 64x512 Minecraft item sheets so the new icons fit the existing medallion/talisman theme.
 - **Pacts and Apex capstones** reward commitment, including Maelstrom for full Discord builds and Stillpoint for neutral builds.
 - **Focus Reliquary and Grand Focus Reliquary** store spare Foci, show equipped slots, save named builds, preview missing items, and apply loadouts from your bag/inventory.
 - **Focus Confluences** wake small set bonuses when specific Focus combinations are active, with journal discovery and HUD pips.

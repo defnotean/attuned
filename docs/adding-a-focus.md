@@ -129,11 +129,11 @@ Current shipped Foci use a 64×512 animated PNG sheet: eight 64×64 item frames
 stacked vertically. Match that format for new shipped art so the Focus sits with
 the existing medallion-style assets.
 
-For new bespoke Foci, follow the current art direction: generate/select an
-image-generation concept first, save the prompt/source under
-`docs/superpowers/assets/<feature>/`, then import/crop/downscale it into the
-Minecraft texture sheet. Do not invent the final icon as code-first/manual sprite
-art; scripts should handle cleanup, formatting, and animation only.
+For new bespoke Foci, follow the current art direction: design or select a
+strong source concept first, then import/crop/downscale it into the Minecraft
+texture sheet. Keep one bold medallion-scale motif, compare it against the
+existing Focus library, and judge readability at 16×16 inventory scale before
+shipping.
 
 **Create:** `src/main/resources/assets/attuned/textures/item/stoneskin_focus.png.mcmeta`
 

@@ -253,7 +253,7 @@ def satchel_gui():
     panel = (33, 31, 38, 255)
     panel_light = (74, 68, 80, 255)
 
-    # Pixel-cleaned from the image-generated leather/amethyst satchel concept,
+    # Pixel-cleaned from the leather/amethyst satchel concept,
     # while preserving the exact slot coordinates used by SatchelMenu.
     bevel(draw, 0, 0, 176, 166, leather, (12, 8, 7, 255), leather_light)
     rect(draw, (3, 3, 172, 162), leather_shadow)
@@ -449,7 +449,7 @@ def satchel_item():
     leather_shadow = (31, 19, 15, 255)
     stitch = (226, 178, 104, 255)
 
-    # Pixel-cleaned from the image-generated item source: chunky leather body,
+    # Pixel-cleaned from the item source: chunky leather body,
     # brass clasp/stitches, and a readable amethyst foci socket.
     rect(draw, (3, 5, 12, 14), leather_shadow)
     rect(draw, (2, 7, 13, 13), leather_dark)
@@ -738,7 +738,7 @@ def _umbral_focus_frame(name, accent, phase):
 
     The first pass used one shared eclipse medallion for all five Foci. The current pass
     keeps the shared shadow-violet family palette, but gives each Focus a silhouette
-    cleaned up from the image-generated concept source: boot, shield, crouched hood,
+    cleaned up from the concept source: boot, shield, crouched hood,
     fang, and total eclipse. Geometry remains deterministic so `generate_ui_art.py`
     can rebuild the shipped 64x512 animated sheets at any time.
     """
@@ -765,7 +765,7 @@ def _umbral_focus_frame(name, accent, phase):
 def generate_umbral_focus_textures():
     """Generates deterministic 64x512 eight-frame animated art for Umbral Eclipse Foci.
 
-    The motifs were derived from an image-generated concept sheet, then redrawn here as
+    The motifs were derived from a concept sheet, then redrawn here as
     crisp, rebuildable Minecraft item sprites with the same `.png.mcmeta` animation
     settings as the rest of the Focus library.
     """
@@ -1088,9 +1088,8 @@ def generate_aspect_focus_preview_textures(output_dir=None):
     """Generate 64x512 animated sheets for the Aspect Counter Foci.
 
     Historical deterministic preview generator only. Do not use this as the final
-    art source for the new Aspect Foci: the user specifically wants these Foci to
-    be image-generation-first. Final shipped Aspect textures should be imported
-    from docs/superpowers/assets/aspect-counter-foci/image-gen-sources/ instead.
+    art source for the new Aspect Foci. Final shipped Aspect textures should be
+    imported from docs/superpowers/assets/aspect-counter-foci/source-art/ instead.
     """
 
     output = Path(output_dir) if output_dir is not None else ASPECT_PREVIEW_TEXTURES
@@ -1108,10 +1107,10 @@ def generate_aspect_focus_preview_textures(output_dir=None):
 
 
 def generate_aspect_focus_textures():
-    """Deprecated: Aspect Foci are now image-generation-derived, not code-drawn."""
+    """Deprecated: Aspect Foci are curated source-art imports, not code-drawn."""
     raise RuntimeError(
-        "Aspect Focus textures are image-generation-derived. Use the saved AI sources "
-        "under docs/superpowers/assets/aspect-counter-foci/image-gen-sources/ and "
+        "Aspect Focus textures are curated source-art imports. Use the saved sources "
+        "under docs/superpowers/assets/aspect-counter-foci/source-art/ and "
         "the import workflow documented there instead of regenerating code-drawn art."
     )
 

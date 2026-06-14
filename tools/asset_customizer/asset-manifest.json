@@ -25,7 +25,7 @@
 		"texture": "../../src/main/resources/assets/attuned/textures/item/ocean_relic_trident_voxel_palette.png",
 		"sprite": "../../src/main/resources/assets/attuned/textures/item/ocean_relic_trident.png",
 		"definition": "../../src/main/resources/assets/attuned/items/ocean_relic_trident.json",
-		"source": "../../docs/superpowers/assets/ocean-relic-trident/Meshy_AI_Ocean_Relic_Trident_0602120856_image-to-3d-texture_obj/Meshy_AI_Ocean_Relic_Trident_0602120856_image-to-3d-texture.obj",
+		"source": "../../docs/superpowers/assets/ocean-relic-trident/ocean_relic_trident_source_model/ocean_relic_trident_source_model.obj",
 		"data": "../../src/main/resources/data/attuned/attuned/focus/harpoon_focus.json"
 	},
 	{
@@ -36,7 +36,7 @@
 		"texture": "../../src/main/resources/assets/attuned/textures/item/ocean_relic_trident_voxel_palette.png",
 		"sprite": "../../src/main/resources/assets/attuned/textures/item/ocean_relic_trident.png",
 		"definition": "../../src/main/resources/assets/attuned/items/ocean_relic_trident_projectile.json",
-		"source": "../../docs/superpowers/assets/ocean-relic-trident/Meshy_AI_Ocean_Relic_Trident_0602120856_image-to-3d-texture_obj/Meshy_AI_Ocean_Relic_Trident_0602120856_image-to-3d-texture.obj",
+		"source": "../../docs/superpowers/assets/ocean-relic-trident/ocean_relic_trident_source_model/ocean_relic_trident_source_model.obj",
 		"data": "../../src/main/resources/data/attuned/attuned/focus/harpoon_focus.json"
 	},
 	{

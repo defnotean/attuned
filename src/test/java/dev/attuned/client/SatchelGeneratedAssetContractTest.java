@@ -11,19 +11,19 @@ import java.nio.file.Path;
 import javax.imageio.ImageIO;
 import org.junit.jupiter.api.Test;
 
-/** Guards the image-generated source art and Minecraft-sized Satchel textures. */
+/** Guards the source art and Minecraft-sized Satchel textures. */
 class SatchelGeneratedAssetContractTest {
 	private static final Path SOURCE_ITEM =
-		Path.of("docs/superpowers/assets/satchel-of-foci/satchel-item-imagegen-source.png");
+		Path.of("docs/superpowers/assets/satchel-of-foci/satchel-item-source.png");
 	private static final Path SOURCE_GUI =
-		Path.of("docs/superpowers/assets/satchel-of-foci/satchel-gui-imagegen-source.png");
+		Path.of("docs/superpowers/assets/satchel-of-foci/satchel-gui-source.png");
 	private static final Path ITEM =
 		Path.of("src/main/resources/assets/attuned/textures/item/satchel_of_foci.png");
 	private static final Path GUI =
 		Path.of("src/main/resources/assets/attuned/textures/gui/satchel.png");
 
 	@Test
-	void satchelAssetsKeepImageGeneratedSourcesAndPinnedMinecraftSizes() throws IOException {
+	void satchelAssetsKeepSourceArtAndPinnedMinecraftSizes() throws IOException {
 		assertTrue(Files.isRegularFile(SOURCE_ITEM), "Satchel item source art should be kept for future art passes.");
 		assertTrue(Files.isRegularFile(SOURCE_GUI), "Satchel GUI source art should be kept for future art passes.");
 

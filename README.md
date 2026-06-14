@@ -10,7 +10,7 @@ Equip **Foci** into six inventory slots, but mind your **attunement capacity**. 
 
 - 78 Foci across mobility, defense, combat, stealth, holy, seafaring, shadow, utility, and the new Aspect counter wheel
 - **New in 1.4.0: Tide, Forge, Verdant, and Umbral Aspect Foci** — Undertow, Riptide Heart, Pearlguard, Slagbrand, Anvilheart, Sparkweld, Thornwake, Seedcall, Bramblegate, Nullveil, Cinderthief, and Snaremoon
-- **Image-generation-derived Focus art** for the new Aspect Foci, processed into animated Minecraft item sheets so they sit with the existing medallion/talisman theme
+- **Refreshed original Focus art** for the new Aspect Foci, processed into animated Minecraft item sheets so they sit with the existing medallion/talisman theme
 - **The Unseen**: a stealth faction built around quiet movement, low-light veils, smoke misdirection, and ambush openings
 - Four **affinities** (Fury, Bastion, Zephyr, Holy) in a counter-combat cycle, plus the cross-affinity **Discord** stance
 - **Aspects** add the broader Wheel of Refusals: Fury, Bastion, Zephyr, Holy, Tide, Forge, Verdant, and Umbral all counter and are countered by two others
@@ -25,7 +25,7 @@ Equip **Foci** into six inventory slots, but mind your **attunement capacity**. 
 
 - The **Aspect counter wheel** adds a visible second layer of counterplay without breaking the original four-affinity Pact/Discord system.
 - The first Aspect batch adds 12 Foci across **Tide**, **Forge**, **Verdant**, and **Umbral**, all with tooltips showing what they counter and what counters them.
-- The new Aspect Focus textures are **image-generation-derived**, with prompt/source provenance saved under `docs/superpowers/assets/aspect-counter-foci/` and imported into crisp animated item sheets.
+- The new Aspect Focus textures ship as crisp animated item sheets with bold medallion silhouettes, disciplined Aspect palettes, and inventory-scale readability checks.
 - **Focus Confluences**, **Tempering**, **Grand Focus Reliquary**, **Attunement Sanctums**, **Resonant Surges**, datapack-defined Focus behavior palettes, and an expanded journal/tooltip suite round out the release.
 
 ## Requirements

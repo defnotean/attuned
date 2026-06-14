@@ -5,7 +5,7 @@ Status: preview assets generated, not wired into gameplay yet
 
 ## Existing Focus asset setup audit
 
-I reviewed the current Focus texture library before drawing the new Aspect Foci.
+I reviewed the current Focus texture library before building the new Aspect Foci.
 
 - Existing `*focus*.png` item textures found: **74**.
 - Bespoke shipped Foci use the same setup: **64×512 animated PNG sheets**, eight **64×64** frames.
@@ -39,11 +39,11 @@ The new icons should follow these rules:
 5. One bold central motif per icon.
 6. Aspect palettes are disciplined: 2–4 dominant colors, with glint/shadow only as accents.
 7. Readability must be judged at Minecraft inventory scale, not just 64px source scale.
-8. Avoid thin neon arcs, overly airy silhouettes, portrait-like detail, noisy rays, or generated-image gradients.
+8. Avoid thin neon arcs, overly airy silhouettes, portrait-like detail, noisy rays, or busy gradients.
 
 ## New preview asset batch
 
-Generated 12 planned Aspect Foci from the 8-Aspect counter-system spec:
+Created 12 planned Aspect Foci from the 8-Aspect counter-system spec:
 
 ### Tide
 

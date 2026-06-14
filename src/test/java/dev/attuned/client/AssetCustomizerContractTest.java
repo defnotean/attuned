@@ -48,7 +48,7 @@ class AssetCustomizerContractTest {
 		Path.of("src/main/resources/assets/attuned/items/ocean_relic_trident_projectile.json");
 	private static final Path CLIENT_MIXIN_CONFIG = Path.of("src/client/resources/attuned.client.mixins.json");
 	private static final Path OCEAN_RELIC_SOURCE =
-		Path.of("docs/superpowers/assets/ocean-relic-trident/Meshy_AI_Ocean_Relic_Trident_0602120856_image-to-3d-texture_obj/Meshy_AI_Ocean_Relic_Trident_0602120856_image-to-3d-texture.obj");
+		Path.of("docs/superpowers/assets/ocean-relic-trident/ocean_relic_trident_source_model/ocean_relic_trident_source_model.obj");
 	private static final Path OCEAN_RELIC_VOXEL_REPORT =
 		Path.of("docs/superpowers/assets/ocean-relic-trident/ocean_relic_trident_voxel_report.json");
 	private static final Path FROSTBOUND_TEXTURE =
