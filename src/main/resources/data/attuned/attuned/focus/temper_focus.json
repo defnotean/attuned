@@ -1,7 +1,7 @@
 {
 	"item": "attuned:temper_focus",
 	"cost": 3,
-	"affinity": "fury",
+	"affinity": "forge",
 	"faction": "attuned:ashen_forge",
 	"unique": true,
 	"behavior": "attuned:temper"

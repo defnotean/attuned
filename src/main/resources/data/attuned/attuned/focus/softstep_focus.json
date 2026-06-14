@@ -2,7 +2,7 @@
 	"item": "attuned:softstep_focus",
 	"cost": 2,
 	"unique": true,
-	"affinity": "zephyr",
+	"affinity": "umbral",
 	"faction": "attuned:unseen",
 	"modifiers": [
 		{

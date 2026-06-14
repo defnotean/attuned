@@ -2,6 +2,6 @@
 	"item": "attuned:ashen_debt_focus",
 	"cost": 4,
 	"unique": true,
-	"affinity": "fury",
+	"affinity": "umbral",
 	"faction": "attuned:revenant"
 }

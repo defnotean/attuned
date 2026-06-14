@@ -2,7 +2,7 @@
 	"item": "attuned:rivet_focus",
 	"cost": 2,
 	"unique": true,
-	"affinity": "bastion",
+	"affinity": "forge",
 	"faction": "attuned:ashen_forge",
 	"behavior": "attuned:rivet"
 }

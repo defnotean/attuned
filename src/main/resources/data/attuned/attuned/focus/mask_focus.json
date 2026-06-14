@@ -1,7 +1,7 @@
 {
 	"item": "attuned:mask_focus",
 	"cost": 3,
-	"affinity": "zephyr",
+	"affinity": "umbral",
 	"faction": "attuned:unseen",
 	"unique": true,
 	"behavior": "attuned:mask"

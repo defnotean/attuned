@@ -2,6 +2,6 @@
 	"item": "attuned:bonechill_focus",
 	"cost": 3,
 	"unique": true,
-	"affinity": "bastion",
+	"affinity": "umbral",
 	"faction": "attuned:revenant"
 }

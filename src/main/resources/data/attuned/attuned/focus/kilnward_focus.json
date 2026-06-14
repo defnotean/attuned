@@ -1,7 +1,7 @@
 {
 	"item": "attuned:kilnward_focus",
 	"cost": 3,
-	"affinity": "bastion",
+	"affinity": "forge",
 	"faction": "attuned:ashen_forge",
 	"unique": true,
 	"behavior": "attuned:kilnward"

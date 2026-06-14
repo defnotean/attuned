@@ -2,6 +2,6 @@
 	"item": "attuned:last_rites_focus",
 	"cost": 3,
 	"unique": true,
-	"affinity": "holy",
+	"affinity": "umbral",
 	"faction": "attuned:revenant"
 }
