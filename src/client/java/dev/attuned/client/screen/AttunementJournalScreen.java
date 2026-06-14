@@ -16,6 +16,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.resources.language.I18n;
@@ -55,6 +56,7 @@ public final class AttunementJournalScreen extends Screen {
 	private static final int SCROLL_STEP = 12;
 	private static final int CONTENT_TOP = 18;
 	private static final int CONTENT_BOTTOM = PANEL_HEIGHT - 48;
+	private static final int SCROLLBAR_HIT_WIDTH = 8;
 
 	private static final int BACKDROP = 0xE6131218;
 	private static final int PANEL_SHADOW = 0xB0000000;
@@ -125,6 +127,8 @@ public final class AttunementJournalScreen extends Screen {
 	private int chapterIndex;
 	private int scrollOffset;
 	private int maxScroll;
+	private boolean scrollbarDragging;
+	private int scrollbarGrabOffset;
 	private Button previousButton;
 	private Button nextButton;
 
@@ -187,6 +191,44 @@ public final class AttunementJournalScreen extends Screen {
 	}
 
 	@Override
+	public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
+		double mouseX = event.x();
+		double mouseY = event.y();
+		if (event.button() == 0 && isMouseOverScrollbar(mouseX, mouseY)) {
+			this.scrollbarDragging = true;
+			int thumbY = scrollbarThumbY();
+			int thumbHeight = scrollbarThumbHeight();
+			if (mouseY >= thumbY && mouseY <= thumbY + thumbHeight) {
+				this.scrollbarGrabOffset = (int) Math.round(mouseY - thumbY);
+			} else {
+				this.scrollbarGrabOffset = thumbHeight / 2;
+			}
+			updateScrollFromMouse(mouseY);
+			return true;
+		}
+		return super.mouseClicked(event, doubleClick);
+	}
+
+	@Override
+	public boolean mouseDragged(MouseButtonEvent event, double dragX, double dragY) {
+		if (this.scrollbarDragging && event.button() == 0 && this.maxScroll > 0) {
+			double mouseY = event.y();
+			updateScrollFromMouse(mouseY);
+			return true;
+		}
+		return super.mouseDragged(event, dragX, dragY);
+	}
+
+	@Override
+	public boolean mouseReleased(MouseButtonEvent event) {
+		if (event.button() == 0 && this.scrollbarDragging) {
+			this.scrollbarDragging = false;
+			return true;
+		}
+		return super.mouseReleased(event);
+	}
+
+	@Override
 	public boolean isPauseScreen() {
 		return false;
 	}
@@ -194,6 +236,8 @@ public final class AttunementJournalScreen extends Screen {
 	private void setChapter(int index) {
 		this.chapterIndex = Math.max(0, Math.min(CHAPTERS.size() - 1, index));
 		this.scrollOffset = 0;
+		this.scrollbarDragging = false;
+		this.scrollbarGrabOffset = 0;
 		updateButtonState();
 	}
 
@@ -279,14 +323,64 @@ public final class AttunementJournalScreen extends Screen {
 		}
 
 		if (this.maxScroll > 0) {
-			int trackX = x + w - 1;
+			int trackX = scrollbarX();
 			graphics.fill(trackX, contentTop, trackX + 2, contentBottom, PAGE_TRACK);
-			int thumbHeight = Math.max(10, Math.round(windowHeight * (windowHeight / (float) total)));
-			int thumbY = contentTop + Math.round((windowHeight - thumbHeight) * (this.scrollOffset / (float) this.maxScroll));
+			int thumbHeight = scrollbarThumbHeight();
+			int thumbY = scrollbarThumbY();
 			graphics.fill(trackX, thumbY, trackX + 2, thumbY + thumbHeight, chapterColor(this.chapterIndex));
 		}
 
 		drawFooter(graphics, x, w);
+	}
+
+	private boolean isMouseOverScrollbar(double mouseX, double mouseY) {
+		int trackX = scrollbarX();
+		int contentTop = top() + CONTENT_TOP;
+		int contentBottom = top() + CONTENT_BOTTOM;
+		return this.maxScroll > 0
+			&& mouseX >= trackX - SCROLLBAR_HIT_WIDTH / 2.0
+			&& mouseX <= trackX + 2 + SCROLLBAR_HIT_WIDTH / 2.0
+			&& mouseY >= contentTop
+			&& mouseY <= contentBottom;
+	}
+
+	private void updateScrollFromMouse(double mouseY) {
+		if (this.maxScroll <= 0) {
+			this.scrollOffset = 0;
+			return;
+		}
+		int contentTop = top() + CONTENT_TOP;
+		int travel = Math.max(1, scrollWindowHeight() - scrollbarThumbHeight());
+		int thumbTop = (int) Math.round(mouseY) - this.scrollbarGrabOffset;
+		int clampedThumbTop = Math.max(contentTop, Math.min(contentTop + travel, thumbTop));
+		float position = (clampedThumbTop - contentTop) / (float) travel;
+		this.scrollOffset = Math.max(0, Math.min(this.maxScroll, Math.round(this.maxScroll * position)));
+	}
+
+	private int scrollbarX() {
+		return contentLeft() + contentWidth() - 11;
+	}
+
+	private int scrollWindowHeight() {
+		return CONTENT_BOTTOM - CONTENT_TOP;
+	}
+
+	private int scrollbarThumbHeight() {
+		if (this.maxScroll <= 0) {
+			return scrollWindowHeight();
+		}
+		int windowHeight = scrollWindowHeight();
+		int total = this.maxScroll + windowHeight;
+		return Math.max(10, Math.round(windowHeight * (windowHeight / (float) total)));
+	}
+
+	private int scrollbarThumbY() {
+		int contentTop = top() + CONTENT_TOP;
+		if (this.maxScroll <= 0) {
+			return contentTop;
+		}
+		int travel = Math.max(0, scrollWindowHeight() - scrollbarThumbHeight());
+		return contentTop + Math.round(travel * (this.scrollOffset / (float) this.maxScroll));
 	}
 
 	private void drawSectionHeader(GuiGraphicsExtractor graphics, Section section, int x, int y, int w,
