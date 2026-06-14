@@ -3,7 +3,6 @@ package dev.attuned.client;
 import dev.attuned.Attuned;
 import dev.attuned.AttunedRegistries;
 import dev.attuned.api.focus.Affinity;
-import dev.attuned.api.focus.Aspect;
 import dev.attuned.api.focus.FocusDefinition;
 import dev.attuned.api.focus.ModifierEntry;
 import dev.attuned.attunement.AttunedAttachments;
@@ -93,9 +92,6 @@ public final class AttunedTooltips {
 					.append(Component.translatableWithFallback(
 						"faction." + faction.getNamespace() + "." + faction.getPath(), faction.toString())
 						.withStyle(ChatFormatting.DARK_PURPLE, ChatFormatting.BOLD))));
-				definition.aspect().ifPresent(aspect -> lines.add(Component.translatable("tooltip.attuned.aspect.line",
-					aspectName(aspect).withStyle(aspectColor(aspect), ChatFormatting.BOLD))
-					.withStyle(ChatFormatting.GRAY)));
 				// Show the effective budget cost this stack consumes, so a Tempered
 				// Focus's tooltip agrees with the budget it actually charges.
 				lines.add(Component.literal("Cost ")
@@ -161,24 +157,6 @@ public final class AttunedTooltips {
 			return ChatFormatting.GRAY;
 		}
 		return switch (affinity) {
-			case FURY -> ChatFormatting.RED;
-			case BASTION -> ChatFormatting.GOLD;
-			case ZEPHYR -> ChatFormatting.AQUA;
-			case HOLY -> ChatFormatting.YELLOW;
-			case TIDE -> ChatFormatting.BLUE;
-			case FORGE -> ChatFormatting.DARK_RED;
-			case VERDANT -> ChatFormatting.GREEN;
-			case UMBRAL -> ChatFormatting.DARK_PURPLE;
-		};
-	}
-
-	private static MutableComponent aspectName(Aspect aspect) {
-		return Component.translatableWithFallback(
-			"aspect.attuned." + aspect.getSerializedName(), humanize(aspect.getSerializedName()));
-	}
-
-	private static ChatFormatting aspectColor(Aspect aspect) {
-		return switch (aspect) {
 			case FURY -> ChatFormatting.RED;
 			case BASTION -> ChatFormatting.GOLD;
 			case ZEPHYR -> ChatFormatting.AQUA;

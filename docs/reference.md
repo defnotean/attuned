@@ -13,7 +13,6 @@ Lives in `src/main/resources/data/attuned/attuned/focus/<name>.json`.
 | `cost`      | number  | no (1)   | Attunement points the Focus uses. Usually 2–6. |
 | `unique`    | boolean | no (false) | If true, only one copy of this Focus can be active at once; a duplicate stays dormant. |
 | `affinity`  | text    | no       | One of the eight wheel values: `fury`, `bastion`, `zephyr`, `holy`, `tide`, `forge`, `verdant`, or `umbral`. Omit for a neutral Focus. |
-| `aspect`    | text    | no       | Legacy alias for an affinity-style counter identity, kept for older datapacks. New Foci should set `affinity` directly. |
 | `faction`   | text    | no       | Optional story/gameplay family, e.g. `attuned:unseen`. It does not change affinity math. |
 | `modifiers` | list    | no ([])  | Stat changes — see [Attribute modifiers](#attribute-modifiers). |
 | `behavior`  | text    | no       | A registered behavior id, e.g. `attuned:stormcall`. |
@@ -114,16 +113,6 @@ diverse spread (four or more distinct active affinities, none stacked three deep
 it hits affinity-bearing foes harder. The Attunement Journal's Pacts chapter
 documents all nine.
 
-## Aspects (legacy alias)
-
-`aspect` predates the eightfold promotion: Tide, Forge, Verdant, and Umbral were
-once a separate "Wheel of Refusals" counter layer on top of the original four
-affinities. They are now first-class **affinities** (see [Affinities](#affinities)),
-so new Foci should set `affinity` directly. The `aspect` field is kept only so
-older datapacks keep loading; it resolves to the same wheel. The in-game
-Attunement Journal's matchup pages are the canonical player-facing reference for
-which affinities beat or answer each other.
-
 ## Factions
 
 Factions are optional labels for Foci that share a theme. They show on tooltips
@@ -142,9 +131,9 @@ Attuned currently ships these factions:
 | `attuned:unseen` | Stealth, stillness, smoke, ambush openings | Rewards setup and positioning without replacing armor, speed, or raw damage builds. | Speed I while sneaking. |
 | `attuned:seafarers` | Fishing, shore travel, return points | Peaceful Luck and water utility without PvP pressure. | Luck I while in or near water. |
 | `attuned:offshore` | Salvage, storms, wreck maps, deep-water risk | Utility with danger: temporary tools, water pressure, and anti-drowned/guardian space without becoming a permanent weapon line. | Water Breathing while submerged. |
-| `attuned:tideborn` | Pull, rain, undertow, and pearl-like defense | Combat-facing Tide tools for the Aspect wheel; their counter identity lives in `aspect`, not in the old affinity cycle. | (No set bonus yet.) |
-| `attuned:forgebound` | Brands, anvils, welding sparks, and tempered pressure | Forge-aspect tools that avoid changing the older Ashen Forge set-bonus roster. | (No set bonus yet.) |
-| `attuned:wildroot` | Thorn, seed, bramble, and patient natural counterplay | Verdant-aspect tools that avoid changing the older Verdant Choir set-bonus roster. | (No set bonus yet.) |
+| `attuned:tideborn` | Pull, rain, undertow, and pearl-like defense | Combat-facing Tide tools; their counter identity lives in their `affinity` on the eightfold wheel. | (No set bonus yet.) |
+| `attuned:forgebound` | Brands, anvils, welding sparks, and tempered pressure | Forge-affinity tools that avoid changing the older Ashen Forge set-bonus roster. | (No set bonus yet.) |
+| `attuned:wildroot` | Thorn, seed, bramble, and patient natural counterplay | Verdant-affinity tools that avoid changing the older Verdant Choir set-bonus roster. | (No set bonus yet.) |
 | `attuned:radiant` | Holy vows, light, witness, judgment | Reveals and protects in short windows rather than adding broad damage. | A brief Regeneration I in bright light (light level >= 12), on a 60s cooldown. |
 | `attuned:reliquary` | Names, relics, rites, thresholds | Utility-side Holy tools that reward preparation and place. | Luck I. |
 | `attuned:verdant_choir` | Roots, bloom, moss, patient growth | Broad natural utility with small travel and survival numbers. | A little hunger restored while standing on grass, on a 60s cooldown. |

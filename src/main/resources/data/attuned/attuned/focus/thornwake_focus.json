@@ -3,7 +3,6 @@
 	"cost": 4,
 	"unique": true,
 	"affinity": "verdant",
-	"aspect": "attuned:verdant",
 	"faction": "attuned:wildroot",
 	"modifiers": [
 		{

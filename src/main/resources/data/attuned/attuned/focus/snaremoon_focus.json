@@ -3,7 +3,6 @@
 	"cost": 4,
 	"unique": true,
 	"affinity": "umbral",
-	"aspect": "attuned:umbral",
 	"faction": "attuned:umbral",
 	"modifiers": [
 		{

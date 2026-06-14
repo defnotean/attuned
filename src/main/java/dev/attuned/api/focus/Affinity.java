@@ -13,10 +13,9 @@ import net.minecraft.util.StringRepresentable;
  * Wheel of Refusals: Fury, Bastion, Zephyr, Holy, Tide, Forge, Verdant, Umbral.
  *
  * <p>Each affinity is strong against exactly two others and weak to two
- * reciprocal others ({@link #strongAgainst()} / {@link #weakAgainst()}), copied
- * from {@link Aspect} so the two identity layers stay in lockstep. The historic
- * four-cycle (Holy beats Fury, Fury beats Bastion, Bastion beats Zephyr, Zephyr
- * beats Holy) survives as a subset of the expanded matrix. A Focus with no
+ * reciprocal others ({@link #strongAgainst()} / {@link #weakAgainst()}). The
+ * historic four-cycle (Holy beats Fury, Fury beats Bastion, Bastion beats Zephyr,
+ * Zephyr beats Holy) survives as a subset of the expanded matrix. A Focus with no
  * affinity (an affinity-neutral utility Focus) is represented by an empty
  * {@code Optional<Affinity>} on its {@link FocusDefinition}.
  */

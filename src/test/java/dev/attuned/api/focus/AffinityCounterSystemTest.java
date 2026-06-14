@@ -9,10 +9,9 @@ import java.util.List;
 import org.junit.jupiter.api.Test;
 
 /**
- * Counter-system coverage for the promoted 8-value {@link Affinity} wheel. The
- * matrix mirrors {@link Aspect} exactly: every Affinity is strong against two
- * others and weak to two reciprocal others, and the original four-cycle
- * relationships survive as a subset.
+ * Counter-system coverage for the promoted 8-value {@link Affinity} wheel. Every
+ * Affinity is strong against two others and weak to two reciprocal others, and
+ * the original four-cycle relationships survive as a subset.
  */
 class AffinityCounterSystemTest {
 

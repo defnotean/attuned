@@ -87,24 +87,24 @@ class FocusPresentationConsistencyTest {
 	}
 
 	@Test
-	void focusTooltipsShowAspectIdentityButLeaveMatchupsToJournal() throws IOException {
+	void focusTooltipsShowAffinityIdentityButLeaveMatchupsToJournal() throws IOException {
 		String source = Files.readString(TOOLTIP_SOURCE, StandardCharsets.UTF_8);
 		JsonObject lang = languageRoot();
 
-		assertTrue(source.contains("definition.aspect().ifPresent"),
-			"Tooltip should render optional Aspect metadata for FocusDefinitions that declare it.");
-		assertTrue(source.contains("tooltip.attuned.aspect.line"),
-			"Tooltip should use one translated Aspect identity line.");
-		assertFalse(source.contains("tooltip.attuned.aspect.matchups"),
-			"Focus item tooltips should not list who the Aspect counters; the journal owns matchups.");
-		assertFalse(source.contains("aspect.strongAgainst()"),
+		assertTrue(source.contains("Component.literal(\"Affinity \")"),
+			"Tooltip should render the Focus's affinity identity line.");
+		assertTrue(source.contains("affinityName(affinity)"),
+			"Tooltip should display the affinity's own name.");
+		assertFalse(source.contains("aspect"),
+			"The removed Aspect layer should leave no trace in the tooltip code.");
+		assertFalse(source.contains("affinity.strongAgainst()"),
 			"Focus item tooltips should not derive or display strength matchup names.");
-		assertFalse(source.contains("aspect.weakAgainst()"),
+		assertFalse(source.contains("affinity.weakAgainst()"),
 			"Focus item tooltips should not derive or display weakness matchup names.");
-		assertFalse(source.contains("aspectList("),
-			"Tooltip code should not keep a helper solely for rendering matchup lists.");
 		assertFalse(lang.has("tooltip.attuned.aspect.matchups"),
 			"Unused matchup tooltip text should be removed so item descriptions stay clean.");
+		assertFalse(lang.has("tooltip.attuned.aspect.line"),
+			"The removed Aspect identity line should leave no orphaned lang key.");
 	}
 
 	private static Set<String> modifierAttributePaths() throws IOException {

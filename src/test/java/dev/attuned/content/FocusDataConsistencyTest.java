@@ -102,19 +102,19 @@ class FocusDataConsistencyTest {
 		"attuned:sunlance_focus",
 		"attuned:threshold_focus",
 		"attuned:votive_focus");
-	private static final Map<String, String> ASPECT_COUNTER_FOCUS_ASPECTS = Map.ofEntries(
-		Map.entry("attuned:undertow_focus", "attuned:tide"),
-		Map.entry("attuned:riptide_heart_focus", "attuned:tide"),
-		Map.entry("attuned:pearlguard_focus", "attuned:tide"),
-		Map.entry("attuned:slagbrand_focus", "attuned:forge"),
-		Map.entry("attuned:anvilheart_focus", "attuned:forge"),
-		Map.entry("attuned:sparkweld_focus", "attuned:forge"),
-		Map.entry("attuned:thornwake_focus", "attuned:verdant"),
-		Map.entry("attuned:seedcall_focus", "attuned:verdant"),
-		Map.entry("attuned:bramblegate_focus", "attuned:verdant"),
-		Map.entry("attuned:nullveil_focus", "attuned:umbral"),
-		Map.entry("attuned:cinderthief_focus", "attuned:umbral"),
-		Map.entry("attuned:snaremoon_focus", "attuned:umbral"));
+	private static final Map<String, String> WHEEL_COUNTER_FOCUS_AFFINITIES = Map.ofEntries(
+		Map.entry("attuned:undertow_focus", "tide"),
+		Map.entry("attuned:riptide_heart_focus", "tide"),
+		Map.entry("attuned:pearlguard_focus", "tide"),
+		Map.entry("attuned:slagbrand_focus", "forge"),
+		Map.entry("attuned:anvilheart_focus", "forge"),
+		Map.entry("attuned:sparkweld_focus", "forge"),
+		Map.entry("attuned:thornwake_focus", "verdant"),
+		Map.entry("attuned:seedcall_focus", "verdant"),
+		Map.entry("attuned:bramblegate_focus", "verdant"),
+		Map.entry("attuned:nullveil_focus", "umbral"),
+		Map.entry("attuned:cinderthief_focus", "umbral"),
+		Map.entry("attuned:snaremoon_focus", "umbral"));
 	private static final Map<String, Double> SEAFARERS_LUCK_AMOUNTS = Map.of(
 		"attuned:driftglass_focus", 1.0D,
 		"attuned:harborlight_focus", 1.0D,
@@ -468,50 +468,48 @@ class FocusDataConsistencyTest {
 	}
 
 	@Test
-	void aspectCounterFociShipAsARealContentBatch() throws IOException {
+	void wheelCounterFociShipAsARealContentBatch() throws IOException {
 		JsonObject lang = languageRoot();
 		Set<String> actualItems = new TreeSet<>();
-		Map<String, Integer> countsByAspect = new TreeMap<>();
+		Map<String, Integer> countsByAffinity = new TreeMap<>();
 
-		for (Map.Entry<String, String> entry : ASPECT_COUNTER_FOCUS_ASPECTS.entrySet()) {
+		for (Map.Entry<String, String> entry : WHEEL_COUNTER_FOCUS_AFFINITIES.entrySet()) {
 			String itemId = entry.getKey();
-			String aspectId = entry.getValue();
+			String affinityId = entry.getValue();
 			String name = attunedPath(itemId);
 			Path file = FOCUS_DATA_DIR.resolve(name + ".json");
-			assertTrue(Files.isRegularFile(file), "Aspect Focus should have FocusDefinition data: " + itemId);
+			assertTrue(Files.isRegularFile(file), "Wheel counter Focus should have FocusDefinition data: " + itemId);
 			JsonObject root = focusDefinitionRoot(file);
 
 			assertEquals(itemId, root.get("item").getAsString(),
-				"Aspect Focus definition item should match file name: " + file);
-			assertTrue(root.has("aspect"), "Aspect Focus should declare counter metadata: " + file);
-			assertEquals(aspectId, root.get("aspect").getAsString(),
-				"Aspect Focus should declare the planned Aspect: " + itemId);
-			assertTrue(NAMESPACED_ID.matcher(aspectId).matches(),
-				"Aspect id should be namespaced: " + file);
-			assertTrue(root.has("unique") && root.get("unique").getAsBoolean(),
-				"Aspect counter Foci should be unique to prevent passive stacking: " + file);
+				"Wheel counter Focus definition item should match file name: " + file);
+			assertTrue(!root.has("aspect"),
+				"Wheel counter Foci should no longer carry the removed aspect field: " + file);
 			assertTrue(root.has("affinity"),
-				"Aspect Foci still need an old affinity for Pact/Discord compatibility: " + file);
+				"Wheel counter Focus should declare its counter identity via affinity: " + file);
+			assertEquals(affinityId, root.get("affinity").getAsString(),
+				"Wheel counter Focus should declare the planned affinity: " + itemId);
+			assertTrue(root.has("unique") && root.get("unique").getAsBoolean(),
+				"Wheel counter Foci should be unique to prevent passive stacking: " + file);
 			assertTrue(hasNonEmptyArray(root, "modifiers") || root.has("behavior"),
-				"Aspect Focus should have a real gameplay effect, not only lore metadata: " + file);
+				"Wheel counter Focus should have a real gameplay effect, not only lore metadata: " + file);
 
 			actualItems.add(itemId);
-			countsByAspect.merge(aspectId, 1, Integer::sum);
-			assertLanguageKey(lang, "aspect." + aspectId.replace(':', '.'));
+			countsByAffinity.merge(affinityId, 1, Integer::sum);
 			assertLanguageKey(lang, "item.attuned." + name);
 			assertLanguageKey(lang, "item.attuned." + name + ".lore");
 			assertLanguageKey(lang, "item.attuned." + name + ".lore2");
 			assertLanguageKey(lang, "item.attuned." + name + ".effect");
 		}
 
-		assertEquals(new TreeSet<>(ASPECT_COUNTER_FOCUS_ASPECTS.keySet()), actualItems,
-			"The first Aspect-counter batch should ship exactly the planned 12 new Foci");
+		assertEquals(new TreeSet<>(WHEEL_COUNTER_FOCUS_AFFINITIES.keySet()), actualItems,
+			"The first wheel-counter batch should ship exactly the planned 12 new Foci");
 		assertEquals(Map.of(
-			"attuned:tide", 3,
-			"attuned:forge", 3,
-			"attuned:verdant", 3,
-			"attuned:umbral", 3), countsByAspect,
-			"The starter batch should ship three Foci for each new non-core Aspect");
+			"tide", 3,
+			"forge", 3,
+			"verdant", 3,
+			"umbral", 3), countsByAffinity,
+			"The starter batch should ship three Foci for each new non-core affinity");
 	}
 
 	@Test

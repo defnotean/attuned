@@ -8,9 +8,9 @@ Equip **Foci** into six inventory slots, but mind your **attunement capacity**. 
 
 ## At a glance
 
-- 78 Foci across mobility, defense, combat, stealth, holy, seafaring, shadow, utility, and the new Aspect counter wheel
-- **New in 1.4.0: Tide, Forge, Verdant, and Umbral Aspect Foci** — Undertow, Riptide Heart, Pearlguard, Slagbrand, Anvilheart, Sparkweld, Thornwake, Seedcall, Bramblegate, Nullveil, Cinderthief, and Snaremoon
-- **Refreshed original Focus art** for the new Aspect Foci, processed into animated Minecraft item sheets so they sit with the existing medallion/talisman theme
+- 78 Foci across mobility, defense, combat, stealth, holy, seafaring, shadow, utility, and the eightfold counter wheel
+- **New in 1.4.0: Tide, Forge, Verdant, and Umbral affinity Foci** — Undertow, Riptide Heart, Pearlguard, Slagbrand, Anvilheart, Sparkweld, Thornwake, Seedcall, Bramblegate, Nullveil, Cinderthief, and Snaremoon
+- **Refreshed original Focus art** for the new affinity Foci, processed into animated Minecraft item sheets so they sit with the existing medallion/talisman theme
 - **The Unseen**: a stealth faction built around quiet movement, low-light veils, smoke misdirection, and ambush openings
 - Eight **affinities** (Fury, Bastion, Zephyr, Holy, Tide, Forge, Verdant, Umbral) on one counter wheel — each beats two and is countered by two — plus the cross-affinity **Discord** stance. The Attunement Journal carries the full matchup reference.
 - The promoted **Tide, Forge, Verdant, and Umbral** affinities round out the Wheel of Refusals; the older four-affinity cycle survives as a subset of the expanded matrix
@@ -23,14 +23,14 @@ Equip **Foci** into six inventory slots, but mind your **attunement capacity**. 
 
 ## Current patch — Attuned 1.4.1
 
-- Focus descriptions/tooltips now show only each Focus's own effect plus Aspect identity.
-- The **Attunement Journal** owns the full Aspect matchup reference, keeping the who-counters-who details in one in-game place.
+- Focus descriptions/tooltips now show only each Focus's own effect plus affinity identity.
+- The **Attunement Journal** owns the full affinity matchup reference, keeping the who-counters-who details in one in-game place.
 
 ## New in Attuned 1.4.0 — Resonant Depths
 
-- The **Aspect counter wheel** adds a visible second layer of counterplay without breaking the original four-affinity Pact/Discord system.
-- The first Aspect batch adds 12 Foci across **Tide**, **Forge**, **Verdant**, and **Umbral**. Tooltips show each Focus's Aspect; the Attunement Journal carries the matchup reference.
-- The new Aspect Focus textures ship as crisp animated item sheets with bold medallion silhouettes, disciplined Aspect palettes, and inventory-scale readability checks.
+- The promoted **Tide, Forge, Verdant, and Umbral** affinities expand the counter wheel from four to eight while the original four-affinity Pact/Discord cycle survives as a subset.
+- The first eightfold batch adds 12 Foci across **Tide**, **Forge**, **Verdant**, and **Umbral**. Tooltips show each Focus's affinity; the Attunement Journal carries the matchup reference.
+- The new affinity Focus textures ship as crisp animated item sheets with bold medallion silhouettes, disciplined affinity palettes, and inventory-scale readability checks.
 - **Focus Confluences**, **Tempering**, **Grand Focus Reliquary**, **Attunement Sanctums**, **Resonant Surges**, datapack-defined Focus behavior palettes, and expanded journal/tooltips round out the release.
 
 ## Requirements

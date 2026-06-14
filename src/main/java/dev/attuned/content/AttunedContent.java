@@ -121,7 +121,7 @@ public final class AttunedContent {
 	public static final Item DREADFANG_FOCUS = registerFocus("dreadfang_focus");
 	public static final Item ECLIPSE_FOCUS = registerFocus("eclipse_focus");
 
-	// Aspect Counter Foci - first Wheel of Refusals batch beyond the original four affinities.
+	// Wheel of Refusals Foci - first batch beyond the original four affinities (Tide, Forge, Verdant, Umbral).
 	public static final Item UNDERTOW_FOCUS = registerFocus("undertow_focus");
 	public static final Item RIPTIDE_HEART_FOCUS = registerFocus("riptide_heart_focus");
 	public static final Item PEARLGUARD_FOCUS = registerFocus("pearlguard_focus");

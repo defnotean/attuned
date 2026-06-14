@@ -3,7 +3,6 @@
 	"cost": 4,
 	"unique": true,
 	"affinity": "tide",
-	"aspect": "attuned:tide",
 	"faction": "attuned:tideborn",
 	"modifiers": [
 		{

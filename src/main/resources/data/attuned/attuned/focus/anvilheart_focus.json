@@ -3,7 +3,6 @@
 	"cost": 5,
 	"unique": true,
 	"affinity": "forge",
-	"aspect": "attuned:forge",
 	"faction": "attuned:forgebound",
 	"modifiers": [
 		{
