@@ -12,8 +12,8 @@ Lives in `src/main/resources/data/attuned/attuned/focus/<name>.json`.
 | `item`      | text    | yes      | The item id, always `attuned:<name>`. |
 | `cost`      | number  | no (1)   | Attunement points the Focus uses. Usually 2–6. |
 | `unique`    | boolean | no (false) | If true, only one copy of this Focus can be active at once; a duplicate stays dormant. |
-| `affinity`  | text    | no       | `fury`, `bastion`, `zephyr`, or `holy`. Omit for a neutral Focus. |
-| `aspect`    | text    | no       | Optional expanded counter identity, e.g. `attuned:tide`. It is separate from affinity/Pact math. |
+| `affinity`  | text    | no       | One of the eight wheel values: `fury`, `bastion`, `zephyr`, `holy`, `tide`, `forge`, `verdant`, or `umbral`. Omit for a neutral Focus. |
+| `aspect`    | text    | no       | Legacy alias for an affinity-style counter identity, kept for older datapacks. New Foci should set `affinity` directly. |
 | `faction`   | text    | no       | Optional story/gameplay family, e.g. `attuned:unseen`. It does not change affinity math. |
 | `modifiers` | list    | no ([])  | Stat changes — see [Attribute modifiers](#attribute-modifiers). |
 | `behavior`  | text    | no       | A registered behavior id, e.g. `attuned:stormcall`. |
@@ -23,11 +23,23 @@ does nothing. Most Foci use either `modifiers` or `behavior` (or both).
 
 ## Affinities
 
-Four affinities form a counter cycle:
+Eight affinities form the counter wheel (the Wheel of Refusals). Each affinity
+beats exactly two others and is countered by the two reciprocal others:
 
-```
-Holy  beats  Fury  beats  Bastion  beats  Zephyr  beats  Holy
-```
+| Affinity | Beats | Weak to |
+|----------|-------|---------|
+| Fury | Bastion, Verdant | Holy, Tide |
+| Bastion | Zephyr, Umbral | Fury, Forge |
+| Zephyr | Holy, Tide | Bastion, Umbral |
+| Holy | Fury, Umbral | Zephyr, Verdant |
+| Tide | Fury, Forge | Zephyr, Verdant |
+| Forge | Bastion, Verdant | Tide, Umbral |
+| Verdant | Tide, Holy | Fury, Forge |
+| Umbral | Zephyr, Forge | Bastion, Holy |
+
+The original four-cycle (Holy beats Fury beats Bastion beats Zephyr beats Holy)
+survives as a subset of this expanded matrix. The in-game Attunement Journal's
+matchup pages carry the same table for players.
 
 - A Focus with an `affinity` pulls its wearer toward that lane. When every
   active affinity-bearing Focus shares one affinity, the wearer is **committed**
@@ -40,11 +52,29 @@ Holy  beats  Fury  beats  Bastion  beats  Zephyr  beats  Holy
   fits any committed lane. Four or more active neutral Foci can reach
   **Stillpoint**, the neutral Apex path.
 
+**Apex capstones.** Each committed affinity arms its own Apex capstone at near-full
+capacity and combat Resonance:
+
+| Affinity | Capstone | Effect |
+|----------|----------|--------|
+| Fury | Execute | Strikes finish off low-health foes. |
+| Bastion | Unyielding | No single blow can land hard, and knockback is ignored. |
+| Zephyr | Untouchable | A chance to dodge attacks outright while sprinting. |
+| Holy | Judgment | Marks wounded Fury-aligned foes for a decisive strike. |
+| Tide | Riptide | Apex strikes drag foes into the current (Slowness). |
+| Forge | Crucible | Apex strikes sear foes with forge-heat (fire). |
+| Verdant | Bloomward | Apex strikes return life to you. |
+| Umbral | Gloaming | Apex strikes sap a foe's strength (Weakness). |
+
+The four promoted capstones (Riptide, Crucible, Bloomward, Gloaming) are matchup-scaled
+on-hit procs on a landed apex melee: empowered against the affinity they beat, normal
+otherwise, and suppressed against an affinity that beats them.
+
 **Apex identity abilities.** The two affinity-less Apex paths each gain an active
 ability fired from the **Focus Ability** keybind — but only while armed (at Apex
 resonance) and while no awake ability Focus is equipped to claim the key first.
-The affinity capstones (Execute, Unyielding, Untouchable, Judgment) own no such
-ability; their key press still reports that no ability Focus is equipped.
+The eight affinity capstones own no such ability; their key press still reports
+that no ability Focus is equipped.
 
 - **Maelstrom** unleashes a **chaos nova**: every nearby hostile (and any
   PvP-affectable player) is knocked away from you and hit with Weakness for five
@@ -62,19 +92,43 @@ does not already telegraph — the lookup is server-mediated (attunement state s
 only to its owner, so it can never be read client-side), range-limited to 24
 blocks with line of sight, and rate-limited per onlooker.
 
-## Aspects
+## Pacts
 
-Aspects are the expanded Focus type/counter layer. They do **not** replace the
-old four affinity/Pact/Discord rules; a Focus may carry both an `affinity` and an
-`aspect`. Focus tooltips show only the Aspect name. The in-game Attunement
-Journal is the canonical player-facing reference for which Aspects beat or
-answer each other.
+A **Pact** is a named set bonus that wakes when **three or more active Foci share
+one affinity** (no extra attunement cost). Each of the eight affinities owns a
+single-affinity pact, and a player is in at most one pact at a time:
+
+| Affinity | Pact |
+|----------|------|
+| Fury | Pyresworn |
+| Bastion | Stoneheart |
+| Zephyr | Windrunner |
+| Holy | Radiant Covenant |
+| Tide | Tidesworn |
+| Forge | Forgebound |
+| Verdant | Wildroot |
+| Umbral | Nightsworn |
+
+The cross-affinity **Untethered** pact wakes instead when the player carries a
+diverse spread (four or more distinct active affinities, none stacked three deep);
+it hits affinity-bearing foes harder. The Attunement Journal's Pacts chapter
+documents all nine.
+
+## Aspects (legacy alias)
+
+`aspect` predates the eightfold promotion: Tide, Forge, Verdant, and Umbral were
+once a separate "Wheel of Refusals" counter layer on top of the original four
+affinities. They are now first-class **affinities** (see [Affinities](#affinities)),
+so new Foci should set `affinity` directly. The `aspect` field is kept only so
+older datapacks keep loading; it resolves to the same wheel. The in-game
+Attunement Journal's matchup pages are the canonical player-facing reference for
+which affinities beat or answer each other.
 
 ## Factions
 
 Factions are optional labels for Foci that share a theme. They show on tooltips
 and can be used by loot weighting, but they are not affinities and never change
-the Holy/Fury/Bastion/Zephyr cycle.
+the affinity counter wheel.
 
 When **three or more ACTIVE Foci share a faction**, that faction grants a small,
 free passive **set bonus** — no extra attunement cost. The bonus is a modest

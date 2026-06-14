@@ -155,11 +155,11 @@ class AttunementJournalUiContractTest {
 				< itemSource.indexOf("\"journal.attuned.page8\""),
 			"Written-book fallback should keep the Apex pages adjacent");
 		assertTrue(lang.contains("\"journal.attuned.page34\""),
-			"Journal UI should include an Aspect overview page.");
+			"Journal UI should include an Affinity overview page.");
 		assertTrue(lang.contains("\"journal.attuned.page35\""),
-			"Journal UI should include the first Aspect matchup page.");
+			"Journal UI should include the first Affinity matchup page.");
 		assertTrue(lang.contains("\"journal.attuned.page36\""),
-			"Journal UI should include the second Aspect matchup page.");
+			"Journal UI should include the second Affinity matchup page.");
 		assertTrue(screenSource.indexOf("journal.attuned.page4")
 				< screenSource.indexOf("journal.attuned.page34")
 				&& screenSource.indexOf("journal.attuned.page34")
@@ -168,7 +168,7 @@ class AttunementJournalUiContractTest {
 				< screenSource.indexOf("journal.attuned.page36")
 				&& screenSource.indexOf("journal.attuned.page36")
 				< screenSource.indexOf("journal.attuned.page5"),
-			"Aspect reference pages should live in Core after the affinity cycle and before Discord.");
+			"Affinity reference pages should live in Core after the affinity cycle and before Discord.");
 		assertTrue(itemSource.indexOf("\"journal.attuned.page4\"")
 				< itemSource.indexOf("\"journal.attuned.page34\"")
 				&& itemSource.indexOf("\"journal.attuned.page34\"")
@@ -177,30 +177,97 @@ class AttunementJournalUiContractTest {
 				< itemSource.indexOf("\"journal.attuned.page36\"")
 				&& itemSource.indexOf("\"journal.attuned.page36\"")
 				< itemSource.indexOf("\"journal.attuned.page5\""),
-			"Written-book fallback should keep Aspect reference pages beside the core affinity cycle.");
-		String aspectOverview = translationValue(lang, "journal.attuned.page34").replace("\\n", "\n");
-		assertTrue(aspectOverview.contains("Focus tooltips name only the Aspect"),
-			"Aspect overview should explain that individual Focus descriptions do not list matchups.");
-		assertTrue(aspectOverview.contains("journal"),
-			"Aspect overview should direct players to the journal for matchup details.");
-		String aspectPageOne = translationValue(lang, "journal.attuned.page35").replace("\\n", "\n");
-		assertTrue(aspectPageOne.contains("Fury: beats Bastion, Verdant; weak to Holy, Tide."),
-			"Journal should list Fury's full Aspect matchups.");
-		assertTrue(aspectPageOne.contains("Bastion: beats Zephyr, Umbral; weak to Fury, Forge."),
-			"Journal should list Bastion's full Aspect matchups.");
-		assertTrue(aspectPageOne.contains("Zephyr: beats Holy, Tide; weak to Bastion, Umbral."),
-			"Journal should list Zephyr's full Aspect matchups.");
-		assertTrue(aspectPageOne.contains("Holy: beats Fury, Umbral; weak to Zephyr, Verdant."),
-			"Journal should list Holy's full Aspect matchups.");
-		String aspectPageTwo = translationValue(lang, "journal.attuned.page36").replace("\\n", "\n");
-		assertTrue(aspectPageTwo.contains("Tide: beats Fury, Forge; weak to Zephyr, Verdant."),
-			"Journal should list Tide's full Aspect matchups.");
-		assertTrue(aspectPageTwo.contains("Forge: beats Bastion, Verdant; weak to Tide, Umbral."),
-			"Journal should list Forge's full Aspect matchups.");
-		assertTrue(aspectPageTwo.contains("Verdant: beats Tide, Holy; weak to Fury, Forge."),
-			"Journal should list Verdant's full Aspect matchups.");
-		assertTrue(aspectPageTwo.contains("Umbral: beats Zephyr, Forge; weak to Bastion, Holy."),
-			"Journal should list Umbral's full Aspect matchups.");
+			"Written-book fallback should keep Affinity reference pages beside the core affinity cycle.");
+		String affinityOverview = translationValue(lang, "journal.attuned.page34").replace("\\n", "\n");
+		assertTrue(affinityOverview.contains("Focus tooltips name only the affinity"),
+			"Affinity overview should explain that individual Focus tooltips do not list matchups.");
+		assertTrue(affinityOverview.contains("journal"),
+			"Affinity overview should direct players to the journal for matchup details.");
+		String affinityPageOne = translationValue(lang, "journal.attuned.page35").replace("\\n", "\n");
+		assertTrue(affinityPageOne.contains("Fury: beats Bastion, Verdant; weak to Holy, Tide."),
+			"Journal should list Fury's full affinity matchups.");
+		assertTrue(affinityPageOne.contains("Bastion: beats Zephyr, Umbral; weak to Fury, Forge."),
+			"Journal should list Bastion's full affinity matchups.");
+		assertTrue(affinityPageOne.contains("Zephyr: beats Holy, Tide; weak to Bastion, Umbral."),
+			"Journal should list Zephyr's full affinity matchups.");
+		assertTrue(affinityPageOne.contains("Holy: beats Fury, Umbral; weak to Zephyr, Verdant."),
+			"Journal should list Holy's full affinity matchups.");
+		String affinityPageTwo = translationValue(lang, "journal.attuned.page36").replace("\\n", "\n");
+		assertTrue(affinityPageTwo.contains("Tide: beats Fury, Forge; weak to Zephyr, Verdant."),
+			"Journal should list Tide's full affinity matchups.");
+		assertTrue(affinityPageTwo.contains("Forge: beats Bastion, Verdant; weak to Tide, Umbral."),
+			"Journal should list Forge's full affinity matchups.");
+		assertTrue(affinityPageTwo.contains("Verdant: beats Tide, Holy; weak to Fury, Forge."),
+			"Journal should list Verdant's full affinity matchups.");
+		assertTrue(affinityPageTwo.contains("Umbral: beats Zephyr, Forge; weak to Bastion, Holy."),
+			"Journal should list Umbral's full affinity matchups.");
+
+		assertEightfoldPactPages(screenSource, itemSource, lang);
+		assertEightfoldCapstonePages(screenSource, itemSource, lang);
+	}
+
+	/**
+	 * Pins that the Pacts chapter documents all eight single-affinity pacts — the
+	 * original four (Pyresworn, Stoneheart, Windrunner, Radiant Covenant) plus the
+	 * four promoted ones (Tidesworn, Forgebound, Wildroot, Nightsworn) — in both the
+	 * custom screen and the written-book fallback, with matching journal copy.
+	 */
+	private static void assertEightfoldPactPages(String screenSource, String itemSource, String lang) {
+		for (String pactPage : new String[] {
+				"journal.attuned.page37", "journal.attuned.page38",
+				"journal.attuned.page39", "journal.attuned.page40" }) {
+			assertTrue(lang.contains("\"" + pactPage + "\""),
+				"Journal copy should include the new pact page " + pactPage);
+			assertTrue(screenSource.contains(pactPage),
+				"Journal UI should route to the new pact page " + pactPage);
+			assertTrue(itemSource.contains("\"" + pactPage + "\""),
+				"Written-book fallback should include the new pact page " + pactPage);
+		}
+		assertTrue(translationValue(lang, "journal.attuned.page37").contains("Tidesworn"),
+			"The Tide pact page should name Tidesworn.");
+		assertTrue(translationValue(lang, "journal.attuned.page38").contains("Forgebound"),
+			"The Forge pact page should name Forgebound.");
+		assertTrue(translationValue(lang, "journal.attuned.page39").contains("Wildroot"),
+			"The Verdant pact page should name Wildroot.");
+		assertTrue(translationValue(lang, "journal.attuned.page40").contains("Nightsworn"),
+			"The Umbral pact page should name Nightsworn.");
+		assertTrue(screenSource.contains("gemPage(\"journal.attuned.page37\", 0xFF2F7FD0, Affinity.TIDE)"),
+			"Tidesworn page should render as a Tide gem page.");
+		assertTrue(screenSource.contains("gemPage(\"journal.attuned.page40\", 0xFF7A4FB5, Affinity.UMBRAL)"),
+			"Nightsworn page should render as an Umbral gem page.");
+	}
+
+	/**
+	 * Pins that the Apex chapter documents the four promoted-affinity capstones
+	 * (Riptide, Crucible, Bloomward, Gloaming) alongside the originals, in both the
+	 * custom screen and the written-book fallback, kept beside the base Apex page.
+	 */
+	private static void assertEightfoldCapstonePages(String screenSource, String itemSource, String lang) {
+		assertTrue(lang.contains("\"journal.attuned.page41\""),
+			"Journal copy should include the promoted-affinity capstone page.");
+		assertTrue(screenSource.contains("journal.attuned.page41"),
+			"Journal UI should route to the promoted-affinity capstone page.");
+		assertTrue(itemSource.contains("\"journal.attuned.page41\""),
+			"Written-book fallback should include the promoted-affinity capstone page.");
+		String capstonePage = translationValue(lang, "journal.attuned.page41").replace("\\n", "\n");
+		assertTrue(capstonePage.contains("Riptide"),
+			"Capstone page should name the Tide capstone Riptide.");
+		assertTrue(capstonePage.contains("Crucible"),
+			"Capstone page should name the Forge capstone Crucible.");
+		assertTrue(capstonePage.contains("Bloomward"),
+			"Capstone page should name the Verdant capstone Bloomward.");
+		assertTrue(capstonePage.contains("Gloaming"),
+			"Capstone page should name the Umbral capstone Gloaming.");
+		assertTrue(screenSource.indexOf("journal.attuned.page7")
+				< screenSource.indexOf("journal.attuned.page41")
+				&& screenSource.indexOf("journal.attuned.page41")
+				< screenSource.indexOf("journal.attuned.page30"),
+			"The capstone page should sit between the base Apex page and Maelstrom.");
+		assertTrue(itemSource.indexOf("\"journal.attuned.page7\"")
+				< itemSource.indexOf("\"journal.attuned.page41\"")
+				&& itemSource.indexOf("\"journal.attuned.page41\"")
+				< itemSource.indexOf("\"journal.attuned.page30\""),
+			"Written-book fallback should keep the capstone page beside the base Apex page.");
 	}
 
 	@Test
