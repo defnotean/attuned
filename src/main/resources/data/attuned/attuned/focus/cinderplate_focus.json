@@ -1,0 +1,17 @@
+{
+	"item": "attuned:cinderplate_focus",
+	"cost": 4,
+	"affinity": "forge",
+	"modifiers": [
+		{
+			"attribute": "minecraft:armor",
+			"amount": 3.0,
+			"operation": "add_value"
+		},
+		{
+			"attribute": "minecraft:armor_toughness",
+			"amount": 2.0,
+			"operation": "add_value"
+		}
+	]
+}

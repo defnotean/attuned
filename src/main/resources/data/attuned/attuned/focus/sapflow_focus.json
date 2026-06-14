@@ -1,0 +1,17 @@
+{
+	"item": "attuned:sapflow_focus",
+	"cost": 4,
+	"affinity": "verdant",
+	"modifiers": [
+		{
+			"attribute": "minecraft:max_health",
+			"amount": 4.0,
+			"operation": "add_value"
+		},
+		{
+			"attribute": "minecraft:attack_damage",
+			"amount": 2.0,
+			"operation": "add_value"
+		}
+	]
+}

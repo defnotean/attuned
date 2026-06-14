@@ -135,6 +135,24 @@ public final class AttunedContent {
 	public static final Item CINDERTHIEF_FOCUS = registerFocus("cinderthief_focus");
 	public static final Item SNAREMOON_FOCUS = registerFocus("snaremoon_focus");
 
+	// Affinity Foci, batch one - pure-modifier Foci across the Tide, Verdant, Forge, Fury and Bastion lanes.
+	public static final Item TIDEWARDEN_FOCUS = registerFocus("tidewarden_focus");
+	public static final Item WELLSPRING_FOCUS = registerFocus("wellspring_focus");
+	public static final Item CURRENT_RUNNER_FOCUS = registerFocus("current_runner_focus");
+	public static final Item SALTBRAND_FOCUS = registerFocus("saltbrand_focus");
+	public static final Item EBBSTRIDE_FOCUS = registerFocus("ebbstride_focus");
+	public static final Item OVERGROWTH_FOCUS = registerFocus("overgrowth_focus");
+	public static final Item DEEPROOT_FOCUS = registerFocus("deeproot_focus");
+	public static final Item BRIARCOAT_FOCUS = registerFocus("briarcoat_focus");
+	public static final Item FERNSTRIDE_FOCUS = registerFocus("fernstride_focus");
+	public static final Item SAPFLOW_FOCUS = registerFocus("sapflow_focus");
+	public static final Item CINDERPLATE_FOCUS = registerFocus("cinderplate_focus");
+	public static final Item BELLOWSFURY_FOCUS = registerFocus("bellowsfury_focus");
+	public static final Item BLOODRUSH_FOCUS = registerFocus("bloodrush_focus");
+	public static final Item RAVAGER_FOCUS = registerFocus("ravager_focus");
+	public static final Item GRANITEHIDE_FOCUS = registerFocus("granitehide_focus");
+	public static final Item HAMMERWARD_FOCUS = registerFocus("hammerward_focus");
+
 	/**
 	 * Blank, resource-pack-skinnable Focus items for datapack authors. Each one is a
 	 * real registered Focus item with a neutral default name/model/texture, but ships

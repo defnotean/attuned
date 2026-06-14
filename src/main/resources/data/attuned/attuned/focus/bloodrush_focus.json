@@ -1,0 +1,17 @@
+{
+	"item": "attuned:bloodrush_focus",
+	"cost": 4,
+	"affinity": "fury",
+	"modifiers": [
+		{
+			"attribute": "minecraft:attack_speed",
+			"amount": 0.35,
+			"operation": "add_value"
+		},
+		{
+			"attribute": "minecraft:movement_speed",
+			"amount": 0.1,
+			"operation": "add_multiplied_base"
+		}
+	]
+}

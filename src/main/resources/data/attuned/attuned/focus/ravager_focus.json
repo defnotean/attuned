@@ -1,0 +1,18 @@
+{
+	"item": "attuned:ravager_focus",
+	"cost": 5,
+	"unique": true,
+	"affinity": "fury",
+	"modifiers": [
+		{
+			"attribute": "minecraft:attack_damage",
+			"amount": 0.4,
+			"operation": "add_multiplied_base"
+		},
+		{
+			"attribute": "minecraft:knockback_resistance",
+			"amount": -0.1,
+			"operation": "add_value"
+		}
+	]
+}

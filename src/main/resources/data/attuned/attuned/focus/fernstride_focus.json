@@ -1,0 +1,17 @@
+{
+	"item": "attuned:fernstride_focus",
+	"cost": 2,
+	"affinity": "verdant",
+	"modifiers": [
+		{
+			"attribute": "minecraft:movement_speed",
+			"amount": 0.12,
+			"operation": "add_multiplied_base"
+		},
+		{
+			"attribute": "minecraft:jump_strength",
+			"amount": 0.2,
+			"operation": "add_multiplied_base"
+		}
+	]
+}

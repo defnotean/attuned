@@ -1,0 +1,23 @@
+{
+	"item": "attuned:hammerward_focus",
+	"cost": 5,
+	"unique": true,
+	"affinity": "bastion",
+	"modifiers": [
+		{
+			"attribute": "minecraft:max_health",
+			"amount": 4.0,
+			"operation": "add_value"
+		},
+		{
+			"attribute": "minecraft:knockback_resistance",
+			"amount": 0.3,
+			"operation": "add_value"
+		},
+		{
+			"attribute": "minecraft:attack_damage",
+			"amount": 2.0,
+			"operation": "add_value"
+		}
+	]
+}

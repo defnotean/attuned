@@ -1,0 +1,17 @@
+{
+	"item": "attuned:current_runner_focus",
+	"cost": 3,
+	"affinity": "tide",
+	"modifiers": [
+		{
+			"attribute": "minecraft:movement_speed",
+			"amount": 0.12,
+			"operation": "add_multiplied_base"
+		},
+		{
+			"attribute": "minecraft:water_movement_efficiency",
+			"amount": 0.6,
+			"operation": "add_value"
+		}
+	]
+}

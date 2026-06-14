@@ -1,0 +1,6 @@
+{
+	"model": {
+		"type": "minecraft:model",
+		"model": "attuned:item/current_runner_focus"
+	}
+}
