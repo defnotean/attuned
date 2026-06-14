@@ -60,7 +60,11 @@ public class AttunementAltarBlock extends Block {
 		FURY("fury"),
 		BASTION("bastion"),
 		ZEPHYR("zephyr"),
-		HOLY("holy");
+		HOLY("holy"),
+		TIDE("tide"),
+		FORGE("forge"),
+		VERDANT("verdant"),
+		UMBRAL("umbral");
 
 		private final String serializedName;
 
@@ -398,9 +402,10 @@ public class AttunementAltarBlock extends Block {
 			case BASTION -> AltarAffinity.BASTION;
 			case ZEPHYR -> AltarAffinity.ZEPHYR;
 			case HOLY -> AltarAffinity.HOLY;
-			// The promoted affinities glow neutral for now — no new altar models,
-			// textures, or blockstates ship with this expansion.
-			case TIDE, FORGE, VERDANT, UMBRAL -> AltarAffinity.NONE;
+			case TIDE -> AltarAffinity.TIDE;
+			case FORGE -> AltarAffinity.FORGE;
+			case VERDANT -> AltarAffinity.VERDANT;
+			case UMBRAL -> AltarAffinity.UMBRAL;
 		};
 	}
 
@@ -410,6 +415,10 @@ public class AttunementAltarBlock extends Block {
 			case BASTION -> 0xFFAA00;
 			case ZEPHYR -> 0x55FFFF;
 			case HOLY -> 0xFFF1A8;
+			case TIDE -> 0x2F7FD0;
+			case FORGE -> 0xC85A2B;
+			case VERDANT -> 0x5FC23E;
+			case UMBRAL -> 0x7A4FB5;
 			case NONE -> 0xFFFFFF;
 		};
 	}

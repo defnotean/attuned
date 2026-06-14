@@ -56,16 +56,10 @@ class HudAssetConsistencyTest {
 		assertImageSize(HUD_BACKPLATE, 50, 24);
 	}
 
-	// The gem sprite a capstone resolves to. The four promoted-affinity capstones
-	// ship no bespoke art and reuse their affinity's existing gem sprite; every
-	// other capstone owns a bespoke hud/<capstone> face. Mirrors CombatHud's
-	// capstoneGemSprite routing.
+	// The gem sprite a capstone resolves to: every capstone owns a bespoke
+	// hud/<capstone> face. Mirrors CombatHud's capstoneGemSprite routing.
 	private static String capstoneGemSpriteName(Apex.Capstone capstone) {
-		return switch (capstone) {
-			case RIPTIDE, CRUCIBLE, BLOOMWARD, GLOAMING ->
-				"affinity_" + capstone.affinity().orElseThrow().getSerializedName();
-			default -> capstone.name().toLowerCase(Locale.ROOT);
-		};
+		return capstone.name().toLowerCase(Locale.ROOT);
 	}
 
 	private static void assertSprite(String name, int width, int height) throws IOException {

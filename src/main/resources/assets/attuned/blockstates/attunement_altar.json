@@ -4,6 +4,10 @@
 		"affinity=fury": { "model": "attuned:block/attunement_altar_fury" },
 		"affinity=bastion": { "model": "attuned:block/attunement_altar_bastion" },
 		"affinity=zephyr": { "model": "attuned:block/attunement_altar_zephyr" },
-		"affinity=holy": { "model": "attuned:block/attunement_altar_holy" }
+		"affinity=holy": { "model": "attuned:block/attunement_altar_holy" },
+		"affinity=tide": { "model": "attuned:block/attunement_altar_tide" },
+		"affinity=forge": { "model": "attuned:block/attunement_altar_forge" },
+		"affinity=verdant": { "model": "attuned:block/attunement_altar_verdant" },
+		"affinity=umbral": { "model": "attuned:block/attunement_altar_umbral" }
 	}
 }
