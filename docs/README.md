@@ -16,8 +16,8 @@ add a Focus.
   affinity Foci that share one lane commit the build; mixed active affinities
   become **Discord**, which is risky but still valid.
 - Some Foci also carry an **Aspect**: Fury, Bastion, Zephyr, Holy, Tide, Forge,
-  Verdant, or Umbral. Aspects are the broader counter web shown on tooltips —
-  every Aspect is strong into two others and weak into two others — but they do
+  Verdant, or Umbral. Tooltips show only the Aspect name; the Attunement Journal
+  carries the broader counter web so Focus descriptions stay clean. Aspects do
   not replace affinity, Pact, or Discord math.
 - Three matching active affinities can awaken a **Pact**. A fully committed,
   high-capacity build can reach **Apex** during combat. Full mixed-affinity and

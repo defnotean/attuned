@@ -66,19 +66,9 @@ blocks with line of sight, and rate-limited per onlooker.
 
 Aspects are the expanded Focus type/counter layer. They do **not** replace the
 old four affinity/Pact/Discord rules; a Focus may carry both an `affinity` and an
-`aspect`. Tooltips show an Aspect's strengths and weaknesses from the Wheel of
-Refusals.
-
-| Aspect | Counters | Weak to |
-|--------|----------|---------|
-| `attuned:fury` | Bastion, Verdant | Holy, Tide |
-| `attuned:bastion` | Zephyr, Umbral | Fury, Forge |
-| `attuned:zephyr` | Holy, Tide | Bastion, Umbral |
-| `attuned:holy` | Fury, Umbral | Zephyr, Verdant |
-| `attuned:tide` | Fury, Forge | Zephyr, Verdant |
-| `attuned:forge` | Bastion, Verdant | Tide, Umbral |
-| `attuned:verdant` | Tide, Holy | Fury, Forge |
-| `attuned:umbral` | Zephyr, Forge | Bastion, Holy |
+`aspect`. Focus tooltips show only the Aspect name. The in-game Attunement
+Journal is the canonical player-facing reference for which Aspects beat or
+answer each other.
 
 ## Factions
 

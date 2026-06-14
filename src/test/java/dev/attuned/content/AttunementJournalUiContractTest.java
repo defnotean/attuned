@@ -154,6 +154,53 @@ class AttunementJournalUiContractTest {
 				&& itemSource.indexOf("\"journal.attuned.page31\"")
 				< itemSource.indexOf("\"journal.attuned.page8\""),
 			"Written-book fallback should keep the Apex pages adjacent");
+		assertTrue(lang.contains("\"journal.attuned.page34\""),
+			"Journal UI should include an Aspect overview page.");
+		assertTrue(lang.contains("\"journal.attuned.page35\""),
+			"Journal UI should include the first Aspect matchup page.");
+		assertTrue(lang.contains("\"journal.attuned.page36\""),
+			"Journal UI should include the second Aspect matchup page.");
+		assertTrue(screenSource.indexOf("journal.attuned.page4")
+				< screenSource.indexOf("journal.attuned.page34")
+				&& screenSource.indexOf("journal.attuned.page34")
+				< screenSource.indexOf("journal.attuned.page35")
+				&& screenSource.indexOf("journal.attuned.page35")
+				< screenSource.indexOf("journal.attuned.page36")
+				&& screenSource.indexOf("journal.attuned.page36")
+				< screenSource.indexOf("journal.attuned.page5"),
+			"Aspect reference pages should live in Core after the affinity cycle and before Discord.");
+		assertTrue(itemSource.indexOf("\"journal.attuned.page4\"")
+				< itemSource.indexOf("\"journal.attuned.page34\"")
+				&& itemSource.indexOf("\"journal.attuned.page34\"")
+				< itemSource.indexOf("\"journal.attuned.page35\"")
+				&& itemSource.indexOf("\"journal.attuned.page35\"")
+				< itemSource.indexOf("\"journal.attuned.page36\"")
+				&& itemSource.indexOf("\"journal.attuned.page36\"")
+				< itemSource.indexOf("\"journal.attuned.page5\""),
+			"Written-book fallback should keep Aspect reference pages beside the core affinity cycle.");
+		String aspectOverview = translationValue(lang, "journal.attuned.page34").replace("\\n", "\n");
+		assertTrue(aspectOverview.contains("Focus tooltips name only the Aspect"),
+			"Aspect overview should explain that individual Focus descriptions do not list matchups.");
+		assertTrue(aspectOverview.contains("journal"),
+			"Aspect overview should direct players to the journal for matchup details.");
+		String aspectPageOne = translationValue(lang, "journal.attuned.page35").replace("\\n", "\n");
+		assertTrue(aspectPageOne.contains("Fury: beats Bastion, Verdant; weak to Holy, Tide."),
+			"Journal should list Fury's full Aspect matchups.");
+		assertTrue(aspectPageOne.contains("Bastion: beats Zephyr, Umbral; weak to Fury, Forge."),
+			"Journal should list Bastion's full Aspect matchups.");
+		assertTrue(aspectPageOne.contains("Zephyr: beats Holy, Tide; weak to Bastion, Umbral."),
+			"Journal should list Zephyr's full Aspect matchups.");
+		assertTrue(aspectPageOne.contains("Holy: beats Fury, Umbral; weak to Zephyr, Verdant."),
+			"Journal should list Holy's full Aspect matchups.");
+		String aspectPageTwo = translationValue(lang, "journal.attuned.page36").replace("\\n", "\n");
+		assertTrue(aspectPageTwo.contains("Tide: beats Fury, Forge; weak to Zephyr, Verdant."),
+			"Journal should list Tide's full Aspect matchups.");
+		assertTrue(aspectPageTwo.contains("Forge: beats Bastion, Verdant; weak to Tide, Umbral."),
+			"Journal should list Forge's full Aspect matchups.");
+		assertTrue(aspectPageTwo.contains("Verdant: beats Tide, Holy; weak to Fury, Forge."),
+			"Journal should list Verdant's full Aspect matchups.");
+		assertTrue(aspectPageTwo.contains("Umbral: beats Zephyr, Forge; weak to Bastion, Holy."),
+			"Journal should list Umbral's full Aspect matchups.");
 	}
 
 	@Test

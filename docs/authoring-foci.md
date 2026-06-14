@@ -26,7 +26,8 @@ A datapack **can**:
   data, fully supported.
 - Reference any **shipped behavior** id (the special powers the mod ships).
 - Add an optional `aspect` such as `attuned:tide` or `attuned:umbral` so the Focus
-  participates in the visible counter wheel tooltip without changing affinity math.
+  participates in the Aspect system without changing affinity math. The tooltip
+  shows only the Aspect name; the Attunement Journal owns the matchup reference.
 - Define **palette behaviors** — parameterized passive behaviors built from data, no
   code. See [the behavior palette](#define-a-palette-behavior).
 
@@ -75,8 +76,9 @@ The simplest Focus. Reuse an item and grant stat modifiers.
   utility Focus.
 - `aspect` — optional visible counter identity (`attuned:fury`, `attuned:bastion`,
   `attuned:zephyr`, `attuned:holy`, `attuned:tide`, `attuned:forge`,
-  `attuned:verdant`, or `attuned:umbral`). Tooltips show what it counters and
-  what counters it; affinity/Pact/Discord behavior is unchanged.
+  `attuned:verdant`, or `attuned:umbral`). Tooltips show only the Aspect name;
+  the Attunement Journal owns the matchup reference. Affinity/Pact/Discord
+  behavior is unchanged.
 - `unique` — set `true` to allow only one copy active at a time.
 - `faction` — optional story/family tag such as `attuned:unseen`. Add a
   `faction.<namespace>.<path>` lang key if you invent a new one.
@@ -208,6 +210,6 @@ This guide covers the no-Java lanes that work today. Attuned now ships the blank
 `attuned:custom_focus_1` through `attuned:custom_focus_8` item pool for packs that
 need bespoke resource-pack art without registering a new item, the passive
 behavior palette (`conditional_mob_effect`, `on_hit_effect`, `periodic_effect`,
-and `attribute_while`), and optional `aspect` metadata for the counter-wheel
-tooltip. Active-ability authoring (cooldowns and Focus Ability key handlers) is
+and `attribute_while`), and optional `aspect` metadata for journal-referenced
+Aspect identity. Active-ability authoring (cooldowns and Focus Ability key handlers) is
 still code-only.

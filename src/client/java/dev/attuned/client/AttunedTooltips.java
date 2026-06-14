@@ -23,9 +23,7 @@ import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.item.ItemStack;
 
-import java.util.Collection;
 import java.util.Locale;
-import java.util.stream.Collectors;
 
 /**
  * Appends Attuned flavour and stats to item tooltips: two lines of lore and a
@@ -95,14 +93,9 @@ public final class AttunedTooltips {
 					.append(Component.translatableWithFallback(
 						"faction." + faction.getNamespace() + "." + faction.getPath(), faction.toString())
 						.withStyle(ChatFormatting.DARK_PURPLE, ChatFormatting.BOLD))));
-				definition.aspect().ifPresent(aspect -> {
-					lines.add(Component.translatable("tooltip.attuned.aspect.line",
-						aspectName(aspect).withStyle(aspectColor(aspect), ChatFormatting.BOLD))
-						.withStyle(ChatFormatting.GRAY));
-					lines.add(Component.translatable("tooltip.attuned.aspect.matchups",
-						aspectList(aspect.strongAgainst()), aspectList(aspect.weakAgainst()))
-						.withStyle(ChatFormatting.DARK_AQUA));
-				});
+				definition.aspect().ifPresent(aspect -> lines.add(Component.translatable("tooltip.attuned.aspect.line",
+					aspectName(aspect).withStyle(aspectColor(aspect), ChatFormatting.BOLD))
+					.withStyle(ChatFormatting.GRAY)));
 				// Show the effective budget cost this stack consumes, so a Tempered
 				// Focus's tooltip agrees with the budget it actually charges.
 				lines.add(Component.literal("Cost ")
@@ -178,13 +171,6 @@ public final class AttunedTooltips {
 	private static MutableComponent aspectName(Aspect aspect) {
 		return Component.translatableWithFallback(
 			"aspect.attuned." + aspect.getSerializedName(), humanize(aspect.getSerializedName()));
-	}
-
-	private static MutableComponent aspectList(Collection<Aspect> aspects) {
-		String names = aspects.stream()
-			.map(aspect -> humanize(aspect.getSerializedName()))
-			.collect(Collectors.joining(", "));
-		return Component.literal(names);
 	}
 
 	private static ChatFormatting aspectColor(Aspect aspect) {

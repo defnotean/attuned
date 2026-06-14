@@ -13,7 +13,7 @@ Equip **Foci** into six inventory slots, but mind your **attunement capacity**. 
 - **Refreshed original Focus art** for the new Aspect Foci, processed into animated Minecraft item sheets so they sit with the existing medallion/talisman theme
 - **The Unseen**: a stealth faction built around quiet movement, low-light veils, smoke misdirection, and ambush openings
 - Four **affinities** (Fury, Bastion, Zephyr, Holy) in a counter-combat cycle, plus the cross-affinity **Discord** stance
-- **Aspects** add the broader Wheel of Refusals: Fury, Bastion, Zephyr, Holy, Tide, Forge, Verdant, and Umbral all counter and are countered by two others
+- **Aspects** add the broader Wheel of Refusals: Fury, Bastion, Zephyr, Holy, Tide, Forge, Verdant, and Umbral appear on Foci, with the full matchup reference kept in the Attunement Journal
 - **Pacts**: set bonuses that wake when you commit (Pyresworn, Stoneheart, Windrunner, Untethered)
 - **Apex capstones** at near-full commitment, including Maelstrom for Discord and Stillpoint for neutral builds, gated by combat **Resonance**
 - **Attunement Altar**: bind shards to grow capacity; glows with your stance
@@ -24,9 +24,9 @@ Equip **Foci** into six inventory slots, but mind your **attunement capacity**. 
 ## New in Attuned 1.4.0 — Resonant Depths
 
 - The **Aspect counter wheel** adds a visible second layer of counterplay without breaking the original four-affinity Pact/Discord system.
-- The first Aspect batch adds 12 Foci across **Tide**, **Forge**, **Verdant**, and **Umbral**, all with tooltips showing what they counter and what counters them.
+- The first Aspect batch adds 12 Foci across **Tide**, **Forge**, **Verdant**, and **Umbral**. Tooltips show each Focus's Aspect; the Attunement Journal carries the matchup reference.
 - The new Aspect Focus textures ship as crisp animated item sheets with bold medallion silhouettes, disciplined Aspect palettes, and inventory-scale readability checks.
-- **Focus Confluences**, **Tempering**, **Grand Focus Reliquary**, **Attunement Sanctums**, **Resonant Surges**, datapack-defined Focus behavior palettes, and an expanded journal/tooltip suite round out the release.
+- **Focus Confluences**, **Tempering**, **Grand Focus Reliquary**, **Attunement Sanctums**, **Resonant Surges**, datapack-defined Focus behavior palettes, and expanded journal/tooltips round out the release.
 
 ## Requirements
 
