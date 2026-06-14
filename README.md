@@ -21,6 +21,11 @@ Equip **Foci** into six inventory slots, but mind your **attunement capacity**. 
 - Lootr-friendly survival loot: every Focus and shard fragment rolls through vanilla structures, fishing treasure, archaeology, and trial rewards; wandering traders can rarely offer the journal or a shard fragment
 - Combat HUD shows your gem, your target's gem, and resonance at a glance
 
+## Current patch — Attuned 1.4.1
+
+- Focus descriptions/tooltips now show only each Focus's own effect plus Aspect identity.
+- The **Attunement Journal** owns the full Aspect matchup reference, keeping the who-counters-who details in one in-game place.
+
 ## New in Attuned 1.4.0 — Resonant Depths
 
 - The **Aspect counter wheel** adds a visible second layer of counterplay without breaking the original four-affinity Pact/Discord system.
