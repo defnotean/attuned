@@ -8,6 +8,7 @@ import dev.attuned.api.focus.Affinity;
 import dev.attuned.combat.Apex;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
 
@@ -31,7 +32,8 @@ class ApexCapstoneContractTest {
 	}
 
 	@Test
-	void maelstromRequiresEveryShippedAffinityAndAllowsNeutralFoci() {
+	void maelstromWakesFromADiverseManifoldSpreadAndAllowsNeutralFoci() {
+		// New rule: four or more distinct active affinities, none stacked 3+ deep.
 		assertEquals(Apex.Capstone.MAELSTROM, Apex.resolveCapstone(
 			List.of(
 				focus(Affinity.FURY),
@@ -41,9 +43,84 @@ class ApexCapstoneContractTest {
 				neutral()),
 			14, 15).orElseThrow());
 
+		// A diverse spread drawn from the promoted affinities also qualifies.
+		assertEquals(Apex.Capstone.MAELSTROM, Apex.resolveCapstone(
+			List.of(
+				focus(Affinity.TIDE),
+				focus(Affinity.FORGE),
+				focus(Affinity.VERDANT),
+				focus(Affinity.UMBRAL)),
+			11, 12).orElseThrow());
+	}
+
+	@Test
+	void maelstromNeedsFourDistinctAffinitiesWithNoSingleLaneStackedDeep() {
+		// Only three distinct active affinities falls short of the diversity gate.
 		assertTrue(Apex.resolveCapstone(
 			List.of(focus(Affinity.FURY), focus(Affinity.BASTION), focus(Affinity.ZEPHYR), neutral()),
-			11, 12).isEmpty(), "Holy cannot be skipped now that it is a shipped affinity");
+			11, 12).isEmpty(), "Three distinct affinities should not wake Maelstrom");
+
+		// Four distinct, but one affinity is stacked three deep — reads as a
+		// committed lane, not a Manifold spread, so no Maelstrom.
+		assertTrue(Apex.resolveCapstone(
+			List.of(
+				focus(Affinity.FURY),
+				focus(Affinity.FURY),
+				focus(Affinity.FURY),
+				focus(Affinity.BASTION),
+				focus(Affinity.ZEPHYR),
+				focus(Affinity.HOLY)),
+			11, 12).isEmpty(), "A single affinity stacked 3+ deep should block Maelstrom");
+	}
+
+	@Test
+	void promotedSingleAffinityCommitmentResolvesToItsOwnCapstone() {
+		// Tide/Forge/Verdant/Umbral now each own an Apex capstone, so a pure
+		// commitment to one of them resolves to that affinity's capstone.
+		Map<Affinity, Apex.Capstone> expected = Map.of(
+			Affinity.TIDE, Apex.Capstone.RIPTIDE,
+			Affinity.FORGE, Apex.Capstone.CRUCIBLE,
+			Affinity.VERDANT, Apex.Capstone.BLOOMWARD,
+			Affinity.UMBRAL, Apex.Capstone.GLOAMING);
+		for (Map.Entry<Affinity, Apex.Capstone> entry : expected.entrySet()) {
+			Affinity promoted = entry.getKey();
+			assertEquals(entry.getValue(), Apex.resolveCapstone(
+				List.of(focus(promoted), focus(promoted), focus(promoted), focus(promoted)),
+				11, 12).orElseThrow(), promoted + " should resolve to its own capstone");
+		}
+	}
+
+	@Test
+	void everyAffinityMapsToAPresentCapstone() {
+		Map<Affinity, Apex.Capstone> expected = Map.of(
+			Affinity.FURY, Apex.Capstone.EXECUTE,
+			Affinity.BASTION, Apex.Capstone.UNYIELDING,
+			Affinity.ZEPHYR, Apex.Capstone.UNTOUCHABLE,
+			Affinity.HOLY, Apex.Capstone.JUDGMENT,
+			Affinity.TIDE, Apex.Capstone.RIPTIDE,
+			Affinity.FORGE, Apex.Capstone.CRUCIBLE,
+			Affinity.VERDANT, Apex.Capstone.BLOOMWARD,
+			Affinity.UMBRAL, Apex.Capstone.GLOAMING);
+		for (Affinity affinity : Affinity.values()) {
+			assertEquals(expected.get(affinity), Apex.Capstone.ofAffinity(affinity).orElseThrow(),
+				affinity + " should own a capstone");
+		}
+	}
+
+	@Test
+	void promotedAffinityCapstonesCarryTheirAffinityNamesAndColors() {
+		assertEquals("Riptide", Apex.Capstone.RIPTIDE.displayName());
+		assertEquals("Crucible", Apex.Capstone.CRUCIBLE.displayName());
+		assertEquals("Bloomward", Apex.Capstone.BLOOMWARD.displayName());
+		assertEquals("Gloaming", Apex.Capstone.GLOAMING.displayName());
+		assertEquals(Optional.of(Affinity.TIDE), Apex.Capstone.RIPTIDE.affinity());
+		assertEquals(Optional.of(Affinity.FORGE), Apex.Capstone.CRUCIBLE.affinity());
+		assertEquals(Optional.of(Affinity.VERDANT), Apex.Capstone.BLOOMWARD.affinity());
+		assertEquals(Optional.of(Affinity.UMBRAL), Apex.Capstone.GLOAMING.affinity());
+		assertEquals(Affinity.TIDE.argb(), Apex.Capstone.RIPTIDE.argb());
+		assertEquals(Affinity.FORGE.argb(), Apex.Capstone.CRUCIBLE.argb());
+		assertEquals(Affinity.VERDANT.argb(), Apex.Capstone.BLOOMWARD.argb());
+		assertEquals(Affinity.UMBRAL.argb(), Apex.Capstone.GLOAMING.argb());
 	}
 
 	@Test

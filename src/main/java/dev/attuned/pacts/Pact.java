@@ -11,9 +11,10 @@ import net.minecraft.network.chat.MutableComponent;
  * A named set bonus that activates from the player's spread of active Foci.
  *
  * <p>The single-affinity pacts (Pyresworn, Stoneheart, Windrunner, Radiant
- * Covenant) wake up when three or more active Foci share one affinity; the Manifold
- * pact (Untethered) wakes up when the player carries at least one active Focus
- * of every affinity at once. A player is in at most one pact at a time.</p>
+ * Covenant, Tidesworn, Forgebound, Wildroot, Nightsworn) wake up when three or
+ * more active Foci share one affinity; the Manifold pact (Untethered) wakes up
+ * when the player carries a diverse spread of active affinities (four or more
+ * distinct, none stacked three deep). A player is in at most one pact at a time.</p>
  *
  * <p>Each pact reads as a short identity: a Pyresworn is a Pyresworn, not "a
  * Fury build with three Foci." The colour and name surface in the panel readout,
@@ -24,6 +25,10 @@ public enum Pact {
 	STONEHEART("stoneheart", Optional.of(Affinity.BASTION), ChatFormatting.GOLD),
 	WINDRUNNER("windrunner", Optional.of(Affinity.ZEPHYR), ChatFormatting.AQUA),
 	RADIANT_COVENANT("radiant_covenant", Optional.of(Affinity.HOLY), ChatFormatting.YELLOW),
+	TIDESWORN("tidesworn", Optional.of(Affinity.TIDE), ChatFormatting.BLUE),
+	FORGEBOUND("forgebound", Optional.of(Affinity.FORGE), ChatFormatting.DARK_RED),
+	WILDROOT("wildroot", Optional.of(Affinity.VERDANT), ChatFormatting.GREEN),
+	NIGHTSWORN("nightsworn", Optional.of(Affinity.UMBRAL), ChatFormatting.DARK_PURPLE),
 	UNTETHERED("untethered", Optional.empty(), ChatFormatting.LIGHT_PURPLE);
 
 	private final String displayNameKey;
@@ -50,7 +55,8 @@ public enum Pact {
 
 	/**
 	 * The single affinity this pact is bound to, or empty for the Manifold
-	 * pact (Untethered) which spans all three.
+	 * pact (Untethered) which spans a diverse spread of affinities rather than
+	 * one committed lane.
 	 */
 	public Optional<Affinity> affinity() { return affinity; }
 
@@ -66,13 +72,17 @@ public enum Pact {
 		return affinity.map(Affinity::argb).orElse(AffinityColors.DISCORD_ARGB);
 	}
 
-	/** The pact that belongs to a single committed affinity. */
+	/** The pact that belongs to a single committed affinity. Total over all eight. */
 	public static Pact ofAffinity(Affinity affinity) {
 		return switch (affinity) {
 			case FURY -> PYRESWORN;
 			case BASTION -> STONEHEART;
 			case ZEPHYR -> WINDRUNNER;
 			case HOLY -> RADIANT_COVENANT;
+			case TIDE -> TIDESWORN;
+			case FORGE -> FORGEBOUND;
+			case VERDANT -> WILDROOT;
+			case UMBRAL -> NIGHTSWORN;
 		};
 	}
 }

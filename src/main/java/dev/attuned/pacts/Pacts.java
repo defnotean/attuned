@@ -103,8 +103,14 @@ public final class Pacts {
 	private static final double WINDRUNNER_CHALLENGE_DISTANCE = 128.0;
 	/** Ignores teleports/launches while counting Windrunner sprint distance. */
 	private static final double WINDRUNNER_MAX_DELTA_PER_TICK = 1.25;
-	/** Untethered requires at least one Focus of every affinity. */
-	private static final int UNTETHERED_AFFINITY_COUNT = Affinity.values().length;
+	/**
+	 * Untethered's Manifold gate after the 8-affinity promotion: at least
+	 * {@link #UNTETHERED_MIN_DISTINCT} distinct active affinities with no single
+	 * affinity stacked to {@link #UNTETHERED_MAX_PER_AFFINITY} or more. Requiring
+	 * all eight would be unrealistic, so diversity (not a full sweep) wakes it.
+	 */
+	private static final int UNTETHERED_MIN_DISTINCT = 4;
+	private static final int UNTETHERED_MAX_PER_AFFINITY = 3;
 
 	private static final String PYRESWORN_CHALLENGE = "attunement/pact_pyresworn_challenge";
 	private static final String STONEHEART_CHALLENGE = "attunement/pact_stoneheart_challenge";
@@ -180,7 +186,7 @@ public final class Pacts {
 
 	/** The pact represented by pre-resolved active affinity counts, if any. */
 	public static Optional<Pact> activeOf(Map<Affinity, Integer> counts) {
-		if (counts.size() >= UNTETHERED_AFFINITY_COUNT) {
+		if (isManifoldSpread(counts)) {
 			return Optional.of(Pact.UNTETHERED);
 		}
 		if (counts.size() == 1) {
@@ -190,6 +196,23 @@ public final class Pacts {
 			}
 		}
 		return Optional.empty();
+	}
+
+	/**
+	 * Untethered's Manifold gate: four or more distinct active affinities with no
+	 * single affinity stacked three or more deep (which would read as a committed
+	 * lane instead of a true mixed spread).
+	 */
+	private static boolean isManifoldSpread(Map<Affinity, Integer> counts) {
+		if (counts.size() < UNTETHERED_MIN_DISTINCT) {
+			return false;
+		}
+		for (int count : counts.values()) {
+			if (count >= UNTETHERED_MAX_PER_AFFINITY) {
+				return false;
+			}
+		}
+		return true;
 	}
 
 	/**
@@ -643,6 +666,12 @@ public final class Pacts {
 			case STONEHEART -> new DustParticleOptions(0xC8A05A, 0.8F);
 			case WINDRUNNER -> ParticleTypes.CLOUD;
 			case RADIANT_COVENANT -> new DustParticleOptions(Affinity.HOLY.argb() & 0x00FFFFFF, 0.9F);
+			// The promoted single-affinity pacts mirror Radiant Covenant's shape: a
+			// modest dust wisp tinted by the bound affinity's colour.
+			case TIDESWORN -> new DustParticleOptions(Affinity.TIDE.argb() & 0x00FFFFFF, 0.9F);
+			case FORGEBOUND -> new DustParticleOptions(Affinity.FORGE.argb() & 0x00FFFFFF, 0.9F);
+			case WILDROOT -> new DustParticleOptions(Affinity.VERDANT.argb() & 0x00FFFFFF, 0.9F);
+			case NIGHTSWORN -> new DustParticleOptions(Affinity.UMBRAL.argb() & 0x00FFFFFF, 0.9F);
 			case UNTETHERED -> new DustParticleOptions(AffinityColors.DISCORD_RGB, 0.9F);
 		};
 	}
@@ -681,7 +710,7 @@ public final class Pacts {
 			return Component.translatable("pact.attuned.fades.empty", name);
 		}
 		if (pact == Pact.UNTETHERED) {
-			return counts.size() < UNTETHERED_AFFINITY_COUNT
+			return !isManifoldSpread(counts)
 				? Component.translatable("pact.attuned.fades.affinities", name)
 				: Component.translatable("pact.attuned.fades", name);
 		}
@@ -708,6 +737,10 @@ public final class Pacts {
 			case STONEHEART -> new PactSound(SoundEvents.TUFF_PLACE, 0.45F, 0.85F);
 			case WINDRUNNER -> new PactSound(SoundEvents.WIND_CHARGE_THROW, 0.35F, 1.55F);
 			case RADIANT_COVENANT -> new PactSound(SoundEvents.AMETHYST_BLOCK_CHIME, 0.45F, 1.45F);
+			case TIDESWORN -> new PactSound(SoundEvents.BUBBLE_COLUMN_UPWARDS_AMBIENT, 0.55F, 1.2F);
+			case FORGEBOUND -> new PactSound(SoundEvents.ANVIL_LAND, 0.35F, 1.35F);
+			case WILDROOT -> new PactSound(SoundEvents.GRASS_PLACE, 0.55F, 1.1F);
+			case NIGHTSWORN -> new PactSound(SoundEvents.SCULK_BLOCK_CHARGE, 0.45F, 1.1F);
 			case UNTETHERED -> new PactSound(SoundEvents.ENCHANTMENT_TABLE_USE, 0.45F, 1.15F);
 		};
 	}
@@ -718,6 +751,10 @@ public final class Pacts {
 			case STONEHEART -> new PactSound(SoundEvents.TUFF_HIT, 0.4F, 0.7F);
 			case WINDRUNNER -> new PactSound(SoundEvents.WOOL_STEP, 0.35F, 1.6F);
 			case RADIANT_COVENANT -> new PactSound(SoundEvents.AMETHYST_BLOCK_RESONATE, 0.35F, 0.9F);
+			case TIDESWORN -> new PactSound(SoundEvents.AMBIENT_UNDERWATER_EXIT, 0.4F, 0.9F);
+			case FORGEBOUND -> new PactSound(SoundEvents.ANVIL_HIT, 0.35F, 0.8F);
+			case WILDROOT -> new PactSound(SoundEvents.GRASS_HIT, 0.4F, 0.85F);
+			case NIGHTSWORN -> new PactSound(SoundEvents.SCULK_BLOCK_HIT, 0.4F, 0.8F);
 			case UNTETHERED -> new PactSound(SoundEvents.AMETHYST_BLOCK_HIT, 0.4F, 0.8F);
 		};
 	}

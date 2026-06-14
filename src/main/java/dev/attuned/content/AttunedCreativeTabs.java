@@ -109,13 +109,17 @@ final class AttunedCreativeTabs {
 	 */
 	private static int affinityOrder(Optional<Affinity> affinity) {
 		if (affinity.isEmpty()) {
-			return 4;
+			return 8;
 		}
 		return switch (affinity.get()) {
 			case FURY -> 0;
 			case BASTION -> 1;
 			case ZEPHYR -> 2;
 			case HOLY -> 3;
+			case TIDE -> 4;
+			case FORGE -> 5;
+			case VERDANT -> 6;
+			case UMBRAL -> 7;
 		};
 	}
 }

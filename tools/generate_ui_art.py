@@ -1145,8 +1145,65 @@ def generate_custom_focus_textures():
             json.dumps(definition, indent=2) + "\n", encoding="utf-8")
 
 
+# HUD affinity gem sprites. The original four (fury/bastion/zephyr/holy) plus the
+# discord/neutral faces shipped as hand-tuned 64x64 PNGs in the gui/sprites/hud
+# atlas. The promoted four affinities (tide/forge/verdant/umbral) reuse the exact
+# gem geometry by recolouring the neutral gem's luminance through a colour ramp
+# built from each affinity's canonical ARGB, so the new gems match the family
+# style and are tinted by the new palette. Deterministic: same input PNG and
+# colour table always produce the same output bytes.
+HUD_SPRITES = TEXTURES / "gui/sprites/hud"
+
+# Canonical affinity colours, mirroring Affinity.argb() (RGB only).
+NEW_AFFINITY_GEM_COLORS = {
+    "tide": (0x2F, 0x7F, 0xD0),
+    "forge": (0xC8, 0x5A, 0x2B),
+    "verdant": (0x5F, 0xC2, 0x3E),
+    "umbral": (0x7A, 0x4F, 0xB5),
+}
+
+
+def _gem_ramp(base):
+    """A shadow -> mid -> highlight colour ramp anchored on the affinity colour."""
+    shadow = tuple(round(c * 0.32) for c in base)
+    highlight = tuple(round(c + (255 - c) * 0.78) for c in base)
+    return shadow, base, highlight
+
+
+def _ramp_sample(ramp, t):
+    shadow, mid, high = ramp
+    if t <= 0.5:
+        f = t / 0.5
+        a, b = shadow, mid
+    else:
+        f = (t - 0.5) / 0.5
+        a, b = mid, high
+    return tuple(round(a[i] + (b[i] - a[i]) * f) for i in range(3))
+
+
+def hud_affinity_gems():
+    template = Image.open(HUD_SPRITES / "affinity_neutral.png").convert("RGBA")
+    width, height = template.size
+    pixels = template.load()
+    for name, color in NEW_AFFINITY_GEM_COLORS.items():
+        ramp = _gem_ramp(color)
+        out = Image.new("RGBA", (width, height), (0, 0, 0, 0))
+        dst = out.load()
+        for y in range(height):
+            for x in range(width):
+                r, g, b, a = pixels[x, y]
+                if a == 0:
+                    continue
+                # Perceptual luminance of the neutral gem pixel, 0..1.
+                lum = (0.299 * r + 0.587 * g + 0.114 * b) / 255.0
+                nr, ng, nb = _ramp_sample(ramp, lum)
+                dst[x, y] = (nr, ng, nb, a)
+        out.save(HUD_SPRITES / f"affinity_{name}.png")
+
+
 if __name__ == "__main__":
     ensure_dirs()
+    hud_affinity_gems()
     altar()
     reweaving_gui()
     focus_panel()

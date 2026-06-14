@@ -43,7 +43,7 @@ class HudAssetConsistencyTest {
 		assertSprite("affinity_discord.png", 64, 64);
 		assertSprite("affinity_neutral.png", 64, 64);
 		for (Apex.Capstone capstone : Apex.Capstone.values()) {
-			assertSprite(capstone.name().toLowerCase(Locale.ROOT) + ".png", 64, 64);
+			assertSprite(capstoneGemSpriteName(capstone) + ".png", 64, 64);
 		}
 		assertSprite("hud_empowered_ring.png", 64, 64);
 		assertSprite("hud_target_ring.png", 64, 64);
@@ -54,6 +54,18 @@ class HudAssetConsistencyTest {
 		assertSprite("hud_resonance_track.png", 14, 3);
 		assertSprite("hud_resonance_fill.png", 14, 3);
 		assertImageSize(HUD_BACKPLATE, 50, 24);
+	}
+
+	// The gem sprite a capstone resolves to. The four promoted-affinity capstones
+	// ship no bespoke art and reuse their affinity's existing gem sprite; every
+	// other capstone owns a bespoke hud/<capstone> face. Mirrors CombatHud's
+	// capstoneGemSprite routing.
+	private static String capstoneGemSpriteName(Apex.Capstone capstone) {
+		return switch (capstone) {
+			case RIPTIDE, CRUCIBLE, BLOOMWARD, GLOAMING ->
+				"affinity_" + capstone.affinity().orElseThrow().getSerializedName();
+			default -> capstone.name().toLowerCase(Locale.ROOT);
+		};
 	}
 
 	private static void assertSprite(String name, int width, int height) throws IOException {

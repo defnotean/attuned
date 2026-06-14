@@ -67,6 +67,10 @@ public final class CombatHud {
 	private static final Identifier BASTION_SPRITE = Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "hud/affinity_bastion");
 	private static final Identifier ZEPHYR_SPRITE = Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "hud/affinity_zephyr");
 	private static final Identifier HOLY_SPRITE = Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "hud/affinity_holy");
+	private static final Identifier TIDE_SPRITE = Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "hud/affinity_tide");
+	private static final Identifier FORGE_SPRITE = Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "hud/affinity_forge");
+	private static final Identifier VERDANT_SPRITE = Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "hud/affinity_verdant");
+	private static final Identifier UMBRAL_SPRITE = Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "hud/affinity_umbral");
 	private static final Identifier DISCORD_SPRITE = Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "hud/affinity_discord");
 	private static final Identifier NEUTRAL_SPRITE = Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "hud/affinity_neutral");
 	private static final Identifier TARGET_RING_SPRITE = Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "hud/hud_target_ring");
@@ -318,8 +322,12 @@ public final class CombatHud {
 	 */
 	public static void drawGem(GuiGraphicsExtractor graphics, int x, int y, int size,
 			@Nullable Affinity affinity, boolean discord, boolean targeted, boolean atApex) {
+		// A promoted affinity (Tide/Forge/Verdant/Umbral) owns no capstone, so its
+		// Apex gem falls back to the plain affinity gem rather than a capstone face.
 		Identifier sprite = atApex && affinity != null && !discord
-			? capstoneSpriteFor(Apex.Capstone.ofAffinity(affinity))
+			? Apex.Capstone.ofAffinity(affinity)
+				.map(CombatHud::capstoneSpriteFor)
+				.orElseGet(() -> affinitySpriteFor(affinity, discord))
 			: affinitySpriteFor(affinity, discord);
 		drawGemSprite(graphics, x, y, size, targeted, sprite);
 	}
@@ -359,6 +367,10 @@ public final class CombatHud {
 			case BASTION -> BASTION_SPRITE;
 			case ZEPHYR -> ZEPHYR_SPRITE;
 			case HOLY -> HOLY_SPRITE;
+			case TIDE -> TIDE_SPRITE;
+			case FORGE -> FORGE_SPRITE;
+			case VERDANT -> VERDANT_SPRITE;
+			case UMBRAL -> UMBRAL_SPRITE;
 		};
 	}
 
@@ -369,10 +381,28 @@ public final class CombatHud {
 	private static Map<Apex.Capstone, Identifier> buildCapstoneSprites() {
 		Map<Apex.Capstone, Identifier> sprites = new EnumMap<>(Apex.Capstone.class);
 		for (Apex.Capstone capstone : Apex.Capstone.values()) {
-			sprites.put(capstone, Identifier.fromNamespaceAndPath(Attuned.MOD_ID,
-				"hud/" + capstone.name().toLowerCase(Locale.ROOT)));
+			sprites.put(capstone, capstoneGemSprite(capstone));
 		}
 		return sprites;
+	}
+
+	// The gem sprite for a capstone. The original capstones (Execute, Unyielding,
+	// Untouchable, Judgment, Maelstrom, Stillpoint) own a bespoke hud/<capstone>
+	// face. The four promoted-affinity capstones (Riptide, Crucible, Bloomward,
+	// Gloaming) ship no bespoke art, so they reuse their affinity's existing gem
+	// sprite (hud/affinity_<affinity>) rather than rendering a missing-texture
+	// magenta gem.
+	private static Identifier capstoneGemSprite(Apex.Capstone capstone) {
+		switch (capstone) {
+			case RIPTIDE, CRUCIBLE, BLOOMWARD, GLOAMING -> {
+				Affinity affinity = capstone.affinity().orElseThrow();
+				return affinitySpriteFor(affinity, false);
+			}
+			default -> {
+				return Identifier.fromNamespaceAndPath(Attuned.MOD_ID,
+					"hud/" + capstone.name().toLowerCase(Locale.ROOT));
+			}
+		}
 	}
 
 	private static void drawOverlaySprite(GuiGraphicsExtractor graphics, Identifier sprite, int gemX, int gemY, int size) {

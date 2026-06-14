@@ -2,7 +2,7 @@
 	"item": "attuned:thornwake_focus",
 	"cost": 4,
 	"unique": true,
-	"affinity": "bastion",
+	"affinity": "verdant",
 	"aspect": "attuned:verdant",
 	"faction": "attuned:wildroot",
 	"modifiers": [

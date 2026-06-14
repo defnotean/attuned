@@ -10,6 +10,14 @@ import java.util.Optional;
 final class ApexCapstoneResolver {
 	private static final int MIN_FOCI = 4;
 	private static final int BUDGET_SLACK = 1;
+	/**
+	 * Maelstrom's diversity gate after the 8-affinity promotion: a build needs at
+	 * least this many distinct active affinities, with no single affinity stacked
+	 * to {@link #UNTETHERED_MAX_PER_AFFINITY} or more (which would read as a
+	 * committed lane rather than a true Manifold spread).
+	 */
+	private static final int UNTETHERED_MIN_DISTINCT = 4;
+	private static final int UNTETHERED_MAX_PER_AFFINITY = 3;
 
 	private ApexCapstoneResolver() {}
 
@@ -27,9 +35,12 @@ final class ApexCapstoneResolver {
 			return Optional.of(Apex.Capstone.STILLPOINT);
 		}
 		if (layout.isPureSingleAffinity()) {
-			return Optional.of(Apex.Capstone.ofAffinity(layout.onlyAffinity()));
+			// Every affinity owns a capstone now, so a build committed purely to one
+			// affinity resolves to that affinity's capstone (the four originals plus
+			// the four promoted Tide/Forge/Verdant/Umbral capstones).
+			return Apex.Capstone.ofAffinity(layout.onlyAffinity());
 		}
-		if (layout.hasEveryAffinity()) {
+		if (layout.isManifoldSpread()) {
 			return Optional.of(Apex.Capstone.MAELSTROM);
 		}
 		return Optional.empty();
@@ -80,8 +91,22 @@ final class ApexCapstoneResolver {
 			return counts.size() == 1 && neutral == 0;
 		}
 
-		private boolean hasEveryAffinity() {
-			return counts.size() == Affinity.values().length;
+		/**
+		 * Maelstrom's Manifold gate after the 8-affinity promotion: four or more
+		 * distinct active affinities with no single affinity stacked three or more
+		 * deep. Requiring all eight would be unrealistic, so diversity (not a full
+		 * sweep) keys the high-Discord capstone.
+		 */
+		private boolean isManifoldSpread() {
+			if (counts.size() < UNTETHERED_MIN_DISTINCT) {
+				return false;
+			}
+			for (int count : counts.values()) {
+				if (count >= UNTETHERED_MAX_PER_AFFINITY) {
+					return false;
+				}
+			}
+			return true;
 		}
 
 		private Affinity onlyAffinity() {

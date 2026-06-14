@@ -2,7 +2,7 @@
 	"item": "attuned:pearlguard_focus",
 	"cost": 4,
 	"unique": true,
-	"affinity": "bastion",
+	"affinity": "tide",
 	"aspect": "attuned:tide",
 	"faction": "attuned:tideborn",
 	"modifiers": [

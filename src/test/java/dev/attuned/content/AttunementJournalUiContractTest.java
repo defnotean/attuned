@@ -218,6 +218,16 @@ class AttunementJournalUiContractTest {
 			"Each chapter should render as one continuous, scrollable document");
 		assertTrue(screenSource.contains("CHAPTERS.get(this.chapterIndex)"),
 			"Navigation should be per-chapter (the rail and Previous/Next move between chapters)");
+		assertTrue(screenSource.contains("public boolean mouseClicked("),
+			"The journal scrollbar should respond to direct mouse clicks, not only wheel input");
+		assertTrue(screenSource.contains("public boolean mouseDragged("),
+			"The journal scrollbar thumb should be draggable");
+		assertTrue(screenSource.contains("public boolean mouseReleased("),
+			"The journal should stop dragging the scrollbar when the mouse button is released");
+		assertTrue(screenSource.contains("this.scrollbarDragging"),
+			"The journal should track active scrollbar dragging state");
+		assertTrue(screenSource.contains("updateScrollFromMouse(mouseY)"),
+			"Scrollbar click and drag should map mouse Y to the scroll offset");
 	}
 
 	private static String read(Path file) throws IOException {

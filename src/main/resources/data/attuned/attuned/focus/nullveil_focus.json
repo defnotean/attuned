@@ -2,7 +2,7 @@
 	"item": "attuned:nullveil_focus",
 	"cost": 4,
 	"unique": true,
-	"affinity": "zephyr",
+	"affinity": "umbral",
 	"aspect": "attuned:umbral",
 	"faction": "attuned:umbral",
 	"modifiers": [
