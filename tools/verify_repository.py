@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import importlib.util
 import json
 import os
 import py_compile
@@ -22,6 +23,11 @@ FOCUS_DEFINITION_RELATIVE_DIR = Path("src/main/resources/data/attuned/attuned/fo
 GRADLE_PROPERTIES_RELATIVE_FILE = Path("gradle.properties")
 BUILD_GRADLE_RELATIVE_FILE = Path("build.gradle")
 CHANGELOG_RELATIVE_FILE = Path("CHANGELOG.md")
+VERSION_PROFILE_RELATIVE_FILE = Path("config/minecraft-version-profiles.json")
+VERSION_PROFILE_TOOL_RELATIVE_FILE = Path("tools/minecraft_version_profile.py")
+CI_WORKFLOW_RELATIVE_FILE = Path(".github/workflows/ci.yml")
+CURSEFORGE_TOOL_RELATIVE_FILE = Path("tools/publish_curseforge.py")
+VERSIONING_DOC_RELATIVE_FILE = Path("docs/versioning/minecraft-version-migration.md")
 EXPECTED_MODRINTH_GALLERY_PNGS = (
     "attuned-all-foci-real-assets.png",
     "attuned-apex-discord-neutral.png",
@@ -542,6 +548,87 @@ def check_modrinth_changelog() -> str:
     return f"Modrinth changelog: Attuned {version} section"
 
 
+def _load_version_profile_tool(root: Path = ROOT):
+    tool_path = root / VERSION_PROFILE_TOOL_RELATIVE_FILE
+    if not tool_path.is_file():
+        raise FileNotFoundError(f"{relative(tool_path, root)} is missing")
+    spec = importlib.util.spec_from_file_location("attuned_minecraft_version_profile", tool_path)
+    if spec is None or spec.loader is None:
+        raise ImportError(f"cannot import {relative(tool_path, root)}")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def version_profile_problems(root: Path = ROOT) -> list[str]:
+    problems: list[str] = []
+    if not (root / VERSION_PROFILE_RELATIVE_FILE).is_file():
+        problems.append(f"{VERSION_PROFILE_RELATIVE_FILE}: missing Minecraft version profile registry")
+    try:
+        profile_tool = _load_version_profile_tool(root)
+        problems.extend(profile_tool.validate_repository(root))
+        _active_id, active_profile = profile_tool.active_profile(root)
+    except (OSError, ImportError, AttributeError, ValueError) as exc:
+        problems.append(f"{VERSION_PROFILE_TOOL_RELATIVE_FILE}: {exc}")
+        active_profile = {}
+
+    try:
+        build_gradle = (root / BUILD_GRADLE_RELATIVE_FILE).read_text(encoding="utf-8")
+    except OSError as exc:
+        problems.append(f"{BUILD_GRADLE_RELATIVE_FILE}: {exc}")
+    else:
+        required_build_snippets = {
+            "targetJavaVersion = project.java_version.toString().toInteger()": "derive targetJavaVersion from project.java_version",
+            "JavaLanguageVersion.of(targetJavaVersion)": "use targetJavaVersion for the Java toolchain",
+            "JavaVersion.toVersion(targetJavaVersion)": "use targetJavaVersion for source/target compatibility",
+            "gameVersions = [project.minecraft_version.toString()]": "publish Modrinth gameVersions from minecraft_version",
+        }
+        for snippet, description in required_build_snippets.items():
+            if snippet not in build_gradle:
+                problems.append(f"{BUILD_GRADLE_RELATIVE_FILE}: must {description}")
+
+    try:
+        ci_workflow = (root / CI_WORKFLOW_RELATIVE_FILE).read_text(encoding="utf-8")
+    except OSError as exc:
+        problems.append(f"{CI_WORKFLOW_RELATIVE_FILE}: {exc}")
+    else:
+        expected_java = str(active_profile.get("java_version", ""))
+        uses_dynamic_profile = (
+            "tools/minecraft_version_profile.py current --github-output" in ci_workflow
+            and "steps.versions.outputs.java_version" in ci_workflow
+        )
+        hardcoded_java = re.search(r"java-version:\s*[\"']?(?P<version>\d+)[\"']?", ci_workflow)
+        if not uses_dynamic_profile and hardcoded_java is None:
+            problems.append(
+                f"{CI_WORKFLOW_RELATIVE_FILE}: setup-java must use the active profile Java version"
+            )
+        if hardcoded_java is not None and expected_java and hardcoded_java.group("version") != expected_java:
+            problems.append(
+                f"{CI_WORKFLOW_RELATIVE_FILE}: java-version {hardcoded_java.group('version')} "
+                f"does not match active profile java_version {expected_java}"
+            )
+
+    try:
+        curseforge_tool = (root / CURSEFORGE_TOOL_RELATIVE_FILE).read_text(encoding="utf-8")
+    except OSError as exc:
+        problems.append(f"{CURSEFORGE_TOOL_RELATIVE_FILE}: {exc}")
+    else:
+        if 'java_version = props["java_version"]' not in curseforge_tool:
+            problems.append(f"{CURSEFORGE_TOOL_RELATIVE_FILE}: must read java_version from gradle.properties")
+
+    if not (root / VERSIONING_DOC_RELATIVE_FILE).is_file():
+        problems.append(f"{VERSIONING_DOC_RELATIVE_FILE}: missing Minecraft version migration guide")
+    return problems
+
+
+def check_version_profile() -> str:
+    problems = version_profile_problems()
+    if problems:
+        raise CheckFailed("Minecraft version profile", problems)
+    active_id, _profile = _load_version_profile_tool().active_profile(ROOT)
+    return f"Minecraft version profile: active {active_id}"
+
+
 def run_checks() -> int:
     checks = (
         check_src_json,
@@ -549,6 +636,7 @@ def run_checks() -> int:
         check_modrinth_gallery_pngs,
         check_readme_focus_count,
         check_modrinth_changelog,
+        check_version_profile,
         check_issue_markers,
         check_assignment_risks,
         check_python_caches,

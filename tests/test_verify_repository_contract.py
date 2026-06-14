@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import importlib.util
+import shutil
 import struct
 import tempfile
 import unittest
@@ -36,6 +37,58 @@ def write_complete_png(path: Path, width: int, height: int) -> None:
         + png_chunk(b"IHDR", ihdr)
         + png_chunk(b"IDAT", zlib.compress(b""))
         + png_chunk(b"IEND")
+    )
+
+
+def write_version_profile_fixture(root: Path, *, java_version: str = "25") -> None:
+    (root / "config").mkdir(parents=True)
+    (root / "tools").mkdir(parents=True)
+    (root / ".github" / "workflows").mkdir(parents=True)
+    (root / "docs" / "versioning").mkdir(parents=True)
+    shutil.copy2(ROOT / "tools" / "minecraft_version_profile.py", root / "tools" / "minecraft_version_profile.py")
+    (root / "config" / "minecraft-version-profiles.json").write_text(
+        """{
+  "active_profile": "26.1.2",
+  "profiles": {
+    "26.1.2": {
+      "minecraft_version": "26.1.2",
+      "loader_version": "0.19.2",
+      "loom_version": "1.16.3",
+      "fabric_api_version": "0.149.0+26.1.2",
+      "java_version": "25",
+      "fabric_loader_range": ">=0.19.2",
+      "status": "current",
+      "notes": ["Current released target."]
+    }
+  }
+}
+""",
+        encoding="utf-8",
+    )
+    (root / "gradle.properties").write_text(
+        f"minecraft_version=26.1.2\nloader_version=0.19.2\nloom_version=1.16.3\n"
+        f"java_version={java_version}\nfabric_api_version=0.149.0+26.1.2\n",
+        encoding="utf-8",
+    )
+    (root / "build.gradle").write_text(
+        "def targetJavaVersion = project.java_version.toString().toInteger()\n"
+        "JavaLanguageVersion.of(targetJavaVersion)\n"
+        "JavaVersion.toVersion(targetJavaVersion)\n"
+        "gameVersions = [project.minecraft_version.toString()]\n",
+        encoding="utf-8",
+    )
+    (root / ".github" / "workflows" / "ci.yml").write_text(
+        "run: python3 tools/minecraft_version_profile.py current --github-output \"$GITHUB_OUTPUT\"\n"
+        "java-version: ${{ steps.versions.outputs.java_version }}\n",
+        encoding="utf-8",
+    )
+    (root / "tools" / "publish_curseforge.py").write_text(
+        'java_version = props["java_version"]\n',
+        encoding="utf-8",
+    )
+    (root / "docs" / "versioning" / "minecraft-version-migration.md").write_text(
+        "# Minecraft Version Migration\n",
+        encoding="utf-8",
     )
 
 
@@ -143,6 +196,20 @@ class VerifyRepositoryContractTest(unittest.TestCase):
 
         self.assertIn("it == headingPrefix || it.startsWith(headingPrefix + \" \")", build_gradle)
         self.assertNotIn("it.startsWith(headingPrefix) }", build_gradle)
+
+    def test_version_profile_verifier_pins_dynamic_version_sources(self) -> None:
+        problems = verify_repository.version_profile_problems(ROOT)
+
+        self.assertEqual([], problems)
+
+    def test_version_profile_problems_report_gradle_profile_drift(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            write_version_profile_fixture(root, java_version="21")
+
+            problems = verify_repository.version_profile_problems(root)
+
+            self.assertTrue(any("java_version" in problem and "active profile" in problem for problem in problems))
 
     def test_modrinth_gallery_pngs_report_missing_or_wrong_sized_panels(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:

@@ -129,11 +129,12 @@ def main(argv: list[str] | None = None) -> int:
     props = gradle_properties()
     version = props["mod_version"]
     minecraft_version = props["minecraft_version"]
+    java_version = props["java_version"]
     metadata = build_metadata(
         changelog=(ROOT / "CHANGELOG.md").read_text(encoding="utf-8"),
         version=version,
         minecraft_version=minecraft_version,
-        java_version="25",
+        java_version=java_version,
     )
     jar_path = ROOT / "build" / "libs" / f"attuned-{version}.jar"
     if not jar_path.is_file():

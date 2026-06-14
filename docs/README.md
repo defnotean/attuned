@@ -47,6 +47,7 @@ That is the whole idea: a Focus is a trade-off, never a free bonus.
 | Change a Focus's cost, affinity, stats, text  | [adding-a-focus.md](adding-a-focus.md#changing-an-existing-focus) |
 | Look up a field, an attribute, a tuning number| [reference.md](reference.md) |
 | Check commands, recipes, and setup files      | [reference.md](reference.md#commands) |
+| Prepare a newer/older Minecraft version port  | [versioning/minecraft-version-migration.md](versioning/minecraft-version-migration.md) |
 
 ## The two kinds of Focus
 

@@ -62,5 +62,13 @@ class PublishCurseForgeTest(unittest.TestCase):
         self.assertTrue(body.endswith(b"--test-boundary--\r\n"))
 
 
+    def test_main_reads_java_version_from_gradle_properties(self):
+        source = MODULE_PATH.read_text(encoding="utf-8")
+
+        self.assertIn('java_version = props["java_version"]', source)
+        self.assertNotIn('java_version="25"', source)
+        self.assertNotIn('java_version = "25"', source)
+
+
 if __name__ == "__main__":
     unittest.main()
