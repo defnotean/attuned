@@ -1,25 +1,9 @@
 {
+  "sources": [
+    "docs/superpowers/assets/apex-capstones/apex-capstones-hud-source.png",
+    "docs/superpowers/assets/apex-capstones/apex-capstones-altar-source.png"
+  ],
   "hudSprites": {
-    "src/main/resources/assets/attuned/textures/gui/sprites/hud/affinity_tide.png": {
-      "width": 64,
-      "height": 64,
-      "mode": "RGBA"
-    },
-    "src/main/resources/assets/attuned/textures/gui/sprites/hud/affinity_forge.png": {
-      "width": 64,
-      "height": 64,
-      "mode": "RGBA"
-    },
-    "src/main/resources/assets/attuned/textures/gui/sprites/hud/affinity_verdant.png": {
-      "width": 64,
-      "height": 64,
-      "mode": "RGBA"
-    },
-    "src/main/resources/assets/attuned/textures/gui/sprites/hud/affinity_umbral.png": {
-      "width": 64,
-      "height": 64,
-      "mode": "RGBA"
-    },
     "src/main/resources/assets/attuned/textures/gui/sprites/hud/riptide.png": {
       "width": 64,
       "height": 64,
@@ -36,6 +20,26 @@
       "mode": "RGBA"
     },
     "src/main/resources/assets/attuned/textures/gui/sprites/hud/gloaming.png": {
+      "width": 64,
+      "height": 64,
+      "mode": "RGBA"
+    },
+    "src/main/resources/assets/attuned/textures/gui/sprites/hud/affinity_tide.png": {
+      "width": 64,
+      "height": 64,
+      "mode": "RGBA"
+    },
+    "src/main/resources/assets/attuned/textures/gui/sprites/hud/affinity_forge.png": {
+      "width": 64,
+      "height": 64,
+      "mode": "RGBA"
+    },
+    "src/main/resources/assets/attuned/textures/gui/sprites/hud/affinity_verdant.png": {
+      "width": 64,
+      "height": 64,
+      "mode": "RGBA"
+    },
+    "src/main/resources/assets/attuned/textures/gui/sprites/hud/affinity_umbral.png": {
       "width": 64,
       "height": 64,
       "mode": "RGBA"

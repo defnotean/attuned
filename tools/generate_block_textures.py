@@ -25,10 +25,6 @@ AFFINITIES: dict[str, dict[str, tuple[int, int, int]]] = {
     "bastion": {"primary": (75, 172, 96), "secondary": (189, 169, 88), "spark": (225, 245, 165)},
     "zephyr": {"primary": (58, 203, 224), "secondary": (96, 146, 235), "spark": (218, 252, 255)},
     "holy": {"primary": (218, 190, 91), "secondary": (238, 226, 154), "spark": (255, 250, 220)},
-    "tide": {"primary": (28, 126, 154), "secondary": (72, 216, 226), "spark": (202, 255, 248)},
-    "forge": {"primary": (204, 82, 31), "secondary": (232, 150, 50), "spark": (255, 226, 132)},
-    "verdant": {"primary": (70, 132, 48), "secondary": (118, 206, 72), "spark": (220, 255, 166)},
-    "umbral": {"primary": (94, 62, 158), "secondary": (154, 118, 232), "spark": (220, 194, 255)},
 }
 
 STATIC_OUTPUTS = (
@@ -41,7 +37,7 @@ STATIC_OUTPUTS = (
 ANIMATED_OUTPUTS = tuple(
     f"attunement_altar_{part}_{affinity}.png"
     for part in ("gem", "pillar", "top")
-    for affinity in AFFINITIES
+    for affinity in ("none", "fury", "bastion", "zephyr", "holy")
 )
 
 

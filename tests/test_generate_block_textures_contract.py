@@ -59,7 +59,7 @@ class GenerateBlockTexturesContractTest(unittest.TestCase):
         self.assertIn('f"attunement_altar_{part}_{affinity}.png"', source)
         for part in ("gem", "pillar", "top"):
             self.assertIn(f'"{part}"', source)
-        for affinity in ("none", "fury", "bastion", "zephyr", "holy", "tide", "forge", "verdant", "umbral"):
+        for affinity in ("none", "fury", "bastion", "zephyr", "holy"):
             self.assertIn(f'"{affinity}"', source)
 
     def test_generated_redesigned_altar_textures_are_correct_sizes_and_animated(self):
@@ -84,12 +84,6 @@ class GenerateBlockTexturesContractTest(unittest.TestCase):
             "attunement_altar_gem_holy.png",
             "attunement_altar_pillar_none.png",
             "attunement_altar_top_none.png",
-            "attunement_altar_gem_tide.png",
-            "attunement_altar_gem_forge.png",
-            "attunement_altar_gem_verdant.png",
-            "attunement_altar_gem_umbral.png",
-            "attunement_altar_pillar_tide.png",
-            "attunement_altar_top_tide.png",
         ):
             width, height, bit_depth, color_type, raw = read_png(texture_dir / name)
             self.assertEqual((64, 512), (width, height), name)
