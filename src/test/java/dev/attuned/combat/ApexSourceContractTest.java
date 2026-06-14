@@ -57,6 +57,47 @@ class ApexSourceContractTest {
 			"Maelstrom should branch on the cached attacker capstone.");
 	}
 
+	@Test
+	void promotedAffinityCapstonesProcTheirEffectsOnLandedApexHits() throws IOException {
+		String apex = read();
+
+		// The four promoted-affinity capstones exist and are bound to their affinity.
+		assertTrue(apex.contains("RIPTIDE(\"Riptide\"") && apex.contains("Affinity.TIDE,"),
+			"Riptide should exist and be bound to Tide.");
+		assertTrue(apex.contains("CRUCIBLE(\"Crucible\"") && apex.contains("Affinity.FORGE,"),
+			"Crucible should exist and be bound to Forge.");
+		assertTrue(apex.contains("BLOOMWARD(\"Bloomward\"") && apex.contains("Affinity.VERDANT,"),
+			"Bloomward should exist and be bound to Verdant.");
+		assertTrue(apex.contains("GLOAMING(\"Gloaming\"") && apex.contains("Affinity.UMBRAL,"),
+			"Gloaming should exist and be bound to Umbral.");
+
+		// afterDamage must restructure to drive the attacker-side proc for any
+		// defender while still pulsing Stillpoint for player defenders.
+		String afterDamage = methodBody(apex,
+			"private static void afterDamage(LivingEntity defender, DamageSource source,");
+		assertTrue(afterDamage.contains("applyAffinityCapstoneProc(defender, source, attacker)"),
+			"afterDamage should drive the attacker-side affinity-capstone proc.");
+		assertTrue(afterDamage.contains("isAt(defenderPlayer, Capstone.STILLPOINT)"),
+			"afterDamage must preserve the defender-side Stillpoint pulse.");
+
+		// The proc dispatch must reference each new capstone so the wiring cannot
+		// silently vanish, and each proc must apply its documented effect.
+		String proc = methodBody(apex,
+			"private static void applyAffinityCapstoneProc(LivingEntity defender, DamageSource source,");
+		assertTrue(proc.contains("case RIPTIDE") && proc.contains("case CRUCIBLE")
+				&& proc.contains("case BLOOMWARD") && proc.contains("case GLOAMING"),
+			"The affinity-capstone proc dispatch must branch on all four new capstones.");
+
+		assertTrue(methodBody(apex, "private static void procRiptide(").contains("MobEffects.SLOWNESS"),
+			"Riptide should apply Slowness to the target.");
+		assertTrue(methodBody(apex, "private static void procCrucible(").contains("igniteForSeconds"),
+			"Crucible should set the target on fire.");
+		assertTrue(methodBody(apex, "private static void procBloomward(").contains("attacker.heal("),
+			"Bloomward should heal the attacker.");
+		assertTrue(methodBody(apex, "private static void procGloaming(").contains("MobEffects.WEAKNESS"),
+			"Gloaming should apply Weakness to the target.");
+	}
+
 	private static String read() throws IOException {
 		return Files.readString(APEX_SOURCE, StandardCharsets.UTF_8);
 	}

@@ -52,6 +52,14 @@ public final class Apex {
 			ChatFormatting.AQUA, Affinity.ZEPHYR.argb()),
 		JUDGMENT("Judgment", "Judgment marks wounded Fury-aligned foes for a decisive strike.", Affinity.HOLY,
 			ChatFormatting.YELLOW, Affinity.HOLY.argb()),
+		RIPTIDE("Riptide", "Your apex strikes drag foes into the current.", Affinity.TIDE,
+			ChatFormatting.BLUE, Affinity.TIDE.argb()),
+		CRUCIBLE("Crucible", "Your apex strikes sear foes with forge-heat.", Affinity.FORGE,
+			ChatFormatting.DARK_RED, Affinity.FORGE.argb()),
+		BLOOMWARD("Bloomward", "Your apex strikes return life to you.", Affinity.VERDANT,
+			ChatFormatting.GREEN, Affinity.VERDANT.argb()),
+		GLOAMING("Gloaming", "Your apex strikes sap a foe's strength.", Affinity.UMBRAL,
+			ChatFormatting.DARK_PURPLE, Affinity.UMBRAL.argb()),
 		MAELSTROM("Maelstrom", "Discord Apex adds force to direct hits and scrambles struck foes.", null,
 			ChatFormatting.LIGHT_PURPLE, AffinityColors.DISCORD_ARGB),
 		STILLPOINT("Stillpoint", "Neutral Apex grants Absorption pulses and denies affinity pressure.", null,
@@ -92,10 +100,10 @@ public final class Apex {
 		}
 
 		/**
-		 * The capstone a single committed affinity resolves to. Only the original
-		 * four affinities own a capstone; the promoted four (Tide, Forge, Verdant,
-		 * Umbral) intentionally return {@link Optional#empty()} for now, so a build
-		 * fully committed to one of them resolves to no capstone.
+		 * The capstone a single committed affinity resolves to. Every affinity now
+		 * owns a capstone: the original four (Fury, Bastion, Zephyr, Holy) plus the
+		 * promoted four (Tide, Forge, Verdant, Umbral), so a build fully committed to
+		 * any single affinity resolves to a present capstone.
 		 */
 		public static Optional<Capstone> ofAffinity(Affinity affinity) {
 			return switch (affinity) {
@@ -103,7 +111,10 @@ public final class Apex {
 				case BASTION -> Optional.of(UNYIELDING);
 				case ZEPHYR -> Optional.of(UNTOUCHABLE);
 				case HOLY -> Optional.of(JUDGMENT);
-				case TIDE, FORGE, VERDANT, UMBRAL -> Optional.empty();
+				case TIDE -> Optional.of(RIPTIDE);
+				case FORGE -> Optional.of(CRUCIBLE);
+				case VERDANT -> Optional.of(BLOOMWARD);
+				case UMBRAL -> Optional.of(GLOAMING);
 			};
 		}
 	}
@@ -121,6 +132,18 @@ public final class Apex {
 	private static final int MAELSTROM_SCRAMBLE_TICKS = 60;
 	private static final int STILLPOINT_ABSORPTION_TICKS = 60;
 	private static final int STILLPOINT_ABSORPTION_COOLDOWN_TICKS = 160;
+
+	// Affinity-capstone on-hit procs (attacker-side, landed apex melee only).
+	// Each is matchup-scaled: NORMAL fires the base value, EMPOWERED roughly
+	// doubles it, NEUTRALIZED does not fire at all.
+	private static final int RIPTIDE_SLOWNESS_TICKS = 40;
+	private static final int RIPTIDE_SLOWNESS_TICKS_EMPOWERED = 80;
+	private static final int CRUCIBLE_FIRE_SECONDS = 3;
+	private static final int CRUCIBLE_FIRE_SECONDS_EMPOWERED = 5;
+	private static final float BLOOMWARD_HEAL = 1.5F;
+	private static final float BLOOMWARD_HEAL_EMPOWERED = 3.0F;
+	private static final int GLOAMING_WEAKNESS_TICKS = 40;
+	private static final int GLOAMING_WEAKNESS_TICKS_EMPOWERED = 80;
 
 	// Apex identity abilities: fired from the Focus Ability key when no ability Focus is active.
 	static final int MAELSTROM_NOVA_COOLDOWN_TICKS = 600;
@@ -205,16 +228,16 @@ public final class Apex {
 	}
 
 	/**
-	 * Player-facing capstone name for a committed affinity, or an empty string for
-	 * a promoted affinity (Tide, Forge, Verdant, Umbral) that owns no capstone.
+	 * Player-facing capstone name for a committed affinity. Every affinity now owns
+	 * a capstone, so this always resolves to a name.
 	 */
 	public static String capstoneName(Affinity affinity) {
 		return Capstone.ofAffinity(affinity).map(Capstone::displayName).orElse("");
 	}
 
 	/**
-	 * Player-facing capstone description for a committed affinity, or an empty
-	 * string for a promoted affinity that owns no capstone.
+	 * Player-facing capstone description for a committed affinity. Every affinity
+	 * now owns a capstone, so this always resolves to a description.
 	 */
 	public static String capstoneDescription(Affinity affinity) {
 		return Capstone.ofAffinity(affinity).map(Capstone::description).orElse("");
@@ -299,16 +322,91 @@ public final class Apex {
 
 	private static void afterDamage(LivingEntity defender, DamageSource source,
 			float originalDamage, float dealtDamage, boolean blocked) {
-		if (dealtDamage <= 0.0F || !(defender instanceof Player defenderPlayer)) {
+		if (dealtDamage <= 0.0F) {
 			return;
 		}
 		LivingEntity attacker = AttunedCombat.attackerOf(source);
-		if (attacker != null
+
+		// Defender-side STILLPOINT: unchanged. Only a player can hold a capstone, so
+		// this still gates on the defender being a player exactly as before.
+		if (defender instanceof Player defenderPlayer
+				&& attacker != null
 				&& isAt(defenderPlayer, Capstone.STILLPOINT)
 				&& Resonance.atApex(defenderPlayer)
 				&& hasAffinityPressure(attacker)) {
 			pulseStillpoint(defenderPlayer);
 		}
+
+		// Attacker-side affinity-capstone procs: fire on a landed apex melee hit
+		// against ANY defender (mob or player). Only the four promoted-affinity
+		// capstones live here; the original capstones keep their existing homes.
+		applyAffinityCapstoneProc(defender, source, attacker);
+	}
+
+	private static void applyAffinityCapstoneProc(LivingEntity defender, DamageSource source,
+			LivingEntity attacker) {
+		if (!(attacker instanceof Player attackerPlayer)) {
+			return;
+		}
+		CombatContext context = CombatContext.of(defender, source);
+		Capstone capstone = context.capstoneOf(attackerPlayer).orElse(null);
+		if (capstone == null
+				|| !context.atApex(attackerPlayer)
+				|| !isApexMeleeTarget(defender, attackerPlayer, source)) {
+			return;
+		}
+		switch (capstone) {
+			case RIPTIDE -> procRiptide(defender, attackerPlayer, context);
+			case CRUCIBLE -> procCrucible(defender, attackerPlayer, context);
+			case BLOOMWARD -> procBloomward(defender, attackerPlayer, context);
+			case GLOAMING -> procGloaming(defender, attackerPlayer, context);
+			// EXECUTE/UNYIELDING/UNTOUCHABLE/JUDGMENT/MAELSTROM/STILLPOINT keep their
+			// existing homes (adjustDamage / allowDamage / afterDamage above), so they
+			// must not double-apply here.
+			default -> { }
+		}
+	}
+
+	private static void procRiptide(LivingEntity defender, Player attacker, CombatContext context) {
+		Matchup matchup = matchupAgainst(Affinity.TIDE, defender, context);
+		if (matchup == Matchup.NEUTRALIZED) {
+			return;
+		}
+		int ticks = matchup == Matchup.EMPOWERED
+			? RIPTIDE_SLOWNESS_TICKS_EMPOWERED
+			: RIPTIDE_SLOWNESS_TICKS;
+		defender.addEffect(new MobEffectInstance(MobEffects.SLOWNESS, ticks, 0, true, true, true));
+	}
+
+	private static void procCrucible(LivingEntity defender, Player attacker, CombatContext context) {
+		Matchup matchup = matchupAgainst(Affinity.FORGE, defender, context);
+		if (matchup == Matchup.NEUTRALIZED) {
+			return;
+		}
+		int seconds = matchup == Matchup.EMPOWERED
+			? CRUCIBLE_FIRE_SECONDS_EMPOWERED
+			: CRUCIBLE_FIRE_SECONDS;
+		defender.igniteForSeconds(seconds);
+	}
+
+	private static void procBloomward(LivingEntity defender, Player attacker, CombatContext context) {
+		Matchup matchup = matchupAgainst(Affinity.VERDANT, defender, context);
+		if (matchup == Matchup.NEUTRALIZED || attacker.isDeadOrDying()) {
+			return;
+		}
+		float heal = matchup == Matchup.EMPOWERED ? BLOOMWARD_HEAL_EMPOWERED : BLOOMWARD_HEAL;
+		attacker.heal(heal);
+	}
+
+	private static void procGloaming(LivingEntity defender, Player attacker, CombatContext context) {
+		Matchup matchup = matchupAgainst(Affinity.UMBRAL, defender, context);
+		if (matchup == Matchup.NEUTRALIZED) {
+			return;
+		}
+		int ticks = matchup == Matchup.EMPOWERED
+			? GLOAMING_WEAKNESS_TICKS_EMPOWERED
+			: GLOAMING_WEAKNESS_TICKS;
+		defender.addEffect(new MobEffectInstance(MobEffects.WEAKNESS, ticks, 0, true, true, true));
 	}
 
 	public static boolean suppressesIncomingAdvantage(Player defender, LivingEntity attacker) {

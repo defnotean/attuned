@@ -381,10 +381,28 @@ public final class CombatHud {
 	private static Map<Apex.Capstone, Identifier> buildCapstoneSprites() {
 		Map<Apex.Capstone, Identifier> sprites = new EnumMap<>(Apex.Capstone.class);
 		for (Apex.Capstone capstone : Apex.Capstone.values()) {
-			sprites.put(capstone, Identifier.fromNamespaceAndPath(Attuned.MOD_ID,
-				"hud/" + capstone.name().toLowerCase(Locale.ROOT)));
+			sprites.put(capstone, capstoneGemSprite(capstone));
 		}
 		return sprites;
+	}
+
+	// The gem sprite for a capstone. The original capstones (Execute, Unyielding,
+	// Untouchable, Judgment, Maelstrom, Stillpoint) own a bespoke hud/<capstone>
+	// face. The four promoted-affinity capstones (Riptide, Crucible, Bloomward,
+	// Gloaming) ship no bespoke art, so they reuse their affinity's existing gem
+	// sprite (hud/affinity_<affinity>) rather than rendering a missing-texture
+	// magenta gem.
+	private static Identifier capstoneGemSprite(Apex.Capstone capstone) {
+		switch (capstone) {
+			case RIPTIDE, CRUCIBLE, BLOOMWARD, GLOAMING -> {
+				Affinity affinity = capstone.affinity().orElseThrow();
+				return affinitySpriteFor(affinity, false);
+			}
+			default -> {
+				return Identifier.fromNamespaceAndPath(Attuned.MOD_ID,
+					"hud/" + capstone.name().toLowerCase(Locale.ROOT));
+			}
+		}
 	}
 
 	private static void drawOverlaySprite(GuiGraphicsExtractor graphics, Identifier sprite, int gemX, int gemY, int size) {

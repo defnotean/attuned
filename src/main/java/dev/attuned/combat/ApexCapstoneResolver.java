@@ -35,8 +35,9 @@ final class ApexCapstoneResolver {
 			return Optional.of(Apex.Capstone.STILLPOINT);
 		}
 		if (layout.isPureSingleAffinity()) {
-			// A promoted affinity (Tide/Forge/Verdant/Umbral) owns no capstone, so
-			// a build committed purely to one of them resolves to no Apex.
+			// Every affinity owns a capstone now, so a build committed purely to one
+			// affinity resolves to that affinity's capstone (the four originals plus
+			// the four promoted Tide/Forge/Verdant/Umbral capstones).
 			return Apex.Capstone.ofAffinity(layout.onlyAffinity());
 		}
 		if (layout.isManifoldSpread()) {
