@@ -2,7 +2,7 @@
 	"item": "attuned:sparkweld_focus",
 	"cost": 3,
 	"unique": true,
-	"affinity": "fury",
+	"affinity": "forge",
 	"aspect": "attuned:forge",
 	"faction": "attuned:forgebound",
 	"modifiers": [

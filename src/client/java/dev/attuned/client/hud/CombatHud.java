@@ -67,6 +67,10 @@ public final class CombatHud {
 	private static final Identifier BASTION_SPRITE = Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "hud/affinity_bastion");
 	private static final Identifier ZEPHYR_SPRITE = Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "hud/affinity_zephyr");
 	private static final Identifier HOLY_SPRITE = Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "hud/affinity_holy");
+	private static final Identifier TIDE_SPRITE = Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "hud/affinity_tide");
+	private static final Identifier FORGE_SPRITE = Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "hud/affinity_forge");
+	private static final Identifier VERDANT_SPRITE = Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "hud/affinity_verdant");
+	private static final Identifier UMBRAL_SPRITE = Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "hud/affinity_umbral");
 	private static final Identifier DISCORD_SPRITE = Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "hud/affinity_discord");
 	private static final Identifier NEUTRAL_SPRITE = Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "hud/affinity_neutral");
 	private static final Identifier TARGET_RING_SPRITE = Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "hud/hud_target_ring");
@@ -318,8 +322,12 @@ public final class CombatHud {
 	 */
 	public static void drawGem(GuiGraphicsExtractor graphics, int x, int y, int size,
 			@Nullable Affinity affinity, boolean discord, boolean targeted, boolean atApex) {
+		// A promoted affinity (Tide/Forge/Verdant/Umbral) owns no capstone, so its
+		// Apex gem falls back to the plain affinity gem rather than a capstone face.
 		Identifier sprite = atApex && affinity != null && !discord
-			? capstoneSpriteFor(Apex.Capstone.ofAffinity(affinity))
+			? Apex.Capstone.ofAffinity(affinity)
+				.map(CombatHud::capstoneSpriteFor)
+				.orElseGet(() -> affinitySpriteFor(affinity, discord))
 			: affinitySpriteFor(affinity, discord);
 		drawGemSprite(graphics, x, y, size, targeted, sprite);
 	}
@@ -359,6 +367,10 @@ public final class CombatHud {
 			case BASTION -> BASTION_SPRITE;
 			case ZEPHYR -> ZEPHYR_SPRITE;
 			case HOLY -> HOLY_SPRITE;
+			case TIDE -> TIDE_SPRITE;
+			case FORGE -> FORGE_SPRITE;
+			case VERDANT -> VERDANT_SPRITE;
+			case UMBRAL -> UMBRAL_SPRITE;
 		};
 	}
 

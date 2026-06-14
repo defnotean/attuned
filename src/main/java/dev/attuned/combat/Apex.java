@@ -91,12 +91,19 @@ public final class Apex {
 			return argb;
 		}
 
-		public static Capstone ofAffinity(Affinity affinity) {
+		/**
+		 * The capstone a single committed affinity resolves to. Only the original
+		 * four affinities own a capstone; the promoted four (Tide, Forge, Verdant,
+		 * Umbral) intentionally return {@link Optional#empty()} for now, so a build
+		 * fully committed to one of them resolves to no capstone.
+		 */
+		public static Optional<Capstone> ofAffinity(Affinity affinity) {
 			return switch (affinity) {
-				case FURY -> EXECUTE;
-				case BASTION -> UNYIELDING;
-				case ZEPHYR -> UNTOUCHABLE;
-				case HOLY -> JUDGMENT;
+				case FURY -> Optional.of(EXECUTE);
+				case BASTION -> Optional.of(UNYIELDING);
+				case ZEPHYR -> Optional.of(UNTOUCHABLE);
+				case HOLY -> Optional.of(JUDGMENT);
+				case TIDE, FORGE, VERDANT, UMBRAL -> Optional.empty();
 			};
 		}
 	}
@@ -197,12 +204,20 @@ public final class Apex {
 		return capstoneOf(player).filter(c -> c == capstone).isPresent();
 	}
 
+	/**
+	 * Player-facing capstone name for a committed affinity, or an empty string for
+	 * a promoted affinity (Tide, Forge, Verdant, Umbral) that owns no capstone.
+	 */
 	public static String capstoneName(Affinity affinity) {
-		return Capstone.ofAffinity(affinity).displayName();
+		return Capstone.ofAffinity(affinity).map(Capstone::displayName).orElse("");
 	}
 
+	/**
+	 * Player-facing capstone description for a committed affinity, or an empty
+	 * string for a promoted affinity that owns no capstone.
+	 */
 	public static String capstoneDescription(Affinity affinity) {
-		return Capstone.ofAffinity(affinity).description();
+		return Capstone.ofAffinity(affinity).map(Capstone::description).orElse("");
 	}
 
 	public static float adjustDamage(LivingEntity defender, DamageSource source, float amount) {

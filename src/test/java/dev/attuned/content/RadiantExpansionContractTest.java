@@ -97,16 +97,22 @@ class RadiantExpansionContractTest {
 	private static final Set<String> FIRST_WAVE_FOCI = firstWaveFoci();
 
 	@Test
-	void holyCompletesTheFourAffinityWheel() {
+	void holyKeepsItsOriginalRelationshipsInsideTheExpandedWheel() {
 		Affinity holy = Affinity.valueOf("HOLY");
 
 		assertEquals("holy", holy.getSerializedName());
-		assertTrue(holy.beats(Affinity.FURY), "Holy should pressure Fury");
+		// The historic four-cycle still holds as a subset of the promoted 8-matrix.
+		assertTrue(holy.beats(Affinity.FURY), "Holy should still pressure Fury");
 		assertTrue(Affinity.FURY.beats(Affinity.BASTION), "Fury should still pressure Bastion");
 		assertTrue(Affinity.BASTION.beats(Affinity.ZEPHYR), "Bastion should still pressure Zephyr");
-		assertTrue(Affinity.ZEPHYR.beats(holy), "Zephyr should counter Holy");
-		assertTrue(!holy.beats(Affinity.BASTION), "Holy and Bastion should be neutral opposites");
-		assertTrue(!Affinity.BASTION.beats(holy), "Bastion and Holy should be neutral opposites");
+		assertTrue(Affinity.ZEPHYR.beats(holy), "Zephyr should still counter Holy");
+		assertTrue(!holy.beats(Affinity.BASTION), "Holy should not pressure Bastion");
+		assertTrue(!Affinity.BASTION.beats(holy), "Bastion should not pressure Holy");
+		// Promotion gave Holy a second strength and a second reciprocal weakness.
+		assertTrue(holy.beats(Affinity.UMBRAL), "Holy should also pressure Umbral after promotion");
+		assertTrue(Affinity.VERDANT.beats(holy), "Verdant should also counter Holy after promotion");
+		assertEquals(2, holy.strongAgainst().size(), "Holy should counter exactly two affinities");
+		assertEquals(2, holy.weakAgainst().size(), "Holy should be countered by exactly two affinities");
 	}
 
 	@Test

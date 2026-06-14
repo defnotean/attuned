@@ -220,6 +220,10 @@ public class AttunementAltarBlock extends Block {
 				case BASTION -> new MobEffectInstance(MobEffects.RESISTANCE, 400, 0, true, true, true);
 				case ZEPHYR -> new MobEffectInstance(MobEffects.SPEED, 400, 0, true, true, true);
 				case HOLY -> new MobEffectInstance(MobEffects.ABSORPTION, 400, 0, true, true, true);
+				case TIDE -> new MobEffectInstance(MobEffects.WATER_BREATHING, 400, 0, true, true, true);
+				case FORGE -> new MobEffectInstance(MobEffects.FIRE_RESISTANCE, 400, 0, true, true, true);
+				case VERDANT -> new MobEffectInstance(MobEffects.REGENERATION, 400, 0, true, true, true);
+				case UMBRAL -> new MobEffectInstance(MobEffects.NIGHT_VISION, 400, 0, true, true, true);
 			};
 			player.addEffect(effect);
 		});
@@ -245,6 +249,10 @@ public class AttunementAltarBlock extends Block {
 			case BASTION -> 0.76F;
 			case ZEPHYR -> 1.18F;
 			case HOLY -> 1.38F;
+			case TIDE -> 1.06F;
+			case FORGE -> 0.68F;
+			case VERDANT -> 0.96F;
+			case UMBRAL -> 1.28F;
 		};
 	}
 
@@ -291,6 +299,10 @@ public class AttunementAltarBlock extends Block {
 			case BASTION -> Component.literal("Bastion").withStyle(ChatFormatting.GOLD);
 			case ZEPHYR -> Component.literal("Zephyr").withStyle(ChatFormatting.AQUA);
 			case HOLY -> Component.literal("Holy").withStyle(ChatFormatting.YELLOW);
+			case TIDE -> Component.literal("Tide").withStyle(ChatFormatting.BLUE);
+			case FORGE -> Component.literal("Forge").withStyle(ChatFormatting.DARK_RED);
+			case VERDANT -> Component.literal("Verdant").withStyle(ChatFormatting.GREEN);
+			case UMBRAL -> Component.literal("Umbral").withStyle(ChatFormatting.DARK_PURPLE);
 		};
 	}
 
@@ -386,6 +398,9 @@ public class AttunementAltarBlock extends Block {
 			case BASTION -> AltarAffinity.BASTION;
 			case ZEPHYR -> AltarAffinity.ZEPHYR;
 			case HOLY -> AltarAffinity.HOLY;
+			// The promoted affinities glow neutral for now — no new altar models,
+			// textures, or blockstates ship with this expansion.
+			case TIDE, FORGE, VERDANT, UMBRAL -> AltarAffinity.NONE;
 		};
 	}
 

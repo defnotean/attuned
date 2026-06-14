@@ -2,7 +2,7 @@
 	"item": "attuned:undertow_focus",
 	"cost": 4,
 	"unique": true,
-	"affinity": "zephyr",
+	"affinity": "tide",
 	"aspect": "attuned:tide",
 	"faction": "attuned:tideborn",
 	"modifiers": [

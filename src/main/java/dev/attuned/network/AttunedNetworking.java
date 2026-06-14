@@ -137,6 +137,10 @@ public final class AttunedNetworking {
 			case BASTION -> ChatFormatting.GOLD;
 			case ZEPHYR -> ChatFormatting.AQUA;
 			case HOLY -> ChatFormatting.YELLOW;
+			case TIDE -> ChatFormatting.BLUE;
+			case FORGE -> ChatFormatting.DARK_RED;
+			case VERDANT -> ChatFormatting.GREEN;
+			case UMBRAL -> ChatFormatting.DARK_PURPLE;
 		};
 	}
 }

@@ -2,7 +2,7 @@
 	"item": "attuned:anvilheart_focus",
 	"cost": 5,
 	"unique": true,
-	"affinity": "bastion",
+	"affinity": "forge",
 	"aspect": "attuned:forge",
 	"faction": "attuned:forgebound",
 	"modifiers": [

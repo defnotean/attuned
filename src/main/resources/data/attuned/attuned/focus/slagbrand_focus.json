@@ -2,7 +2,7 @@
 	"item": "attuned:slagbrand_focus",
 	"cost": 4,
 	"unique": true,
-	"affinity": "fury",
+	"affinity": "forge",
 	"aspect": "attuned:forge",
 	"faction": "attuned:forgebound",
 	"modifiers": [

@@ -2,7 +2,7 @@
 	"item": "attuned:cinderthief_focus",
 	"cost": 4,
 	"unique": true,
-	"affinity": "fury",
+	"affinity": "umbral",
 	"aspect": "attuned:umbral",
 	"faction": "attuned:umbral",
 	"modifiers": [

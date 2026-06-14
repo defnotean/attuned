@@ -278,6 +278,10 @@ public final class AttunementReadout {
 			case BASTION -> Component.literal("Bastion").withStyle(ChatFormatting.GOLD);
 			case ZEPHYR -> Component.literal("Zephyr").withStyle(ChatFormatting.AQUA);
 			case HOLY -> Component.literal("Holy").withStyle(ChatFormatting.YELLOW);
+			case TIDE -> Component.literal("Tide").withStyle(ChatFormatting.BLUE);
+			case FORGE -> Component.literal("Forge").withStyle(ChatFormatting.DARK_RED);
+			case VERDANT -> Component.literal("Verdant").withStyle(ChatFormatting.GREEN);
+			case UMBRAL -> Component.literal("Umbral").withStyle(ChatFormatting.DARK_PURPLE);
 		};
 	}
 
@@ -351,6 +355,10 @@ public final class AttunementReadout {
 			case BASTION -> ChatFormatting.GOLD;
 			case ZEPHYR -> ChatFormatting.AQUA;
 			case HOLY -> ChatFormatting.YELLOW;
+			case TIDE -> ChatFormatting.BLUE;
+			case FORGE -> ChatFormatting.DARK_RED;
+			case VERDANT -> ChatFormatting.GREEN;
+			case UMBRAL -> ChatFormatting.DARK_PURPLE;
 		};
 	}
 

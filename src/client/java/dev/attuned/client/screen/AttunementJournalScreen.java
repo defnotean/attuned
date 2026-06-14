@@ -448,6 +448,10 @@ public final class AttunementJournalScreen extends Screen {
 			case BASTION -> 0xFFFFC857;
 			case ZEPHYR -> 0xFF54C7F0;
 			case HOLY -> 0xFFFFF1A8;
+			case TIDE -> 0xFF2F7FD0;
+			case FORGE -> 0xFFC85A2B;
+			case VERDANT -> 0xFF5FC23E;
+			case UMBRAL -> 0xFF7A4FB5;
 		};
 		graphics.fill(x, y + 3, x + 3, y + size - 3, 0xFF0C0B10);
 		graphics.fill(x + 3, y, x + size - 3, y + size, 0xFF0C0B10);

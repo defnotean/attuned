@@ -2,7 +2,7 @@
 	"item": "attuned:seedcall_focus",
 	"cost": 3,
 	"unique": true,
-	"affinity": "zephyr",
+	"affinity": "verdant",
 	"aspect": "attuned:verdant",
 	"faction": "attuned:wildroot",
 	"modifiers": [
