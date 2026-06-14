@@ -522,6 +522,10 @@ class FocusDataConsistencyTest {
 		assertNoDownCullface(BLOCK_MODEL_DIR.resolve("attunement_altar_bastion.json"));
 		assertNoDownCullface(BLOCK_MODEL_DIR.resolve("attunement_altar_zephyr.json"));
 		assertNoDownCullface(BLOCK_MODEL_DIR.resolve("attunement_altar_holy.json"));
+		assertNoDownCullface(BLOCK_MODEL_DIR.resolve("attunement_altar_tide.json"));
+		assertNoDownCullface(BLOCK_MODEL_DIR.resolve("attunement_altar_forge.json"));
+		assertNoDownCullface(BLOCK_MODEL_DIR.resolve("attunement_altar_verdant.json"));
+		assertNoDownCullface(BLOCK_MODEL_DIR.resolve("attunement_altar_umbral.json"));
 		assertNoDownCullface(BLOCK_MODEL_DIR.resolve("altar_of_reweaving.json"));
 		assertTopPlateHasBottomFace(BLOCK_MODEL_DIR.resolve("attunement_altar.json"));
 		assertBlockTextureSize("altar_of_reweaving_base.png", 64, 64);

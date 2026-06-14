@@ -36,6 +36,10 @@ class HudAssetConsistencyTest {
 		assertSprite("affinity_bastion.png", 64, 64);
 		assertSprite("affinity_zephyr.png", 64, 64);
 		assertSprite("affinity_holy.png", 64, 64);
+		assertSprite("affinity_tide.png", 64, 64);
+		assertSprite("affinity_forge.png", 64, 64);
+		assertSprite("affinity_verdant.png", 64, 64);
+		assertSprite("affinity_umbral.png", 64, 64);
 		assertSprite("affinity_discord.png", 64, 64);
 		assertSprite("affinity_neutral.png", 64, 64);
 		for (Apex.Capstone capstone : Apex.Capstone.values()) {
