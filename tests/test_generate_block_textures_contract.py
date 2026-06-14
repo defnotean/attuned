@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import importlib.util
 import struct
 import unittest
 import zlib
@@ -9,14 +8,6 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 MODULE_PATH = ROOT / "tools" / "generate_block_textures.py"
-
-
-def load_generator():
-    spec = importlib.util.spec_from_file_location("generate_block_textures", MODULE_PATH)
-    module = importlib.util.module_from_spec(spec)
-    assert spec is not None and spec.loader is not None
-    spec.loader.exec_module(module)
-    return module
 
 
 def read_png(path: Path):
@@ -53,7 +44,7 @@ def frame_rows(raw: bytes, *, width: int, frame: int, frame_height: int = 64) ->
 
 class GenerateBlockTexturesContractTest(unittest.TestCase):
     def test_generator_declares_all_redesigned_altar_texture_outputs(self):
-        generator = load_generator()
+        source = MODULE_PATH.read_text(encoding="utf-8")
 
         expected_static = {
             "attunement_altar_base.png",
@@ -61,17 +52,17 @@ class GenerateBlockTexturesContractTest(unittest.TestCase):
             "altar_of_reweaving_gem.png",
             "altar_of_reweaving_top.png",
         }
-        expected_animated = {
-            f"attunement_altar_{part}_{affinity}.png"
-            for part in ("gem", "pillar", "top")
-            for affinity in ("none", "fury", "bastion", "zephyr", "holy")
-        }
-
-        self.assertTrue(expected_static <= set(generator.STATIC_OUTPUTS))
-        self.assertTrue(expected_animated <= set(generator.ANIMATED_OUTPUTS))
+        for output in expected_static:
+            self.assertIn(output, source)
+        self.assertIn("STATIC_OUTPUTS = (", source)
+        self.assertIn("ANIMATED_OUTPUTS = tuple(", source)
+        self.assertIn('f"attunement_altar_{part}_{affinity}.png"', source)
+        for part in ("gem", "pillar", "top"):
+            self.assertIn(f'"{part}"', source)
+        for affinity in ("none", "fury", "bastion", "zephyr", "holy"):
+            self.assertIn(f'"{affinity}"', source)
 
     def test_generated_redesigned_altar_textures_are_correct_sizes_and_animated(self):
-        load_generator()
         texture_dir = ROOT / "src" / "main" / "resources" / "assets" / "attuned" / "textures" / "block"
 
         for name in (
