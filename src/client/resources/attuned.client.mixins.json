@@ -6,10 +6,14 @@
 		"AbstractRecipeBookScreenAccessor",
 		"AbstractRecipeBookScreenMixin",
 		"CreativeModeInventoryScreenMixin",
+		"CustomHeadLayerInvisibilityMixin",
+		"HumanoidArmorLayerInvisibilityMixin",
 		"InventoryScreenMixin",
+		"ItemInHandLayerInvisibilityMixin",
 		"RenderTypeInvoker",
 		"ThrownTridentRendererMixin",
-		"ThrownTridentRenderStateMixin"
+		"ThrownTridentRenderStateMixin",
+		"WingsLayerInvisibilityMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1
