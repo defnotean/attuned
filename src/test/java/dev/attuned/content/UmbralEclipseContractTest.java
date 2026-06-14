@@ -47,11 +47,11 @@ class UmbralEclipseContractTest {
 
 	private static Map<String, FocusSpec> umbralFoci() {
 		Map<String, FocusSpec> foci = new LinkedHashMap<>();
-		foci.put("gloomstride_focus", new FocusSpec("zephyr", 4, false, "attuned:gloomstride"));
-		foci.put("duskward_focus", new FocusSpec("bastion", 4, false, "attuned:duskward"));
-		foci.put("shadowmeld_focus", new FocusSpec("zephyr", 4, false, "attuned:shadowmeld"));
-		foci.put("dreadfang_focus", new FocusSpec("fury", 5, true, "attuned:dreadfang"));
-		foci.put("eclipse_focus", new FocusSpec("fury", 6, true, "attuned:eclipse"));
+		foci.put("gloomstride_focus", new FocusSpec("umbral", 4, false, "attuned:gloomstride"));
+		foci.put("duskward_focus", new FocusSpec("umbral", 4, false, "attuned:duskward"));
+		foci.put("shadowmeld_focus", new FocusSpec("umbral", 4, false, "attuned:shadowmeld"));
+		foci.put("dreadfang_focus", new FocusSpec("umbral", 5, true, "attuned:dreadfang"));
+		foci.put("eclipse_focus", new FocusSpec("umbral", 6, true, "attuned:eclipse"));
 		return foci;
 	}
 

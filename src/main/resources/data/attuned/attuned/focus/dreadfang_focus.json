@@ -2,7 +2,7 @@
 	"item": "attuned:dreadfang_focus",
 	"cost": 5,
 	"unique": true,
-	"affinity": "fury",
+	"affinity": "umbral",
 	"faction": "attuned:umbral",
 	"behavior": "attuned:dreadfang"
 }

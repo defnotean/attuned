@@ -1,7 +1,7 @@
 {
 	"item": "attuned:shadowmeld_focus",
 	"cost": 4,
-	"affinity": "zephyr",
+	"affinity": "umbral",
 	"faction": "attuned:umbral",
 	"behavior": "attuned:shadowmeld"
 }
