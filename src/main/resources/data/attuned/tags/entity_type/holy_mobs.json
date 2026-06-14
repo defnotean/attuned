@@ -1,8 +1,7 @@
 {
 	"values": [
 		"minecraft:creeper",
-		"minecraft:enderman",
-		"minecraft:endermite",
-		"minecraft:shulker"
+		"minecraft:shulker",
+		"minecraft:vex"
 	]
 }
