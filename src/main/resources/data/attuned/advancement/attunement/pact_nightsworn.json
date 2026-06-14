@@ -1,0 +1,19 @@
+{
+	"parent": "attuned:attunement/first_pact",
+	"display": {
+		"icon": {
+			"id": "attuned:nullveil_focus"
+		},
+		"title": "Nightsworn",
+		"description": "Awaken the Umbral Pact.",
+		"frame": "task",
+		"show_toast": true,
+		"announce_to_chat": false,
+		"hidden": false
+	},
+	"criteria": {
+		"done": {
+			"trigger": "minecraft:impossible"
+		}
+	}
+}
