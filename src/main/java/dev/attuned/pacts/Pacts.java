@@ -57,19 +57,25 @@ import net.minecraft.world.level.Level;
  * The Pacts system: detection, activation announcement, per-tick effects and
  * damage hooks for the named set bonuses ({@link Pact}).
  *
- * <p>A player has at most one pact active at any moment:
+ * <p>A player has at most one pact active at any moment. Each single-affinity pact
+ * wakes on three or more active Foci of its lane with no other affinity:
  * <ul>
- *   <li><b>Pyresworn</b> — three or more active Fury Foci and no other affinity.</li>
- *   <li><b>Stoneheart</b> — three or more active Bastion Foci and no other affinity.</li>
- *   <li><b>Windrunner</b> — three or more active Zephyr Foci and no other affinity.</li>
- *   <li><b>Untethered</b> — at least one active Focus of every affinity, the
- *       Manifold path. Beats any single-affinity threshold when both qualify.</li>
+ *   <li><b>Pyresworn</b> (Fury) — charged melee hits ignite the target.</li>
+ *   <li><b>Stoneheart</b> (Bastion) — all incoming damage is dulled.</li>
+ *   <li><b>Windrunner</b> (Zephyr) — sustained Speed and a taller step height.</li>
+ *   <li><b>Radiant Covenant</b> (Holy) — charged hits reveal threats; undead take extra.</li>
+ *   <li><b>Tidesworn</b> (Tide) — melee hits briefly Slow the target.</li>
+ *   <li><b>Forgebound</b> (Forge) — melee hits sear the target with a short ignite.</li>
+ *   <li><b>Wildroot</b> (Verdant) — a slow passive Regeneration while the pact holds.</li>
+ *   <li><b>Nightsworn</b> (Umbral) — incoming damage is dulled while standing in the dark.</li>
+ *   <li><b>Untethered</b> — at least four distinct active affinities, the Manifold
+ *       path. Beats any single-affinity threshold when both qualify.</li>
  * </ul>
  *
- * <p>Per-tick aura particles, a constant low-tier MobEffect for Windrunner, an
- * outgoing-damage hook for Untethered, an incoming-damage hook for Stoneheart
- * and an AFTER_DAMAGE hook for Pyresworn all branch on the result of
- * {@link #activeOf}.</p>
+ * <p>Per-tick aura particles, sustained MobEffects for Windrunner and Wildroot, an
+ * outgoing-damage hook for Untethered/Radiant Covenant, an incoming-damage hook for
+ * Stoneheart/Nightsworn and an AFTER_DAMAGE hook for Pyresworn/Tidesworn/Forgebound
+ * all branch on the result of {@link #activeOf}.</p>
  */
 public final class Pacts {
 	private Pacts() {}
@@ -95,6 +101,16 @@ public final class Pacts {
 	private static final int RADIANT_COVENANT_REVEAL_TICKS = 80;
 	/** Radiant Covenant's modest Smite-flavored boost against hostile undead. */
 	private static final float RADIANT_COVENANT_UNDEAD_BONUS = 0.10F;
+	/** Tidesworn melee hits drag the target in the current — a brief Slowness I. */
+	private static final int TIDESWORN_SLOW_TICKS = 40;
+	/** Forgebound melee hits sear the target for a short ember (a milder Pyresworn burn). */
+	private static final int FORGEBOUND_IGNITE_SECONDS = 2;
+	/** Wildroot knits a slow Regeneration I while the pact holds; refreshed every tick window. */
+	private static final int WILDROOT_REGEN_TICK = 40;
+	/** Nightsworn shrugs off this fraction of incoming damage while standing in the dark. */
+	private static final float NIGHTSWORN_DARK_DAMPEN = 0.10F;
+	/** Light level at or below which Nightsworn counts as standing in the dark (matches the Umbral Foci). */
+	private static final int NIGHTSWORN_MAX_LIGHT = 7;
 	/** Time window for a Pyresworn challenge kill after Pact fire catches a hostile. */
 	private static final int PYRESWORN_CHALLENGE_WINDOW_TICKS = 20 * 20;
 	/** Final damage threshold for the Stoneheart heavy-hit challenge. */
@@ -309,6 +325,13 @@ public final class Pacts {
 		if (defenderPact == Pact.STONEHEART) {
 			amount *= (1.0F - STONEHEART_DAMPEN);
 		}
+		// Nightsworn: a defender-side dampen that only holds while the wearer stands
+		// in the dark — the shadow shelters them. Mirrors Stoneheart's shape but
+		// conditioned on light level rather than always-on.
+		if (defenderPact == Pact.NIGHTSWORN && defender instanceof Player darkPlayer
+				&& isInDark(darkPlayer)) {
+			amount *= (1.0F - NIGHTSWORN_DARK_DAMPEN);
+		}
 		// Untethered: an attacker-side amplifier against any affinity-bearing foe.
 		if (source.getEntity() instanceof Player attackerPlayer) {
 			Pact attackerPact = activeOf(context.activeAffinityCounts(attackerPlayer)).orElse(null);
@@ -351,6 +374,12 @@ public final class Pacts {
 		if (attackerPact == Pact.PYRESWORN) {
 			pyreswornIgnite(attacker, defender, source);
 		}
+		if (attackerPact == Pact.TIDESWORN) {
+			tideswornSlow(attacker, defender, source);
+		}
+		if (attackerPact == Pact.FORGEBOUND) {
+			forgeboundSear(attacker, defender, source);
+		}
 		if (attackerPact == Pact.UNTETHERED
 				&& canAffectCombatTarget(attacker, defender)
 				&& hasAffinityPressure(defender)) {
@@ -387,14 +416,7 @@ public final class Pacts {
 
 	/** Pyresworn's fire-on-strike, gated to direct melee and to at-least-half-charged swings. */
 	private static void pyreswornIgnite(Player attacker, LivingEntity defender, DamageSource source) {
-		// Only on direct melee — projectile and indirect sources have a non-null direct entity.
-		if (source.getDirectEntity() != attacker) {
-			return;
-		}
-		// Defense in depth: even if a modded weapon sets the player as the direct entity
-		// for a projectile or explosion, the damage type tag still flags it correctly.
-		if (source.is(net.minecraft.tags.DamageTypeTags.IS_PROJECTILE)
-				|| source.is(net.minecraft.tags.DamageTypeTags.IS_EXPLOSION)) {
+		if (!isDirectMelee(attacker, source)) {
 			return;
 		}
 		// Only on at-least-half-charged swings — discourages the most extreme spam-clicking.
@@ -422,6 +444,70 @@ public final class Pacts {
 		}
 		defender.igniteForSeconds(PYRESWORN_IGNITE_SECONDS);
 		markPyreswornFire(attacker, defender);
+	}
+
+	/**
+	 * Tidesworn's control-on-strike: a brief Slowness I that drags the foe in the
+	 * current. Like Pyresworn's burn it fires on a direct melee hit and shares the
+	 * same friendly-fire/PvP guards, but lands on any direct hit (no charge gate)
+	 * because Slowness I is a far milder pressure than open flame.
+	 */
+	private static void tideswornSlow(Player attacker, LivingEntity defender, DamageSource source) {
+		if (!isDirectMelee(attacker, source) || !canStrikePactTarget(attacker, defender)) {
+			return;
+		}
+		defender.addEffect(new MobEffectInstance(
+			MobEffects.SLOWNESS, TIDESWORN_SLOW_TICKS, 0, true, false, true));
+	}
+
+	/**
+	 * Forgebound's ember-on-strike: a milder Pyresworn burn — a shorter ignite on
+	 * any direct melee hit, with no charge gate. Shares the direct-melee and
+	 * friendly-fire/PvP guards so it never catches the attacker's own pets, a
+	 * villager, or a player the world's PvP rule protects.
+	 */
+	private static void forgeboundSear(Player attacker, LivingEntity defender, DamageSource source) {
+		if (!isDirectMelee(attacker, source) || !canStrikePactTarget(attacker, defender)) {
+			return;
+		}
+		defender.igniteForSeconds(FORGEBOUND_IGNITE_SECONDS);
+	}
+
+	/** Direct, non-projectile, non-explosion melee from this attacker. */
+	private static boolean isDirectMelee(Player attacker, DamageSource source) {
+		// Only on direct melee — projectile and indirect sources have a non-null direct entity.
+		if (source.getDirectEntity() != attacker) {
+			return false;
+		}
+		// Defense in depth: even if a modded weapon sets the player as the direct entity
+		// for a projectile or explosion, the damage type tag still flags it correctly.
+		return !source.is(net.minecraft.tags.DamageTypeTags.IS_PROJECTILE)
+			&& !source.is(net.minecraft.tags.DamageTypeTags.IS_EXPLOSION);
+	}
+
+	/**
+	 * Shared friendly-fire and PvP guard for the on-strike pact procs (Pyresworn,
+	 * Tidesworn, Forgebound): the defender must be a hostile or a valid PvP
+	 * opponent, never the attacker's own pet and never a villager. AFTER_DAMAGE is
+	 * server-side, so PvP is gated through {@link CombatTargets#canAffectPlayer}.
+	 */
+	private static boolean canStrikePactTarget(Player attacker, LivingEntity defender) {
+		if (!CombatTargets.isHostileOrPvpOpponent(defender, attacker)) {
+			return false;
+		}
+		if (defender instanceof Player targetPlayer) {
+			return CombatTargets.canAffectPlayer(attacker, targetPlayer);
+		}
+		if (defender instanceof TamableAnimal pet) {
+			var ownerRef = pet.getOwnerReference();
+			return ownerRef == null || !attacker.getUUID().equals(ownerRef.getUUID());
+		}
+		return !(defender instanceof AbstractVillager);
+	}
+
+	/** Whether a player stands in light dim enough for Nightsworn's shelter to hold. */
+	private static boolean isInDark(Player player) {
+		return player.level().getMaxLocalRawBrightness(player.blockPosition()) <= NIGHTSWORN_MAX_LIGHT;
 	}
 
 	private static void markPyreswornFire(Player attacker, LivingEntity defender) {
@@ -569,6 +655,12 @@ public final class Pacts {
 					// shown in HUD so the player knows the pact is sustaining the buff.
 					player.addEffect(new MobEffectInstance(
 						MobEffects.SPEED, WINDRUNNER_TICK * 4, 0, true, false, true));
+				}
+				if (now == Pact.WILDROOT && ticks % WILDROOT_REGEN_TICK == 0) {
+					// REGENERATION 0 (Regen I) refreshed every WILDROOT_REGEN_TICK ticks — a
+					// slow passive knit while the pact holds. Hidden particles, shown in HUD.
+					player.addEffect(new MobEffectInstance(
+						MobEffects.REGENERATION, WILDROOT_REGEN_TICK * 2, 0, true, false, true));
 				}
 			}
 			trackWindrunnerChallenge(player, now);
