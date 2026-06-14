@@ -315,23 +315,6 @@ public final class CombatHud {
 			sprite, x, y, MATCHUP_LINK_W, MATCHUP_LINK_H);
 	}
 
-	/**
-	 * Paints one texture-backed affinity gem. Normal affinity, Discord, neutral,
-	 * target ring, matchup ring, and Apex states all resolve to PNG assets in the
-	 * HUD sprite atlas instead of being drawn one pixel at a time.
-	 */
-	public static void drawGem(GuiGraphicsExtractor graphics, int x, int y, int size,
-			@Nullable Affinity affinity, boolean discord, boolean targeted, boolean atApex) {
-		// A promoted affinity (Tide/Forge/Verdant/Umbral) owns no capstone, so its
-		// Apex gem falls back to the plain affinity gem rather than a capstone face.
-		Identifier sprite = atApex && affinity != null && !discord
-			? Apex.Capstone.ofAffinity(affinity)
-				.map(CombatHud::capstoneSpriteFor)
-				.orElseGet(() -> affinitySpriteFor(affinity, discord))
-			: affinitySpriteFor(affinity, discord);
-		drawGemSprite(graphics, x, y, size, targeted, sprite);
-	}
-
 	public static void drawPlayerGem(GuiGraphicsExtractor graphics, int x, int y, int size,
 			@Nullable Affinity affinity, boolean discord, @Nullable Apex.Capstone capstone, boolean atApex) {
 		Identifier sprite = atApex && capstone != null
