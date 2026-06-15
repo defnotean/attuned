@@ -6,9 +6,6 @@ import unittest
 import zlib
 from pathlib import Path
 
-from PIL import Image
-
-
 ROOT = Path(__file__).resolve().parents[1]
 GENERATOR = ROOT / "tools" / "generate_modifier_focus_assets.py"
 DOC_DIR = ROOT / "docs" / "superpowers" / "assets" / "modifier-foci"
@@ -71,6 +68,55 @@ def frame_rows(raw: bytes, *, width: int, frame: int, frame_height: int = 64) ->
 	return raw[start:end]
 
 
+def paeth_predictor(left: int, up: int, upper_left: int) -> int:
+	prediction = left + up - upper_left
+	left_distance = abs(prediction - left)
+	up_distance = abs(prediction - up)
+	upper_left_distance = abs(prediction - upper_left)
+	if left_distance <= up_distance and left_distance <= upper_left_distance:
+		return left
+	if up_distance <= upper_left_distance:
+		return up
+	return upper_left
+
+
+def unfilter_rgba_scanlines(raw: bytes, *, width: int, height: int) -> bytes:
+	bytes_per_pixel = 4
+	row_bytes = width * bytes_per_pixel
+	output = bytearray(height * row_bytes)
+	offset = 0
+	for row in range(height):
+		filter_type = raw[offset]
+		offset += 1
+		current = bytearray(raw[offset:offset + row_bytes])
+		offset += row_bytes
+		previous_start = (row - 1) * row_bytes
+		current_start = row * row_bytes
+		for index in range(row_bytes):
+			left = current[index - bytes_per_pixel] if index >= bytes_per_pixel else 0
+			up = output[previous_start + index] if row > 0 else 0
+			upper_left = output[previous_start + index - bytes_per_pixel] if row > 0 and index >= bytes_per_pixel else 0
+			if filter_type == 0:
+				value = current[index]
+			elif filter_type == 1:
+				value = current[index] + left
+			elif filter_type == 2:
+				value = current[index] + up
+			elif filter_type == 3:
+				value = current[index] + ((left + up) // 2)
+			elif filter_type == 4:
+				value = current[index] + paeth_predictor(left, up, upper_left)
+			else:
+				raise AssertionError(f"unsupported PNG filter {filter_type}")
+			current[index] = value & 0xFF
+			output[current_start + index] = current[index]
+	return bytes(output)
+
+
+def alpha_at(decoded_rgba: bytes, *, width: int, x: int, y: int) -> int:
+	return decoded_rgba[(y * width + x) * 4 + 3]
+
+
 class GenerateModifierFocusAssetsContractTest(unittest.TestCase):
 	def test_generator_imports_image_generated_source_sheet(self) -> None:
 		source = GENERATOR.read_text(encoding="utf-8")
@@ -109,10 +155,9 @@ class GenerateModifierFocusAssetsContractTest(unittest.TestCase):
 			)
 			self.assertEqual(7, changed_frames, name)
 
-			with Image.open(path) as image:
-				first_frame = image.convert("RGBA").crop((0, 0, 64, 64))
-				for xy in ((0, 0), (63, 0), (0, 63), (63, 63)):
-					self.assertEqual(0, first_frame.getpixel(xy)[3], f"{name} corner {xy}")
+			decoded = unfilter_rgba_scanlines(raw, width=width, height=height)
+			for x, y in ((0, 0), (63, 0), (0, 63), (63, 63)):
+				self.assertEqual(0, alpha_at(decoded, width=width, x=x, y=y), f"{name} corner {(x, y)}")
 
 			mcmeta = json.loads(path.with_suffix(path.suffix + ".mcmeta").read_text(encoding="utf-8"))
 			self.assertEqual(EXPECTED_MCMETA, mcmeta, name)
