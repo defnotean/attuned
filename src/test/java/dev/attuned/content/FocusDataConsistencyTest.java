@@ -322,19 +322,38 @@ class FocusDataConsistencyTest {
 
 		assertTrue(content.contains("AttunedCreativeTabs.init()"),
 			"AttunedContent.init should register the creative tabs");
+		assertTrue(source.contains("\"attuned\""),
+			"Creative inventory should keep a stable first Attuned tab id");
+		assertTrue(source.contains("\"attuned_zephyr_holy\""),
+			"Creative inventory should split the original Zephyr/Holy lanes away from Fury/Bastion");
+		assertTrue(source.contains("\"attuned_tide_forge\""),
+			"Creative inventory should split Tide/Forge Foci into their own readable tab");
+		assertTrue(source.contains("\"attuned_verdant_umbral\""),
+			"Creative inventory should split Verdant/Umbral Foci into their own readable tab");
 		assertTrue(source.contains("\"attuned_utility\""),
-			"Creative inventory should include a second Attuned utility tab");
-		assertTrue(source.contains("itemGroup.attuned.affinity_foci"),
-			"Affinity Focus tab should use a dedicated translated title");
-		assertTrue(source.contains("itemGroup.attuned.utility_foci"),
-			"Utility Focus tab should use a dedicated translated title");
+			"Creative inventory should include a utility tab for neutral Foci and tools");
+		assertTrue(source.contains("Set.of(Affinity.FURY, Affinity.BASTION)"),
+			"First Focus tab should group Fury and Bastion side-by-side");
+		assertTrue(source.contains("Set.of(Affinity.ZEPHYR, Affinity.HOLY)"),
+			"Second Focus tab should group Zephyr and Holy side-by-side");
+		assertTrue(source.contains("Set.of(Affinity.TIDE, Affinity.FORGE)"),
+			"Third Focus tab should group Tide and Forge side-by-side");
+		assertTrue(source.contains("Set.of(Affinity.VERDANT, Affinity.UMBRAL)"),
+			"Fourth Focus tab should group Verdant and Umbral side-by-side");
+		assertTrue(source.contains("definition.faction()"),
+			"Creative tab order should keep named Focus families together within each affinity lane");
+		assertTrue(source.contains("factionKey(definition.faction())"),
+			"Creative tab sorting should use a stable faction key between affinity and cost");
 		assertTrue(source.contains("ALTAR_OF_REWEAVING"),
 			"Utility tab should keep the Altar of Reweaving reachable");
 		assertTrue(!source.contains("AttunedContent.FOCI"),
 			"Creative tabs should display Foci from the synced FocusDefinition registry, not the static shipped-Foci list");
 		assertTrue(!source.contains("definition == null"),
 			"Creative tab filters should only evaluate real FocusDefinition entries from the registry");
-		assertLanguageKey(lang, "itemGroup.attuned.affinity_foci");
+		assertLanguageKey(lang, "itemGroup.attuned.fury_bastion_foci");
+		assertLanguageKey(lang, "itemGroup.attuned.zephyr_holy_foci");
+		assertLanguageKey(lang, "itemGroup.attuned.tide_forge_foci");
+		assertLanguageKey(lang, "itemGroup.attuned.verdant_umbral_foci");
 		assertLanguageKey(lang, "itemGroup.attuned.utility_foci");
 	}
 

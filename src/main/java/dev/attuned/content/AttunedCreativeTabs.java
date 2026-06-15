@@ -7,6 +7,7 @@ import dev.attuned.api.focus.FocusDefinition;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Predicate;
 import net.fabricmc.fabric.api.creativetab.v1.FabricCreativeModeTab;
 import net.minecraft.core.HolderLookup;
@@ -28,9 +29,9 @@ final class AttunedCreativeTabs {
 	 * Registers the Attuned creative-inventory tabs so Foci and altar tools are
 	 * reachable without {@code /give}.
 	 *
-	 * <p>Foci are grouped by affinity (Fury, Bastion, Zephyr, Holy, then neutral)
-	 * and sorted within each group by attunement cost, so players can scan the
-	 * tabs by build identity rather than registration order.
+	 * <p>The 1.5.0 Focus roster is large enough that one affinity tab becomes a
+	 * wall of icons. Split the eight lanes into readable pairs, then keep neutral
+	 * utility Foci, author placeholders, and core tools on the utility tab.
 	 */
 	static void init() {
 		if (initialized) {
@@ -39,9 +40,27 @@ final class AttunedCreativeTabs {
 		initialized = true;
 		registerFocusCreativeTab(
 			"attuned",
-			Component.translatable("itemGroup.attuned.affinity_foci"),
-			AttunedContent.SUNLANCE_FOCUS,
-			definition -> definition != null && definition.affinity().isPresent(),
+			Component.translatable("itemGroup.attuned.fury_bastion_foci"),
+			AttunedContent.BLOODFURY_FOCUS,
+			definition -> hasAnyAffinity(definition, Set.of(Affinity.FURY, Affinity.BASTION)),
+			false);
+		registerFocusCreativeTab(
+			"attuned_zephyr_holy",
+			Component.translatable("itemGroup.attuned.zephyr_holy_foci"),
+			AttunedContent.GALESPUR_FOCUS,
+			definition -> hasAnyAffinity(definition, Set.of(Affinity.ZEPHYR, Affinity.HOLY)),
+			false);
+		registerFocusCreativeTab(
+			"attuned_tide_forge",
+			Component.translatable("itemGroup.attuned.tide_forge_foci"),
+			AttunedContent.TIDEWARDEN_FOCUS,
+			definition -> hasAnyAffinity(definition, Set.of(Affinity.TIDE, Affinity.FORGE)),
+			false);
+		registerFocusCreativeTab(
+			"attuned_verdant_umbral",
+			Component.translatable("itemGroup.attuned.verdant_umbral_foci"),
+			AttunedContent.OVERGROWTH_FOCUS,
+			definition -> hasAnyAffinity(definition, Set.of(Affinity.VERDANT, Affinity.UMBRAL)),
 			false);
 		registerFocusCreativeTab(
 			"attuned_utility",
@@ -83,29 +102,37 @@ final class AttunedCreativeTabs {
 	}
 
 	/**
-	 * Returns the Foci in display order for a creative tab: grouped by
-	 * affinity (Fury, then Bastion, then Zephyr, then Holy, then neutral), and sorted
-	 * within each group by attunement cost ascending, then by registry id
-	 * alphabetically as a tiebreak.
+	 * Returns the Foci in display order for a creative tab: grouped by affinity,
+	 * then by named content family, then by attunement cost, then by registry id.
 	 */
 	private static List<Item> fociInDisplayOrder(HolderLookup.RegistryLookup<FocusDefinition> lookup,
 			Predicate<FocusDefinition> include) {
 		Comparator<FocusDefinition> byAffinity =
 			Comparator.comparingInt(definition -> affinityOrder(definition.affinity()));
+		Comparator<FocusDefinition> byFaction =
+			Comparator.comparing(definition -> factionKey(definition.faction()));
 		Comparator<FocusDefinition> byCost = Comparator.comparingInt(FocusDefinition::cost);
 		Comparator<FocusDefinition> byKey =
 			Comparator.comparing(definition -> BuiltInRegistries.ITEM.getKey(definition.item().value()).toString());
 		return lookup.listElements()
 			.map(holder -> holder.value())
 			.filter(include)
-			.sorted(byAffinity.thenComparing(byCost).thenComparing(byKey))
+			.sorted(byAffinity.thenComparing(byFaction).thenComparing(byCost).thenComparing(byKey))
 			.map(definition -> definition.item().value())
 			.toList();
 	}
 
+	private static boolean hasAnyAffinity(FocusDefinition definition, Set<Affinity> affinities) {
+		return definition.affinity().filter(affinities::contains).isPresent();
+	}
+
+	private static String factionKey(Optional<Identifier> faction) {
+		return faction.map(Identifier::toString).orElse("");
+	}
+
 	/**
-	 * Stable sort key for the affinity grouping: Fury, Bastion, Zephyr, Holy, then
-	 * affinity-neutral last.
+	 * Stable sort key for the affinity grouping: Fury, Bastion, Zephyr, Holy,
+	 * Tide, Forge, Verdant, Umbral, then affinity-neutral last.
 	 */
 	private static int affinityOrder(Optional<Affinity> affinity) {
 		if (affinity.isEmpty()) {
