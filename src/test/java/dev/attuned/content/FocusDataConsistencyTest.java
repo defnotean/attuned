@@ -315,6 +315,27 @@ class FocusDataConsistencyTest {
 	}
 
 	@Test
+	void bloodrushTooltipSeparatesFlatAttackSpeedFromPercentMovementSpeed() throws IOException {
+		JsonObject root = focusDefinitionRoot(FOCUS_DATA_DIR.resolve("bloodrush_focus.json"));
+		JsonObject attackSpeed = modifierFor(root, "minecraft:attack_speed");
+		JsonObject movementSpeed = modifierFor(root, "minecraft:movement_speed");
+		String effect = languageRoot().get("item.attuned.bloodrush_focus.effect").getAsString();
+
+		assertEquals("add_value", attackSpeed.get("operation").getAsString(),
+			"Bloodrush attack speed is a flat vanilla attribute bonus.");
+		assertEquals(0.35D, attackSpeed.get("amount").getAsDouble(), 0.0001D,
+			"Bloodrush attack speed amount should stay in sync with tooltip wording.");
+		assertEquals("add_multiplied_base", movementSpeed.get("operation").getAsString(),
+			"Bloodrush movement speed is the percentage modifier.");
+		assertEquals(0.1D, movementSpeed.get("amount").getAsDouble(), 0.0001D,
+			"Bloodrush movement speed amount should stay in sync with tooltip wording.");
+		assertTrue(effect.contains("+0.35 attack speed"),
+			"Bloodrush tooltip should not describe its flat attack-speed modifier as a percentage.");
+		assertTrue(effect.contains("10% movement speed"),
+			"Bloodrush tooltip should still name the actual movement-speed percentage.");
+	}
+
+	@Test
 	void creativeInventorySplitsAffinityAndUtilityContentIntoReadableTabs() throws IOException {
 		String content = Files.readString(CONTENT_SOURCE, StandardCharsets.UTF_8);
 		String source = Files.readString(CREATIVE_TABS_SOURCE, StandardCharsets.UTF_8);
@@ -548,6 +569,16 @@ class FocusDataConsistencyTest {
 		assertBlockTextureSize("altar_of_reweaving_base.png", 64, 64);
 		assertBlockTextureSize("altar_of_reweaving_gem.png", 64, 64);
 		assertBlockTextureSize("altar_of_reweaving_top.png", 64, 64);
+	}
+
+	private static JsonObject modifierFor(JsonObject root, String attribute) {
+		for (JsonElement element : root.get("modifiers").getAsJsonArray()) {
+			JsonObject modifier = element.getAsJsonObject();
+			if (attribute.equals(modifier.get("attribute").getAsString())) {
+				return modifier;
+			}
+		}
+		throw new AssertionError("Missing Focus modifier for " + attribute + ": " + root);
 	}
 
 	private static void assertSeafarersLuckModifier(JsonObject root, String itemId, Path file) {

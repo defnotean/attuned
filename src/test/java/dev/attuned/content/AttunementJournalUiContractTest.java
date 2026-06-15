@@ -1,5 +1,6 @@
 package dev.attuned.content;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -7,6 +8,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.junit.jupiter.api.Test;
@@ -268,6 +270,26 @@ class AttunementJournalUiContractTest {
 				&& itemSource.indexOf("\"journal.attuned.page41\"")
 				< itemSource.indexOf("\"journal.attuned.page30\""),
 			"Written-book fallback should keep the capstone page beside the base Apex page.");
+	}
+
+	@Test
+	void journalScreenAndWrittenBookFallbackKeepTheSameStaticPageOrder() throws IOException {
+		String screenSource = read(JOURNAL_SCREEN_SOURCE);
+		String itemSource = read(JOURNAL_ITEM_SOURCE);
+
+		List<String> screenPages = Pattern.compile("(?:page|gemPage)\\(\\\"(journal\\.attuned\\.page[0-9]+)\\\"")
+			.matcher(screenSource)
+			.results()
+			.map(result -> result.group(1))
+			.toList();
+		List<String> itemPages = Pattern.compile("\\\"(journal\\.attuned\\.page[0-9]+)\\\"")
+			.matcher(itemSource)
+			.results()
+			.map(result -> result.group(1))
+			.toList();
+
+		assertEquals(screenPages, itemPages,
+			"The written-book fallback page order should mirror the custom journal screen chapter order.");
 	}
 
 	@Test

@@ -172,7 +172,7 @@ of the unmodified stat (this is what most percentage Foci want).
 | `minecraft:armor_toughness`        | Armor toughness | |
 | `minecraft:knockback_resistance`   | Knockback resistance | `0`–`1`, where `1` is immune |
 | `minecraft:movement_speed`         | Walking speed | percentage works best |
-| `minecraft:sneaking_speed`         | Sneaking speed | percentage works best |
+| `minecraft:sneaking_speed`         | Sneaking speed | this is the crouch-speed multiplier (`0.3` vanilla base); use `add_value` for visible multiplier points |
 | `minecraft:attack_damage`          | Melee damage | |
 | `minecraft:attack_speed`           | Attack cooldown speed | |
 | `minecraft:jump_strength`          | Jump height | percentage works best |
@@ -186,6 +186,24 @@ of the unmodified stat (this is what most percentage Foci want).
 | `minecraft:oxygen_bonus`           | Underwater breath | |
 
 Any vanilla player attribute works — these are just the common ones.
+
+## Custom Focus visuals
+
+Some active Foci also have small custom visual motifs on the existing aura cadence.
+These are server-sent vanilla particles, not extra gameplay state, and they reuse
+already-active Focus slots so they do not add another definition lookup pass.
+
+The first shipped custom-visual batch is:
+
+| Focus | Visual motif |
+|-------|--------------|
+| Softstep | violet shadow footprints and low ground wisps |
+| Aegis | warm gold protective ring |
+| Tide | cyan bubbles and splash motes |
+| Cinder | compact ember arc and lava sparks |
+
+Internal visual review notes are kept under
+`docs/superpowers/assets/focus-custom-effects/`.
 
 ## Behaviors
 
@@ -318,7 +336,9 @@ Confluences are data-driven, loaded from
 
 Member ids are Focus **item** ids, not behavior ids. A Confluence may only
 reference Foci that exist. Keep effects modest — a Confluence should make a themed
-build feel cohesive, never out-scale a focused affinity build.
+build feel cohesive, never out-scale a focused affinity build. Every first-class
+affinity has at least one pure-affinity Confluence so each lane has both an Apex
+capstone and an earlier buildcraft payoff.
 
 The ones that ship with Attuned:
 
@@ -328,10 +348,25 @@ The ones that ship with Attuned:
 | Bulwark of Light (`bulwark_of_light`) | Votive + Oathguard | +1 armor |
 | Hunter's Patience (`hunters_patience`) | Lantern + Veil | +4% movement speed |
 | Tempest (`tempest`) | Rainstep + Stormcall | +1 attack damage |
+| Razor Tempo (`razor_tempo`) | Edge + Frenzy | +0.25 attack speed |
+| Iron Bastion (`iron_bastion`) | Iron + Bulwark | +1 armor toughness |
+| Tidal Engine (`tidal_engine`) | Current Runner + Riptide Heart | +0.25 water movement efficiency |
+| Sparkbrand (`sparkbrand`) | Sparkweld + Slagbrand | +0.5 attack damage |
+| Thornbloom (`thornbloom`) | Seedcall + Thornwake | +1 armor |
 | Wildward (`wildward`) | Mossheart + Rootstep | Resistance I while on natural ground |
 | Sunwarden (`sunwarden`) | Votive + Bellwether | Regeneration I while standing in bright light |
 | Forgewarded (`forgewarded`) | Kilnward + Emberward | Fire Resistance while near a lit forge, magma, or lava |
 | Total Eclipse (`total_eclipse`) | Eclipse + Gloomstride + Duskward | +4 max health and +1 attack damage |
+
+## Resonant Combos
+
+A **Resonant Combo** is a small named payoff for a specific pair of active Foci.
+Both Foci must be awake; dormant Foci do not count. Combos cost no extra
+attunement and stay smaller than Confluences, Pacts, or Apex.
+
+| Combo | Active Foci | Effect |
+|-------|-------------|--------|
+| Silent Opening | Softstep + Needle | A confirmed Needle opener applies Weakness I for 80 ticks. |
 
 ## Tempering Foci
 

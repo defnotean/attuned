@@ -66,5 +66,26 @@ class DocsContractTest(unittest.TestCase):
         self.assertIn("current-version section", contributing)
 
 
+    def test_public_docs_keep_asset_workflow_private(self) -> None:
+        public_docs = [
+            ROOT / "README.md",
+            ROOT / "docs" / "README.md",
+            ROOT / "docs" / "reference.md",
+            ROOT / "docs" / "adding-a-focus.md",
+            ROOT / "docs" / "authoring-foci.md",
+            ROOT / "docs" / "platform" / "modrinth-description.md",
+            ROOT / "docs" / "platform" / "curseforge-description.md",
+        ]
+        forbidden = re.compile(r"image-generation|provenance|generated image", re.IGNORECASE)
+
+        leaks = []
+        for doc in public_docs:
+            text = doc.read_text(encoding="utf-8")
+            for match in forbidden.finditer(text):
+                leaks.append(f"{doc.relative_to(ROOT)}:{text[:match.start()].count(chr(10)) + 1}:{match.group(0)}")
+
+        self.assertEqual([], leaks, "Public docs should describe art neutrally and keep asset workflow details private")
+
+
 if __name__ == "__main__":
     unittest.main()

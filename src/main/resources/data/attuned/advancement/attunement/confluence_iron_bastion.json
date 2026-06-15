@@ -1,0 +1,19 @@
+{
+	"parent": "attuned:attunement/root",
+	"display": {
+		"icon": {
+			"id": "attuned:bulwark_focus"
+		},
+		"title": "Iron Bastion",
+		"description": "Discover the Iron Bastion Confluence.",
+		"frame": "task",
+		"show_toast": true,
+		"announce_to_chat": false,
+		"hidden": true
+	},
+	"criteria": {
+		"done": {
+			"trigger": "minecraft:impossible"
+		}
+	}
+}

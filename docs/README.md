@@ -28,14 +28,13 @@ add a Focus.
 - The **Focus Reliquary** is a craftable bag that stores spare Foci, shows your
   six equipped slots beside it, and saves named loadout **builds** you can
   re-apply with one click.
-- Creative inventory content is split into **Attuned: Affinity Foci** and
-  **Attuned: Utility Foci** so combat builds and neutral tools are easier to
-  scan.
-- Current release headline: **Attuned 1.4.1 — Journal Clarity** keeps the
-  Resonant Depths feature set and moves explicit affinity matchup details into the
-  Attunement Journal. Attuned still ships 78 Foci, including 12 Tide/Forge/
-  Verdant/Umbral affinity Foci, Focus Confluences, Tempering, Grand Reliquary
-  storage, Attunement Sanctums, resonant surges, and datapack behavior palettes.
+- Creative inventory content is split into **Fury & Bastion**, **Zephyr &
+  Holy**, **Tide & Forge**, **Verdant & Umbral**, and **Utility & Tools** tabs
+  so the full roster is easy to scan.
+- Current release headline: **Attuned 1.5.0 — Eightfold Affinities** promotes
+  all eight affinities into first-class build identities, ships 94 Foci, expands
+  Pacts/Apex/Confluences, adds subtle Focus visual motifs, and keeps explicit
+  matchup details in the Attunement Journal.
 
 That is the whole idea: a Focus is a trade-off, never a free bonus.
 

@@ -6,22 +6,19 @@ Equip **Foci** into six inventory slots, manage your **attunement capacity**, an
 
 ## Highlights
 
-- **Attuned 1.4.1 patch** — Focus descriptions/tooltips now show only Focus-specific effects plus Aspect identity; the Attunement Journal owns the full Aspect matchup reference.
-- **78 Foci** across mobility, defense, combat, stealth, holy, seafaring, shadow, utility, and the new Aspect counter wheel.
-- **Four core affinities** — Fury, Bastion, Zephyr, and Holy — form the original combat counter cycle, with Discord for risky mixed-affinity builds.
-- **New Aspect counter wheel** — Fury, Bastion, Zephyr, Holy, Tide, Forge, Verdant, and Umbral appear as broader Focus identities. Individual Focus descriptions show only the Aspect name; the Attunement Journal carries the matchup reference.
-- **12 new Aspect Foci** in the first Tide / Forge / Verdant / Umbral batch: Undertow, Riptide Heart, Pearlguard, Slagbrand, Anvilheart, Sparkweld, Thornwake, Seedcall, Bramblegate, Nullveil, Cinderthief, and Snaremoon.
-- **Refreshed original Focus art** for the new Aspect Foci, imported into animated 64x512 Minecraft item sheets so the new icons fit the existing medallion/talisman theme.
-- **Pacts and Apex capstones** reward commitment, including Maelstrom for full Discord builds and Stillpoint for neutral builds.
-- **Focus Reliquary and Grand Focus Reliquary** store spare Foci, show equipped slots, save named builds, preview missing items, and apply loadouts from your bag/inventory.
-- **Focus Confluences** wake small set bonuses when specific Focus combinations are active, with journal discovery and HUD pips.
-- **Focus Tempering** lets the Altar of Reweaving fuse duplicate Foci into stronger, costlier Tempered copies.
-- **Attunement Sanctums and Resonant Surges** add world discovery and thunderstorm resonance events.
+- **Attuned 1.5.0 - Eightfold Affinities** expands the counter system into eight first-class Affinities: Fury, Bastion, Zephyr, Holy, Tide, Forge, Verdant, and Umbral.
+- **94 Foci** across mobility, defense, combat, stealth, holy, seafaring, shadow, utility, and the eightfold counter wheel.
+- **16 new pure-affinity modifier Foci** fill out the expanded roster with simple, readable stat identities and animated medallion art.
+- **Eight Affinity Pacts** and expanded Apex capstones reward commitment to any single Affinity, while Discord and neutral builds keep their own endgame paths.
+- **Readable creative inventory tabs** split Foci into Fury & Bastion, Zephyr & Holy, Tide & Forge, Verdant & Umbral, and Utility & Tools.
+- **Focus Confluences** wake small set bonuses when specific active Focus combinations align, with journal discovery and HUD pips.
+- **Custom Focus visual motifs** add subtle particle feedback to selected Foci without changing their balance identity.
+- **Focus Reliquary and Grand Focus Reliquary** store spare Foci, save named builds, preview missing items, and apply loadouts from your bag/inventory.
 - **Data-driven authoring** supports datapack Foci, behavior palettes, `/attuned validate`, a blank custom Focus item pool, and a worked example pack.
 
 ## How it plays
 
-Attuned is about building a kit, not wearing a pile of stats. A Focus can be active, dormant, part of a Pact, part of a Confluence, tied to a faction, and now part of an Aspect identity. Tooltips keep the Focus-specific readout clean, while the Attunement Journal explains the matchup web.
+Attuned is about building a kit, not wearing a pile of stats. A Focus can be active, dormant, part of a Pact, part of a Confluence, tied to a faction, and part of an Affinity identity. Tooltips keep the Focus-specific readout clean, while the Attunement Journal explains the full matchup web.
 
 ## Requirements
 

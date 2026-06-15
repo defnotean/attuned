@@ -1,0 +1,35 @@
+{
+  "feature": "focus-custom-effects",
+  "generated_at": "2026-06-14T17:14:09",
+  "provider": "xai",
+  "model": "grok-imagine-image",
+  "source_image": "docs/superpowers/assets/focus-custom-effects/image-gen-sources/focus-custom-effects-concept-sheet.jpg",
+  "prompt": "Concept art sheet for Attuned Minecraft mod Focus custom visual effects. Four square panels in one row on a dark neutral background, no text labels, no UI. Each panel shows a readable in-game particle-effect motif around an invisible player silhouette/position marker, designed to translate into vanilla Minecraft particles. Panel 1 Softstep/Umbral: smoky violet shadow footprints and low ground wisps. Panel 2 Aegis/Bastion: amber-gold hex shield ring and small protective sparks. Panel 3 Tide: cyan bubble spiral and water motes orbiting waist height. Panel 4 Ember/Cinder: orange ember arc and coal sparks snapping around a melee hit. Pixel-art inspired, Minecraft-readable at small scale, chunky high contrast, limited palette, no photorealism, no characters, no text.",
+  "implementation_targets": [
+    {
+      "focus": "softstep_focus",
+      "motif": "smoky violet shadow footprints and low ground wisps",
+      "vanilla_particles": ["minecraft:sculk_soul", "purple dust"]
+    },
+    {
+      "focus": "aegis_focus",
+      "motif": "amber-gold protective ring and sparks",
+      "vanilla_particles": ["gold dust"]
+    },
+    {
+      "focus": "tide_focus",
+      "motif": "cyan bubble spiral and water motes",
+      "vanilla_particles": ["minecraft:bubble", "minecraft:splash"]
+    },
+    {
+      "focus": "cinder_focus",
+      "motif": "orange ember arc and coal sparks",
+      "vanilla_particles": ["minecraft:flame", "minecraft:lava"]
+    }
+  ],
+  "review_notes": [
+    "The generated sheet included visible labels even though the prompt requested none; the labels are used only in documentation/provenance, not as game assets.",
+    "The four motifs are readable enough to translate into vanilla particles without custom client assets in the first implementation slice.",
+    "Implementation should be subtle and throttled, because active Focus visuals run while a Focus is awake."
+  ]
+}

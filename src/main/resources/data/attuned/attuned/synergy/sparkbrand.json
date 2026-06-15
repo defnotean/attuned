@@ -1,0 +1,13 @@
+{
+	"members": [
+		"attuned:sparkweld_focus",
+		"attuned:slagbrand_focus"
+	],
+	"modifiers": [
+		{
+			"attribute": "minecraft:attack_damage",
+			"amount": 0.5,
+			"operation": "add_value"
+		}
+	]
+}

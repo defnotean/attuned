@@ -8,7 +8,7 @@
 		{
 			"attribute": "minecraft:sneaking_speed",
 			"amount": 0.35,
-			"operation": "add_multiplied_base"
+			"operation": "add_value"
 		}
 	],
 	"behavior": "attuned:softstep"

@@ -4,24 +4,21 @@ Attuned is a Fabric accessory mod for Minecraft 26.1.2 built around deliberate F
 
 Equip Foci into six inventory slots, manage your attunement capacity, and build around trade-offs instead of stacking every bonus at once. If your equipped Foci exceed your capacity, the lowest-priority Foci go dormant until the build fits again.
 
-## What is in the current release?
+## Highlights
 
-- Attuned 1.4.1 patch — Focus descriptions/tooltips now show only Focus-specific effects plus Aspect identity; the Attunement Journal owns the full Aspect matchup reference.
-- 78 Foci across mobility, defense, combat, stealth, holy, seafaring, shadow, utility, and the new Aspect counter wheel.
-- Four core affinities — Fury, Bastion, Zephyr, and Holy — form the original combat counter cycle, with Discord for risky mixed-affinity builds.
-- Aspect counter wheel — Fury, Bastion, Zephyr, Holy, Tide, Forge, Verdant, and Umbral appear as broader Focus identities. Individual Focus descriptions show only the Aspect name; the Attunement Journal carries the matchup reference.
-- 12 new Aspect Foci across Tide, Forge, Verdant, and Umbral: Undertow, Riptide Heart, Pearlguard, Slagbrand, Anvilheart, Sparkweld, Thornwake, Seedcall, Bramblegate, Nullveil, Cinderthief, and Snaremoon.
-- Refreshed original Focus art for the new Aspect Foci, processed into animated Minecraft item textures so the new icons match the existing medallion/talisman look.
-- Pacts and Apex capstones, including Maelstrom for full Discord builds and Stillpoint for neutral builds.
-- Focus Reliquary and Grand Focus Reliquary for storing spare Foci, saving loadouts, previewing missing items, and applying builds from your reliquary/inventory.
-- Focus Confluences that wake small set bonuses from specific active Focus combinations, with HUD pips and journal discovery.
-- Focus Tempering at the Altar of Reweaving: duplicate Foci can become stronger, costlier Tempered copies.
-- Attunement Sanctums in-world and thunderstorm Resonant Surges for exploration and resonance events.
-- Datapack authoring support: Focus definitions, behavior palettes, `/attuned validate`, blank custom Focus items, and an example pack.
+- Attuned 1.5.0 - Eightfold Affinities expands the counter system into eight first-class Affinities: Fury, Bastion, Zephyr, Holy, Tide, Forge, Verdant, and Umbral.
+- 94 Foci across mobility, defense, combat, stealth, holy, seafaring, shadow, utility, and the eightfold counter wheel.
+- 16 new pure-affinity modifier Foci fill out the expanded roster with simple, readable stat identities and animated medallion art.
+- Eight Affinity Pacts and expanded Apex capstones reward commitment to any single Affinity, while Discord and neutral builds keep their own endgame paths.
+- Readable creative inventory tabs split Foci into Fury & Bastion, Zephyr & Holy, Tide & Forge, Verdant & Umbral, and Utility & Tools.
+- Focus Confluences wake small set bonuses when specific active Focus combinations align, with journal discovery and HUD pips.
+- Custom Focus visual motifs add subtle particle feedback to selected Foci without changing their balance identity.
+- Focus Reliquary and Grand Focus Reliquary store spare Foci, save named builds, preview missing items, and apply loadouts from your bag/inventory.
+- Data-driven authoring supports datapack Foci, behavior palettes, `/attuned validate`, a blank custom Focus item pool, and a worked example pack.
 
-## Design goal
+## How it plays
 
-Attuned should feel like choosing a build, not collecting free passive bonuses. Foci have costs, slot priority matters, dormancy prevents over-stacking, and the new Aspect system makes counterplay readable. A good build has an identity — and a weakness.
+Attuned is about building a kit, not wearing a pile of stats. A Focus can be active, dormant, part of a Pact, part of a Confluence, tied to a faction, and part of an Affinity identity. Tooltips keep the Focus-specific readout clean, while the Attunement Journal explains the full matchup web.
 
 ## Requirements
 
@@ -29,8 +26,9 @@ Attuned should feel like choosing a build, not collecting free passive bonuses. 
 - Fabric Loader 0.19.2+
 - Fabric API
 
-Lootr is optional but recommended for modpacks. Attuned uses vanilla loot injection for Foci and shard fragments, so Lootr's per-player containers can still roll Attuned rewards.
+Lootr is optional but recommended for modpacks. Attuned injects Foci and shard fragments into vanilla loot tables rather than adding custom loot containers, so Lootr's per-player containers can roll the same rewards.
 
-## Documentation
+## Links
 
-The repository includes player-facing and authoring documentation under `docs/`, including Focus authoring, behavior palettes, the reference tables, and release notes generated from `CHANGELOG.md`.
+- Documentation and authoring guides are included in the repository under `docs/`.
+- Current release notes are generated from the matching `CHANGELOG.md` section for the uploaded version.

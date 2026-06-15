@@ -688,7 +688,7 @@
 	"item.attuned.bellowsfury_focus.effect": "Grants bonus attack damage and faster attack speed as the forge breathes.",
 	"item.attuned.bloodrush_focus.lore": "The chase and the kill are one motion.",
 	"item.attuned.bloodrush_focus.lore2": "Slowing down is how prey dies.",
-	"item.attuned.bloodrush_focus.effect": "Increases attack speed and movement speed by 10%.",
+	"item.attuned.bloodrush_focus.effect": "Adds +0.35 attack speed and 10% movement speed.",
 	"item.attuned.ravager_focus.lore": "All the weight thrown into the swing.",
 	"item.attuned.ravager_focus.lore2": "Nothing left over to brace the blow.",
 	"item.attuned.ravager_focus.effect": "Increases attack damage by 40% but reduces knockback resistance by 10%.",

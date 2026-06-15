@@ -1,0 +1,272 @@
+{
+  "source": "docs/superpowers/assets/modifier-foci/modifier-foci-source.png",
+  "preview": "docs/superpowers/assets/modifier-foci/modifier-foci-preview.png",
+  "source_grid": [
+    4,
+    4
+  ],
+  "operations": [
+    "crop generated source grid cells",
+    "remove flat magenta key background",
+    "fit each item to 64x64",
+    "assemble eight brightness/color pulse frames"
+  ],
+  "outputs": [
+    {
+      "id": "tidewarden_focus",
+      "label": "Tidewarden",
+      "path": "src/main/resources/assets/attuned/textures/item/tidewarden_focus.png",
+      "size": [
+        64,
+        512
+      ],
+      "frames": 8,
+      "first_frame_bounds": [
+        3,
+        1,
+        60,
+        63
+      ]
+    },
+    {
+      "id": "wellspring_focus",
+      "label": "Wellspring",
+      "path": "src/main/resources/assets/attuned/textures/item/wellspring_focus.png",
+      "size": [
+        64,
+        512
+      ],
+      "frames": 8,
+      "first_frame_bounds": [
+        4,
+        1,
+        60,
+        63
+      ]
+    },
+    {
+      "id": "current_runner_focus",
+      "label": "Current Runner",
+      "path": "src/main/resources/assets/attuned/textures/item/current_runner_focus.png",
+      "size": [
+        64,
+        512
+      ],
+      "frames": 8,
+      "first_frame_bounds": [
+        4,
+        1,
+        60,
+        63
+      ]
+    },
+    {
+      "id": "saltbrand_focus",
+      "label": "Saltbrand",
+      "path": "src/main/resources/assets/attuned/textures/item/saltbrand_focus.png",
+      "size": [
+        64,
+        512
+      ],
+      "frames": 8,
+      "first_frame_bounds": [
+        4,
+        1,
+        60,
+        63
+      ]
+    },
+    {
+      "id": "ebbstride_focus",
+      "label": "Ebbstride",
+      "path": "src/main/resources/assets/attuned/textures/item/ebbstride_focus.png",
+      "size": [
+        64,
+        512
+      ],
+      "frames": 8,
+      "first_frame_bounds": [
+        4,
+        1,
+        60,
+        63
+      ]
+    },
+    {
+      "id": "overgrowth_focus",
+      "label": "Overgrowth",
+      "path": "src/main/resources/assets/attuned/textures/item/overgrowth_focus.png",
+      "size": [
+        64,
+        512
+      ],
+      "frames": 8,
+      "first_frame_bounds": [
+        4,
+        1,
+        60,
+        63
+      ]
+    },
+    {
+      "id": "deeproot_focus",
+      "label": "Deeproot",
+      "path": "src/main/resources/assets/attuned/textures/item/deeproot_focus.png",
+      "size": [
+        64,
+        512
+      ],
+      "frames": 8,
+      "first_frame_bounds": [
+        4,
+        1,
+        60,
+        63
+      ]
+    },
+    {
+      "id": "briarcoat_focus",
+      "label": "Briarcoat",
+      "path": "src/main/resources/assets/attuned/textures/item/briarcoat_focus.png",
+      "size": [
+        64,
+        512
+      ],
+      "frames": 8,
+      "first_frame_bounds": [
+        4,
+        1,
+        60,
+        63
+      ]
+    },
+    {
+      "id": "fernstride_focus",
+      "label": "Fernstride",
+      "path": "src/main/resources/assets/attuned/textures/item/fernstride_focus.png",
+      "size": [
+        64,
+        512
+      ],
+      "frames": 8,
+      "first_frame_bounds": [
+        8,
+        1,
+        56,
+        63
+      ]
+    },
+    {
+      "id": "sapflow_focus",
+      "label": "Sapflow",
+      "path": "src/main/resources/assets/attuned/textures/item/sapflow_focus.png",
+      "size": [
+        64,
+        512
+      ],
+      "frames": 8,
+      "first_frame_bounds": [
+        8,
+        1,
+        56,
+        63
+      ]
+    },
+    {
+      "id": "cinderplate_focus",
+      "label": "Cinderplate",
+      "path": "src/main/resources/assets/attuned/textures/item/cinderplate_focus.png",
+      "size": [
+        64,
+        512
+      ],
+      "frames": 8,
+      "first_frame_bounds": [
+        8,
+        1,
+        56,
+        63
+      ]
+    },
+    {
+      "id": "bellowsfury_focus",
+      "label": "Bellowsfury",
+      "path": "src/main/resources/assets/attuned/textures/item/bellowsfury_focus.png",
+      "size": [
+        64,
+        512
+      ],
+      "frames": 8,
+      "first_frame_bounds": [
+        8,
+        1,
+        56,
+        63
+      ]
+    },
+    {
+      "id": "bloodrush_focus",
+      "label": "Bloodrush",
+      "path": "src/main/resources/assets/attuned/textures/item/bloodrush_focus.png",
+      "size": [
+        64,
+        512
+      ],
+      "frames": 8,
+      "first_frame_bounds": [
+        3,
+        1,
+        60,
+        63
+      ]
+    },
+    {
+      "id": "ravager_focus",
+      "label": "Ravager",
+      "path": "src/main/resources/assets/attuned/textures/item/ravager_focus.png",
+      "size": [
+        64,
+        512
+      ],
+      "frames": 8,
+      "first_frame_bounds": [
+        3,
+        1,
+        60,
+        63
+      ]
+    },
+    {
+      "id": "granitehide_focus",
+      "label": "Granitehide",
+      "path": "src/main/resources/assets/attuned/textures/item/granitehide_focus.png",
+      "size": [
+        64,
+        512
+      ],
+      "frames": 8,
+      "first_frame_bounds": [
+        3,
+        1,
+        60,
+        63
+      ]
+    },
+    {
+      "id": "hammerward_focus",
+      "label": "Hammerward",
+      "path": "src/main/resources/assets/attuned/textures/item/hammerward_focus.png",
+      "size": [
+        64,
+        512
+      ],
+      "frames": 8,
+      "first_frame_bounds": [
+        3,
+        1,
+        60,
+        63
+      ]
+    }
+  ]
+}

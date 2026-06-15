@@ -112,9 +112,11 @@ public final class AttunedEffects {
 			ACTIVE.computeIfAbsent(player.getUUID(), id -> new HashMap<>());
 		Set<Affinity> activeAffinities = activeAffinities(activeDefinitions.values());
 
-		// A subtle ambient aura while the player has anything active.
+		// A subtle ambient aura while the player has anything active, plus small
+		// custom visual motifs for specific active Foci.
 		if (!currentActive.isEmpty() && auraTick % AURA_INTERVAL == 0) {
 			spawnAura(player, activeAffinities);
+			FocusVisualEffects.spawn(player, inv, currentActive, auraTick);
 		}
 
 		// Build this tick's active snapshot from the currently-loaded definitions.

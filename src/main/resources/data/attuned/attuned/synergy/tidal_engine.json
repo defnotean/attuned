@@ -1,0 +1,13 @@
+{
+	"members": [
+		"attuned:current_runner_focus",
+		"attuned:riptide_heart_focus"
+	],
+	"modifiers": [
+		{
+			"attribute": "minecraft:water_movement_efficiency",
+			"amount": 0.25,
+			"operation": "add_value"
+		}
+	]
+}

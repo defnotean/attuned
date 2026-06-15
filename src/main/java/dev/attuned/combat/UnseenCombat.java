@@ -9,6 +9,7 @@ import dev.attuned.content.behavior.VeilBehavior;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -16,6 +17,8 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.tags.DamageTypeTags;
 import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
@@ -36,8 +39,11 @@ public final class UnseenCombat {
 
 	private static final Identifier NEEDLE_FOCUS =
 		Identifier.fromNamespaceAndPath("attuned", "needle_focus");
+	private static final Identifier SOFTSTEP_FOCUS =
+		Identifier.fromNamespaceAndPath("attuned", "softstep_focus");
 	private static final float NEEDLE_MULTIPLIER = 1.35F;
 	private static final int NEEDLE_COOLDOWN_TICKS = 120;
+	private static final int NEEDLE_SOFTSTEP_WEAKNESS_TICKS = 80;
 	private static final double BEHIND_DOT_THRESHOLD = -0.35D;
 
 	private static final Map<UUID, Long> LAST_NEEDLE = new HashMap<>();
@@ -135,12 +141,34 @@ public final class UnseenCombat {
 				VeilBehavior.breakVeil(attacker);
 				if (pending.consumes()) {
 					LAST_NEEDLE.put(attacker.getUUID(), attacker.level().getGameTime());
+					applyNeedleSoftstepCombo(attacker, defender);
 				}
 			}
 		}
 		if (defender instanceof ServerPlayer player && dealtDamage > 0.0F) {
 			VeilBehavior.breakVeil(player);
 		}
+	}
+
+	/** Resonant Combo: Softstep + Needle rewards a quiet crouch into a confirmed opener. */
+	private static void applyNeedleSoftstepCombo(ServerPlayer attacker, LivingEntity defender) {
+		if (!hasActiveFocus(attacker, SOFTSTEP_FOCUS)) {
+			return;
+		}
+		defender.addEffect(new MobEffectInstance(
+			MobEffects.WEAKNESS,
+			NEEDLE_SOFTSTEP_WEAKNESS_TICKS, 0, true, false, true));
+		needleSoftstepComboFeedback(attacker, defender);
+	}
+
+	private static void needleSoftstepComboFeedback(ServerPlayer attacker, LivingEntity defender) {
+		ServerLevel level = (ServerLevel) attacker.level();
+		level.sendParticles(ParticleTypes.SCULK_SOUL,
+			defender.getX(), defender.getY() + defender.getBbHeight() * 0.65, defender.getZ(),
+			10, 0.2, 0.25, 0.2, 0.01);
+		level.playSound(null, defender.blockPosition(),
+			SoundEvents.SCULK_SHRIEKER_SHRIEK, SoundSource.PLAYERS, 0.35F, 1.8F);
+		attacker.sendOverlayMessage(Component.translatable("combo.attuned.softstep_needle"));
 	}
 
 	private static boolean hasActiveFocus(Player player, Identifier targetId) {

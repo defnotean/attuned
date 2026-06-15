@@ -1,0 +1,15 @@
+## Attuned 1.5.0 - Eightfold Affinities
+
+### Added
+- **Eight first-class Affinities** - the four counter-combat affinities have been promoted into the full eight-value Wheel of Refusals: Fury, Bastion, Zephyr, Holy, Tide, Forge, Verdant, and Umbral are now all first-class identities (stance, Discord, Pact, and Apex) rather than the older four affinities plus a separate Aspect layer. Each affinity is strong against two others and weak to two reciprocal others, and the historic four-cycle survives as a subset of the expanded matrix.
+- **Four new Affinity Pacts** - Tide, Forge, Verdant, and Umbral each gain their own Pact (with awakening advancement and death message) alongside the original four, so committing to any single affinity now wakes a matching Pact.
+- **Four new Apex capstones** - committing an Apex build to a promoted affinity now grants a modest, matchup-aware on-hit capstone instead of resolving to nothing: **Riptide** (Tide) drags landed apex-melee foes into the current with Slowness, **Crucible** (Forge) sears them with forge-heat (sets them on fire), **Bloomward** (Verdant) returns a little life to you on the hit, and **Gloaming** (Umbral) saps a foe's strength with Weakness. Each effect scales with the matchup (longer/stronger when your affinity beats the foe's, and does not proc when the foe's affinity counters yours), and these capstones own no identity ability or dodge.
+
+- **16 pure-affinity modifier Foci** - the first 1.5.0 balance batch fills out Fury, Bastion, Tide, Forge, Verdant, and utility mobility lanes with readable medallion art and simple stat identities, bringing the shipped roster to 94 Foci.
+- **Custom Focus visual motifs** - Softstep, Aegis, Tide, and Cinder now emit subtle vanilla-particle flourishes on the existing aura cadence, keeping the visuals readable without adding new gameplay state.
+- **Resonant combo MVP** - Softstep + Needle now rewards a sneaky opener with a brief Weakness window, action-bar feedback, and restrained particles/sound.
+- **Five new Confluences** - Iron Bastion, Razor Tempo, Sparkbrand, Thornbloom, and Tidal Engine add more pure-affinity build payoffs and hidden discovery advancements.
+- **Creative inventory organization** - the 94-Focus roster is split into Fury & Bastion, Zephyr & Holy, Tide & Forge, Verdant & Umbral, and Utility & Tools tabs with stable affinity/family/cost ordering.
+
+### Changed
+- **Balance note - migrated Foci changed affinity** - the 12 Foci that previously carried only an Aspect now carry a first-class Affinity, so existing builds that used them may resolve differently than before. A loadout that was affinity-neutral (or read as Discord/single-affinity in a particular way) because those Foci had no affinity can now commit to, or diversify across, the promoted affinities — which can change your committed stance, whether you read as Discord, which Pact wakes, and which Apex capstone (if any) your build resolves to. Review builds that lean on the migrated Tide/Forge/Verdant/Umbral Foci.
