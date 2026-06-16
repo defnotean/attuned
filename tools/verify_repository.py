@@ -326,6 +326,35 @@ def validate_png_chunks(path: Path) -> None:
             raise ValueError("missing IEND chunk")
 
 
+def is_positive_integer(value: object) -> bool:
+    return isinstance(value, int) and not isinstance(value, bool) and value > 0
+
+
+def png_mcmeta_problems(path: Path) -> list[str]:
+    try:
+        data, duplicate_keys = load_json_with_duplicate_key_problems(path)
+    except (OSError, json.JSONDecodeError) as exc:
+        return [f"{relative(path)}: {exc}"]
+
+    problems = [f"{relative(path)}: duplicate key {key}" for key in duplicate_keys]
+    if not isinstance(data, dict):
+        return problems + [f"{relative(path)}: metadata must be a JSON object"]
+    animation = data.get("animation")
+    if not isinstance(animation, dict):
+        return problems + [f"{relative(path)}: animation must be a JSON object"]
+    frametime = animation.get("frametime")
+    if frametime is not None and not is_positive_integer(frametime):
+        problems.append(f"{relative(path)}: animation.frametime must be a positive integer")
+    interpolate = animation.get("interpolate")
+    if interpolate is not None and not isinstance(interpolate, bool):
+        problems.append(f"{relative(path)}: animation.interpolate must be a boolean")
+    for dimension in ("width", "height"):
+        value = animation.get(dimension)
+        if value is not None and not is_positive_integer(value):
+            problems.append(f"{relative(path)}: animation.{dimension} must be a positive integer")
+    return problems
+
+
 def check_png_resources() -> str:
     png_files = sorted(PNG_RESOURCE_ROOT.rglob("*.png"))
     problems: list[str] = []
@@ -338,6 +367,7 @@ def check_png_resources() -> str:
     for path in sorted(PNG_RESOURCE_ROOT.rglob("*.png.mcmeta")):
         if not path.with_suffix("").is_file():
             problems.append(f"{relative(path)}: missing paired PNG")
+        problems.extend(png_mcmeta_problems(path))
     if problems:
         raise CheckFailed("PNG resource headers", problems)
     return f"PNG resource headers: {len(png_files)} files"
