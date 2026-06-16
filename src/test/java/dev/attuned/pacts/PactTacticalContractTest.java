@@ -26,6 +26,10 @@ class PactTacticalContractTest {
 
 		assertTrue(source.contains("COOLDOWN_TICKS = 600"),
 			"Pact tacticals should use a 30-second cooldown.");
+		assertTrue(source.contains("CombatMomentum.effectiveCooldown("),
+			"Pact tactical cooldown should scale with kill-streak momentum at Apex.");
+		assertTrue(source.contains("shaveCooldown("),
+			"Pact tactical cooldown should shave on streak kills.");
 		assertTrue(source.contains("FocusAbilityStatusPayload.PACT_TACTICAL_SLOT"),
 			"Pact tactical cooldown should sync through the pact tactical slot sentinel.");
 	}

@@ -2,9 +2,14 @@ package dev.attuned.onboarding;
 
 import dev.attuned.AttunedServerCleanup;
 import dev.attuned.attunement.AttunedAttachments;
+import dev.attuned.api.focus.Affinity;
 import dev.attuned.combat.Apex;
 import dev.attuned.combat.Resonance;
 import dev.attuned.content.AttunedContent;
+import dev.attuned.pacts.Pacts;
+import dev.attuned.synergy.Synergies;
+import java.util.Locale;
+import java.util.Optional;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
@@ -86,6 +91,8 @@ public final class Onboarding {
 					&& Resonance.atApex(player)) {
 					tryResonanceArmedHint(player);
 				}
+				tryPactPreviewHint(player);
+				tryConfluencePreviewHint(player);
 			}
 		});
 		AttunedServerCleanup.onStop(() -> tickCounter = 0);
@@ -199,6 +206,48 @@ public final class Onboarding {
 					.withStyle(ChatFormatting.GRAY)));
 	}
 
+	/**
+	 * One-shot action-bar nudge when the build is exactly one Focus away from a
+	 * pact and budget allows equipping it. Fires once per affinity lane.
+	 */
+	public static void tryPactPreviewHint(ServerPlayer player) {
+		Optional<Affinity> affinity = Pacts.oneAwayAffinity(player);
+		if (affinity.isEmpty()) {
+			return;
+		}
+		String key = "pact_one_away_" + affinity.get().name().toLowerCase(Locale.ROOT);
+		if (AttunedAttachments.sawOnboarding(player, key)) {
+			return;
+		}
+		AttunedAttachments.markOnboarding(player, key);
+		Pacts.previewOf(player).ifPresent(preview -> {
+			((ServerLevel) player.level()).playSound(null, player.blockPosition(),
+				SoundEvents.EXPERIENCE_ORB_PICKUP, SoundSource.PLAYERS, 0.35F, 1.25F);
+			player.sendOverlayMessage(preview);
+		});
+	}
+
+	/**
+	 * One-shot action-bar nudge when the build is exactly one Focus away from a
+	 * discovered Confluence. Fires once per confluence id.
+	 */
+	public static void tryConfluencePreviewHint(ServerPlayer player) {
+		Optional<String> confluenceId = Synergies.oneAwayConfluence(player);
+		if (confluenceId.isEmpty()) {
+			return;
+		}
+		String key = "confluence_one_away_" + confluencePath(confluenceId.get());
+		if (AttunedAttachments.sawOnboarding(player, key)) {
+			return;
+		}
+		AttunedAttachments.markOnboarding(player, key);
+		Synergies.previewOf(player).ifPresent(preview -> {
+			((ServerLevel) player.level()).playSound(null, player.blockPosition(),
+				SoundEvents.EXPERIENCE_ORB_PICKUP, SoundSource.PLAYERS, 0.35F, 1.25F);
+			player.sendOverlayMessage(preview);
+		});
+	}
+
 	/** Whether the player is carrying at least one Attunement Shard in their main inventory. */
 	private static boolean carriesShard(ServerPlayer player) {
 		return carries(player, AttunedContent.ATTUNEMENT_SHARD);
@@ -239,6 +288,11 @@ public final class Onboarding {
 		}
 		BlockPos pos = ((BlockHitResult) hit).getBlockPos();
 		return player.level().getBlockState(pos).is(AttunedContent.ATTUNEMENT_ALTAR);
+	}
+
+	private static String confluencePath(String confluenceId) {
+		int colon = confluenceId.indexOf(':');
+		return colon >= 0 ? confluenceId.substring(colon + 1) : confluenceId;
 	}
 
 	/**

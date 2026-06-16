@@ -1,5 +1,6 @@
 package dev.attuned.pacts;
 
+import dev.attuned.Milestones;
 import dev.attuned.AttunedAdvancements;
 import dev.attuned.AttunedPlayerCleanup;
 import dev.attuned.AttunedServerCleanup;
@@ -55,6 +56,7 @@ public final class PactTrials {
 	private static final int WILDROOT_ACCRUE_PER_TICK = 20;
 	private static final double WINDRUNNER_MAX_DELTA_PER_TICK = 1.25;
 	private static final double TRIAL_COMBAT_RADIUS = 16.0D;
+	private static final int[] TRIAL_PROGRESS_MILESTONES = {25, 50, 75};
 
 	private static final Map<UUID, WindrunnerTrialRun> windrunnerTrialRuns = new HashMap<>();
 	private static boolean initialized;
@@ -92,6 +94,7 @@ public final class PactTrials {
 		int current = progress.counters().getOrDefault(id, 0);
 		int next = current + amount;
 		int goal = goalOf(pact);
+		checkTrialMilestones(player, pact, current, next, goal);
 		if (next >= goal) {
 			player.setAttached(AttunedAttachments.PACT_TRIAL_PROGRESS, progress.withCounter(id, goal));
 			onComplete(player, pact);
@@ -135,6 +138,7 @@ public final class PactTrials {
 		level.sendParticles(new DustParticleOptions(pact.argb() & 0x00FFFFFF, 0.9F),
 			px, py, pz, 6, 0.4, 0.3, 0.4, 0.0);
 		Onboarding.tryPactTrialCompleteHint(player);
+		Milestones.onPactTrialComplete(player);
 		PactTier4.reconcileStoneheartToughness(player, Pacts.activeOf(player).orElse(null));
 	}
 
@@ -218,6 +222,31 @@ public final class PactTrials {
 			accrue(player, Pact.WINDRUNNER, accrued);
 		}
 		windrunnerTrialRuns.put(id, new WindrunnerTrialRun(dimension, x, z, distance, wholeBlocks));
+	}
+
+	private static void checkTrialMilestones(ServerPlayer player, Pact pact, int current, int next, int goal) {
+		if (goal <= 0) {
+			return;
+		}
+		String id = pactId(pact);
+		for (int percent : TRIAL_PROGRESS_MILESTONES) {
+			int threshold = (goal * percent) / 100;
+			if (threshold <= 0 || current >= threshold || next < threshold) {
+				continue;
+			}
+			String onboardId = "pact_trial_" + id + "_" + percent;
+			if (AttunedAttachments.sawOnboarding(player, onboardId)) {
+				continue;
+			}
+			AttunedAttachments.markOnboarding(player, onboardId);
+			((ServerLevel) player.level()).playSound(null, player.blockPosition(),
+				SoundEvents.EXPERIENCE_ORB_PICKUP, SoundSource.PLAYERS, 0.35F, 1.25F);
+			player.sendOverlayMessage(
+				Component.translatable("pact.attuned." + id + "_trial.title")
+					.withStyle(pact.chatColor())
+					.append(Component.translatable("pact.attuned.trial.progress", percent)
+						.withStyle(ChatFormatting.GRAY)));
+		}
 	}
 
 	private static PactTrialProgress get(Player player) {

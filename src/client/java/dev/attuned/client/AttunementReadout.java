@@ -42,6 +42,10 @@ public final class AttunementReadout {
 	private static UUID cachedPlayerId;
 	private static int cachedTick = -1;
 	private static Snapshot cachedSnapshot;
+	private static UUID displayedResonanceFor;
+	private static float displayedResonance = -1.0F;
+	/** Client-side lerp speed toward the synced resonance value (per HUD frame). */
+	private static final float RESONANCE_LERP = 0.28F;
 
 	private AttunementReadout() {}
 
@@ -85,6 +89,27 @@ public final class AttunementReadout {
 			cachedSnapshot = snapshot(player);
 		}
 		return cachedSnapshot;
+	}
+
+	/**
+	 * Resonance fill for HUD bars — eases toward the synced server value so the
+	 * gauge flows instead of stepping on batched decay ticks.
+	 */
+	public static float displayResonance(Player player) {
+		float target = cached(player).resonance();
+		UUID id = player.getUUID();
+		if (displayedResonanceFor == null || !id.equals(displayedResonanceFor)) {
+			displayedResonanceFor = id;
+			displayedResonance = target;
+			return target;
+		}
+		float delta = target - displayedResonance;
+		if (Math.abs(delta) < 0.002F) {
+			displayedResonance = target;
+		} else {
+			displayedResonance += delta * RESONANCE_LERP;
+		}
+		return Math.max(0.0F, Math.min(1.0F, displayedResonance));
 	}
 
 	public static Snapshot snapshot(Player player) {

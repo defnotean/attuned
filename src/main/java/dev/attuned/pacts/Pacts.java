@@ -244,6 +244,26 @@ public final class Pacts {
 	}
 
 	/**
+	 * The affinity one active Focus away from waking a pact, when budget allows the
+	 * cheapest matching Focus. Empty when no such opportunity exists.
+	 */
+	public static Optional<Affinity> oneAwayAffinity(Player player) {
+		EnumMap<Affinity, Integer> counts = activeAffinityCounts(player);
+		if (activeOf(counts).isPresent() || Attunement.isDiscord(player) || counts.size() != 1) {
+			return Optional.empty();
+		}
+		Map.Entry<Affinity, Integer> only = counts.entrySet().iterator().next();
+		if (only.getValue() != SINGLE_AFFINITY_THRESHOLD - 1) {
+			return Optional.empty();
+		}
+		Affinity affinity = only.getKey();
+		if (remainingBudget(player) < cheapestFocusCost(player, affinity)) {
+			return Optional.empty();
+		}
+		return Optional.of(affinity);
+	}
+
+	/**
 	 * Short UI hint from pre-resolved affinity counts and remaining budget.
 	 * The caller owns the player-state snapshot; this helper only performs the
 	 * registry lookup needed to know the cheapest matching Focus cost.

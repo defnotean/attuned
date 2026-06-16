@@ -102,8 +102,10 @@ class FociHudContractTest {
 			"The HUD should not recompute dormant reasons after resolving the frame budget.");
 		assertTrue(hud.contains("List<Integer> activeSlots = readout.activeSlots()"),
 			"The HUD should take active slots from the shared readout.");
-		assertTrue(hud.contains("drawAbilityWell(graphics, player, inv, activeSlots,"),
-			"The ability well should reuse the frame's resolved active slots.");
+		assertTrue(hud.contains("drawAbilityWell(graphics, player, inv, activeSlots, slotDefinitions, readout,"),
+			"The ability well should reuse the frame readout for overcharge telegraphing.");
+		assertTrue(hud.contains("drawOverchargeRing("),
+			"The ability well should telegraph crouch overcharge when ready.");
 		assertTrue(hud.contains("selectedAbilitySlot(Player player, AttunedInv inv, List<Integer> activeSlots,"),
 			"Ability fallback selection should receive resolved active slots instead of querying again.");
 		assertTrue(hud.contains("for (int slot : activeSlots)"),
@@ -116,7 +118,7 @@ class FociHudContractTest {
 			"The HUD should derive committed affinity from cached active slot definitions.");
 		assertEquals(0, countOccurrences(hud, "Attunement.isDiscord(player)"),
 			"The HUD should derive Discord state from cached active slot definitions.");
-		assertTrue(hud.contains("drawApexBar(graphics, readout,"),
+		assertTrue(hud.contains("drawApexBar(graphics, player, readout,"),
 			"The HUD should draw Apex and resonance state from the shared readout.");
 	}
 

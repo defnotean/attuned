@@ -8,6 +8,7 @@ import dev.attuned.AttunedServerCleanup;
 import dev.attuned.api.focus.FocusBehavior;
 import dev.attuned.api.focus.ModifierEntry;
 import dev.attuned.api.synergy.SynergyDefinition;
+import dev.attuned.Milestones;
 import dev.attuned.attunement.AttunedAttachments;
 import dev.attuned.attunement.Attunement;
 import dev.attuned.onboarding.Onboarding;
@@ -16,11 +17,14 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
+import net.minecraft.ChatFormatting;
 import net.minecraft.core.Registry;
+import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
@@ -240,11 +244,65 @@ public final class Synergies {
 
 	private static void fanfare(ServerPlayer player, String confluenceId) {
 		AttunedAttachments.markConfluenceDiscovered(player, confluenceId); // flips the journal row to discovered
+		if (AttunedAttachments.getDiscoveredConfluences(player).size() == 1) {
+			Milestones.onFirstConfluence(player);
+		}
+		Component discovery = Component.translatable("confluence.attuned.first_discovery", nameOf(confluenceId))
+			.withStyle(ChatFormatting.LIGHT_PURPLE, ChatFormatting.BOLD);
 		if (player.level() instanceof ServerLevel level) {
 			level.playSound(null, player.blockPosition(),
 				SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, SoundSource.PLAYERS, 0.7F, 1.0F);
+			level.sendParticles(ParticleTypes.ENCHANT,
+				player.getX(),
+				player.getY() + player.getBbHeight() * 0.5,
+				player.getZ(),
+				16, 0.5, 0.7, 0.5, 0.4);
 		}
-		player.sendSystemMessage(Component.translatable("confluence.attuned.first_discovery", nameOf(confluenceId)));
+		player.sendOverlayMessage(discovery);
+		player.sendSystemMessage(discovery);
+	}
+
+	/**
+	 * The discovered Confluence that is exactly one active member short, when unambiguous.
+	 * Empty when nothing qualifies or when budget/policy suppresses the hint.
+	 */
+	public static Optional<String> oneAwayConfluence(Player player) {
+		return SynergyResolver.previewOf(
+			activeFocusIds(player),
+			new HashSet<>(AttunedAttachments.getDiscoveredConfluences(player)),
+			definitions(player));
+	}
+
+	/**
+	 * Short action-bar hint for a build that is exactly one active Focus away from a
+	 * single discovered Confluence.
+	 */
+	public static Optional<Component> previewOf(Player player) {
+		Optional<String> previewId = oneAwayConfluence(player);
+		if (previewId.isEmpty()) {
+			return Optional.empty();
+		}
+		String id = previewId.get();
+		Set<String> active = activeFocusIds(player);
+		String missingMember = null;
+		for (SynergyResolver.SynergyDef def : definitions(player)) {
+			if (!def.id().equals(id)) {
+				continue;
+			}
+			for (String member : def.members()) {
+				if (!active.contains(member)) {
+					missingMember = member;
+					break;
+				}
+			}
+			break;
+		}
+		Component confluenceName = nameOf(id);
+		Component memberName = missingMember == null
+			? Component.empty()
+			: Component.translatable(itemKey(missingMember));
+		return Optional.of(Component.translatable("confluence.attuned.preview", confluenceName, memberName)
+			.withStyle(ChatFormatting.GRAY));
 	}
 
 	/**
@@ -271,8 +329,25 @@ public final class Synergies {
 			+ confluenceId.replace(':', '_') + "_mod_" + index);
 	}
 
+	private static Set<String> activeFocusIds(Player player) {
+		Set<String> activeFocusIds = new HashSet<>();
+		for (int slot : Attunement.activeSlots(player)) {
+			ItemStack stack = AttunedAttachments.getInventory(player).get(slot);
+			Attunement.definitionFor(player, stack).ifPresent(def ->
+				activeFocusIds.add(BuiltInRegistries.ITEM.getKey(def.item().value()).toString()));
+		}
+		return activeFocusIds;
+	}
+
 	private static Component nameOf(String confluenceId) {
 		return Component.translatable("confluence.attuned." + pathOf(confluenceId) + ".name");
+	}
+
+	private static String itemKey(String itemId) {
+		int colon = itemId.indexOf(':');
+		String namespace = colon >= 0 ? itemId.substring(0, colon) : "minecraft";
+		String path = colon >= 0 ? itemId.substring(colon + 1) : itemId;
+		return "item." + namespace + "." + path;
 	}
 
 	/** The path portion of a {@code namespace:path} id, computed without touching a registry. */

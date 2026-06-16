@@ -1,5 +1,6 @@
 package dev.attuned.combat;
 
+import dev.attuned.Milestones;
 import dev.attuned.AttunedAdvancements;
 import dev.attuned.AttunedConfig;
 import dev.attuned.AttunedPlayerCleanup;
@@ -11,6 +12,7 @@ import dev.attuned.attunement.AttunedInv;
 import dev.attuned.attunement.Attunement;
 import dev.attuned.attunement.BudgetResolver;
 import dev.attuned.onboarding.Onboarding;
+import dev.attuned.pacts.PactTacticals;
 import dev.attuned.pacts.PactTier4;
 import java.util.ArrayList;
 import java.util.EnumSet;
@@ -57,6 +59,9 @@ public final class Resonance {
 
 	private static final Map<UUID, Long> LAST_KILL_TICK = new HashMap<>();
 	private static final Map<UUID, Integer> KILL_STREAK = new HashMap<>();
+	/** Pause idle decay briefly after the last combat resonance event. */
+	private static final Map<UUID, Long> LAST_COMBAT_TICK = new HashMap<>();
+	private static final int COMBAT_GRACE_TICKS = 100;
 	private static boolean initialized;
 
 	private record PlayerCombatState(Optional<Affinity> committed, boolean discord,
@@ -80,10 +85,12 @@ public final class Resonance {
 		AttunedServerCleanup.onStop(() -> {
 			LAST_KILL_TICK.clear();
 			KILL_STREAK.clear();
+			LAST_COMBAT_TICK.clear();
 		});
 		AttunedPlayerCleanup.onForget(uuid -> {
 			LAST_KILL_TICK.remove(uuid);
 			KILL_STREAK.remove(uuid);
+			LAST_COMBAT_TICK.remove(uuid);
 		});
 
 		ServerLivingEntityEvents.AFTER_DAMAGE.register(Resonance::afterDamage);
@@ -113,6 +120,7 @@ public final class Resonance {
 		if (before < APEX_THRESHOLD && clamped >= APEX_THRESHOLD) {
 			Onboarding.tryResonanceArmedHint(serverPlayer);
 			CombatFeedback.resonanceArmed(serverPlayer);
+			Milestones.onApexArmed(serverPlayer);
 		} else if (delta >= CombatFeedback.gainThreshold()) {
 			CombatFeedback.resonanceGain(serverPlayer, delta, clamped);
 		} else if (delta <= -CombatFeedback.drainThreshold()) {
@@ -165,19 +173,23 @@ public final class Resonance {
 			if (attackerState.isAt(Apex.Capstone.MAELSTROM)
 					&& hasAffinityPressure(defender, defenderState)) {
 				add(attackerPlayer, dealtDamage * hitEmpoweredGainPerDamage);
+				markCombat(attackerPlayer);
 			} else if (matchup(attackerState, defender, defenderState) == Matchup.EMPOWERED) {
 				add(attackerPlayer, dealtDamage * hitEmpoweredGainPerDamage);
+				markCombat(attackerPlayer);
 			}
 		}
 		// Defender side — drain when the matchup neutralizes us.
 		if (defender instanceof Player defenderPlayer && attacker != null
 				&& matchup(defenderState, attacker, attackerState) == Matchup.NEUTRALIZED) {
 			add(defenderPlayer, -AttunedConfig.get().resonanceHitNeutralizedLoss());
+			markCombat(defenderPlayer);
 		}
 		if (defender instanceof Player defenderPlayer && attacker != null
 				&& defenderState.isAt(Apex.Capstone.STILLPOINT)
 				&& hasAffinityPressure(attacker, attackerState)) {
 			add(defenderPlayer, KILL_NEUTRAL_GAIN);
+			markCombat(defenderPlayer);
 		}
 	}
 
@@ -197,6 +209,8 @@ public final class Resonance {
 				if (player instanceof ServerPlayer serverPlayer) {
 					AttunedAdvancements.award(serverPlayer, "attunement/favored_matchup");
 					recordKillStreak(serverPlayer);
+					markCombat(serverPlayer);
+					ResonantSurges.tryKillReward(serverPlayer);
 				}
 			}
 			case NORMAL -> {
@@ -208,6 +222,8 @@ public final class Resonance {
 				}
 				if (player instanceof ServerPlayer serverPlayer) {
 					recordKillStreak(serverPlayer);
+					markCombat(serverPlayer);
+					ResonantSurges.tryKillReward(serverPlayer);
 				}
 			}
 			case NEUTRALIZED -> resetKillStreak(player.getUUID());
@@ -230,6 +246,18 @@ public final class Resonance {
 		LAST_KILL_TICK.put(id, now);
 		KILL_STREAK.put(id, streak);
 		CombatFeedback.resonanceKillStreak(player, streak);
+		if (atApex(player)) {
+			int shave = CombatMomentum.killShaveTicks(streak, true);
+			if (shave > 0) {
+				PactTacticals.shaveCooldown(player, shave);
+				Apex.shaveIdentityCooldown(player, shave);
+			}
+		}
+	}
+
+	/** Current kill streak within the rolling window, for momentum and HUD. */
+	public static int killStreak(Player player) {
+		return KILL_STREAK.getOrDefault(player.getUUID(), 0);
 	}
 
 	private static void resetKillStreak(UUID id) {
@@ -246,11 +274,20 @@ public final class Resonance {
 			}
 			float current = get(player);
 			if (current > 0.0F) {
+				long now = player.level().getGameTime();
+				Long lastCombat = LAST_COMBAT_TICK.get(player.getUUID());
+				if (lastCombat != null && now - lastCombat < COMBAT_GRACE_TICKS) {
+					continue;
+				}
 				float decay = AttunedConfig.get().resonanceDecayPerTick() * 20
 					* PactTier4.resonanceDecayMultiplier(player);
 				set(player, current - decay);
 			}
 		}
+	}
+
+	private static void markCombat(Player player) {
+		LAST_COMBAT_TICK.put(player.getUUID(), player.level().getGameTime());
 	}
 
 	/** How a player's committed affinity fares against another combatant's. */

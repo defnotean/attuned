@@ -278,6 +278,9 @@ public final class Apex {
 				float cap = defenderPlayer.getMaxHealth() * fraction;
 				if (amount > cap) {
 					amount = cap;
+					if (defenderPlayer instanceof ServerPlayer serverPlayer) {
+						CombatFeedback.unyieldingCap(serverPlayer);
+					}
 				}
 			}
 		}
@@ -293,7 +296,7 @@ public final class Apex {
 				if (defender.getHealth() / defender.getMaxHealth() <= threshold) {
 					amount = Math.max(amount, EXECUTE_DAMAGE);
 					if (attackerPlayer instanceof ServerPlayer serverPlayer) {
-						CombatFeedback.apexProc(serverPlayer, Capstone.EXECUTE);
+						CombatFeedback.executeFinisher(serverPlayer, defender);
 					}
 				}
 			}
@@ -309,7 +312,7 @@ public final class Apex {
 					&& defender.getHealth() / defender.getMaxHealth() <= JUDGMENT_THRESHOLD) {
 				amount *= (1.0F + JUDGMENT_DAMAGE_BONUS);
 				if (attackerPlayer instanceof ServerPlayer serverPlayer) {
-					CombatFeedback.apexProc(serverPlayer, Capstone.JUDGMENT);
+					CombatFeedback.judgmentStrike(serverPlayer, defender);
 				}
 			}
 		}
@@ -322,6 +325,9 @@ public final class Apex {
 				&& context.hasAffinityPressure(defender)) {
 			amount *= (1.0F + MAELSTROM_DAMAGE_BONUS);
 			markScrambled(attackerPlayer, defender);
+			if (attackerPlayer instanceof ServerPlayer serverPlayer) {
+				CombatFeedback.maelstromHit(serverPlayer, defender);
+			}
 		}
 		return amount;
 	}
@@ -383,7 +389,7 @@ public final class Apex {
 			: RIPTIDE_SLOWNESS_TICKS;
 		defender.addEffect(new MobEffectInstance(MobEffects.SLOWNESS, ticks, 0, true, true, true));
 		if (attacker instanceof ServerPlayer serverPlayer) {
-			CombatFeedback.apexProc(serverPlayer, Apex.Capstone.RIPTIDE);
+			CombatFeedback.riptideDrag(serverPlayer, defender);
 		}
 	}
 
@@ -397,7 +403,7 @@ public final class Apex {
 			: CRUCIBLE_FIRE_SECONDS;
 		defender.igniteForSeconds(seconds);
 		if (attacker instanceof ServerPlayer serverPlayer) {
-			CombatFeedback.apexProc(serverPlayer, Capstone.CRUCIBLE);
+			CombatFeedback.crucibleIgnite(serverPlayer, defender);
 		}
 	}
 
@@ -409,7 +415,7 @@ public final class Apex {
 		float heal = matchup == Matchup.EMPOWERED ? BLOOMWARD_HEAL_EMPOWERED : BLOOMWARD_HEAL;
 		attacker.heal(heal);
 		if (attacker instanceof ServerPlayer serverPlayer) {
-			CombatFeedback.apexProc(serverPlayer, Capstone.BLOOMWARD);
+			CombatFeedback.bloomwardHeal(serverPlayer);
 		}
 	}
 
@@ -423,7 +429,7 @@ public final class Apex {
 			: GLOAMING_WEAKNESS_TICKS;
 		defender.addEffect(new MobEffectInstance(MobEffects.WEAKNESS, ticks, 0, true, true, true));
 		if (attacker instanceof ServerPlayer serverPlayer) {
-			CombatFeedback.apexProc(serverPlayer, Capstone.GLOAMING);
+			CombatFeedback.gloamingWeakness(serverPlayer, defender);
 		}
 	}
 
@@ -515,6 +521,9 @@ public final class Apex {
 		stillpointPulses.put(player.getUUID(), now);
 		player.addEffect(new MobEffectInstance(MobEffects.ABSORPTION,
 			STILLPOINT_ABSORPTION_TICKS, 0, true, true, true));
+		if (player instanceof ServerPlayer serverPlayer) {
+			CombatFeedback.stillpointPulse(serverPlayer);
+		}
 	}
 
 	/**
@@ -533,9 +542,11 @@ public final class Apex {
 			return false;
 		}
 
-		int cooldownTicks = capstone == Capstone.MAELSTROM
+		int baseCooldown = capstone == Capstone.MAELSTROM
 			? MAELSTROM_NOVA_COOLDOWN_TICKS
 			: STILLPOINT_FIELD_COOLDOWN_TICKS;
+		int cooldownTicks = CombatMomentum.effectiveCooldown(
+			baseCooldown, Resonance.killStreak(player), true);
 		long now = player.level().getGameTime();
 		Long readyAt = identityCooldowns.get(player.getUUID());
 		if (readyAt != null && now < readyAt) {
@@ -553,6 +564,28 @@ public final class Apex {
 		}
 		identityCooldowns.put(player.getUUID(), now + cooldownTicks);
 		return true;
+	}
+
+	/** Shaves ticks off an in-flight identity-ability cooldown (kill-streak momentum). */
+	public static void shaveIdentityCooldown(ServerPlayer player, int ticks) {
+		if (ticks <= 0) {
+			return;
+		}
+		Long readyAt = identityCooldowns.get(player.getUUID());
+		if (readyAt == null) {
+			return;
+		}
+		long now = player.level().getGameTime();
+		if (now >= readyAt) {
+			identityCooldowns.remove(player.getUUID());
+			return;
+		}
+		long newReady = Math.max(now, readyAt - ticks);
+		if (newReady <= now) {
+			identityCooldowns.remove(player.getUUID());
+		} else {
+			identityCooldowns.put(player.getUUID(), newReady);
+		}
 	}
 
 	private static void fireMaelstromNova(ServerPlayer player, ServerLevel level) {
@@ -743,19 +776,15 @@ public final class Apex {
 	private static void announceRearmed(ServerPlayer player, Capstone capstone) {
 		((ServerLevel) player.level()).playSound(null, player.blockPosition(),
 			SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, SoundSource.PLAYERS, 0.7F, 1.3F);
-		player.sendSystemMessage(Component.literal("Apex active again: ")
-			.withStyle(ChatFormatting.GRAY)
-			.append(Component.literal(capstone.displayName())
-				.withStyle(capstone.chatColor(), ChatFormatting.BOLD))
-			.append(Component.literal(".").withStyle(ChatFormatting.GRAY)));
+		player.sendOverlayMessage(Component.translatable("apex.attuned.rearmed",
+			Component.literal(capstone.displayName()).withStyle(capstone.chatColor(), ChatFormatting.BOLD)));
 		AttunedAdvancements.award(player, "attunement/apex");
 	}
 
 	private static void announceDormant(ServerPlayer player) {
 		((ServerLevel) player.level()).playSound(null, player.blockPosition(),
 			SoundEvents.AMETHYST_BLOCK_HIT, SoundSource.PLAYERS, 0.6F, 0.6F);
-		player.sendSystemMessage(Component.literal("Your Apex sleeps. Resonance is too low.")
-			.withStyle(ChatFormatting.GRAY));
+		player.sendOverlayMessage(Component.translatable("apex.attuned.dormant"));
 	}
 
 	private static void announceLost(ServerPlayer player) {
