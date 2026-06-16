@@ -3,12 +3,17 @@ package dev.attuned.attunement;
 import com.mojang.serialization.Codec;
 import dev.attuned.Attuned;
 import dev.attuned.AttunedConfig;
+import dev.attuned.network.AttunementStatePayload;
 import dev.attuned.pacts.Pact;
 import dev.attuned.pacts.PactTrialProgress;
 import dev.attuned.pacts.PactTrials;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentRegistry;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentType;
+import net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 
@@ -26,6 +31,7 @@ public final class AttunedAttachments {
 	private AttunedAttachments() {}
 
 	public static final int MAX_PRESETS = 9;
+	private static boolean initialized;
 
 	public static final AttachmentType<Integer> CAPACITY = AttachmentRegistry.<Integer>builder()
 			.initializer(() -> AttunedConfig.get().startingCapacity())
@@ -92,7 +98,14 @@ public final class AttunedAttachments {
 	public record PactTrialState(int progress, int goal, boolean tier4Complete) {}
 
 	/** Forces this class to load so the attachment types register during mod init. */
-	public static void init() {}
+	public static void init() {
+		if (initialized) {
+			return;
+		}
+		initialized = true;
+		ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> syncToClient(handler.player));
+		ServerPlayerEvents.AFTER_RESPAWN.register((oldPlayer, newPlayer, alive) -> syncToClient(newPlayer));
+	}
 
 	/**
 	 * Synced trial progress per {@link Pact}. Returns an empty map when {@code player}
@@ -119,6 +132,7 @@ public final class AttunedAttachments {
 
 	public static void setCapacity(Player player, int value) {
 		player.setAttached(CAPACITY, clampCapacity(value));
+		syncToClient(player);
 	}
 
 	private static int clampCapacity(int value) {
@@ -135,6 +149,7 @@ public final class AttunedAttachments {
 		}
 		if (stack == null || stack.isEmpty()) {
 			player.setAttached(INVENTORY, getInventory(player).with(slot, ItemStack.EMPTY));
+			syncToClient(player);
 			return;
 		}
 		if (Attunement.definitionFor(player, stack).isEmpty()) {
@@ -144,6 +159,7 @@ public final class AttunedAttachments {
 		// then replace the whole value. Do not use modifyAttached here: it passes
 		// null to its operator when the attachment has never been set.
 		player.setAttached(INVENTORY, getInventory(player).with(slot, cappedSlotStack(stack)));
+		syncToClient(player);
 	}
 
 	private static ItemStack cappedSlotStack(ItemStack stack) {
@@ -180,6 +196,7 @@ public final class AttunedAttachments {
 			if (updated.get(i).name().equals(preset.name())) {
 				updated.set(i, preset);
 				player.setAttached(PRESETS, List.copyOf(updated));
+				syncToClient(player);
 				return;
 			}
 		}
@@ -188,6 +205,7 @@ public final class AttunedAttachments {
 		}
 		updated.add(preset);
 		player.setAttached(PRESETS, List.copyOf(updated));
+		syncToClient(player);
 	}
 
 	public static void deletePreset(Player player, int index) {
@@ -198,6 +216,7 @@ public final class AttunedAttachments {
 		List<FocusPreset> updated = new ArrayList<>(current);
 		updated.remove(index);
 		player.setAttached(PRESETS, List.copyOf(updated));
+		syncToClient(player);
 	}
 
 	/** Whether the player has already claimed the milestone with the given id. */
@@ -229,6 +248,16 @@ public final class AttunedAttachments {
 
 	public static void setResonance(Player player, float value) {
 		player.setAttached(RESONANCE, clampResonance(value));
+		syncToClient(player);
+	}
+
+	public static PactTrialProgress getPactTrialProgressValue(Player player) {
+		return player.getAttachedOrElse(PACT_TRIAL_PROGRESS, PactTrialProgress.EMPTY);
+	}
+
+	public static void setPactTrialProgress(Player player, PactTrialProgress progress) {
+		player.setAttached(PACT_TRIAL_PROGRESS, progress == null ? PactTrialProgress.EMPTY : progress);
+		syncToClient(player);
 	}
 
 	private static float clampResonance(float value) {
@@ -280,6 +309,32 @@ public final class AttunedAttachments {
 		List<String> updated = new ArrayList<>(discovered);
 		updated.add(confluenceId);
 		player.setAttached(DISCOVERED_CONFLUENCES, List.copyOf(updated));
+		syncToClient(player);
+	}
+
+	public static void applySyncedState(Player player, AttunementStatePayload state) {
+		if (player == null || state == null) {
+			return;
+		}
+		player.setAttached(CAPACITY, clampCapacity(state.capacity()));
+		player.setAttached(INVENTORY, state.inventory());
+		player.setAttached(PRESETS, normalizePresets(state.presets()));
+		player.setAttached(RESONANCE, clampResonance(state.resonance()));
+		player.setAttached(PACT_TRIAL_PROGRESS, state.pactTrialProgress());
+		player.setAttached(DISCOVERED_CONFLUENCES, List.copyOf(state.discoveredConfluences()));
+	}
+
+	public static void syncToClient(Player player) {
+		if (!(player instanceof ServerPlayer serverPlayer)) {
+			return;
+		}
+		ServerPlayNetworking.send(serverPlayer, new AttunementStatePayload(
+			getCapacity(serverPlayer),
+			getInventory(serverPlayer),
+			getPresets(serverPlayer),
+			getResonance(serverPlayer),
+			getPactTrialProgressValue(serverPlayer),
+			getDiscoveredConfluences(serverPlayer)));
 	}
 
 	private static Optional<String> normalizedAttachmentId(String id) {
