@@ -23,7 +23,7 @@ Attuned is about building a kit, not wearing a pile of stats. A Focus can be act
 ## Requirements
 
 - Minecraft 26.1.2
-- Fabric Loader 0.19.2+
+- Fabric Loader 0.19.3+
 - Fabric API
 
 Lootr is optional but recommended for modpacks. Attuned injects Foci and shard fragments into vanilla loot tables rather than adding custom loot containers, so Lootr's per-player containers can roll the same rewards.
