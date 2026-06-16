@@ -763,23 +763,10 @@ def _umbral_focus_frame(name, accent, phase):
 
 
 def generate_umbral_focus_textures():
-    """Generates deterministic 64x512 eight-frame animated art for Umbral Eclipse Foci.
+    """Regenerate Umbral Eclipse Foci from the image-generated source sheet."""
+    from generate_umbral_eclipse_focus_assets import generate_assets
 
-    The motifs were derived from a concept sheet, then redrawn here as
-    crisp, rebuildable Minecraft item sprites with the same `.png.mcmeta` animation
-    settings as the rest of the Focus library.
-    """
-    frames = 8
-    for name, accent in UMBRAL_FOCI.items():
-        sheet = Image.new("RGBA", (64, 64 * frames), CLEAR)
-        for frame in range(frames):
-            phase = frame / frames
-            sheet.alpha_composite(_umbral_focus_frame(name, accent, phase), (0, frame * 64))
-        sheet.save(TEXTURES / "item" / f"{name}.png")
-
-        mcmeta = {"animation": {"frametime": 2, "interpolate": True}}
-        (TEXTURES / "item" / f"{name}.png.mcmeta").write_text(
-            json.dumps(mcmeta, indent=2) + "\n", encoding="utf-8")
+    generate_assets()
 
 
 ASPECT_PREVIEW_ASSETS = ROOT / "docs/superpowers/assets/aspect-counter-foci"
@@ -1117,32 +1104,10 @@ def generate_aspect_focus_textures():
 
 
 def generate_custom_focus_textures():
-    """Generates the deterministic default art + model/item JSON for the blank,
-    resource-pack-skinnable Focus pool (attuned:custom_focus_1..N)."""
-    import colorsys
+    """Regenerate the custom Focus pool from the image-generated source sheet."""
+    from generate_custom_focus_assets import generate_assets
 
-    for n in range(1, CUSTOM_FOCUS_COUNT + 1):
-        name = f"custom_focus_{n}"
-        # Deterministic, byte-stable hue spread so all N differ and re-running is
-        # reproducible. The pool ships static 16x16 art (no animation), unlike the
-        # bespoke 64x512 shipped Foci.
-        hue = ((n - 1) * 360 // CUSTOM_FOCUS_COUNT) / 360.0
-        accent = tuple(round(c * 255) for c in colorsys.hsv_to_rgb(hue, 0.62, 0.86)) + (255,)
-        accent_light = tuple(round(c * 255) for c in colorsys.hsv_to_rgb(hue, 0.34, 1.0)) + (255,)
-        accent_dark = tuple(round(c * 255) for c in colorsys.hsv_to_rgb(hue, 0.78, 0.48)) + (255,)
-        rim = tuple(round(c * 255) for c in colorsys.hsv_to_rgb(hue, 0.5, 0.96)) + (255,)
-
-        _custom_focus_frame(accent, accent_light, accent_dark, rim).save(
-            TEXTURES / "item" / f"{name}.png")
-
-        model = {"parent": "minecraft:item/generated",
-                 "textures": {"layer0": f"attuned:item/{name}"}}
-        (ITEM_MODELS / f"{name}.json").write_text(
-            json.dumps(model, indent=2) + "\n", encoding="utf-8")
-
-        definition = {"model": {"type": "minecraft:model", "model": f"attuned:item/{name}"}}
-        (ITEM_DEFINITIONS / f"{name}.json").write_text(
-            json.dumps(definition, indent=2) + "\n", encoding="utf-8")
+    generate_assets()
 
 
 # HUD affinity gem sprites. The original four (fury/bastion/zephyr/holy) plus the
