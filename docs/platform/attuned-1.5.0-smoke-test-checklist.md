@@ -1,6 +1,6 @@
-# Attuned 1.6.0 — manual playtest checklist
+# Attuned 1.5.0 — manual playtest checklist
 
-Run on a dedicated or local server with `mod_version=1.6.0`. Check each box before publishing.
+Run on a dedicated or local server with `mod_version=1.5.0`. Check each box before publishing.
 
 ## Discord build feel
 
@@ -60,7 +60,7 @@ Run on a dedicated or local server with `mod_version=1.6.0`. Check each box befo
 
 - [ ] Equip **3+ active Unseen** Foci, sneak, and confirm **Speed** while sneaking.
 - [ ] Drop below 3 active Unseen Foci; bonus stops.
-- [ ] Spot-check one new 1.6 faction (**Tideborn**, **Forgebound**, **Wildroot**, or **Umbral**) at 3+ active Foci.
+- [ ] Spot-check one new 1.5 faction (**Tideborn**, **Forgebound**, **Wildroot**, or **Umbral**) at 3+ active Foci.
 
 ## HUD & journal polish
 
