@@ -97,6 +97,21 @@ class MinecraftVersionProfileContractTest(unittest.TestCase):
             self.assertIn(key, active)
         self.assertEqual("25", active["java_version"])
 
+    def test_repository_profiles_cover_latest_and_four_maintenance_targets(self) -> None:
+        profiles = minecraft_version_profile.load_profiles(ROOT)["profiles"]
+
+        self.assertEqual("26.1.2", minecraft_version_profile.load_profiles(ROOT)["active_profile"])
+        expected = {
+            "26.1.2": "current",
+            "1.21.11": "maintenance",
+            "1.20.6": "maintenance",
+            "1.19.4": "maintenance",
+            "1.18.2": "maintenance",
+        }
+        for profile_id, status in expected.items():
+            self.assertIn(profile_id, profiles)
+            self.assertEqual(status, profiles[profile_id]["status"])
+
     def test_apply_profile_dry_run_reports_changes_without_writing(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
             root = Path(temp_dir)
@@ -140,7 +155,7 @@ class MinecraftVersionProfileContractTest(unittest.TestCase):
             result_path = minecraft_version_profile.render_checklist(root, "1.21.1", output)
             text = result_path.read_text(encoding="utf-8")
 
-            self.assertIn("port/minecraft-1.21.1", text)
+            self.assertIn("maintenance/minecraft-1.21.1", text)
             self.assertIn("Fabric API", text)
             self.assertIn("dependency locks", text)
             self.assertIn("server smoke", text)

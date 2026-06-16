@@ -12,6 +12,58 @@
       "notes": [
         "Current released target. Use as the known-good baseline before creating newer or older port profiles."
       ]
+    },
+    "1.21.11": {
+      "minecraft_version": "1.21.11",
+      "loader_version": "0.19.3",
+      "loom_version": "1.16.3",
+      "fabric_api_version": "0.141.4+1.21.11",
+      "java_version": "21",
+      "fabric_loader_range": ">=0.19.3",
+      "status": "maintenance",
+      "notes": [
+        "Latest stable 1.21.x target before the 26.1.x release line.",
+        "Requires compile, server smoke, and gameplay QA on maintenance/minecraft-1.21.11 before publishing."
+      ]
+    },
+    "1.20.6": {
+      "minecraft_version": "1.20.6",
+      "loader_version": "0.19.3",
+      "loom_version": "1.16.3",
+      "fabric_api_version": "0.100.8+1.20.6",
+      "java_version": "21",
+      "fabric_loader_range": ">=0.19.3",
+      "status": "maintenance",
+      "notes": [
+        "Latest stable 1.20.x target before the 1.21.x release line.",
+        "Requires compile, server smoke, and gameplay QA on maintenance/minecraft-1.20.6 before publishing."
+      ]
+    },
+    "1.19.4": {
+      "minecraft_version": "1.19.4",
+      "loader_version": "0.19.3",
+      "loom_version": "1.16.3",
+      "fabric_api_version": "0.87.2+1.19.4",
+      "java_version": "17",
+      "fabric_loader_range": ">=0.19.3",
+      "status": "maintenance",
+      "notes": [
+        "Latest stable 1.19.x target before the 1.20.x release line.",
+        "Requires compile, server smoke, and gameplay QA on maintenance/minecraft-1.19.4 before publishing."
+      ]
+    },
+    "1.18.2": {
+      "minecraft_version": "1.18.2",
+      "loader_version": "0.19.3",
+      "loom_version": "1.16.3",
+      "fabric_api_version": "0.77.0+1.18.2",
+      "java_version": "17",
+      "fabric_loader_range": ">=0.19.3",
+      "status": "maintenance",
+      "notes": [
+        "Latest stable 1.18.x target before the 1.19.x release line.",
+        "Requires compile, server smoke, and gameplay QA on maintenance/minecraft-1.18.2 before publishing."
+      ]
     }
   }
 }

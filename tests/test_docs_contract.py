@@ -65,6 +65,29 @@ class DocsContractTest(unittest.TestCase):
         self.assertIn("## Attuned <mod_version>", contributing)
         self.assertIn("current-version section", contributing)
 
+    def test_default_development_branch_is_latest(self) -> None:
+        ci = (ROOT / ".github" / "workflows" / "ci.yml").read_text(encoding="utf-8")
+        migration = (ROOT / "docs" / "versioning" / "minecraft-version-migration.md").read_text(encoding="utf-8")
+
+        self.assertIn("branches: [latest]", ci)
+        self.assertNotIn("branches: [main]", ci)
+        self.assertIn("tools/minecraft_version_profile.py current --github-output", ci)
+        self.assertIn("steps.versions.outputs.java_version", ci)
+        self.assertIn("Start from green `latest`", migration)
+        self.assertNotIn("git checkout main", migration)
+
+    def test_supported_branch_docs_cover_version_matrix(self) -> None:
+        matrix = (ROOT / "docs" / "versioning" / "supported-branches.md").read_text(encoding="utf-8")
+
+        expected_rows = {
+            "| `latest` | `26.1.2` | current |",
+            "| `maintenance/minecraft-1.21.11` | `1.21.11` | maintenance |",
+            "| `maintenance/minecraft-1.20.6` | `1.20.6` | maintenance |",
+            "| `maintenance/minecraft-1.19.4` | `1.19.4` | maintenance |",
+            "| `maintenance/minecraft-1.18.2` | `1.18.2` | maintenance |",
+        }
+        for row in expected_rows:
+            self.assertIn(row, matrix)
 
     def test_public_docs_keep_asset_workflow_private(self) -> None:
         public_docs = [
