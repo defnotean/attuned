@@ -17,6 +17,7 @@ VERSION_KEYS = (
     "fabric_api_version",
     "java_version",
 )
+MINIMUM_BUILD_JAVA_VERSION = 21
 REQUIRED_PROFILE_FIELDS = VERSION_KEYS + (
     "fabric_loader_range",
     "status",
@@ -29,6 +30,7 @@ GITHUB_OUTPUT_FIELDS = (
     "loom_version",
     "fabric_api_version",
     "java_version",
+    "build_java_version",
     "fabric_loader_range",
     "status",
 )
@@ -161,6 +163,10 @@ def validate_repository(root: Path = ROOT) -> list[str]:
                 f"{active_id} ({expected!r})"
             )
     return problems
+
+
+def build_java_version(profile: dict[str, Any]) -> str:
+    return str(max(int(str(profile["java_version"])), MINIMUM_BUILD_JAVA_VERSION))
 
 
 def _line_key(line: str) -> str | None:
@@ -321,6 +327,7 @@ Branch: `{branch}`
 def write_github_output(path: Path, profile_id: str, profile: dict[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     values = {"minecraft_profile": profile_id, **{key: str(profile[key]) for key in VERSION_KEYS}}
+    values["build_java_version"] = build_java_version(profile)
     values["fabric_loader_range"] = str(profile.get("fabric_loader_range", ""))
     values["status"] = str(profile.get("status", ""))
     with path.open("a", encoding="utf-8") as handle:
@@ -368,7 +375,7 @@ def main(argv: list[str] | None = None) -> int:
             profile_id, profile = active_profile(root)
             if args.github_output:
                 write_github_output(args.github_output, profile_id, profile)
-            _json_print({"profile": profile_id, **profile})
+            _json_print({"profile": profile_id, **profile, "build_java_version": build_java_version(profile)})
             return 0
         if args.command == "validate":
             problems = validate_repository(root)
