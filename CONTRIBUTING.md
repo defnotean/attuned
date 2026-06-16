@@ -21,19 +21,19 @@ Run the Java/Fabric build and tests with:
 Run repository-level validation with:
 
 ```sh
-PYTHONDONTWRITEBYTECODE=1 python tools/verify_repository.py
+python -B tools/verify_repository.py
 ```
 
 Run the Python contract tests with:
 
 ```sh
-PYTHONDONTWRITEBYTECODE=1 python -m unittest discover -s tests
+python -B -m unittest discover -s tests
 ```
 
 Run the dedicated-server smoke check after reviewing and accepting the Minecraft EULA:
 
 ```sh
-PYTHONDONTWRITEBYTECODE=1 python tools/minecraft_runtime_smoke.py --accept-eula
+python -B tools/minecraft_runtime_smoke.py --accept-eula
 ```
 
 The smoke check starts the Fabric `runServer` task, waits for the server-ready signal, stops it, and fails on fatal server, mixin, or resource-load errors.

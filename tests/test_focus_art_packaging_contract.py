@@ -1,4 +1,5 @@
 import json
+import re
 import subprocess
 import unittest
 from pathlib import Path
@@ -8,6 +9,7 @@ ROOT = Path(__file__).resolve().parents[1]
 FOCUS_DIR = ROOT / "src" / "main" / "resources" / "data" / "attuned" / "attuned" / "focus"
 TEXTURE_DIR = ROOT / "src" / "main" / "resources" / "assets" / "attuned" / "textures" / "item"
 EXPECTED_MCMETA = {"animation": {"frametime": 2, "interpolate": True}}
+README_FOCI_PATTERN = re.compile(r"\b(?P<count>\d+)\s+Foci\b")
 
 
 def git_tracked_paths() -> set[str]:
@@ -33,8 +35,15 @@ class FocusArtPackagingContractTest(unittest.TestCase):
             json.loads(path.read_text(encoding="utf-8"))["item"].split(":", 1)[1]
             for path in FOCUS_DIR.glob("*_focus.json")
         )
+        readme = (ROOT / "README.md").read_text(encoding="utf-8")
+        advertised = README_FOCI_PATTERN.search(readme)
 
-        self.assertEqual(94, len(focus_ids), "1.5.0 currently ships 94 Focus definitions")
+        self.assertIsNotNone(advertised, "README.md should advertise the shipped Focus count")
+        self.assertEqual(
+            int(advertised.group("count")),
+            len(focus_ids),
+            "README.md should advertise the same Focus count that release packaging sweeps",
+        )
 
         for focus_id in focus_ids:
             texture = TEXTURE_DIR / f"{focus_id}.png"
