@@ -16,5 +16,6 @@ public final class JournalNetworking {
 		PayloadTypeRegistry.playS2C().register(OpenJournalPayload.TYPE, OpenJournalPayload.CODEC);
 		PayloadTypeRegistry.playS2C().register(TremorOreHintPayload.TYPE, TremorOreHintPayload.CODEC);
 		PayloadTypeRegistry.playS2C().register(FocusAbilityStatusPayload.TYPE, FocusAbilityStatusPayload.CODEC);
+		PayloadTypeRegistry.playS2C().register(AttunementStatePayload.TYPE, AttunementStatePayload.CODEC);
 	}
 }
