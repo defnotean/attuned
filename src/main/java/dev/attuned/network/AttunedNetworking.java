@@ -74,10 +74,10 @@ public final class AttunedNetworking {
 			ServerPlayer player = context.player();
 			player.level().getServer().execute(() -> {
 				if (!UpdraftBehavior.isActive(player) || !UpdraftBehavior.hasFunctionalElytra(player)) {
-					UpdraftBehavior.setLifting(player.getUUID(), false);
+					UpdraftBehavior.setControls(player.getUUID(), false, false);
 					return;
 				}
-				UpdraftBehavior.setLifting(player.getUUID(), payload.lifting());
+				UpdraftBehavior.setControls(player.getUUID(), payload.boosting(), payload.braking());
 			});
 		});
 

@@ -18,38 +18,38 @@ import net.minecraft.world.phys.Vec3;
 
 /**
  * Updraft Focus: while fall-flying with a functional elytra, holding jump adds
- * pitch-controlled thrust after vanilla movement resolves.
+ * smooth forward thrust, while holding sprint/control brakes flight.
  */
 public final class UpdraftBehavior implements FocusBehavior {
-	/** Gentle forward thrust at level pitch while boost is held (blocks/tick). */
-	static final double CRUISE_THRUST = 0.035D;
-	/** Extra forward thrust at full dive pitch. */
-	static final double DIVE_THRUST = 0.075D;
-	/** Forward speed bled off at full climb pitch. */
-	static final double CLIMB_BRAKE = 0.09D;
-	/** Extra vertical push per tick at full look-up; scaled by look pitch. */
-	static final double VERTICAL_THRUST = 0.055D;
-	/** Normal controllable cruise cap before dive pitch adds speed. */
-	static final double CRUISE_SPEED_CAP = 1.2D;
-	/** Highest forward speed the focus will actively push toward while diving. */
-	static final double DIVE_SPEED_CAP = 1.55D;
+	/** Forward thrust added per tick while boost is held (blocks/tick). */
+	static final double BOOST_THRUST = 0.08D;
+	/** Highest speed the focus actively boosts toward. Faster vanilla motion is preserved. */
+	static final double BOOST_SPEED_CAP = 1.45D;
+	/** Target velocity multiplier while braking. */
+	static final double BRAKE_FACTOR = 0.45D;
 	/** Hard cap on total flight speed (blocks/tick). */
-	static final double MAX_SPEED = 1.75D;
-	/** Floor that keeps the glide steerable without forcing the old high minimum. */
-	static final double MIN_CONTROL_SPEED = 0.08D;
-	/** Passive bleed used when existing velocity is above the current pitch cap. */
-	static final double OVERSPEED_BLEED = 0.035D;
+	static final double MAX_SPEED = 1.65D;
+	/** Response factor toward the desired velocity; lower values feel smoother. */
+	static final double MOTION_SMOOTHING = 0.65D;
+	/** Maximum horizontal velocity change applied in one boost tick. */
+	static final double MAX_HORIZONTAL_CHANGE = 0.09D;
+	/** Maximum vertical velocity change applied in one boost tick. */
+	static final double MAX_VERTICAL_CHANGE = 0.045D;
+	/** Maximum horizontal velocity change applied in one brake tick. */
+	static final double MAX_BRAKE_HORIZONTAL_CHANGE = 0.18D;
+	/** Maximum vertical velocity change applied in one brake tick. */
+	static final double MAX_BRAKE_VERTICAL_CHANGE = 0.12D;
 
-	private static final Map<UUID, Boolean> LIFTING = new HashMap<>();
+	private static final Map<UUID, Controls> CONTROLS = new HashMap<>();
 	private static final Map<UUID, Integer> LAST_FLIGHT_TICK = new HashMap<>();
 
 	static {
 		AttunedServerCleanup.onStop(() -> {
-			LIFTING.clear();
+			CONTROLS.clear();
 			LAST_FLIGHT_TICK.clear();
 		});
 		AttunedPlayerCleanup.onForget(uuid -> {
-			LIFTING.remove(uuid);
+			CONTROLS.remove(uuid);
 			LAST_FLIGHT_TICK.remove(uuid);
 		});
 	}
@@ -61,14 +61,14 @@ public final class UpdraftBehavior implements FocusBehavior {
 
 	@Override
 	public void onDeactivate(ServerPlayer player, ItemStack focus) {
-		setLifting(player.getUUID(), false);
+		setControls(player.getUUID(), false, false);
 	}
 
-	public static void setLifting(UUID playerId, boolean lifting) {
-		if (lifting) {
-			LIFTING.put(playerId, true);
+	public static void setControls(UUID playerId, boolean boosting, boolean braking) {
+		if (boosting || braking) {
+			CONTROLS.put(playerId, new Controls(boosting, braking));
 		} else {
-			LIFTING.remove(playerId);
+			CONTROLS.remove(playerId);
 		}
 	}
 
@@ -97,57 +97,42 @@ public final class UpdraftBehavior implements FocusBehavior {
 		LAST_FLIGHT_TICK.put(player.getUUID(), player.tickCount);
 
 		if (!isActive(player) || !hasFunctionalElytra(player)) {
-			setLifting(player.getUUID(), false);
+			setControls(player.getUUID(), false, false);
 			return;
 		}
-		if (!wantsBoost(player)) {
+		Controls controls = controlsFor(player);
+		if (!controls.active()) {
 			return;
 		}
 
 		player.resetFallDistance();
 		player.fallDistance = 0.0F;
 
-		if (!player.isFallFlying() && canStartGlide(player)) {
+		if (controls.boosting() && !player.isFallFlying() && canStartGlide(player)) {
 			player.startFallFlying();
 		}
 		if (!player.isFallFlying()) {
 			return;
 		}
-		applyFlightBoost(player);
+		applyFlightControls(player, controls);
 	}
 
 	public static boolean mitigatesFallDamage(ServerPlayer player) {
-		return isActive(player) && hasFunctionalElytra(player) && wantsBoost(player);
+		return isActive(player) && hasFunctionalElytra(player) && controlsFor(player).active();
 	}
 
-	static boolean wantsBoost(ServerPlayer player) {
-		if (LIFTING.getOrDefault(player.getUUID(), false)) {
-			return true;
+	static Controls controlsFor(ServerPlayer player) {
+		Controls controls = CONTROLS.get(player.getUUID());
+		if (controls != null) {
+			return controls;
 		}
-		return player.getLastClientInput().jump();
+		return new Controls(player.getLastClientInput().jump(), false);
 	}
 
-	public static void applyFlightBoost(ServerPlayer player) {
-		Vec3 forward = horizontalLook(player);
+	public static void applyFlightControls(ServerPlayer player, Controls controls) {
 		Vec3 motion = player.getDeltaMovement();
 		Vec3 look = player.getLookAngle();
-
-		double forwardSpeed = motion.x * forward.x + motion.z * forward.z;
-		double targetForward = controlledForwardSpeed(forwardSpeed, look.y);
-		Vec3 horizontal = new Vec3(motion.x, 0.0D, motion.z);
-		Vec3 lateral = horizontal.subtract(forward.scale(forwardSpeed));
-		Vec3 boostedHorizontal = lateral.add(forward.scale(targetForward));
-
-		Vec3 next = new Vec3(
-			boostedHorizontal.x,
-			motion.y + controlledVerticalBoost(look.y),
-			boostedHorizontal.z
-		);
-
-		double speed = next.length();
-		if (speed > MAX_SPEED) {
-			next = next.scale(MAX_SPEED / speed);
-		}
+		Vec3 next = controlledMotion(motion, look, player.getYRot(), controls.boosting(), controls.braking());
 
 		player.setDeltaMovement(next);
 		player.resetFallDistance();
@@ -155,20 +140,63 @@ public final class UpdraftBehavior implements FocusBehavior {
 		player.hurtMarked = true;
 	}
 
-	static double controlledForwardSpeed(double forwardSpeed, double lookY) {
-		double climb = clamp(lookY, 0.0D, 1.0D);
-		double dive = clamp(-lookY, 0.0D, 1.0D);
-		double cap = CRUISE_SPEED_CAP + (DIVE_SPEED_CAP - CRUISE_SPEED_CAP) * dive;
-		double next = forwardSpeed + CRUISE_THRUST + DIVE_THRUST * dive - CLIMB_BRAKE * climb;
-		if (next > cap) {
-			double bleed = OVERSPEED_BLEED + CLIMB_BRAKE * climb;
-			next = Math.max(cap, forwardSpeed - bleed);
+	public static Vec3 controlledMotion(Vec3 motion, Vec3 look, double yawDegrees,
+			boolean boosting, boolean braking) {
+		if (braking) {
+			return brakedMotion(motion);
 		}
-		return Math.max(next, MIN_CONTROL_SPEED);
+		if (boosting) {
+			return boostedMotion(motion, look, yawDegrees);
+		}
+		return motion;
 	}
 
-	static double controlledVerticalBoost(double lookY) {
-		return clamp(lookY, -1.0D, 1.0D) * VERTICAL_THRUST;
+	static Vec3 boostedMotion(Vec3 motion, Vec3 look, double yawDegrees) {
+		Vec3 forward = horizontalLook(look, yawDegrees);
+		double forwardSpeed = motion.x * forward.x + motion.z * forward.z;
+		double targetForward = forwardSpeed >= BOOST_SPEED_CAP
+			? forwardSpeed
+			: Math.min(forwardSpeed + BOOST_THRUST, BOOST_SPEED_CAP);
+		Vec3 horizontal = new Vec3(motion.x, 0.0D, motion.z);
+		Vec3 lateral = horizontal.subtract(forward.scale(forwardSpeed));
+		Vec3 boostedHorizontal = lateral.add(forward.scale(targetForward));
+		Vec3 desired = new Vec3(
+			boostedHorizontal.x,
+			motion.y,
+			boostedHorizontal.z
+		);
+		return capAddedSpeed(motion, smoothMotion(motion, desired,
+			MAX_HORIZONTAL_CHANGE, MAX_VERTICAL_CHANGE));
+	}
+
+	static Vec3 brakedMotion(Vec3 motion) {
+		Vec3 desired = motion.scale(BRAKE_FACTOR);
+		return smoothMotion(motion, desired, MAX_BRAKE_HORIZONTAL_CHANGE, MAX_BRAKE_VERTICAL_CHANGE);
+	}
+
+	static Vec3 smoothMotion(Vec3 current, Vec3 desired, double maxHorizontalChange, double maxVerticalChange) {
+		Vec3 horizontalDelta = new Vec3(desired.x - current.x, 0.0D, desired.z - current.z)
+			.scale(MOTION_SMOOTHING);
+		double horizontalChange = Math.sqrt(horizontalDelta.x * horizontalDelta.x
+			+ horizontalDelta.z * horizontalDelta.z);
+		if (horizontalChange > maxHorizontalChange) {
+			horizontalDelta = horizontalDelta.scale(maxHorizontalChange / horizontalChange);
+		}
+		double verticalDelta = clamp((desired.y - current.y) * MOTION_SMOOTHING,
+			-maxVerticalChange, maxVerticalChange);
+		return new Vec3(
+			current.x + horizontalDelta.x,
+			current.y + verticalDelta,
+			current.z + horizontalDelta.z
+		);
+	}
+
+	private static Vec3 capAddedSpeed(Vec3 current, Vec3 next) {
+		double nextSpeed = next.length();
+		if (nextSpeed > MAX_SPEED && nextSpeed > current.length()) {
+			next = next.scale(MAX_SPEED / nextSpeed);
+		}
+		return next;
 	}
 
 	private static boolean canStartGlide(ServerPlayer player) {
@@ -180,10 +208,13 @@ public final class UpdraftBehavior implements FocusBehavior {
 	}
 
 	private static Vec3 horizontalLook(ServerPlayer player) {
-		Vec3 look = player.getLookAngle();
+		return horizontalLook(player.getLookAngle(), player.getYRot());
+	}
+
+	private static Vec3 horizontalLook(Vec3 look, double yawDegrees) {
 		Vec3 flat = new Vec3(look.x, 0.0D, look.z);
 		if (flat.lengthSqr() < 1.0E-4D) {
-			double yawRad = Math.toRadians(player.getYRot());
+			double yawRad = Math.toRadians(yawDegrees);
 			return new Vec3(-Math.sin(yawRad), 0.0D, Math.cos(yawRad));
 		}
 		return flat.normalize();
@@ -191,5 +222,11 @@ public final class UpdraftBehavior implements FocusBehavior {
 
 	private static double clamp(double value, double min, double max) {
 		return Math.max(min, Math.min(max, value));
+	}
+
+	public record Controls(boolean boosting, boolean braking) {
+		boolean active() {
+			return boosting || braking;
+		}
 	}
 }
