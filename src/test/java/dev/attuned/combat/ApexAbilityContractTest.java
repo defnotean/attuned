@@ -18,6 +18,8 @@ class ApexAbilityContractTest {
 		Path.of("src/main/java/dev/attuned/network/FocusAbilityState.java");
 	private static final Path APEX =
 		Path.of("src/main/java/dev/attuned/combat/Apex.java");
+	private static final Path KNOCKBACK_MIXIN =
+		Path.of("src/main/java/dev/attuned/mixin/LivingEntityKnockbackMixin.java");
 	private static final Path LANG =
 		Path.of("src/main/resources/assets/attuned/lang/en_us.json");
 	private static final Path REFERENCE =
@@ -78,6 +80,20 @@ class ApexAbilityContractTest {
 			"Stillpoint's field should pacify nearby monsters by dropping their target.");
 		assertTrue(apex.contains("MobEffects.SLOWNESS"),
 			"Stillpoint's field should apply brief Slowness to nearby monsters.");
+	}
+
+	@Test
+	void apexKnockbackMixinTracksTheMinecraft26Descriptor() throws IOException {
+		String mixin = read(KNOCKBACK_MIXIN);
+
+		assertTrue(mixin.contains("DamageSource source"),
+			"The knockback injector must include the 26.2 DamageSource parameter.");
+		assertTrue(mixin.contains("float knockbackResistance"),
+			"The knockback injector must include the 26.2 resistance parameter.");
+		assertTrue(mixin.contains("boolean force"),
+			"The knockback injector must include the 26.2 force parameter.");
+		assertTrue(mixin.contains("CallbackInfo ci"),
+			"The knockback injector should still be cancellable.");
 	}
 
 	@Test

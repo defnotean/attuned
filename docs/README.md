@@ -36,10 +36,10 @@ add a Focus.
 - Creative inventory content is split into **Fury & Bastion**, **Zephyr &
   Holy**, **Tide & Forge**, **Verdant & Umbral**, and **Utility & Tools** tabs
   so the full roster is easy to scan.
-- Current release headline: **Attuned 1.5.1 — Updraft Flight Polish** adds the
-  Updraft Focus, smooth elytra boost/brake controls, in-flight feedback, and a
-  five-second PvP exhaustion safeguard on top of the 1.5.0 eightfold affinity
-  and Resonant Engagement foundation.
+- Current release headline: **Attuned 1.5.2 — Minecraft 26.2 Chaos Cubed**
+  moves `latest` to Minecraft 26.2 while carrying forward the 1.5.1 Updraft
+  Focus, smooth elytra boost/brake controls, in-flight feedback, and PvP
+  exhaustion safeguard.
 
 That is the whole idea: a Focus is a trade-off, never a free bonus.
 

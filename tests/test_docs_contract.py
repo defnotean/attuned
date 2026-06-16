@@ -80,7 +80,8 @@ class DocsContractTest(unittest.TestCase):
         matrix = (ROOT / "docs" / "versioning" / "supported-branches.md").read_text(encoding="utf-8")
 
         expected_rows = {
-            "| `latest` | `26.1.2` | current |",
+            "| `latest` | `26.2` | current |",
+            "| `maintenance/minecraft-26.1.2` | `26.1.2` | maintenance |",
             "| `maintenance/minecraft-1.21.11` | `1.21.11` | maintenance |",
             "| `maintenance/minecraft-1.20.6` | `1.20.6` | maintenance |",
             "| `maintenance/minecraft-1.19.4` | `1.19.4` | maintenance |",

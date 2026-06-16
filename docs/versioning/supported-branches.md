@@ -6,7 +6,8 @@ to `latest` unless the change is also intended for the newest target.
 
 | Branch | Minecraft | Status |
 | --- | --- | --- |
-| `latest` | `26.1.2` | current |
+| `latest` | `26.2` | current |
+| `maintenance/minecraft-26.1.2` | `26.1.2` | maintenance |
 | `maintenance/minecraft-1.21.11` | `1.21.11` | maintenance |
 | `maintenance/minecraft-1.20.6` | `1.20.6` | maintenance |
 | `maintenance/minecraft-1.19.4` | `1.19.4` | maintenance |
@@ -22,7 +23,8 @@ branch.
 
 | Branch | Result | Verification |
 | --- | --- | --- |
-| `latest` | pass | Repository verifier, Python unittest discovery, pytest/Pillow, Gradle `test build`, dedicated-server smoke, client `runClient` smoke, GUI preview render, and visual GUI contact-sheet inspection passed. |
+| `latest` | pass locally; CI pending | Retargeted to Minecraft 26.2 Chaos Cubed. Local gates passed: profile validation, repository verification, Python unittest discovery, pytest/Pillow, Gradle `test build`, dedicated-server smoke on `attuned_smoke_262_20260616`, client `runClient` smoke through Attuned initialization/resource startup, GUI previews, CurseForge dry-run metadata, and Modrinth dry-run. |
+| `maintenance/minecraft-26.1.2` | pass | Preserves the previous 26.1.2 latest line from GitHub CI run `27632626151`; requires branch-local CI confirmation after branch creation. |
 | `maintenance/minecraft-1.21.11` | pass | Same gate passed; server smoke used fresh world `attuned_smoke_12111_20260616103713`; GitHub CI run `27631781707` passed. |
 | `maintenance/minecraft-1.20.6` | pass | Same gate passed after one local client asset-cache retry; server smoke used fresh world `attuned_smoke_1206_20260616103909`; GitHub CI run `27631829397` passed. |
 | `maintenance/minecraft-1.19.4` | pass | Same gate passed after fixing the client mixin Java compatibility and adding Linux LWJGL native verification; server smoke used fresh world `attuned_smoke_1194_fix_20260616105514`; GitHub CI run `27632282182` passed. |
@@ -64,6 +66,7 @@ the HUD/GUI resources render without the issues targeted by this QA pass.
 
 | Minecraft | Java | Fabric Loader | Fabric API | Loom |
 | --- | --- | --- | --- | --- |
+| `26.2` | `25` | `0.19.3` | `0.152.1+26.2` | `1.17.11` |
 | `26.1.2` | `25` | `0.19.2` | `0.149.0+26.1.2` | `1.16.3` |
 | `1.21.11` | `21` | `0.19.3` | `0.141.4+1.21.11` | `1.16.3` |
 | `1.20.6` | `21` | `0.19.3` | `0.100.8+1.20.6` | `1.16.3` |
@@ -71,9 +74,9 @@ the HUD/GUI resources render without the issues targeted by this QA pass.
 | `1.18.2` | `17` | `0.19.3` | `0.77.0+1.18.2` | `1.16.3` |
 
 CI uses `build_java_version` from `tools/minecraft_version_profile.py` for the
-Gradle/Loom JVM. That value is at least Java 21 because Loom `1.16.3` requires a
-Java 21+ build runtime; the mod bytecode target and platform metadata still use
-the branch `java_version` shown above.
+Gradle/Loom JVM. That value is at least Java 21 because current Loom releases
+require a Java 21+ build runtime; the mod bytecode target and platform metadata
+still use the branch `java_version` shown above.
 
 ## Branch Policy
 

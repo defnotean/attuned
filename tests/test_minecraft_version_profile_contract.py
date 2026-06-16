@@ -20,12 +20,12 @@ spec.loader.exec_module(minecraft_version_profile)
 
 
 CURRENT_PROFILE = {
-    "minecraft_version": "26.1.2",
-    "loader_version": "0.19.2",
-    "loom_version": "1.16.3",
-    "fabric_api_version": "0.149.0+26.1.2",
+    "minecraft_version": "26.2",
+    "loader_version": "0.19.3",
+    "loom_version": "1.17.11",
+    "fabric_api_version": "0.152.1+26.2",
     "java_version": "25",
-    "fabric_loader_range": ">=0.19.2",
+    "fabric_loader_range": ">=0.19.3",
     "status": "current",
     "notes": ["Current released target."],
 }
@@ -42,7 +42,8 @@ LEGACY_PROFILE = {
 }
 
 BRANCH_ACTIVE_PROFILES = {
-    "latest": "26.1.2",
+    "latest": "26.2",
+    "maintenance/minecraft-26.1.2": "26.1.2",
     "maintenance/minecraft-1.21.11": "1.21.11",
     "maintenance/minecraft-1.20.6": "1.20.6",
     "maintenance/minecraft-1.19.4": "1.19.4",
@@ -70,9 +71,18 @@ def write_profile_config(root: Path) -> None:
     (config / "minecraft-version-profiles.json").write_text(
         json.dumps(
             {
-                "active_profile": "26.1.2",
+                "active_profile": "26.2",
                 "profiles": {
-                    "26.1.2": CURRENT_PROFILE,
+                    "26.2": CURRENT_PROFILE,
+                    "26.1.2": {
+                        **CURRENT_PROFILE,
+                        "minecraft_version": "26.1.2",
+                        "loader_version": "0.19.2",
+                        "loom_version": "1.16.3",
+                        "fabric_api_version": "0.149.0+26.1.2",
+                        "fabric_loader_range": ">=0.19.2",
+                        "status": "maintenance",
+                    },
                     "1.21.1": LEGACY_PROFILE,
                 },
             },
@@ -86,16 +96,17 @@ def write_profile_config(root: Path) -> None:
 def write_gradle_properties(root: Path) -> None:
     (root / "gradle.properties").write_text(
         "# Fabric Properties\n"
-        "minecraft_version=26.1.2\n"
-        "loader_version=0.19.2\n"
-        "loom_version=1.16.3\n"
+        "minecraft_version=26.2\n"
+        "loader_version=0.19.3\n"
+        "loom_version=1.17.11\n"
+        "java_version=25\n"
         "\n"
         "# Mod Properties\n"
         "mod_version=1.4.0\n"
         "maven_group=dev.attuned\n"
         "\n"
         "# Dependencies\n"
-        "fabric_api_version=0.149.0+26.1.2\n"
+        "fabric_api_version=0.152.1+26.2\n"
         "custom.keep=this-line\n",
         encoding="utf-8",
     )
@@ -128,7 +139,8 @@ class MinecraftVersionProfileContractTest(unittest.TestCase):
 
         self.assertIn(minecraft_version_profile.load_profiles(ROOT)["active_profile"], profiles)
         expected = {
-            "26.1.2": "current",
+            "26.2": "current",
+            "26.1.2": "maintenance",
             "1.21.11": "maintenance",
             "1.20.6": "maintenance",
             "1.19.4": "maintenance",
@@ -148,10 +160,10 @@ class MinecraftVersionProfileContractTest(unittest.TestCase):
 
             self.assertTrue(result["changed"])
             self.assertEqual("1.21.1", result["profile"])
-            self.assertEqual("26.1.2", result["updates"]["minecraft_version"]["old"])
+            self.assertEqual("26.2", result["updates"]["minecraft_version"]["old"])
             self.assertEqual("1.21.1", result["updates"]["minecraft_version"]["new"])
             self.assertIn("custom.keep=this-line", (root / "gradle.properties").read_text(encoding="utf-8"))
-            self.assertIn("minecraft_version=26.1.2", (root / "gradle.properties").read_text(encoding="utf-8"))
+            self.assertIn("minecraft_version=26.2", (root / "gradle.properties").read_text(encoding="utf-8"))
 
     def test_apply_profile_updates_only_version_keys_and_preserves_comments(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -203,7 +215,7 @@ class MinecraftVersionProfileContractTest(unittest.TestCase):
 
             self.assertEqual(0, code)
             github_output = output.read_text(encoding="utf-8")
-            self.assertIn("minecraft_version=26.1.2", github_output)
+            self.assertIn("minecraft_version=26.2", github_output)
             self.assertIn("java_version=25", github_output)
             self.assertIn("build_java_version=25", github_output)
 

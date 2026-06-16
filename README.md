@@ -1,6 +1,6 @@
 # Attuned
 
-An accessory mod for **Minecraft 26.1.2** (Fabric).
+An accessory mod for **Minecraft 26.2** (Fabric).
 
 Equip **Foci** into six inventory slots, but mind your **attunement capacity**. Go over budget and your lowest-priority Foci go dormant. Builds are deliberate, not stacked.
 
@@ -21,12 +21,12 @@ Equip **Foci** into six inventory slots, but mind your **attunement capacity**. 
 - Lootr-friendly survival loot: every Focus and shard fragment rolls through vanilla structures, fishing treasure, archaeology, and trial rewards; wandering traders can rarely offer the journal or a shard fragment
 - Combat HUD shows your gem, your target's gem, and resonance at a glance
 
-## Current release — Attuned 1.5.1
+## Current release — Attuned 1.5.2
 
-- **Updraft Focus** — a new elytra utility Focus that boosts forward while holding jump and brakes hard while holding sprint/control.
-- **Smoother flight control** — Updraft thrust and braking ease velocity instead of snapping it, so long glides are calmer and easier to steer.
-- **Flight feedback** — boost, brake, and exhaustion states use restrained vanilla particles, sounds, and action-bar messages.
-- **PvP exhaustion safeguard** — sustained PvP pressure for more than five seconds makes Updraft falter briefly, applying a hard brake plus short Weakness and Slowness.
+- **Minecraft 26.2 Chaos Cubed support** — the `latest` line now targets Minecraft 26.2 with Fabric Loader 0.19.3+, Fabric API 0.152.1+26.2, Loom 1.17.11, and Gradle 9.5.1.
+- **26.2 runtime compatibility** — entity/knockback APIs, client render submit nodes, and screen/toast hooks have been updated so dedicated server and client runtimes launch cleanly.
+- **Preserved 26.1.2 line** — Minecraft 26.1.2 remains available on `maintenance/minecraft-26.1.2` while `latest` moves forward.
+- **Updraft Focus carried forward** — the 1.5.1 elytra utility Focus, smoother boost/brake controls, flight feedback, and PvP exhaustion safeguard are included.
 - **1.5.0 foundation** — Eightfold Affinities, Pact Trials, pact tacticals, Affinity Loom, build sharing, faction set bonuses, Resonant Surges, and expanded HUD/journal surfacing remain the core release base.
 
 ## Foundation — Resonant Depths
@@ -38,7 +38,7 @@ Equip **Foci** into six inventory slots, but mind your **attunement capacity**. 
 
 ## Requirements
 
-Minecraft 26.1.2, Fabric Loader 0.19.2+, Fabric API
+Minecraft 26.2, Fabric Loader 0.19.3+, Fabric API
 
 Lootr is optional but suggested for modpacks. Attuned does not add custom
 loot containers; it injects Foci and shard fragments into vanilla loot tables,

@@ -24,6 +24,7 @@ from __future__ import annotations
 
 import argparse
 import gzip
+import json
 import struct
 import sys
 from pathlib import Path
@@ -38,12 +39,10 @@ CHEST = "minecraft:chest"
 SIZE = (15, 8, 15)
 CENTER = (7, 7)  # centre column in X/Z for a 0..14 span
 
-DEFAULT_VANILLA = Path(
-    r"C:/Users/Eating/.gradle/caches/fabric-loom/26.1.2/minecraft-merged.jar"
-)
+ROOT = Path(__file__).resolve().parents[1]
 VANILLA_TEMPLATE_ENTRY = "data/minecraft/structure/igloo/top.nbt"
 DEFAULT_OUT = (
-    Path(__file__).resolve().parents[1]
+    ROOT
     / "src"
     / "main"
     / "resources"
@@ -52,6 +51,35 @@ DEFAULT_OUT = (
     / "structure"
     / "sanctum.nbt"
 )
+
+
+def active_minecraft_version(root: Path = ROOT) -> str:
+    profiles_path = root / "config" / "minecraft-version-profiles.json"
+    if profiles_path.is_file():
+        data = json.loads(profiles_path.read_text(encoding="utf-8"))
+        active = data["active_profile"]
+        return data["profiles"][active]["minecraft_version"]
+
+    for line in (root / "gradle.properties").read_text(encoding="utf-8").splitlines():
+        if line.startswith("minecraft_version="):
+            return line.split("=", 1)[1].strip()
+    raise ValueError("could not determine active Minecraft version")
+
+
+def default_vanilla_candidates(version: str, home: Path = Path.home()) -> list[Path]:
+    loom = home / ".gradle" / "caches" / "fabric-loom"
+    return [
+        loom / "minecraftMaven" / "net" / "minecraft" / "minecraft-common-deobf" / version
+            / f"minecraft-common-deobf-{version}.jar",
+        loom / "minecraftMaven" / "net" / "minecraft" / "minecraft-merged-deobf" / version
+            / f"minecraft-merged-deobf-{version}.jar",
+        loom / version / "minecraft-merged.jar",
+    ]
+
+
+def default_vanilla_path(root: Path = ROOT, home: Path = Path.home()) -> Path:
+    candidates = default_vanilla_candidates(active_minecraft_version(root), home)
+    return next((path for path in candidates if path.is_file()), candidates[0])
 
 
 # --- Minimal big-endian NBT writer (tag ids used: 1,3,8,9,10). ----------------
@@ -240,8 +268,8 @@ def main(argv=None) -> int:
     parser.add_argument(
         "--vanilla",
         type=Path,
-        default=DEFAULT_VANILLA,
-        help="vanilla .nbt template or merged jar to read DataVersion from",
+        default=default_vanilla_path(),
+        help="vanilla .nbt template or common/merged jar to read DataVersion from",
     )
     parser.add_argument(
         "--out",

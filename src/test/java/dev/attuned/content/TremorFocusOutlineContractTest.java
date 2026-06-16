@@ -18,8 +18,6 @@ class TremorFocusOutlineContractTest {
 		Path.of("src/main/java/dev/attuned/network/JournalNetworking.java");
 	private static final Path TREMOR_CLIENT =
 		Path.of("src/client/java/dev/attuned/client/TremorOreOutlines.java");
-	private static final Path TREMOR_RENDER_TYPES =
-		Path.of("src/client/java/dev/attuned/client/TremorOreRenderTypes.java");
 	private static final Path CLIENT_INIT =
 		Path.of("src/client/java/dev/attuned/client/AttunedClient.java");
 	private static final Path CLIENT_MIXINS =
@@ -63,7 +61,6 @@ class TremorFocusOutlineContractTest {
 	@Test
 	void clientRendersATimedWorldOutlineAroundTheOreBlock() throws IOException {
 		String source = read(TREMOR_CLIENT);
-		String renderTypes = read(TREMOR_RENDER_TYPES);
 		String init = read(CLIENT_INIT);
 		String mixins = read(CLIENT_MIXINS);
 
@@ -71,19 +68,13 @@ class TremorFocusOutlineContractTest {
 			"The client should receive Tremor ore hints.");
 		assertTrue(source.contains("LevelRenderEvents.END_MAIN.register"),
 			"The outline should render in the world render pass.");
-		assertTrue(source.contains("ShapeRenderer.renderShape"),
-			"The outline should be drawn around the ore block bounds.");
-		assertTrue(source.contains("TremorOreRenderTypes.oreOutline()"),
-			"Tremor should use its custom ore-outline render type.");
-		assertTrue(renderTypes.contains("RenderPipelines.LINES_TRANSLUCENT"),
+		assertTrue(source.contains("context.submitNodeCollector().submitShapeOutline"),
+			"The outline should be submitted around the ore block bounds.");
+		assertTrue(source.contains("RenderTypes.linesTranslucent()"),
 			"Tremor's outline should keep vanilla line rendering behavior.");
-		assertTrue(renderTypes.contains("new DepthStencilState(CompareOp.ALWAYS_PASS, false)"),
-			"Tremor's outline should render through surrounding stone without writing depth.");
-		assertTrue(renderTypes.contains("RenderTypeInvoker.attuned$create"),
-			"The custom render type should be created through the client mixin invoker.");
-		assertTrue(mixins.contains("\"RenderTypeInvoker\""),
-			"The RenderType invoker mixin should be registered on the client.");
-		assertTrue(source.contains("context.gameRenderer().getMainCamera().position()"),
+		assertTrue(!mixins.contains("\"RenderTypeInvoker\""),
+			"The 26.2 outline path should not rely on a private RenderType invoker mixin.");
+		assertTrue(source.contains("context.gameRenderer().mainCamera().position()"),
 			"The outline should be rendered relative to the active camera.");
 		assertTrue(source.contains("private static ClientLevel highlightedLevel"),
 			"Tremor should remember the client level that owns the current outline.");

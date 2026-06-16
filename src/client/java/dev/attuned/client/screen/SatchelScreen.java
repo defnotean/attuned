@@ -25,6 +25,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
+import net.minecraft.client.gui.components.toasts.SystemToast;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.renderer.RenderPipelines;
@@ -202,7 +203,7 @@ public class SatchelScreen extends AbstractContainerScreen<SatchelMenu> {
 			return;
 		}
 		minecraft.keyboardHandler.setClipboard(BuildShareCodec.encode(preset));
-		minecraft.gui.setOverlayMessage(Component.translatable("screen.attuned.preset.shared", preset.name()), false);
+		showPresetToast(minecraft, Component.translatable("screen.attuned.preset.shared", preset.name()));
 	}
 
 	private void importBuild() {
@@ -212,13 +213,21 @@ public class SatchelScreen extends AbstractContainerScreen<SatchelMenu> {
 		}
 		Optional<FocusPreset> decoded = BuildShareCodec.decode(minecraft.keyboardHandler.getClipboard());
 		if (decoded.isEmpty()) {
-			minecraft.gui.setOverlayMessage(Component.translatable("screen.attuned.preset.import_failed"), false);
+			showPresetToast(minecraft, Component.translatable("screen.attuned.preset.import_failed"));
 			return;
 		}
 		FocusPreset preset = decoded.get();
 		this.nameField.setValue(preset.name());
 		ClientPlayNetworking.send(new ImportPresetPayload(preset.name(), preset.slots()));
-		minecraft.gui.setOverlayMessage(Component.translatable("screen.attuned.preset.imported", preset.name()), false);
+		showPresetToast(minecraft, Component.translatable("screen.attuned.preset.imported", preset.name()));
+	}
+
+	private static void showPresetToast(Minecraft minecraft, Component message) {
+		SystemToast.addOrUpdate(
+			minecraft.gui.toastManager(),
+			SystemToast.SystemToastId.PERIODIC_NOTIFICATION,
+			Component.literal("Attuned"),
+			message);
 	}
 
 	@Override
