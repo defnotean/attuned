@@ -1,5 +1,12 @@
 # Changelog
 
+## Attuned 1.5.2+mc1.18.2 - Minecraft 1.18.2 Maintenance Build
+
+### Changed
+- Published a dedicated Minecraft 1.18.2 maintenance artifact using the verified compatibility branch.
+- Carries forward Attuned 1.5.1 Updraft Flight Polish and the 1.5.0 eightfold affinity, Pact, Apex, Confluence, and 95-Focus roster.
+- Release metadata targets Minecraft 1.18.2, Java 17, Fabric Loader 0.19.3, and Fabric API 0.77.0+1.18.2.
+
 ## Attuned 1.5.1 - Updraft Flight Polish
 
 ### Added
