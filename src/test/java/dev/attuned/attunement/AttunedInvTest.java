@@ -9,11 +9,18 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import dev.attuned.test.MinecraftTestBootstrap;
 import net.minecraft.world.item.ItemStack;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 class AttunedInvTest {
 	private static final Path SOURCE = Path.of("src/main/java/dev/attuned/attunement/AttunedInv.java");
+
+	@BeforeAll
+	static void bootstrapMinecraft() {
+		MinecraftTestBootstrap.ensureBootstrapped();
+	}
 
 	@Test
 	void publicConstructorNormalizesToSixSlots() {

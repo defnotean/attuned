@@ -1,5 +1,6 @@
 package dev.attuned.content;
 
+import dev.attuned.compat.PlayerMessages;
 import dev.attuned.network.OpenJournalPayload;
 import java.util.List;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
@@ -11,6 +12,7 @@ import net.minecraft.server.network.Filterable;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.WrittenBookItem;
 import net.minecraft.world.item.component.WrittenBookContent;
@@ -74,7 +76,7 @@ public class AttunementJournalItem extends WrittenBookItem {
 	}
 
 	@Override
-	public InteractionResult use(Level level, Player player, InteractionHand hand) {
+	public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
 		ItemStack stack = player.getItemInHand(hand);
 		if (!stack.has(DataComponents.WRITTEN_BOOK_CONTENT)) {
 			stack.set(DataComponents.WRITTEN_BOOK_CONTENT, GUIDE_CONTENT);
@@ -82,14 +84,14 @@ public class AttunementJournalItem extends WrittenBookItem {
 		if (!level.isClientSide() && player instanceof ServerPlayer serverPlayer) {
 			ServerPlayNetworking.send(serverPlayer, new OpenJournalPayload());
 		}
-		return InteractionResult.SUCCESS;
+		return InteractionResultHolder.sidedSuccess(stack, level.isClientSide());
 	}
 
 	public static void showGuide(Player player) {
-		player.sendSystemMessage(Component.translatable("journal.attuned.title")
+		PlayerMessages.system(player, Component.translatable("journal.attuned.title")
 			.withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD));
 		for (int i = 1; i <= 8; i++) {
-			player.sendSystemMessage(Component.translatable("journal.attuned.line" + i)
+			PlayerMessages.system(player, Component.translatable("journal.attuned.line" + i)
 				.withStyle(ChatFormatting.GRAY));
 		}
 	}

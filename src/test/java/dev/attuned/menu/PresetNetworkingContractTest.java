@@ -38,7 +38,7 @@ class PresetNetworkingContractTest {
 	void presetNetworkingIsIdempotentServerAuthoritativeAndUsesTheResolver() throws IOException {
 		String net = read(NET);
 		assertTrue(net.contains("private static boolean initialized;"), "Idempotent init.");
-		assertBefore(net, "initialized = true;", "PayloadTypeRegistry.serverboundPlay().register");
+		assertBefore(net, "initialized = true;", serverboundRegistrationNeedle(net));
 		assertTrue(net.contains("ServerPlayNetworking.registerGlobalReceiver(SavePresetPayload.TYPE"), "Save receiver.");
 		assertTrue(net.contains("ServerPlayNetworking.registerGlobalReceiver(ApplyPresetPayload.TYPE"), "Apply receiver.");
 		assertTrue(net.contains("ServerPlayNetworking.registerGlobalReceiver(DeletePresetPayload.TYPE"), "Delete receiver.");
@@ -68,7 +68,8 @@ class PresetNetworkingContractTest {
 	@Test
 	void applyAndSaveResolveAgainstTheRegistryAndPreserveAvailableStacks() throws IOException {
 		String net = read(NET);
-		assertTrue(net.contains("lookupOrThrow(AttunedRegistries.FOCUS_DEFINITIONS)"),
+		assertTrue(net.contains("lookupOrThrow(AttunedRegistries.FOCUS_DEFINITIONS)")
+				|| net.contains("registryOrThrow(AttunedRegistries.FOCUS_DEFINITIONS)"),
 			"Apply must resolve focus ids against the world registry server-side.");
 		assertTrue(net.contains("SatchelState satchel = satchelState(player);"),
 			"Apply should preserve stored satchel stacks even when a Focus definition failed to load.");
@@ -154,6 +155,12 @@ class PresetNetworkingContractTest {
 		int e = source.indexOf(earlier);
 		int l = source.indexOf(later);
 		assertTrue(e >= 0 && l >= 0 && e < l, "Expected " + earlier + " before " + later);
+	}
+
+	private static String serverboundRegistrationNeedle(String source) {
+		return source.contains("PayloadTypeRegistry.serverboundPlay().register")
+			? "PayloadTypeRegistry.serverboundPlay().register"
+			: "PayloadTypeRegistry.playC2S().register";
 	}
 
 	private static int countOccurrences(String source, String needle) {

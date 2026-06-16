@@ -59,7 +59,7 @@ class SynergiesRuntimeContractTest {
 		assertTrue(tickPlayer.contains("BuiltInRegistries.ITEM.getKey("),
 			"tickPlayer must key Foci by item id.");
 		assertTrue(tickPlayer.contains(".value()).toString()"),
-			"The Identifier->String bridge is load-bearing: members compare as Strings.");
+			"The ResourceLocation->String bridge is load-bearing: members compare as Strings.");
 		assertTrue(tickPlayer.contains("SynergyResolver.activeConfluences("),
 			"tickPlayer must delegate activation to the pure resolver.");
 	}
@@ -75,8 +75,8 @@ class SynergiesRuntimeContractTest {
 	@Test
 	void modifierIdIsStablePerConfluence() throws IOException {
 		String synergies = read(SYNERGIES);
-		String modifierId = methodBody(synergies, "private static Identifier modifierId(");
-		assertTrue(modifierId.contains("Identifier.fromNamespaceAndPath(Attuned.MOD_ID, \"confluence_\""),
+		String modifierId = methodBody(synergies, "private static ResourceLocation modifierId(");
+		assertTrue(modifierId.contains("new ResourceLocation(Attuned.MOD_ID, \"confluence_\""),
 			"Confluence modifier ids use a stable confluence_ prefixed namespace path.");
 	}
 
@@ -85,7 +85,8 @@ class SynergiesRuntimeContractTest {
 		String synergies = read(SYNERGIES);
 		assertTrue(synergies.contains("addTransientModifier("),
 			"Active Confluences apply their modifiers transiently.");
-		assertTrue(synergies.contains("removeModifier(modifierId("),
+		assertTrue(synergies.contains("removeModifier(modifierId(")
+				|| synergies.contains("removeModifier(AttributeModifierIds.uuid(modifierId("),
 			"Dropped Confluences remove their modifiers by the same stable id.");
 	}
 
@@ -141,7 +142,8 @@ class SynergiesRuntimeContractTest {
 		assertBefore(synergies, "sawOnboarding(player", "markOnboarding(player");
 		assertTrue(synergies.contains("AttunedAttachments.markConfluenceDiscovered("),
 			"First-discovery fanfare must record the discovery for the journal.");
-		assertTrue(synergies.contains("sendOverlayMessage(discovery)"),
+		assertTrue(synergies.contains("sendOverlayMessage(discovery)")
+				|| synergies.contains("PlayerMessages.overlay(player, discovery)"),
 			"First-discovery fanfare should surface an overlay in addition to chat.");
 		assertTrue(synergies.contains("ParticleTypes.ENCHANT"),
 			"First-discovery fanfare should add a lightweight particle burst.");

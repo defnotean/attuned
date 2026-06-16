@@ -1,18 +1,18 @@
 {
-	"item": "attuned:saltbrand_focus",
-	"cost": 5,
-	"unique": true,
-	"affinity": "tide",
-	"modifiers": [
-		{
-			"attribute": "minecraft:attack_damage",
-			"amount": 4.0,
-			"operation": "add_value"
-		},
-		{
-			"attribute": "minecraft:armor_toughness",
-			"amount": 2.0,
-			"operation": "add_value"
-		}
-	]
+    "item":  "attuned:saltbrand_focus",
+    "cost":  5,
+    "unique":  true,
+    "affinity":  "tide",
+    "modifiers":  [
+                      {
+                          "attribute":  "minecraft:generic.attack_damage",
+                          "amount":  4.0,
+                          "operation":  "add_value"
+                      },
+                      {
+                          "attribute":  "minecraft:generic.armor_toughness",
+                          "amount":  2.0,
+                          "operation":  "add_value"
+                      }
+                  ]
 }

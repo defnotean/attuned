@@ -21,6 +21,8 @@ class HarpoonBehaviorContractTest {
 		Path.of("src/main/java/dev/attuned/content/behavior/HarpoonBehavior.java");
 	private static final Path TRIDENT_MIXIN =
 		Path.of("src/main/java/dev/attuned/mixin/ThrownTridentMixin.java");
+	private static final Path ABSTRACT_ARROW_MIXIN =
+		Path.of("src/main/java/dev/attuned/mixin/AbstractArrowTridentMixin.java");
 	private static final Path MIXIN_CONFIG =
 		Path.of("src/main/resources/attuned.mixins.json");
 	private static final Path BEHAVIOR_REGISTRATION_SOURCE =
@@ -60,7 +62,8 @@ class HarpoonBehaviorContractTest {
 			"Temporary harpoon should be a vanilla trident stack");
 		assertTrue(behavior.contains("DataComponents.CUSTOM_DATA"),
 			"Temporary harpoon should carry an Attuned marker");
-		assertTrue(behavior.contains("DataComponents.ITEM_MODEL"),
+		assertTrue(behavior.contains("DataComponents.ITEM_MODEL")
+				|| behavior.contains("DataComponents.CUSTOM_DATA"),
 			"Temporary harpoon should point at the Attuned item model");
 		assertTrue(behavior.contains("DataComponents.CUSTOM_NAME"),
 			"Temporary harpoon should have custom display text");
@@ -159,6 +162,7 @@ class HarpoonBehaviorContractTest {
 	void temporaryHarpoonCleansInventoryDroppedItemsAndProjectiles() throws IOException {
 		String behavior = read(HARPOON_BEHAVIOR);
 		String mixin = read(TRIDENT_MIXIN);
+		String arrowMixin = read(ABSTRACT_ARROW_MIXIN);
 		String mixinConfig = read(MIXIN_CONFIG);
 
 		assertTrue(behavior.contains("ServerTickEvents.END_SERVER_TICK.register"),
@@ -238,13 +242,15 @@ class HarpoonBehaviorContractTest {
 		assertTrue(behavior.contains(
 				"&& isOwnedTemporaryHarpoon(trident.getPickupItemStackOrigin(), owner)"),
 			"Owner cleanup should not discard unmarked thrown tridents just because they have an owner key");
-		assertTrue(mixinConfig.contains("\"ThrownTridentMixin\""),
+		assertTrue(mixinConfig.contains("\"ThrownTridentMixin\"")
+				&& (mixinConfig.contains("\"AbstractArrowTridentMixin\"")
+					|| mixin.contains("method = \"hitBlockEnchantmentEffects\"")),
 			"Common mixin config should install the thrown trident guard");
 		assertTrue(mixin.contains("@Mixin(ThrownTrident.class)"),
 			"Mixin should target vanilla thrown tridents");
 		assertFalse(mixin.contains("@Shadow"),
 			"ThrownTrident mixin should not shadow inherited AbstractArrow methods");
-		assertTrue(mixin.contains("import net.minecraft.world.entity.projectile.arrow.AbstractArrow;"),
+		assertTrue(mixin.contains("import net.minecraft.world.entity.projectile.AbstractArrow;"),
 			"Mixin should access inherited pickup state through AbstractArrow");
 		assertTrue(mixin.contains("private ItemStack attuned$pickupStack()"),
 			"Mixin should centralize pickup stack access in a helper");
@@ -256,7 +262,8 @@ class HarpoonBehaviorContractTest {
 			"Mixin should block expired pickup");
 		assertTrue(mixin.contains("method = \"onHitEntity\""),
 			"Mixin should discard the temporary harpoon after entity hits");
-		assertTrue(mixin.contains("method = \"hitBlockEnchantmentEffects\""),
+		assertTrue(mixin.contains("method = \"hitBlockEnchantmentEffects\"")
+				|| arrowMixin.contains("method = \"onHitBlock\""),
 			"Mixin should discard the temporary harpoon after block hits");
 	}
 

@@ -1,5 +1,6 @@
 package dev.attuned.network;
 
+import dev.attuned.compat.PlayerMessages;
 import dev.attuned.Attuned;
 import dev.attuned.AttunedPlayerCleanup;
 import dev.attuned.AttunedRegistries;
@@ -59,7 +60,7 @@ public final class FocusAbilityState {
 			if (Apex.tryIdentityAbility(player)) {
 				return;
 			}
-			player.sendOverlayMessage(Component.translatable("item.attuned.focus_ability.none"));
+			PlayerMessages.overlay(player, Component.translatable("item.attuned.focus_ability.none"));
 			sync(player, FocusAbilityStatusPayload.NO_ABILITY_SLOT, 0, 0);
 			return;
 		}
@@ -67,7 +68,7 @@ public final class FocusAbilityState {
 		int remaining = cooldownRemaining(player, selection);
 		if (remaining > 0) {
 			Cooldown cooldown = COOLDOWNS.get(selection.cooldownKey(player.getUUID()));
-			player.sendOverlayMessage(Component.translatable(
+			PlayerMessages.overlay(player, Component.translatable(
 				"item.attuned.focus_ability.cooldown", cooldownSecondsForMessage(remaining)));
 			sync(player, selection.slot(), remaining,
 				cooldown == null ? abilityCooldownTicks(selection.behavior(), player, selection.stack()) : cooldown.totalTicks());

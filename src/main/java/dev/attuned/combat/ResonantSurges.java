@@ -1,5 +1,6 @@
 package dev.attuned.combat;
 
+import dev.attuned.compat.PlayerMessages;
 import dev.attuned.AttunedConfig;
 import dev.attuned.AttunedServerCleanup;
 import dev.attuned.content.AttunedContent;
@@ -123,7 +124,7 @@ public final class ResonantSurges {
 			return;
 		}
 		ServerPlayer anchor = candidates.get(anchor(candidates).nextInt(candidates.size()));
-		ServerLevel level = anchor.level();
+		ServerLevel level = (ServerLevel) anchor.level();
 		RandomSource random = anchor.getRandom();
 		int offsetX = signedOffset(random);
 		int offsetZ = signedOffset(random);
@@ -167,13 +168,13 @@ public final class ResonantSurges {
 		int count = 1 + player.getRandom().nextInt(2);
 		ItemStack stack = new ItemStack(AttunedContent.ATTUNEMENT_SHARD_FRAGMENT, count);
 		if (player.getInventory().add(stack)) {
-			player.sendOverlayMessage(Component.translatable("surge.attuned.kill_reward", count));
+			PlayerMessages.overlay(player, Component.translatable("surge.attuned.kill_reward", count));
 			return;
 		}
 		ItemEntity drop = new ItemEntity(player.level(), player.getX(), player.getY() + 0.5, player.getZ(), stack);
 		drop.setDefaultPickUpDelay();
 		player.level().addFreshEntity(drop);
-		player.sendOverlayMessage(Component.translatable("surge.attuned.kill_reward", count));
+		PlayerMessages.overlay(player, Component.translatable("surge.attuned.kill_reward", count));
 	}
 
 	/** Grants resonance and emits feedback while a surge is live; ends it on expiry. */
@@ -196,7 +197,7 @@ public final class ResonantSurges {
 				continue;
 			}
 			if (expired) {
-				player.sendOverlayMessage(Component.translatable("surge.attuned.faded"));
+				PlayerMessages.overlay(player, Component.translatable("surge.attuned.faded"));
 			} else {
 				Resonance.grantSurge(player, surgeResonanceGain(player, gain));
 				if (player instanceof ServerPlayer serverPlayer) {
@@ -219,7 +220,7 @@ public final class ResonantSurges {
 	private static void broadcastSurgeStart(ServerLevel level, BlockPos site) {
 		level.playSound(null, site, SoundEvents.BEACON_ACTIVATE, SoundSource.BLOCKS, 1.2F, 1.0F);
 		for (ServerPlayer player : level.players()) {
-			player.sendOverlayMessage(surgeStartedMessage(site, player));
+			PlayerMessages.overlay(player, surgeStartedMessage(site, player));
 		}
 	}
 
@@ -246,7 +247,7 @@ public final class ResonantSurges {
 			monster -> monster.isAlive() && monster.getTarget() == null);
 		for (Monster monster : monsters) {
 			monster.addEffect(new MobEffectInstance(
-				MobEffects.SPEED, MOB_LURE_SPEED_TICKS, 0, true, false, false));
+				MobEffects.MOVEMENT_SPEED, MOB_LURE_SPEED_TICKS, 0, true, false, false));
 			monster.getNavigation().moveTo(centerX, centerY, centerZ, 1.0);
 			Vec3 delta = new Vec3(centerX - monster.getX(), 0.0, centerZ - monster.getZ());
 			if (delta.lengthSqr() > 1.0E-4) {

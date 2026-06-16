@@ -1,8 +1,10 @@
 package dev.attuned.content.behavior;
 
+import dev.attuned.compat.AttributeModifierIds;
+
 import dev.attuned.Attuned;
 import dev.attuned.api.focus.FocusBehavior;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
@@ -16,8 +18,8 @@ import net.minecraft.world.level.block.state.properties.BlockStateProperties;
  * Rainstep Focus: a modest movement boost while the wearer is in wet conditions.
  */
 public final class RainstepBehavior implements FocusBehavior {
-	private static final Identifier WET_SPEED_ID =
-		Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "rainstep_focus_wet_speed");
+	private static final ResourceLocation WET_SPEED_ID =
+		new ResourceLocation(Attuned.MOD_ID, "rainstep_focus_wet_speed");
 	private static final double WET_SPEED = 0.12;
 
 	@Override
@@ -46,17 +48,16 @@ public final class RainstepBehavior implements FocusBehavior {
 
 	private static void apply(ServerPlayer player) {
 		AttributeInstance attribute = player.getAttribute(Attributes.MOVEMENT_SPEED);
-		if (attribute == null || attribute.getModifier(WET_SPEED_ID) != null) {
+		if (attribute == null || attribute.getModifier(AttributeModifierIds.uuid(WET_SPEED_ID)) != null) {
 			return;
 		}
-		attribute.addTransientModifier(new AttributeModifier(
-			WET_SPEED_ID, WET_SPEED, AttributeModifier.Operation.ADD_MULTIPLIED_BASE));
+		attribute.addTransientModifier(new AttributeModifier(AttributeModifierIds.uuid(WET_SPEED_ID), AttributeModifierIds.name(WET_SPEED_ID), WET_SPEED, AttributeModifier.Operation.ADD_MULTIPLIED_BASE));
 	}
 
 	private static void remove(ServerPlayer player) {
 		AttributeInstance attribute = player.getAttribute(Attributes.MOVEMENT_SPEED);
 		if (attribute != null) {
-			attribute.removeModifier(WET_SPEED_ID);
+			attribute.removeModifier(AttributeModifierIds.uuid(WET_SPEED_ID));
 		}
 	}
 }

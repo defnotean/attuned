@@ -6,7 +6,7 @@ import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 
 /** Server-to-client state for the player's selected Focus Ability and cooldown. */
 public record FocusAbilityStatusPayload(int slot, int remainingTicks, int totalTicks) implements CustomPacketPayload {
@@ -29,7 +29,7 @@ public record FocusAbilityStatusPayload(int slot, int remainingTicks, int totalT
 	}
 
 	public static final Type<FocusAbilityStatusPayload> TYPE =
-		new Type<>(Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "focus_ability_status"));
+		new Type<>(new ResourceLocation(Attuned.MOD_ID, "focus_ability_status"));
 
 	public static final StreamCodec<RegistryFriendlyByteBuf, FocusAbilityStatusPayload> CODEC =
 		StreamCodec.composite(

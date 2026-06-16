@@ -18,10 +18,10 @@ import net.minecraft.core.GlobalPos;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
-import net.minecraft.world.entity.vehicle.boat.AbstractBoat;
+import net.minecraft.world.entity.vehicle.Boat;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.component.LodestoneTracker;
@@ -31,10 +31,10 @@ import net.minecraft.world.item.component.LodestoneTracker;
  * boating return point, then restore cleanly when the Focus deactivates.
  */
 public final class DriftglassBehavior implements FocusBehavior {
-	private static final Identifier BEACON_FOCUS =
-		Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "beacon_focus");
-	private static final Identifier WAYSTONE_FOCUS =
-		Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "waystone_focus");
+	private static final ResourceLocation BEACON_FOCUS =
+		new ResourceLocation(Attuned.MOD_ID, "beacon_focus");
+	private static final ResourceLocation WAYSTONE_FOCUS =
+		new ResourceLocation(Attuned.MOD_ID, "waystone_focus");
 	private static final Component DRIFTGLASS_COMPASS_NAME =
 		Component.translatable("item.attuned.driftglass_compass");
 
@@ -55,7 +55,7 @@ public final class DriftglassBehavior implements FocusBehavior {
 			restorePlayer(player);
 			return;
 		}
-		if (player.getVehicle() instanceof AbstractBoat || player.fishing != null) {
+		if (player.getVehicle() instanceof Boat || player.fishing != null) {
 			points.put(player.getUUID(), GlobalPos.of(player.level().dimension(), player.blockPosition()));
 		}
 		GlobalPos point = points.get(player.getUUID());
@@ -79,14 +79,14 @@ public final class DriftglassBehavior implements FocusBehavior {
 	}
 
 	private static boolean hasHigherPriorityCompassFocus(ServerPlayer player) {
-		boolean beaconCanTrack = player.getRespawnConfig() != null;
+		boolean beaconCanTrack = player.getRespawnPosition() != null;
 		boolean waystoneCanTrack = player.getLastDeathLocation().isPresent();
 		if (!beaconCanTrack && !waystoneCanTrack) {
 			return false;
 		}
 		AttunedInv inv = AttunedAttachments.getInventory(player);
 		for (int slot : Attunement.activeSlots(player)) {
-			Identifier id = BuiltInRegistries.ITEM.getKey(inv.get(slot).getItem());
+			ResourceLocation id = BuiltInRegistries.ITEM.getKey(inv.get(slot).getItem());
 			if (beaconCanTrack && BEACON_FOCUS.equals(id)) {
 				return true;
 			}

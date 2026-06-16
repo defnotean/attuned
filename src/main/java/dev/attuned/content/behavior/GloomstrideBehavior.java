@@ -1,9 +1,11 @@
 package dev.attuned.content.behavior;
 
+import dev.attuned.compat.AttributeModifierIds;
+
 import dev.attuned.Attuned;
 import dev.attuned.api.focus.FocusCondition;
 import dev.attuned.api.focus.FocusBehavior;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
@@ -18,8 +20,8 @@ import net.minecraft.world.item.ItemStack;
  * so unequipping in darkness never strands the bonus.
  */
 public final class GloomstrideBehavior implements FocusBehavior {
-	private static final Identifier GLOOM_SPEED_ID =
-		Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "gloomstride_focus_dark_speed");
+	private static final ResourceLocation GLOOM_SPEED_ID =
+		new ResourceLocation(Attuned.MOD_ID, "gloomstride_focus_dark_speed");
 	private static final double GLOOM_SPEED = 0.15;
 	/** Light level at or below which the gloom takes hold. */
 	private static final int MAX_LIGHT = 7;
@@ -40,17 +42,16 @@ public final class GloomstrideBehavior implements FocusBehavior {
 
 	private static void apply(ServerPlayer player) {
 		AttributeInstance attribute = player.getAttribute(Attributes.MOVEMENT_SPEED);
-		if (attribute == null || attribute.getModifier(GLOOM_SPEED_ID) != null) {
+		if (attribute == null || attribute.getModifier(AttributeModifierIds.uuid(GLOOM_SPEED_ID)) != null) {
 			return;
 		}
-		attribute.addTransientModifier(new AttributeModifier(
-			GLOOM_SPEED_ID, GLOOM_SPEED, AttributeModifier.Operation.ADD_MULTIPLIED_BASE));
+		attribute.addTransientModifier(new AttributeModifier(AttributeModifierIds.uuid(GLOOM_SPEED_ID), AttributeModifierIds.name(GLOOM_SPEED_ID), GLOOM_SPEED, AttributeModifier.Operation.ADD_MULTIPLIED_BASE));
 	}
 
 	private static void remove(ServerPlayer player) {
 		AttributeInstance attribute = player.getAttribute(Attributes.MOVEMENT_SPEED);
 		if (attribute != null) {
-			attribute.removeModifier(GLOOM_SPEED_ID);
+			attribute.removeModifier(AttributeModifierIds.uuid(GLOOM_SPEED_ID));
 		}
 	}
 

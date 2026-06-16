@@ -25,8 +25,9 @@ class CombatContextSourceContractTest {
 	@Test
 	void hurtMixinBuildsOneContextAndPassesItThroughDamageStages() throws IOException {
 		String source = read(MIXIN_SOURCE);
-		String adjustDamage = methodBody(source,
-			"private float attuned$adjustDamage(float amount, ServerLevel level, DamageSource source)");
+		String adjustDamage = methodBodyAny(source,
+			"private float attuned$adjustDamage(float amount, ServerLevel level, DamageSource source)",
+			"private float attuned$adjustDamage(float amount, DamageSource source)");
 
 		assertEquals(1, countOccurrences(adjustDamage, "CombatContext.of(self, source)"),
 			"One hurt event should build one shared combat context.");
@@ -53,7 +54,7 @@ class CombatContextSourceContractTest {
 			"Player state should reuse active slots from the shared resolution.");
 		assertTrue(playerState.contains("EnumMap<Affinity, Integer> activeAffinityCounts"),
 			"Player state should expose active affinity counts for Pact resolution.");
-		assertTrue(playerState.contains("Set<Identifier> activeFocusIds"),
+		assertTrue(playerState.contains("Set<ResourceLocation> activeFocusIds"),
 			"Player state should expose active Focus item ids for active-Focus checks.");
 		assertEquals(0, countOccurrences(playerState, "Attunement.activeSlots(player)"),
 			"Player state should not use active-slot convenience helpers.");
@@ -120,6 +121,7 @@ class CombatContextSourceContractTest {
 	}
 
 	private static String methodBody(String source, String signaturePrefix) {
+		source = source.replace("\r\n", "\n").replace('\r', '\n');
 		int signatureStart = source.indexOf(signaturePrefix);
 		assertTrue(signatureStart >= 0, "Missing method signature: " + signaturePrefix);
 		int bodyStart = source.indexOf('{', signatureStart);
@@ -137,6 +139,15 @@ class CombatContextSourceContractTest {
 			}
 		}
 		throw new AssertionError("Unterminated method body: " + signaturePrefix);
+	}
+
+	private static String methodBodyAny(String source, String... signaturePrefixes) {
+		for (String signaturePrefix : signaturePrefixes) {
+			if (source.contains(signaturePrefix)) {
+				return methodBody(source, signaturePrefix);
+			}
+		}
+		throw new AssertionError("Missing method signature: " + String.join(" or ", signaturePrefixes));
 	}
 
 	private static int countOccurrences(String value, String needle) {

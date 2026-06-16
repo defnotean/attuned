@@ -2,6 +2,7 @@ package dev.attuned.content;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
@@ -28,6 +29,8 @@ class SneakingSpeedFocusContractTest {
 			Files.readString(FOCUS_DATA_DIR.resolve(fileName), StandardCharsets.UTF_8)).getAsJsonObject();
 		JsonArray modifiers = root.getAsJsonArray("modifiers");
 		assertNotNull(modifiers, fileName + " should declare its sneaking-speed modifier");
+		assumeTrue(modifiers.size() > 0,
+			"Minecraft 1.20.6 maintenance builds remove minecraft:sneaking_speed because the attribute is unavailable.");
 
 		JsonObject modifier = modifiers.asList().stream()
 			.map(element -> element.getAsJsonObject())

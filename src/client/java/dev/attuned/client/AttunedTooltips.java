@@ -20,7 +20,7 @@ import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
@@ -48,7 +48,7 @@ public final class AttunedTooltips {
 		initialized = true;
 
 		ItemTooltipCallback.EVENT.register((stack, context, type, lines) -> {
-			Identifier id = BuiltInRegistries.ITEM.getKey(stack.getItem());
+			ResourceLocation id = BuiltInRegistries.ITEM.getKey(stack.getItem());
 			if (id == null || !id.getNamespace().equals(Attuned.MOD_ID)) {
 				return;
 			}
@@ -152,7 +152,7 @@ public final class AttunedTooltips {
 			return null;
 		}
 		Registry<FocusDefinition> registry =
-			minecraft.level.registryAccess().lookupOrThrow(AttunedRegistries.FOCUS_DEFINITIONS);
+			minecraft.level.registryAccess().registryOrThrow(AttunedRegistries.FOCUS_DEFINITIONS);
 		return FocusLookup.forItem(registry, stack.getItem()).orElse(null);
 	}
 
@@ -168,7 +168,7 @@ public final class AttunedTooltips {
 			return false;
 		}
 		Registry<FocusDefinition> focusRegistry =
-			minecraft.level.registryAccess().lookupOrThrow(AttunedRegistries.FOCUS_DEFINITIONS);
+			minecraft.level.registryAccess().registryOrThrow(AttunedRegistries.FOCUS_DEFINITIONS);
 		FocusDefinition focus = FocusLookup.forItem(focusRegistry, stack.getItem()).orElse(null);
 		if (focus == null) {
 			return false;
@@ -179,12 +179,11 @@ public final class AttunedTooltips {
 		Set<String> discovered = new HashSet<>(AttunedAttachments.getDiscoveredConfluences(player));
 
 		Registry<SynergyDefinition> synergyRegistry =
-			minecraft.level.registryAccess().lookupOrThrow(AttunedRegistries.SYNERGY_DEFINITIONS);
+			minecraft.level.registryAccess().registryOrThrow(AttunedRegistries.SYNERGY_DEFINITIONS);
 		List<SynergyResolver.SynergyDef> defs = new ArrayList<>();
-		synergyRegistry.listElements().forEach(holder -> {
-			SynergyDefinition def = holder.value();
+		synergyRegistry.stream().forEach(def -> {
 			String id = synergyRegistry.getKey(def).toString();
-			List<String> members = def.members().stream().map(Identifier::toString).toList();
+			List<String> members = def.members().stream().map(ResourceLocation::toString).toList();
 			defs.add(new SynergyResolver.SynergyDef(id, members));
 		});
 
@@ -252,14 +251,19 @@ public final class AttunedTooltips {
 	}
 
 	private static MutableComponent modifierSummary(ModifierEntry modifier) {
-		Identifier attributeId = modifier.attribute().unwrapKey()
-			.map(key -> key.identifier())
+		ResourceLocation attributeId = modifier.attribute().unwrapKey()
+			.map(key -> key.location())
 			.orElseGet(() -> BuiltInRegistries.ATTRIBUTE.getKey(modifier.attribute().value()));
-		String attributePath = attributeId.getPath();
+		String attributePath = tooltipAttributePath(attributeId.getPath());
 		MutableComponent attributeName = Component.translatableWithFallback(
 			"tooltip.attuned.modifier.attribute." + attributePath, humanize(attributePath));
 		return Component.translatable("tooltip.attuned.modifier.line",
 			modifierAmount(attributePath, modifier.amount(), modifier.operation()), attributeName);
+	}
+
+	private static String tooltipAttributePath(String path) {
+		int dot = path.indexOf('.');
+		return dot >= 0 ? path.substring(dot + 1) : path;
 	}
 
 	private static String modifierAmount(String attributePath, double amount, AttributeModifier.Operation operation) {

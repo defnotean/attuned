@@ -44,9 +44,11 @@ class HudLayoutContractTest {
 		String hud = read(FOCI_HUD);
 		assertTrue(hud.contains("HudAnchor.layout()"),
 			"The Foci HUD should read the configured layout.");
-		assertTrue(hud.contains("graphics.pose().pushMatrix()") && hud.contains("graphics.pose().scale(scale, scale)"),
+		assertTrue((hud.contains("graphics.pose().pushMatrix()") && hud.contains("graphics.pose().scale(scale, scale)"))
+				|| (hud.contains("graphics.pose().pushPose()") && hud.contains("graphics.pose().scale(scale, scale, 1.0F)")),
 			"A non-default scale should wrap the draw in a pose scale.");
-		assertTrue(hud.contains("graphics.pose().popMatrix()"),
+		assertTrue(hud.contains("graphics.pose().popMatrix()")
+				|| hud.contains("graphics.pose().popPose()"),
 			"The scale transform must be popped after the draw.");
 		assertTrue(hud.contains("Math.round(graphics.guiWidth() / scale)"),
 			"Scaled drawing must position in scaled coordinate space so the anchored corner stays put.");

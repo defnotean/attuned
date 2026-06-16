@@ -1,8 +1,10 @@
 package dev.attuned.content.behavior;
 
+import dev.attuned.compat.AttributeModifierIds;
+
 import dev.attuned.Attuned;
 import dev.attuned.api.focus.FocusBehavior;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
@@ -13,8 +15,8 @@ import net.minecraft.world.level.block.state.BlockState;
 
 /** Rivet Focus: grounded knockback resistance while braced or standing on metal. */
 public final class RivetBehavior implements FocusBehavior {
-	private static final Identifier BRACED_ID =
-		Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "rivet_focus_braced");
+	private static final ResourceLocation BRACED_ID =
+		new ResourceLocation(Attuned.MOD_ID, "rivet_focus_braced");
 	private static final double KNOCKBACK_RESISTANCE = 0.15D;
 
 	@Override
@@ -47,17 +49,16 @@ public final class RivetBehavior implements FocusBehavior {
 
 	private static void apply(ServerPlayer player) {
 		AttributeInstance attribute = player.getAttribute(Attributes.KNOCKBACK_RESISTANCE);
-		if (attribute == null || attribute.getModifier(BRACED_ID) != null) {
+		if (attribute == null || attribute.getModifier(AttributeModifierIds.uuid(BRACED_ID)) != null) {
 			return;
 		}
-		attribute.addTransientModifier(new AttributeModifier(
-			BRACED_ID, KNOCKBACK_RESISTANCE, AttributeModifier.Operation.ADD_VALUE));
+		attribute.addTransientModifier(new AttributeModifier(AttributeModifierIds.uuid(BRACED_ID), AttributeModifierIds.name(BRACED_ID), KNOCKBACK_RESISTANCE, AttributeModifier.Operation.ADD_VALUE));
 	}
 
 	private static void remove(ServerPlayer player) {
 		AttributeInstance attribute = player.getAttribute(Attributes.KNOCKBACK_RESISTANCE);
 		if (attribute != null) {
-			attribute.removeModifier(BRACED_ID);
+			attribute.removeModifier(AttributeModifierIds.uuid(BRACED_ID));
 		}
 	}
 }

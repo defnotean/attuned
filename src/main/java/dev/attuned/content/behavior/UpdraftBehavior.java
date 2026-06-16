@@ -1,5 +1,6 @@
 package dev.attuned.content.behavior;
 
+import dev.attuned.compat.PlayerMessages;
 import dev.attuned.AttunedPlayerCleanup;
 import dev.attuned.AttunedServerCleanup;
 import dev.attuned.api.focus.FocusBehavior;
@@ -165,7 +166,7 @@ public final class UpdraftBehavior implements FocusBehavior {
 		if (controls != null) {
 			return controls;
 		}
-		return new Controls(player.getLastClientInput().jump(), false);
+		return new Controls(false, false);
 	}
 
 	public static void applyFlightControls(ServerPlayer player, Controls controls) {
@@ -318,9 +319,9 @@ public final class UpdraftBehavior implements FocusBehavior {
 		}
 		player.addEffect(new MobEffectInstance(MobEffects.WEAKNESS,
 			EXHAUSTION_DEBUFF_TICKS, 0, true, true, true));
-		player.addEffect(new MobEffectInstance(MobEffects.SLOWNESS,
+		player.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN,
 			EXHAUSTION_DEBUFF_TICKS, 0, true, true, true));
-		player.sendOverlayMessage(Component.translatable(
+		PlayerMessages.overlay(player, Component.translatable(
 			"item.attuned.updraft_focus.exhausted"));
 		if (player.level() instanceof ServerLevel level) {
 			Vec3 at = player.position().add(0.0D, player.getBbHeight() * 0.55D, 0.0D);

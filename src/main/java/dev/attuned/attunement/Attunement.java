@@ -57,7 +57,7 @@ public final class Attunement {
 			return Optional.empty();
 		}
 		Registry<FocusDefinition> registry =
-			player.level().registryAccess().lookupOrThrow(AttunedRegistries.FOCUS_DEFINITIONS);
+			player.level().registryAccess().registryOrThrow(AttunedRegistries.FOCUS_DEFINITIONS);
 		return FocusLookup.forItem(registry, stack.getItem());
 	}
 

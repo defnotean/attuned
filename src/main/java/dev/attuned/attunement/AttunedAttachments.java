@@ -7,10 +7,8 @@ import dev.attuned.pacts.Pact;
 import dev.attuned.pacts.PactTrialProgress;
 import dev.attuned.pacts.PactTrials;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentRegistry;
-import net.fabricmc.fabric.api.attachment.v1.AttachmentSyncPredicate;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentType;
-import net.minecraft.network.codec.ByteBufCodecs;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 
@@ -29,42 +27,31 @@ public final class AttunedAttachments {
 
 	public static final int MAX_PRESETS = 9;
 
-	public static final AttachmentType<Integer> CAPACITY = AttachmentRegistry.create(
-		Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "capacity"),
-		builder -> builder
+	public static final AttachmentType<Integer> CAPACITY = AttachmentRegistry.<Integer>builder()
 			.initializer(() -> AttunedConfig.get().startingCapacity())
 			.persistent(Codec.INT)
-			.syncWith(ByteBufCodecs.VAR_INT, AttachmentSyncPredicate.targetOnly())
 			.copyOnDeath()
-	);
+			.buildAndRegister(new ResourceLocation(Attuned.MOD_ID, "capacity"));
 
-	public static final AttachmentType<AttunedInv> INVENTORY = AttachmentRegistry.create(
-		Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "inventory"),
-		builder -> builder
+	public static final AttachmentType<AttunedInv> INVENTORY = AttachmentRegistry.<AttunedInv>builder()
 			.initializer(AttunedInv::empty)
 			.persistent(AttunedInv.CODEC)
-			.syncWith(AttunedInv.STREAM_CODEC, AttachmentSyncPredicate.targetOnly())
 			.copyOnDeath()
-	);
+			.buildAndRegister(new ResourceLocation(Attuned.MOD_ID, "inventory"));
 
 	/** The first synced list attachment: named Focus loadouts for the owning client. */
-	public static final AttachmentType<List<FocusPreset>> PRESETS = AttachmentRegistry.create(
-		Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "presets"),
-		builder -> builder
+	public static final AttachmentType<List<FocusPreset>> PRESETS = AttachmentRegistry.<List<FocusPreset>>builder()
 			.initializer(() -> List.of())
 			.persistent(FocusPreset.CODEC.listOf())
-			.syncWith(FocusPreset.STREAM_CODEC.apply(ByteBufCodecs.list()), AttachmentSyncPredicate.targetOnly())
 			.copyOnDeath()
-	);
+			.buildAndRegister(new ResourceLocation(Attuned.MOD_ID, "presets"));
 
 	/** Ids of the progression milestones a player has already claimed. */
-	public static final AttachmentType<List<String>> MILESTONES = AttachmentRegistry.create(
-		Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "milestones"),
-		builder -> builder
+	public static final AttachmentType<List<String>> MILESTONES = AttachmentRegistry.<List<String>>builder()
 			.initializer(() -> List.of())
 			.persistent(Codec.STRING.listOf())
 			.copyOnDeath()
-	);
+			.buildAndRegister(new ResourceLocation(Attuned.MOD_ID, "milestones"));
 
 	/**
 	 * Combat resonance, the {@code [0, 1]} gauge that gates Apex. Persists
@@ -72,43 +59,34 @@ public final class AttunedAttachments {
 	 * threshold keeps it after respawning; otherwise dying inside an empowered
 	 * fight would silently strip the capstone the player just earned.
 	 */
-	public static final AttachmentType<Float> RESONANCE = AttachmentRegistry.create(
-		Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "resonance"),
-		builder -> builder
+	public static final AttachmentType<Float> RESONANCE = AttachmentRegistry.<Float>builder()
 			.initializer(() -> 0.0F)
 			.persistent(Codec.FLOAT)
-			.syncWith(ByteBufCodecs.FLOAT, AttachmentSyncPredicate.targetOnly())
 			.copyOnDeath()
-	);
+			.buildAndRegister(new ResourceLocation(Attuned.MOD_ID, "resonance"));
 
 	/** Ids of one-time onboarding toasts a player has already seen. */
-	public static final AttachmentType<List<String>> ONBOARDING = AttachmentRegistry.create(
-		Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "onboarding"),
-		builder -> builder
+	public static final AttachmentType<List<String>> ONBOARDING = AttachmentRegistry.<List<String>>builder()
 			.initializer(() -> List.of())
 			.persistent(Codec.STRING.listOf())
 			.copyOnDeath()
-	);
+			.buildAndRegister(new ResourceLocation(Attuned.MOD_ID, "onboarding"));
 
 	/** Per-pact trial counters and permanent Tier 4 completions. Synced for the journal. */
-	public static final AttachmentType<PactTrialProgress> PACT_TRIAL_PROGRESS = AttachmentRegistry.create(
-		Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "pact_trial_progress"),
-		builder -> builder
+	public static final AttachmentType<PactTrialProgress> PACT_TRIAL_PROGRESS =
+		AttachmentRegistry.<PactTrialProgress>builder()
 			.initializer(() -> PactTrialProgress.EMPTY)
 			.persistent(PactTrialProgress.CODEC)
-			.syncWith(PactTrialProgress.STREAM_CODEC, AttachmentSyncPredicate.targetOnly())
 			.copyOnDeath()
-	);
+			.buildAndRegister(new ResourceLocation(Attuned.MOD_ID, "pact_trial_progress"));
 
 	/** Confluence ids this player has discovered (each first activation). Synced for the journal. */
-	public static final AttachmentType<List<String>> DISCOVERED_CONFLUENCES = AttachmentRegistry.create(
-		Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "discovered_confluences"),
-		builder -> builder
+	public static final AttachmentType<List<String>> DISCOVERED_CONFLUENCES =
+		AttachmentRegistry.<List<String>>builder()
 			.initializer(() -> List.of())
 			.persistent(Codec.STRING.listOf())
-			.syncWith(ByteBufCodecs.STRING_UTF8.apply(ByteBufCodecs.list()), AttachmentSyncPredicate.targetOnly())
 			.copyOnDeath()
-	);
+			.buildAndRegister(new ResourceLocation(Attuned.MOD_ID, "discovered_confluences"));
 
 	/** Per-pact trial progress surfaced in the journal; trials runtime fills this in. */
 	public record PactTrialState(int progress, int goal, boolean tier4Complete) {}

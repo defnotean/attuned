@@ -1,7 +1,7 @@
 package dev.attuned;
 
 import net.minecraft.advancements.AdvancementHolder;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 
 /**
@@ -24,7 +24,7 @@ public final class AttunedAdvancements {
 
 	private static void awardSingle(ServerPlayer player, String path) {
 		AdvancementHolder holder = player.level().getServer().getAdvancements()
-			.get(Identifier.fromNamespaceAndPath(Attuned.MOD_ID, path));
+			.get(new ResourceLocation(Attuned.MOD_ID, path));
 		if (holder != null) {
 			player.getAdvancements().award(holder, CRITERION);
 		}

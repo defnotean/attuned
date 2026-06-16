@@ -5,8 +5,7 @@ import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import java.util.Objects;
 import net.minecraft.core.registries.Registries;
-import net.minecraft.resources.Identifier;
-import net.minecraft.server.level.ServerLevel;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.level.biome.Biome;
@@ -83,7 +82,7 @@ public sealed interface FocusCondition {
 
 		@Override
 		public boolean test(ServerPlayer player) {
-			ServerLevel level = player.level();
+			var level = player.level();
 			return level.isRainingAt(player.blockPosition()) || player.isInWaterOrRain();
 		}
 
@@ -141,9 +140,9 @@ public sealed interface FocusCondition {
 	}
 
 	/** Holds while the block at the player's feet matches the given block tag. */
-	record OnBlockTag(Identifier tag) implements FocusCondition {
+	record OnBlockTag(ResourceLocation tag) implements FocusCondition {
 		static final MapCodec<OnBlockTag> MAP_CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(
-			Identifier.CODEC.fieldOf("tag").forGetter(OnBlockTag::tag)
+			ResourceLocation.CODEC.fieldOf("tag").forGetter(OnBlockTag::tag)
 		).apply(instance, OnBlockTag::new));
 
 		public OnBlockTag {
@@ -163,9 +162,9 @@ public sealed interface FocusCondition {
 	}
 
 	/** Holds while the player stands in a biome that matches the given biome tag. */
-	record InBiomeTag(Identifier tag) implements FocusCondition {
+	record InBiomeTag(ResourceLocation tag) implements FocusCondition {
 		static final MapCodec<InBiomeTag> MAP_CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(
-			Identifier.CODEC.fieldOf("tag").forGetter(InBiomeTag::tag)
+			ResourceLocation.CODEC.fieldOf("tag").forGetter(InBiomeTag::tag)
 		).apply(instance, InBiomeTag::new));
 
 		public InBiomeTag {

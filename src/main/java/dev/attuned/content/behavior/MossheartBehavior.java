@@ -1,5 +1,7 @@
 package dev.attuned.content.behavior;
 
+import dev.attuned.compat.AfterDamageCallback;
+
 import dev.attuned.Attuned;
 import dev.attuned.AttunedPlayerCleanup;
 import dev.attuned.AttunedServerCleanup;
@@ -14,7 +16,7 @@ import java.util.Map;
 import java.util.UUID;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.world.damagesource.DamageSource;
@@ -27,8 +29,8 @@ import net.minecraft.world.level.block.state.BlockState;
 
 /** Mossheart Focus: reactive Resistance while rooted on moss, grass, or leaves. */
 public final class MossheartBehavior implements FocusBehavior {
-	private static final Identifier FOCUS_ID =
-		Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "mossheart_focus");
+	private static final ResourceLocation FOCUS_ID =
+		new ResourceLocation(Attuned.MOD_ID, "mossheart_focus");
 	private static final int RESISTANCE_TICKS = 60;
 	private static final int COOLDOWN_TICKS = 240;
 	private static final Map<UUID, Integer> COOLDOWNS = new HashMap<>();
@@ -60,7 +62,7 @@ public final class MossheartBehavior implements FocusBehavior {
 		initialized = true;
 		AttunedPlayerCleanup.onForget(COOLDOWNS::remove);
 		AttunedServerCleanup.onStop(COOLDOWNS::clear);
-		ServerLivingEntityEvents.AFTER_DAMAGE.register(MossheartBehavior::afterDamage);
+		AfterDamageCallback.EVENT.register(MossheartBehavior::afterDamage);
 	}
 
 	private static void afterDamage(LivingEntity defender, DamageSource source,
@@ -77,7 +79,7 @@ public final class MossheartBehavior implements FocusBehavior {
 			return;
 		}
 		player.addEffect(new MobEffectInstance(
-			MobEffects.RESISTANCE, RESISTANCE_TICKS, 0, true, false, true));
+			MobEffects.DAMAGE_RESISTANCE, RESISTANCE_TICKS, 0, true, false, true));
 		COOLDOWNS.put(player.getUUID(), COOLDOWN_TICKS);
 	}
 
@@ -99,7 +101,7 @@ public final class MossheartBehavior implements FocusBehavior {
 	private static boolean hasActiveMossheart(ServerPlayer player) {
 		AttunedInv inv = AttunedAttachments.getInventory(player);
 		for (int slot : Attunement.activeSlots(player)) {
-			Identifier id = BuiltInRegistries.ITEM.getKey(inv.get(slot).getItem());
+			ResourceLocation id = BuiltInRegistries.ITEM.getKey(inv.get(slot).getItem());
 			if (FOCUS_ID.equals(id)) {
 				return true;
 			}

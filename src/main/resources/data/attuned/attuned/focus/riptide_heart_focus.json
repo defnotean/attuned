@@ -1,20 +1,15 @@
 {
-	"item": "attuned:riptide_heart_focus",
-	"cost": 3,
-	"unique": true,
-	"affinity": "tide",
-	"faction": "attuned:tideborn",
-	"modifiers": [
-		{
-			"attribute": "minecraft:movement_speed",
-			"amount": 0.08,
-			"operation": "add_multiplied_base"
-		},
-		{
-			"attribute": "minecraft:water_movement_efficiency",
-			"amount": 0.5,
-			"operation": "add_value"
-		}
-	],
-	"behavior": "attuned:riptide_heart"
+    "item":  "attuned:riptide_heart_focus",
+    "cost":  3,
+    "unique":  true,
+    "affinity":  "tide",
+    "faction":  "attuned:tideborn",
+    "modifiers":  [
+                      {
+                          "attribute":  "minecraft:generic.movement_speed",
+                          "amount":  0.08,
+                          "operation":  "add_multiplied_base"
+                      }
+                  ],
+    "behavior":  "attuned:riptide_heart"
 }

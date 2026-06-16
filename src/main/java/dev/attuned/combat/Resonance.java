@@ -1,5 +1,7 @@
 package dev.attuned.combat;
 
+import dev.attuned.compat.AfterDamageCallback;
+
 import dev.attuned.Milestones;
 import dev.attuned.AttunedAdvancements;
 import dev.attuned.AttunedConfig;
@@ -93,7 +95,7 @@ public final class Resonance {
 			LAST_COMBAT_TICK.remove(uuid);
 		});
 
-		ServerLivingEntityEvents.AFTER_DAMAGE.register(Resonance::afterDamage);
+		AfterDamageCallback.EVENT.register(Resonance::afterDamage);
 		ServerLivingEntityEvents.AFTER_DEATH.register(Resonance::afterDeath);
 		ServerTickEvents.END_SERVER_TICK.register(Resonance::tick);
 	}

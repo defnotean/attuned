@@ -1,5 +1,8 @@
 package dev.attuned.content;
 
+import dev.attuned.compat.ParticleCompat;
+
+import dev.attuned.compat.PlayerMessages;
 import com.mojang.serialization.MapCodec;
 import dev.attuned.AttunedConfig;
 import dev.attuned.AttunedServerCleanup;
@@ -27,6 +30,7 @@ import net.minecraft.tags.BlockTags;
 import net.minecraft.util.RandomSource;
 import net.minecraft.util.StringRepresentable;
 import net.minecraft.world.InteractionHand;
+import net.minecraft.world.ItemInteractionResult;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
@@ -128,7 +132,7 @@ public class AttunementAltarBlock extends Block {
 
 	/** Right-click with Attunement Shards: bind one into capacity and take on the binder's affinity. */
 	@Override
-	protected InteractionResult useItemOn(ItemStack stack, BlockState state, Level level, BlockPos pos,
+	protected ItemInteractionResult useItemOn(ItemStack stack, BlockState state, Level level, BlockPos pos,
 			Player player, InteractionHand hand, BlockHitResult hitResult) {
 		// When the held stack isn't a shard (including the empty hand), defer to
 		// the empty-hand path so {@link #useWithoutItem} gets a chance to fire. In
@@ -139,20 +143,20 @@ public class AttunementAltarBlock extends Block {
 			if (!level.isClientSide()) {
 				AttunementShardFragmentItem.sendProgressHint(player);
 			}
-			return level.isClientSide() ? InteractionResult.SUCCESS : InteractionResult.SUCCESS_SERVER;
+			return ItemInteractionResult.sidedSuccess(level.isClientSide());
 		}
 		if (!stack.is(AttunedContent.ATTUNEMENT_SHARD)) {
-			return InteractionResult.TRY_WITH_EMPTY_HAND;
+			return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
 		}
 		if (level.isClientSide()) {
-			return InteractionResult.SUCCESS;
+			return ItemInteractionResult.SUCCESS;
 		}
 		if (bindShard(level, pos, state, player, stack)) {
 			if (player instanceof ServerPlayer serverPlayer) {
 				Onboarding.tryAltarHint(serverPlayer);
 			}
 		}
-		return InteractionResult.SUCCESS_SERVER;
+		return ItemInteractionResult.SUCCESS;
 	}
 
 	/** Right-click empty-handed: open the Altar GUI so the player can bind shards visually. */
@@ -166,7 +170,7 @@ public class AttunementAltarBlock extends Block {
 		if (player instanceof ServerPlayer serverPlayer) {
 			Onboarding.tryAltarHint(serverPlayer);
 		}
-		return InteractionResult.SUCCESS_SERVER;
+		return InteractionResult.SUCCESS;
 	}
 
 	/**
@@ -186,7 +190,7 @@ public class AttunementAltarBlock extends Block {
 		int cap = AttunedConfig.get().capacityCap();
 		int capacity = AttunedAttachments.getCapacity(player);
 		if (capacity >= cap) {
-			player.sendSystemMessage(Component.literal("Your attunement is already at its fullest.")
+			PlayerMessages.system(player, Component.literal("Your attunement is already at its fullest.")
 				.withStyle(ChatFormatting.GRAY));
 			return false;
 		}
@@ -211,7 +215,7 @@ public class AttunementAltarBlock extends Block {
 			AltarAnimations.begin(server, pos, serverPlayer, stanceRgb(affinity), flair);
 			applyBindingPerk(serverPlayer);
 		}
-		player.sendSystemMessage(Component.literal("The Altar binds the shard — capacity ")
+		PlayerMessages.system(player, Component.literal("The Altar binds the shard — capacity ")
 			.withStyle(ChatFormatting.GRAY)
 			.append(Component.literal(raised + " / " + cap).withStyle(ChatFormatting.AQUA)));
 		return true;
@@ -220,9 +224,9 @@ public class AttunementAltarBlock extends Block {
 	private static void applyBindingPerk(ServerPlayer player) {
 		Attunement.committedAffinity(player).ifPresent(affinity -> {
 			MobEffectInstance effect = switch (affinity) {
-				case FURY -> new MobEffectInstance(MobEffects.STRENGTH, 400, 0, true, true, true);
-				case BASTION -> new MobEffectInstance(MobEffects.RESISTANCE, 400, 0, true, true, true);
-				case ZEPHYR -> new MobEffectInstance(MobEffects.SPEED, 400, 0, true, true, true);
+				case FURY -> new MobEffectInstance(MobEffects.DAMAGE_BOOST, 400, 0, true, true, true);
+				case BASTION -> new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 400, 0, true, true, true);
+				case ZEPHYR -> new MobEffectInstance(MobEffects.MOVEMENT_SPEED, 400, 0, true, true, true);
 				case HOLY -> new MobEffectInstance(MobEffects.ABSORPTION, 400, 0, true, true, true);
 				case TIDE -> new MobEffectInstance(MobEffects.WATER_BREATHING, 400, 0, true, true, true);
 				case FORGE -> new MobEffectInstance(MobEffects.FIRE_RESISTANCE, 400, 0, true, true, true);
@@ -319,7 +323,7 @@ public class AttunementAltarBlock extends Block {
 		double z = pos.getZ() + 0.5 + (random.nextDouble() - 0.5) * 0.4;
 		ParticleOptions particle = affinity == AltarAffinity.NONE
 			? ParticleTypes.ENCHANT
-			: new DustParticleOptions(affinityColor(affinity), 1.0F);
+			: ParticleCompat.dust(affinityColor(affinity), 1.0F);
 		level.addParticle(particle, x, y, z, 0.0, 0.03, 0.0);
 		tryProximityPulse(level, pos, random);
 	}
@@ -388,7 +392,7 @@ public class AttunementAltarBlock extends Block {
 		int rgb = AffinityColors.argbOf(
 			Attunement.committedAffinity(player),
 			Attunement.isDiscord(player)) & 0x00FFFFFF;
-		return new DustParticleOptions(rgb, 1.0F);
+		return ParticleCompat.dust(rgb, 1.0F);
 	}
 
 	private record ProximityPulseKey(ResourceKey<Level> dimension, long pos) {}

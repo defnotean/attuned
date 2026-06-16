@@ -4,18 +4,18 @@ import dev.attuned.Attuned;
 import dev.attuned.menu.ReweavePayload;
 import dev.attuned.menu.ReweavingMenu;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
-import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
 
 /** Screen for the Altar of Reweaving. */
 public class ReweavingScreen extends AbstractContainerScreen<ReweavingMenu> {
-	private static final Identifier BACKGROUND_TEXTURE =
-		Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "textures/gui/altar_of_reweaving.png");
+	private static final ResourceLocation BACKGROUND_TEXTURE =
+		new ResourceLocation(Attuned.MOD_ID, "textures/gui/altar_of_reweaving.png");
 	private static final int IMAGE_WIDTH = 216;
 	private static final int IMAGE_HEIGHT = 190;
 	private static final int TITLE_TEXT = 0xFFEDE6FF;
@@ -35,7 +35,9 @@ public class ReweavingScreen extends AbstractContainerScreen<ReweavingMenu> {
 	private Button reweaveButton;
 
 	public ReweavingScreen(ReweavingMenu menu, Inventory inventory, Component title) {
-		super(menu, inventory, title, IMAGE_WIDTH, IMAGE_HEIGHT);
+		super(menu, inventory, title);
+		this.imageWidth = IMAGE_WIDTH;
+		this.imageHeight = IMAGE_HEIGHT;
 		this.titleLabelX = 14;
 		this.titleLabelY = 13;
 		this.inventoryLabelY = ReweavingMenu.INVENTORY_Y - 10;
@@ -60,15 +62,15 @@ public class ReweavingScreen extends AbstractContainerScreen<ReweavingMenu> {
 	}
 
 	@Override
-	public void extractBackground(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
+	protected void renderBg(GuiGraphics graphics, float partialTick, int mouseX, int mouseY) {
 		graphics.fill(0, 0, this.width, this.height, SCREEN_BACKDROP);
-		graphics.blit(RenderPipelines.GUI_TEXTURED, BACKGROUND_TEXTURE, this.leftPos, this.topPos,
+		graphics.blit(BACKGROUND_TEXTURE, this.leftPos, this.topPos,
 			0.0F, 0.0F, IMAGE_WIDTH, IMAGE_HEIGHT, IMAGE_WIDTH, IMAGE_HEIGHT);
 	}
 
 	@Override
-	protected void extractLabels(GuiGraphicsExtractor graphics, int mouseX, int mouseY) {
-		graphics.text(this.font, this.title, this.titleLabelX, this.titleLabelY, TITLE_TEXT, false);
+	protected void renderLabels(GuiGraphics graphics, int mouseX, int mouseY) {
+		graphics.drawString(this.font, this.title, this.titleLabelX, this.titleLabelY, TITLE_TEXT, false);
 		Component hint = hint();
 		int color = canCommit() ? BODY_TEXT : WARNING_TEXT;
 		drawTrimmedText(graphics, hint, HINT_X, HINT_Y, HINT_MAX_WIDTH, color);
@@ -106,18 +108,18 @@ public class ReweavingScreen extends AbstractContainerScreen<ReweavingMenu> {
 		return Component.translatable("screen.attuned.reweaving_altar.hint.ready");
 	}
 
-	private void drawTrimmedText(GuiGraphicsExtractor graphics, Component text, int x, int y, int maxWidth, int color) {
+	private void drawTrimmedText(GuiGraphics graphics, Component text, int x, int y, int maxWidth, int color) {
 		if (this.font.width(text) <= maxWidth) {
-			graphics.text(this.font, text, x, y, color, false);
+			graphics.drawString(this.font, text, x, y, color, false);
 			return;
 		}
 		String ellipsis = "...";
 		int ellipsisWidth = this.font.width(ellipsis);
 		String trimmed = this.font.plainSubstrByWidth(text.getString(), Math.max(0, maxWidth - ellipsisWidth));
-		graphics.text(this.font, Component.literal(trimmed + ellipsis), x, y, color, false);
+		graphics.drawString(this.font, Component.literal(trimmed + ellipsis), x, y, color, false);
 	}
 
-	private static void drawButtonOutline(GuiGraphicsExtractor graphics, int x0, int y0, int x1, int y1, int argb) {
+	private static void drawButtonOutline(GuiGraphics graphics, int x0, int y0, int x1, int y1, int argb) {
 		graphics.fill(x0, y0, x1, y0 + 1, argb);
 		graphics.fill(x0, y1 - 1, x1, y1, argb);
 		graphics.fill(x0, y0 + 1, x0 + 1, y1 - 1, argb);
@@ -130,7 +132,7 @@ public class ReweavingScreen extends AbstractContainerScreen<ReweavingMenu> {
 		}
 
 		@Override
-		protected void extractContents(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
+		protected void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
 			int x0 = getX();
 			int y0 = getY();
 			int x1 = x0 + getWidth();
@@ -140,7 +142,7 @@ public class ReweavingScreen extends AbstractContainerScreen<ReweavingMenu> {
 			} else if (isHoveredOrFocused()) {
 				drawButtonOutline(graphics, x0, y0, x1, y1, BUTTON_HOVER_ARGB);
 			}
-			extractDefaultLabel(graphics.textRendererForWidget(this, GuiGraphicsExtractor.HoveredTextEffects.NONE));
+			renderString(graphics, Minecraft.getInstance().font, BODY_TEXT);
 		}
 	}
 }

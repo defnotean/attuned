@@ -9,12 +9,12 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
-import net.fabricmc.fabric.api.creativetab.v1.FabricCreativeModeTab;
+import net.fabricmc.fabric.api.itemgroup.v1.FabricItemGroup;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -72,7 +72,7 @@ final class AttunedCreativeTabs {
 
 	private static void registerFocusCreativeTab(String id, Component title, Item icon,
 			Predicate<FocusDefinition> include, boolean includeCoreItems) {
-		CreativeModeTab tab = FabricCreativeModeTab.builder()
+		CreativeModeTab tab = FabricItemGroup.builder()
 			.title(title)
 			.icon(() -> new ItemStack(icon))
 			.displayItems((parameters, output) -> {
@@ -98,7 +98,7 @@ final class AttunedCreativeTabs {
 			})
 			.build();
 		Registry.register(BuiltInRegistries.CREATIVE_MODE_TAB,
-			Identifier.fromNamespaceAndPath(Attuned.MOD_ID, id), tab);
+			new ResourceLocation(Attuned.MOD_ID, id), tab);
 	}
 
 	/**
@@ -126,8 +126,8 @@ final class AttunedCreativeTabs {
 		return definition.affinity().filter(affinities::contains).isPresent();
 	}
 
-	private static String factionKey(Optional<Identifier> faction) {
-		return faction.map(Identifier::toString).orElse("");
+	private static String factionKey(Optional<ResourceLocation> faction) {
+		return faction.map(ResourceLocation::toString).orElse("");
 	}
 
 	/**

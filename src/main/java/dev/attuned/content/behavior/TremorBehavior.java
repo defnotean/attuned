@@ -17,7 +17,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
@@ -33,10 +33,10 @@ import net.minecraft.world.level.block.state.BlockState;
  * Tremor Focus: mining stone reveals the nearest ore pulse through a brief outline.
  */
 public final class TremorBehavior implements dev.attuned.api.focus.FocusBehavior {
-	private static final Identifier FOCUS_ID =
-		Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "tremor_focus");
+	private static final ResourceLocation FOCUS_ID =
+		new ResourceLocation(Attuned.MOD_ID, "tremor_focus");
 	private static final TagKey<net.minecraft.world.level.block.Block> ORES =
-		TagKey.create(Registries.BLOCK, Identifier.fromNamespaceAndPath("c", "ores"));
+		TagKey.create(Registries.BLOCK, new ResourceLocation("c", "ores"));
 	private static final int RADIUS = 5;
 	/** Cap on outlined blocks per reveal, so a giant deposit cannot flood the packet. */
 	private static final int MAX_VEIN_BLOCKS = 32;
@@ -158,7 +158,7 @@ public final class TremorBehavior implements dev.attuned.api.focus.FocusBehavior
 	private static boolean hasActiveTremor(ServerPlayer player) {
 		AttunedInv inv = AttunedAttachments.getInventory(player);
 		for (int slot : Attunement.activeSlots(player)) {
-			Identifier id = BuiltInRegistries.ITEM.getKey(inv.get(slot).getItem());
+			ResourceLocation id = BuiltInRegistries.ITEM.getKey(inv.get(slot).getItem());
 			if (FOCUS_ID.equals(id)) {
 				return true;
 			}

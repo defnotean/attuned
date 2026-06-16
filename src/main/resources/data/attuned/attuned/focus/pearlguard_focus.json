@@ -1,15 +1,15 @@
 {
-	"item": "attuned:pearlguard_focus",
-	"cost": 4,
-	"unique": true,
-	"affinity": "tide",
-	"faction": "attuned:tideborn",
-	"modifiers": [
-		{
-			"attribute": "minecraft:armor",
-			"amount": 2.0,
-			"operation": "add_value"
-		}
-	],
-	"behavior": "attuned:pearlguard"
+    "item":  "attuned:pearlguard_focus",
+    "cost":  4,
+    "unique":  true,
+    "affinity":  "tide",
+    "faction":  "attuned:tideborn",
+    "modifiers":  [
+                      {
+                          "attribute":  "minecraft:generic.armor",
+                          "amount":  2.0,
+                          "operation":  "add_value"
+                      }
+                  ],
+    "behavior":  "attuned:pearlguard"
 }

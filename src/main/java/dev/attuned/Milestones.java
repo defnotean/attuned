@@ -1,7 +1,8 @@
 package dev.attuned;
 
+import dev.attuned.compat.PlayerMessages;
 import dev.attuned.attunement.AttunedAttachments;
-import net.fabricmc.fabric.api.entity.event.v1.ServerEntityLevelChangeEvents;
+import net.fabricmc.fabric.api.entity.event.v1.ServerEntityWorldChangeEvents;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
@@ -56,7 +57,7 @@ public final class Milestones {
 		}
 		initialized = true;
 
-		ServerEntityLevelChangeEvents.AFTER_PLAYER_CHANGE_LEVEL.register((player, origin, destination) -> {
+		ServerEntityWorldChangeEvents.AFTER_PLAYER_CHANGE_WORLD.register((player, origin, destination) -> {
 			if (destination.dimension() == Level.NETHER) {
 				grant(player, Milestone.NETHER);
 			} else if (destination.dimension() == Level.END) {
@@ -117,7 +118,7 @@ public final class Milestones {
 
 		((ServerLevel) player.level()).playSound(null, player.blockPosition(),
 			SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, SoundSource.PLAYERS, 0.7F, 1.2F);
-		player.sendSystemMessage(Component.literal("Your attunement deepens — you " + milestone.feat + ". ")
+		PlayerMessages.system(player, Component.literal("Your attunement deepens — you " + milestone.feat + ". ")
 			.withStyle(ChatFormatting.GRAY)
 			.append(Component.literal("(+" + (after - before) + " capacity)")
 				.withStyle(ChatFormatting.AQUA)));

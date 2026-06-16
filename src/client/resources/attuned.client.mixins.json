@@ -1,20 +1,8 @@
 {
 	"required": true,
 	"package": "dev.attuned.client.mixin",
-	"compatibilityLevel": "JAVA_25",
-	"client": [
-		"AbstractRecipeBookScreenAccessor",
-		"AbstractRecipeBookScreenMixin",
-		"CreativeModeInventoryScreenMixin",
-		"CustomHeadLayerInvisibilityMixin",
-		"HumanoidArmorLayerInvisibilityMixin",
-		"InventoryScreenMixin",
-		"ItemInHandLayerInvisibilityMixin",
-		"RenderTypeInvoker",
-		"ThrownTridentRendererMixin",
-		"ThrownTridentRenderStateMixin",
-		"WingsLayerInvisibilityMixin"
-	],
+	"compatibilityLevel": "JAVA_21",
+	"client": [],
 	"injectors": {
 		"defaultRequire": 1
 	},

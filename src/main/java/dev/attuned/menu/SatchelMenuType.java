@@ -6,7 +6,7 @@ import dev.attuned.content.AttunedContent;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.MenuProvider;
 import net.minecraft.world.SimpleMenuProvider;
@@ -35,10 +35,10 @@ public final class SatchelMenuType {
 		}
 		initialized = true;
 		TYPE = Registry.register(BuiltInRegistries.MENU,
-			Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "satchel_of_foci"),
+			new ResourceLocation(Attuned.MOD_ID, "satchel_of_foci"),
 			new MenuType<>(SatchelMenu::new, FeatureFlags.VANILLA_SET));
 		GRAND_TYPE = Registry.register(BuiltInRegistries.MENU,
-			Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "grand_satchel_of_foci"),
+			new ResourceLocation(Attuned.MOD_ID, "grand_satchel_of_foci"),
 			new MenuType<>(SatchelMenu::grand, FeatureFlags.VANILLA_SET));
 	}
 

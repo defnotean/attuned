@@ -1,15 +1,15 @@
 {
-	"item": "attuned:thornwake_focus",
-	"cost": 4,
-	"unique": true,
-	"affinity": "verdant",
-	"faction": "attuned:wildroot",
-	"modifiers": [
-		{
-			"attribute": "minecraft:armor",
-			"amount": 1.0,
-			"operation": "add_value"
-		}
-	],
-	"behavior": "attuned:thornwake"
+    "item":  "attuned:thornwake_focus",
+    "cost":  4,
+    "unique":  true,
+    "affinity":  "verdant",
+    "faction":  "attuned:wildroot",
+    "modifiers":  [
+                      {
+                          "attribute":  "minecraft:generic.armor",
+                          "amount":  1.0,
+                          "operation":  "add_value"
+                      }
+                  ],
+    "behavior":  "attuned:thornwake"
 }

@@ -9,11 +9,18 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import dev.attuned.test.MinecraftTestBootstrap;
 import net.minecraft.world.item.ItemStack;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 class FocusHolderTest {
 	private static final Path HOLDER = Path.of("src/main/java/dev/attuned/attunement/FocusHolder.java");
+
+	@BeforeAll
+	static void bootstrapMinecraft() {
+		MinecraftTestBootstrap.ensureBootstrapped();
+	}
 
 	@Test
 	void emptyHolderNormalizesToRequestedSize() {

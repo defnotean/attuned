@@ -1,15 +1,15 @@
 {
-	"item": "attuned:seedcall_focus",
-	"cost": 3,
-	"unique": true,
-	"affinity": "verdant",
-	"faction": "attuned:wildroot",
-	"modifiers": [
-		{
-			"attribute": "minecraft:luck",
-			"amount": 1.0,
-			"operation": "add_value"
-		}
-	],
-	"behavior": "attuned:seedcall"
+    "item":  "attuned:seedcall_focus",
+    "cost":  3,
+    "unique":  true,
+    "affinity":  "verdant",
+    "faction":  "attuned:wildroot",
+    "modifiers":  [
+                      {
+                          "attribute":  "minecraft:generic.luck",
+                          "amount":  1.0,
+                          "operation":  "add_value"
+                      }
+                  ],
+    "behavior":  "attuned:seedcall"
 }

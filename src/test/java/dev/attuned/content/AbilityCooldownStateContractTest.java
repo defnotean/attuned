@@ -66,7 +66,8 @@ class AbilityCooldownStateContractTest {
 			"The payload should carry selected ability slot and cooldown progress.");
 		assertTrue(networking.contains("FocusAbilityState.trigger(player)"),
 			"The ability packet receiver should delegate to the shared state helper.");
-		assertTrue(journal.contains("PayloadTypeRegistry.clientboundPlay().register(FocusAbilityStatusPayload.TYPE"),
+		assertTrue(journal.contains("PayloadTypeRegistry.clientboundPlay().register(FocusAbilityStatusPayload.TYPE")
+				|| journal.contains("PayloadTypeRegistry.playS2C().register(FocusAbilityStatusPayload.TYPE"),
 			"The cooldown status payload should be registered clientbound.");
 	}
 

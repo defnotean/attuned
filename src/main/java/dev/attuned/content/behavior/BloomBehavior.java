@@ -8,7 +8,7 @@ import dev.attuned.attunement.Attunement;
 import net.fabricmc.fabric.api.event.player.PlayerBlockBreakEvents;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.tags.BlockTags;
@@ -22,8 +22,8 @@ import net.minecraft.world.level.block.state.BlockState;
 
 /** Bloom Focus: rare seeds, flowers, and bee-adjacent finds from plant gathering. */
 public final class BloomBehavior implements FocusBehavior {
-	private static final Identifier FOCUS_ID =
-		Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "bloom_focus");
+	private static final ResourceLocation FOCUS_ID =
+		new ResourceLocation(Attuned.MOD_ID, "bloom_focus");
 	private static boolean initialized;
 
 	public BloomBehavior() {
@@ -82,7 +82,7 @@ public final class BloomBehavior implements FocusBehavior {
 	private static boolean hasActiveBloom(ServerPlayer player) {
 		AttunedInv inv = AttunedAttachments.getInventory(player);
 		for (int slot : Attunement.activeSlots(player)) {
-			Identifier id = BuiltInRegistries.ITEM.getKey(inv.get(slot).getItem());
+			ResourceLocation id = BuiltInRegistries.ITEM.getKey(inv.get(slot).getItem());
 			if (FOCUS_ID.equals(id)) {
 				return true;
 			}

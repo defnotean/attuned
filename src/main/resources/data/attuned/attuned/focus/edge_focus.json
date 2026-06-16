@@ -1,12 +1,12 @@
 {
-	"item": "attuned:edge_focus",
-	"cost": 3,
-	"affinity": "fury",
-	"modifiers": [
-		{
-			"attribute": "minecraft:attack_damage",
-			"amount": 3.0,
-			"operation": "add_value"
-		}
-	]
+    "item":  "attuned:edge_focus",
+    "cost":  3,
+    "affinity":  "fury",
+    "modifiers":  [
+                      {
+                          "attribute":  "minecraft:generic.attack_damage",
+                          "amount":  3.0,
+                          "operation":  "add_value"
+                      }
+                  ]
 }

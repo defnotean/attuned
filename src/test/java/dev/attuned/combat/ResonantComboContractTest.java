@@ -26,9 +26,9 @@ class ResonantComboContractTest {
 
 		assertTrue(unseen.contains("Resonant Combo: Softstep + Needle"),
 			"The first Resonant Combo should be documented where the proc is implemented.");
-		assertTrue(unseen.contains("private static final Identifier SOFTSTEP_FOCUS"),
+		assertTrue(unseen.contains("private static final ResourceLocation SOFTSTEP_FOCUS"),
 			"Silent Opening should require Softstep as its second active Focus.");
-		assertTrue(unseen.contains("Identifier.fromNamespaceAndPath(\"attuned\", \"softstep_focus\")"),
+		assertTrue(unseen.contains("new ResourceLocation(\"attuned\", \"softstep_focus\")"),
 			"The Softstep member id should be explicit and stable.");
 		assertTrue(unseen.contains("private static final int NEEDLE_SOFTSTEP_WEAKNESS_TICKS = 80"),
 			"The opener should create a noticeable but short 4-second Weakness window.");
@@ -75,7 +75,8 @@ class ResonantComboContractTest {
 		assertTrue(feedback.contains("sendParticles("), "The combo should have particle feedback.");
 		assertTrue(feedback.contains("playSound(null, defender.blockPosition()"),
 			"The combo should have sound feedback on the target.");
-		assertTrue(feedback.contains("attacker.sendOverlayMessage(Component.translatable(\"combo.attuned.softstep_needle\"))"),
+		assertTrue(feedback.contains("attacker.sendOverlayMessage(Component.translatable(\"combo.attuned.softstep_needle\"))")
+				|| feedback.contains("PlayerMessages.overlay(attacker, Component.translatable(\"combo.attuned.softstep_needle\"))"),
 			"The attacker should get a compact action-bar confirmation when the combo lands.");
 	}
 
@@ -102,6 +103,7 @@ class ResonantComboContractTest {
 	}
 
 	private static String methodBody(String source, String signaturePrefix) {
+		source = source.replace("\r\n", "\n").replace('\r', '\n');
 		int signatureStart = source.indexOf(signaturePrefix);
 		assertTrue(signatureStart >= 0, "Missing method signature: " + signaturePrefix);
 		int bodyStart = source.indexOf('{', signatureStart);

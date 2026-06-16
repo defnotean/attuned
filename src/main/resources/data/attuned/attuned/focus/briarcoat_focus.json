@@ -1,17 +1,17 @@
 {
-	"item": "attuned:briarcoat_focus",
-	"cost": 3,
-	"affinity": "verdant",
-	"modifiers": [
-		{
-			"attribute": "minecraft:attack_damage",
-			"amount": 2.0,
-			"operation": "add_value"
-		},
-		{
-			"attribute": "minecraft:attack_speed",
-			"amount": 0.3,
-			"operation": "add_value"
-		}
-	]
+    "item":  "attuned:briarcoat_focus",
+    "cost":  3,
+    "affinity":  "verdant",
+    "modifiers":  [
+                      {
+                          "attribute":  "minecraft:generic.attack_damage",
+                          "amount":  2.0,
+                          "operation":  "add_value"
+                      },
+                      {
+                          "attribute":  "minecraft:generic.attack_speed",
+                          "amount":  0.3,
+                          "operation":  "add_value"
+                      }
+                  ]
 }

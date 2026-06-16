@@ -1,15 +1,15 @@
 {
-	"item": "attuned:sparkweld_focus",
-	"cost": 3,
-	"unique": true,
-	"affinity": "forge",
-	"faction": "attuned:forgebound",
-	"modifiers": [
-		{
-			"attribute": "minecraft:attack_speed",
-			"amount": 0.12,
-			"operation": "add_multiplied_base"
-		}
-	],
-	"behavior": "attuned:sparkweld"
+    "item":  "attuned:sparkweld_focus",
+    "cost":  3,
+    "unique":  true,
+    "affinity":  "forge",
+    "faction":  "attuned:forgebound",
+    "modifiers":  [
+                      {
+                          "attribute":  "minecraft:generic.attack_speed",
+                          "amount":  0.12,
+                          "operation":  "add_multiplied_base"
+                      }
+                  ],
+    "behavior":  "attuned:sparkweld"
 }

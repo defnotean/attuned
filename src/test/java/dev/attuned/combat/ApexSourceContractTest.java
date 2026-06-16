@@ -88,7 +88,7 @@ class ApexSourceContractTest {
 				&& proc.contains("case BLOOMWARD") && proc.contains("case GLOAMING"),
 			"The affinity-capstone proc dispatch must branch on all four new capstones.");
 
-		assertTrue(methodBody(apex, "private static void procRiptide(").contains("MobEffects.SLOWNESS"),
+		assertTrue(methodBody(apex, "private static void procRiptide(").contains("MobEffects.MOVEMENT_SLOWDOWN"),
 			"Riptide should apply Slowness to the target.");
 		assertTrue(methodBody(apex, "private static void procCrucible(").contains("igniteForSeconds"),
 			"Crucible should set the target on fire.");
@@ -103,6 +103,7 @@ class ApexSourceContractTest {
 	}
 
 	private static String methodBody(String source, String signature) {
+		source = source.replace("\r\n", "\n").replace('\r', '\n');
 		int signatureStart = source.indexOf(signature);
 		assertTrue(signatureStart >= 0, "Missing method signature: " + signature);
 		int bodyStart = source.indexOf('{', signatureStart);

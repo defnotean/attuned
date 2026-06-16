@@ -15,16 +15,14 @@ import java.util.Set;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.player.LocalPlayer;
-import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.core.Registry;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.FormattedCharSequence;
 
 /**
@@ -34,8 +32,8 @@ import net.minecraft.util.FormattedCharSequence;
  * between chapters. No content is ever truncated.
  */
 public final class AttunementJournalScreen extends Screen {
-	private static final Identifier BACKGROUND_TEXTURE =
-		Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "textures/gui/attunement_journal.png");
+	private static final ResourceLocation BACKGROUND_TEXTURE =
+		new ResourceLocation(Attuned.MOD_ID, "textures/gui/attunement_journal.png");
 	private static final String CONFLUENCE_PAGE_KEY = "journal.attuned.confluence.intro";
 	private static final String PACT_TRIALS_PAGE_KEY = "journal.attuned.pact_trials.intro";
 	private static boolean initialized;
@@ -184,7 +182,7 @@ public final class AttunementJournalScreen extends Screen {
 	}
 
 	@Override
-	public void extractBackground(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
+	public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
 		drawFrame(graphics);
 		drawNavigation(graphics);
 		drawChapter(graphics);
@@ -201,10 +199,8 @@ public final class AttunementJournalScreen extends Screen {
 	}
 
 	@Override
-	public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
-		double mouseX = event.x();
-		double mouseY = event.y();
-		if (event.button() == 0 && isMouseOverScrollbar(mouseX, mouseY)) {
+	public boolean mouseClicked(double mouseX, double mouseY, int button) {
+		if (button == 0 && isMouseOverScrollbar(mouseX, mouseY)) {
 			this.scrollbarDragging = true;
 			int thumbY = scrollbarThumbY();
 			int thumbHeight = scrollbarThumbHeight();
@@ -216,26 +212,25 @@ public final class AttunementJournalScreen extends Screen {
 			updateScrollFromMouse(mouseY);
 			return true;
 		}
-		return super.mouseClicked(event, doubleClick);
+		return super.mouseClicked(mouseX, mouseY, button);
 	}
 
 	@Override
-	public boolean mouseDragged(MouseButtonEvent event, double dragX, double dragY) {
-		if (this.scrollbarDragging && event.button() == 0 && this.maxScroll > 0) {
-			double mouseY = event.y();
+	public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
+		if (this.scrollbarDragging && button == 0 && this.maxScroll > 0) {
 			updateScrollFromMouse(mouseY);
 			return true;
 		}
-		return super.mouseDragged(event, dragX, dragY);
+		return super.mouseDragged(mouseX, mouseY, button, dragX, dragY);
 	}
 
 	@Override
-	public boolean mouseReleased(MouseButtonEvent event) {
-		if (event.button() == 0 && this.scrollbarDragging) {
+	public boolean mouseReleased(double mouseX, double mouseY, int button) {
+		if (button == 0 && this.scrollbarDragging) {
 			this.scrollbarDragging = false;
 			return true;
 		}
-		return super.mouseReleased(event);
+		return super.mouseReleased(mouseX, mouseY, button);
 	}
 
 	@Override
@@ -266,21 +261,21 @@ public final class AttunementJournalScreen extends Screen {
 		return this.addRenderableWidget(button);
 	}
 
-	private void drawFrame(GuiGraphicsExtractor graphics) {
+	private void drawFrame(GuiGraphics graphics) {
 		int left = left();
 		int top = top();
 		graphics.fill(0, 0, this.width, this.height, BACKDROP);
 		graphics.fill(left + 4, top + 4, left + PANEL_WIDTH + 4, top + PANEL_HEIGHT + 4, PANEL_SHADOW);
-		graphics.blit(RenderPipelines.GUI_TEXTURED, BACKGROUND_TEXTURE, left, top,
+		graphics.blit(BACKGROUND_TEXTURE, left, top,
 			0.0F, 0.0F, PANEL_WIDTH, PANEL_HEIGHT, PANEL_WIDTH, PANEL_HEIGHT);
 	}
 
-	private void drawNavigation(GuiGraphicsExtractor graphics) {
+	private void drawNavigation(GuiGraphics graphics) {
 		int left = left();
 		int top = top();
-		graphics.text(this.font, Component.translatable("journal.attuned.screen.title"),
+		graphics.drawString(this.font, Component.translatable("journal.attuned.screen.title"),
 			left + PADDING, top + 10, TEXT_TITLE, false);
-		graphics.text(this.font, Component.translatable("journal.attuned.screen.subtitle"),
+		graphics.drawString(this.font, Component.translatable("journal.attuned.screen.subtitle"),
 			left + PADDING, top + 22, TEXT_MUTED, false);
 
 		for (int i = 0; i < CHAPTERS.size(); i++) {
@@ -298,7 +293,7 @@ public final class AttunementJournalScreen extends Screen {
 		}
 	}
 
-	private void drawChapter(GuiGraphicsExtractor graphics) {
+	private void drawChapter(GuiGraphics graphics) {
 		Chapter chapter = CHAPTERS.get(this.chapterIndex);
 		int x = contentLeft() + 10;
 		int w = contentWidth() - 20;
@@ -325,7 +320,7 @@ public final class AttunementJournalScreen extends Screen {
 			y += HEADER_HEIGHT;
 			for (FormattedCharSequence line : section.lines()) {
 				if (y >= contentTop && y + 9 <= contentBottom) {
-					graphics.text(this.font, line, x, y, PAGE_BODY, false);
+					graphics.drawString(this.font, line, x, y, PAGE_BODY, false);
 				}
 				y += LINE_HEIGHT;
 			}
@@ -393,18 +388,18 @@ public final class AttunementJournalScreen extends Screen {
 		return contentTop + Math.round(travel * (this.scrollOffset / (float) this.maxScroll));
 	}
 
-	private void drawSectionHeader(GuiGraphicsExtractor graphics, Section section, int x, int y, int w,
+	private void drawSectionHeader(GuiGraphics graphics, Section section, int x, int y, int w,
 			int contentTop, int contentBottom) {
 		Page page = section.page();
 		int accent = page.accent();
 		if (y >= contentTop && y + 9 <= contentBottom) {
 			if (page.affinity() != null) {
 				drawMiniGem(graphics, x, y - 2, 14, page.affinity(), accent);
-				graphics.text(this.font, Component.literal(section.title()).withStyle(ChatFormatting.BOLD),
+				graphics.drawString(this.font, Component.literal(section.title()).withStyle(ChatFormatting.BOLD),
 					x + 20, y, PAGE_TITLE, false);
 			} else {
 				graphics.fill(x, y + 4, x + 12, y + 6, accent);
-				graphics.text(this.font, Component.literal(section.title()).withStyle(ChatFormatting.BOLD),
+				graphics.drawString(this.font, Component.literal(section.title()).withStyle(ChatFormatting.BOLD),
 					x + 18, y, PAGE_TITLE, false);
 			}
 		}
@@ -415,11 +410,11 @@ public final class AttunementJournalScreen extends Screen {
 		}
 	}
 
-	private void drawFooter(GuiGraphicsExtractor graphics, int x, int w) {
+	private void drawFooter(GuiGraphics graphics, int x, int w) {
 		String progress = (this.chapterIndex + 1) + " / " + CHAPTERS.size();
 		int progressX = x + PAGE_BUTTON_WIDTH + 10;
 		int progressWidth = w - (PAGE_BUTTON_WIDTH + 10) * 2;
-		graphics.text(this.font, Component.literal(progress),
+		graphics.drawString(this.font, Component.literal(progress),
 			progressX + (progressWidth - this.font.width(progress)) / 2,
 			top() + PANEL_HEIGHT - 45, PAGE_MUTED, false);
 		int progressY = top() + PANEL_HEIGHT - 34;
@@ -442,7 +437,7 @@ public final class AttunementJournalScreen extends Screen {
 		return out;
 	}
 
-	private static void drawDot(GuiGraphicsExtractor graphics, int cx, int cy, int color) {
+	private static void drawDot(GuiGraphics graphics, int cx, int cy, int color) {
 		int c = 0xFF000000 | (color & 0x00FFFFFF);
 		graphics.fill(cx - 1, cy, cx + 2, cy + 1, c);
 		graphics.fill(cx, cy - 1, cx + 1, cy + 2, c);
@@ -452,7 +447,7 @@ public final class AttunementJournalScreen extends Screen {
 		return CHAPTERS.get(chapterIndex).pages().get(0).accent();
 	}
 
-	private static void drawMiniGem(GuiGraphicsExtractor graphics, int x, int y, int size, Affinity affinity, int accent) {
+	private static void drawMiniGem(GuiGraphics graphics, int x, int y, int size, Affinity affinity, int accent) {
 		int face = switch (affinity) {
 			case FURY -> 0xFFE95E4D;
 			case BASTION -> 0xFFFFC857;
@@ -506,9 +501,8 @@ public final class AttunementJournalScreen extends Screen {
 		if (player != null) {
 			Set<String> discovered = new HashSet<>(AttunedAttachments.getDiscoveredConfluences(player));
 			Registry<SynergyDefinition> registry =
-				player.level().registryAccess().lookupOrThrow(AttunedRegistries.SYNERGY_DEFINITIONS);
-			registry.listElements().forEach(holder -> {
-				SynergyDefinition def = holder.value();
+				player.level().registryAccess().registryOrThrow(AttunedRegistries.SYNERGY_DEFINITIONS);
+			registry.stream().forEach(def -> {
 				String id = registry.getKey(def).toString();
 				if (discovered.contains(id)) {
 					rows.add(I18n.get("confluence.attuned." + pathOf(id) + ".name"));
@@ -595,7 +589,7 @@ public final class AttunementJournalScreen extends Screen {
 		}
 
 		@Override
-		protected void extractContents(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
+		protected void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
 			int x0 = getX();
 			int y0 = getY();
 			int x1 = x0 + getWidth();
@@ -604,7 +598,7 @@ public final class AttunementJournalScreen extends Screen {
 				if (isHoveredOrFocused()) {
 					graphics.fill(x0, y0, x1, y1, ROW_HOVER);
 				}
-				extractDefaultLabel(graphics.textRendererForWidget(this, GuiGraphicsExtractor.HoveredTextEffects.NONE));
+				renderString(graphics, Minecraft.getInstance().font, LABEL_LIGHT);
 				return;
 			}
 			int face = this.active
@@ -616,7 +610,7 @@ public final class AttunementJournalScreen extends Screen {
 			graphics.fill(x0 + 2, y0 + 2, x1 - 2, y1 - 2, face);
 			graphics.fill(x0 + 3, y0 + 3, x1 - 3, y0 + 4, this.active ? 0xFFE0C6FF : 0xFF77707E);
 			graphics.fill(x0 + 3, y1 - 4, x1 - 3, y1 - 3, 0xFF17151D);
-			extractDefaultLabel(graphics.textRendererForWidget(this, GuiGraphicsExtractor.HoveredTextEffects.NONE));
+			renderString(graphics, Minecraft.getInstance().font, LABEL_LIGHT);
 		}
 	}
 

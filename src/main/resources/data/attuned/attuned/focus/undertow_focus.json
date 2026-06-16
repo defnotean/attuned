@@ -1,15 +1,11 @@
 {
-	"item": "attuned:undertow_focus",
-	"cost": 4,
-	"unique": true,
-	"affinity": "tide",
-	"faction": "attuned:tideborn",
-	"modifiers": [
-		{
-			"attribute": "minecraft:water_movement_efficiency",
-			"amount": 0.5,
-			"operation": "add_value"
-		}
-	],
-	"behavior": "attuned:undertow"
+    "item":  "attuned:undertow_focus",
+    "cost":  4,
+    "unique":  true,
+    "affinity":  "tide",
+    "faction":  "attuned:tideborn",
+    "modifiers":  [
+
+                  ],
+    "behavior":  "attuned:undertow"
 }

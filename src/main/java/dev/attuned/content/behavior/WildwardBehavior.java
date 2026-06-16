@@ -24,9 +24,9 @@ public final class WildwardBehavior implements FocusBehavior {
 
 	@Override
 	public void onTick(ServerPlayer player, ItemStack focus) {
-		if (onGreenFooting(player) && !player.hasEffect(MobEffects.RESISTANCE)) {
+		if (onGreenFooting(player) && !player.hasEffect(MobEffects.DAMAGE_RESISTANCE)) {
 			player.addEffect(new MobEffectInstance(
-				MobEffects.RESISTANCE, RESISTANCE_TICKS, 0, true, false, true));
+				MobEffects.DAMAGE_RESISTANCE, RESISTANCE_TICKS, 0, true, false, true));
 		}
 	}
 

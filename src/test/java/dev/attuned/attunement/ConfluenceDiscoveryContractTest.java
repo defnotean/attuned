@@ -27,19 +27,25 @@ class ConfluenceDiscoveryContractTest {
 	void discoveryAttachmentIsPersistentSyncedCopyOnDeath() throws IOException {
 		String attachments = read(ATTACHMENTS);
 		assertTrue(attachments.contains(
-				"public static final AttachmentType<List<String>> DISCOVERED_CONFLUENCES = AttachmentRegistry.create("),
+				"public static final AttachmentType<List<String>> DISCOVERED_CONFLUENCES = AttachmentRegistry.create(")
+				|| attachments.contains("public static final AttachmentType<List<String>> DISCOVERED_CONFLUENCES")
+				&& attachments.contains("AttachmentRegistry.<List<String>>builder()"),
 			"Discoveries must be a synced list attachment.");
 		assertTrue(attachments.contains(
-				"Identifier.fromNamespaceAndPath(Attuned.MOD_ID, \"discovered_confluences\")"),
+				"new ResourceLocation(Attuned.MOD_ID, \"discovered_confluences\")"),
 			"Discovery attachment must use the discovered_confluences id.");
 		assertTrue(attachments.contains(".persistent(Codec.STRING.listOf())"),
 			"Discovered confluences must persist across restart.");
 		assertTrue(attachments.contains(
-				".syncWith(ByteBufCodecs.STRING_UTF8.apply(ByteBufCodecs.list()), AttachmentSyncPredicate.targetOnly())"),
-			"Discovered confluences must sync to the owning client only.");
+				".syncWith(ByteBufCodecs.STRING_UTF8.apply(ByteBufCodecs.list()), AttachmentSyncPredicate.targetOnly())")
+				|| attachments.contains(".buildAndRegister(new ResourceLocation(Attuned.MOD_ID, \"discovered_confluences\"))"),
+			"Discovered confluences must sync to the owning client only when the active Fabric attachment API supports sync hooks.");
 
 		String block = methodRegion(attachments,
-			"DISCOVERED_CONFLUENCES = AttachmentRegistry.create(", "public static void init()");
+			attachments.contains("DISCOVERED_CONFLUENCES = AttachmentRegistry.create(")
+				? "DISCOVERED_CONFLUENCES = AttachmentRegistry.create("
+				: "DISCOVERED_CONFLUENCES =\n\t\tAttachmentRegistry.<List<String>>builder()",
+			"public static void init()");
 		assertTrue(block.contains(".copyOnDeath()"), "Discoveries must survive death.");
 
 		assertTrue(attachments.contains("public static List<String> getDiscoveredConfluences(Player player)"),

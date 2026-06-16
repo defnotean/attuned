@@ -79,7 +79,7 @@ public final class AttunedCommands {
 				// CommandSourceStack#hasPermission(int) is gone; gating now uses
 				// Commands.hasPermission(PermissionCheck) with a LEVEL_* constant.
 				.then(Commands.literal("capacity")
-					.requires(Commands.hasPermission(Commands.LEVEL_GAMEMASTERS))
+					.requires(source -> source.hasPermission(Commands.LEVEL_GAMEMASTERS))
 					.executes(ctx -> {
 						ServerPlayer player = ctx.getSource().getPlayerOrException();
 						int capacity = AttunedAttachments.getCapacity(player);
@@ -98,14 +98,14 @@ public final class AttunedCommands {
 							return capacity;
 						})))
 				.then(Commands.literal("status")
-					.requires(Commands.hasPermission(Commands.LEVEL_GAMEMASTERS))
+					.requires(source -> source.hasPermission(Commands.LEVEL_GAMEMASTERS))
 					.executes(ctx -> {
 						ServerPlayer player = ctx.getSource().getPlayerOrException();
 						printStatus(ctx.getSource(), player);
 						return 1;
 					}))
 				.then(Commands.literal("validate")
-					.requires(Commands.hasPermission(Commands.LEVEL_GAMEMASTERS))
+					.requires(source -> source.hasPermission(Commands.LEVEL_GAMEMASTERS))
 					.executes(ctx -> validateContent(ctx.getSource())))));
 	}
 

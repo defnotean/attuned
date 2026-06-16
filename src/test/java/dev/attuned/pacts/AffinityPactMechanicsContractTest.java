@@ -42,7 +42,7 @@ class AffinityPactMechanicsContractTest {
 			"Tidesworn should dispatch from the shared AFTER_DAMAGE hook, like Pyresworn.");
 		assertTrue(afterDamage.contains("tideswornSlow(attacker, defender, source)"),
 			"Tidesworn dispatch should call its slow helper.");
-		assertTrue(tideswornSlow.contains("MobEffects.SLOWNESS"),
+		assertTrue(tideswornSlow.contains("MobEffects.MOVEMENT_SLOWDOWN"),
 			"Tidesworn's control effect is a Slowness, dragging the foe in the current.");
 		assertTrue(tideswornSlow.contains("isDirectMelee(attacker, source)"),
 			"Tidesworn should only Slow on a direct melee hit.");
@@ -153,6 +153,7 @@ class AffinityPactMechanicsContractTest {
 	}
 
 	private static String methodBody(String source, String signaturePrefix) {
+		source = source.replace("\r\n", "\n").replace('\r', '\n');
 		int signatureStart = source.indexOf(signaturePrefix);
 		assertTrue(signatureStart >= 0, "Missing method signature: " + signaturePrefix);
 		int bodyStart = source.indexOf('{', signatureStart);

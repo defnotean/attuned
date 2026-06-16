@@ -1,5 +1,7 @@
 package dev.attuned.content;
 
+import dev.attuned.compat.ParticleCompat;
+
 import dev.attuned.AttunedServerCleanup;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -140,7 +142,7 @@ public final class AltarAnimations {
 		Vec3 chest = player.position().add(0, player.getBbHeight() * 0.6, 0);
 		double progress = (age + 0.5) / DURATION_TICKS;
 		Vec3 emitAt = altarTop.lerp(chest, Math.min(1.0, progress));
-		DustParticleOptions dust = new DustParticleOptions(p.rgb(), 0.9F);
+		DustParticleOptions dust = ParticleCompat.dust(p.rgb(), 0.9F);
 		p.level().sendParticles(dust, emitAt.x, emitAt.y, emitAt.z, PARTICLES_PER_TICK, 0.1, 0.1, 0.1, 0.0);
 	}
 
@@ -181,7 +183,7 @@ public final class AltarAnimations {
 		if (player == null) {
 			return;
 		}
-		DustParticleOptions dust = new DustParticleOptions(p.rgb(), 1.2F);
+		DustParticleOptions dust = ParticleCompat.dust(p.rgb(), 1.2F);
 		p.level().sendParticles(dust,
 			player.getX(), player.getY() + player.getBbHeight() / 2, player.getZ(),
 			24, 0.4, 0.6, 0.4, 0.02);

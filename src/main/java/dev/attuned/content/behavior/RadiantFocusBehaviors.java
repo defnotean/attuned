@@ -1,5 +1,9 @@
 package dev.attuned.content.behavior;
 
+import dev.attuned.compat.AttributeModifierIds;
+
+import dev.attuned.compat.AfterDamageCallback;
+
 import dev.attuned.Attuned;
 import dev.attuned.AttunedPlayerCleanup;
 import dev.attuned.AttunedServerCleanup;
@@ -18,7 +22,7 @@ import net.fabricmc.fabric.api.event.player.UseBlockCallback;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.Holder;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.tags.BlockTags;
@@ -88,7 +92,7 @@ public final class RadiantFocusBehaviors {
 			initialized = true;
 			AttunedPlayerCleanup.onForget(STATE::remove);
 			AttunedServerCleanup.onStop(STATE::clear);
-			ServerLivingEntityEvents.AFTER_DAMAGE.register(Votive::afterDamage);
+			AfterDamageCallback.EVENT.register(Votive::afterDamage);
 		}
 
 		private static void afterDamage(LivingEntity defender, DamageSource source,
@@ -199,7 +203,7 @@ public final class RadiantFocusBehaviors {
 			AttunedPlayerCleanup.onForget(active::remove);
 			AttunedServerCleanup.onStop(cooldowns::clear);
 			AttunedServerCleanup.onStop(active::clear);
-			ServerLivingEntityEvents.AFTER_DAMAGE.register(this::afterDamage);
+			AfterDamageCallback.EVENT.register(this::afterDamage);
 		}
 
 		@Override
@@ -327,8 +331,8 @@ public final class RadiantFocusBehaviors {
 	}
 
 	public static final class Namesake implements FocusBehavior {
-		private static final Identifier LUCK_ID =
-			Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "namesake_focus_luck");
+		private static final ResourceLocation LUCK_ID =
+			new ResourceLocation(Attuned.MOD_ID, "namesake_focus_luck");
 		private static final double LUCK_BONUS = 1.0D;
 		private static final double NAMED_ENTITY_RADIUS = 8.0D;
 
@@ -376,17 +380,16 @@ public final class RadiantFocusBehaviors {
 
 		private static void applyLuck(ServerPlayer player) {
 			AttributeInstance luck = player.getAttribute(Attributes.LUCK);
-			if (luck == null || luck.getModifier(LUCK_ID) != null) {
+			if (luck == null || luck.getModifier(AttributeModifierIds.uuid(LUCK_ID)) != null) {
 				return;
 			}
-			luck.addTransientModifier(new AttributeModifier(
-				LUCK_ID, LUCK_BONUS, AttributeModifier.Operation.ADD_VALUE));
+			luck.addTransientModifier(new AttributeModifier(AttributeModifierIds.uuid(LUCK_ID), AttributeModifierIds.name(LUCK_ID), LUCK_BONUS, AttributeModifier.Operation.ADD_VALUE));
 		}
 
 		private static void removeLuck(ServerPlayer player) {
 			AttributeInstance luck = player.getAttribute(Attributes.LUCK);
 			if (luck != null) {
-				luck.removeModifier(LUCK_ID);
+				luck.removeModifier(AttributeModifierIds.uuid(LUCK_ID));
 			}
 		}
 	}

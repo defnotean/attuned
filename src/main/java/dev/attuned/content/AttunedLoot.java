@@ -2,18 +2,16 @@ package dev.attuned.content;
 
 import dev.attuned.AttunedConfig;
 import dev.attuned.Attuned;
-import dev.attuned.AttunedRegistries;
 import dev.attuned.api.focus.Affinity;
 import dev.attuned.api.focus.FocusDefinition;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import net.fabricmc.fabric.api.loot.v3.FabricLootTableBuilder;
-import net.fabricmc.fabric.api.loot.v3.LootTableEvents;
-import net.minecraft.core.HolderLookup;
+import net.fabricmc.fabric.api.loot.v2.FabricLootTableBuilder;
+import net.fabricmc.fabric.api.loot.v2.LootTableEvents;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.storage.loot.LootPool;
@@ -68,16 +66,16 @@ public final class AttunedLoot {
 	private static final int WEIGHT_OFF_THEME = 1;
 	private static final int WEIGHT_UNSEEN_THEME_BONUS = 3;
 	private static final int WEIGHT_SEAFARERS_FISHING_BONUS = 3;
-	private static final Identifier UNSEEN_FACTION =
-		Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "unseen");
-	private static final Identifier SEAFARERS_FACTION =
-		Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "seafarers");
+	private static final ResourceLocation UNSEEN_FACTION =
+		new ResourceLocation(Attuned.MOD_ID, "unseen");
+	private static final ResourceLocation SEAFARERS_FACTION =
+		new ResourceLocation(Attuned.MOD_ID, "seafarers");
 
-	private record FocusMeta(Affinity affinity, Identifier faction) {}
+	private record FocusMeta(Affinity affinity, ResourceLocation faction) {}
 	private record FocusEntry(Item item, FocusMeta meta) {}
 
 	/** Vanilla loot tables that gain a chance at a Focus. Grouped by source family. */
-	private static final Map<Identifier, Drop> TARGETS = Map.ofEntries(
+	private static final Map<ResourceLocation, Drop> TARGETS = Map.ofEntries(
 		// Structure chests — common exploration, modest odds.
 		Map.entry(chest("simple_dungeon"), normal(Tier.COMMON, null)),
 		Map.entry(chest("abandoned_mineshaft"), unseen(Tier.COMMON, null)),
@@ -132,19 +130,19 @@ public final class AttunedLoot {
 		return new Drop(tier, null, false, true);
 	}
 
-	private static Identifier chest(String name) {
+	private static ResourceLocation chest(String name) {
 		return vanilla("chests/" + name);
 	}
 
-	private static Identifier vanilla(String path) {
-		return Identifier.fromNamespaceAndPath("minecraft", path);
+	private static ResourceLocation vanilla(String path) {
+		return new ResourceLocation("minecraft", path);
 	}
 
-	static Map<Identifier, Drop> targetDrops() {
+	static Map<ResourceLocation, Drop> targetDrops() {
 		return TARGETS;
 	}
 
-	static boolean modifiesExistingPools(Identifier table) {
+	static boolean modifiesExistingPools(ResourceLocation table) {
 		return table.getNamespace().equals("minecraft") && table.getPath().startsWith("archaeology/");
 	}
 
@@ -154,17 +152,16 @@ public final class AttunedLoot {
 			return;
 		}
 		initialized = true;
-		LootTableEvents.MODIFY.register((key, tableBuilder, source, registries) -> {
-			Drop drop = TARGETS.get(key.identifier());
+		LootTableEvents.MODIFY.register((key, tableBuilder, source) -> {
+			Drop drop = TARGETS.get(key.location());
 			if (drop == null) {
 				return;
 			}
 			AttunedConfig config = AttunedConfig.get();
 			float chance = focusChance(config, drop);
 			float fragmentChance = fragmentChance(config, chance);
-			List<FocusEntry> focusEntries = focusEntries(
-				registries.lookupOrThrow(AttunedRegistries.FOCUS_DEFINITIONS));
-			if (modifiesExistingPools(key.identifier())) {
+			List<FocusEntry> focusEntries = focusEntries();
+			if (modifiesExistingPools(key.location())) {
 				((FabricLootTableBuilder) tableBuilder).modifyPools(pool -> {
 					float focusEntryChance = chance / Math.max(1, focusEntries.size());
 					for (FocusEntry focus : focusEntries) {
@@ -213,15 +210,10 @@ public final class AttunedLoot {
 		};
 	}
 
-	/** Affinities and factions from the synced datapack registry, keyed by Focus item. */
-	private static List<FocusEntry> focusEntries(HolderLookup.RegistryLookup<FocusDefinition> lookup) {
-		return lookup.listElements()
-			.map(holder -> {
-				FocusDefinition definition = holder.value();
-				return new FocusEntry(definition.item().value(), new FocusMeta(
-					definition.affinity().orElse(null),
-					definition.faction().orElse(null)));
-			})
+	/** Focus items for the 1.20.6 loot callback, which does not expose dynamic registries. */
+	private static List<FocusEntry> focusEntries() {
+		return AttunedContent.FOCI.stream()
+			.map(item -> new FocusEntry(item, new FocusMeta(null, null)))
 			.sorted(Comparator.comparing(focus ->
 				BuiltInRegistries.ITEM.getKey(focus.item()).toString()))
 			.toList();
@@ -232,7 +224,7 @@ public final class AttunedLoot {
 		return weightForMeta(focus.meta().affinity(), focus.meta().faction(), drop);
 	}
 
-	static int weightForMeta(Affinity affinity, Identifier faction, Drop drop) {
+	static int weightForMeta(Affinity affinity, ResourceLocation faction, Drop drop) {
 		int weight;
 		if (affinity == null) {
 			weight = WEIGHT_NEUTRAL;

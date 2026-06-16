@@ -1,6 +1,8 @@
 package dev.attuned.pacts;
 
-import net.minecraft.resources.Identifier;
+import dev.attuned.compat.AttributeModifierIds;
+
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
@@ -19,8 +21,8 @@ public final class PactTier4 {
 	private static final int FORGEBOUND_EXTRA_IGNITE_SECONDS = 1;
 	private static final int TIDESWORN_EXTRA_SLOW_TICKS = 20;
 
-	private static final Identifier STONEHEART_TOUGHNESS_MODIFIER_ID =
-		Identifier.fromNamespaceAndPath("attuned", "stoneheart_tier4_toughness");
+	private static final ResourceLocation STONEHEART_TOUGHNESS_MODIFIER_ID =
+		new ResourceLocation("attuned", "stoneheart_tier4_toughness");
 
 	public static int pyreswornIgniteSeconds(Player player) {
 		return activeTier4(player, Pact.PYRESWORN)
@@ -69,19 +71,18 @@ public final class PactTier4 {
 			return;
 		}
 		boolean shouldHave = active == Pact.STONEHEART && isTier4Complete(player, Pact.STONEHEART);
-		boolean has = attr.getModifier(STONEHEART_TOUGHNESS_MODIFIER_ID) != null;
+		boolean has = attr.getModifier(AttributeModifierIds.uuid(STONEHEART_TOUGHNESS_MODIFIER_ID)) != null;
 		if (shouldHave && !has) {
-			attr.addTransientModifier(new AttributeModifier(
-				STONEHEART_TOUGHNESS_MODIFIER_ID, 1.0, AttributeModifier.Operation.ADD_VALUE));
+			attr.addTransientModifier(new AttributeModifier(AttributeModifierIds.uuid(STONEHEART_TOUGHNESS_MODIFIER_ID), AttributeModifierIds.name(STONEHEART_TOUGHNESS_MODIFIER_ID), 1.0, AttributeModifier.Operation.ADD_VALUE));
 		} else if (!shouldHave && has) {
-			attr.removeModifier(STONEHEART_TOUGHNESS_MODIFIER_ID);
+			attr.removeModifier(AttributeModifierIds.uuid(STONEHEART_TOUGHNESS_MODIFIER_ID));
 		}
 	}
 
 	public static void removeStoneheartToughness(ServerPlayer player) {
 		AttributeInstance attr = player.getAttribute(Attributes.ARMOR_TOUGHNESS);
 		if (attr != null) {
-			attr.removeModifier(STONEHEART_TOUGHNESS_MODIFIER_ID);
+			attr.removeModifier(AttributeModifierIds.uuid(STONEHEART_TOUGHNESS_MODIFIER_ID));
 		}
 	}
 

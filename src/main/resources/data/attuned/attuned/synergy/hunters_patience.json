@@ -1,10 +1,13 @@
 {
-	"members": ["attuned:lantern_focus", "attuned:veil_focus"],
-	"modifiers": [
-		{
-			"attribute": "minecraft:movement_speed",
-			"amount": 0.04,
-			"operation": "add_multiplied_base"
-		}
-	]
+    "members":  [
+                    "attuned:lantern_focus",
+                    "attuned:veil_focus"
+                ],
+    "modifiers":  [
+                      {
+                          "attribute":  "minecraft:generic.movement_speed",
+                          "amount":  0.04,
+                          "operation":  "add_multiplied_base"
+                      }
+                  ]
 }

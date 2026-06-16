@@ -1,12 +1,10 @@
 package dev.attuned.mixin;
 
 import dev.attuned.content.behavior.HarpoonBehavior;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.entity.projectile.arrow.AbstractArrow;
-import net.minecraft.world.entity.projectile.arrow.ThrownTrident;
+import net.minecraft.world.entity.projectile.AbstractArrow;
+import net.minecraft.world.entity.projectile.ThrownTrident;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.EntityHitResult;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -39,12 +37,6 @@ public abstract class ThrownTridentMixin {
 
 	@Inject(method = "onHitEntity", at = @At("TAIL"))
 	private void attuned$discardHarpoonAfterEntityHit(EntityHitResult hitResult, CallbackInfo ci) {
-		discardAfterHit();
-	}
-
-	@Inject(method = "hitBlockEnchantmentEffects", at = @At("TAIL"))
-	private void attuned$discardHarpoonAfterBlockHit(
-			ServerLevel level, BlockHitResult hitResult, ItemStack weapon, CallbackInfo ci) {
 		discardAfterHit();
 	}
 

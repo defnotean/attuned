@@ -1,9 +1,11 @@
 package dev.attuned.content.behavior;
 
+import dev.attuned.compat.AttributeModifierIds;
+
 import dev.attuned.Attuned;
 import dev.attuned.api.focus.FocusCondition;
 import dev.attuned.api.focus.FocusBehavior;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
@@ -17,8 +19,8 @@ import net.minecraft.world.item.ItemStack;
  * id so the toggle is idempotent.
  */
 public final class DuskwardBehavior implements FocusBehavior {
-	private static final Identifier DUSK_ARMOR_ID =
-		Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "duskward_focus_dark_armor");
+	private static final ResourceLocation DUSK_ARMOR_ID =
+		new ResourceLocation(Attuned.MOD_ID, "duskward_focus_dark_armor");
 	private static final double DUSK_ARMOR = 3.0;
 	/** Light level at or below which the dusk-ward hardens. */
 	private static final int MAX_LIGHT = 7;
@@ -39,17 +41,16 @@ public final class DuskwardBehavior implements FocusBehavior {
 
 	private static void apply(ServerPlayer player) {
 		AttributeInstance attribute = player.getAttribute(Attributes.ARMOR);
-		if (attribute == null || attribute.getModifier(DUSK_ARMOR_ID) != null) {
+		if (attribute == null || attribute.getModifier(AttributeModifierIds.uuid(DUSK_ARMOR_ID)) != null) {
 			return;
 		}
-		attribute.addTransientModifier(new AttributeModifier(
-			DUSK_ARMOR_ID, DUSK_ARMOR, AttributeModifier.Operation.ADD_VALUE));
+		attribute.addTransientModifier(new AttributeModifier(AttributeModifierIds.uuid(DUSK_ARMOR_ID), AttributeModifierIds.name(DUSK_ARMOR_ID), DUSK_ARMOR, AttributeModifier.Operation.ADD_VALUE));
 	}
 
 	private static void remove(ServerPlayer player) {
 		AttributeInstance attribute = player.getAttribute(Attributes.ARMOR);
 		if (attribute != null) {
-			attribute.removeModifier(DUSK_ARMOR_ID);
+			attribute.removeModifier(AttributeModifierIds.uuid(DUSK_ARMOR_ID));
 		}
 	}
 

@@ -73,7 +73,7 @@ public final class GravebindSave {
 		player.removeAllEffects();
 		player.clearFire();
 		player.addEffect(new MobEffectInstance(MobEffects.REGENERATION, 100, 1));
-		player.addEffect(new MobEffectInstance(MobEffects.RESISTANCE, 100, 1));
+		player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 100, 1));
 
 		ServerLevel level = (ServerLevel) player.level();
 		level.sendParticles(ParticleTypes.TOTEM_OF_UNDYING,
