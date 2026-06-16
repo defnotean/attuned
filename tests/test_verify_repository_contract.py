@@ -279,6 +279,23 @@ class VerifyRepositoryContractTest(unittest.TestCase):
             self.assertIn("attuned-zephyr-foci.png", problems[0])
             self.assertIn("IDAT", problems[0])
 
+    def test_png_resources_report_orphan_mcmeta_sidecars(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            textures = root / "src" / "main" / "resources" / "assets" / "attuned" / "textures" / "item"
+            textures.mkdir(parents=True)
+            (textures / "orphan.png.mcmeta").write_text('{"animation": {"frametime": 2}}\n', encoding="utf-8")
+            original_png_resource_root = verify_repository.PNG_RESOURCE_ROOT
+            verify_repository.PNG_RESOURCE_ROOT = root / "src" / "main" / "resources"
+            try:
+                with self.assertRaises(verify_repository.CheckFailed) as failure:
+                    verify_repository.check_png_resources()
+            finally:
+                verify_repository.PNG_RESOURCE_ROOT = original_png_resource_root
+
+            self.assertEqual("PNG resource headers", failure.exception.title)
+            self.assertIn("orphan.png.mcmeta", failure.exception.problems[0])
+
     def test_attuned_asset_references_report_missing_models_and_textures(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
             root = Path(temp_dir)
