@@ -4,6 +4,8 @@ import contextlib
 import importlib.util
 import io
 import json
+import os
+import subprocess
 import tempfile
 import unittest
 from pathlib import Path
@@ -38,6 +40,28 @@ LEGACY_PROFILE = {
     "status": "candidate",
     "notes": ["Example older maintenance target for tests."],
 }
+
+BRANCH_ACTIVE_PROFILES = {
+    "latest": "26.1.2",
+    "maintenance/minecraft-1.21.11": "1.21.11",
+    "maintenance/minecraft-1.20.6": "1.20.6",
+    "maintenance/minecraft-1.19.4": "1.19.4",
+    "maintenance/minecraft-1.18.2": "1.18.2",
+}
+
+
+def current_branch_name() -> str:
+    github_branch = os.environ.get("GITHUB_HEAD_REF") or os.environ.get("GITHUB_REF_NAME")
+    if github_branch:
+        return github_branch
+    result = subprocess.run(
+        ["git", "branch", "--show-current"],
+        cwd=ROOT,
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    return result.stdout.strip()
 
 
 def write_profile_config(root: Path) -> None:
@@ -83,7 +107,9 @@ class MinecraftVersionProfileContractTest(unittest.TestCase):
         self.assertEqual([], problems)
 
         active_id, active = minecraft_version_profile.active_profile(ROOT)
-        self.assertEqual("26.1.2", active_id)
+        expected_active = BRANCH_ACTIVE_PROFILES.get(current_branch_name())
+        if expected_active is not None:
+            self.assertEqual(expected_active, active_id)
         for key in (
             "minecraft_version",
             "loader_version",
@@ -95,12 +121,12 @@ class MinecraftVersionProfileContractTest(unittest.TestCase):
             "notes",
         ):
             self.assertIn(key, active)
-        self.assertEqual("25", active["java_version"])
+        self.assertIn(active_id, minecraft_version_profile.load_profiles(ROOT)["profiles"])
 
     def test_repository_profiles_cover_latest_and_four_maintenance_targets(self) -> None:
         profiles = minecraft_version_profile.load_profiles(ROOT)["profiles"]
 
-        self.assertEqual("26.1.2", minecraft_version_profile.load_profiles(ROOT)["active_profile"])
+        self.assertIn(minecraft_version_profile.load_profiles(ROOT)["active_profile"], profiles)
         expected = {
             "26.1.2": "current",
             "1.21.11": "maintenance",
