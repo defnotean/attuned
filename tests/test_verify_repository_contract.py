@@ -151,6 +151,26 @@ class VerifyRepositoryContractTest(unittest.TestCase):
             self.assertIn("advertises 1 Foci", problems[0])
             self.assertIn("ships 2 FocusDefinition files", problems[0])
 
+    def test_public_focus_counts_include_platform_descriptions(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            focus_dir = root / "src" / "main" / "resources" / "data" / "attuned" / "attuned" / "focus"
+            platform_dir = root / "docs" / "platform"
+            focus_dir.mkdir(parents=True)
+            platform_dir.mkdir(parents=True)
+            (focus_dir / "first_focus.json").write_text("{}", encoding="utf-8")
+            (focus_dir / "second_focus.json").write_text("{}", encoding="utf-8")
+            (root / "README.md").write_text("- 2 Foci across test categories\n", encoding="utf-8")
+            (platform_dir / "modrinth-description.md").write_text("- 1 Foci across test categories\n", encoding="utf-8")
+            (platform_dir / "curseforge-description.md").write_text("- 2 Foci across test categories\n", encoding="utf-8")
+
+            problems = verify_repository.public_focus_count_problems(root)
+
+            self.assertEqual(len(problems), 1)
+            self.assertIn("docs/platform/modrinth-description.md", problems[0])
+            self.assertIn("advertises 1 Foci", problems[0])
+            self.assertIn("ships 2 FocusDefinition files", problems[0])
+
     def test_current_changelog_section_excludes_prior_release_notes(self) -> None:
         changelog = (
             "# Changelog\n\n"

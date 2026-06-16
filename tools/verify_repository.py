@@ -129,6 +129,11 @@ ASSIGNMENT_PATTERN = re.compile(
     re.IGNORECASE,
 )
 README_FOCI_PATTERN = re.compile(r"\b(?P<count>\d+)\s+Foci\b")
+PUBLIC_FOCUS_COUNT_RELATIVE_FILES = (
+    Path("README.md"),
+    Path("docs/platform/modrinth-description.md"),
+    Path("docs/platform/curseforge-description.md"),
+)
 CHANGELOG_HEADING_PATTERN = re.compile(r"^##\s+Attuned\s+(?P<version>\S+)\b", re.MULTILINE)
 MODRINTH_CHANGELOG_PROVIDER_PATTERN = re.compile(
     r"^\s*changelog\s*=\s*providers\.provider\s*\{[^}]*currentChangelogSection\([^}]*\}\.get\(\)",
@@ -448,37 +453,51 @@ def shipped_focus_definition_count(root: Path = ROOT) -> int:
     focus_dir = root / FOCUS_DEFINITION_RELATIVE_DIR
     if not focus_dir.is_dir():
         raise CheckFailed(
-            "README Focus count",
+            "Public Focus counts",
             [f"{relative(focus_dir, root)}: missing FocusDefinition directory"],
         )
     return sum(1 for path in focus_dir.iterdir() if path.suffix == ".json")
 
 
-def readme_focus_count_problems(root: Path = ROOT) -> list[str]:
-    readme = root / "README.md"
-    if not readme.is_file():
-        return ["README.md: missing release overview"]
+def focus_count_doc_problems(path: Path, shipped_count: int, root: Path = ROOT) -> list[str]:
+    relative_path = relative(path, root)
+    if not path.is_file():
+        return [f"{relative_path}: missing release overview"]
 
-    text = readme.read_text(encoding="utf-8")
-    match = README_FOCI_PATTERN.search(text)
-    if match is None:
-        return ["README.md: missing advertised Focus count"]
+    text = path.read_text(encoding="utf-8")
+    matches = list(README_FOCI_PATTERN.finditer(text))
+    if not matches:
+        return [f"{relative_path}: missing advertised Focus count"]
 
-    advertised_count = int(match.group("count"))
+    problems: list[str] = []
+    for match in matches:
+        advertised_count = int(match.group("count"))
+        if advertised_count != shipped_count:
+            problems.append(
+                f"{relative_path}: advertises "
+                f"{advertised_count} Foci but ships {shipped_count} FocusDefinition files"
+            )
+    return problems
+
+
+def public_focus_count_problems(root: Path = ROOT) -> list[str]:
     shipped_count = shipped_focus_definition_count(root)
-    if advertised_count != shipped_count:
-        return [
-            "README.md: advertises "
-            f"{advertised_count} Foci but ships {shipped_count} FocusDefinition files"
-        ]
-    return []
+    problems: list[str] = []
+    for relative_file in PUBLIC_FOCUS_COUNT_RELATIVE_FILES:
+        problems.extend(focus_count_doc_problems(root / relative_file, shipped_count, root))
+    return problems
 
 
-def check_readme_focus_count() -> str:
-    problems = readme_focus_count_problems()
+def readme_focus_count_problems(root: Path = ROOT) -> list[str]:
+    shipped_count = shipped_focus_definition_count(root)
+    return focus_count_doc_problems(root / "README.md", shipped_count, root)
+
+
+def check_public_focus_counts() -> str:
+    problems = public_focus_count_problems()
     if problems:
-        raise CheckFailed("README Focus count", problems)
-    return f"README Focus count: {shipped_focus_definition_count()} Foci"
+        raise CheckFailed("Public Focus counts", problems)
+    return f"Public Focus counts: {shipped_focus_definition_count()} Foci in {len(PUBLIC_FOCUS_COUNT_RELATIVE_FILES)} docs"
 
 
 def gradle_properties(root: Path = ROOT) -> dict[str, str]:
@@ -634,7 +653,7 @@ def run_checks() -> int:
         check_src_json,
         check_png_resources,
         check_modrinth_gallery_pngs,
-        check_readme_focus_count,
+        check_public_focus_counts,
         check_modrinth_changelog,
         check_version_profile,
         check_issue_markers,
