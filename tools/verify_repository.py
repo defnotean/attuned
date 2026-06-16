@@ -295,6 +295,7 @@ def check_png_resources() -> str:
     for path in png_files:
         try:
             png_dimensions(path)
+            validate_png_chunks(path)
         except (OSError, ValueError) as exc:
             problems.append(f"{relative(path)}: {exc}")
     for path in sorted(PNG_RESOURCE_ROOT.rglob("*.png.mcmeta")):
