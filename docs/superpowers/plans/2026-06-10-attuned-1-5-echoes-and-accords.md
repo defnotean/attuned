@@ -1,6 +1,6 @@
 # Attuned 1.5 "Echoes and Accords" Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax.
+> **Implementation:** Work tasks in order using the checkbox (`- [ ]`) syntax below.
 >
 > **PREREQUISITE: the 1.4 plan (`2026-06-10-attuned-1-4-resonant-depths.md`) must be fully landed and released before starting this plan.** Several tasks build on 1.4 outputs (Grand Reliquary, faction set bonuses, Sanctum). The "READ THIS FIRST" constraints section of the 1.4 plan applies VERBATIM here — read it first, every constraint is load-bearing.
 

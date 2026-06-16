@@ -1,6 +1,6 @@
 # Offshore Harpoon Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **Implementation:** Work tasks in order using the checkbox (`- [ ]`) syntax below.
 
 **Goal:** Add The Offshore faction and Harpoon Focus, whose Focus Ability summons a temporary custom-model trident that cannot be crafted or made permanent.
 

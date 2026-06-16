@@ -53,11 +53,15 @@ replay_*.log
 *.hprof
 *.jfr
 
-# claude
-
+# local IDE / assistant tooling (never commit)
 .claude/
+.cursor/
+.playwright-cli/
+AGENTS.md
+.cursorrules
+output/
 
-# agent/tooling scratch dirs
+# local tooling scratch dirs
 /tmp/
 /.codex-remote-attachments/
 /.superpowers/

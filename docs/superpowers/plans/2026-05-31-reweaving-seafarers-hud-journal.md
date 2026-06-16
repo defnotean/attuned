@@ -1,6 +1,6 @@
 # Reweaving Seafarers HUD Journal Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **Implementation:** Work tasks in order using the checkbox (`- [ ]`) syntax below.
 
 **Goal:** Build the approved Reweaving expansion: a dedicated Altar of Reweaving, peaceful Seafarers fishing Foci, client HUD toggles, journal button rendering fix, expanded lore pages, and final Minecraft-ready assets.
 
@@ -1797,12 +1797,12 @@ If no fixes were needed after the prior task commits, do not create an empty com
 
 ## Execution Strategy
 
-Use subagent-driven development with disjoint ownership:
+Use parallel workstreams with disjoint ownership:
 
-- Worker 1: Task 2 journal button rendering and Task 7 journal lore.
-- Worker 2: Task 3 HUD config/keybinds/HUD renderer.
-- Worker 3: Task 4 and Task 5 Reweaving picker/block/menu/network/screen.
-- Worker 4: Task 6 Seafarers Foci/fishing/loot/assets.
-- Parent agent: integrate, resolve conflicts, run Task 8 and Task 9 verification.
+- Stream 1: Task 2 journal button rendering and Task 7 journal lore.
+- Stream 2: Task 3 HUD config/keybinds/HUD renderer.
+- Stream 3: Task 4 and Task 5 Reweaving picker/block/menu/network/screen.
+- Stream 4: Task 6 Seafarers Foci/fishing/loot/assets.
+- Integrator: merge streams, resolve conflicts, run Task 8 and Task 9 verification.
 
-Workers are not alone in the codebase. Each worker must preserve changes from other workers and must not revert user or sibling-agent edits.
+Each stream must preserve changes from other streams and must not revert unrelated edits.
