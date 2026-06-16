@@ -69,7 +69,7 @@ class DocsContractTest(unittest.TestCase):
         ci = (ROOT / ".github" / "workflows" / "ci.yml").read_text(encoding="utf-8")
         migration = (ROOT / "docs" / "versioning" / "minecraft-version-migration.md").read_text(encoding="utf-8")
 
-        self.assertIn("branches: [latest]", ci)
+        self.assertIn('branches: [latest, "maintenance/**"]', ci)
         self.assertNotIn("branches: [main]", ci)
         self.assertIn("tools/minecraft_version_profile.py current --github-output", ci)
         self.assertIn("steps.versions.outputs.java_version", ci)
