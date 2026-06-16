@@ -7,13 +7,8 @@ import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.Identifier;
 
-/**
- * Client-to-server signal that the player is holding jump while gliding with
- * the Updraft Focus active. The server re-validates elytra and active Focus
- * before applying lift.
- */
+/** Client-to-server jump-hold state for Updraft Focus flight boost. */
 public record UpdraftLiftPayload(boolean lifting) implements CustomPacketPayload {
-
 	public static final Type<UpdraftLiftPayload> TYPE =
 		new Type<>(Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "updraft_lift"));
 

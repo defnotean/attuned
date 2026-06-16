@@ -24,7 +24,15 @@ class UpdraftFocusContractTest {
 	@Test
 	void updraftFocusIsWiredForElytraLift() throws IOException {
 		String behavior = read(BEHAVIOR);
-		assertTrue(behavior.contains("applyBoost("));
+		assertTrue(behavior.contains("public void onTick(ServerPlayer player, ItemStack focus)"));
+		assertTrue(behavior.contains("tickFlight(player);"));
+		assertTrue(behavior.contains("public void onDeactivate(ServerPlayer player, ItemStack focus)"));
+		assertTrue(behavior.contains("setLifting(player.getUUID(), false);"));
+		assertTrue(behavior.contains("tickFlight("));
+		assertTrue(behavior.contains("applyFlightBoost("));
+		assertTrue(behavior.contains("mitigatesFallDamage("));
+		assertTrue(behavior.contains("setLifting("));
+		assertTrue(behavior.contains("LAST_FLIGHT_TICK"));
 		assertTrue(behavior.contains("startFallFlying()"));
 		assertTrue(behavior.contains("Items.ELYTRA"));
 		assertTrue(behavior.contains("THRUST"));
@@ -32,13 +40,19 @@ class UpdraftFocusContractTest {
 
 		String networking = read(NETWORKING);
 		assertTrue(networking.contains("UpdraftLiftPayload.TYPE"));
-		assertTrue(networking.contains("UpdraftBehavior.isActive(player)"));
 		assertTrue(networking.contains("UpdraftBehavior.setLifting"));
 
 		String client = read(CLIENT);
 		assertTrue(client.contains("UpdraftLiftPayload"));
 		assertTrue(client.contains("keyJump.isDown()"));
-		assertTrue(client.contains("AttunedContent.UPDRAFT_FOCUS"));
+		assertTrue(client.contains("lastSent"));
+		assertTrue(client.contains("heartbeat"));
+		assertTrue(client.contains("wantsLift(Player player)"));
+		assertTrue(client.contains("heartbeat % 10"));
+
+		String mixins = read(Path.of("src/main/resources/attuned.mixins.json"));
+		assertTrue(mixins.contains("PlayerUpdraftMixin"));
+		assertTrue(mixins.contains("LivingEntityUpdraftFallMixin"));
 
 		String focus = read(FOCUS);
 		assertTrue(focus.contains("\"behavior\": \"attuned:updraft\""));
