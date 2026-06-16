@@ -8,7 +8,7 @@ Equip **Foci** into six inventory slots, but mind your **attunement capacity**. 
 
 ## At a glance
 
-- 94 Foci across mobility, defense, combat, stealth, holy, seafaring, shadow, utility, and the eightfold counter wheel
+- 95 Foci across mobility, defense, combat, stealth, holy, seafaring, shadow, utility, and the eightfold counter wheel
 - **Eightfold Affinities** — Tide, Forge, Verdant, and Umbral now stand beside Fury, Bastion, Zephyr, and Holy as first-class lanes
 - **Refreshed original Focus art** for the new affinity Foci, processed into animated Minecraft item sheets so they sit with the existing medallion/talisman theme
 - **The Unseen**: a stealth faction built around quiet movement, low-light veils, smoke misdirection, and ambush openings
@@ -21,23 +21,18 @@ Equip **Foci** into six inventory slots, but mind your **attunement capacity**. 
 - Lootr-friendly survival loot: every Focus and shard fragment rolls through vanilla structures, fishing treasure, archaeology, and trial rewards; wandering traders can rarely offer the journal or a shard fragment
 - Combat HUD shows your gem, your target's gem, and resonance at a glance
 
-## Current release — Attuned 1.5.0
+## Current release — Attuned 1.5.1
 
-- **Combat config tuning** — Discord damage multiplier and resonance gain/decay are server-configurable (`config/attuned.json`).
-- **Pact tacticals** on the Focus Ability key (**R** by default), including **crouch overcharge** (spends resonance for a stronger burst), plus new ability Foci that claim the keybind.
-- **Pact Trials (Tier 4)** — long-term goals per pact; permanent completion unlocks a small passive while that pact is awake again.
-- **Faction set bonuses** for Tideborn, Forgebound, Wildroot, and Umbral (three+ active Foci sharing the faction).
-- **Resonant surge interactivity** — server-wide surge fields grant amplified resonance; tunable interval, duration, and radius.
-- **Onboarding hints** — one-shot toasts for first shard, dormant Focus, confluence, pact trial completion, and more.
-- **Affinity Loom** at the Altar of Reweaving — reroll one Focus within its affinity for escalating Attunement Shards.
-- **Build sharing** — Reliquary Share/Import copies `attuned:v1:` clipboard presets between players.
-- **Combat feedback** — particles and sounds on resonance swings, Apex procs, ability casts, and pact tacticals.
-- **HUD and journal surfacing** — pact trial progress, tactical cooldown ring, Affinity Loom hints, and expanded rules in the Attunement Journal.
+- **Updraft Focus** — a new elytra utility Focus that boosts forward while holding jump and brakes hard while holding sprint/control.
+- **Smoother flight control** — Updraft thrust and braking ease velocity instead of snapping it, so long glides are calmer and easier to steer.
+- **Flight feedback** — boost, brake, and exhaustion states use restrained vanilla particles, sounds, and action-bar messages.
+- **PvP exhaustion safeguard** — sustained PvP pressure for more than five seconds makes Updraft falter briefly, applying a hard brake plus short Weakness and Slowness.
+- **1.5.0 foundation** — Eightfold Affinities, Pact Trials, pact tacticals, Affinity Loom, build sharing, faction set bonuses, Resonant Surges, and expanded HUD/journal surfacing remain the core release base.
 
 ## Foundation — Resonant Depths
 
 - The promoted **Tide, Forge, Verdant, and Umbral** affinities expand the counter wheel from four to eight while the original four-affinity Pact/Discord cycle survives as a subset.
-- The eightfold roster includes 94 Foci across all affinity, faction, and utility lanes. Tooltips show each Focus's affinity; the Attunement Journal carries the matchup reference.
+- The eightfold roster includes 95 Foci across all affinity, faction, and utility lanes. Tooltips show each Focus's affinity; the Attunement Journal carries the matchup reference.
 - The new affinity Focus textures ship as crisp animated item sheets with bold medallion silhouettes, disciplined affinity palettes, and inventory-scale readability checks.
 - **Focus Confluences**, **Tempering**, **Grand Focus Reliquary**, **Attunement Sanctums**, **Resonant Surges**, datapack-defined Focus behavior palettes, and expanded journal/tooltips round out the release.
 

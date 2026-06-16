@@ -36,11 +36,10 @@ add a Focus.
 - Creative inventory content is split into **Fury & Bastion**, **Zephyr &
   Holy**, **Tide & Forge**, **Verdant & Umbral**, and **Utility & Tools** tabs
   so the full roster is easy to scan.
-- Current release headline: **Attuned 1.5.0 — Eightfold Affinities & Resonant Engagement** adds the eightfold counter wheel, Pact
-  Trials (Tier 4), Affinity Loom reweaving, build sharing, faction set bonuses
-  for Tideborn/Forgebound/Wildroot/Umbral, pact tacticals on the Focus Ability
-  key, combat config tuning (Discord damage, resonance in config), resonant surge
-  interactivity, onboarding hints, and HUD/journal surfacing.
+- Current release headline: **Attuned 1.5.1 — Updraft Flight Polish** adds the
+  Updraft Focus, smooth elytra boost/brake controls, in-flight feedback, and a
+  five-second PvP exhaustion safeguard on top of the 1.5.0 eightfold affinity
+  and Resonant Engagement foundation.
 
 That is the whole idea: a Focus is a trade-off, never a free bonus.
 
