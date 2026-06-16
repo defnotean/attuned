@@ -93,11 +93,11 @@ python tools/minecraft_version_profile.py render-checklist <minecraft-version> -
 
 ## Newer Minecraft Version Workflow
 
-1. Start from green `main`.
+1. Start from green `latest`.
 
    ```bash
-   git checkout main
-   git pull --ff-only origin main
+   git checkout latest
+   git pull --ff-only origin latest
    git checkout -b port/minecraft-<new-version>
    ```
 
@@ -150,10 +150,10 @@ python tools/minecraft_version_profile.py render-checklist <minecraft-version> -
 
 Older support should normally live on a maintenance branch unless the codebase remains source-compatible.
 
-1. Branch from the closest release tag or from current `main` if the target is still source-compatible.
+1. Branch from the closest release tag or from current `latest` if the target is still source-compatible.
 
    ```bash
-   git checkout main
+   git checkout latest
    git checkout -b maintenance/minecraft-<old-version>
    ```
 
@@ -183,7 +183,7 @@ Older support should normally live on a maintenance branch unless the codebase r
 - Modrinth game versions come from `project.minecraft_version` in `build.gradle`.
 - CurseForge game version names come from `minecraft_version` and `java_version` in `gradle.properties`.
 - Platform descriptions and release notes should be changed only after compile/build/smoke pass.
-- For a completed, green Attuned change, merge to `main`, push `main`, and watch GitHub CI to success.
+- For a completed, green Attuned change, merge to `latest`, push `latest`, and watch GitHub CI to success.
 
 ## Rollback Rules
 
