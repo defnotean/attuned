@@ -598,7 +598,8 @@ public final class Apex {
 			// knockback pushes opposite the (x, z) source vector, so passing the
 			// player's position throws the victim outward, away from the nova.
 			victim.knockback(MAELSTROM_NOVA_KNOCKBACK,
-				player.getX() - victim.getX(), player.getZ() - victim.getZ());
+				player.getX() - victim.getX(), player.getZ() - victim.getZ(),
+				level.damageSources().generic(), 0.0F);
 			victim.addEffect(new MobEffectInstance(MobEffects.WEAKNESS,
 				MAELSTROM_NOVA_WEAKNESS_TICKS, 0, true, true, true));
 		}

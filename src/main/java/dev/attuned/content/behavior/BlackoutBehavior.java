@@ -10,6 +10,7 @@ import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EntityTypes;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.AABB;
@@ -61,6 +62,6 @@ public final class BlackoutBehavior implements FocusBehavior {
 
 	private static boolean immuneToMisdirection(Mob mob) {
 		EntityType<?> type = mob.getType();
-		return type == EntityType.WARDEN || type == EntityType.WITHER || type == EntityType.ENDER_DRAGON;
+		return type == EntityTypes.WARDEN || type == EntityTypes.WITHER || type == EntityTypes.ENDER_DRAGON;
 	}
 }

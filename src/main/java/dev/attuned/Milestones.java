@@ -10,6 +10,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EntityTypes;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.level.Level;
 
@@ -89,13 +90,13 @@ public final class Milestones {
 	/** The boss-kill milestone for an entity type, or {@code null} if it is not a milestone boss. */
 	private static Milestone bossMilestone(LivingEntity entity) {
 		EntityType<?> type = entity.getType();
-		if (type == EntityType.WITHER) {
+		if (type == EntityTypes.WITHER) {
 			return Milestone.WITHER;
 		}
-		if (type == EntityType.ENDER_DRAGON) {
+		if (type == EntityTypes.ENDER_DRAGON) {
 			return Milestone.DRAGON;
 		}
-		if (type == EntityType.ELDER_GUARDIAN) {
+		if (type == EntityTypes.ELDER_GUARDIAN) {
 			return Milestone.ELDER_GUARDIAN;
 		}
 		return null;

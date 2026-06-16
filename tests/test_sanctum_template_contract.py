@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import gzip
 import importlib.util
+import json
 import struct
 import tempfile
 import unittest
@@ -124,6 +125,35 @@ def _write_fixture(path: Path, data_version: int) -> None:
 
 
 class SanctumTemplateContractTest(unittest.TestCase):
+    def test_default_vanilla_path_uses_active_profile_and_common_jar_first(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            temp_root = Path(temp_dir) / "repo"
+            temp_home = Path(temp_dir) / "home"
+            (temp_root / "config").mkdir(parents=True)
+            (temp_root / "config" / "minecraft-version-profiles.json").write_text(
+                json.dumps({
+                    "active_profile": "26.2",
+                    "profiles": {"26.2": {"minecraft_version": "26.2"}},
+                }),
+                encoding="utf-8",
+            )
+            common = (
+                temp_home / ".gradle" / "caches" / "fabric-loom" / "minecraftMaven"
+                / "net" / "minecraft" / "minecraft-common-deobf" / "26.2"
+                / "minecraft-common-deobf-26.2.jar"
+            )
+            common.parent.mkdir(parents=True)
+            common.write_bytes(b"jar placeholder")
+
+            self.assertEqual(
+                generate_sanctum_template.active_minecraft_version(temp_root),
+                "26.2",
+            )
+            self.assertEqual(
+                generate_sanctum_template.default_vanilla_path(temp_root, temp_home),
+                common,
+            )
+
     def test_data_version_is_read_from_fixture_not_hardcoded(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
             fixture = Path(temp_dir) / "vanilla.nbt"

@@ -1,6 +1,18 @@
 {
-  "active_profile": "26.1.2",
+  "active_profile": "26.2",
   "profiles": {
+    "26.2": {
+      "minecraft_version": "26.2",
+      "loader_version": "0.19.3",
+      "loom_version": "1.17.11",
+      "fabric_api_version": "0.152.1+26.2",
+      "java_version": "25",
+      "fabric_loader_range": ">=0.19.3",
+      "status": "current",
+      "notes": [
+        "Current released Chaos Cubed target. Use as the known-good baseline before creating newer or older port profiles."
+      ]
+    },
     "26.1.2": {
       "minecraft_version": "26.1.2",
       "loader_version": "0.19.2",
@@ -8,9 +20,10 @@
       "fabric_api_version": "0.149.0+26.1.2",
       "java_version": "25",
       "fabric_loader_range": ">=0.19.2",
-      "status": "current",
+      "status": "maintenance",
       "notes": [
-        "Current released target. Use as the known-good baseline before creating newer or older port profiles."
+        "Stable 26.1.2 line preserved before latest moved to Minecraft 26.2.",
+        "Requires compile, server smoke, and gameplay QA on maintenance/minecraft-26.1.2 before publishing."
       ]
     },
     "1.21.11": {

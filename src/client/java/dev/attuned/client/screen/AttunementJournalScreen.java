@@ -154,7 +154,7 @@ public final class AttunementJournalScreen extends Screen {
 
 		ClientPlayNetworking.registerGlobalReceiver(OpenJournalPayload.TYPE, (payload, context) ->
 			context.client().execute(() ->
-				context.client().setScreen(new AttunementJournalScreen())));
+				context.client().setScreenAndShow(new AttunementJournalScreen())));
 	}
 
 	@Override

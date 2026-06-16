@@ -9,8 +9,7 @@ import net.fabricmc.fabric.api.client.rendering.v1.level.LevelRenderContext;
 import net.fabricmc.fabric.api.client.rendering.v1.level.LevelRenderEvents;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
-import net.minecraft.client.renderer.ShapeRenderer;
-import net.minecraft.client.renderer.rendertype.RenderType;
+import net.minecraft.client.renderer.rendertype.RenderTypes;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.Identifier;
@@ -77,21 +76,17 @@ public final class TremorOreOutlines {
 			return;
 		}
 
-		Vec3 camera = context.gameRenderer().getMainCamera().position();
-		RenderType outline = TremorOreRenderTypes.oreOutline();
+		Vec3 camera = context.gameRenderer().mainCamera().position();
 		for (BlockPos orePos : orePositions) {
 			double x = orePos.getX() - camera.x();
 			double y = orePos.getY() - camera.y();
 			double z = orePos.getZ() - camera.z();
-			ShapeRenderer.renderShape(
-				context.poseStack(),
-				context.bufferSource().getBuffer(outline),
-				Shapes.block(),
-				x, y, z,
-				OUTLINE_COLOR,
-				LINE_WIDTH);
+			context.poseStack().pushPose();
+			context.poseStack().translate(x, y, z);
+			context.submitNodeCollector().submitShapeOutline(
+				context.poseStack(), Shapes.block(), RenderTypes.linesTranslucent(), OUTLINE_COLOR, LINE_WIDTH, true);
+			context.poseStack().popPose();
 		}
-		context.bufferSource().endBatch(outline);
 	}
 
 	private static void clear() {

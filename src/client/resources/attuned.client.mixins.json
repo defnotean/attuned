@@ -10,7 +10,6 @@
 		"HumanoidArmorLayerInvisibilityMixin",
 		"InventoryScreenMixin",
 		"ItemInHandLayerInvisibilityMixin",
-		"RenderTypeInvoker",
 		"ThrownTridentRendererMixin",
 		"ThrownTridentRenderStateMixin",
 		"WingsLayerInvisibilityMixin"

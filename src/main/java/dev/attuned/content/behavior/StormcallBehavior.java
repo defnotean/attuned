@@ -12,7 +12,7 @@ import java.util.UUID;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.EntitySpawnReason;
-import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EntityTypes;
 import net.minecraft.world.entity.LightningBolt;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ItemStack;
@@ -79,7 +79,7 @@ public final class StormcallBehavior implements FocusBehavior {
 		int count = Math.min(BOLTS, targets.size());
 		for (int i = 0; i < count; i++) {
 			LivingEntity target = targets.get(i);
-			LightningBolt bolt = EntityType.LIGHTNING_BOLT.create(level, EntitySpawnReason.TRIGGERED);
+			LightningBolt bolt = EntityTypes.LIGHTNING_BOLT.create(level, EntitySpawnReason.TRIGGERED);
 			if (bolt != null) {
 				bolt.snapTo(target.getX(), target.getY(), target.getZ());
 				bolt.setCause(player);

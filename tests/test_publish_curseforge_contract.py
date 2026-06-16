@@ -29,7 +29,7 @@ class PublishCurseForgeTest(unittest.TestCase):
         metadata = publish_curseforge.build_metadata(
             changelog=changelog,
             version="1.3.0",
-            minecraft_version="26.1.2",
+            minecraft_version="26.2",
             java_version="25",
         )
 
@@ -38,7 +38,7 @@ class PublishCurseForgeTest(unittest.TestCase):
         self.assertEqual("release", metadata["releaseType"])
         self.assertIn("## Attuned 1.3.0 - The Focus Reliquary", metadata["changelog"])
         self.assertNotIn("Attuned 1.2.7", metadata["changelog"])
-        self.assertEqual(["26.1.2", "Java 25", "Client", "Server", "Fabric"],
+        self.assertEqual(["26.2", "Java 25", "Client", "Server", "Fabric"],
                          metadata["gameVersionNames"])
         self.assertEqual(
             {"projects": [{"slug": "fabric-api", "type": "requiredDependency"}]},

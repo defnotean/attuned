@@ -37,7 +37,7 @@ public final class RivetBehavior implements FocusBehavior {
 			|| state.is(Blocks.RAW_IRON_BLOCK)
 			|| state.is(Blocks.GOLD_BLOCK)
 			|| state.is(Blocks.RAW_GOLD_BLOCK)
-			|| state.is(Blocks.COPPER_BLOCK)
+			|| Blocks.COPPER_BLOCK.asList().contains(state.getBlock())
 			|| state.is(Blocks.RAW_COPPER_BLOCK)
 			|| state.is(Blocks.NETHERITE_BLOCK)
 			|| state.is(Blocks.ANVIL)
