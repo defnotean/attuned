@@ -79,7 +79,11 @@ def write_version_profile_fixture(root: Path, *, java_version: str = "25") -> No
     )
     (root / ".github" / "workflows" / "ci.yml").write_text(
         "run: python3 tools/minecraft_version_profile.py current --github-output \"$GITHUB_OUTPUT\"\n"
-        "java-version: ${{ steps.versions.outputs.java_version }}\n",
+        "java-version: ${{ steps.versions.outputs.java_version }}\n"
+        "run: python3 tools/verify_repository.py\n"
+        "run: python3 -m unittest discover -s tests\n"
+        "run: ./gradlew test build --no-daemon\n"
+        "run: python3 tools/minecraft_runtime_smoke.py --accept-eula --timeout 240 --stop-timeout 60\n",
         encoding="utf-8",
     )
     (root / "tools" / "publish_curseforge.py").write_text(
@@ -291,6 +295,23 @@ class VerifyRepositoryContractTest(unittest.TestCase):
             problems = verify_repository.version_profile_problems(root)
 
             self.assertTrue(any("java_version" in problem and "active profile" in problem for problem in problems))
+
+    def test_version_profile_problems_report_missing_ci_smoke_gate(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            write_version_profile_fixture(root)
+            (root / ".github" / "workflows" / "ci.yml").write_text(
+                "run: python3 tools/minecraft_version_profile.py current --github-output \"$GITHUB_OUTPUT\"\n"
+                "java-version: ${{ steps.versions.outputs.java_version }}\n"
+                "run: python3 tools/verify_repository.py\n"
+                "run: python3 -m unittest discover -s tests\n"
+                "run: ./gradlew test build --no-daemon\n",
+                encoding="utf-8",
+            )
+
+            problems = verify_repository.version_profile_problems(root)
+
+            self.assertTrue(any("Minecraft server smoke" in problem for problem in problems))
 
     def test_modrinth_gallery_pngs_report_missing_or_wrong_sized_panels(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:

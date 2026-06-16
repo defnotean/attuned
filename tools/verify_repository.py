@@ -941,6 +941,15 @@ def version_profile_problems(root: Path = ROOT) -> list[str]:
                 f"{CI_WORKFLOW_RELATIVE_FILE}: java-version {hardcoded_java.group('version')} "
                 f"does not match active profile java_version {expected_java}"
             )
+        required_ci_snippets = {
+            "tools/verify_repository.py": "run repository verification",
+            "unittest discover -s tests": "run Python contract tests",
+            "./gradlew test build --no-daemon": "run Gradle test/build",
+            "tools/minecraft_runtime_smoke.py": "run Minecraft server smoke",
+        }
+        for snippet, description in required_ci_snippets.items():
+            if snippet not in ci_workflow:
+                problems.append(f"{CI_WORKFLOW_RELATIVE_FILE}: must {description}")
 
     try:
         curseforge_tool = (root / CURSEFORGE_TOOL_RELATIVE_FILE).read_text(encoding="utf-8")
