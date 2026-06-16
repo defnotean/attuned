@@ -15,21 +15,22 @@
     },
     "26.1.2": {
       "minecraft_version": "26.1.2",
-      "loader_version": "0.19.2",
-      "loom_version": "1.16.3",
-      "fabric_api_version": "0.149.0+26.1.2",
+      "loader_version": "0.19.3",
+      "loom_version": "1.17.11",
+      "fabric_api_version": "0.152.1+26.1.2",
       "java_version": "25",
-      "fabric_loader_range": ">=0.19.2",
+      "fabric_loader_range": ">=0.19.3",
       "status": "maintenance",
       "notes": [
         "Stable 26.1.2 line preserved before latest moved to Minecraft 26.2.",
+        "Uses the latest Fabric Loader, Fabric API, and Loom releases available for the 26.1.2 target.",
         "Requires compile, server smoke, and gameplay QA on maintenance/minecraft-26.1.2 before publishing."
       ]
     },
     "1.21.11": {
       "minecraft_version": "1.21.11",
       "loader_version": "0.19.3",
-      "loom_version": "1.16.3",
+      "loom_version": "1.17.11",
       "fabric_api_version": "0.141.4+1.21.11",
       "java_version": "21",
       "fabric_loader_range": ">=0.19.3",
@@ -42,7 +43,7 @@
     "1.20.6": {
       "minecraft_version": "1.20.6",
       "loader_version": "0.19.3",
-      "loom_version": "1.16.3",
+      "loom_version": "1.17.11",
       "fabric_api_version": "0.100.8+1.20.6",
       "java_version": "21",
       "fabric_loader_range": ">=0.19.3",
@@ -55,7 +56,7 @@
     "1.19.4": {
       "minecraft_version": "1.19.4",
       "loader_version": "0.19.3",
-      "loom_version": "1.16.3",
+      "loom_version": "1.17.11",
       "fabric_api_version": "0.87.2+1.19.4",
       "java_version": "17",
       "fabric_loader_range": ">=0.19.3",
@@ -68,7 +69,7 @@
     "1.18.2": {
       "minecraft_version": "1.18.2",
       "loader_version": "0.19.3",
-      "loom_version": "1.16.3",
+      "loom_version": "1.17.11",
       "fabric_api_version": "0.77.0+1.18.2",
       "java_version": "17",
       "fabric_loader_range": ">=0.19.3",
