@@ -63,7 +63,7 @@ public final class PactTacticals {
 		Long endsAt = COOLDOWN_ENDS.get(player.getUUID());
 		if (endsAt != null && now < endsAt) {
 			int remaining = (int) (endsAt - now);
-			PlayerMessages.overlay(player, Component.translatable(
+			PlayerMessages.overlay(player, new net.minecraft.network.chat.TranslatableComponent(
 				"pact.attuned.tactical.cooldown",
 				FocusAbilityState.cooldownSecondsForMessage(remaining)));
 			FocusAbilityState.syncStatus(player,
@@ -75,7 +75,7 @@ public final class PactTacticals {
 		fireTactical(player, pact.get(), overcharge);
 		if (overcharge) {
 			Resonance.add(player, -OVERCHARGE_SPEND);
-			PlayerMessages.overlay(player, Component.translatable("pact.attuned.tactical.overcharge"));
+			PlayerMessages.overlay(player, new net.minecraft.network.chat.TranslatableComponent("pact.attuned.tactical.overcharge"));
 		}
 		CombatFeedback.pactTactical(player, pact.get(), overcharge);
 		int cooldown = CombatMomentum.effectiveCooldown(
@@ -83,7 +83,7 @@ public final class PactTacticals {
 		COOLDOWN_ENDS.put(player.getUUID(), now + cooldown);
 		FocusAbilityState.syncStatus(player,
 			FocusAbilityStatusPayload.PACT_TACTICAL_SLOT, cooldown, cooldown);
-		PlayerMessages.overlay(player, Component.translatable(tacticalMessageKey(pact.get())));
+		PlayerMessages.overlay(player, new net.minecraft.network.chat.TranslatableComponent(tacticalMessageKey(pact.get())));
 		return true;
 	}
 

@@ -48,7 +48,8 @@ class PresetNetworkingContractTest {
 		assertTrue(net.contains("ServerPlayNetworking.registerGlobalReceiver(DeletePresetPayload.TYPE"), "Delete receiver.");
 		assertTrue(net.contains("ServerPlayNetworking.registerGlobalReceiver(ImportPresetPayload.TYPE"), "Import receiver.");
 		assertTrue(net.contains("player.level().getServer().execute(")
-				|| net.contains("player.getLevel().getServer().execute("), "Server-thread hop.");
+				|| net.contains("player.getLevel().getServer().execute(")
+				|| net.contains("server.execute("), "Server-thread hop.");
 		assertTrue(net.contains("PresetApplicationResolver."), "Apply must delegate to the pure resolver.");
 		assertTrue(read(BOOTSTRAP).contains("PresetNetworking.init()"), "Bootstrap wiring.");
 	}

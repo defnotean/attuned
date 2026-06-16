@@ -43,20 +43,25 @@ public final class PresetNetworking {
 			return;
 		}
 		initialized = true;
-		ServerPlayNetworking.registerGlobalReceiver(SavePresetPayload.TYPE, (payload, player, sender) -> {
-			player.getLevel().getServer().execute(() -> savePreset(player, payload));
+		ServerPlayNetworking.registerGlobalReceiver(SavePresetPayload.TYPE, (server, player, handler, buf, sender) -> {
+			SavePresetPayload payload = SavePresetPayload.TYPE.read(buf);
+			server.execute(() -> savePreset(player, payload));
 		});
-		ServerPlayNetworking.registerGlobalReceiver(ApplyPresetPayload.TYPE, (payload, player, sender) -> {
-			player.getLevel().getServer().execute(() -> applyPreset(player, payload));
+		ServerPlayNetworking.registerGlobalReceiver(ApplyPresetPayload.TYPE, (server, player, handler, buf, sender) -> {
+			ApplyPresetPayload payload = ApplyPresetPayload.TYPE.read(buf);
+			server.execute(() -> applyPreset(player, payload));
 		});
-		ServerPlayNetworking.registerGlobalReceiver(DeletePresetPayload.TYPE, (payload, player, sender) -> {
-			player.getLevel().getServer().execute(() -> deletePreset(player, payload));
+		ServerPlayNetworking.registerGlobalReceiver(DeletePresetPayload.TYPE, (server, player, handler, buf, sender) -> {
+			DeletePresetPayload payload = DeletePresetPayload.TYPE.read(buf);
+			server.execute(() -> deletePreset(player, payload));
 		});
-		ServerPlayNetworking.registerGlobalReceiver(QuickApplyPresetPayload.TYPE, (payload, player, sender) -> {
-			player.getLevel().getServer().execute(() -> quickApplyPreset(player, payload));
+		ServerPlayNetworking.registerGlobalReceiver(QuickApplyPresetPayload.TYPE, (server, player, handler, buf, sender) -> {
+			QuickApplyPresetPayload payload = QuickApplyPresetPayload.TYPE.read(buf);
+			server.execute(() -> quickApplyPreset(player, payload));
 		});
-		ServerPlayNetworking.registerGlobalReceiver(ImportPresetPayload.TYPE, (payload, player, sender) -> {
-			player.getLevel().getServer().execute(() -> importPreset(player, payload));
+		ServerPlayNetworking.registerGlobalReceiver(ImportPresetPayload.TYPE, (server, player, handler, buf, sender) -> {
+			ImportPresetPayload payload = ImportPresetPayload.TYPE.read(buf);
+			server.execute(() -> importPreset(player, payload));
 		});
 		AttunedPlayerCleanup.onForget(LAST_APPLY_TICK::remove);
 		AttunedServerCleanup.onStop(LAST_APPLY_TICK::clear);
@@ -154,10 +159,10 @@ public final class PresetNetworking {
 		if (player.containerMenu instanceof SatchelMenu menu) {
 			menu.broadcastChanges();
 		}
-		PlayerMessages.overlay(player, Component.translatable(
+		PlayerMessages.overlay(player, new net.minecraft.network.chat.TranslatableComponent(
 			"screen.attuned.preset.applied", presets.get(index).name()));
 		if (!result.missing().isEmpty()) {
-			PlayerMessages.system(player, Component.translatable(
+			PlayerMessages.system(player, new net.minecraft.network.chat.TranslatableComponent(
 				"screen.attuned.preset.missing", String.join(", ", result.missing()))
 				.withStyle(ChatFormatting.RED));
 		}

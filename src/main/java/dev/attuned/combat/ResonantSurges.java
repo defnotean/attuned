@@ -19,7 +19,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
-import net.minecraft.util.RandomSource;
+import java.util.Random;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.monster.Monster;
@@ -125,7 +125,7 @@ public final class ResonantSurges {
 		}
 		ServerPlayer anchor = candidates.get(anchor(candidates).nextInt(candidates.size()));
 		ServerLevel level = (ServerLevel) anchor.getLevel();
-		RandomSource random = anchor.getRandom();
+		Random random = anchor.getRandom();
 		int offsetX = signedOffset(random);
 		int offsetZ = signedOffset(random);
 		int x = (int) Math.floor(anchor.getX()) + offsetX;
@@ -168,13 +168,13 @@ public final class ResonantSurges {
 		int count = 1 + player.getRandom().nextInt(2);
 		ItemStack stack = new ItemStack(AttunedContent.ATTUNEMENT_SHARD_FRAGMENT, count);
 		if (player.getInventory().add(stack)) {
-			PlayerMessages.overlay(player, Component.translatable("surge.attuned.kill_reward", count));
+			PlayerMessages.overlay(player, new net.minecraft.network.chat.TranslatableComponent("surge.attuned.kill_reward", count));
 			return;
 		}
 		ItemEntity drop = new ItemEntity(player.getLevel(), player.getX(), player.getY() + 0.5, player.getZ(), stack);
 		drop.setDefaultPickUpDelay();
 		player.getLevel().addFreshEntity(drop);
-		PlayerMessages.overlay(player, Component.translatable("surge.attuned.kill_reward", count));
+		PlayerMessages.overlay(player, new net.minecraft.network.chat.TranslatableComponent("surge.attuned.kill_reward", count));
 	}
 
 	/** Grants resonance and emits feedback while a surge is live; ends it on expiry. */
@@ -197,7 +197,7 @@ public final class ResonantSurges {
 				continue;
 			}
 			if (expired) {
-				PlayerMessages.overlay(player, Component.translatable("surge.attuned.faded"));
+				PlayerMessages.overlay(player, new net.minecraft.network.chat.TranslatableComponent("surge.attuned.faded"));
 			} else {
 				Resonance.grantSurge(player, surgeResonanceGain(player, gain));
 				CombatFeedback.surgeCharge(player);
@@ -228,9 +228,9 @@ public final class ResonantSurges {
 		if (dx * dx + dz * dz <= SURGE_COORD_HINT_RADIUS * SURGE_COORD_HINT_RADIUS) {
 			int approxX = Math.floorDiv(site.getX(), SURGE_COORD_GRID) * SURGE_COORD_GRID;
 			int approxZ = Math.floorDiv(site.getZ(), SURGE_COORD_GRID) * SURGE_COORD_GRID;
-			return Component.translatable("surge.attuned.started.coords", approxX, site.getY(), approxZ);
+			return new net.minecraft.network.chat.TranslatableComponent("surge.attuned.started.coords", approxX, site.getY(), approxZ);
 		}
-		return Component.translatable("surge.attuned.started.nearby");
+		return new net.minecraft.network.chat.TranslatableComponent("surge.attuned.started.nearby");
 	}
 
 	/** Draws untargeted monsters toward the surge with Speed I and a path/velocity nudge. */
@@ -265,12 +265,12 @@ public final class ResonantSurges {
 		level.playSound(null, pos, SoundEvents.BEACON_AMBIENT, SoundSource.AMBIENT, 1.4F, 1.6F);
 	}
 
-	private static int signedOffset(RandomSource random) {
+	private static int signedOffset(Random random) {
 		int magnitude = MIN_OFFSET + random.nextInt(MAX_OFFSET - MIN_OFFSET + 1);
 		return random.nextBoolean() ? magnitude : -magnitude;
 	}
 
-	private static RandomSource anchor(List<ServerPlayer> candidates) {
+	private static Random anchor(List<ServerPlayer> candidates) {
 		return candidates.get(0).getRandom();
 	}
 }

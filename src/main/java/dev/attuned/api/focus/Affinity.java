@@ -29,7 +29,7 @@ public enum Affinity implements StringRepresentable {
 	VERDANT("verdant"),
 	UMBRAL("umbral");
 
-	public static final Codec<Affinity> CODEC = StringRepresentable.fromEnum(Affinity::values);
+	public static final Codec<Affinity> CODEC = StringRepresentable.fromEnum(Affinity::values, Affinity::byName);
 
 	private final String serializedName;
 
@@ -40,6 +40,15 @@ public enum Affinity implements StringRepresentable {
 	@Override
 	public String getSerializedName() {
 		return serializedName;
+	}
+
+	private static Affinity byName(String name) {
+		for (Affinity affinity : values()) {
+			if (affinity.serializedName.equals(name)) {
+				return affinity;
+			}
+		}
+		return null;
 	}
 
 	/** True if this affinity counters {@code other} in the Wheel of Refusals. */

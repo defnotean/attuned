@@ -173,7 +173,7 @@ public final class Synergies {
 				behavior.onActivate(player, ItemStack.EMPTY); // a Confluence has no backing stack
 			}
 		});
-		PlayerMessages.system(player, Component.translatable("confluence.attuned.gained", nameOf(confluenceId)));
+		PlayerMessages.system(player, new net.minecraft.network.chat.TranslatableComponent("confluence.attuned.gained", nameOf(confluenceId)));
 		AttunedAdvancements.award(player, "attunement/confluence_" + pathOf(confluenceId));
 		maybeFanfare(player, confluenceId);
 	}
@@ -189,7 +189,7 @@ public final class Synergies {
 				behavior.onDeactivate(player, ItemStack.EMPTY);
 			}
 		});
-		PlayerMessages.system(player, Component.translatable("confluence.attuned.faded", nameOf(confluenceId)));
+		PlayerMessages.system(player, new net.minecraft.network.chat.TranslatableComponent("confluence.attuned.faded", nameOf(confluenceId)));
 	}
 
 	private static void applyModifiers(ServerPlayer player, String confluenceId, SynergyDefinition def) {
@@ -248,7 +248,7 @@ public final class Synergies {
 		if (AttunedAttachments.getDiscoveredConfluences(player).size() == 1) {
 			Milestones.onFirstConfluence(player);
 		}
-		Component discovery = Component.translatable("confluence.attuned.first_discovery", nameOf(confluenceId))
+		Component discovery = new net.minecraft.network.chat.TranslatableComponent("confluence.attuned.first_discovery", nameOf(confluenceId))
 			.withStyle(ChatFormatting.LIGHT_PURPLE, ChatFormatting.BOLD);
 		ServerLevel level = player.getLevel();
 		level.playSound(null, player.blockPosition(),
@@ -299,9 +299,9 @@ public final class Synergies {
 		}
 		Component confluenceName = nameOf(id);
 		Component memberName = missingMember == null
-			? Component.empty()
-			: Component.translatable(itemKey(missingMember));
-		return Optional.of(Component.translatable("confluence.attuned.preview", confluenceName, memberName)
+			? new net.minecraft.network.chat.TextComponent("")
+			: new net.minecraft.network.chat.TranslatableComponent(itemKey(missingMember));
+		return Optional.of(new net.minecraft.network.chat.TranslatableComponent("confluence.attuned.preview", confluenceName, memberName)
 			.withStyle(ChatFormatting.GRAY));
 	}
 
@@ -339,7 +339,7 @@ public final class Synergies {
 	}
 
 	private static Component nameOf(String confluenceId) {
-		return Component.translatable("confluence.attuned." + pathOf(confluenceId) + ".name");
+		return new net.minecraft.network.chat.TranslatableComponent("confluence.attuned." + pathOf(confluenceId) + ".name");
 	}
 
 	private static String itemKey(String itemId) {

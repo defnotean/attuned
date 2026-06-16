@@ -9,7 +9,7 @@ import java.util.UUID;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.util.RandomSource;
+import java.util.Random;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.CropBlock;
 import net.minecraft.world.level.block.state.BlockState;
@@ -57,7 +57,7 @@ public final class HarvestBehavior implements FocusBehavior {
 
 	private void growNearbyCrops(ServerPlayer player) {
 		ServerLevel level = (ServerLevel) player.getLevel();
-		RandomSource random = level.getRandom();
+		Random random = level.getRandom();
 		BlockPos center = player.blockPosition();
 		int grown = 0;
 		for (BlockPos pos : BlockPos.betweenClosed(

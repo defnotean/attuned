@@ -19,7 +19,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
-import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
+import net.fabricmc.fabric.api.command.v1.CommandRegistrationCallback;
 import net.minecraft.ChatFormatting;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
@@ -43,7 +43,7 @@ public final class AttunedCommands {
 			return;
 		}
 		initialized = true;
-		CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) ->
+		CommandRegistrationCallback.EVENT.register((dispatcher, dedicated) ->
 			dispatcher.register(Commands.literal("attuned")
 				.then(Commands.literal("journal")
 					.executes(ctx -> {
@@ -84,7 +84,7 @@ public final class AttunedCommands {
 						ServerPlayer player = ctx.getSource().getPlayerOrException();
 						int capacity = AttunedAttachments.getCapacity(player);
 						ctx.getSource().sendSuccess(
-							Component.literal("Attunement capacity: " + capacity), false);
+							new net.minecraft.network.chat.TextComponent("Attunement capacity: " + capacity), false);
 						return capacity;
 					})
 					.then(Commands.argument("amount", IntegerArgumentType.integer(0))
@@ -94,7 +94,7 @@ public final class AttunedCommands {
 							AttunedAttachments.setCapacity(player, amount);
 							int capacity = AttunedAttachments.getCapacity(player);
 							ctx.getSource().sendSuccess(
-								Component.literal("Attunement capacity set to " + capacity), false);
+								new net.minecraft.network.chat.TextComponent("Attunement capacity set to " + capacity), false);
 							return capacity;
 						})))
 				.then(Commands.literal("status")
@@ -111,7 +111,7 @@ public final class AttunedCommands {
 
 	private static int moveFocus(CommandSourceStack source, ServerPlayer player, int from, int to) {
 		if (to < 0 || to >= AttunedInv.SIZE) {
-			source.sendFailure(Component.literal("That Focus slot cannot move any further."));
+			source.sendFailure(new net.minecraft.network.chat.TextComponent("That Focus slot cannot move any further."));
 			return 0;
 		}
 		if (from == to) {
@@ -121,16 +121,16 @@ public final class AttunedCommands {
 		ItemStack first = inv.get(from).copy();
 		ItemStack second = inv.get(to).copy();
 		if (first.isEmpty() && second.isEmpty()) {
-			source.sendFailure(Component.literal("Both Focus slots are empty."));
+			source.sendFailure(new net.minecraft.network.chat.TextComponent("Both Focus slots are empty."));
 			return 0;
 		}
 		if (!canMoveFocus(player, first) || !canMoveFocus(player, second)) {
-			source.sendFailure(Component.literal("A Focus slot contains an item that no longer has a Focus definition."));
+			source.sendFailure(new net.minecraft.network.chat.TextComponent("A Focus slot contains an item that no longer has a Focus definition."));
 			return 0;
 		}
 		AttunedAttachments.setSlot(player, from, second);
 		AttunedAttachments.setSlot(player, to, first);
-		source.sendSuccess(Component.literal(
+		source.sendSuccess(new net.minecraft.network.chat.TextComponent(
 			"Swapped Focus slots " + (from + 1) + " and " + (to + 1) + "."), false);
 		return 1;
 	}
@@ -143,12 +143,11 @@ public final class AttunedCommands {
 		List<String> problems = new ArrayList<>();
 		List<String> warnings = new ArrayList<>();
 		var registries = source.getServer().registryAccess();
-		var registry = registries.lookupOrThrow(AttunedRegistries.FOCUS_DEFINITIONS);
+		var registry = registries.registryOrThrow(AttunedRegistries.FOCUS_DEFINITIONS);
 		Map<net.minecraft.world.item.Item, FocusDefinition> byItem = new IdentityHashMap<>();
 		// Walk every focus/<name>.json file by file: each problem and each warning
 		// is qualified with the Focus's item key so an author can find the source file.
-		registry.listElements().forEach(holder -> {
-			FocusDefinition def = holder.value();
+		registry.stream().forEach(def -> {
 			var itemKey = BuiltInRegistries.ITEM.getKey(def.item().value());
 			// An item that failed to resolve to a real registered item.
 			if (!def.item().isBound()) {
@@ -181,37 +180,37 @@ public final class AttunedCommands {
 		// Walk the focus_behavior palette registry too, so a palette file that an
 		// author shipped is reported alongside their focus files. A palette entry that
 		// failed to decode never reaches the registry, so reaching here means it built.
-		var behaviorRegistry = registries.lookupOrThrow(AttunedRegistries.FOCUS_BEHAVIORS);
-		int paletteCount = (int) behaviorRegistry.listElements().count();
+		var behaviorRegistry = registries.registryOrThrow(AttunedRegistries.FOCUS_BEHAVIORS);
+		int paletteCount = (int) behaviorRegistry.stream().count();
 
 		if (problems.isEmpty()) {
-			source.sendSuccess(Component.literal("Attuned validation passed: "
+			source.sendSuccess(new net.minecraft.network.chat.TextComponent("Attuned validation passed: "
 				+ byItem.size() + " Focus definitions and " + paletteCount + " palette behavior(s) checked."), false);
 			if (!warnings.isEmpty()) {
-				source.sendSuccess(Component.literal(
+				source.sendSuccess(new net.minecraft.network.chat.TextComponent(
 					"Attuned validation: " + warnings.size() + " warning(s) (missing lang keys)."), false);
 				for (String warning : warnings.subList(0, Math.min(8, warnings.size()))) {
-					source.sendSuccess(Component.literal("- " + warning), false);
+					source.sendSuccess(new net.minecraft.network.chat.TextComponent("- " + warning), false);
 				}
 				if (warnings.size() > 8) {
-					source.sendSuccess(Component.literal(
+					source.sendSuccess(new net.minecraft.network.chat.TextComponent(
 						"- ...and " + (warnings.size() - 8) + " more."), false);
 				}
 			}
 			return byItem.size();
 		}
-		source.sendFailure(Component.literal("Attuned validation found " + problems.size() + " issue(s):"));
+		source.sendFailure(new net.minecraft.network.chat.TextComponent("Attuned validation found " + problems.size() + " issue(s):"));
 		for (String problem : problems.subList(0, Math.min(8, problems.size()))) {
-			source.sendFailure(Component.literal("- " + problem));
+			source.sendFailure(new net.minecraft.network.chat.TextComponent("- " + problem));
 		}
 		if (problems.size() > 8) {
-			source.sendFailure(Component.literal("- ...and " + (problems.size() - 8) + " more."));
+			source.sendFailure(new net.minecraft.network.chat.TextComponent("- ...and " + (problems.size() - 8) + " more."));
 		}
 		if (!warnings.isEmpty()) {
-			source.sendFailure(Component.literal(
+			source.sendFailure(new net.minecraft.network.chat.TextComponent(
 				"Plus " + warnings.size() + " warning(s) (missing lang keys):"));
 			for (String warning : warnings.subList(0, Math.min(8, warnings.size()))) {
-				source.sendFailure(Component.literal("- " + warning));
+				source.sendFailure(new net.minecraft.network.chat.TextComponent("- " + warning));
 			}
 		}
 		return 0;
@@ -230,17 +229,17 @@ public final class AttunedCommands {
 		Optional<Apex.Capstone> apexCapstone = Apex.capstoneOf(player);
 		boolean apexFiring = apexCapstone.isPresent() && Resonance.atApex(player);
 
-		source.sendSuccess(Component.literal("=== Attuned status for " + player.getName().getString() + " ===")
+		source.sendSuccess(new net.minecraft.network.chat.TextComponent("=== Attuned status for " + player.getName().getString() + " ===")
 			.withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD), false);
 
 		source.sendSuccess(label("Capacity: ")
-			.append(Component.literal(used + " / " + capacity).withStyle(ChatFormatting.AQUA)), false);
+			.append(new net.minecraft.network.chat.TextComponent(used + " / " + capacity).withStyle(ChatFormatting.AQUA)), false);
 
 		source.sendSuccess(label("Used: ")
-			.append(Component.literal(Integer.toString(used)).withStyle(ChatFormatting.AQUA)), false);
+			.append(new net.minecraft.network.chat.TextComponent(Integer.toString(used)).withStyle(ChatFormatting.AQUA)), false);
 
 		source.sendSuccess(label("Title: ")
-			.append(Component.literal(titleText(activeSlots.size(), used))
+			.append(new net.minecraft.network.chat.TextComponent(titleText(activeSlots.size(), used))
 				.withStyle(rankColor(used, activeSlots.size()))), false);
 
 		source.sendSuccess(label("Stance: ")
@@ -249,7 +248,7 @@ public final class AttunedCommands {
 		source.sendSuccess(label("Active Foci (" + activeSlots.size() + "):")
 			.withStyle(ChatFormatting.GRAY), false);
 		if (activeSlots.isEmpty()) {
-			source.sendSuccess(Component.literal("  (none)")
+			source.sendSuccess(new net.minecraft.network.chat.TextComponent("  (none)")
 				.withStyle(ChatFormatting.DARK_GRAY), false);
 		} else {
 			for (int slot : activeSlots) {
@@ -259,39 +258,39 @@ public final class AttunedCommands {
 				int cost = def.map(FocusDefinition::cost).orElse(0);
 				Optional<Affinity> aff = def.flatMap(FocusDefinition::affinity);
 				String affName = aff.map(a -> a.name().toLowerCase(Locale.ROOT)).orElse("neutral");
-				source.sendSuccess(Component.literal("  - ")
+				source.sendSuccess(new net.minecraft.network.chat.TextComponent("  - ")
 					.withStyle(ChatFormatting.DARK_GRAY)
-					.append(Component.literal(name).withStyle(ChatFormatting.WHITE))
-					.append(Component.literal(" (cost " + cost + ", ").withStyle(ChatFormatting.GRAY))
-					.append(Component.literal(affName).withStyle(affinityColor(aff)))
-					.append(Component.literal(")").withStyle(ChatFormatting.GRAY)), false);
+					.append(new net.minecraft.network.chat.TextComponent(name).withStyle(ChatFormatting.WHITE))
+					.append(new net.minecraft.network.chat.TextComponent(" (cost " + cost + ", ").withStyle(ChatFormatting.GRAY))
+					.append(new net.minecraft.network.chat.TextComponent(affName).withStyle(affinityColor(aff)))
+					.append(new net.minecraft.network.chat.TextComponent(")").withStyle(ChatFormatting.GRAY)), false);
 			}
 		}
 
 		source.sendSuccess(label("Pact: ")
 			.append(pact.map(p -> (Component) p.displayName().withStyle(p.chatColor(), ChatFormatting.BOLD))
-				.orElse(Component.literal("none").withStyle(ChatFormatting.DARK_GRAY))), false);
+				.orElse(new net.minecraft.network.chat.TextComponent("none").withStyle(ChatFormatting.DARK_GRAY))), false);
 
 		source.sendSuccess(label("Resonance: ")
-			.append(Component.literal(String.format(Locale.ROOT, "%.2f", resonance))
+			.append(new net.minecraft.network.chat.TextComponent(String.format(Locale.ROOT, "%.2f", resonance))
 				.withStyle(ChatFormatting.AQUA))
-			.append(Component.literal(" (Apex threshold " + String.format(Locale.ROOT, "%.2f", Resonance.APEX_THRESHOLD) + ")")
+			.append(new net.minecraft.network.chat.TextComponent(" (Apex threshold " + String.format(Locale.ROOT, "%.2f", Resonance.APEX_THRESHOLD) + ")")
 				.withStyle(ChatFormatting.DARK_GRAY)), false);
 
 		Component apexStatus;
 		if (apexCapstone.isEmpty()) {
 			apexStatus = label("Apex: ")
-				.append(Component.literal("Foci do not qualify").withStyle(ChatFormatting.DARK_GRAY));
+				.append(new net.minecraft.network.chat.TextComponent("Foci do not qualify").withStyle(ChatFormatting.DARK_GRAY));
 		} else {
 			Apex.Capstone capstone = apexCapstone.get();
 			String name = capstone.displayName();
 			if (apexFiring) {
 				apexStatus = label("Apex: ")
-					.append(Component.literal("active - " + name)
+					.append(new net.minecraft.network.chat.TextComponent("active - " + name)
 						.withStyle(capstone.chatColor(), ChatFormatting.BOLD));
 			} else {
 				apexStatus = label("Apex: ")
-					.append(Component.literal("not active (would be " + name + " when resonance >= "
+					.append(new net.minecraft.network.chat.TextComponent("not active (would be " + name + " when resonance >= "
 						+ String.format(Locale.ROOT, "%.2f", Resonance.APEX_THRESHOLD) + ")")
 						.withStyle(ChatFormatting.GRAY));
 			}
@@ -300,7 +299,7 @@ public final class AttunedCommands {
 	}
 
 	private static net.minecraft.network.chat.MutableComponent label(String text) {
-		return Component.literal(text).withStyle(ChatFormatting.GRAY);
+		return new net.minecraft.network.chat.TextComponent(text).withStyle(ChatFormatting.GRAY);
 	}
 
 	/** Same two-word scheme as the client-side AttunementReadout, computed inline. */
@@ -355,16 +354,16 @@ public final class AttunedCommands {
 
 	private static Component stanceComponent(Optional<Affinity> committed, boolean discord) {
 		if (discord) {
-			return Component.literal("Discord").withStyle(ChatFormatting.LIGHT_PURPLE);
+			return new net.minecraft.network.chat.TextComponent("Discord").withStyle(ChatFormatting.LIGHT_PURPLE);
 		}
 		if (committed.isPresent()) {
 			Affinity a = committed.get();
 			String lower = a.name().toLowerCase(Locale.ROOT);
 			String capitalized = Character.toUpperCase(lower.charAt(0)) + lower.substring(1);
-			return Component.literal(capitalized + " (committed)")
+			return new net.minecraft.network.chat.TextComponent(capitalized + " (committed)")
 				.withStyle(affinityChatColor(a));
 		}
-		return Component.literal("Unattuned").withStyle(ChatFormatting.DARK_GRAY);
+		return new net.minecraft.network.chat.TextComponent("Unattuned").withStyle(ChatFormatting.DARK_GRAY);
 	}
 
 	private static ChatFormatting affinityChatColor(Affinity affinity) {

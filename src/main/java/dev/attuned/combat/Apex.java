@@ -485,8 +485,8 @@ public final class Apex {
 		if (source.getDirectEntity() != player) {
 			return false;
 		}
-		return !source.is(net.minecraft.tags.DamageTypeTags.IS_PROJECTILE)
-			&& !source.is(net.minecraft.tags.DamageTypeTags.IS_EXPLOSION);
+		return !source.isProjectile()
+			&& !source.isExplosion();
 	}
 
 	private static boolean isOwnPet(LivingEntity defender, Player attacker) {
@@ -554,7 +554,7 @@ public final class Apex {
 		Long readyAt = identityCooldowns.get(player.getUUID());
 		if (readyAt != null && now < readyAt) {
 			int remaining = (int) (readyAt - now);
-			PlayerMessages.overlay(player, Component.translatable(
+			PlayerMessages.overlay(player, new net.minecraft.network.chat.TranslatableComponent(
 				"apex.attuned.identity_cooldown", cooldownSeconds(remaining)));
 			return true;
 		}
@@ -610,8 +610,8 @@ public final class Apex {
 		level.sendParticles(ParticleTypes.ELECTRIC_SPARK,
 			player.getX(), player.getY() + 1.0, player.getZ(), 48, 1.6, 0.8, 1.6, 0.4);
 		level.playSound(null, player.blockPosition(),
-			SoundEvents.WARDEN_SONIC_BOOM, SoundSource.PLAYERS, 0.9F, 1.4F);
-		PlayerMessages.overlay(player, Component.translatable("apex.attuned.maelstrom_nova"));
+			SoundEvents.GENERIC_EXPLODE, SoundSource.PLAYERS, 0.9F, 1.4F);
+		PlayerMessages.overlay(player, new net.minecraft.network.chat.TranslatableComponent("apex.attuned.maelstrom_nova"));
 	}
 
 	private static void fireStillpointField(ServerPlayer player, ServerLevel level) {
@@ -629,7 +629,7 @@ public final class Apex {
 			player.getX(), player.getY() + 1.0, player.getZ(), 16, 1.6, 0.8, 1.6, 0.0);
 		level.playSound(null, player.blockPosition(),
 			SoundEvents.BEACON_ACTIVATE, SoundSource.PLAYERS, 0.7F, 1.5F);
-		PlayerMessages.overlay(player, Component.translatable("apex.attuned.stillpoint_field"));
+		PlayerMessages.overlay(player, new net.minecraft.network.chat.TranslatableComponent("apex.attuned.stillpoint_field"));
 	}
 
 	private static boolean isApexNovaTarget(LivingEntity entity, Player player) {
@@ -757,11 +757,11 @@ public final class Apex {
 	private static void announceGained(ServerPlayer player, Capstone capstone) {
 		((ServerLevel) player.getLevel()).playSound(null, player.blockPosition(),
 			SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, SoundSource.PLAYERS, 0.7F, 1.0F);
-		PlayerMessages.system(player, Component.literal("Apex active: ")
+		PlayerMessages.system(player, new net.minecraft.network.chat.TextComponent("Apex active: ")
 			.withStyle(ChatFormatting.GRAY)
-			.append(Component.literal(capstone.displayName())
+			.append(new net.minecraft.network.chat.TextComponent(capstone.displayName())
 				.withStyle(capstone.chatColor(), ChatFormatting.BOLD))
-			.append(Component.literal(". " + capstone.description())
+			.append(new net.minecraft.network.chat.TextComponent(". " + capstone.description())
 				.withStyle(ChatFormatting.GRAY)));
 		AttunedAdvancements.award(player, "attunement/apex");
 	}
@@ -769,9 +769,9 @@ public final class Apex {
 	private static void announceGainedDormant(ServerPlayer player, Capstone capstone) {
 		((ServerLevel) player.getLevel()).playSound(null, player.blockPosition(),
 			SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, SoundSource.PLAYERS, 0.6F, 0.8F);
-		PlayerMessages.system(player, Component.translatable(
+		PlayerMessages.system(player, new net.minecraft.network.chat.TranslatableComponent(
 				"apex.attuned.unlocked_dormant",
-				Component.literal(capstone.displayName())
+				new net.minecraft.network.chat.TextComponent(capstone.displayName())
 					.withStyle(capstone.chatColor(), ChatFormatting.BOLD))
 			.withStyle(ChatFormatting.GRAY));
 	}
@@ -779,21 +779,21 @@ public final class Apex {
 	private static void announceRearmed(ServerPlayer player, Capstone capstone) {
 		((ServerLevel) player.getLevel()).playSound(null, player.blockPosition(),
 			SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, SoundSource.PLAYERS, 0.7F, 1.3F);
-		PlayerMessages.overlay(player, Component.translatable("apex.attuned.rearmed",
-			Component.literal(capstone.displayName()).withStyle(capstone.chatColor(), ChatFormatting.BOLD)));
+		PlayerMessages.overlay(player, new net.minecraft.network.chat.TranslatableComponent("apex.attuned.rearmed",
+			new net.minecraft.network.chat.TextComponent(capstone.displayName()).withStyle(capstone.chatColor(), ChatFormatting.BOLD)));
 		AttunedAdvancements.award(player, "attunement/apex");
 	}
 
 	private static void announceDormant(ServerPlayer player) {
 		((ServerLevel) player.getLevel()).playSound(null, player.blockPosition(),
 			SoundEvents.AMETHYST_BLOCK_HIT, SoundSource.PLAYERS, 0.6F, 0.6F);
-		PlayerMessages.overlay(player, Component.translatable("apex.attuned.dormant"));
+		PlayerMessages.overlay(player, new net.minecraft.network.chat.TranslatableComponent("apex.attuned.dormant"));
 	}
 
 	private static void announceLost(ServerPlayer player) {
 		((ServerLevel) player.getLevel()).playSound(null, player.blockPosition(),
 			SoundEvents.BEACON_DEACTIVATE, SoundSource.PLAYERS, 0.6F, 1.0F);
-		PlayerMessages.system(player, Component.literal("Your Apex has faded.")
+		PlayerMessages.system(player, new net.minecraft.network.chat.TextComponent("Your Apex has faded.")
 			.withStyle(ChatFormatting.GRAY));
 	}
 

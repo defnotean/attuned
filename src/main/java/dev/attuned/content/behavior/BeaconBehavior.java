@@ -29,7 +29,7 @@ import net.minecraft.world.item.Items;
  */
 public final class BeaconBehavior implements FocusBehavior {
 	private static final Component BEACON_COMPASS_NAME =
-		Component.translatable("item.attuned.beacon_compass");
+		new net.minecraft.network.chat.TranslatableComponent("item.attuned.beacon_compass");
 
 	private final Map<UUID, Map<ItemStack, TrackerSnapshot>> changedCompasses = new HashMap<>();
 

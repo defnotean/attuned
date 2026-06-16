@@ -2,10 +2,11 @@ package dev.attuned.client.screen;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import dev.attuned.Attuned;
+import dev.attuned.client.ClientNetworkPackets;
 import dev.attuned.menu.ReweavePayload;
 import dev.attuned.menu.ReweavingMenu;
-import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiComponent;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
@@ -50,8 +51,8 @@ public class ReweavingScreen extends AbstractContainerScreen<ReweavingMenu> {
 		this.reweaveButton = new ReweaveButton(
 			this.leftPos + BUTTON_X,
 			this.topPos + BUTTON_Y,
-			Component.translatable("screen.attuned.reweaving_altar.reweave"),
-			button -> ClientPlayNetworking.send(new ReweavePayload()));
+			new net.minecraft.network.chat.TranslatableComponent("screen.attuned.reweaving_altar.reweave"),
+			button -> ClientNetworkPackets.send(new ReweavePayload()));
 		this.addRenderableWidget(this.reweaveButton);
 		refreshButtonState();
 	}
@@ -92,23 +93,23 @@ public class ReweavingScreen extends AbstractContainerScreen<ReweavingMenu> {
 
 	private Component hint() {
 		if (!this.menu.outputStack().isEmpty()) {
-			return Component.translatable("screen.attuned.reweaving_altar.hint.output_blocked");
+			return new net.minecraft.network.chat.TranslatableComponent("screen.attuned.reweaving_altar.hint.output_blocked");
 		}
 		if (this.menu.canTemper()) {
-			return Component.translatable("screen.attuned.reweaving_altar.hint.temper");
+			return new net.minecraft.network.chat.TranslatableComponent("screen.attuned.reweaving_altar.hint.temper");
 		}
 		if (this.menu.affinityLoomLayout()) {
-			return Component.translatable(
+			return new net.minecraft.network.chat.TranslatableComponent(
 				"screen.attuned.reweaving_altar.hint.affinity_loom", this.menu.affinityLoomShardCost());
 		}
 		if (!this.menu.hasAllFocusInputs()) {
-			return Component.translatable("screen.attuned.reweaving_altar.hint.missing_foci");
+			return new net.minecraft.network.chat.TranslatableComponent("screen.attuned.reweaving_altar.hint.missing_foci");
 		}
 		if (!this.menu.container().getItem(ReweavingMenu.CATALYST_SLOT)
 				.is(dev.attuned.content.AttunedContent.ATTUNEMENT_SHARD_FRAGMENT)) {
-			return Component.translatable("screen.attuned.reweaving_altar.hint.missing_fragment");
+			return new net.minecraft.network.chat.TranslatableComponent("screen.attuned.reweaving_altar.hint.missing_fragment");
 		}
-		return Component.translatable("screen.attuned.reweaving_altar.hint.ready");
+		return new net.minecraft.network.chat.TranslatableComponent("screen.attuned.reweaving_altar.hint.ready");
 	}
 
 	private void drawTrimmedText(GuiGraphics graphics, Component text, int x, int y, int maxWidth, int color) {
@@ -119,7 +120,7 @@ public class ReweavingScreen extends AbstractContainerScreen<ReweavingMenu> {
 		String ellipsis = "...";
 		int ellipsisWidth = this.font.width(ellipsis);
 		String trimmed = this.font.plainSubstrByWidth(text.getString(), Math.max(0, maxWidth - ellipsisWidth));
-		graphics.drawString(this.font, Component.literal(trimmed + ellipsis), x, y, color, false);
+		graphics.drawString(this.font, new net.minecraft.network.chat.TextComponent(trimmed + ellipsis), x, y, color, false);
 	}
 
 	private static void drawButtonOutline(GuiGraphics graphics, int x0, int y0, int x1, int y1, int argb) {
@@ -131,14 +132,14 @@ public class ReweavingScreen extends AbstractContainerScreen<ReweavingMenu> {
 
 	private static final class ReweaveButton extends Button {
 		private ReweaveButton(int x, int y, Component message, OnPress onPress) {
-			super(x, y, BUTTON_W, BUTTON_H, message, onPress, DEFAULT_NARRATION);
+			super(x, y, BUTTON_W, BUTTON_H, message, onPress);
 		}
 
 		@Override
-		public void renderWidget(PoseStack poseStack, int mouseX, int mouseY, float partialTick) {
+		public void renderButton(PoseStack poseStack, int mouseX, int mouseY, float partialTick) {
 			GuiGraphics graphics = new GuiGraphics(Minecraft.getInstance(), poseStack);
-			int x0 = getX();
-			int y0 = getY();
+			int x0 = this.x;
+			int y0 = this.y;
 			int x1 = x0 + getWidth();
 			int y1 = y0 + getHeight();
 			if (!this.active) {
@@ -146,7 +147,8 @@ public class ReweavingScreen extends AbstractContainerScreen<ReweavingMenu> {
 			} else if (isHoveredOrFocused()) {
 				drawButtonOutline(graphics, x0, y0, x1, y1, BUTTON_HOVER_ARGB);
 			}
-			renderString(poseStack, Minecraft.getInstance().font, BODY_TEXT);
+			GuiComponent.drawCenteredString(poseStack, Minecraft.getInstance().font, getMessage(),
+				x0 + getWidth() / 2, y0 + (getHeight() - 8) / 2, BODY_TEXT);
 		}
 	}
 }

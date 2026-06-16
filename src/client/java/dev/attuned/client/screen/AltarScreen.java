@@ -4,11 +4,12 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import dev.attuned.Attuned;
 import dev.attuned.attunement.Attunement;
 import dev.attuned.client.AttunementReadout;
+import dev.attuned.client.ClientNetworkPackets;
 import dev.attuned.client.hud.CombatHud;
 import dev.attuned.menu.AltarMenu;
 import dev.attuned.menu.BindShardPayload;
-import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiComponent;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
@@ -92,7 +93,7 @@ public class AltarScreen extends AbstractContainerScreen<AltarMenu> {
 		this.bindButton = new BindButton(
 			this.leftPos + BUTTON_X,
 			this.topPos + BUTTON_Y,
-			Component.translatable("screen.attuned.altar.bind"),
+			new net.minecraft.network.chat.TranslatableComponent("screen.attuned.altar.bind"),
 			btn -> sendBind());
 		this.addRenderableWidget(this.bindButton);
 		refreshButtonState();
@@ -121,7 +122,7 @@ public class AltarScreen extends AbstractContainerScreen<AltarMenu> {
 	}
 
 	private void sendBind() {
-		ClientPlayNetworking.send(new BindShardPayload());
+		ClientNetworkPackets.send(new BindShardPayload());
 	}
 
 	@Override
@@ -221,7 +222,7 @@ public class AltarScreen extends AbstractContainerScreen<AltarMenu> {
 		int perShard = this.menu.capacityPerShard();
 		int active = readout.active();
 
-		Component budgetText = Component.translatable("screen.attuned.altar.budget", used, capacity);
+		Component budgetText = new net.minecraft.network.chat.TranslatableComponent("screen.attuned.altar.budget", used, capacity);
 		graphics.drawString(this.font, budgetText, READOUT_X, 24, BODY_TEXT, false);
 
 		// Stance row: a small textured gem prefix that visually says "this is your
@@ -237,7 +238,7 @@ public class AltarScreen extends AbstractContainerScreen<AltarMenu> {
 			readout.atApex());
 		graphics.drawString(this.font, AttunementReadout.stanceLabel(readout),
 			stanceGemX + stanceGemSize + 4, 41, BODY_TEXT, false);
-		drawTrimmedText(graphics, Component.literal(active + " active"),
+		drawTrimmedText(graphics, new net.minecraft.network.chat.TextComponent(active + " active"),
 			STATUS_X, STATUS_Y, STATUS_MAX_WIDTH, BODY_TEXT);
 		drawTrimmedText(graphics, detailLine(readout),
 			STATUS_X, DETAIL_Y, DETAIL_MAX_WIDTH, MUTED_TEXT);
@@ -246,16 +247,16 @@ public class AltarScreen extends AbstractContainerScreen<AltarMenu> {
 		Component hint;
 		int hintColor = BODY_TEXT;
 		if (capacity >= cap) {
-			hint = Component.translatable("screen.attuned.altar.hint.cap", cap);
+			hint = new net.minecraft.network.chat.TranslatableComponent("screen.attuned.altar.hint.cap", cap);
 			hintColor = WARNING_TEXT;
 		} else if (this.menu.inputStack().isEmpty()) {
-			hint = Component.translatable("screen.attuned.altar.hint.empty");
+			hint = new net.minecraft.network.chat.TranslatableComponent("screen.attuned.altar.hint.empty");
 		} else {
 			ItemStack shard = this.menu.inputStack();
 			int next = Math.min(cap, capacity + perShard);
 			hint = shard.getCount() == 1
-				? Component.translatable("screen.attuned.altar.hint.ready.one", capacity, next, cap)
-				: Component.translatable("screen.attuned.altar.hint.ready.many",
+				? new net.minecraft.network.chat.TranslatableComponent("screen.attuned.altar.hint.ready.one", capacity, next, cap)
+				: new net.minecraft.network.chat.TranslatableComponent("screen.attuned.altar.hint.ready.many",
 					capacity, next, cap, shard.getCount());
 		}
 		drawTrimmedText(graphics, hint, TEXT_BOX_X, HINT_Y, HINT_MAX_WIDTH, hintColor);
@@ -269,16 +270,16 @@ public class AltarScreen extends AbstractContainerScreen<AltarMenu> {
 		String ellipsis = "...";
 		int ellipsisWidth = this.font.width(ellipsis);
 		String trimmed = this.font.plainSubstrByWidth(text.getString(), Math.max(0, maxWidth - ellipsisWidth));
-		graphics.drawString(this.font, Component.literal(trimmed + ellipsis), x, y, color, false);
+		graphics.drawString(this.font, new net.minecraft.network.chat.TextComponent(trimmed + ellipsis), x, y, color, false);
 	}
 
 	private static Component detailLine(AttunementReadout.Snapshot readout) {
-		Component prefix = Component.literal(readout.dormant() + " dormant");
+		Component prefix = new net.minecraft.network.chat.TextComponent(readout.dormant() + " dormant");
 		if (readout.pact().isPresent()) {
-			return prefix.copy().append(Component.literal(" / Pact"));
+			return prefix.copy().append(new net.minecraft.network.chat.TextComponent(" / Pact"));
 		}
 		if (readout.capstone().isPresent()) {
-			return prefix.copy().append(Component.literal(" / Apex"));
+			return prefix.copy().append(new net.minecraft.network.chat.TextComponent(" / Apex"));
 		}
 		return prefix;
 	}
@@ -292,14 +293,14 @@ public class AltarScreen extends AbstractContainerScreen<AltarMenu> {
 
 	private static final class BindButton extends Button {
 		private BindButton(int x, int y, Component message, OnPress onPress) {
-			super(x, y, BUTTON_W, BUTTON_H, message, onPress, DEFAULT_NARRATION);
+			super(x, y, BUTTON_W, BUTTON_H, message, onPress);
 		}
 
 		@Override
-		public void renderWidget(PoseStack poseStack, int mouseX, int mouseY, float partialTick) {
+		public void renderButton(PoseStack poseStack, int mouseX, int mouseY, float partialTick) {
 			GuiGraphics graphics = new GuiGraphics(Minecraft.getInstance(), poseStack);
-			int x0 = getX();
-			int y0 = getY();
+			int x0 = this.x;
+			int y0 = this.y;
 			int x1 = x0 + getWidth();
 			int y1 = y0 + getHeight();
 			if (!this.active) {
@@ -307,7 +308,8 @@ public class AltarScreen extends AbstractContainerScreen<AltarMenu> {
 			} else if (isHoveredOrFocused()) {
 				drawButtonOutline(graphics, x0, y0, x1, y1, BUTTON_HOVER_ARGB);
 			}
-			renderString(poseStack, Minecraft.getInstance().font, BODY_TEXT);
+			GuiComponent.drawCenteredString(poseStack, Minecraft.getInstance().font, getMessage(),
+				x0 + getWidth() / 2, y0 + (getHeight() - 8) / 2, BODY_TEXT);
 		}
 	}
 }

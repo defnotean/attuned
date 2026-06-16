@@ -26,6 +26,8 @@ import org.junit.jupiter.api.Test;
 class SanctumDataContractTest {
 	private static final Path DATA = Path.of("src/main/resources/data/attuned");
 	private static final Path STRUCTURE = DATA.resolve("worldgen/structure/attunement_sanctum.json");
+	private static final Path CONFIGURED_STRUCTURE =
+		DATA.resolve("worldgen/configured_structure_feature/attunement_sanctum.json");
 	private static final Path STRUCTURE_SET = DATA.resolve("worldgen/structure_set/attunement_sanctum.json");
 	private static final Path TEMPLATE_POOL = DATA.resolve("worldgen/template_pool/sanctum/main.json");
 	private static final Path BIOME_TAG = DATA.resolve("tags/worldgen/biome/has_sanctum.json");
@@ -65,8 +67,24 @@ class SanctumDataContractTest {
 	}
 
 	@Test
+	void configuredStructureFeatureBackportsTheSanctumForMinecraft118() throws IOException {
+		JsonObject root = json(CONFIGURED_STRUCTURE);
+		assertEquals("minecraft:village", root.get("type").getAsString(),
+			"Minecraft 1.18 has no generic minecraft:jigsaw configured feature id");
+		assertEquals("#attuned:has_sanctum", root.get("biomes").getAsString());
+		assertTrue(root.get("adapt_noise").getAsBoolean(),
+			"The 1.18 configured feature should use the old jigsaw terrain adaptation flag");
+		JsonObject config = root.getAsJsonObject("config");
+		assertEquals("attuned:sanctum/main", config.get("start_pool").getAsString());
+		assertEquals(1, config.get("size").getAsInt());
+	}
+
+	@Test
 	void templatePoolResolvesTheSanctumTemplate() throws IOException {
-		JsonArray elements = json(TEMPLATE_POOL).getAsJsonArray("elements");
+		JsonObject root = json(TEMPLATE_POOL);
+		assertEquals("attuned:sanctum/main", root.get("name").getAsString(),
+			"Minecraft 1.18 template pools still require a top-level registry name");
+		JsonArray elements = root.getAsJsonArray("elements");
 		assertEquals(1, elements.size(), "The pool has exactly one element");
 		JsonObject element = elements.get(0).getAsJsonObject().getAsJsonObject("element");
 		assertEquals("minecraft:single_pool_element", element.get("element_type").getAsString());

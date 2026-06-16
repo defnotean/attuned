@@ -288,7 +288,7 @@ public final class Pacts {
 		}
 		Pact next = Pact.ofAffinity(affinity);
 		return Optional.of(next.displayName().withStyle(next.chatColor(), ChatFormatting.BOLD)
-			.append(Component.literal(" needs 1 " + affinityName(affinity) + " Focus")
+			.append(new net.minecraft.network.chat.TextComponent(" needs 1 " + affinityName(affinity) + " Focus")
 				.withStyle(ChatFormatting.GRAY)));
 	}
 
@@ -532,8 +532,8 @@ public final class Pacts {
 		}
 		// Defense in depth: even if a modded weapon sets the player as the direct entity
 		// for a projectile or explosion, the damage type tag still flags it correctly.
-		return !source.is(net.minecraft.tags.DamageTypeTags.IS_PROJECTILE)
-			&& !source.is(net.minecraft.tags.DamageTypeTags.IS_EXPLOSION);
+		return !source.isProjectile()
+			&& !source.isExplosion();
 	}
 
 	/**
@@ -621,7 +621,7 @@ public final class Pacts {
 		if (killer != null && !mark.playerId().equals(killer.getUUID())) {
 			return;
 		}
-		if (killer == null && !source.is(net.minecraft.tags.DamageTypeTags.IS_FIRE)) {
+		if (killer == null && !source.isFire()) {
 			return;
 		}
 		ServerPlayer player = level.getServer().getPlayerList().getPlayer(mark.playerId());
@@ -823,10 +823,10 @@ public final class Pacts {
 
 	private static void announceGained(ServerPlayer player, Pact pact) {
 		playPactSound(player, pact, true);
-		PlayerMessages.system(player, Component.translatable("pact.attuned.awakened")
+		PlayerMessages.system(player, new net.minecraft.network.chat.TranslatableComponent("pact.attuned.awakened")
 			.withStyle(ChatFormatting.GRAY)
 			.append(pact.displayName().withStyle(pact.chatColor(), ChatFormatting.BOLD))
-			.append(Component.literal(". ").withStyle(ChatFormatting.GRAY))
+			.append(new net.minecraft.network.chat.TextComponent(". ").withStyle(ChatFormatting.GRAY))
 			.append(pact.description().withStyle(ChatFormatting.GRAY)));
 		AttunedAdvancements.award(player, "attunement/pact_" + pact.name().toLowerCase(Locale.ROOT));
 	}
@@ -836,7 +836,7 @@ public final class Pacts {
 			playPactSound(player, pact, false);
 		}
 		Component name = pact == null
-			? Component.translatable("pact.attuned.fades.generic")
+			? new net.minecraft.network.chat.TranslatableComponent("pact.attuned.fades.generic")
 			: pact.displayName().withStyle(pact.chatColor(), ChatFormatting.BOLD);
 		PlayerMessages.system(player, fadeMessage(player, pact, replacement, name).copy()
 			.withStyle(ChatFormatting.GRAY));
@@ -844,29 +844,29 @@ public final class Pacts {
 
 	private static Component fadeMessage(ServerPlayer player, Pact pact, Pact replacement, Component name) {
 		if (replacement != null) {
-			return Component.translatable("pact.attuned.fades.replaced", name,
+			return new net.minecraft.network.chat.TranslatableComponent("pact.attuned.fades.replaced", name,
 				replacement.displayName().withStyle(replacement.chatColor(), ChatFormatting.BOLD));
 		}
 		if (pact == null) {
-			return Component.translatable("pact.attuned.fades", name);
+			return new net.minecraft.network.chat.TranslatableComponent("pact.attuned.fades", name);
 		}
 		EnumMap<Affinity, Integer> counts = activeAffinityCounts(player);
 		if (counts.isEmpty()) {
-			return Component.translatable("pact.attuned.fades.empty", name);
+			return new net.minecraft.network.chat.TranslatableComponent("pact.attuned.fades.empty", name);
 		}
 		if (pact == Pact.UNTETHERED) {
 			return !isManifoldSpread(counts)
-				? Component.translatable("pact.attuned.fades.affinities", name)
-				: Component.translatable("pact.attuned.fades", name);
+				? new net.minecraft.network.chat.TranslatableComponent("pact.attuned.fades.affinities", name)
+				: new net.minecraft.network.chat.TranslatableComponent("pact.attuned.fades", name);
 		}
 		if (counts.size() >= 2) {
-			return Component.translatable("pact.attuned.fades.discord", name);
+			return new net.minecraft.network.chat.TranslatableComponent("pact.attuned.fades.discord", name);
 		}
 		Affinity affinity = pact.affinity().orElse(null);
 		if (affinity != null && counts.getOrDefault(affinity, 0) < SINGLE_AFFINITY_THRESHOLD) {
-			return Component.translatable("pact.attuned.fades.short", name, affinityName(affinity));
+			return new net.minecraft.network.chat.TranslatableComponent("pact.attuned.fades.short", name, affinityName(affinity));
 		}
-		return Component.translatable("pact.attuned.fades", name);
+		return new net.minecraft.network.chat.TranslatableComponent("pact.attuned.fades", name);
 	}
 
 	private static void playPactSound(ServerPlayer player, Pact pact, boolean awakening) {
@@ -885,7 +885,7 @@ public final class Pacts {
 			case TIDESWORN -> new PactSound(SoundEvents.BUBBLE_COLUMN_UPWARDS_AMBIENT, 0.55F, 1.2F);
 			case FORGEBOUND -> new PactSound(SoundEvents.ANVIL_LAND, 0.35F, 1.35F);
 			case WILDROOT -> new PactSound(SoundEvents.GRASS_PLACE, 0.55F, 1.1F);
-			case NIGHTSWORN -> new PactSound(SoundEvents.SCULK_BLOCK_CHARGE, 0.45F, 1.1F);
+			case NIGHTSWORN -> new PactSound(SoundEvents.SOUL_ESCAPE, 0.45F, 1.1F);
 			case UNTETHERED -> new PactSound(SoundEvents.ENCHANTMENT_TABLE_USE, 0.45F, 1.15F);
 		};
 	}
@@ -899,7 +899,7 @@ public final class Pacts {
 			case TIDESWORN -> new PactSound(SoundEvents.AMBIENT_UNDERWATER_EXIT, 0.4F, 0.9F);
 			case FORGEBOUND -> new PactSound(SoundEvents.ANVIL_HIT, 0.35F, 0.8F);
 			case WILDROOT -> new PactSound(SoundEvents.GRASS_HIT, 0.4F, 0.85F);
-			case NIGHTSWORN -> new PactSound(SoundEvents.SCULK_BLOCK_HIT, 0.4F, 0.8F);
+			case NIGHTSWORN -> new PactSound(SoundEvents.SOUL_SOIL_HIT, 0.4F, 0.8F);
 			case UNTETHERED -> new PactSound(SoundEvents.AMETHYST_BLOCK_HIT, 0.4F, 0.8F);
 		};
 	}
@@ -941,7 +941,7 @@ public final class Pacts {
 			player.getZ(),
 			20, 0.6, 0.8, 0.6, 0.5
 		);
-		PlayerMessages.system(player, Component.translatable("pact.attuned.first_pact")
+		PlayerMessages.system(player, new net.minecraft.network.chat.TranslatableComponent("pact.attuned.first_pact")
 			.withStyle(pact.chatColor(), ChatFormatting.BOLD, ChatFormatting.ITALIC));
 		AttunedAdvancements.award(player, "attunement/first_pact");
 	}

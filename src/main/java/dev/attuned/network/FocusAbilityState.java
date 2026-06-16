@@ -1,12 +1,13 @@
 package dev.attuned.network;
 
-import dev.attuned.compat.PlayerMessages;
 import dev.attuned.Attuned;
 import dev.attuned.AttunedPlayerCleanup;
 import dev.attuned.AttunedRegistries;
 import dev.attuned.AttunedServerCleanup;
 import dev.attuned.api.focus.FocusBehavior;
 import dev.attuned.api.focus.FocusDefinition;
+import dev.attuned.compat.NetworkPackets;
+import dev.attuned.compat.PlayerMessages;
 import dev.attuned.combat.Apex;
 import dev.attuned.pacts.PactTacticals;
 import dev.attuned.attunement.AttunedAttachments;
@@ -17,7 +18,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
-import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
@@ -60,7 +60,7 @@ public final class FocusAbilityState {
 			if (Apex.tryIdentityAbility(player)) {
 				return;
 			}
-			PlayerMessages.overlay(player, Component.translatable("item.attuned.focus_ability.none"));
+			PlayerMessages.overlay(player, new net.minecraft.network.chat.TranslatableComponent("item.attuned.focus_ability.none"));
 			sync(player, FocusAbilityStatusPayload.NO_ABILITY_SLOT, 0, 0);
 			return;
 		}
@@ -68,7 +68,7 @@ public final class FocusAbilityState {
 		int remaining = cooldownRemaining(player, selection);
 		if (remaining > 0) {
 			Cooldown cooldown = COOLDOWNS.get(selection.cooldownKey(player.getUUID()));
-			PlayerMessages.overlay(player, Component.translatable(
+			PlayerMessages.overlay(player, new net.minecraft.network.chat.TranslatableComponent(
 				"item.attuned.focus_ability.cooldown", cooldownSecondsForMessage(remaining)));
 			sync(player, selection.slot(), remaining,
 				cooldown == null ? abilityCooldownTicks(selection.behavior(), player, selection.stack()) : cooldown.totalTicks());
@@ -208,7 +208,7 @@ public final class FocusAbilityState {
 			return;
 		}
 		LAST_SENT.put(player.getUUID(), payload);
-		ServerPlayNetworking.send(player, new FocusAbilityStatusPayload(payload.slot(),
+		NetworkPackets.send(player, new FocusAbilityStatusPayload(payload.slot(),
 			payload.remainingTicks(), payload.totalTicks()));
 	}
 

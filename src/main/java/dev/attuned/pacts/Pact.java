@@ -45,12 +45,12 @@ public enum Pact {
 
 	/** Translated display name, ready to style and append. */
 	public MutableComponent displayName() {
-		return Component.translatable(displayNameKey);
+		return new net.minecraft.network.chat.TranslatableComponent(displayNameKey);
 	}
 
 	/** Translated rules-text description for the chat announcement. */
 	public MutableComponent description() {
-		return Component.translatable(descriptionKey);
+		return new net.minecraft.network.chat.TranslatableComponent(descriptionKey);
 	}
 
 	/**

@@ -85,6 +85,6 @@ public final class WhisperBehavior implements FocusBehavior {
 
 	private static boolean immuneToMisdirection(Mob mob) {
 		EntityType<?> type = mob.getType();
-		return type == EntityType.WARDEN || type == EntityType.WITHER || type == EntityType.ENDER_DRAGON;
+		return type == EntityType.WITHER || type == EntityType.ENDER_DRAGON;
 	}
 }

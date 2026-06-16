@@ -8,6 +8,7 @@ import dev.attuned.combat.RevenantCombat;
 import dev.attuned.combat.UnseenCombat;
 import dev.attuned.content.behavior.UpdraftBehavior;
 import dev.attuned.pacts.Pacts;
+import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.LivingEntity;
@@ -36,11 +37,29 @@ public abstract class LivingEntityHurtMixin {
 	@Unique
 	private float attuned$beforeDamagePool;
 
-	@Inject(method = "hurt", at = @At("HEAD"))
+	@Inject(method = "hurt", at = @At("HEAD"), cancellable = true)
 	private void attuned$captureDamagePool(DamageSource source, float amount,
 			CallbackInfoReturnable<Boolean> cir) {
 		LivingEntity self = (LivingEntity) (Object) this;
+		if (self.getLevel() instanceof ServerLevel
+				&& !ServerLivingEntityEvents.ALLOW_DAMAGE.invoker().allowDamage(self, source, amount)) {
+			cir.setReturnValue(false);
+			return;
+		}
 		attuned$beforeDamagePool = self.getHealth() + self.getAbsorptionAmount();
+	}
+
+	@Inject(
+		method = "hurt",
+		at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/LivingEntity;die(Lnet/minecraft/world/damagesource/DamageSource;)V"),
+		cancellable = true
+	)
+	private void attuned$allowDeath(DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {
+		LivingEntity self = (LivingEntity) (Object) this;
+		if (self.getLevel() instanceof ServerLevel
+				&& !ServerLivingEntityEvents.ALLOW_DEATH.invoker().allowDeath(self, source, amount)) {
+			cir.setReturnValue(false);
+		}
 	}
 
 	@ModifyVariable(method = "hurt", at = @At("HEAD"), argsOnly = true, ordinal = 0)
@@ -77,5 +96,13 @@ public abstract class LivingEntityHurtMixin {
 			return;
 		}
 		AfterDamageCallback.EVENT.invoker().afterDamage(self, source, amount, dealtDamage, false);
+	}
+
+	@Inject(method = "die", at = @At("TAIL"))
+	private void attuned$afterDeath(DamageSource source, org.spongepowered.asm.mixin.injection.callback.CallbackInfo ci) {
+		LivingEntity self = (LivingEntity) (Object) this;
+		if (self.getLevel() instanceof ServerLevel) {
+			ServerLivingEntityEvents.AFTER_DEATH.invoker().afterDeath(self, source);
+		}
 	}
 }

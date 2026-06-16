@@ -10,7 +10,6 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.MenuProvider;
 import net.minecraft.world.SimpleMenuProvider;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.flag.FeatureFlags;
 import net.minecraft.world.inventory.MenuType;
 
 /** Registers the Focus Reliquary menu types (small + grand) and hand-bound providers. */
@@ -24,9 +23,9 @@ public final class SatchelMenuType {
 	public static MenuType<SatchelMenu> GRAND_TYPE;
 
 	public static final Component DISPLAY_NAME =
-		Component.translatable("container.attuned.satchel");
+		new net.minecraft.network.chat.TranslatableComponent("container.attuned.satchel");
 	public static final Component GRAND_DISPLAY_NAME =
-		Component.translatable("container.attuned.grand_satchel");
+		new net.minecraft.network.chat.TranslatableComponent("container.attuned.grand_satchel");
 
 	public static void init() {
 		if (initialized) {
@@ -35,10 +34,10 @@ public final class SatchelMenuType {
 		initialized = true;
 		TYPE = Registry.register(BuiltInRegistries.MENU,
 			new ResourceLocation(Attuned.MOD_ID, "satchel_of_foci"),
-			new MenuType<>(SatchelMenu::new, FeatureFlags.VANILLA_SET));
+			new MenuType<>(SatchelMenu::new));
 		GRAND_TYPE = Registry.register(BuiltInRegistries.MENU,
 			new ResourceLocation(Attuned.MOD_ID, "grand_satchel_of_foci"),
-			new MenuType<>(SatchelMenu::grand, FeatureFlags.VANILLA_SET));
+			new MenuType<>(SatchelMenu::grand));
 	}
 
 	public static MenuProvider provider(Player player, InteractionHand hand) {

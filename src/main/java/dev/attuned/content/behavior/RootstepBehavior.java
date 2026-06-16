@@ -43,7 +43,6 @@ public final class RootstepBehavior implements FocusBehavior {
 			|| state.is(Blocks.GRASS_BLOCK)
 			|| state.is(Blocks.MOSS_BLOCK)
 			|| state.is(Blocks.MOSS_CARPET)
-			|| state.is(Blocks.MUD)
 			|| state.is(Blocks.CLAY);
 	}
 

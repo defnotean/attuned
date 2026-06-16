@@ -77,9 +77,11 @@ class CombatPolishContractTest {
 		assertTrue(apex.contains("CombatFeedback.unyieldingCap("));
 		assertTrue(apex.contains("CombatFeedback.stillpointPulse("));
 		assertTrue(apex.contains("sendOverlayMessage(Component.translatable(\"apex.attuned.rearmed\"")
-				|| apex.contains("PlayerMessages.overlay(player, Component.translatable(\"apex.attuned.rearmed\""));
+				|| apex.contains("PlayerMessages.overlay(player, Component.translatable(\"apex.attuned.rearmed\"")
+				|| apex.contains("PlayerMessages.overlay(player, new net.minecraft.network.chat.TranslatableComponent(\"apex.attuned.rearmed\""));
 		assertTrue(apex.contains("sendOverlayMessage(Component.translatable(\"apex.attuned.dormant\"")
-				|| apex.contains("PlayerMessages.overlay(player, Component.translatable(\"apex.attuned.dormant\""));
+				|| apex.contains("PlayerMessages.overlay(player, Component.translatable(\"apex.attuned.dormant\"")
+				|| apex.contains("PlayerMessages.overlay(player, new net.minecraft.network.chat.TranslatableComponent(\"apex.attuned.dormant\""));
 	}
 
 	@Test

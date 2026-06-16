@@ -6,6 +6,8 @@ import dev.attuned.api.focus.Affinity;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -217,9 +219,9 @@ public final class AttunedLoot {
 	/** Focus items for legacy loot callbacks, which expose resources but not dynamic registries. */
 	private static List<FocusEntry> focusEntries(ResourceManager resourceManager) {
 		List<FocusEntry> entries = resourceManager
-			.listResources("attuned/focus", id -> id.getPath().endsWith(".json"))
-			.values()
+			.listResources("attuned/focus", path -> path.endsWith(".json"))
 			.stream()
+			.flatMap(id -> focusResources(resourceManager, id).stream())
 			.map(AttunedLoot::focusEntry)
 			.filter(Objects::nonNull)
 			.sorted(Comparator.comparing(focus ->
@@ -235,15 +237,24 @@ public final class AttunedLoot {
 			.toList();
 	}
 
+	private static List<Resource> focusResources(ResourceManager resourceManager, ResourceLocation id) {
+		try {
+			return resourceManager.getResources(id);
+		} catch (IOException ex) {
+			Attuned.LOGGER.warn("Unable to read Focus loot metadata resource {}", id, ex);
+			return List.of();
+		}
+	}
+
 	private static FocusEntry focusEntry(Resource resource) {
-		try (var reader = resource.openAsReader()) {
+		try (var reader = new InputStreamReader(resource.getInputStream(), StandardCharsets.UTF_8)) {
 			JsonObject root = JsonParser.parseReader(reader).getAsJsonObject();
 			ResourceLocation itemId = new ResourceLocation(root.get("item").getAsString());
 			return BuiltInRegistries.ITEM.getOptional(itemId)
 				.map(item -> new FocusEntry(item, focusMeta(root)))
 				.orElse(null);
 		} catch (IOException | IllegalArgumentException | IllegalStateException | NullPointerException ex) {
-			Attuned.LOGGER.warn("Ignoring malformed Focus loot metadata from {}", resource.sourcePackId(), ex);
+			Attuned.LOGGER.warn("Ignoring malformed Focus loot metadata from {}", resource.getSourceName(), ex);
 			return null;
 		}
 	}

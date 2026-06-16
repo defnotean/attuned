@@ -73,7 +73,7 @@ public sealed interface FocusBehaviorDef {
 				return DataResult.success(type);
 			}
 		}
-		return DataResult.error(() -> "Unknown Focus behavior type: " + name
+		return DataResult.error("Unknown Focus behavior type: " + name
 			+ " (palette types: attuned:conditional_mob_effect, attuned:on_hit_effect,"
 			+ " attuned:periodic_effect, attuned:attribute_while)");
 	}

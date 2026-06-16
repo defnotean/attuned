@@ -166,10 +166,10 @@ public final class AttunementReadout {
 	public static MutableComponent title(Snapshot snapshot) {
 		int activeFoci = snapshot.active();
 		if (activeFoci == 0) {
-			return Component.literal("Unattuned").withStyle(ChatFormatting.DARK_GRAY);
+			return new net.minecraft.network.chat.TextComponent("Unattuned").withStyle(ChatFormatting.DARK_GRAY);
 		}
 		int used = snapshot.used();
-		return Component.literal(countWord(activeFoci) + " " + rankWord(used))
+		return new net.minecraft.network.chat.TextComponent(countWord(activeFoci) + " " + rankWord(used))
 			.withStyle(rankColor(used));
 	}
 
@@ -187,62 +187,62 @@ public final class AttunementReadout {
 
 		List<Component> lines = new ArrayList<>();
 		lines.add(title(snapshot).withStyle(ChatFormatting.BOLD));
-		lines.add(Component.empty());
-		lines.add(Component.literal("Budget: ").withStyle(ChatFormatting.GRAY)
-			.append(Component.literal(used + " / " + capacity).withStyle(ChatFormatting.AQUA)));
-		lines.add(Component.literal("Remaining: ").withStyle(ChatFormatting.GRAY)
-			.append(Component.literal(Integer.toString(remaining))
+		lines.add(new net.minecraft.network.chat.TextComponent(""));
+		lines.add(new net.minecraft.network.chat.TextComponent("Budget: ").withStyle(ChatFormatting.GRAY)
+			.append(new net.minecraft.network.chat.TextComponent(used + " / " + capacity).withStyle(ChatFormatting.AQUA)));
+		lines.add(new net.minecraft.network.chat.TextComponent("Remaining: ").withStyle(ChatFormatting.GRAY)
+			.append(new net.minecraft.network.chat.TextComponent(Integer.toString(remaining))
 				.withStyle(remaining > 0 ? ChatFormatting.GREEN : ChatFormatting.DARK_GRAY)));
-		lines.add(Component.literal("Active: ").withStyle(ChatFormatting.GRAY)
-			.append(Component.literal(Integer.toString(active))
+		lines.add(new net.minecraft.network.chat.TextComponent("Active: ").withStyle(ChatFormatting.GRAY)
+			.append(new net.minecraft.network.chat.TextComponent(Integer.toString(active))
 				.withStyle(active > 0 ? ChatFormatting.GREEN : ChatFormatting.DARK_GRAY))
-			.append(Component.literal("  Dormant: ").withStyle(ChatFormatting.GRAY))
-			.append(Component.literal(Integer.toString(dormant))
+			.append(new net.minecraft.network.chat.TextComponent("  Dormant: ").withStyle(ChatFormatting.GRAY))
+			.append(new net.minecraft.network.chat.TextComponent(Integer.toString(dormant))
 				.withStyle(dormant > 0 ? ChatFormatting.YELLOW : ChatFormatting.DARK_GRAY)));
 		if (dormant > 0) {
-			lines.add(Component.literal("Hover a dormant Focus for details.")
+			lines.add(new net.minecraft.network.chat.TextComponent("Hover a dormant Focus for details.")
 				.withStyle(ChatFormatting.DARK_GRAY));
 		}
 
 		if (snapshot.discord()) {
-			lines.add(Component.literal("Stance: ").withStyle(ChatFormatting.GRAY)
-				.append(Component.literal("Discord").withStyle(ChatFormatting.LIGHT_PURPLE)));
-			lines.add(Component.literal("Clashing affinities — you deal and take extra damage.")
+			lines.add(new net.minecraft.network.chat.TextComponent("Stance: ").withStyle(ChatFormatting.GRAY)
+				.append(new net.minecraft.network.chat.TextComponent("Discord").withStyle(ChatFormatting.LIGHT_PURPLE)));
+			lines.add(new net.minecraft.network.chat.TextComponent("Clashing affinities — you deal and take extra damage.")
 				.withStyle(ChatFormatting.GRAY));
 		} else {
 			Optional<Affinity> affinity = snapshot.committed();
-			lines.add(Component.literal("Affinity: ").withStyle(ChatFormatting.GRAY)
-				.append(Component.literal(affinityName(affinity)).withStyle(affinityTextColor(affinity))));
+			lines.add(new net.minecraft.network.chat.TextComponent("Affinity: ").withStyle(ChatFormatting.GRAY)
+				.append(new net.minecraft.network.chat.TextComponent(affinityName(affinity)).withStyle(affinityTextColor(affinity))));
 		}
 
 		Optional<Pact> pact = snapshot.pact();
 		if (pact.isPresent()) {
 			Pact activePact = pact.get();
-			lines.add(Component.literal("Pact: ").withStyle(ChatFormatting.GRAY)
+			lines.add(new net.minecraft.network.chat.TextComponent("Pact: ").withStyle(ChatFormatting.GRAY)
 				.append(activePact.displayName().withStyle(activePact.chatColor(), ChatFormatting.BOLD)));
 		} else {
-			lines.add(Component.literal("Pact: ").withStyle(ChatFormatting.GRAY)
-				.append(Component.literal("None").withStyle(ChatFormatting.DARK_GRAY)));
+			lines.add(new net.minecraft.network.chat.TextComponent("Pact: ").withStyle(ChatFormatting.GRAY)
+				.append(new net.minecraft.network.chat.TextComponent("None").withStyle(ChatFormatting.DARK_GRAY)));
 			snapshot.pactPreview().ifPresent(preview -> lines.add(
-				Component.literal("Next Pact: ").withStyle(ChatFormatting.GRAY).append(preview)));
+				new net.minecraft.network.chat.TextComponent("Next Pact: ").withStyle(ChatFormatting.GRAY).append(preview)));
 		}
 
 		snapshot.confluencePreview().ifPresent(preview -> lines.add(
-			Component.literal("Confluence: ").withStyle(ChatFormatting.GRAY).append(preview)));
+			new net.minecraft.network.chat.TextComponent("Confluence: ").withStyle(ChatFormatting.GRAY).append(preview)));
 
 		Optional<Apex.Capstone> apex = snapshot.capstone();
 		if (apex.isPresent()) {
 			Apex.Capstone capstone = apex.get();
 			boolean activeApex = snapshot.atApex();
-			lines.add(Component.literal("Apex: ").withStyle(ChatFormatting.GRAY)
-				.append(Component.literal(capstone.displayName())
+			lines.add(new net.minecraft.network.chat.TextComponent("Apex: ").withStyle(ChatFormatting.GRAY)
+				.append(new net.minecraft.network.chat.TextComponent(capstone.displayName())
 					.withStyle(capstone.chatColor(), ChatFormatting.BOLD))
-				.append(Component.literal(activeApex ? " - Active" : " - Dormant")
+				.append(new net.minecraft.network.chat.TextComponent(activeApex ? " - Active" : " - Dormant")
 					.withStyle(activeApex ? ChatFormatting.GREEN : ChatFormatting.DARK_GRAY)));
-			lines.add(Component.literal(capstone.description())
+			lines.add(new net.minecraft.network.chat.TextComponent(capstone.description())
 				.withStyle(ChatFormatting.GRAY));
 			if (!activeApex) {
-				lines.add(Component.literal("Build qualifies; raise Resonance to wake it.")
+				lines.add(new net.minecraft.network.chat.TextComponent("Build qualifies; raise Resonance to wake it.")
 					.withStyle(ChatFormatting.DARK_GRAY));
 			}
 		}
@@ -289,24 +289,24 @@ public final class AttunementReadout {
 	public static Component stanceLabel(Snapshot snapshot) {
 		if (snapshot.capstone().isPresent()) {
 			Apex.Capstone capstone = snapshot.capstone().get();
-			return Component.literal(capstone.displayName()).withStyle(capstone.chatColor());
+			return new net.minecraft.network.chat.TextComponent(capstone.displayName()).withStyle(capstone.chatColor());
 		}
 		if (snapshot.discord()) {
-			return Component.literal("Discord").withStyle(ChatFormatting.LIGHT_PURPLE);
+			return new net.minecraft.network.chat.TextComponent("Discord").withStyle(ChatFormatting.LIGHT_PURPLE);
 		}
 		Optional<Affinity> affinity = snapshot.committed();
 		if (affinity.isEmpty()) {
-			return Component.literal("None").withStyle(ChatFormatting.GRAY);
+			return new net.minecraft.network.chat.TextComponent("None").withStyle(ChatFormatting.GRAY);
 		}
 		return switch (affinity.get()) {
-			case FURY -> Component.literal("Fury").withStyle(ChatFormatting.RED);
-			case BASTION -> Component.literal("Bastion").withStyle(ChatFormatting.GOLD);
-			case ZEPHYR -> Component.literal("Zephyr").withStyle(ChatFormatting.AQUA);
-			case HOLY -> Component.literal("Holy").withStyle(ChatFormatting.YELLOW);
-			case TIDE -> Component.literal("Tide").withStyle(ChatFormatting.BLUE);
-			case FORGE -> Component.literal("Forge").withStyle(ChatFormatting.DARK_RED);
-			case VERDANT -> Component.literal("Verdant").withStyle(ChatFormatting.GREEN);
-			case UMBRAL -> Component.literal("Umbral").withStyle(ChatFormatting.DARK_PURPLE);
+			case FURY -> new net.minecraft.network.chat.TextComponent("Fury").withStyle(ChatFormatting.RED);
+			case BASTION -> new net.minecraft.network.chat.TextComponent("Bastion").withStyle(ChatFormatting.GOLD);
+			case ZEPHYR -> new net.minecraft.network.chat.TextComponent("Zephyr").withStyle(ChatFormatting.AQUA);
+			case HOLY -> new net.minecraft.network.chat.TextComponent("Holy").withStyle(ChatFormatting.YELLOW);
+			case TIDE -> new net.minecraft.network.chat.TextComponent("Tide").withStyle(ChatFormatting.BLUE);
+			case FORGE -> new net.minecraft.network.chat.TextComponent("Forge").withStyle(ChatFormatting.DARK_RED);
+			case VERDANT -> new net.minecraft.network.chat.TextComponent("Verdant").withStyle(ChatFormatting.GREEN);
+			case UMBRAL -> new net.minecraft.network.chat.TextComponent("Umbral").withStyle(ChatFormatting.DARK_PURPLE);
 		};
 	}
 
@@ -411,11 +411,11 @@ public final class AttunementReadout {
 				break;
 			}
 		}
-		Component confluenceName = Component.translatable("confluence.attuned." + idPath(id) + ".name");
+		Component confluenceName = new net.minecraft.network.chat.TranslatableComponent("confluence.attuned." + idPath(id) + ".name");
 		Component memberName = missingMember == null
-			? Component.empty()
-			: Component.translatable(itemKey(missingMember));
-		return Optional.of(Component.translatable("confluence.attuned.preview", confluenceName, memberName)
+			? new net.minecraft.network.chat.TextComponent("")
+			: new net.minecraft.network.chat.TranslatableComponent(itemKey(missingMember));
+		return Optional.of(new net.minecraft.network.chat.TranslatableComponent("confluence.attuned.preview", confluenceName, memberName)
 			.withStyle(ChatFormatting.GRAY));
 	}
 

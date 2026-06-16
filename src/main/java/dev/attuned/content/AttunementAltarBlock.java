@@ -26,7 +26,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.tags.BlockTags;
-import net.minecraft.util.RandomSource;
+import java.util.Random;
 import net.minecraft.util.StringRepresentable;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
@@ -179,7 +179,7 @@ public class AttunementAltarBlock extends Block {
 		int cap = AttunedConfig.get().capacityCap();
 		int capacity = AttunedAttachments.getCapacity(player);
 		if (capacity >= cap) {
-			PlayerMessages.system(player, Component.literal("Your attunement is already at its fullest.")
+			PlayerMessages.system(player, new net.minecraft.network.chat.TextComponent("Your attunement is already at its fullest.")
 				.withStyle(ChatFormatting.GRAY));
 			return false;
 		}
@@ -204,9 +204,9 @@ public class AttunementAltarBlock extends Block {
 			AltarAnimations.begin(server, pos, serverPlayer, stanceRgb(affinity), flair);
 			applyBindingPerk(serverPlayer);
 		}
-		PlayerMessages.system(player, Component.literal("The Altar binds the shard — capacity ")
+		PlayerMessages.system(player, new net.minecraft.network.chat.TextComponent("The Altar binds the shard — capacity ")
 			.withStyle(ChatFormatting.GRAY)
-			.append(Component.literal(raised + " / " + cap).withStyle(ChatFormatting.AQUA)));
+			.append(new net.minecraft.network.chat.TextComponent(raised + " / " + cap).withStyle(ChatFormatting.AQUA)));
 		return true;
 	}
 
@@ -285,27 +285,27 @@ public class AttunementAltarBlock extends Block {
 	/** The stance label for {@code player} — Discord, a committed affinity, or None. */
 	public static Component stanceLabel(Player player) {
 		if (Attunement.isDiscord(player)) {
-			return Component.literal("Discord").withStyle(ChatFormatting.LIGHT_PURPLE);
+			return new net.minecraft.network.chat.TextComponent("Discord").withStyle(ChatFormatting.LIGHT_PURPLE);
 		}
 		Optional<Affinity> affinity = Attunement.committedAffinity(player);
 		if (affinity.isEmpty()) {
-			return Component.literal("None").withStyle(ChatFormatting.GRAY);
+			return new net.minecraft.network.chat.TextComponent("None").withStyle(ChatFormatting.GRAY);
 		}
 		return switch (affinity.get()) {
-			case FURY -> Component.literal("Fury").withStyle(ChatFormatting.RED);
-			case BASTION -> Component.literal("Bastion").withStyle(ChatFormatting.GOLD);
-			case ZEPHYR -> Component.literal("Zephyr").withStyle(ChatFormatting.AQUA);
-			case HOLY -> Component.literal("Holy").withStyle(ChatFormatting.YELLOW);
-			case TIDE -> Component.literal("Tide").withStyle(ChatFormatting.BLUE);
-			case FORGE -> Component.literal("Forge").withStyle(ChatFormatting.DARK_RED);
-			case VERDANT -> Component.literal("Verdant").withStyle(ChatFormatting.GREEN);
-			case UMBRAL -> Component.literal("Umbral").withStyle(ChatFormatting.DARK_PURPLE);
+			case FURY -> new net.minecraft.network.chat.TextComponent("Fury").withStyle(ChatFormatting.RED);
+			case BASTION -> new net.minecraft.network.chat.TextComponent("Bastion").withStyle(ChatFormatting.GOLD);
+			case ZEPHYR -> new net.minecraft.network.chat.TextComponent("Zephyr").withStyle(ChatFormatting.AQUA);
+			case HOLY -> new net.minecraft.network.chat.TextComponent("Holy").withStyle(ChatFormatting.YELLOW);
+			case TIDE -> new net.minecraft.network.chat.TextComponent("Tide").withStyle(ChatFormatting.BLUE);
+			case FORGE -> new net.minecraft.network.chat.TextComponent("Forge").withStyle(ChatFormatting.DARK_RED);
+			case VERDANT -> new net.minecraft.network.chat.TextComponent("Verdant").withStyle(ChatFormatting.GREEN);
+			case UMBRAL -> new net.minecraft.network.chat.TextComponent("Umbral").withStyle(ChatFormatting.DARK_PURPLE);
 		};
 	}
 
 	/** A particle drifting up from the Altar — affinity-coloured once it has been attuned. */
 	@Override
-	public void animateTick(BlockState state, Level level, BlockPos pos, RandomSource random) {
+	public void animateTick(BlockState state, Level level, BlockPos pos, Random random) {
 		AltarAffinity affinity = state.getValue(AFFINITY);
 		double x = pos.getX() + 0.5 + (random.nextDouble() - 0.5) * 0.4;
 		double y = pos.getY() + 1.05;
@@ -317,7 +317,7 @@ public class AttunementAltarBlock extends Block {
 		tryProximityPulse(level, pos, random);
 	}
 
-	private static void tryProximityPulse(Level level, BlockPos pos, RandomSource random) {
+	private static void tryProximityPulse(Level level, BlockPos pos, Random random) {
 		long now = level.getGameTime();
 		ProximityPulseKey key = new ProximityPulseKey(level.dimension(), pos.asLong());
 		pruneProximityPulseCooldowns(now);
@@ -359,7 +359,7 @@ public class AttunementAltarBlock extends Block {
 		return null;
 	}
 
-	private static void spawnProximityPulse(Level level, BlockPos pos, RandomSource random,
+	private static void spawnProximityPulse(Level level, BlockPos pos, Random random,
 			ParticleOptions particle) {
 		double centerX = pos.getX() + 0.5;
 		double y = pos.getY() + 1.1;

@@ -4,7 +4,6 @@ import dev.attuned.network.InspectRequestPayload;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
-import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.client.Minecraft;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
@@ -65,7 +64,7 @@ public final class AffinityInspectClient {
 		// Send exactly once when the accumulator first reaches the threshold; the
 		// equality (not >=) guarantees one packet per sustained hover, no spam.
 		if (hoverTicks == INSPECT_HOLD_TICKS) {
-			ClientPlayNetworking.send(new InspectRequestPayload(targetId));
+			ClientNetworkPackets.send(new InspectRequestPayload(targetId));
 		}
 	}
 

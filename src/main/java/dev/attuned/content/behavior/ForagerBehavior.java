@@ -18,7 +18,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.CropBlock;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.util.RandomSource;
+import java.util.Random;
 
 /**
  * Forager Focus: small bonus food/seed finds from vanilla gathering blocks.
@@ -52,7 +52,7 @@ public final class ForagerBehavior implements dev.attuned.api.focus.FocusBehavio
 		}
 	}
 
-	private static ItemStack rewardFor(BlockState state, RandomSource random) {
+	private static ItemStack rewardFor(BlockState state, Random random) {
 		if (state.is(BlockTags.LEAVES) && random.nextInt(18) == 0) {
 			return new ItemStack(Items.APPLE);
 		}

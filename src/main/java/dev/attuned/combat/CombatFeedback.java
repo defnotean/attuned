@@ -62,7 +62,7 @@ public final class CombatFeedback {
 		double z = player.getZ();
 		level.sendParticles(ParticleTypes.SMOKE, x, y, z, 4, 0.2, 0.2, 0.2, 0.01);
 		level.playSound(null, player.blockPosition(),
-			SoundEvents.NOTE_BLOCK_BASS.value(), SoundSource.PLAYERS, 0.45F, 0.65F);
+			SoundEvents.NOTE_BLOCK_BASS, SoundSource.PLAYERS, 0.45F, 0.65F);
 		markFeedback(player);
 	}
 
@@ -89,7 +89,7 @@ public final class CombatFeedback {
 		float pitch = 1.0F + Math.min(0.4F, (streak - 2) * 0.08F);
 		level.playSound(null, player.blockPosition(),
 			SoundEvents.PLAYER_LEVELUP, SoundSource.PLAYERS, 0.25F, pitch);
-		PlayerMessages.overlay(player, net.minecraft.network.chat.Component.translatable(
+		PlayerMessages.overlay(player, new net.minecraft.network.chat.TranslatableComponent(
 			"resonance.attuned.kill_streak", streak));
 	}
 
@@ -156,7 +156,7 @@ public final class CombatFeedback {
 			case NIGHTSWORN -> {
 				level.sendParticles(ParticleTypes.SQUID_INK, x, y, z, 10, 0.35, 0.3, 0.35, 0.02);
 				level.playSound(null, player.blockPosition(),
-					SoundEvents.WARDEN_HEARTBEAT, SoundSource.PLAYERS, 0.35F, 1.6F);
+					SoundEvents.SOUL_ESCAPE, SoundSource.PLAYERS, 0.35F, 1.6F);
 			}
 			case UNTETHERED -> {
 				level.sendParticles(ParticleTypes.CLOUD, x, y, z, 8, 0.45, 0.25, 0.45, 0.05);
@@ -234,7 +234,7 @@ public final class CombatFeedback {
 		level.sendParticles(ParticleTypes.SQUID_INK, x, y, z, 10, 0.35, 0.3, 0.35, 0.02);
 		level.sendParticles(ParticleCompat.dust(color, 0.95F), x, y, z, 6, 0.25, 0.25, 0.25, 0.0);
 		level.playSound(null, victim.blockPosition(),
-			SoundEvents.WARDEN_HEARTBEAT, SoundSource.PLAYERS, 0.35F, 1.2F);
+			SoundEvents.SOUL_ESCAPE, SoundSource.PLAYERS, 0.35F, 1.2F);
 	}
 
 	/** Judgment bonus strike on a wounded Fury-aligned foe. */

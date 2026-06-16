@@ -54,7 +54,7 @@ public final class UpdraftLiftClient {
 		boolean send = !hasSent || wantsLift != lastSent || wantsBrake != lastBrakeSent
 			|| (active && heartbeat % 10 == 0);
 		if (send && ClientPlayNetworking.canSend(UpdraftLiftPayload.TYPE)) {
-			ClientPlayNetworking.send(new UpdraftLiftPayload(wantsLift, wantsBrake));
+			ClientNetworkPackets.send(new UpdraftLiftPayload(wantsLift, wantsBrake));
 			lastSent = wantsLift;
 			lastBrakeSent = wantsBrake;
 			hasSent = true;

@@ -201,10 +201,10 @@ public final class AttunedEffects {
 			for (Map.Entry<Integer, BudgetResolver.DormantReason> entry : dormantReasons.entrySet()) {
 				int slot = entry.getKey();
 				if (!previous.contains(slot)) {
-					PlayerMessages.system(player, Component.literal("A Focus falls dormant: ")
+					PlayerMessages.system(player, new net.minecraft.network.chat.TextComponent("A Focus falls dormant: ")
 						.withStyle(ChatFormatting.GRAY)
 						.append(AttunedAttachments.getInventory(player).get(slot).getHoverName())
-						.append(Component.literal(". " + dormantChatMessage(entry.getValue()))
+						.append(new net.minecraft.network.chat.TextComponent(". " + dormantChatMessage(entry.getValue()))
 							.withStyle(ChatFormatting.DARK_GRAY)));
 					Onboarding.tryDormantHint(player);
 					break;

@@ -26,7 +26,7 @@ public class AttunementShardItem extends Item {
 	@Override
 	public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
 		if (!level.isClientSide()) {
-			PlayerMessages.system(player, Component.literal(
+			PlayerMessages.system(player, new net.minecraft.network.chat.TextComponent(
 					"Bind this at an Attunement Altar to raise your capacity.")
 				.withStyle(ChatFormatting.GRAY));
 		}

@@ -16,6 +16,7 @@ import dev.attuned.synergy.SynergyResolver;
 import net.fabricmc.fabric.api.client.item.v1.ItemTooltipCallback;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
+import net.minecraft.locale.Language;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
@@ -55,14 +56,14 @@ public final class AttunedTooltips {
 			String path = id.getPath();
 
 			// Two lines of flavour lore on every Attuned item.
-			lines.add(Component.translatable("item.attuned." + path + ".lore")
+			lines.add(new net.minecraft.network.chat.TranslatableComponent("item.attuned." + path + ".lore")
 				.withStyle(ChatFormatting.DARK_GRAY, ChatFormatting.ITALIC));
-			lines.add(Component.translatable("item.attuned." + path + ".lore2")
+			lines.add(new net.minecraft.network.chat.TranslatableComponent("item.attuned." + path + ".lore2")
 				.withStyle(ChatFormatting.DARK_GRAY, ChatFormatting.ITALIC));
 
 			// Feature description on every Attuned item.
-			lines.add(Component.empty());
-			lines.add(Component.translatable("item.attuned." + path + ".effect")
+			lines.add(new net.minecraft.network.chat.TextComponent(""));
+			lines.add(new net.minecraft.network.chat.TranslatableComponent("item.attuned." + path + ".effect")
 				.withStyle(ChatFormatting.GREEN));
 
 			// Affinity and attunement cost on items that are registered Foci.
@@ -74,13 +75,13 @@ public final class AttunedTooltips {
 						// Recolor the name line (index 0) gold to mark the Tempered variant.
 						lines.set(0, lines.get(0).copy().withStyle(ChatFormatting.GOLD));
 					}
-					lines.add(Component.empty());
-					lines.add(Component.translatable("tooltip.attuned.tempered")
+						lines.add(new net.minecraft.network.chat.TextComponent(""));
+					lines.add(new net.minecraft.network.chat.TranslatableComponent("tooltip.attuned.tempered")
 						.withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD));
 				}
 				if (!definition.modifiers().isEmpty()) {
-					lines.add(Component.empty());
-					lines.add(Component.translatable("tooltip.attuned.modifier.header")
+					lines.add(new net.minecraft.network.chat.TextComponent(""));
+					lines.add(new net.minecraft.network.chat.TranslatableComponent("tooltip.attuned.modifier.header")
 						.withStyle(ChatFormatting.GRAY));
 					for (ModifierEntry modifier : definition.modifiers()) {
 						lines.add(modifierSummary(modifier)
@@ -89,32 +90,32 @@ public final class AttunedTooltips {
 				}
 
 				Affinity affinity = definition.affinity().orElse(null);
-				lines.add(Component.empty());
-				lines.add(Component.literal("Affinity ")
+				lines.add(new net.minecraft.network.chat.TextComponent(""));
+				lines.add(new net.minecraft.network.chat.TextComponent("Affinity ")
 					.withStyle(ChatFormatting.GRAY)
-					.append(Component.literal(affinityName(affinity))
+					.append(new net.minecraft.network.chat.TextComponent(affinityName(affinity))
 						.withStyle(affinityColor(affinity), ChatFormatting.BOLD)));
-				definition.faction().ifPresent(faction -> lines.add(Component.literal("Faction: ")
+				definition.faction().ifPresent(faction -> lines.add(new net.minecraft.network.chat.TextComponent("Faction: ")
 					.withStyle(ChatFormatting.GRAY)
-					.append(Component.translatableWithFallback(
+					.append(translatableWithFallback(
 						"faction." + faction.getNamespace() + "." + faction.getPath(), faction.toString())
 						.withStyle(ChatFormatting.DARK_PURPLE, ChatFormatting.BOLD))));
 				// Show the effective budget cost this stack consumes, so a Tempered
 				// Focus's tooltip agrees with the budget it actually charges.
-				lines.add(Component.literal("Cost ")
+				lines.add(new net.minecraft.network.chat.TextComponent("Cost ")
 					.withStyle(ChatFormatting.GRAY)
-					.append(Component.literal(Attunement.effectiveCost(definition, stack) + " attunement")
+					.append(new net.minecraft.network.chat.TextComponent(Attunement.effectiveCost(definition, stack) + " attunement")
 						.withStyle(ChatFormatting.AQUA)));
 				if (definition.unique()) {
-					lines.add(Component.literal("Unique")
+					lines.add(new net.minecraft.network.chat.TextComponent("Unique")
 						.withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD)
-						.append(Component.literal(" - only one can be active")
+						.append(new net.minecraft.network.chat.TextComponent(" - only one can be active")
 							.withStyle(ChatFormatting.GRAY)));
 				}
 
 				Player player = Minecraft.getInstance().player;
 				if (player != null && nearUndiscoveredConfluence(player, stack)) {
-					lines.add(Component.translatable("tooltip.attuned.confluence.near")
+					lines.add(new net.minecraft.network.chat.TranslatableComponent("tooltip.attuned.confluence.near")
 						.withStyle(ChatFormatting.GRAY));
 				}
 
@@ -124,18 +125,18 @@ public final class AttunedTooltips {
 					AttunedInv inv = AttunedAttachments.getInventory(player);
 					for (int slot = 0; slot < AttunedInv.SIZE; slot++) {
 						if (ItemStack.matches(inv.get(slot), stack)) {
-							lines.add(Component.empty());
-							lines.add(Component.translatable("tooltip.attuned.equipped_slot", slot + 1)
+							lines.add(new net.minecraft.network.chat.TextComponent(""));
+							lines.add(new net.minecraft.network.chat.TranslatableComponent("tooltip.attuned.equipped_slot", slot + 1)
 								.withStyle(ChatFormatting.AQUA));
 							var dormantReason = Attunement.dormantReason(player, slot);
 							if (dormantReason.isPresent()) {
-								lines.add(Component.translatable("tooltip.attuned.status.dormant",
+								lines.add(new net.minecraft.network.chat.TranslatableComponent("tooltip.attuned.status.dormant",
 										dormantSummary(dormantReason.get()))
 									.withStyle(ChatFormatting.DARK_RED, ChatFormatting.BOLD));
 								lines.add(dormantAdvice(dormantReason.get())
 									.withStyle(ChatFormatting.GRAY));
 							} else {
-								lines.add(Component.translatable("tooltip.attuned.status.active")
+								lines.add(new net.minecraft.network.chat.TranslatableComponent("tooltip.attuned.status.active")
 									.withStyle(ChatFormatting.GREEN, ChatFormatting.BOLD));
 							}
 							break;
@@ -255,10 +256,16 @@ public final class AttunedTooltips {
 			.map(key -> key.location())
 			.orElseGet(() -> BuiltInRegistries.ATTRIBUTE.getKey(modifier.attribute().value()));
 		String attributePath = tooltipAttributePath(attributeId.getPath());
-		MutableComponent attributeName = Component.translatableWithFallback(
+		MutableComponent attributeName = translatableWithFallback(
 			"tooltip.attuned.modifier.attribute." + attributePath, humanize(attributePath));
-		return Component.translatable("tooltip.attuned.modifier.line",
+		return new net.minecraft.network.chat.TranslatableComponent("tooltip.attuned.modifier.line",
 			modifierAmount(attributePath, modifier.amount(), modifier.operation()), attributeName);
+	}
+
+	private static MutableComponent translatableWithFallback(String key, String fallback) {
+		return Language.getInstance().has(key)
+			? new net.minecraft.network.chat.TranslatableComponent(key)
+			: new net.minecraft.network.chat.TextComponent(fallback);
 	}
 
 	private static String tooltipAttributePath(String path) {
@@ -303,15 +310,15 @@ public final class AttunedTooltips {
 
 	private static MutableComponent dormantSummary(BudgetResolver.DormantReason reason) {
 		return switch (reason) {
-			case NOT_ENOUGH_CAPACITY -> Component.translatable("tooltip.attuned.dormant.capacity.summary");
-			case DUPLICATE_UNIQUE -> Component.translatable("tooltip.attuned.dormant.duplicate.summary");
+			case NOT_ENOUGH_CAPACITY -> new net.minecraft.network.chat.TranslatableComponent("tooltip.attuned.dormant.capacity.summary");
+			case DUPLICATE_UNIQUE -> new net.minecraft.network.chat.TranslatableComponent("tooltip.attuned.dormant.duplicate.summary");
 		};
 	}
 
 	private static MutableComponent dormantAdvice(BudgetResolver.DormantReason reason) {
 		return switch (reason) {
-			case NOT_ENOUGH_CAPACITY -> Component.translatable("tooltip.attuned.dormant.capacity.advice");
-			case DUPLICATE_UNIQUE -> Component.translatable("tooltip.attuned.dormant.duplicate.advice");
+			case NOT_ENOUGH_CAPACITY -> new net.minecraft.network.chat.TranslatableComponent("tooltip.attuned.dormant.capacity.advice");
+			case DUPLICATE_UNIQUE -> new net.minecraft.network.chat.TranslatableComponent("tooltip.attuned.dormant.duplicate.advice");
 		};
 	}
 }

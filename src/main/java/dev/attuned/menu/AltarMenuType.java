@@ -9,7 +9,6 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.MenuProvider;
 import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.SimpleMenuProvider;
-import net.minecraft.world.flag.FeatureFlags;
 import net.minecraft.world.inventory.ContainerLevelAccess;
 import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.level.Level;
@@ -33,7 +32,7 @@ public final class AltarMenuType {
 
 	/** Window title shown above the slot. */
 	public static final Component DISPLAY_NAME =
-		Component.translatable("container.attuned.altar");
+		new net.minecraft.network.chat.TranslatableComponent("container.attuned.altar");
 
 	/** Forces this class to load and registers the menu type. */
 	public static void init() {
@@ -45,7 +44,7 @@ public final class AltarMenuType {
 		// The MenuType constructor is widened by fabric-menu-api-v1; vanilla also
 		// instantiates its menu types this way (see net.minecraft.world.inventory.MenuType).
 		TYPE = Registry.register(BuiltInRegistries.MENU, id,
-			new MenuType<>(AltarMenu::new, FeatureFlags.VANILLA_SET));
+			new MenuType<>(AltarMenu::new));
 	}
 
 	/**

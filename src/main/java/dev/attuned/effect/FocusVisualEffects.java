@@ -73,7 +73,7 @@ public final class FocusVisualEffects {
 		double footZ = baseZ + sideZ * 0.22D * stepPulse;
 		double y = player.getY() + 0.08D;
 
-		level.sendParticles(ParticleTypes.SCULK_SOUL,
+		level.sendParticles(ParticleTypes.SOUL,
 			footX, y + 0.05D, footZ, 1, 0.04D, 0.02D, 0.04D, 0.0D);
 		level.sendParticles(ParticleCompat.dust(SOFTSTEP_PURPLE, 0.75F),
 			footX, y, footZ, 2, 0.08D, 0.01D, 0.08D, 0.0D);

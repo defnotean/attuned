@@ -53,20 +53,23 @@ public final class AttunedNetworking {
 			return;
 		}
 		initialized = true;
-		ServerPlayNetworking.registerGlobalReceiver(AbilityPayload.TYPE, (payload, player, sender) -> {
-			player.getLevel().getServer().execute(() -> FocusAbilityState.trigger(player));
+		ServerPlayNetworking.registerGlobalReceiver(AbilityPayload.TYPE, (server, player, handler, buf, sender) -> {
+			AbilityPayload payload = AbilityPayload.TYPE.read(buf);
+			server.execute(() -> FocusAbilityState.trigger(player));
 		});
 
-		ServerPlayNetworking.registerGlobalReceiver(InspectRequestPayload.TYPE, (payload, player, sender) -> {
+		ServerPlayNetworking.registerGlobalReceiver(InspectRequestPayload.TYPE, (server, player, handler, buf, sender) -> {
+			InspectRequestPayload payload = InspectRequestPayload.TYPE.read(buf);
 			int targetId = payload.targetEntityId();
-			player.getLevel().getServer().execute(() -> handleInspect(player, targetId));
+			server.execute(() -> handleInspect(player, targetId));
 		});
 
 		AttunedServerCleanup.onStop(LAST_INSPECT::clear);
 		AttunedPlayerCleanup.onForget(LAST_INSPECT::remove);
 
-		ServerPlayNetworking.registerGlobalReceiver(UpdraftLiftPayload.TYPE, (payload, player, sender) -> {
-			player.getLevel().getServer().execute(() -> {
+		ServerPlayNetworking.registerGlobalReceiver(UpdraftLiftPayload.TYPE, (server, player, handler, buf, sender) -> {
+			UpdraftLiftPayload payload = UpdraftLiftPayload.TYPE.read(buf);
+			server.execute(() -> {
 				if (!UpdraftBehavior.isActive(player) || !UpdraftBehavior.hasFunctionalElytra(player)) {
 					UpdraftBehavior.setControls(player.getUUID(), false, false);
 					return;
@@ -107,16 +110,16 @@ public final class AttunedNetworking {
 	// target qualifies for a capstone, mirroring the Combat HUD's enemy gem state.
 	private static MutableComponent inspectLine(ServerPlayer target) {
 		MutableComponent stance = stanceLabel(target);
-		MutableComponent line = Component.translatable("inspect.attuned.line",
+		MutableComponent line = new net.minecraft.network.chat.TranslatableComponent("inspect.attuned.line",
 			target.getDisplayName(), stance);
 
 		Optional<Apex.Capstone> capstone = Apex.capstoneOf(target);
 		if (capstone.isPresent()) {
 			boolean armed = Resonance.atApex(target);
-			Component state = Component.translatable(armed
+			Component state = new net.minecraft.network.chat.TranslatableComponent(armed
 				? "inspect.attuned.apex.ready" : "inspect.attuned.apex.dormant");
-			line.append(Component.translatable("inspect.attuned.apex",
-				Component.literal(capstone.get().displayName()).withStyle(capstone.get().chatColor()),
+			line.append(new net.minecraft.network.chat.TranslatableComponent("inspect.attuned.apex",
+				new net.minecraft.network.chat.TextComponent(capstone.get().displayName()).withStyle(capstone.get().chatColor()),
 				state).withStyle(ChatFormatting.GRAY));
 		}
 		return line;
@@ -125,14 +128,14 @@ public final class AttunedNetworking {
 	// The target's stance word: Discord, a committed affinity, or Neutral.
 	private static MutableComponent stanceLabel(ServerPlayer target) {
 		if (Attunement.isDiscord(target)) {
-			return Component.translatable("inspect.attuned.discord").withStyle(ChatFormatting.LIGHT_PURPLE);
+			return new net.minecraft.network.chat.TranslatableComponent("inspect.attuned.discord").withStyle(ChatFormatting.LIGHT_PURPLE);
 		}
 		Optional<Affinity> committed = Attunement.committedAffinity(target);
 		if (committed.isEmpty()) {
-			return Component.translatable("inspect.attuned.neutral").withStyle(ChatFormatting.GRAY);
+			return new net.minecraft.network.chat.TranslatableComponent("inspect.attuned.neutral").withStyle(ChatFormatting.GRAY);
 		}
 		Affinity affinity = committed.get();
-		return Component.translatable("inspect.attuned.affinity." + affinity.name().toLowerCase(Locale.ROOT))
+		return new net.minecraft.network.chat.TranslatableComponent("inspect.attuned.affinity." + affinity.name().toLowerCase(Locale.ROOT))
 			.withStyle(affinityColor(affinity));
 	}
 

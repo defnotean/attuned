@@ -46,8 +46,9 @@ public final class AltarNetworking {
 			return;
 		}
 		initialized = true;
-		ServerPlayNetworking.registerGlobalReceiver(BindShardPayload.TYPE, (payload, player, sender) -> {
-			player.getLevel().getServer().execute(() -> tryBind(player));
+		ServerPlayNetworking.registerGlobalReceiver(BindShardPayload.TYPE, (server, player, handler, buf, sender) -> {
+			BindShardPayload payload = BindShardPayload.TYPE.read(buf);
+			server.execute(() -> tryBind(player));
 		});
 		AttunedPlayerCleanup.onForget(LAST_BIND_TICK::remove);
 		AttunedServerCleanup.onStop(LAST_BIND_TICK::clear);

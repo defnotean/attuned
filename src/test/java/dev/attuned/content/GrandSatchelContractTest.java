@@ -65,8 +65,10 @@ class GrandSatchelContractTest {
 		assertTrue(content.contains("grand_satchel_of_foci"),
 			"The grand reliquary registry path should be grand_satchel_of_foci.");
 		String tabs = read(TABS);
-		int satchel = tabs.indexOf("output.accept(AttunedContent.SATCHEL_OF_FOCI)");
-		int grand = tabs.indexOf("output.accept(AttunedContent.GRAND_SATCHEL_OF_FOCI)");
+		int satchel = Math.max(tabs.indexOf("output.accept(AttunedContent.SATCHEL_OF_FOCI)"),
+			tabs.indexOf("new ItemStack(AttunedContent.SATCHEL_OF_FOCI)"));
+		int grand = Math.max(tabs.indexOf("output.accept(AttunedContent.GRAND_SATCHEL_OF_FOCI)"),
+			tabs.indexOf("new ItemStack(AttunedContent.GRAND_SATCHEL_OF_FOCI)"));
 		assertTrue(satchel >= 0 && grand >= 0 && Math.abs(satchel - grand) < 400,
 			"The grand reliquary should be accepted in the utility tab next to the small satchel.");
 	}

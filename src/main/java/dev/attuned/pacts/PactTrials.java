@@ -126,9 +126,9 @@ public final class PactTrials {
 		PactTrialProgress progress = get(player).withTier4Completed(id);
 		AttunedAttachments.setPactTrialProgress(player, progress);
 		AttunedAdvancements.award(player, "attunement/pact_" + id + "_trial");
-		PlayerMessages.system(player, Component.translatable("pact.attuned." + id + "_trial.title")
+		PlayerMessages.system(player, new net.minecraft.network.chat.TranslatableComponent("pact.attuned." + id + "_trial.title")
 			.withStyle(pact.chatColor(), ChatFormatting.BOLD)
-			.append(Component.translatable("pact.attuned.trial.complete").withStyle(ChatFormatting.GRAY)));
+			.append(new net.minecraft.network.chat.TranslatableComponent("pact.attuned.trial.complete").withStyle(ChatFormatting.GRAY)));
 		ServerLevel level = (ServerLevel) player.getLevel();
 		level.playSound(null, player.blockPosition(),
 			SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, SoundSource.PLAYERS, 0.8F, 1.2F);
@@ -245,9 +245,9 @@ public final class PactTrials {
 			((ServerLevel) player.getLevel()).playSound(null, player.blockPosition(),
 				SoundEvents.EXPERIENCE_ORB_PICKUP, SoundSource.PLAYERS, 0.35F, 1.25F);
 			PlayerMessages.overlay(player,
-				Component.translatable("pact.attuned." + id + "_trial.title")
+				new net.minecraft.network.chat.TranslatableComponent("pact.attuned." + id + "_trial.title")
 					.withStyle(pact.chatColor())
-					.append(Component.translatable("pact.attuned.trial.progress", percent)
+					.append(new net.minecraft.network.chat.TranslatableComponent("pact.attuned.trial.progress", percent)
 						.withStyle(ChatFormatting.GRAY)));
 		}
 	}

@@ -6,6 +6,8 @@ import java.util.Locale;
 import java.util.Optional;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.minecraft.ChatFormatting;
+import net.minecraft.Util;
+import net.minecraft.network.chat.ChatType;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.HoverEvent;
 import net.minecraft.server.level.ServerPlayer;
@@ -66,11 +68,12 @@ public final class PactDeathMessages {
 			.withStyle(s -> s
 				.applyFormats(pact.chatColor(), ChatFormatting.BOLD)
 				.withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, attacker.getDisplayName())));
-		Component message = Component.translatable(
+		Component message = new net.minecraft.network.chat.TranslatableComponent(
 			"pact.attuned.death." + pact.name().toLowerCase(Locale.ROOT),
 			victim.getDisplayName(),
 			pactName
 		);
-		victim.getLevel().getServer().getPlayerList().broadcastSystemMessage(message, false);
+		victim.getLevel().getServer().getPlayerList()
+			.broadcastMessage(message, ChatType.SYSTEM, Util.NIL_UUID);
 	}
 }

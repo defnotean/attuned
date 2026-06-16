@@ -5,7 +5,6 @@ import dev.attuned.menu.QuickApplyPresetPayload;
 import dev.attuned.network.AbilityPayload;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
-import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.client.KeyMapping;
 import org.lwjgl.glfw.GLFW;
 
@@ -51,7 +50,7 @@ public final class AttunedKeybinds {
 			while (abilityKey.consumeClick()) {
 				// Buffered clicks can drain after a disconnect; only send with a live player.
 				if (client.player != null) {
-					ClientPlayNetworking.send(new AbilityPayload());
+					ClientNetworkPackets.send(new AbilityPayload());
 				}
 			}
 			while (toggleOwnAffinityHudKey.consumeClick()) {
@@ -67,7 +66,7 @@ public final class AttunedKeybinds {
 				while (applyBuildKeys[i].consumeClick()) {
 					// Server validates index range, apply cooldown, and sourcing.
 					if (client.player != null) {
-						ClientPlayNetworking.send(new QuickApplyPresetPayload(i));
+						ClientNetworkPackets.send(new QuickApplyPresetPayload(i));
 					}
 				}
 			}

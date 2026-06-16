@@ -9,7 +9,6 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.MenuProvider;
 import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.SimpleMenuProvider;
-import net.minecraft.world.flag.FeatureFlags;
 import net.minecraft.world.inventory.ContainerLevelAccess;
 import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.level.Level;
@@ -22,7 +21,7 @@ public final class ReweavingMenuType {
 
 	public static MenuType<ReweavingMenu> TYPE;
 	public static final Component DISPLAY_NAME =
-		Component.translatable("container.attuned.reweaving_altar");
+		new net.minecraft.network.chat.TranslatableComponent("container.attuned.reweaving_altar");
 
 	public static void init() {
 		if (initialized) {
@@ -31,7 +30,7 @@ public final class ReweavingMenuType {
 		initialized = true;
 		ResourceLocation id = new ResourceLocation(Attuned.MOD_ID, "altar_of_reweaving");
 		TYPE = Registry.register(BuiltInRegistries.MENU, id,
-			new MenuType<>(ReweavingMenu::new, FeatureFlags.VANILLA_SET));
+			new MenuType<>(ReweavingMenu::new));
 	}
 
 	public static MenuProvider provider(Level level, BlockPos pos) {

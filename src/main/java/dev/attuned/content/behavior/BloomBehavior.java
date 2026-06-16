@@ -12,7 +12,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.tags.BlockTags;
-import net.minecraft.util.RandomSource;
+import java.util.Random;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -50,7 +50,7 @@ public final class BloomBehavior implements FocusBehavior {
 		}
 	}
 
-	private static ItemStack rewardFor(BlockState state, RandomSource random) {
+	private static ItemStack rewardFor(BlockState state, Random random) {
 		if (state.is(BlockTags.FLOWERS) && random.nextInt(18) == 0) {
 			return flowerReward(random);
 		}
@@ -63,7 +63,7 @@ public final class BloomBehavior implements FocusBehavior {
 		return ItemStack.EMPTY;
 	}
 
-	private static ItemStack flowerReward(RandomSource random) {
+	private static ItemStack flowerReward(Random random) {
 		return switch (random.nextInt(4)) {
 			case 0 -> new ItemStack(Items.DANDELION);
 			case 1 -> new ItemStack(Items.POPPY);

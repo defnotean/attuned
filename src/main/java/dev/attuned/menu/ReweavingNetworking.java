@@ -35,8 +35,9 @@ public final class ReweavingNetworking {
 			return;
 		}
 		initialized = true;
-		ServerPlayNetworking.registerGlobalReceiver(ReweavePayload.TYPE, (payload, player, sender) -> {
-			player.getLevel().getServer().execute(() -> tryReweave(player));
+		ServerPlayNetworking.registerGlobalReceiver(ReweavePayload.TYPE, (server, player, handler, buf, sender) -> {
+			ReweavePayload payload = ReweavePayload.TYPE.read(buf);
+			server.execute(() -> tryReweave(player));
 		});
 	}
 

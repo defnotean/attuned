@@ -118,9 +118,9 @@ public final class Milestones {
 
 		((ServerLevel) player.getLevel()).playSound(null, player.blockPosition(),
 			SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, SoundSource.PLAYERS, 0.7F, 1.2F);
-		PlayerMessages.system(player, Component.literal("Your attunement deepens — you " + milestone.feat + ". ")
+		PlayerMessages.system(player, new net.minecraft.network.chat.TextComponent("Your attunement deepens — you " + milestone.feat + ". ")
 			.withStyle(ChatFormatting.GRAY)
-			.append(Component.literal("(+" + (after - before) + " capacity)")
+			.append(new net.minecraft.network.chat.TextComponent("(+" + (after - before) + " capacity)")
 				.withStyle(ChatFormatting.AQUA)));
 	}
 }

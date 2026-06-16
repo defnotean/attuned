@@ -34,8 +34,8 @@ public class AttunementShardFragmentItem extends Item {
 	public static void sendProgressHint(Player player) {
 		int count = countFragments(player);
 		Component message = count >= FRAGMENTS_PER_SHARD
-			? Component.translatable("item.attuned.attunement_shard_fragment.use.ready", count)
-			: Component.translatable("item.attuned.attunement_shard_fragment.use.progress",
+			? new net.minecraft.network.chat.TranslatableComponent("item.attuned.attunement_shard_fragment.use.ready", count)
+			: new net.minecraft.network.chat.TranslatableComponent("item.attuned.attunement_shard_fragment.use.progress",
 				count, FRAGMENTS_PER_SHARD);
 		PlayerMessages.system(player, message.copy().withStyle(ChatFormatting.GRAY));
 	}

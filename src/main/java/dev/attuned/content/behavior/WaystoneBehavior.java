@@ -9,6 +9,7 @@ import dev.attuned.attunement.AttunedInv;
 import dev.attuned.attunement.Attunement;
 import dev.attuned.compat.CompassTags;
 import dev.attuned.compat.CompassTags.LodestoneTags;
+import dev.attuned.compat.LastDeathPositions;
 import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.Iterator;
@@ -32,7 +33,7 @@ public final class WaystoneBehavior implements FocusBehavior {
 	private static final ResourceLocation BEACON_FOCUS =
 		new ResourceLocation(Attuned.MOD_ID, "beacon_focus");
 	private static final Component WAYSTONE_COMPASS_NAME =
-		Component.translatable("item.attuned.waystone_compass");
+		new net.minecraft.network.chat.TranslatableComponent("item.attuned.waystone_compass");
 
 	private final Map<UUID, Map<ItemStack, TrackerSnapshot>> changedCompasses = new HashMap<>();
 
@@ -47,7 +48,7 @@ public final class WaystoneBehavior implements FocusBehavior {
 			restorePlayer(player);
 			return;
 		}
-		Optional<GlobalPos> death = player.getLastDeathLocation();
+		Optional<GlobalPos> death = LastDeathPositions.get(player);
 		if (death.isEmpty()) {
 			restorePlayer(player);
 			return;

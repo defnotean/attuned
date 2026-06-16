@@ -321,7 +321,7 @@ public final class UpdraftBehavior implements FocusBehavior {
 			EXHAUSTION_DEBUFF_TICKS, 0, true, true, true));
 		player.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN,
 			EXHAUSTION_DEBUFF_TICKS, 0, true, true, true));
-		PlayerMessages.overlay(player, Component.translatable(
+		PlayerMessages.overlay(player, new net.minecraft.network.chat.TranslatableComponent(
 			"item.attuned.updraft_focus.exhausted"));
 		ServerLevel level = player.getLevel();
 		Vec3 at = player.position().add(0.0D, player.getBbHeight() * 0.55D, 0.0D);

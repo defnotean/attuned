@@ -1,9 +1,9 @@
 package dev.attuned.content;
 
 import dev.attuned.compat.PlayerMessages;
+import dev.attuned.compat.NetworkPackets;
 import dev.attuned.network.OpenJournalPayload;
 import java.util.List;
-import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.ChatFormatting;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
@@ -84,16 +84,16 @@ public class AttunementJournalItem extends WrittenBookItem {
 		ItemStack stack = player.getItemInHand(hand);
 		ensureGuideContent(stack);
 		if (!level.isClientSide() && player instanceof ServerPlayer serverPlayer) {
-			ServerPlayNetworking.send(serverPlayer, new OpenJournalPayload());
+			NetworkPackets.send(serverPlayer, new OpenJournalPayload());
 		}
 		return InteractionResultHolder.sidedSuccess(stack, level.isClientSide());
 	}
 
 	public static void showGuide(Player player) {
-		PlayerMessages.system(player, Component.translatable("journal.attuned.title")
+		PlayerMessages.system(player, new net.minecraft.network.chat.TranslatableComponent("journal.attuned.title")
 			.withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD));
 		for (int i = 1; i <= 8; i++) {
-			PlayerMessages.system(player, Component.translatable("journal.attuned.line" + i)
+			PlayerMessages.system(player, new net.minecraft.network.chat.TranslatableComponent("journal.attuned.line" + i)
 				.withStyle(ChatFormatting.GRAY));
 		}
 	}
@@ -106,7 +106,7 @@ public class AttunementJournalItem extends WrittenBookItem {
 		tag.putBoolean(WrittenBookItem.TAG_RESOLVED, true);
 		ListTag pages = new ListTag();
 		for (String key : GUIDE_PAGE_KEYS) {
-			pages.add(StringTag.valueOf(Component.Serializer.toJson(Component.translatable(key))));
+			pages.add(StringTag.valueOf(Component.Serializer.toJson(new net.minecraft.network.chat.TranslatableComponent(key))));
 		}
 		tag.put(WrittenBookItem.TAG_PAGES, pages);
 	}

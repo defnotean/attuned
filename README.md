@@ -1,6 +1,6 @@
 # Attuned
 
-An accessory mod for **Minecraft 1.19.4** (Fabric).
+An accessory mod for **Minecraft 1.18.2** (Fabric).
 
 Equip **Foci** into six inventory slots, but mind your **attunement capacity**. Go over budget and your lowest-priority Foci go dormant. Builds are deliberate, not stacked.
 
@@ -38,7 +38,7 @@ Equip **Foci** into six inventory slots, but mind your **attunement capacity**. 
 
 ## Requirements
 
-Minecraft 1.19.4, Fabric Loader 0.19.3+, Fabric API
+Minecraft 1.18.2, Fabric Loader 0.19.3+, Fabric API
 
 Lootr is optional but suggested for modpacks. Attuned does not add custom
 loot containers; it injects Foci and shard fragments into vanilla loot tables,

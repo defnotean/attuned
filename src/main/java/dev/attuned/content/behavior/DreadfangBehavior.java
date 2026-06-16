@@ -22,6 +22,6 @@ public final class DreadfangBehavior implements FocusBehavior {
 
 	/** Plunges the victim into vanilla darkness for the designed window. */
 	public static void applyTo(LivingEntity victim) {
-		victim.addEffect(new MobEffectInstance(MobEffects.DARKNESS, DARKNESS_TICKS, 0, true, false, true));
+		victim.addEffect(new MobEffectInstance(MobEffects.BLINDNESS, DARKNESS_TICKS, 0, true, false, true));
 	}
 }

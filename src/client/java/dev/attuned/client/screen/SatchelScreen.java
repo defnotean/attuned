@@ -5,6 +5,7 @@ import dev.attuned.Attuned;
 import dev.attuned.attunement.AttunedAttachments;
 import dev.attuned.attunement.AttunedInv;
 import dev.attuned.attunement.FocusPreset;
+import dev.attuned.client.ClientNetworkPackets;
 import dev.attuned.menu.ApplyPresetPayload;
 import dev.attuned.menu.BuildShareCodec;
 import dev.attuned.menu.BuildPreviewResolver;
@@ -21,12 +22,13 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.BooleanSupplier;
-import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiComponent;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
+import net.minecraft.client.resources.language.I18n;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -142,22 +144,22 @@ public class SatchelScreen extends AbstractContainerScreen<SatchelMenu> {
 		FocusSlot.setSuppressed(false);
 
 		this.nameField = new EditBox(this.font, this.leftPos + BUILDS_X, this.topPos + NAME_Y, BUILDS_W, FIELD_H,
-			Component.translatable("screen.attuned.builds.name"));
+			new net.minecraft.network.chat.TranslatableComponent("screen.attuned.builds.name"));
 		this.nameField.setMaxLength(32);
 		this.nameField.setTextColor(NAME_FIELD_TEXT);
-		this.nameField.setHint(Component.translatable("screen.attuned.builds.name_hint"));
+		this.nameField.setSuggestion(I18n.get("screen.attuned.builds.name_hint"));
 		this.addRenderableWidget(this.nameField);
 
 		this.saveButton = new PresetButton(this.leftPos + BUILDS_X, this.topPos + SAVE_Y, BUILDS_W, FIELD_H,
-			Component.translatable("screen.attuned.preset.save"), button -> saveBuild());
+			new net.minecraft.network.chat.TranslatableComponent("screen.attuned.preset.save"), button -> saveBuild());
 		this.shareButton = new PresetButton(this.leftPos + BUILDS_X, this.topPos + SHARE_IMPORT_Y, HALF_W, ACTION_H,
-			Component.translatable("screen.attuned.preset.share"), button -> shareBuild());
+			new net.minecraft.network.chat.TranslatableComponent("screen.attuned.preset.share"), button -> shareBuild());
 		this.importButton = new PresetButton(this.leftPos + BUILDS_X + HALF_W + 2, this.topPos + SHARE_IMPORT_Y, HALF_W, ACTION_H,
-			Component.translatable("screen.attuned.preset.import"), button -> importBuild());
+			new net.minecraft.network.chat.TranslatableComponent("screen.attuned.preset.import"), button -> importBuild());
 		this.applyButton = new PresetButton(this.leftPos + BUILDS_X, this.topPos + ACTION_ROW_Y, HALF_W, ACTION_H,
-			Component.translatable("screen.attuned.preset.apply"), button -> applySelectedBuild());
+			new net.minecraft.network.chat.TranslatableComponent("screen.attuned.preset.apply"), button -> applySelectedBuild());
 		this.deleteButton = new PresetButton(this.leftPos + BUILDS_X + HALF_W + 2, this.topPos + ACTION_ROW_Y, HALF_W, ACTION_H,
-			Component.translatable("screen.attuned.preset.delete"), button -> deleteSelectedBuild());
+			new net.minecraft.network.chat.TranslatableComponent("screen.attuned.preset.delete"), button -> deleteSelectedBuild());
 		this.addRenderableWidget(this.saveButton);
 		this.addRenderableWidget(this.shareButton);
 		this.addRenderableWidget(this.importButton);
@@ -174,21 +176,21 @@ public class SatchelScreen extends AbstractContainerScreen<SatchelMenu> {
 		// Re-validate against the live synced list: a sync packet can shrink it between
 		// the tick that enabled this button and the click being processed.
 		if (selectedIndex >= 0 && selectedIndex < presets().size()) {
-			ClientPlayNetworking.send(new ApplyPresetPayload(selectedIndex));
+			ClientNetworkPackets.send(new ApplyPresetPayload(selectedIndex));
 		}
 	}
 
 	private void deleteSelectedBuild() {
 		List<FocusPreset> presets = presets();
 		if (selectedIndex >= 0 && selectedIndex < presets.size()) {
-			ClientPlayNetworking.send(new DeletePresetPayload(selectedIndex, presets.get(selectedIndex).name()));
+			ClientNetworkPackets.send(new DeletePresetPayload(selectedIndex, presets.get(selectedIndex).name()));
 		}
 	}
 
 	private void saveBuild() {
 		String typed = this.nameField.getValue().trim();
 		String name = typed.isEmpty() ? nextPresetName() : typed;
-		ClientPlayNetworking.send(new SavePresetPayload(name));
+		ClientNetworkPackets.send(new SavePresetPayload(name));
 		this.nameField.setValue("");
 	}
 
@@ -203,7 +205,7 @@ public class SatchelScreen extends AbstractContainerScreen<SatchelMenu> {
 			return;
 		}
 		minecraft.keyboardHandler.setClipboard(BuildShareCodec.encode(preset));
-		minecraft.gui.setOverlayMessage(Component.translatable("screen.attuned.preset.shared", preset.name()), false);
+		minecraft.gui.setOverlayMessage(new net.minecraft.network.chat.TranslatableComponent("screen.attuned.preset.shared", preset.name()), false);
 	}
 
 	private void importBuild() {
@@ -213,13 +215,13 @@ public class SatchelScreen extends AbstractContainerScreen<SatchelMenu> {
 		}
 		Optional<FocusPreset> decoded = BuildShareCodec.decode(minecraft.keyboardHandler.getClipboard());
 		if (decoded.isEmpty()) {
-			minecraft.gui.setOverlayMessage(Component.translatable("screen.attuned.preset.import_failed"), false);
+			minecraft.gui.setOverlayMessage(new net.minecraft.network.chat.TranslatableComponent("screen.attuned.preset.import_failed"), false);
 			return;
 		}
 		FocusPreset preset = decoded.get();
 		this.nameField.setValue(preset.name());
-		ClientPlayNetworking.send(new ImportPresetPayload(preset.name(), preset.slots()));
-		minecraft.gui.setOverlayMessage(Component.translatable("screen.attuned.preset.imported", preset.name()), false);
+		ClientNetworkPackets.send(new ImportPresetPayload(preset.name(), preset.slots()));
+		minecraft.gui.setOverlayMessage(new net.minecraft.network.chat.TranslatableComponent("screen.attuned.preset.imported", preset.name()), false);
 	}
 
 	@Override
@@ -257,7 +259,7 @@ public class SatchelScreen extends AbstractContainerScreen<SatchelMenu> {
 			int index = i;
 			String label = trimToWidth(presets.get(i).name(), BUILDS_W - 6);
 			Button button = new PresetButton(this.leftPos + BUILDS_X, this.topPos + BUILDS_LIST_Y + i * BUILD_ROW_H,
-				BUILDS_W, BUILD_ROW_INNER_H, Component.literal(label),
+				BUILDS_W, BUILD_ROW_INNER_H, new net.minecraft.network.chat.TextComponent(label),
 				ignored -> selectBuild(index), () -> selectedIndex == index);
 			buildButtons.add(button);
 			this.addRenderableWidget(button);
@@ -352,12 +354,12 @@ public class SatchelScreen extends AbstractContainerScreen<SatchelMenu> {
 	@Override
 	protected void renderLabels(PoseStack poseStack, int mouseX, int mouseY) {
 		GuiGraphics graphics = new GuiGraphics(Minecraft.getInstance(), poseStack);
-		graphics.drawString(this.font, Component.translatable("screen.attuned.equipped"),
+		graphics.drawString(this.font, new net.minecraft.network.chat.TranslatableComponent("screen.attuned.equipped"),
 			EQUIPPED_X - 2, EQUIPPED_LABEL_Y, LABEL_TEXT, false);
-		graphics.drawString(this.font, Component.translatable("screen.attuned.builds"),
+		graphics.drawString(this.font, new net.minecraft.network.chat.TranslatableComponent("screen.attuned.builds"),
 			BUILDS_X, BUILDS_LABEL_Y, LABEL_TEXT, false);
 		if (presets().isEmpty()) {
-			graphics.drawString(this.font, Component.translatable("screen.attuned.builds.empty"),
+			graphics.drawString(this.font, new net.minecraft.network.chat.TranslatableComponent("screen.attuned.builds.empty"),
 				BUILDS_X, BUILDS_LIST_Y, LABEL_TEXT, false);
 		}
 		drawBuildPreview(graphics, mouseX, mouseY);
@@ -544,15 +546,15 @@ public class SatchelScreen extends AbstractContainerScreen<SatchelMenu> {
 
 		private PresetButton(int x, int y, int width, int height, Component message, OnPress onPress,
 				BooleanSupplier selected) {
-			super(x, y, width, height, message, onPress, DEFAULT_NARRATION);
+			super(x, y, width, height, message, onPress);
 			this.selected = selected;
 		}
 
 		@Override
-		public void renderWidget(PoseStack poseStack, int mouseX, int mouseY, float partialTick) {
+		public void renderButton(PoseStack poseStack, int mouseX, int mouseY, float partialTick) {
 			GuiGraphics graphics = new GuiGraphics(Minecraft.getInstance(), poseStack);
-			int x0 = getX();
-			int y0 = getY();
+			int x0 = this.x;
+			int y0 = this.y;
 			int x1 = x0 + getWidth();
 			int y1 = y0 + getHeight();
 			if (!this.active) {
@@ -563,7 +565,8 @@ public class SatchelScreen extends AbstractContainerScreen<SatchelMenu> {
 			} else if (isHoveredOrFocused()) {
 				drawButtonOutline(graphics, x0, y0, x1, y1, BUTTON_HOVER_ARGB);
 			}
-			renderString(poseStack, Minecraft.getInstance().font, LABEL_TEXT);
+			GuiComponent.drawCenteredString(poseStack, Minecraft.getInstance().font, getMessage(),
+				x0 + getWidth() / 2, y0 + (getHeight() - 8) / 2, LABEL_TEXT);
 		}
 	}
 }

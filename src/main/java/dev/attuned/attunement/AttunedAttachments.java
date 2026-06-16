@@ -1,6 +1,7 @@
 package dev.attuned.attunement;
 
 import dev.attuned.AttunedConfig;
+import dev.attuned.compat.NetworkPackets;
 import dev.attuned.network.AttunedStatePayload;
 import dev.attuned.pacts.Pact;
 import dev.attuned.pacts.PactTrialProgress;
@@ -13,7 +14,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
-import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.StringTag;
@@ -82,7 +82,7 @@ public final class AttunedAttachments {
 
 	public static void sync(Player player) {
 		if (player instanceof ServerPlayer serverPlayer) {
-			ServerPlayNetworking.send(serverPlayer, new AttunedStatePayload(state(serverPlayer).toTag()));
+			NetworkPackets.send(serverPlayer, new AttunedStatePayload(state(serverPlayer).toTag()));
 		}
 	}
 

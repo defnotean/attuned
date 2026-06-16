@@ -17,6 +17,7 @@ import dev.attuned.content.AttunedComponents;
 import dev.attuned.content.AttunedContent;
 import dev.attuned.content.AttunedLoot;
 import dev.attuned.content.behavior.FactionSetBonuses;
+import dev.attuned.compat.LastDeathPositions;
 import dev.attuned.effect.AttunedEffects;
 import dev.attuned.menu.AltarMenuType;
 import dev.attuned.menu.AltarNetworking;
@@ -49,6 +50,7 @@ public class Attuned implements ModInitializer {
 		AttunedAttachments.init();
 		AttunedPlayerCleanup.init();
 		AttunedServerCleanup.init();
+		LastDeathPositions.init();
 		// Register generic Focus teardown before Focus behaviors add fallback cleanup callbacks.
 		AttunedEffects.init();
 		FactionSetBonuses.init();

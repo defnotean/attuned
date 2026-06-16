@@ -37,7 +37,7 @@ public final class HarpoonBehavior implements FocusBehavior {
 	private static final String OWNER_KEY = "owner";
 	private static final String EXPIRES_AT_KEY = "expires_at";
 	private static final Component HARPOON_NAME =
-		Component.translatable("item.attuned.ocean_relic_trident");
+		new net.minecraft.network.chat.TranslatableComponent("item.attuned.ocean_relic_trident");
 	private static final Map<UUID, Long> ACTIVE_HARPOONS = new HashMap<>();
 	private static boolean initialized;
 
@@ -60,13 +60,13 @@ public final class HarpoonBehavior implements FocusBehavior {
 		long now = player.getLevel().getGameTime();
 		removeInvalidInventoryHarpoons(player, now);
 		if (ACTIVE_HARPOONS.getOrDefault(player.getUUID(), -1L) > now) {
-			PlayerMessages.overlay(player, Component.translatable("item.attuned.harpoon_focus.active"));
+			PlayerMessages.overlay(player, new net.minecraft.network.chat.TranslatableComponent("item.attuned.harpoon_focus.active"));
 			return false;
 		}
 
 		ItemStack harpoon = createHarpoon(player, now);
 		if (!placeHarpoon(player, harpoon)) {
-			PlayerMessages.overlay(player, Component.translatable("item.attuned.harpoon_focus.no_space"));
+			PlayerMessages.overlay(player, new net.minecraft.network.chat.TranslatableComponent("item.attuned.harpoon_focus.no_space"));
 			return false;
 		}
 

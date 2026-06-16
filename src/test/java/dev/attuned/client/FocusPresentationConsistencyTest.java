@@ -92,7 +92,8 @@ class FocusPresentationConsistencyTest {
 		String source = Files.readString(TOOLTIP_SOURCE, StandardCharsets.UTF_8);
 		JsonObject lang = languageRoot();
 
-		assertTrue(source.contains("Component.literal(\"Affinity \")"),
+		assertTrue(source.contains("Component.literal(\"Affinity \")")
+				|| source.contains("new net.minecraft.network.chat.TextComponent(\"Affinity \")"),
 			"Tooltip should render the Focus's affinity identity line.");
 		assertTrue(source.contains("affinityName(affinity)"),
 			"Tooltip should display the affinity's own name.");

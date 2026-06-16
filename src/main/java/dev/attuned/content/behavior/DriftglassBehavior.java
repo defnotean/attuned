@@ -9,6 +9,7 @@ import dev.attuned.attunement.AttunedInv;
 import dev.attuned.attunement.Attunement;
 import dev.attuned.compat.CompassTags;
 import dev.attuned.compat.CompassTags.LodestoneTags;
+import dev.attuned.compat.LastDeathPositions;
 import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.Iterator;
@@ -35,7 +36,7 @@ public final class DriftglassBehavior implements FocusBehavior {
 	private static final ResourceLocation WAYSTONE_FOCUS =
 		new ResourceLocation(Attuned.MOD_ID, "waystone_focus");
 	private static final Component DRIFTGLASS_COMPASS_NAME =
-		Component.translatable("item.attuned.driftglass_compass");
+		new net.minecraft.network.chat.TranslatableComponent("item.attuned.driftglass_compass");
 
 	private final Map<UUID, GlobalPos> points = new HashMap<>();
 	private final Map<UUID, Map<ItemStack, TrackerSnapshot>> changedCompasses = new HashMap<>();
@@ -79,7 +80,7 @@ public final class DriftglassBehavior implements FocusBehavior {
 
 	private static boolean hasHigherPriorityCompassFocus(ServerPlayer player) {
 		boolean beaconCanTrack = player.getRespawnPosition() != null;
-		boolean waystoneCanTrack = player.getLastDeathLocation().isPresent();
+		boolean waystoneCanTrack = LastDeathPositions.get(player).isPresent();
 		if (!beaconCanTrack && !waystoneCanTrack) {
 			return false;
 		}

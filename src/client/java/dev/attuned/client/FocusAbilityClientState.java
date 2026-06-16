@@ -23,8 +23,10 @@ public final class FocusAbilityClientState {
 		}
 		initialized = true;
 
-		ClientPlayNetworking.registerGlobalReceiver(FocusAbilityStatusPayload.TYPE, (payload, player, sender) ->
-			Minecraft.getInstance().execute(() -> accept(payload)));
+		ClientPlayNetworking.registerGlobalReceiver(FocusAbilityStatusPayload.TYPE, (client, handler, buf, sender) -> {
+			FocusAbilityStatusPayload payload = FocusAbilityStatusPayload.TYPE.read(buf);
+			client.execute(() -> accept(payload));
+		});
 		ClientTickEvents.END_CLIENT_TICK.register(FocusAbilityClientState::tick);
 	}
 

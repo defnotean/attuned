@@ -18,7 +18,6 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
-import net.minecraft.tags.DamageTypeTags;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
@@ -103,8 +102,8 @@ public final class UnseenCombat {
 		if (source.getDirectEntity() != attacker) {
 			return false;
 		}
-		return !source.is(DamageTypeTags.IS_PROJECTILE)
-			&& !source.is(DamageTypeTags.IS_EXPLOSION);
+		return !source.isProjectile()
+			&& !source.isExplosion();
 	}
 
 	private static boolean canNeedle(ServerPlayer attacker, LivingEntity defender, boolean wasVeiled) {
@@ -166,12 +165,12 @@ public final class UnseenCombat {
 
 	private static void needleSoftstepComboFeedback(ServerPlayer attacker, LivingEntity defender) {
 		ServerLevel level = (ServerLevel) attacker.getLevel();
-		level.sendParticles(ParticleTypes.SCULK_SOUL,
+		level.sendParticles(ParticleTypes.SOUL,
 			defender.getX(), defender.getY() + defender.getBbHeight() * 0.65, defender.getZ(),
 			10, 0.2, 0.25, 0.2, 0.01);
 		level.playSound(null, defender.blockPosition(),
-			SoundEvents.SCULK_SHRIEKER_SHRIEK, SoundSource.PLAYERS, 0.35F, 1.8F);
-		PlayerMessages.overlay(attacker, Component.translatable("combo.attuned.softstep_needle"));
+			SoundEvents.SOUL_ESCAPE, SoundSource.PLAYERS, 0.35F, 1.8F);
+		PlayerMessages.overlay(attacker, new net.minecraft.network.chat.TranslatableComponent("combo.attuned.softstep_needle"));
 	}
 
 	private static boolean hasActiveFocus(Player player, ResourceLocation targetId) {

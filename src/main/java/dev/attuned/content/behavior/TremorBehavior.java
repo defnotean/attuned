@@ -6,13 +6,13 @@ import dev.attuned.AttunedServerCleanup;
 import dev.attuned.attunement.AttunedAttachments;
 import dev.attuned.attunement.AttunedInv;
 import dev.attuned.attunement.Attunement;
+import dev.attuned.compat.NetworkPackets;
 import dev.attuned.network.TremorOreHintPayload;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import net.fabricmc.fabric.api.event.player.PlayerBlockBreakEvents;
-import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -77,7 +77,7 @@ public final class TremorBehavior implements dev.attuned.api.focus.FocusBehavior
 		if (ore.isPresent()) {
 			BlockPos orePos = ore.get();
 			java.util.List<BlockPos> vein = collectVein(server, orePos);
-			ServerPlayNetworking.send(serverPlayer, new TremorOreHintPayload(vein));
+			NetworkPackets.send(serverPlayer, new TremorOreHintPayload(vein));
 			server.sendParticles(ParticleTypes.NOTE,
 				pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5,
 				2, 0.25, 0.25, 0.25, 0.0);

@@ -106,8 +106,8 @@ public final class Onboarding {
 	 */
 	public static void tryShardHint(ServerPlayer player) {
 		fireHint(player, HINT_FIRST_SHARD,
-			Component.translatable("onboarding.attuned.first_shard.found").withStyle(ChatFormatting.AQUA)
-				.append(Component.translatable("onboarding.attuned.first_shard.detail")
+			new net.minecraft.network.chat.TranslatableComponent("onboarding.attuned.first_shard.found").withStyle(ChatFormatting.AQUA)
+				.append(new net.minecraft.network.chat.TranslatableComponent("onboarding.attuned.first_shard.detail")
 					.withStyle(ChatFormatting.GRAY)));
 	}
 
@@ -118,8 +118,8 @@ public final class Onboarding {
 	 */
 	public static void tryFragmentHint(ServerPlayer player) {
 		fireHint(player, HINT_FIRST_FRAGMENT,
-			Component.translatable("onboarding.attuned.first_fragment.found").withStyle(ChatFormatting.AQUA)
-				.append(Component.translatable("onboarding.attuned.first_fragment.detail")
+			new net.minecraft.network.chat.TranslatableComponent("onboarding.attuned.first_fragment.found").withStyle(ChatFormatting.AQUA)
+				.append(new net.minecraft.network.chat.TranslatableComponent("onboarding.attuned.first_fragment.detail")
 					.withStyle(ChatFormatting.GRAY)));
 	}
 
@@ -130,8 +130,8 @@ public final class Onboarding {
 	 */
 	public static void tryAltarHint(ServerPlayer player) {
 		fireHint(player, HINT_FIRST_ALTAR,
-			Component.translatable("onboarding.attuned.first_altar.bind_here").withStyle(ChatFormatting.AQUA)
-				.append(Component.translatable("onboarding.attuned.first_altar.detail")
+			new net.minecraft.network.chat.TranslatableComponent("onboarding.attuned.first_altar.bind_here").withStyle(ChatFormatting.AQUA)
+				.append(new net.minecraft.network.chat.TranslatableComponent("onboarding.attuned.first_altar.detail")
 					.withStyle(ChatFormatting.GRAY)));
 	}
 
@@ -142,7 +142,7 @@ public final class Onboarding {
 	 */
 	public static void tryAltarSightHint(ServerPlayer player) {
 		fireHint(player, HINT_ALTAR_SIGHT,
-			Component.translatable("onboarding.attuned.altar_sight").withStyle(ChatFormatting.AQUA));
+			new net.minecraft.network.chat.TranslatableComponent("onboarding.attuned.altar_sight").withStyle(ChatFormatting.AQUA));
 	}
 
 	/**
@@ -153,8 +153,8 @@ public final class Onboarding {
 	 */
 	public static void tryDormantHint(ServerPlayer player) {
 		fireHint(player, HINT_FIRST_DORMANT,
-			Component.translatable("onboarding.attuned.first_dormant.found").withStyle(ChatFormatting.AQUA)
-				.append(Component.translatable("onboarding.attuned.first_dormant.detail")
+			new net.minecraft.network.chat.TranslatableComponent("onboarding.attuned.first_dormant.found").withStyle(ChatFormatting.AQUA)
+				.append(new net.minecraft.network.chat.TranslatableComponent("onboarding.attuned.first_dormant.detail")
 					.withStyle(ChatFormatting.GRAY)));
 	}
 
@@ -165,8 +165,8 @@ public final class Onboarding {
 	 */
 	public static void tryResonanceArmedHint(ServerPlayer player) {
 		fireHint(player, HINT_FIRST_RESONANCE_ARMED,
-			Component.translatable("onboarding.attuned.first_resonance_armed").withStyle(ChatFormatting.AQUA)
-				.append(Component.translatable("onboarding.attuned.first_resonance_armed.detail")
+			new net.minecraft.network.chat.TranslatableComponent("onboarding.attuned.first_resonance_armed").withStyle(ChatFormatting.AQUA)
+				.append(new net.minecraft.network.chat.TranslatableComponent("onboarding.attuned.first_resonance_armed.detail")
 					.withStyle(ChatFormatting.GRAY)));
 	}
 
@@ -177,8 +177,8 @@ public final class Onboarding {
 	 */
 	public static void tryAbilityHint(ServerPlayer player) {
 		fireHint(player, HINT_FIRST_ABILITY,
-			Component.translatable("onboarding.attuned.first_ability").withStyle(ChatFormatting.AQUA)
-				.append(Component.translatable("onboarding.attuned.first_ability.detail")
+			new net.minecraft.network.chat.TranslatableComponent("onboarding.attuned.first_ability").withStyle(ChatFormatting.AQUA)
+				.append(new net.minecraft.network.chat.TranslatableComponent("onboarding.attuned.first_ability.detail")
 					.withStyle(ChatFormatting.GRAY)));
 	}
 
@@ -189,8 +189,8 @@ public final class Onboarding {
 	 */
 	public static void tryConfluenceHint(ServerPlayer player) {
 		fireHint(player, HINT_FIRST_CONFLUENCE,
-			Component.translatable("onboarding.attuned.first_confluence").withStyle(ChatFormatting.AQUA)
-				.append(Component.translatable("onboarding.attuned.first_confluence.detail")
+			new net.minecraft.network.chat.TranslatableComponent("onboarding.attuned.first_confluence").withStyle(ChatFormatting.AQUA)
+				.append(new net.minecraft.network.chat.TranslatableComponent("onboarding.attuned.first_confluence.detail")
 					.withStyle(ChatFormatting.GRAY)));
 	}
 
@@ -202,8 +202,8 @@ public final class Onboarding {
 	 */
 	public static void tryPactTrialCompleteHint(ServerPlayer player) {
 		fireHint(player, HINT_PACT_TRIAL_COMPLETE,
-			Component.translatable("onboarding.attuned.pact_trial_complete").withStyle(ChatFormatting.AQUA)
-				.append(Component.translatable("onboarding.attuned.pact_trial_complete.detail")
+			new net.minecraft.network.chat.TranslatableComponent("onboarding.attuned.pact_trial_complete").withStyle(ChatFormatting.AQUA)
+				.append(new net.minecraft.network.chat.TranslatableComponent("onboarding.attuned.pact_trial_complete.detail")
 					.withStyle(ChatFormatting.GRAY)));
 	}
 

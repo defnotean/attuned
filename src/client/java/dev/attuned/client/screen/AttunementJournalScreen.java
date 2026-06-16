@@ -16,6 +16,7 @@ import java.util.Set;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiComponent;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
@@ -142,7 +143,7 @@ public final class AttunementJournalScreen extends Screen {
 	private Button nextButton;
 
 	public AttunementJournalScreen() {
-		super(Component.translatable("journal.attuned.screen.title"));
+		super(new net.minecraft.network.chat.TranslatableComponent("journal.attuned.screen.title"));
 	}
 
 	public static void initNetworking() {
@@ -151,9 +152,10 @@ public final class AttunementJournalScreen extends Screen {
 		}
 		initialized = true;
 
-		ClientPlayNetworking.registerGlobalReceiver(OpenJournalPayload.TYPE, (payload, player, sender) ->
-			Minecraft.getInstance().execute(() ->
-				Minecraft.getInstance().setScreen(new AttunementJournalScreen())));
+		ClientPlayNetworking.registerGlobalReceiver(OpenJournalPayload.TYPE, (client, handler, buf, sender) -> {
+			OpenJournalPayload payload = OpenJournalPayload.TYPE.read(buf);
+			client.execute(() -> client.setScreen(new AttunementJournalScreen()));
+		});
 	}
 
 	@Override
@@ -165,7 +167,7 @@ public final class AttunementJournalScreen extends Screen {
 		int y = top + CHAPTER_BUTTON_Y;
 		for (int i = 0; i < CHAPTERS.size(); i++) {
 			final int target = i;
-			Button button = addJournalButton(Component.literal(CHAPTERS.get(i).name()),
+			Button button = addJournalButton(new net.minecraft.network.chat.TextComponent(CHAPTERS.get(i).name()),
 				navX, y + i * (CHAPTER_BUTTON_HEIGHT + CHAPTER_BUTTON_GAP), CHAPTER_BUTTON_WIDTH, CHAPTER_BUTTON_HEIGHT,
 				true, btn -> setChapter(target));
 			this.chapterButtons.add(button);
@@ -174,9 +176,9 @@ public final class AttunementJournalScreen extends Screen {
 		int buttonY = top + PANEL_HEIGHT - PADDING - PAGE_BUTTON_HEIGHT;
 		int contentLeft = contentLeft();
 		int contentWidth = contentWidth();
-		this.previousButton = addJournalButton(Component.translatable("screen.attuned.journal.previous"),
+		this.previousButton = addJournalButton(new net.minecraft.network.chat.TranslatableComponent("screen.attuned.journal.previous"),
 			contentLeft, buttonY, PAGE_BUTTON_WIDTH, PAGE_BUTTON_HEIGHT, false, btn -> setChapter(this.chapterIndex - 1));
-		this.nextButton = addJournalButton(Component.translatable("screen.attuned.journal.next"),
+		this.nextButton = addJournalButton(new net.minecraft.network.chat.TranslatableComponent("screen.attuned.journal.next"),
 			contentLeft + contentWidth - PAGE_BUTTON_WIDTH, buttonY, PAGE_BUTTON_WIDTH, PAGE_BUTTON_HEIGHT,
 			false, btn -> setChapter(this.chapterIndex + 1));
 		updateButtonState();
@@ -276,15 +278,15 @@ public final class AttunementJournalScreen extends Screen {
 	private void drawNavigation(GuiGraphics graphics) {
 		int left = left();
 		int top = top();
-		graphics.drawString(this.font, Component.translatable("journal.attuned.screen.title"),
+		graphics.drawString(this.font, new net.minecraft.network.chat.TranslatableComponent("journal.attuned.screen.title"),
 			left + PADDING, top + 10, TEXT_TITLE, false);
-		graphics.drawString(this.font, Component.translatable("journal.attuned.screen.subtitle"),
+		graphics.drawString(this.font, new net.minecraft.network.chat.TranslatableComponent("journal.attuned.screen.subtitle"),
 			left + PADDING, top + 22, TEXT_MUTED, false);
 
 		for (int i = 0; i < CHAPTERS.size(); i++) {
 			Button button = this.chapterButtons.get(i);
-			int bx = button.getX();
-			int by = button.getY();
+			int bx = button.x;
+			int by = button.y;
 			int bw = button.getWidth();
 			int bh = button.getHeight();
 			int dot = chapterColor(i);
@@ -398,11 +400,11 @@ public final class AttunementJournalScreen extends Screen {
 		if (y >= contentTop && y + 9 <= contentBottom) {
 			if (page.affinity() != null) {
 				drawMiniGem(graphics, x, y - 2, 14, page.affinity(), accent);
-				graphics.drawString(this.font, Component.literal(section.title()).withStyle(ChatFormatting.BOLD),
+				graphics.drawString(this.font, new net.minecraft.network.chat.TextComponent(section.title()).withStyle(ChatFormatting.BOLD),
 					x + 20, y, PAGE_TITLE, false);
 			} else {
 				graphics.fill(x, y + 4, x + 12, y + 6, accent);
-				graphics.drawString(this.font, Component.literal(section.title()).withStyle(ChatFormatting.BOLD),
+				graphics.drawString(this.font, new net.minecraft.network.chat.TextComponent(section.title()).withStyle(ChatFormatting.BOLD),
 					x + 18, y, PAGE_TITLE, false);
 			}
 		}
@@ -417,7 +419,7 @@ public final class AttunementJournalScreen extends Screen {
 		String progress = (this.chapterIndex + 1) + " / " + CHAPTERS.size();
 		int progressX = x + PAGE_BUTTON_WIDTH + 10;
 		int progressWidth = w - (PAGE_BUTTON_WIDTH + 10) * 2;
-		graphics.drawString(this.font, Component.literal(progress),
+		graphics.drawString(this.font, new net.minecraft.network.chat.TextComponent(progress),
 			progressX + (progressWidth - this.font.width(progress)) / 2,
 			top() + PANEL_HEIGHT - 45, PAGE_MUTED, false);
 		int progressY = top() + PANEL_HEIGHT - 34;
@@ -435,7 +437,7 @@ public final class AttunementJournalScreen extends Screen {
 				out.add(FormattedCharSequence.EMPTY);
 				continue;
 			}
-			out.addAll(this.font.split(Component.literal(paragraph), width));
+			out.addAll(this.font.split(new net.minecraft.network.chat.TextComponent(paragraph), width));
 		}
 		return out;
 	}
@@ -587,22 +589,23 @@ public final class AttunementJournalScreen extends Screen {
 
 		private JournalButton(int x, int y, int width, int height, Component message,
 				boolean chapterButton, OnPress onPress) {
-			super(x, y, width, height, message, onPress, DEFAULT_NARRATION);
+			super(x, y, width, height, message, onPress);
 			this.chapterButton = chapterButton;
 		}
 
 		@Override
-		public void renderWidget(PoseStack poseStack, int mouseX, int mouseY, float partialTick) {
+		public void renderButton(PoseStack poseStack, int mouseX, int mouseY, float partialTick) {
 			GuiGraphics graphics = new GuiGraphics(Minecraft.getInstance(), poseStack);
-			int x0 = getX();
-			int y0 = getY();
+			int x0 = this.x;
+			int y0 = this.y;
 			int x1 = x0 + getWidth();
 			int y1 = y0 + getHeight();
 			if (this.chapterButton) {
 				if (isHoveredOrFocused()) {
 					graphics.fill(x0, y0, x1, y1, ROW_HOVER);
 				}
-				renderString(poseStack, Minecraft.getInstance().font, LABEL_LIGHT);
+				GuiComponent.drawCenteredString(poseStack, Minecraft.getInstance().font, getMessage(),
+					x0 + getWidth() / 2, y0 + (getHeight() - 8) / 2, LABEL_LIGHT);
 				return;
 			}
 			int face = this.active
@@ -614,7 +617,8 @@ public final class AttunementJournalScreen extends Screen {
 			graphics.fill(x0 + 2, y0 + 2, x1 - 2, y1 - 2, face);
 			graphics.fill(x0 + 3, y0 + 3, x1 - 3, y0 + 4, this.active ? 0xFFE0C6FF : 0xFF77707E);
 			graphics.fill(x0 + 3, y1 - 4, x1 - 3, y1 - 3, 0xFF17151D);
-			renderString(poseStack, Minecraft.getInstance().font, LABEL_LIGHT);
+			GuiComponent.drawCenteredString(poseStack, Minecraft.getInstance().font, getMessage(),
+				x0 + getWidth() / 2, y0 + (getHeight() - 8) / 2, LABEL_LIGHT);
 		}
 	}
 

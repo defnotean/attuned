@@ -84,7 +84,8 @@ class FocusDefinitionContractTest {
 			"ModifierEntry should use the finite-only amount codec for FocusDefinition JSON.");
 		assertTrue(source.contains("private static DataResult<Double> validateAmount(double amount)"),
 			"ModifierEntry should centralize codec amount validation.");
-		assertTrue(source.contains("DataResult.error(() -> \"Modifier amount must be finite\")"),
+		assertTrue(source.contains("DataResult.error(() -> \"Modifier amount must be finite\")")
+				|| source.contains("DataResult.error(\"Modifier amount must be finite\")"),
 			"ModifierEntry codec failures should explain invalid amount values.");
 	}
 
