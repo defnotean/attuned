@@ -15,7 +15,7 @@ Branch: `port/minecraft-26.1.2`
 
 ## 1. Branch and Mechanical Retarget
 
-- [ ] Start from green `main`: `git checkout main && git pull --ff-only origin main`.
+- [ ] Start from green `latest`: `git checkout latest && git pull --ff-only origin latest`.
 - [ ] Create the port branch: `git checkout -b port/minecraft-26.1.2`.
 - [ ] Confirm or add the profile in `config/minecraft-version-profiles.json`.
 - [ ] Dry run profile application: `python tools/minecraft_version_profile.py apply 26.1.2 --dry-run`.
@@ -66,5 +66,5 @@ Branch: `port/minecraft-26.1.2`
 
 - [ ] If the target cannot compile because dependencies are not available, revert only the profile application commit and keep the profile marked `blocked` with notes.
 - [ ] Older-version support should be bugfix/backport-first, not a new-feature branch, unless the same feature is fully tested on all supported targets.
-- [ ] Do not merge a port branch to `main` until repository verification, Python tests, Gradle build, and smoke QA are green.
-- [ ] After the work is complete and green, merge to `main`, push `main`, and watch GitHub CI to success.
+- [ ] Do not merge a port branch to `latest` until repository verification, Python tests, Gradle build, and smoke QA are green.
+- [ ] After the work is complete and green, merge to `latest`, push `latest`, and watch GitHub CI to success.
