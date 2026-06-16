@@ -72,7 +72,7 @@ class DocsContractTest(unittest.TestCase):
         self.assertIn('branches: [latest, "maintenance/**"]', ci)
         self.assertNotIn("branches: [main]", ci)
         self.assertIn("tools/minecraft_version_profile.py current --github-output", ci)
-        self.assertIn("steps.versions.outputs.java_version", ci)
+        self.assertIn("steps.versions.outputs.build_java_version", ci)
         self.assertIn("Start from green `latest`", migration)
         self.assertNotIn("git checkout main", migration)
 

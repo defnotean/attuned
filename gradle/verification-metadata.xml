@@ -6,6 +6,7 @@
       <trusted-artifacts>
          <trust group="net.minecraft" name="minecraft-clientOnly-52430b475d" version="26.1.2" reason="LoomLocalMinecraft remaps this Minecraft compile jar locally."/>
          <trust group="net.minecraft" name="minecraft-common-52430b475d" version="26.1.2" reason="LoomLocalMinecraft remaps this Minecraft compile jar locally."/>
+         <trust group="loom" name="mappings" version="layered+hash.2198" reason="LoomGlobalMinecraft generates branch-local layered mappings jars."/>
       </trusted-artifacts>
    </configuration>
    <components>
