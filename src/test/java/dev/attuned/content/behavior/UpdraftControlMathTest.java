@@ -42,6 +42,12 @@ class UpdraftControlMathTest {
 	}
 
 	@Test
+	void pvpExhaustionStartsAfterFiveSecondsOfCombat() {
+		assertTrue(!UpdraftBehavior.exhaustedByDuration(0L, 99L));
+		assertTrue(UpdraftBehavior.exhaustedByDuration(0L, 100L));
+	}
+
+	@Test
 	void boostEasesHardDirectionChangesInsteadOfSnappingVelocity() {
 		Vec3 motion = new Vec3(0.9D, 0.0D, 0.0D);
 		Vec3 lookBack = new Vec3(-1.0D, 0.0D, 0.0D);

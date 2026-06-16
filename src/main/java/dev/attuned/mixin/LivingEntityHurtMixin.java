@@ -5,6 +5,7 @@ import dev.attuned.combat.AttunedCombat;
 import dev.attuned.combat.CombatContext;
 import dev.attuned.combat.RevenantCombat;
 import dev.attuned.combat.UnseenCombat;
+import dev.attuned.content.behavior.UpdraftBehavior;
 import dev.attuned.pacts.Pacts;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.damagesource.DamageSource;
@@ -35,6 +36,7 @@ public abstract class LivingEntityHurtMixin {
 			return amount;
 		}
 		LivingEntity self = (LivingEntity) (Object) this;
+		UpdraftBehavior.recordPvpDamage(self, source);
 		CombatContext context = CombatContext.of(self, source);
 		float scaled = AttunedCombat.applyAffinity(level, self, source, amount, context);
 		float capped = Apex.adjustDamage(self, source, scaled, context);
