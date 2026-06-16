@@ -297,6 +297,9 @@ def check_png_resources() -> str:
             png_dimensions(path)
         except (OSError, ValueError) as exc:
             problems.append(f"{relative(path)}: {exc}")
+    for path in sorted(PNG_RESOURCE_ROOT.rglob("*.png.mcmeta")):
+        if not path.with_suffix("").is_file():
+            problems.append(f"{relative(path)}: missing paired PNG")
     if problems:
         raise CheckFailed("PNG resource headers", problems)
     return f"PNG resource headers: {len(png_files)} files"
