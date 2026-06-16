@@ -162,6 +162,27 @@ class VerifyRepositoryContractTest(unittest.TestCase):
             self.assertEqual("repository JSON parsing", failure.exception.title)
             self.assertIn("tools/asset_customizer/asset-manifest.json", failure.exception.problems[0])
 
+    def test_repository_json_parsing_reports_duplicate_keys(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            item_json = root / "src" / "main" / "resources" / "assets" / "attuned" / "items" / "duplicate.json"
+            item_json.parent.mkdir(parents=True)
+            item_json.write_text('{"model": "attuned:item/first", "model": "attuned:item/second"}\n', encoding="utf-8")
+            original_root = verify_repository.ROOT
+            original_source_scan_roots = verify_repository.SOURCE_SCAN_ROOTS
+            verify_repository.ROOT = root
+            verify_repository.SOURCE_SCAN_ROOTS = (root / "src",)
+            try:
+                with self.assertRaises(verify_repository.CheckFailed) as failure:
+                    verify_repository.check_repository_json()
+            finally:
+                verify_repository.ROOT = original_root
+                verify_repository.SOURCE_SCAN_ROOTS = original_source_scan_roots
+
+            self.assertEqual("repository JSON parsing", failure.exception.title)
+            self.assertIn("duplicate.json", failure.exception.problems[0])
+            self.assertIn("duplicate key model", failure.exception.problems[0])
+
     def test_sensitive_assignment_scan_omits_assigned_value(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
             sample = Path(temp_dir) / "sample.properties"
