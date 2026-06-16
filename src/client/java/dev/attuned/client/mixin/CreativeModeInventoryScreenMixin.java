@@ -5,7 +5,7 @@ import dev.attuned.client.FocusPanel;
 import dev.attuned.menu.FocusLayout;
 import dev.attuned.menu.FocusSlot;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.gui.screens.inventory.CreativeModeInventoryScreen;
 import net.minecraft.world.entity.player.Player;
@@ -63,8 +63,8 @@ public abstract class CreativeModeInventoryScreenMixin
 		}
 	}
 
-	@Inject(method = "extractBackground", at = @At("TAIL"))
-	private void attuned$drawFocusPanel(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick, CallbackInfo ci) {
+	@Inject(method = "renderBg", at = @At("TAIL"))
+	private void attuned$drawFocusPanel(GuiGraphics graphics, float partialTick, int mouseX, int mouseY, CallbackInfo ci) {
 		// The Focus-slot suppression flag is a survival-only, recipe-book concern;
 		// clear it so the creative slots are never left hidden by a stale value.
 		FocusSlot.setSuppressed(false);

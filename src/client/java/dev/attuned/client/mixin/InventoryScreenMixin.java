@@ -5,7 +5,7 @@ import dev.attuned.client.FocusPanel;
 import dev.attuned.menu.FocusLayout;
 import dev.attuned.menu.FocusSlot;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.gui.screens.inventory.InventoryScreen;
 import net.minecraft.client.gui.screens.recipebook.RecipeBookComponent;
@@ -34,8 +34,8 @@ public abstract class InventoryScreenMixin extends AbstractContainerScreen<Inven
 		super(null, null, null);
 	}
 
-	@Inject(method = "extractBackground", at = @At("TAIL"))
-	private void attuned$drawFocusPanel(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick, CallbackInfo ci) {
+	@Inject(method = "renderBg", at = @At("TAIL"))
+	private void attuned$drawFocusPanel(GuiGraphics graphics, float partialTick, int mouseX, int mouseY, CallbackInfo ci) {
 		// The recipe book claims the same edge as the Focus panel. While it is
 		// open, suppress the panel and its slots; restore them once it closes.
 		boolean recipeBookOpen = attuned$recipeBookOpen();

@@ -5,8 +5,8 @@ import java.util.ArrayList;
 import java.util.List;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
-import net.fabricmc.fabric.api.client.rendering.v1.level.LevelRenderContext;
-import net.fabricmc.fabric.api.client.rendering.v1.level.LevelRenderEvents;
+import net.fabricmc.fabric.api.client.rendering.v1.world.WorldRenderContext;
+import net.fabricmc.fabric.api.client.rendering.v1.world.WorldRenderEvents;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.renderer.ShapeRenderer;
@@ -42,7 +42,7 @@ public final class TremorOreOutlines {
 
 		ClientPlayNetworking.registerGlobalReceiver(TremorOreHintPayload.TYPE, (payload, context) ->
 			context.client().execute(() -> highlight(payload.orePositions())));
-		LevelRenderEvents.END_MAIN.register(TremorOreOutlines::render);
+		WorldRenderEvents.END_MAIN.register(TremorOreOutlines::render);
 		// Drop the highlighted-level reference on disconnect; render() does not run
 		// on the title screen, so without this the old ClientLevel would stay pinned.
 		ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> clear());
@@ -61,7 +61,7 @@ public final class TremorOreOutlines {
 		expiresAt = minecraft.level.getGameTime() + OUTLINE_TICKS;
 	}
 
-	private static void render(LevelRenderContext context) {
+	private static void render(WorldRenderContext context) {
 		Minecraft minecraft = Minecraft.getInstance();
 		if (minecraft.level == null || orePositions.isEmpty()) {
 			return;
@@ -84,14 +84,13 @@ public final class TremorOreOutlines {
 			double y = orePos.getY() - camera.y();
 			double z = orePos.getZ() - camera.z();
 			ShapeRenderer.renderShape(
-				context.poseStack(),
-				context.bufferSource().getBuffer(outline),
+				context.matrices(),
+				context.consumers().getBuffer(outline),
 				Shapes.block(),
 				x, y, z,
 				OUTLINE_COLOR,
 				LINE_WIDTH);
 		}
-		context.bufferSource().endBatch(outline);
 	}
 
 	private static void clear() {

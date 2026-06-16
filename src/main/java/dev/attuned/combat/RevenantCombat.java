@@ -131,7 +131,7 @@ public final class RevenantCombat {
 			chill(attacker);
 		}
 		if (attacker instanceof ServerPlayer player && hasActiveFocus(player, BONECHILL_FOCUS)
-				&& defender.typeHolder().is(EntityTypeTags.UNDEAD)) {
+				&& defender.getType().is(EntityTypeTags.UNDEAD)) {
 			chill(defender);
 		}
 	}
@@ -170,7 +170,7 @@ public final class RevenantCombat {
 	}
 
 	private static boolean canChillAttacker(ServerPlayer player, LivingEntity attacker) {
-		return attacker.typeHolder().is(EntityTypeTags.UNDEAD)
+		return attacker.getType().is(EntityTypeTags.UNDEAD)
 			|| CombatTargets.isHostileOrPvpOpponent(attacker, player);
 	}
 

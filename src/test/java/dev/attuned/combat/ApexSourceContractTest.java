@@ -103,6 +103,7 @@ class ApexSourceContractTest {
 	}
 
 	private static String methodBody(String source, String signature) {
+		source = source.replace("\r\n", "\n").replace('\r', '\n');
 		int signatureStart = source.indexOf(signature);
 		assertTrue(signatureStart >= 0, "Missing method signature: " + signature);
 		int bodyStart = source.indexOf('{', signatureStart);

@@ -153,6 +153,7 @@ class AffinityPactMechanicsContractTest {
 	}
 
 	private static String methodBody(String source, String signaturePrefix) {
+		source = source.replace("\r\n", "\n").replace('\r', '\n');
 		int signatureStart = source.indexOf(signaturePrefix);
 		assertTrue(signatureStart >= 0, "Missing method signature: " + signaturePrefix);
 		int bodyStart = source.indexOf('{', signatureStart);

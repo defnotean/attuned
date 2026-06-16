@@ -11,7 +11,7 @@ import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry;
 import net.fabricmc.fabric.api.client.rendering.v1.hud.VanillaHudElements;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
@@ -136,7 +136,7 @@ public final class CombatHud {
 
 	// The HudElement render entry point. Pulled out as a method reference so the
 	// registration call stays single-line and free of inline lambda bodies.
-	private static void renderLayer(GuiGraphicsExtractor graphics, DeltaTracker delta) {
+	private static void renderLayer(GuiGraphics graphics, DeltaTracker delta) {
 		Minecraft minecraft = Minecraft.getInstance();
 		Player player = minecraft.player;
 		if (player == null) {
@@ -149,7 +149,7 @@ public final class CombatHud {
 	// player gem, halo or dim, and target gem in screen-bottom-anchored order.
 	// All player-state reads happen once at the top of this method so the per-frame
 	// HUD draw never re-walks the Focus slots or repeats a registry lookup.
-	private static void draw(GuiGraphicsExtractor graphics, Minecraft minecraft, Player player) {
+	private static void draw(GuiGraphics graphics, Minecraft minecraft, Player player) {
 		boolean showOwn = AttunedClientConfig.get().showOwnAffinityHud();
 		boolean showEnemy = AttunedClientConfig.get().showEnemyAffinityHud();
 		if (!showOwn && !showEnemy) {
@@ -306,7 +306,7 @@ public final class CombatHud {
 		return right + backplateW <= screenW - SCREEN_MARGIN || left >= SCREEN_MARGIN;
 	}
 
-	private static void drawMatchupLink(GuiGraphicsExtractor graphics, int x, int y, Matchup matchup) {
+	private static void drawMatchupLink(GuiGraphics graphics, int x, int y, Matchup matchup) {
 		Identifier sprite = switch (matchup) {
 			case EMPOWERED -> LINK_EMPOWERED_SPRITE;
 			case NEUTRALIZED -> LINK_NEUTRALIZED_SPRITE;
@@ -316,7 +316,7 @@ public final class CombatHud {
 			sprite, x, y, MATCHUP_LINK_W, MATCHUP_LINK_H);
 	}
 
-	public static void drawPlayerGem(GuiGraphicsExtractor graphics, int x, int y, int size,
+	public static void drawPlayerGem(GuiGraphics graphics, int x, int y, int size,
 			@Nullable Affinity affinity, boolean discord, @Nullable Apex.Capstone capstone, boolean atApex) {
 		Identifier sprite = atApex && capstone != null
 			? capstoneSpriteFor(capstone)
@@ -324,13 +324,13 @@ public final class CombatHud {
 		drawGemSprite(graphics, x, y, size, false, sprite);
 	}
 
-	private static void drawTargetGem(GuiGraphicsExtractor graphics, int x, int y, int size,
+	private static void drawTargetGem(GuiGraphics graphics, int x, int y, int size,
 			TargetStance stance) {
 		drawPlayerGem(graphics, x, y, size, stance.affinity(), stance.discord(), stance.capstone(), stance.apexArmed());
 		drawOverlaySprite(graphics, TARGET_RING_SPRITE, x, y, size);
 	}
 
-	private static void drawGemSprite(GuiGraphicsExtractor graphics, int x, int y, int size,
+	private static void drawGemSprite(GuiGraphics graphics, int x, int y, int size,
 			boolean targeted, Identifier sprite) {
 		graphics.blitSprite(net.minecraft.client.renderer.RenderPipelines.GUI_TEXTURED,
 			sprite, x, y, size, size);
@@ -378,12 +378,12 @@ public final class CombatHud {
 			"hud/" + capstone.name().toLowerCase(Locale.ROOT));
 	}
 
-	private static void drawOverlaySprite(GuiGraphicsExtractor graphics, Identifier sprite, int gemX, int gemY, int size) {
+	private static void drawOverlaySprite(GuiGraphics graphics, Identifier sprite, int gemX, int gemY, int size) {
 		graphics.blitSprite(net.minecraft.client.renderer.RenderPipelines.GUI_TEXTURED,
 			sprite, gemX - 2, gemY - 2, size + 4, size + 4);
 	}
 
-	private static void drawResonanceBar(GuiGraphicsExtractor graphics, int barX0, int barY, int barWidth,
+	private static void drawResonanceBar(GuiGraphics graphics, int barX0, int barY, int barWidth,
 			float resonance) {
 		graphics.blit(net.minecraft.client.renderer.RenderPipelines.GUI_TEXTURED,
 			RESONANCE_TRACK_TEXTURE, barX0, barY,

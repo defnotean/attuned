@@ -4,7 +4,7 @@ import com.mojang.blaze3d.platform.InputConstants;
 import dev.attuned.menu.QuickApplyPresetPayload;
 import dev.attuned.network.AbilityPayload;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
-import net.fabricmc.fabric.api.client.keymapping.v1.KeyMappingHelper;
+import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.client.KeyMapping;
 import org.lwjgl.glfw.GLFW;
@@ -30,20 +30,20 @@ public final class AttunedKeybinds {
 		}
 		initialized = true;
 
-		abilityKey = KeyMappingHelper.registerKeyMapping(new KeyMapping(
+		abilityKey = KeyBindingHelper.registerKeyBinding(new KeyMapping(
 			"key.attuned.ability", GLFW.GLFW_KEY_R, KeyMapping.Category.GAMEPLAY));
-		toggleOwnAffinityHudKey = KeyMappingHelper.registerKeyMapping(new KeyMapping(
+		toggleOwnAffinityHudKey = KeyBindingHelper.registerKeyBinding(new KeyMapping(
 			"key.attuned.toggle_own_affinity_hud",
 			InputConstants.UNKNOWN.getType(), InputConstants.UNKNOWN.getValue(), KeyMapping.Category.GAMEPLAY));
-		toggleEnemyAffinityHudKey = KeyMappingHelper.registerKeyMapping(new KeyMapping(
+		toggleEnemyAffinityHudKey = KeyBindingHelper.registerKeyBinding(new KeyMapping(
 			"key.attuned.toggle_enemy_affinity_hud",
 			InputConstants.UNKNOWN.getType(), InputConstants.UNKNOWN.getValue(), KeyMapping.Category.GAMEPLAY));
-		toggleFociHudKey = KeyMappingHelper.registerKeyMapping(new KeyMapping(
+		toggleFociHudKey = KeyBindingHelper.registerKeyBinding(new KeyMapping(
 			"key.attuned.toggle_foci_hud",
 			InputConstants.UNKNOWN.getType(), InputConstants.UNKNOWN.getValue(), KeyMapping.Category.GAMEPLAY));
 		applyBuildKeys = new KeyMapping[3];
 		for (int i = 0; i < applyBuildKeys.length; i++) {
-			applyBuildKeys[i] = KeyMappingHelper.registerKeyMapping(new KeyMapping(
+			applyBuildKeys[i] = KeyBindingHelper.registerKeyBinding(new KeyMapping(
 				"key.attuned.apply_build_" + (i + 1),
 				InputConstants.UNKNOWN.getType(), InputConstants.UNKNOWN.getValue(), KeyMapping.Category.GAMEPLAY));
 		}

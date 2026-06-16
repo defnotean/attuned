@@ -1,5 +1,6 @@
 package dev.attuned.pacts;
 
+import dev.attuned.compat.PlayerMessages;
 import dev.attuned.AttunedPlayerCleanup;
 import dev.attuned.AttunedServerCleanup;
 import dev.attuned.combat.CombatTargets;
@@ -62,7 +63,7 @@ public final class PactTacticals {
 		Long endsAt = COOLDOWN_ENDS.get(player.getUUID());
 		if (endsAt != null && now < endsAt) {
 			int remaining = (int) (endsAt - now);
-			player.sendOverlayMessage(Component.translatable(
+			PlayerMessages.overlay(player, Component.translatable(
 				"pact.attuned.tactical.cooldown",
 				FocusAbilityState.cooldownSecondsForMessage(remaining)));
 			FocusAbilityState.syncStatus(player,
@@ -74,7 +75,7 @@ public final class PactTacticals {
 		fireTactical(player, pact.get(), overcharge);
 		if (overcharge) {
 			Resonance.add(player, -OVERCHARGE_SPEND);
-			player.sendOverlayMessage(Component.translatable("pact.attuned.tactical.overcharge"));
+			PlayerMessages.overlay(player, Component.translatable("pact.attuned.tactical.overcharge"));
 		}
 		CombatFeedback.pactTactical(player, pact.get(), overcharge);
 		int cooldown = CombatMomentum.effectiveCooldown(
@@ -82,7 +83,7 @@ public final class PactTacticals {
 		COOLDOWN_ENDS.put(player.getUUID(), now + cooldown);
 		FocusAbilityState.syncStatus(player,
 			FocusAbilityStatusPayload.PACT_TACTICAL_SLOT, cooldown, cooldown);
-		player.sendOverlayMessage(Component.translatable(tacticalMessageKey(pact.get())));
+		PlayerMessages.overlay(player, Component.translatable(tacticalMessageKey(pact.get())));
 		return true;
 	}
 

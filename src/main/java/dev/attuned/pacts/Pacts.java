@@ -1,5 +1,6 @@
 package dev.attuned.pacts;
 
+import dev.attuned.compat.PlayerMessages;
 import dev.attuned.AttunedPlayerCleanup;
 import dev.attuned.AttunedAdvancements;
 import dev.attuned.AttunedRegistries;
@@ -375,7 +376,7 @@ public final class Pacts {
 			if (attackerPact == Pact.RADIANT_COVENANT
 					&& !(defender instanceof Player)
 					&& isHostile(defender)
-					&& defender.typeHolder().is(EntityTypeTags.UNDEAD)
+					&& defender.getType().is(EntityTypeTags.UNDEAD)
 					&& AttunedCombat.isChargedDirectMelee(attackerPlayer, defender, source, RADIANT_COVENANT_SWING_THRESHOLD)) {
 				amount *= (1.0F + PactTier4.radiantUndeadBonus(attackerPlayer));
 			}
@@ -831,7 +832,7 @@ public final class Pacts {
 
 	private static void announceGained(ServerPlayer player, Pact pact) {
 		playPactSound(player, pact, true);
-		player.sendSystemMessage(Component.translatable("pact.attuned.awakened")
+		PlayerMessages.system(player, Component.translatable("pact.attuned.awakened")
 			.withStyle(ChatFormatting.GRAY)
 			.append(pact.displayName().withStyle(pact.chatColor(), ChatFormatting.BOLD))
 			.append(Component.literal(". ").withStyle(ChatFormatting.GRAY))
@@ -846,7 +847,7 @@ public final class Pacts {
 		Component name = pact == null
 			? Component.translatable("pact.attuned.fades.generic")
 			: pact.displayName().withStyle(pact.chatColor(), ChatFormatting.BOLD);
-		player.sendSystemMessage(fadeMessage(player, pact, replacement, name).copy()
+		PlayerMessages.system(player, fadeMessage(player, pact, replacement, name).copy()
 			.withStyle(ChatFormatting.GRAY));
 	}
 
@@ -949,7 +950,7 @@ public final class Pacts {
 			player.getZ(),
 			20, 0.6, 0.8, 0.6, 0.5
 		);
-		player.sendSystemMessage(Component.translatable("pact.attuned.first_pact")
+		PlayerMessages.system(player, Component.translatable("pact.attuned.first_pact")
 			.withStyle(pact.chatColor(), ChatFormatting.BOLD, ChatFormatting.ITALIC));
 		AttunedAdvancements.award(player, "attunement/first_pact");
 	}

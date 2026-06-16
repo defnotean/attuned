@@ -26,7 +26,7 @@ import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry;
 import net.fabricmc.fabric.api.client.rendering.v1.hud.VanillaHudElements;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.player.Player;
@@ -103,7 +103,7 @@ public final class FociHud {
 		return AttunedClientConfig.get().showFociHud();
 	}
 
-	private static void renderLayer(GuiGraphicsExtractor graphics, DeltaTracker delta) {
+	private static void renderLayer(GuiGraphics graphics, DeltaTracker delta) {
 		Minecraft minecraft = Minecraft.getInstance();
 		Player player = minecraft.player;
 		if (player == null || !isVisible(player)) {
@@ -112,7 +112,7 @@ public final class FociHud {
 		draw(graphics, player);
 	}
 
-	private static void draw(GuiGraphicsExtractor graphics, Player player) {
+	private static void draw(GuiGraphics graphics, Player player) {
 		AttunedClientConfig.HudLayout layout = HudAnchor.layout();
 		float scale = layout.scale();
 		boolean scaled = scale != 1.0F;
@@ -174,7 +174,7 @@ public final class FociHud {
 		return definition == null ? Optional.empty() : definition.affinity();
 	}
 
-	private static void drawFrameGlow(GuiGraphicsExtractor graphics, int x, int y) {
+	private static void drawFrameGlow(GuiGraphics graphics, int x, int y) {
 		graphics.fill(x + 4, y, x + HUD_W - 4, y + 1, FRAME_EDGE);
 		graphics.fill(x + 4, y + HUD_H - 1, x + HUD_W - 4, y + HUD_H, FRAME_EDGE);
 		graphics.fill(x, y + 4, x + 1, y + HUD_H - 4, FRAME_GLOW);
@@ -182,7 +182,7 @@ public final class FociHud {
 		graphics.fill(x + 4, y + 34, x + HUD_W - 4, y + 35, FRAME_GLOW);
 	}
 
-	private static void drawAbilityWell(GuiGraphicsExtractor graphics, Player player, AttunedInv inv,
+	private static void drawAbilityWell(GuiGraphics graphics, Player player, AttunedInv inv,
 			List<Integer> activeSlots, FocusDefinition[] slotDefinitions,
 			AttunementReadout.Snapshot readout, int x, int y) {
 		int stanceArgb = readout.stanceArgb();
@@ -194,7 +194,7 @@ public final class FociHud {
 			int slot = selectedAbilitySlot(player, inv, activeSlots, slotDefinitions);
 			if (slot >= 0) {
 				ItemStack stack = inv.get(slot);
-				graphics.item(stack, x + (ABILITY_WELL_SIZE - 16) / 2, y + (ABILITY_WELL_SIZE - 16) / 2);
+				graphics.renderItem(stack, x + (ABILITY_WELL_SIZE - 16) / 2, y + (ABILITY_WELL_SIZE - 16) / 2);
 			}
 		}
 		int remaining = FocusAbilityClientState.remainingTicks();
@@ -214,7 +214,7 @@ public final class FociHud {
 		}
 	}
 
-	private static void drawOverchargeRing(GuiGraphicsExtractor graphics, int x, int y, int size) {
+	private static void drawOverchargeRing(GuiGraphics graphics, int x, int y, int size) {
 		long gameTime = apexPulseGameTime();
 		float pulse = (float) (Math.sin((gameTime / 8.0) * Math.PI * 2.0) * 0.5 + 0.5);
 		int alpha = Math.round(0x90 + pulse * 0x60);
@@ -256,7 +256,7 @@ public final class FociHud {
 		}
 	}
 
-	private static void drawFocusGrid(GuiGraphicsExtractor graphics, AttunedInv inv,
+	private static void drawFocusGrid(GuiGraphics graphics, AttunedInv inv,
 			List<Integer> activeSlots, Map<Integer, BudgetResolver.DormantReason> dormantReasons,
 			FocusDefinition[] slotDefinitions, int x, int y) {
 		for (int slot = 0; slot < AttunedInv.SIZE; slot++) {
@@ -276,14 +276,14 @@ public final class FociHud {
 			} else if (dormantReasons.containsKey(slot)) {
 				drawDormantOverlay(graphics, sx, sy);
 			}
-			graphics.item(stack, sx + FocusLayout.SLOT_INSET, sy + FocusLayout.SLOT_INSET);
+			graphics.renderItem(stack, sx + FocusLayout.SLOT_INSET, sy + FocusLayout.SLOT_INSET);
 			if (stack.has(AttunedComponents.TEMPERED)) {
 				drawTemperedTick(graphics, sx, sy);
 			}
 		}
 	}
 
-	private static void drawTemperedTick(GuiGraphicsExtractor graphics, int x, int y) {
+	private static void drawTemperedTick(GuiGraphics graphics, int x, int y) {
 		int x1 = x + FocusLayout.SLOT - 1;
 		int y0 = y;
 		graphics.fill(x1 - 2, y0, x1, y0 + 1, TEMPERED_TICK);
@@ -296,7 +296,7 @@ public final class FociHud {
 			.orElse(AffinityColors.NEUTRAL_ARGB);
 	}
 
-	private static void drawActiveGlow(GuiGraphicsExtractor graphics, int x, int y, int color) {
+	private static void drawActiveGlow(GuiGraphics graphics, int x, int y, int color) {
 		int argb = (ACTIVE_GLOW_ALPHA << 24) | (color & 0x00FFFFFF);
 		int x1 = x + FocusLayout.SLOT;
 		int y1 = y + FocusLayout.SLOT;
@@ -306,7 +306,7 @@ public final class FociHud {
 		graphics.fill(x1 - 1, y + 1, x1, y1 - 1, argb);
 	}
 
-	private static void drawDormantOverlay(GuiGraphicsExtractor graphics, int x, int y) {
+	private static void drawDormantOverlay(GuiGraphics graphics, int x, int y) {
 		graphics.fill(x + 1, y + 1, x + FocusLayout.SLOT - 1, y + FocusLayout.SLOT - 1, DORMANT_DIM);
 	}
 
@@ -314,7 +314,7 @@ public final class FociHud {
 	 * Paints one pip per active Confluence (up to a small cap) in the HUD's top gap.
 	 * Fill-only to match the HUD idiom (no font batch); draws nothing when none are active.
 	 */
-	private static void drawConfluenceChip(GuiGraphicsExtractor graphics, int count, int x, int y, long gameTime) {
+	private static void drawConfluenceChip(GuiGraphics graphics, int count, int x, int y, long gameTime) {
 		if (count <= 0) {
 			return;
 		}
@@ -333,7 +333,7 @@ public final class FociHud {
 	 * Thin pact-trial progress pip under the Apex bar. Skips when no pact is awake
 	 * or the active pact's Tier 4 trial is already complete.
 	 */
-	private static void drawTrialPip(GuiGraphicsExtractor graphics, Player player,
+	private static void drawTrialPip(GuiGraphics graphics, Player player,
 			AttunementReadout.Snapshot readout, int x, int y) {
 		Optional<Pact> pact = readout.pact();
 		if (pact.isEmpty()) {
@@ -356,7 +356,7 @@ public final class FociHud {
 		}
 	}
 
-	private static void drawApexBar(GuiGraphicsExtractor graphics, Player player,
+	private static void drawApexBar(GuiGraphics graphics, Player player,
 			AttunementReadout.Snapshot readout, int gemX, int gemY, int barX, int barY) {
 		CombatHud.drawPlayerGem(graphics, gemX, gemY, APEX_GEM_SIZE,
 			readout.committed().orElse(null), readout.discord(), readout.capstone().orElse(null), readout.atApex());
@@ -408,7 +408,7 @@ public final class FociHud {
 		return (alpha << 24) | (rgb & 0x00FFFFFF);
 	}
 
-	private static void drawApexArmedRing(GuiGraphicsExtractor graphics, int gemX, int gemY, int size, int color) {
+	private static void drawApexArmedRing(GuiGraphics graphics, int gemX, int gemY, int size, int color) {
 		int x1 = gemX + size;
 		int y1 = gemY + size;
 		graphics.fill(gemX, gemY, x1, gemY + 1, color);
@@ -417,7 +417,7 @@ public final class FociHud {
 		graphics.fill(x1 - 1, gemY + 1, x1, y1 - 1, color);
 	}
 
-	private static void drawCooldownRing(GuiGraphicsExtractor graphics, int x, int y, int size,
+	private static void drawCooldownRing(GuiGraphics graphics, int x, int y, int size,
 			int remainingTicks, int totalTicks) {
 		graphics.fill(x + 3, y + 3, x + size - 3, y + size - 3, COOLDOWN_SHADE);
 		float progress = Math.max(0.0F, Math.min(1.0F, remainingTicks / (float) totalTicks));
@@ -426,7 +426,7 @@ public final class FociHud {
 		drawCooldownEdge(graphics, x, y, size, lit);
 	}
 
-	private static void drawCooldownEdge(GuiGraphicsExtractor graphics, int x, int y, int size, int lit) {
+	private static void drawCooldownEdge(GuiGraphics graphics, int x, int y, int size, int lit) {
 		int edge = size - 1;
 		int top = Math.min(lit, edge);
 		if (top > 0) {

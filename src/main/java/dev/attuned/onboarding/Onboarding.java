@@ -1,5 +1,6 @@
 package dev.attuned.onboarding;
 
+import dev.attuned.compat.PlayerMessages;
 import dev.attuned.AttunedServerCleanup;
 import dev.attuned.attunement.AttunedAttachments;
 import dev.attuned.api.focus.Affinity;
@@ -223,7 +224,7 @@ public final class Onboarding {
 		Pacts.previewOf(player).ifPresent(preview -> {
 			((ServerLevel) player.level()).playSound(null, player.blockPosition(),
 				SoundEvents.EXPERIENCE_ORB_PICKUP, SoundSource.PLAYERS, 0.35F, 1.25F);
-			player.sendOverlayMessage(preview);
+			PlayerMessages.overlay(player, preview);
 		});
 	}
 
@@ -244,7 +245,7 @@ public final class Onboarding {
 		Synergies.previewOf(player).ifPresent(preview -> {
 			((ServerLevel) player.level()).playSound(null, player.blockPosition(),
 				SoundEvents.EXPERIENCE_ORB_PICKUP, SoundSource.PLAYERS, 0.35F, 1.25F);
-			player.sendOverlayMessage(preview);
+			PlayerMessages.overlay(player, preview);
 		});
 	}
 
@@ -307,7 +308,7 @@ public final class Onboarding {
 			return;
 		}
 		AttunedAttachments.markOnboarding(player, id);
-		player.sendSystemMessage(message);
+		PlayerMessages.system(player, message);
 		((ServerLevel) player.level()).playSound(null, player.blockPosition(),
 			SoundEvents.AMETHYST_BLOCK_CHIME, SoundSource.PLAYERS, 0.5F, 1.4F);
 	}

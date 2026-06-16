@@ -1,5 +1,6 @@
 package dev.attuned.combat;
 
+import dev.attuned.compat.PlayerMessages;
 import dev.attuned.AttunedPlayerCleanup;
 import dev.attuned.AttunedServerCleanup;
 import dev.attuned.attunement.AttunedAttachments;
@@ -168,7 +169,7 @@ public final class UnseenCombat {
 			10, 0.2, 0.25, 0.2, 0.01);
 		level.playSound(null, defender.blockPosition(),
 			SoundEvents.SCULK_SHRIEKER_SHRIEK, SoundSource.PLAYERS, 0.35F, 1.8F);
-		attacker.sendOverlayMessage(Component.translatable("combo.attuned.softstep_needle"));
+		PlayerMessages.overlay(attacker, Component.translatable("combo.attuned.softstep_needle"));
 	}
 
 	private static boolean hasActiveFocus(Player player, Identifier targetId) {

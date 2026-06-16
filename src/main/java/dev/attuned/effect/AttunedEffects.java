@@ -1,5 +1,6 @@
 package dev.attuned.effect;
 
+import dev.attuned.compat.PlayerMessages;
 import dev.attuned.Attuned;
 import dev.attuned.AttunedAdvancements;
 import dev.attuned.AttunedPlayerCleanup;
@@ -196,7 +197,7 @@ public final class AttunedEffects {
 			for (Map.Entry<Integer, BudgetResolver.DormantReason> entry : dormantReasons.entrySet()) {
 				int slot = entry.getKey();
 				if (!previous.contains(slot)) {
-					player.sendSystemMessage(Component.literal("A Focus falls dormant: ")
+					PlayerMessages.system(player, Component.literal("A Focus falls dormant: ")
 						.withStyle(ChatFormatting.GRAY)
 						.append(AttunedAttachments.getInventory(player).get(slot).getHoverName())
 						.append(Component.literal(". " + dormantChatMessage(entry.getValue()))

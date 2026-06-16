@@ -22,7 +22,7 @@ import java.util.Set;
 import java.util.function.BooleanSupplier;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
@@ -115,7 +115,9 @@ public class SatchelScreen extends AbstractContainerScreen<SatchelMenu> {
 	private int selectedIndex = -1;
 
 	public SatchelScreen(SatchelMenu menu, Inventory inventory, Component title) {
-		super(menu, inventory, title, IMAGE_WIDTH, logicalHeight(menu));
+		super(menu, inventory, title);
+		this.imageWidth = IMAGE_WIDTH;
+		this.imageHeight = logicalHeight(menu);
 		this.titleLabelX = 8;
 		this.titleLabelY = 6;
 		this.inventoryLabelY = menu.inventoryY() - 10;
@@ -294,7 +296,7 @@ public class SatchelScreen extends AbstractContainerScreen<SatchelMenu> {
 	}
 
 	@Override
-	public void extractBackground(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
+	protected void renderBg(GuiGraphics graphics, float partialTick, int mouseX, int mouseY) {
 		graphics.fill(0, 0, this.width, this.height, SCREEN_BACKDROP);
 		// Solid window base so the right-hand panel reads as part of the window, then the
 		// leather reliquary texture over the grid/inventory in the left half. The window
@@ -348,13 +350,13 @@ public class SatchelScreen extends AbstractContainerScreen<SatchelMenu> {
 	}
 
 	@Override
-	protected void extractLabels(GuiGraphicsExtractor graphics, int mouseX, int mouseY) {
-		graphics.text(this.font, Component.translatable("screen.attuned.equipped"),
+	protected void renderLabels(GuiGraphics graphics, int mouseX, int mouseY) {
+		graphics.drawString(this.font, Component.translatable("screen.attuned.equipped"),
 			EQUIPPED_X - 2, EQUIPPED_LABEL_Y, LABEL_TEXT, false);
-		graphics.text(this.font, Component.translatable("screen.attuned.builds"),
+		graphics.drawString(this.font, Component.translatable("screen.attuned.builds"),
 			BUILDS_X, BUILDS_LABEL_Y, LABEL_TEXT, false);
 		if (presets().isEmpty()) {
-			graphics.text(this.font, Component.translatable("screen.attuned.builds.empty"),
+			graphics.drawString(this.font, Component.translatable("screen.attuned.builds.empty"),
 				BUILDS_X, BUILDS_LIST_Y, LABEL_TEXT, false);
 		}
 		drawBuildPreview(graphics, mouseX, mouseY);
@@ -368,7 +370,7 @@ public class SatchelScreen extends AbstractContainerScreen<SatchelMenu> {
 	 * {@code leftPos/topPos}); the row is clamped to the logical window so it never
 	 * leaves the click/draw bounds.
 	 */
-	private void drawBuildPreview(GuiGraphicsExtractor graphics, int mouseX, int mouseY) {
+	private void drawBuildPreview(GuiGraphics graphics, int mouseX, int mouseY) {
 		int hovered = hoveredBuildIndex(mouseX, mouseY);
 		if (hovered < 0) {
 			return;
@@ -406,7 +408,7 @@ public class SatchelScreen extends AbstractContainerScreen<SatchelMenu> {
 			if (stack.isEmpty()) {
 				continue;
 			}
-			graphics.item(stack, cx + 1, cy + 1);
+			graphics.renderItem(stack, cx + 1, cy + 1);
 			if (slot < availability.size()
 					&& availability.get(slot) == BuildPreviewResolver.Availability.MISSING) {
 				graphics.fill(cx + 1, cy + 1, cx + PREVIEW_CELL - 1, cy + PREVIEW_CELL - 1, PREVIEW_MISSING_OVERLAY);
@@ -430,7 +432,7 @@ public class SatchelScreen extends AbstractContainerScreen<SatchelMenu> {
 		return BuiltInRegistries.ITEM.getValue(Identifier.parse(id)).getDefaultInstance();
 	}
 
-	private void drawWell(GuiGraphicsExtractor graphics, int x, int y) {
+	private void drawWell(GuiGraphics graphics, int x, int y) {
 		graphics.fill(x, y, x + 18, y + 18, WELL_EDGE);
 		graphics.fill(x + 1, y + 1, x + 17, y + 17, WELL_FILL);
 	}
@@ -525,7 +527,7 @@ public class SatchelScreen extends AbstractContainerScreen<SatchelMenu> {
 		return this.font.plainSubstrByWidth(text, Math.max(0, maxWidth - ellipsisWidth)) + ellipsis;
 	}
 
-	private static void drawButtonOutline(GuiGraphicsExtractor graphics, int x0, int y0, int x1, int y1, int argb) {
+	private static void drawButtonOutline(GuiGraphics graphics, int x0, int y0, int x1, int y1, int argb) {
 		graphics.fill(x0, y0, x1, y0 + 1, argb);
 		graphics.fill(x0, y1 - 1, x1, y1, argb);
 		graphics.fill(x0, y0 + 1, x0 + 1, y1 - 1, argb);
@@ -546,7 +548,7 @@ public class SatchelScreen extends AbstractContainerScreen<SatchelMenu> {
 		}
 
 		@Override
-		protected void extractContents(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
+		protected void renderContents(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
 			int x0 = getX();
 			int y0 = getY();
 			int x1 = x0 + getWidth();
@@ -559,7 +561,7 @@ public class SatchelScreen extends AbstractContainerScreen<SatchelMenu> {
 			} else if (isHoveredOrFocused()) {
 				drawButtonOutline(graphics, x0, y0, x1, y1, BUTTON_HOVER_ARGB);
 			}
-			extractDefaultLabel(graphics.textRendererForWidget(this, GuiGraphicsExtractor.HoveredTextEffects.NONE));
+			renderDefaultLabel(graphics.textRendererForWidget(this, GuiGraphics.HoveredTextEffects.NONE));
 		}
 	}
 }

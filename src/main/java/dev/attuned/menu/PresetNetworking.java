@@ -1,5 +1,6 @@
 package dev.attuned.menu;
 
+import dev.attuned.compat.PlayerMessages;
 import dev.attuned.AttunedPlayerCleanup;
 import dev.attuned.AttunedRegistries;
 import dev.attuned.AttunedServerCleanup;
@@ -44,11 +45,11 @@ public final class PresetNetworking {
 			return;
 		}
 		initialized = true;
-		PayloadTypeRegistry.serverboundPlay().register(SavePresetPayload.TYPE, SavePresetPayload.CODEC);
-		PayloadTypeRegistry.serverboundPlay().register(ApplyPresetPayload.TYPE, ApplyPresetPayload.CODEC);
-		PayloadTypeRegistry.serverboundPlay().register(DeletePresetPayload.TYPE, DeletePresetPayload.CODEC);
-		PayloadTypeRegistry.serverboundPlay().register(QuickApplyPresetPayload.TYPE, QuickApplyPresetPayload.CODEC);
-		PayloadTypeRegistry.serverboundPlay().register(ImportPresetPayload.TYPE, ImportPresetPayload.CODEC);
+		PayloadTypeRegistry.playC2S().register(SavePresetPayload.TYPE, SavePresetPayload.CODEC);
+		PayloadTypeRegistry.playC2S().register(ApplyPresetPayload.TYPE, ApplyPresetPayload.CODEC);
+		PayloadTypeRegistry.playC2S().register(DeletePresetPayload.TYPE, DeletePresetPayload.CODEC);
+		PayloadTypeRegistry.playC2S().register(QuickApplyPresetPayload.TYPE, QuickApplyPresetPayload.CODEC);
+		PayloadTypeRegistry.playC2S().register(ImportPresetPayload.TYPE, ImportPresetPayload.CODEC);
 		ServerPlayNetworking.registerGlobalReceiver(SavePresetPayload.TYPE, (payload, context) -> {
 			ServerPlayer player = context.player();
 			player.level().getServer().execute(() -> savePreset(player, payload));
@@ -165,10 +166,10 @@ public final class PresetNetworking {
 		if (player.containerMenu instanceof SatchelMenu menu) {
 			menu.broadcastChanges();
 		}
-		player.sendOverlayMessage(Component.translatable(
+		PlayerMessages.overlay(player, Component.translatable(
 			"screen.attuned.preset.applied", presets.get(index).name()));
 		if (!result.missing().isEmpty()) {
-			player.sendSystemMessage(Component.translatable(
+			PlayerMessages.system(player, Component.translatable(
 				"screen.attuned.preset.missing", String.join(", ", result.missing()))
 				.withStyle(ChatFormatting.RED));
 		}
