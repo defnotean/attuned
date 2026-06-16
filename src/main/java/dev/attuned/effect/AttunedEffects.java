@@ -249,7 +249,7 @@ public final class AttunedEffects {
 
 	/** A soft chime when a Focus changes activation — pitched up to attune, down to lapse. */
 	private static void playAttuneSound(ServerPlayer player, float pitch) {
-		((ServerLevel) player.level()).playSound(null, player.blockPosition(),
+		((ServerLevel) player.getLevel()).playSound(null, player.blockPosition(),
 			SoundEvents.AMETHYST_BLOCK_CHIME, SoundSource.PLAYERS, 0.6F, pitch);
 	}
 
@@ -272,10 +272,10 @@ public final class AttunedEffects {
 		// A Tempered Focus amplifies every declarative attribute modifier. Removal
 		// keys off the slot/index id, never the amount, so the boosted modifier is
 		// still torn down exactly when the slot goes dormant.
-		boolean tempered = focus.stack().has(AttunedComponents.TEMPERED);
+		boolean tempered = AttunedComponents.isTempered(focus.stack());
 		for (int i = 0; i < focus.modifiers().size(); i++) {
 			ModifierEntry entry = focus.modifiers().get(i);
-			AttributeInstance ai = player.getAttribute(entry.attribute());
+			AttributeInstance ai = player.getAttribute(entry.attribute().value());
 			if (ai == null) {
 				continue;
 			}
@@ -287,7 +287,7 @@ public final class AttunedEffects {
 		}
 
 		focus.behavior().ifPresent(behaviorId -> {
-			FocusBehavior behavior = AttunedRegistries.getBehavior(behaviorId, player.registryAccess());
+			FocusBehavior behavior = AttunedRegistries.getBehavior(behaviorId, player.getLevel().registryAccess());
 			if (behavior != null) {
 				runBehaviorActivate(behavior, player, focus.stack());
 			}
@@ -297,7 +297,7 @@ public final class AttunedEffects {
 	private static void removeFocus(ServerPlayer player, int slot, AppliedFocus focus) {
 		for (int i = 0; i < focus.modifiers().size(); i++) {
 			ModifierEntry entry = focus.modifiers().get(i);
-			AttributeInstance ai = player.getAttribute(entry.attribute());
+			AttributeInstance ai = player.getAttribute(entry.attribute().value());
 			if (ai == null) {
 				continue;
 			}
@@ -305,7 +305,7 @@ public final class AttunedEffects {
 		}
 
 		focus.behavior().ifPresent(behaviorId -> {
-			FocusBehavior behavior = AttunedRegistries.getBehavior(behaviorId, player.registryAccess());
+			FocusBehavior behavior = AttunedRegistries.getBehavior(behaviorId, player.getLevel().registryAccess());
 			if (behavior != null) {
 				runBehaviorDeactivate(behavior, player, focus.stack());
 			}
@@ -340,7 +340,7 @@ public final class AttunedEffects {
 
 	private static void tickFocus(ServerPlayer player, AppliedFocus focus) {
 		focus.behavior()
-			.map(behaviorId -> AttunedRegistries.getBehavior(behaviorId, player.registryAccess()))
+			.map(behaviorId -> AttunedRegistries.getBehavior(behaviorId, player.getLevel().registryAccess()))
 			.ifPresent(behavior -> runBehaviorTick(behavior, player, focus.stack()));
 	}
 
@@ -378,7 +378,7 @@ public final class AttunedEffects {
 
 	/** A subtle ambient particle aura shown while the player has any active Focus. */
 	private static void spawnAura(ServerPlayer player, Set<Affinity> activeAffinities) {
-		ServerLevel level = (ServerLevel) player.level();
+		ServerLevel level = (ServerLevel) player.getLevel();
 		level.sendParticles(auraParticle(activeAffinities),
 			player.getX(), player.getY() + 1.0, player.getZ(),
 			6, 0.4, 0.9, 0.4, 0.05);

@@ -1,103 +1,94 @@
 package dev.attuned.attunement;
 
-import com.mojang.serialization.Codec;
-import dev.attuned.Attuned;
 import dev.attuned.AttunedConfig;
+import dev.attuned.network.AttunedStatePayload;
 import dev.attuned.pacts.Pact;
 import dev.attuned.pacts.PactTrialProgress;
 import dev.attuned.pacts.PactTrials;
-import net.fabricmc.fabric.api.attachment.v1.AttachmentRegistry;
-import net.fabricmc.fabric.api.attachment.v1.AttachmentType;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.ItemStack;
-
 import java.util.ArrayList;
 import java.util.EnumMap;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.StringTag;
+import net.minecraft.nbt.Tag;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
 
 /**
- * Per-player attunement state: the attunement capacity and the six Focus slots.
- * Both are persistent across restarts and synced to the owning client.
+ * Per-player attunement state for Minecraft versions before Fabric data attachments.
+ * State is stored in a branch-local map and persisted by {@code PlayerAttunedStateMixin}.
  */
 public final class AttunedAttachments {
+	private static final String ROOT_KEY = "Attuned";
+	private static final String CAPACITY_KEY = "Capacity";
+	private static final String INVENTORY_KEY = "Inventory";
+	private static final String PRESETS_KEY = "Presets";
+	private static final String MILESTONES_KEY = "Milestones";
+	private static final String RESONANCE_KEY = "Resonance";
+	private static final String ONBOARDING_KEY = "Onboarding";
+	private static final String PACT_TRIAL_PROGRESS_KEY = "PactTrialProgress";
+	private static final String DISCOVERED_CONFLUENCES_KEY = "DiscoveredConfluences";
+
+	private static final Map<UUID, State> STATES = new HashMap<>();
+	private static boolean initialized;
+
 	private AttunedAttachments() {}
 
 	public static final int MAX_PRESETS = 9;
 
-	public static final AttachmentType<Integer> CAPACITY = AttachmentRegistry.<Integer>builder()
-			.initializer(() -> AttunedConfig.get().startingCapacity())
-			.persistent(Codec.INT)
-			.copyOnDeath()
-			.buildAndRegister(new ResourceLocation(Attuned.MOD_ID, "capacity"));
-
-	public static final AttachmentType<AttunedInv> INVENTORY = AttachmentRegistry.<AttunedInv>builder()
-			.initializer(AttunedInv::empty)
-			.persistent(AttunedInv.CODEC)
-			.copyOnDeath()
-			.buildAndRegister(new ResourceLocation(Attuned.MOD_ID, "inventory"));
-
-	/** The first synced list attachment: named Focus loadouts for the owning client. */
-	public static final AttachmentType<List<FocusPreset>> PRESETS = AttachmentRegistry.<List<FocusPreset>>builder()
-			.initializer(() -> List.of())
-			.persistent(FocusPreset.CODEC.listOf())
-			.copyOnDeath()
-			.buildAndRegister(new ResourceLocation(Attuned.MOD_ID, "presets"));
-
-	/** Ids of the progression milestones a player has already claimed. */
-	public static final AttachmentType<List<String>> MILESTONES = AttachmentRegistry.<List<String>>builder()
-			.initializer(() -> List.of())
-			.persistent(Codec.STRING.listOf())
-			.copyOnDeath()
-			.buildAndRegister(new ResourceLocation(Attuned.MOD_ID, "milestones"));
-
-	/**
-	 * Combat resonance, the {@code [0, 1]} gauge that gates Apex. Persists
-	 * across death so a player who has earned their way up to the Apex
-	 * threshold keeps it after respawning; otherwise dying inside an empowered
-	 * fight would silently strip the capstone the player just earned.
-	 */
-	public static final AttachmentType<Float> RESONANCE = AttachmentRegistry.<Float>builder()
-			.initializer(() -> 0.0F)
-			.persistent(Codec.FLOAT)
-			.copyOnDeath()
-			.buildAndRegister(new ResourceLocation(Attuned.MOD_ID, "resonance"));
-
-	/** Ids of one-time onboarding toasts a player has already seen. */
-	public static final AttachmentType<List<String>> ONBOARDING = AttachmentRegistry.<List<String>>builder()
-			.initializer(() -> List.of())
-			.persistent(Codec.STRING.listOf())
-			.copyOnDeath()
-			.buildAndRegister(new ResourceLocation(Attuned.MOD_ID, "onboarding"));
-
-	/** Per-pact trial counters and permanent Tier 4 completions. Synced for the journal. */
-	public static final AttachmentType<PactTrialProgress> PACT_TRIAL_PROGRESS =
-		AttachmentRegistry.<PactTrialProgress>builder()
-			.initializer(() -> PactTrialProgress.EMPTY)
-			.persistent(PactTrialProgress.CODEC)
-			.copyOnDeath()
-			.buildAndRegister(new ResourceLocation(Attuned.MOD_ID, "pact_trial_progress"));
-
-	/** Confluence ids this player has discovered (each first activation). Synced for the journal. */
-	public static final AttachmentType<List<String>> DISCOVERED_CONFLUENCES =
-		AttachmentRegistry.<List<String>>builder()
-			.initializer(() -> List.of())
-			.persistent(Codec.STRING.listOf())
-			.copyOnDeath()
-			.buildAndRegister(new ResourceLocation(Attuned.MOD_ID, "discovered_confluences"));
-
 	/** Per-pact trial progress surfaced in the journal; trials runtime fills this in. */
 	public record PactTrialState(int progress, int goal, boolean tier4Complete) {}
 
-	/** Forces this class to load so the attachment types register during mod init. */
-	public static void init() {}
+	/** Installs the branch-local sync hook used before Fabric data attachments. */
+	public static void init() {
+		if (initialized) {
+			return;
+		}
+		initialized = true;
+		ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> sync(handler.player));
+	}
+
+	public static void copy(Player from, Player to) {
+		STATES.put(to.getUUID(), state(from).copy());
+		sync(to);
+	}
+
+	public static void load(Player player, CompoundTag playerTag) {
+		if (playerTag == null || !playerTag.contains(ROOT_KEY, Tag.TAG_COMPOUND)) {
+			return;
+		}
+		STATES.put(player.getUUID(), State.fromTag(playerTag.getCompound(ROOT_KEY)));
+	}
+
+	public static void save(Player player, CompoundTag playerTag) {
+		if (playerTag != null) {
+			playerTag.put(ROOT_KEY, state(player).toTag());
+		}
+	}
+
+	public static void applySync(Player player, CompoundTag tag) {
+		if (player != null && tag != null) {
+			STATES.put(player.getUUID(), State.fromTag(tag));
+		}
+	}
+
+	public static void sync(Player player) {
+		if (player instanceof ServerPlayer serverPlayer) {
+			ServerPlayNetworking.send(serverPlayer, new AttunedStatePayload(state(serverPlayer).toTag()));
+		}
+	}
 
 	/**
 	 * Synced trial progress per {@link Pact}. Returns an empty map when {@code player}
-	 * is null; otherwise reads the attachment with {@link PactTrialProgress#EMPTY} as
-	 * the defensive fallback.
+	 * is null; otherwise reads the branch-local pact progress state.
 	 */
 	public static Map<Pact, PactTrialState> getPactTrialProgress(Player player) {
 		if (player == null) {
@@ -113,12 +104,22 @@ public final class AttunedAttachments {
 		return Map.copyOf(out);
 	}
 
+	public static PactTrialProgress pactTrialProgress(Player player) {
+		return state(player).pactTrialProgress;
+	}
+
+	public static void setPactTrialProgress(Player player, PactTrialProgress progress) {
+		state(player).pactTrialProgress = progress == null ? PactTrialProgress.EMPTY : progress;
+		sync(player);
+	}
+
 	public static int getCapacity(Player player) {
-		return clampCapacity(player.getAttachedOrElse(CAPACITY, 0));
+		return clampCapacity(state(player).capacity);
 	}
 
 	public static void setCapacity(Player player, int value) {
-		player.setAttached(CAPACITY, clampCapacity(value));
+		state(player).capacity = clampCapacity(value);
+		sync(player);
 	}
 
 	private static int clampCapacity(int value) {
@@ -126,7 +127,7 @@ public final class AttunedAttachments {
 	}
 
 	public static AttunedInv getInventory(Player player) {
-		return player.getAttachedOrElse(INVENTORY, AttunedInv.empty());
+		return state(player).inventory;
 	}
 
 	public static void setSlot(Player player, int slot, ItemStack stack) {
@@ -134,16 +135,15 @@ public final class AttunedAttachments {
 			return;
 		}
 		if (stack == null || stack.isEmpty()) {
-			player.setAttached(INVENTORY, getInventory(player).with(slot, ItemStack.EMPTY));
+			state(player).inventory = getInventory(player).with(slot, ItemStack.EMPTY);
+			sync(player);
 			return;
 		}
 		if (Attunement.definitionFor(player, stack).isEmpty()) {
 			return;
 		}
-		// Read through getInventory (never null — falls back to an empty inventory),
-		// then replace the whole value. Do not use modifyAttached here: it passes
-		// null to its operator when the attachment has never been set.
-		player.setAttached(INVENTORY, getInventory(player).with(slot, cappedSlotStack(stack)));
+		state(player).inventory = getInventory(player).with(slot, cappedSlotStack(stack));
+		sync(player);
 	}
 
 	private static ItemStack cappedSlotStack(ItemStack stack) {
@@ -153,7 +153,7 @@ public final class AttunedAttachments {
 	}
 
 	public static List<FocusPreset> getPresets(Player player) {
-		return normalizePresets(player.getAttachedOrElse(PRESETS, List.of()));
+		return normalizePresets(state(player).presets);
 	}
 
 	private static List<FocusPreset> normalizePresets(List<FocusPreset> presets) {
@@ -179,7 +179,8 @@ public final class AttunedAttachments {
 		for (int i = 0; i < updated.size(); i++) {
 			if (updated.get(i).name().equals(preset.name())) {
 				updated.set(i, preset);
-				player.setAttached(PRESETS, List.copyOf(updated));
+				state(player).presets = List.copyOf(updated);
+				sync(player);
 				return;
 			}
 		}
@@ -187,7 +188,8 @@ public final class AttunedAttachments {
 			return;
 		}
 		updated.add(preset);
-		player.setAttached(PRESETS, List.copyOf(updated));
+		state(player).presets = List.copyOf(updated);
+		sync(player);
 	}
 
 	public static void deletePreset(Player player, int index) {
@@ -197,13 +199,14 @@ public final class AttunedAttachments {
 		}
 		List<FocusPreset> updated = new ArrayList<>(current);
 		updated.remove(index);
-		player.setAttached(PRESETS, List.copyOf(updated));
+		state(player).presets = List.copyOf(updated);
+		sync(player);
 	}
 
 	/** Whether the player has already claimed the milestone with the given id. */
 	public static boolean hasMilestone(Player player, String id) {
 		return normalizedAttachmentId(id)
-			.map(milestoneId -> player.getAttachedOrElse(MILESTONES, List.of()).contains(milestoneId))
+			.map(milestoneId -> state(player).milestones.contains(milestoneId))
 			.orElse(false);
 	}
 
@@ -214,21 +217,22 @@ public final class AttunedAttachments {
 			return;
 		}
 		String milestoneId = normalized.get();
-		List<String> claimed = player.getAttachedOrElse(MILESTONES, List.of());
-		if (claimed.contains(milestoneId)) {
+		if (state(player).milestones.contains(milestoneId)) {
 			return;
 		}
-		List<String> updated = new ArrayList<>(claimed);
+		List<String> updated = new ArrayList<>(state(player).milestones);
 		updated.add(milestoneId);
-		player.setAttached(MILESTONES, List.copyOf(updated));
+		state(player).milestones = List.copyOf(updated);
+		sync(player);
 	}
 
 	public static float getResonance(Player player) {
-		return clampResonance(player.getAttachedOrElse(RESONANCE, 0.0F));
+		return clampResonance(state(player).resonance);
 	}
 
 	public static void setResonance(Player player, float value) {
-		player.setAttached(RESONANCE, clampResonance(value));
+		state(player).resonance = clampResonance(value);
+		sync(player);
 	}
 
 	private static float clampResonance(float value) {
@@ -241,7 +245,7 @@ public final class AttunedAttachments {
 	/** Whether this player has already seen the onboarding toast with the given id. */
 	public static boolean sawOnboarding(Player player, String id) {
 		return normalizedAttachmentId(id)
-			.map(onboardingId -> player.getAttachedOrElse(ONBOARDING, List.of()).contains(onboardingId))
+			.map(onboardingId -> state(player).onboarding.contains(onboardingId))
 			.orElse(false);
 	}
 
@@ -252,18 +256,18 @@ public final class AttunedAttachments {
 			return;
 		}
 		String onboardingId = normalized.get();
-		List<String> seen = player.getAttachedOrElse(ONBOARDING, List.of());
-		if (seen.contains(onboardingId)) {
+		if (state(player).onboarding.contains(onboardingId)) {
 			return;
 		}
-		List<String> updated = new ArrayList<>(seen);
+		List<String> updated = new ArrayList<>(state(player).onboarding);
 		updated.add(onboardingId);
-		player.setAttached(ONBOARDING, List.copyOf(updated));
+		state(player).onboarding = List.copyOf(updated);
+		sync(player);
 	}
 
 	/** Confluence ids this player has discovered, in discovery order. */
 	public static List<String> getDiscoveredConfluences(Player player) {
-		return player.getAttachedOrElse(DISCOVERED_CONFLUENCES, List.of());
+		return state(player).discoveredConfluences;
 	}
 
 	/** Records a Confluence id as discovered. A no-op if already discovered. Server-side writes only. */
@@ -273,13 +277,13 @@ public final class AttunedAttachments {
 			return;
 		}
 		String confluenceId = normalized.get();
-		List<String> discovered = player.getAttachedOrElse(DISCOVERED_CONFLUENCES, List.of());
-		if (discovered.contains(confluenceId)) {
+		if (state(player).discoveredConfluences.contains(confluenceId)) {
 			return;
 		}
-		List<String> updated = new ArrayList<>(discovered);
+		List<String> updated = new ArrayList<>(state(player).discoveredConfluences);
 		updated.add(confluenceId);
-		player.setAttached(DISCOVERED_CONFLUENCES, List.copyOf(updated));
+		state(player).discoveredConfluences = List.copyOf(updated);
+		sync(player);
 	}
 
 	private static Optional<String> normalizedAttachmentId(String id) {
@@ -288,5 +292,100 @@ public final class AttunedAttachments {
 		}
 		String normalized = id.trim();
 		return normalized.isEmpty() ? Optional.empty() : Optional.of(normalized);
+	}
+
+	private static State state(Player player) {
+		return STATES.computeIfAbsent(player.getUUID(), id -> State.empty());
+	}
+
+	private static ListTag stringList(List<String> values) {
+		ListTag list = new ListTag();
+		for (String value : values) {
+			list.add(StringTag.valueOf(value));
+		}
+		return list;
+	}
+
+	private static List<String> readStringList(CompoundTag tag, String key) {
+		List<String> values = new ArrayList<>();
+		ListTag list = tag.getList(key, Tag.TAG_STRING);
+		for (int i = 0; i < list.size(); i++) {
+			values.add(list.getString(i));
+		}
+		return List.copyOf(values);
+	}
+
+	private static final class State {
+		private int capacity;
+		private AttunedInv inventory;
+		private List<FocusPreset> presets;
+		private List<String> milestones;
+		private float resonance;
+		private List<String> onboarding;
+		private PactTrialProgress pactTrialProgress;
+		private List<String> discoveredConfluences;
+
+		private State(
+				int capacity,
+				AttunedInv inventory,
+				List<FocusPreset> presets,
+				List<String> milestones,
+				float resonance,
+				List<String> onboarding,
+				PactTrialProgress pactTrialProgress,
+				List<String> discoveredConfluences) {
+			this.capacity = clampCapacity(capacity);
+			this.inventory = inventory == null ? AttunedInv.empty() : inventory;
+			this.presets = normalizePresets(presets);
+			this.milestones = milestones == null ? List.of() : List.copyOf(milestones);
+			this.resonance = clampResonance(resonance);
+			this.onboarding = onboarding == null ? List.of() : List.copyOf(onboarding);
+			this.pactTrialProgress = pactTrialProgress == null ? PactTrialProgress.EMPTY : pactTrialProgress;
+			this.discoveredConfluences = discoveredConfluences == null ? List.of() : List.copyOf(discoveredConfluences);
+		}
+
+		private static State empty() {
+			return new State(AttunedConfig.get().startingCapacity(), AttunedInv.empty(), List.of(), List.of(),
+				0.0F, List.of(), PactTrialProgress.EMPTY, List.of());
+		}
+
+		private State copy() {
+			return new State(capacity, inventory, presets, milestones, resonance, onboarding,
+				pactTrialProgress, discoveredConfluences);
+		}
+
+		private CompoundTag toTag() {
+			CompoundTag tag = new CompoundTag();
+			tag.putInt(CAPACITY_KEY, capacity);
+			tag.put(INVENTORY_KEY, inventory.toTag());
+			ListTag presetTags = new ListTag();
+			for (FocusPreset preset : presets) {
+				presetTags.add(preset.toTag());
+			}
+			tag.put(PRESETS_KEY, presetTags);
+			tag.put(MILESTONES_KEY, stringList(milestones));
+			tag.putFloat(RESONANCE_KEY, resonance);
+			tag.put(ONBOARDING_KEY, stringList(onboarding));
+			tag.put(PACT_TRIAL_PROGRESS_KEY, pactTrialProgress.toTag());
+			tag.put(DISCOVERED_CONFLUENCES_KEY, stringList(discoveredConfluences));
+			return tag;
+		}
+
+		private static State fromTag(CompoundTag tag) {
+			List<FocusPreset> presets = new ArrayList<>();
+			ListTag presetTags = tag.getList(PRESETS_KEY, Tag.TAG_COMPOUND);
+			for (int i = 0; i < presetTags.size(); i++) {
+				presets.add(FocusPreset.fromTag(presetTags.getCompound(i)));
+			}
+			return new State(
+				tag.contains(CAPACITY_KEY) ? tag.getInt(CAPACITY_KEY) : AttunedConfig.get().startingCapacity(),
+				AttunedInv.fromTag(tag.getCompound(INVENTORY_KEY)),
+				presets,
+				readStringList(tag, MILESTONES_KEY),
+				tag.getFloat(RESONANCE_KEY),
+				readStringList(tag, ONBOARDING_KEY),
+				PactTrialProgress.fromTag(tag.getCompound(PACT_TRIAL_PROGRESS_KEY)),
+				readStringList(tag, DISCOVERED_CONFLUENCES_KEY));
+		}
 	}
 }

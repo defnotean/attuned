@@ -3,11 +3,15 @@ package dev.attuned.content;
 import dev.attuned.AttunedConfig;
 import dev.attuned.Attuned;
 import dev.attuned.api.focus.Affinity;
-import dev.attuned.api.focus.FocusDefinition;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import java.io.IOException;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import net.minecraft.server.packs.resources.Resource;
+import net.minecraft.server.packs.resources.ResourceManager;
 import net.fabricmc.fabric.api.loot.v2.FabricLootTableBuilder;
 import net.fabricmc.fabric.api.loot.v2.LootTableEvents;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -152,16 +156,16 @@ public final class AttunedLoot {
 			return;
 		}
 		initialized = true;
-		LootTableEvents.MODIFY.register((key, tableBuilder, source) -> {
-			Drop drop = TARGETS.get(key.location());
+		LootTableEvents.MODIFY.register((resourceManager, lootManager, id, tableBuilder, source) -> {
+			Drop drop = TARGETS.get(id);
 			if (drop == null) {
 				return;
 			}
 			AttunedConfig config = AttunedConfig.get();
 			float chance = focusChance(config, drop);
 			float fragmentChance = fragmentChance(config, chance);
-			List<FocusEntry> focusEntries = focusEntries();
-			if (modifiesExistingPools(key.location())) {
+			List<FocusEntry> focusEntries = focusEntries(resourceManager);
+			if (modifiesExistingPools(id)) {
 				((FabricLootTableBuilder) tableBuilder).modifyPools(pool -> {
 					float focusEntryChance = chance / Math.max(1, focusEntries.size());
 					for (FocusEntry focus : focusEntries) {
@@ -210,13 +214,50 @@ public final class AttunedLoot {
 		};
 	}
 
-	/** Focus items for the 1.20.6 loot callback, which does not expose dynamic registries. */
-	private static List<FocusEntry> focusEntries() {
+	/** Focus items for legacy loot callbacks, which expose resources but not dynamic registries. */
+	private static List<FocusEntry> focusEntries(ResourceManager resourceManager) {
+		List<FocusEntry> entries = resourceManager
+			.listResources("attuned/focus", id -> id.getPath().endsWith(".json"))
+			.values()
+			.stream()
+			.map(AttunedLoot::focusEntry)
+			.filter(Objects::nonNull)
+			.sorted(Comparator.comparing(focus ->
+				BuiltInRegistries.ITEM.getKey(focus.item()).toString()))
+			.toList();
+		if (!entries.isEmpty()) {
+			return entries;
+		}
 		return AttunedContent.FOCI.stream()
 			.map(item -> new FocusEntry(item, new FocusMeta(null, null)))
 			.sorted(Comparator.comparing(focus ->
 				BuiltInRegistries.ITEM.getKey(focus.item()).toString()))
 			.toList();
+	}
+
+	private static FocusEntry focusEntry(Resource resource) {
+		try (var reader = resource.openAsReader()) {
+			JsonObject root = JsonParser.parseReader(reader).getAsJsonObject();
+			ResourceLocation itemId = new ResourceLocation(root.get("item").getAsString());
+			return BuiltInRegistries.ITEM.getOptional(itemId)
+				.map(item -> new FocusEntry(item, focusMeta(root)))
+				.orElse(null);
+		} catch (IOException | IllegalArgumentException | IllegalStateException | NullPointerException ex) {
+			Attuned.LOGGER.warn("Ignoring malformed Focus loot metadata from {}", resource.sourcePackId(), ex);
+			return null;
+		}
+	}
+
+	private static FocusMeta focusMeta(JsonObject root) {
+		Affinity affinity = null;
+		ResourceLocation faction = null;
+		if (root.has("affinity")) {
+			affinity = Affinity.valueOf(root.get("affinity").getAsString().toUpperCase());
+		}
+		if (root.has("faction")) {
+			faction = new ResourceLocation(root.get("faction").getAsString());
+		}
+		return new FocusMeta(affinity, faction);
 	}
 
 	/** The pool weight for a Focus in a structure with the given affinity theme. */

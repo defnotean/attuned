@@ -99,11 +99,11 @@ public final class PactTrials {
 		int goal = goalOf(pact);
 		checkTrialMilestones(player, pact, current, next, goal);
 		if (next >= goal) {
-			player.setAttached(AttunedAttachments.PACT_TRIAL_PROGRESS, progress.withCounter(id, goal));
+			AttunedAttachments.setPactTrialProgress(player, progress.withCounter(id, goal));
 			onComplete(player, pact);
 			return;
 		}
-		player.setAttached(AttunedAttachments.PACT_TRIAL_PROGRESS, progress.withCounter(id, next));
+		AttunedAttachments.setPactTrialProgress(player, progress.withCounter(id, next));
 	}
 
 	public static int progress(Player player, Pact pact) {
@@ -124,12 +124,12 @@ public final class PactTrials {
 		}
 		String id = pactId(pact);
 		PactTrialProgress progress = get(player).withTier4Completed(id);
-		player.setAttached(AttunedAttachments.PACT_TRIAL_PROGRESS, progress);
+		AttunedAttachments.setPactTrialProgress(player, progress);
 		AttunedAdvancements.award(player, "attunement/pact_" + id + "_trial");
 		PlayerMessages.system(player, Component.translatable("pact.attuned." + id + "_trial.title")
 			.withStyle(pact.chatColor(), ChatFormatting.BOLD)
 			.append(Component.translatable("pact.attuned.trial.complete").withStyle(ChatFormatting.GRAY)));
-		ServerLevel level = (ServerLevel) player.level();
+		ServerLevel level = (ServerLevel) player.getLevel();
 		level.playSound(null, player.blockPosition(),
 			SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, SoundSource.PLAYERS, 0.8F, 1.2F);
 		level.playSound(null, player.blockPosition(),
@@ -203,7 +203,7 @@ public final class PactTrials {
 			windrunnerTrialRuns.remove(id);
 			return;
 		}
-		ResourceKey<Level> dimension = player.level().dimension();
+		ResourceKey<Level> dimension = player.getLevel().dimension();
 		double x = player.getX();
 		double z = player.getZ();
 		WindrunnerTrialRun previous = windrunnerTrialRuns.get(id);
@@ -242,7 +242,7 @@ public final class PactTrials {
 				continue;
 			}
 			AttunedAttachments.markOnboarding(player, onboardId);
-			((ServerLevel) player.level()).playSound(null, player.blockPosition(),
+			((ServerLevel) player.getLevel()).playSound(null, player.blockPosition(),
 				SoundEvents.EXPERIENCE_ORB_PICKUP, SoundSource.PLAYERS, 0.35F, 1.25F);
 			PlayerMessages.overlay(player,
 				Component.translatable("pact.attuned." + id + "_trial.title")
@@ -253,7 +253,7 @@ public final class PactTrials {
 	}
 
 	private static PactTrialProgress get(Player player) {
-		return player.getAttachedOrElse(AttunedAttachments.PACT_TRIAL_PROGRESS, PactTrialProgress.EMPTY);
+		return AttunedAttachments.pactTrialProgress(player);
 	}
 
 	static String pactId(Pact pact) {
@@ -276,7 +276,7 @@ public final class PactTrials {
 
 	private static boolean nearTrialPressure(ServerPlayer player) {
 		AABB area = player.getBoundingBox().inflate(TRIAL_COMBAT_RADIUS);
-		for (LivingEntity entity : player.level().getEntitiesOfClass(LivingEntity.class, area,
+		for (LivingEntity entity : player.getLevel().getEntitiesOfClass(LivingEntity.class, area,
 				target -> target != player
 					&& target.isAlive()
 					&& CombatTargets.isHostileOrPvpOpponent(target, player))) {

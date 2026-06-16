@@ -40,7 +40,7 @@ public final class CombatFeedback {
 		if (delta < GAIN_THRESHOLD || !cooldownReady(player)) {
 			return;
 		}
-		ServerLevel level = (ServerLevel) player.level();
+		ServerLevel level = (ServerLevel) player.getLevel();
 		double x = player.getX();
 		double y = player.getY() + player.getBbHeight() * 0.55;
 		double z = player.getZ();
@@ -56,7 +56,7 @@ public final class CombatFeedback {
 		if (!cooldownReady(player)) {
 			return;
 		}
-		ServerLevel level = (ServerLevel) player.level();
+		ServerLevel level = (ServerLevel) player.getLevel();
 		double x = player.getX();
 		double y = player.getY() + player.getBbHeight() * 0.55;
 		double z = player.getZ();
@@ -67,7 +67,7 @@ public final class CombatFeedback {
 	}
 
 	public static void resonanceArmed(ServerPlayer player) {
-		ServerLevel level = (ServerLevel) player.level();
+		ServerLevel level = (ServerLevel) player.getLevel();
 		double x = player.getX();
 		double y = player.getY() + player.getBbHeight() * 0.65;
 		double z = player.getZ();
@@ -80,7 +80,7 @@ public final class CombatFeedback {
 		if (streak < 3) {
 			return;
 		}
-		ServerLevel level = (ServerLevel) player.level();
+		ServerLevel level = (ServerLevel) player.getLevel();
 		double x = player.getX();
 		double y = player.getY() + player.getBbHeight() * 0.7;
 		double z = player.getZ();
@@ -97,7 +97,7 @@ public final class CombatFeedback {
 		if (!cooldownReady(player)) {
 			return;
 		}
-		ServerLevel level = (ServerLevel) player.level();
+		ServerLevel level = (ServerLevel) player.getLevel();
 		double x = player.getX();
 		double y = player.getY() + player.getBbHeight() * 0.5;
 		double z = player.getZ();
@@ -110,7 +110,7 @@ public final class CombatFeedback {
 	}
 
 	public static void pactTactical(ServerPlayer player, Pact pact, boolean overcharge) {
-		ServerLevel level = (ServerLevel) player.level();
+		ServerLevel level = (ServerLevel) player.getLevel();
 		double x = player.getX();
 		double y = player.getY() + player.getBbHeight() * 0.55;
 		double z = player.getZ();
@@ -159,9 +159,9 @@ public final class CombatFeedback {
 					SoundEvents.WARDEN_HEARTBEAT, SoundSource.PLAYERS, 0.35F, 1.6F);
 			}
 			case UNTETHERED -> {
-				level.sendParticles(ParticleTypes.GUST, x, y, z, 8, 0.45, 0.25, 0.45, 0.05);
+				level.sendParticles(ParticleTypes.CLOUD, x, y, z, 8, 0.45, 0.25, 0.45, 0.05);
 				level.playSound(null, player.blockPosition(),
-					SoundEvents.WIND_CHARGE_THROW, SoundSource.PLAYERS, 0.55F, 1.15F);
+					SoundEvents.PHANTOM_FLAP, SoundSource.PLAYERS, 0.55F, 1.15F);
 			}
 		}
 		level.sendParticles(ParticleCompat.dust(color, overcharge ? 1.1F : 0.85F),
@@ -173,7 +173,7 @@ public final class CombatFeedback {
 	}
 
 	public static void apexProc(ServerPlayer player, Apex.Capstone capstone) {
-		ServerLevel level = (ServerLevel) player.level();
+		ServerLevel level = (ServerLevel) player.getLevel();
 		double x = player.getX();
 		double y = player.getY() + player.getBbHeight() * 0.6;
 		double z = player.getZ();
@@ -185,7 +185,7 @@ public final class CombatFeedback {
 
 	/** Riptide slowness drag landed on a foe. */
 	public static void riptideDrag(ServerPlayer player, LivingEntity victim) {
-		ServerLevel level = (ServerLevel) player.level();
+		ServerLevel level = (ServerLevel) player.getLevel();
 		double x = victim.getX();
 		double y = victim.getY() + victim.getBbHeight() * 0.4;
 		double z = victim.getZ();
@@ -199,7 +199,7 @@ public final class CombatFeedback {
 
 	/** Crucible ignite landed on a foe. */
 	public static void crucibleIgnite(ServerPlayer player, LivingEntity victim) {
-		ServerLevel level = (ServerLevel) player.level();
+		ServerLevel level = (ServerLevel) player.getLevel();
 		double x = victim.getX();
 		double y = victim.getY() + victim.getBbHeight() * 0.5;
 		double z = victim.getZ();
@@ -213,7 +213,7 @@ public final class CombatFeedback {
 
 	/** Bloomward lifesteal heal returned to the attacker. */
 	public static void bloomwardHeal(ServerPlayer player) {
-		ServerLevel level = (ServerLevel) player.level();
+		ServerLevel level = (ServerLevel) player.getLevel();
 		double x = player.getX();
 		double y = player.getY() + player.getBbHeight() * 0.55;
 		double z = player.getZ();
@@ -226,7 +226,7 @@ public final class CombatFeedback {
 
 	/** Gloaming weakness landed on a foe. */
 	public static void gloamingWeakness(ServerPlayer player, LivingEntity victim) {
-		ServerLevel level = (ServerLevel) player.level();
+		ServerLevel level = (ServerLevel) player.getLevel();
 		double x = victim.getX();
 		double y = victim.getY() + victim.getBbHeight() * 0.5;
 		double z = victim.getZ();
@@ -239,7 +239,7 @@ public final class CombatFeedback {
 
 	/** Judgment bonus strike on a wounded Fury-aligned foe. */
 	public static void judgmentStrike(ServerPlayer player, LivingEntity victim) {
-		ServerLevel level = (ServerLevel) player.level();
+		ServerLevel level = (ServerLevel) player.getLevel();
 		double x = victim.getX();
 		double y = victim.getY() + victim.getBbHeight() * 0.55;
 		double z = victim.getZ();
@@ -253,7 +253,7 @@ public final class CombatFeedback {
 
 	/** Maelstrom damage bonus hit — light discord spark. */
 	public static void maelstromHit(ServerPlayer player, LivingEntity victim) {
-		ServerLevel level = (ServerLevel) player.level();
+		ServerLevel level = (ServerLevel) player.getLevel();
 		double x = victim.getX();
 		double y = victim.getY() + victim.getBbHeight() * 0.5;
 		double z = victim.getZ();
@@ -266,7 +266,7 @@ public final class CombatFeedback {
 
 	/** A guaranteed Execute finisher — heavier than a generic capstone proc. */
 	public static void executeFinisher(ServerPlayer player, LivingEntity victim) {
-		ServerLevel level = (ServerLevel) player.level();
+		ServerLevel level = (ServerLevel) player.getLevel();
 		double x = victim.getX();
 		double y = victim.getY() + victim.getBbHeight() * 0.55;
 		double z = victim.getZ();
@@ -285,7 +285,7 @@ public final class CombatFeedback {
 		if (!cooldownReady(player)) {
 			return;
 		}
-		ServerLevel level = (ServerLevel) player.level();
+		ServerLevel level = (ServerLevel) player.getLevel();
 		double x = player.getX();
 		double y = player.getY() + player.getBbHeight() * 0.55;
 		double z = player.getZ();
@@ -302,7 +302,7 @@ public final class CombatFeedback {
 		if (!cooldownReady(player)) {
 			return;
 		}
-		ServerLevel level = (ServerLevel) player.level();
+		ServerLevel level = (ServerLevel) player.getLevel();
 		double x = player.getX();
 		double y = player.getY() + player.getBbHeight() * 0.6;
 		double z = player.getZ();
@@ -313,7 +313,7 @@ public final class CombatFeedback {
 	}
 
 	public static void abilityCast(ServerPlayer player, AbilityFlavor flavor) {
-		ServerLevel level = (ServerLevel) player.level();
+		ServerLevel level = (ServerLevel) player.getLevel();
 		double x = player.getX();
 		double y = player.getY() + player.getBbHeight() * 0.55;
 		double z = player.getZ();
@@ -368,13 +368,13 @@ public final class CombatFeedback {
 	}
 
 	private static boolean cooldownReady(ServerPlayer player) {
-		long now = player.level().getGameTime();
+		long now = player.getLevel().getGameTime();
 		Long last = LAST_RESONANCE_FEEDBACK.get(player.getUUID());
 		return last == null || now - last >= COOLDOWN_TICKS;
 	}
 
 	private static void markFeedback(ServerPlayer player) {
-		LAST_RESONANCE_FEEDBACK.put(player.getUUID(), player.level().getGameTime());
+		LAST_RESONANCE_FEEDBACK.put(player.getUUID(), player.getLevel().getGameTime());
 	}
 
 	static float gainThreshold() {

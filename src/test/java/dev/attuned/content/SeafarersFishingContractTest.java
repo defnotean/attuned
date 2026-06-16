@@ -51,7 +51,8 @@ class SeafarersFishingContractTest {
 			"Netmender should have a short explicit mend cooldown");
 		assertTrue(source.contains("netmenderCooldowns"),
 			"Netmender should track per-player cooldown state");
-		assertTrue(source.contains("player.level().getGameTime()"),
+		assertTrue(source.contains("player.level().getGameTime()")
+				|| source.contains("player.getLevel().getGameTime()"),
 			"Netmender should compare cooldowns against server game time");
 		assertTrue(source.contains("rod.isDamageableItem()"),
 			"Netmender should only try to mend damageable fishing rod stacks");

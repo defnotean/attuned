@@ -68,7 +68,7 @@ public final class UpdraftLiftClient {
 		if (!Minecraft.getInstance().options.keyJump.isDown()) {
 			return false;
 		}
-		return player.isFallFlying() || (!player.onGround() && !player.isInWater() && !player.isPassenger());
+		return player.isFallFlying() || (!player.isOnGround() && !player.isInWater() && !player.isPassenger());
 	}
 
 	private static boolean wantsBrake(Player player) {

@@ -25,7 +25,8 @@ class QuickApplyPresetContractTest {
 		String payload = read(PAYLOAD);
 		assertTrue(payload.contains("record QuickApplyPresetPayload(int index)"),
 			"Quick apply carries only a preset index.");
-		assertTrue(payload.contains("ByteBufCodecs.VAR_INT"),
+		assertTrue(payload.contains("ByteBufCodecs.VAR_INT")
+				|| payload.contains("readVarInt()"),
 			"The index serializes as a var-int.");
 	}
 
@@ -33,7 +34,8 @@ class QuickApplyPresetContractTest {
 	void quickApplyIsRegisteredAndDoesNotRequireTheOpenSatchelMenu() throws IOException {
 		String net = read(NET);
 		assertTrue(net.contains("PayloadTypeRegistry.serverboundPlay().register(QuickApplyPresetPayload.TYPE")
-				|| net.contains("PayloadTypeRegistry.playC2S().register(QuickApplyPresetPayload.TYPE"),
+				|| net.contains("PayloadTypeRegistry.playC2S().register(QuickApplyPresetPayload.TYPE")
+				|| net.contains("ServerPlayNetworking.registerGlobalReceiver(QuickApplyPresetPayload.TYPE"),
 			"Quick apply payload should be registered serverbound.");
 		assertTrue(net.contains("ServerPlayNetworking.registerGlobalReceiver(QuickApplyPresetPayload.TYPE"),
 			"Quick apply should have a server receiver.");

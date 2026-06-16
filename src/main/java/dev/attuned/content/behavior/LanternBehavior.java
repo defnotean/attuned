@@ -43,10 +43,10 @@ public final class LanternBehavior implements FocusBehavior {
 			return;
 		}
 		ticks.put(id, 0);
-		if (!holdsLight(player) || player.level().getMaxLocalRawBrightness(player.blockPosition()) > MAX_LIGHT) {
+		if (!holdsLight(player) || player.getLevel().getMaxLocalRawBrightness(player.blockPosition()) > MAX_LIGHT) {
 			return;
 		}
-		ServerLevel level = (ServerLevel) player.level();
+		ServerLevel level = (ServerLevel) player.getLevel();
 		AABB area = player.getBoundingBox().inflate(RADIUS);
 		List<LivingEntity> targets = level.getEntitiesOfClass(LivingEntity.class, area, target ->
 			target.isAlive() && CombatTargets.isHostileOrPvpOpponent(target, player)

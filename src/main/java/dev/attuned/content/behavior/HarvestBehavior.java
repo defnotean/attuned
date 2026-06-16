@@ -56,7 +56,7 @@ public final class HarvestBehavior implements FocusBehavior {
 	}
 
 	private void growNearbyCrops(ServerPlayer player) {
-		ServerLevel level = (ServerLevel) player.level();
+		ServerLevel level = (ServerLevel) player.getLevel();
 		RandomSource random = level.getRandom();
 		BlockPos center = player.blockPosition();
 		int grown = 0;

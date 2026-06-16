@@ -17,11 +17,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
-import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.fabricmc.fabric.api.event.player.UseBlockCallback;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.component.DataComponents;
-import net.minecraft.core.Holder;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -172,7 +169,7 @@ public final class RadiantFocusBehaviors {
 		}
 
 		private void revealVisibleThreats(ServerPlayer player, Cooldown cooldown) {
-			ServerLevel level = (ServerLevel) player.level();
+			ServerLevel level = (ServerLevel) player.getLevel();
 			List<LivingEntity> targets = level.getEntitiesOfClass(LivingEntity.class,
 				player.getBoundingBox().inflate(TARGET_RADIUS),
 				target -> target.isAlive() && CombatTargets.isHostileOrPvpOpponent(target, player)
@@ -245,7 +242,7 @@ public final class RadiantFocusBehaviors {
 
 		@Override
 		public boolean onAbility(ServerPlayer player, ItemStack focus) {
-			ServerLevel level = (ServerLevel) player.level();
+			ServerLevel level = (ServerLevel) player.getLevel();
 			List<LivingEntity> targets = level.getEntitiesOfClass(LivingEntity.class,
 				player.getBoundingBox().inflate(WITNESS_RADIUS),
 				target -> target.isAlive()
@@ -316,7 +313,7 @@ public final class RadiantFocusBehaviors {
 			ticks.remove(player.getUUID());
 		}
 
-		private static void trim(ServerPlayer player, Holder<MobEffect> effect) {
+		private static void trim(ServerPlayer player, MobEffect effect) {
 			MobEffectInstance current = player.getEffect(effect);
 			if (current == null) {
 				return;
@@ -366,11 +363,11 @@ public final class RadiantFocusBehaviors {
 		}
 
 		private static boolean hasCustomName(ItemStack stack) {
-			return !stack.isEmpty() && stack.has(DataComponents.CUSTOM_NAME);
+			return !stack.isEmpty() && stack.hasCustomHoverName();
 		}
 
 		private static boolean nearNamedNonPlayer(ServerPlayer player) {
-			ServerLevel level = (ServerLevel) player.level();
+			ServerLevel level = (ServerLevel) player.getLevel();
 			return !level.getEntitiesOfClass(LivingEntity.class,
 				player.getBoundingBox().inflate(NAMED_ENTITY_RADIUS),
 				target -> target.isAlive()
@@ -383,7 +380,7 @@ public final class RadiantFocusBehaviors {
 			if (luck == null || luck.getModifier(AttributeModifierIds.uuid(LUCK_ID)) != null) {
 				return;
 			}
-			luck.addTransientModifier(new AttributeModifier(AttributeModifierIds.uuid(LUCK_ID), AttributeModifierIds.name(LUCK_ID), LUCK_BONUS, AttributeModifier.Operation.ADD_VALUE));
+			luck.addTransientModifier(new AttributeModifier(AttributeModifierIds.uuid(LUCK_ID), AttributeModifierIds.name(LUCK_ID), LUCK_BONUS, AttributeModifier.Operation.ADDITION));
 		}
 
 		private static void removeLuck(ServerPlayer player) {
@@ -408,11 +405,11 @@ public final class RadiantFocusBehaviors {
 		@Override
 		public void onTick(ServerPlayer player, ItemStack focus) {
 			ThresholdState state = states.computeIfAbsent(player.getUUID(),
-				id -> new ThresholdState(player.level().getMaxLocalRawBrightness(player.blockPosition())));
+				id -> new ThresholdState(player.getLevel().getMaxLocalRawBrightness(player.blockPosition())));
 			if (state.cooldown > 0) {
 				state.cooldown--;
 			}
-			int light = player.level().getMaxLocalRawBrightness(player.blockPosition());
+			int light = player.getLevel().getMaxLocalRawBrightness(player.blockPosition());
 			if (state.cooldown == 0 && state.lastLight <= DARK_LIGHT && light >= BRIGHT_LIGHT
 					&& !player.hasEffect(MobEffects.ABSORPTION)) {
 				player.addEffect(new MobEffectInstance(
@@ -433,7 +430,7 @@ public final class RadiantFocusBehaviors {
 	}
 
 	private static boolean isBright(ServerPlayer player) {
-		return player.level().getMaxLocalRawBrightness(player.blockPosition()) >= BRIGHT_LIGHT;
+		return player.getLevel().getMaxLocalRawBrightness(player.blockPosition()) >= BRIGHT_LIGHT;
 	}
 
 	private static boolean nearLitCandle(ServerPlayer player, int radiusXz, int radiusY) {
@@ -441,7 +438,7 @@ public final class RadiantFocusBehaviors {
 		for (BlockPos pos : BlockPos.betweenClosed(
 				origin.offset(-radiusXz, -radiusY, -radiusXz),
 				origin.offset(radiusXz, radiusY, radiusXz))) {
-			BlockState state = player.level().getBlockState(pos);
+			BlockState state = player.getLevel().getBlockState(pos);
 			if (state.is(BlockTags.CANDLES) && AbstractCandleBlock.isLit(state)) {
 				return true;
 			}
@@ -454,7 +451,7 @@ public final class RadiantFocusBehaviors {
 		for (BlockPos pos : BlockPos.betweenClosed(
 				origin.offset(-radiusXz, -radiusY, -radiusXz),
 				origin.offset(radiusXz, radiusY, radiusXz))) {
-			BlockState state = player.level().getBlockState(pos);
+			BlockState state = player.getLevel().getBlockState(pos);
 			if ((state.is(Blocks.CAMPFIRE) || state.is(Blocks.SOUL_CAMPFIRE))
 					&& state.getValue(CampfireBlock.LIT)) {
 				return true;
@@ -468,7 +465,7 @@ public final class RadiantFocusBehaviors {
 		for (BlockPos pos : BlockPos.betweenClosed(
 				origin.offset(-radius, -radius, -radius),
 				origin.offset(radius, radius, radius))) {
-			if (player.level().getBlockState(pos).is(block)) {
+			if (player.getLevel().getBlockState(pos).is(block)) {
 				return true;
 			}
 		}

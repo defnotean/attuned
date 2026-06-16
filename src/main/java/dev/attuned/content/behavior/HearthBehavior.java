@@ -59,7 +59,7 @@ public final class HearthBehavior implements FocusBehavior {
 		for (BlockPos pos : BlockPos.betweenClosed(
 				origin.offset(-RADIUS_XZ, -RADIUS_Y, -RADIUS_XZ),
 				origin.offset(RADIUS_XZ, RADIUS_Y, RADIUS_XZ))) {
-			BlockState state = player.level().getBlockState(pos);
+			BlockState state = player.getLevel().getBlockState(pos);
 			if ((state.is(Blocks.CAMPFIRE) || state.is(Blocks.SOUL_CAMPFIRE))
 					&& state.getValue(CampfireBlock.LIT)) {
 				return true;

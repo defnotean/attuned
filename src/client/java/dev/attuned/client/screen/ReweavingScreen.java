@@ -1,5 +1,6 @@
 package dev.attuned.client.screen;
 
+import com.mojang.blaze3d.vertex.PoseStack;
 import dev.attuned.Attuned;
 import dev.attuned.menu.ReweavePayload;
 import dev.attuned.menu.ReweavingMenu;
@@ -62,14 +63,16 @@ public class ReweavingScreen extends AbstractContainerScreen<ReweavingMenu> {
 	}
 
 	@Override
-	protected void renderBg(GuiGraphics graphics, float partialTick, int mouseX, int mouseY) {
+	protected void renderBg(PoseStack poseStack, float partialTick, int mouseX, int mouseY) {
+		GuiGraphics graphics = new GuiGraphics(Minecraft.getInstance(), poseStack);
 		graphics.fill(0, 0, this.width, this.height, SCREEN_BACKDROP);
 		graphics.blit(BACKGROUND_TEXTURE, this.leftPos, this.topPos,
 			0.0F, 0.0F, IMAGE_WIDTH, IMAGE_HEIGHT, IMAGE_WIDTH, IMAGE_HEIGHT);
 	}
 
 	@Override
-	protected void renderLabels(GuiGraphics graphics, int mouseX, int mouseY) {
+	protected void renderLabels(PoseStack poseStack, int mouseX, int mouseY) {
+		GuiGraphics graphics = new GuiGraphics(Minecraft.getInstance(), poseStack);
 		graphics.drawString(this.font, this.title, this.titleLabelX, this.titleLabelY, TITLE_TEXT, false);
 		Component hint = hint();
 		int color = canCommit() ? BODY_TEXT : WARNING_TEXT;
@@ -132,7 +135,8 @@ public class ReweavingScreen extends AbstractContainerScreen<ReweavingMenu> {
 		}
 
 		@Override
-		protected void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+		public void renderWidget(PoseStack poseStack, int mouseX, int mouseY, float partialTick) {
+			GuiGraphics graphics = new GuiGraphics(Minecraft.getInstance(), poseStack);
 			int x0 = getX();
 			int y0 = getY();
 			int x1 = x0 + getWidth();
@@ -142,7 +146,7 @@ public class ReweavingScreen extends AbstractContainerScreen<ReweavingMenu> {
 			} else if (isHoveredOrFocused()) {
 				drawButtonOutline(graphics, x0, y0, x1, y1, BUTTON_HOVER_ARGB);
 			}
-			renderString(graphics, Minecraft.getInstance().font, BODY_TEXT);
+			renderString(poseStack, Minecraft.getInstance().font, BODY_TEXT);
 		}
 	}
 }

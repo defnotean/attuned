@@ -28,19 +28,26 @@ class CompassFocusBehaviorContractTest {
 	void beaconCompassUsesVanillaLodestoneTrackerForNeedleAngle() throws IOException {
 		String source = read(BEACON_SOURCE);
 
-		assertTrue(source.contains("new LodestoneTracker(Optional.of(home), false)"),
+		assertTrue(source.contains("new LodestoneTracker(Optional.of(home), false)")
+				|| source.contains("CompassTags.target(home)"),
 			"Beacon should create an untracked lodestone target from the player's respawn point");
-		assertTrue(source.contains("compass.set(DataComponents.LODESTONE_TRACKER, tracker)"),
+		assertTrue(source.contains("compass.set(DataComponents.LODESTONE_TRACKER, tracker)")
+				|| source.contains("CompassTags.setLodestone(compass, tracker)"),
 			"Beacon should write the vanilla tracker component that drives compass angle rendering");
-		assertTrue(source.contains("compass.set(DataComponents.CUSTOM_NAME, BEACON_COMPASS_NAME)"),
+		assertTrue(source.contains("compass.set(DataComponents.CUSTOM_NAME, BEACON_COMPASS_NAME)")
+				|| source.contains("CompassTags.setCustomName(compass, BEACON_COMPASS_NAME)"),
 			"Beacon should give redirected compasses a mod-specific display name");
-		assertTrue(source.contains("compass.remove(DataComponents.LODESTONE_TRACKER)"),
+		assertTrue(source.contains("compass.remove(DataComponents.LODESTONE_TRACKER)")
+				|| source.contains("CompassTags.setLodestone(compass, null)"),
 			"Beacon should remove its temporary tracker when restoring an ordinary compass");
-		assertTrue(source.contains("compass.set(DataComponents.LODESTONE_TRACKER, snapshot.originalTracker)"),
+		assertTrue(source.contains("compass.set(DataComponents.LODESTONE_TRACKER, snapshot.originalTracker)")
+				|| source.contains("CompassTags.setLodestone(compass, snapshot.originalTracker)"),
 			"Beacon should restore pre-existing lodestone bindings");
-		assertTrue(source.contains("compass.remove(DataComponents.CUSTOM_NAME)"),
+		assertTrue(source.contains("compass.remove(DataComponents.CUSTOM_NAME)")
+				|| source.contains("CompassTags.setCustomName(compass, null)"),
 			"Beacon should remove its temporary display name from ordinary compasses");
-		assertTrue(source.contains("compass.set(DataComponents.CUSTOM_NAME, snapshot.originalName)"),
+		assertTrue(source.contains("compass.set(DataComponents.CUSTOM_NAME, snapshot.originalName)")
+				|| source.contains("CompassTags.setCustomName(compass, snapshot.originalName)"),
 			"Beacon should restore player-supplied custom names");
 		assertTrue(source.contains("held.is(Items.COMPASS)"),
 			"Beacon should apply only to held vanilla compasses");
@@ -60,11 +67,14 @@ class CompassFocusBehaviorContractTest {
 	void driftglassCompassUsesReturnPointAndRestoresOnServerStop() throws IOException {
 		String source = read(DRIFTGLASS_SOURCE);
 
-		assertTrue(source.contains("new LodestoneTracker(Optional.of(point), false)"),
+		assertTrue(source.contains("new LodestoneTracker(Optional.of(point), false)")
+				|| source.contains("CompassTags.target(point)"),
 			"Driftglass should create an untracked lodestone target from the latest return point");
-		assertTrue(source.contains("compass.set(DataComponents.LODESTONE_TRACKER, tracker)"),
+		assertTrue(source.contains("compass.set(DataComponents.LODESTONE_TRACKER, tracker)")
+				|| source.contains("CompassTags.setLodestone(compass, tracker)"),
 			"Driftglass should write the vanilla tracker component that drives compass angle rendering");
-		assertTrue(source.contains("compass.set(DataComponents.CUSTOM_NAME, DRIFTGLASS_COMPASS_NAME)"),
+		assertTrue(source.contains("compass.set(DataComponents.CUSTOM_NAME, DRIFTGLASS_COMPASS_NAME)")
+				|| source.contains("CompassTags.setCustomName(compass, DRIFTGLASS_COMPASS_NAME)"),
 			"Driftglass should give redirected compasses a mod-specific display name");
 		assertTrue(source.contains("AttunedServerCleanup.onStop(this::restoreAllCompasses)"),
 			"Driftglass should restore any redirected compass stacks when the server stops");
@@ -99,19 +109,26 @@ class CompassFocusBehaviorContractTest {
 	void waystoneCompassUsesLastDeathTrackerAndSupportsHeldStacks() throws IOException {
 		String source = read(WAYSTONE_SOURCE);
 
-		assertTrue(source.contains("new LodestoneTracker(death, false)"),
+		assertTrue(source.contains("new LodestoneTracker(death, false)")
+				|| source.contains("CompassTags.target(death.get())"),
 			"Waystone should create an untracked lodestone target from the player's last death location");
-		assertTrue(source.contains("compass.set(DataComponents.LODESTONE_TRACKER, tracker)"),
+		assertTrue(source.contains("compass.set(DataComponents.LODESTONE_TRACKER, tracker)")
+				|| source.contains("CompassTags.setLodestone(compass, tracker)"),
 			"Waystone should write the vanilla tracker component that drives compass angle rendering");
-		assertTrue(source.contains("compass.set(DataComponents.CUSTOM_NAME, WAYSTONE_COMPASS_NAME)"),
+		assertTrue(source.contains("compass.set(DataComponents.CUSTOM_NAME, WAYSTONE_COMPASS_NAME)")
+				|| source.contains("CompassTags.setCustomName(compass, WAYSTONE_COMPASS_NAME)"),
 			"Waystone should give redirected compasses a mod-specific display name");
-		assertTrue(source.contains("compass.remove(DataComponents.LODESTONE_TRACKER)"),
+		assertTrue(source.contains("compass.remove(DataComponents.LODESTONE_TRACKER)")
+				|| source.contains("CompassTags.setLodestone(compass, null)"),
 			"Waystone should remove its temporary tracker when restoring an ordinary compass");
-		assertTrue(source.contains("compass.set(DataComponents.LODESTONE_TRACKER, snapshot.originalTracker)"),
+		assertTrue(source.contains("compass.set(DataComponents.LODESTONE_TRACKER, snapshot.originalTracker)")
+				|| source.contains("CompassTags.setLodestone(compass, snapshot.originalTracker)"),
 			"Waystone should restore pre-existing lodestone bindings");
-		assertTrue(source.contains("compass.remove(DataComponents.CUSTOM_NAME)"),
+		assertTrue(source.contains("compass.remove(DataComponents.CUSTOM_NAME)")
+				|| source.contains("CompassTags.setCustomName(compass, null)"),
 			"Waystone should remove its temporary display name from ordinary compasses");
-		assertTrue(source.contains("compass.set(DataComponents.CUSTOM_NAME, snapshot.originalName)"),
+		assertTrue(source.contains("compass.set(DataComponents.CUSTOM_NAME, snapshot.originalName)")
+				|| source.contains("CompassTags.setCustomName(compass, snapshot.originalName)"),
 			"Waystone should restore player-supplied custom names");
 		assertTrue(source.contains("return stack.is(Items.COMPASS);"),
 			"Waystone should update any held compass stack, matching Beacon behavior");

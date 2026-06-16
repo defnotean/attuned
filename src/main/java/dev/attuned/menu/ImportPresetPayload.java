@@ -3,30 +3,33 @@ package dev.attuned.menu;
 import dev.attuned.Attuned;
 import dev.attuned.attunement.FocusPreset;
 import java.util.List;
-import net.minecraft.network.RegistryFriendlyByteBuf;
-import net.minecraft.network.codec.ByteBufCodecs;
-import net.minecraft.network.codec.StreamCodec;
-import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.fabricmc.fabric.api.networking.v1.FabricPacket;
+import net.fabricmc.fabric.api.networking.v1.PacketType;
+import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
 
-public record ImportPresetPayload(String name, List<String> slots) implements CustomPacketPayload {
+public record ImportPresetPayload(String name, List<String> slots) implements FabricPacket {
 	public ImportPresetPayload {
 		FocusPreset normalized = new FocusPreset(name, slots);
 		name = normalized.name();
 		slots = normalized.slots();
 	}
 
-	public static final Type<ImportPresetPayload> TYPE =
-		new Type<>(new ResourceLocation(Attuned.MOD_ID, "import_preset"));
+	public static final PacketType<ImportPresetPayload> TYPE =
+		PacketType.create(new ResourceLocation(Attuned.MOD_ID, "import_preset"), ImportPresetPayload::new);
 
-	public static final StreamCodec<RegistryFriendlyByteBuf, ImportPresetPayload> CODEC =
-		StreamCodec.composite(
-			ByteBufCodecs.STRING_UTF8, ImportPresetPayload::name,
-			ByteBufCodecs.STRING_UTF8.apply(ByteBufCodecs.list()), ImportPresetPayload::slots,
-			ImportPresetPayload::new).cast();
+	public ImportPresetPayload(FriendlyByteBuf buf) {
+		this(buf.readUtf(32), buf.readList(FriendlyByteBuf::readUtf));
+	}
 
 	@Override
-	public Type<ImportPresetPayload> type() {
+	public void write(FriendlyByteBuf buf) {
+		buf.writeUtf(name);
+		buf.writeCollection(slots, FriendlyByteBuf::writeUtf);
+	}
+
+	@Override
+	public PacketType<?> getType() {
 		return TYPE;
 	}
 }

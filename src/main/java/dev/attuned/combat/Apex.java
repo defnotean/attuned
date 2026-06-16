@@ -404,7 +404,7 @@ public final class Apex {
 		int seconds = matchup == Matchup.EMPOWERED
 			? CRUCIBLE_FIRE_SECONDS_EMPOWERED
 			: CRUCIBLE_FIRE_SECONDS;
-		defender.igniteForSeconds(seconds);
+		defender.setSecondsOnFire(seconds);
 		if (attacker instanceof ServerPlayer serverPlayer) {
 			CombatFeedback.crucibleIgnite(serverPlayer, defender);
 		}
@@ -498,7 +498,7 @@ public final class Apex {
 	}
 
 	private static void markScrambled(Player player, LivingEntity target) {
-		long expiresAt = target.level().getGameTime() + MAELSTROM_SCRAMBLE_TICKS;
+		long expiresAt = target.getLevel().getGameTime() + MAELSTROM_SCRAMBLE_TICKS;
 		maelstromScrambles.put(new ScrambleKey(target.getUUID(), player.getUUID()), expiresAt);
 	}
 
@@ -508,7 +508,7 @@ public final class Apex {
 		if (expiresAt == null) {
 			return false;
 		}
-		if (target.level().getGameTime() >= expiresAt) {
+		if (target.getLevel().getGameTime() >= expiresAt) {
 			maelstromScrambles.remove(key);
 			return false;
 		}
@@ -516,7 +516,7 @@ public final class Apex {
 	}
 
 	private static void pulseStillpoint(Player player) {
-		long now = player.level().getGameTime();
+		long now = player.getLevel().getGameTime();
 		Long last = stillpointPulses.get(player.getUUID());
 		if (last != null && now - last < STILLPOINT_ABSORPTION_COOLDOWN_TICKS) {
 			return;
@@ -550,7 +550,7 @@ public final class Apex {
 			: STILLPOINT_FIELD_COOLDOWN_TICKS;
 		int cooldownTicks = CombatMomentum.effectiveCooldown(
 			baseCooldown, Resonance.killStreak(player), true);
-		long now = player.level().getGameTime();
+		long now = player.getLevel().getGameTime();
 		Long readyAt = identityCooldowns.get(player.getUUID());
 		if (readyAt != null && now < readyAt) {
 			int remaining = (int) (readyAt - now);
@@ -559,7 +559,7 @@ public final class Apex {
 			return true;
 		}
 
-		ServerLevel level = (ServerLevel) player.level();
+		ServerLevel level = (ServerLevel) player.getLevel();
 		if (capstone == Capstone.MAELSTROM) {
 			fireMaelstromNova(player, level);
 		} else {
@@ -578,7 +578,7 @@ public final class Apex {
 		if (readyAt == null) {
 			return;
 		}
-		long now = player.level().getGameTime();
+		long now = player.getLevel().getGameTime();
 		if (now >= readyAt) {
 			identityCooldowns.remove(player.getUUID());
 			return;
@@ -755,7 +755,7 @@ public final class Apex {
 	}
 
 	private static void announceGained(ServerPlayer player, Capstone capstone) {
-		((ServerLevel) player.level()).playSound(null, player.blockPosition(),
+		((ServerLevel) player.getLevel()).playSound(null, player.blockPosition(),
 			SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, SoundSource.PLAYERS, 0.7F, 1.0F);
 		PlayerMessages.system(player, Component.literal("Apex active: ")
 			.withStyle(ChatFormatting.GRAY)
@@ -767,7 +767,7 @@ public final class Apex {
 	}
 
 	private static void announceGainedDormant(ServerPlayer player, Capstone capstone) {
-		((ServerLevel) player.level()).playSound(null, player.blockPosition(),
+		((ServerLevel) player.getLevel()).playSound(null, player.blockPosition(),
 			SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, SoundSource.PLAYERS, 0.6F, 0.8F);
 		PlayerMessages.system(player, Component.translatable(
 				"apex.attuned.unlocked_dormant",
@@ -777,7 +777,7 @@ public final class Apex {
 	}
 
 	private static void announceRearmed(ServerPlayer player, Capstone capstone) {
-		((ServerLevel) player.level()).playSound(null, player.blockPosition(),
+		((ServerLevel) player.getLevel()).playSound(null, player.blockPosition(),
 			SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, SoundSource.PLAYERS, 0.7F, 1.3F);
 		PlayerMessages.overlay(player, Component.translatable("apex.attuned.rearmed",
 			Component.literal(capstone.displayName()).withStyle(capstone.chatColor(), ChatFormatting.BOLD)));
@@ -785,13 +785,13 @@ public final class Apex {
 	}
 
 	private static void announceDormant(ServerPlayer player) {
-		((ServerLevel) player.level()).playSound(null, player.blockPosition(),
+		((ServerLevel) player.getLevel()).playSound(null, player.blockPosition(),
 			SoundEvents.AMETHYST_BLOCK_HIT, SoundSource.PLAYERS, 0.6F, 0.6F);
 		PlayerMessages.overlay(player, Component.translatable("apex.attuned.dormant"));
 	}
 
 	private static void announceLost(ServerPlayer player) {
-		((ServerLevel) player.level()).playSound(null, player.blockPosition(),
+		((ServerLevel) player.getLevel()).playSound(null, player.blockPosition(),
 			SoundEvents.BEACON_DEACTIVATE, SoundSource.PLAYERS, 0.6F, 1.0F);
 		PlayerMessages.system(player, Component.literal("Your Apex has faded.")
 			.withStyle(ChatFormatting.GRAY));
@@ -799,7 +799,7 @@ public final class Apex {
 
 	private static void onDodge(ServerPlayer player) {
 		player.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, 40, 1, true, false, true));
-		ServerLevel level = (ServerLevel) player.level();
+		ServerLevel level = (ServerLevel) player.getLevel();
 		level.sendParticles(ParticleTypes.CLOUD,
 			player.getX(), player.getY() + 1.0, player.getZ(), 12, 0.3, 0.5, 0.3, 0.02);
 		level.playSound(null, player.blockPosition(),

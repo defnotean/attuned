@@ -57,7 +57,7 @@ public final class Attunement {
 			return Optional.empty();
 		}
 		Registry<FocusDefinition> registry =
-			player.level().registryAccess().registryOrThrow(AttunedRegistries.FOCUS_DEFINITIONS);
+			player.getLevel().registryAccess().registryOrThrow(AttunedRegistries.FOCUS_DEFINITIONS);
 		return FocusLookup.forItem(registry, stack.getItem());
 	}
 
@@ -65,7 +65,7 @@ public final class Attunement {
 	public static BudgetResolver.Resolution resolution(Player player) {
 		AttunedInv inv = AttunedAttachments.getInventory(player);
 		int capacity = capacity(player);
-		if (player.level().isClientSide()) {
+		if (player.getLevel().isClientSide()) {
 			return BudgetResolver.resolveDetailed(candidates(player, inv), capacity);
 		}
 		CachedResolution cached = RESOLUTION_CACHE.get(player.getUUID());
@@ -121,7 +121,7 @@ public final class Attunement {
 	 */
 	public static int effectiveCost(FocusDefinition definition, ItemStack stack) {
 		int base = definition.cost();
-		return stack.has(AttunedComponents.TEMPERED) ? TemperingResolver.temperedCost(base) : base;
+		return AttunedComponents.isTempered(stack) ? TemperingResolver.temperedCost(base) : base;
 	}
 
 	/** Dormant reasons keyed by slot for occupied Focus slots that are not active. */

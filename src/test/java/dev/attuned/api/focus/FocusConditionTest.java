@@ -74,7 +74,7 @@ class FocusConditionTest {
 	void unknownConditionTypeIsRejected() {
 		var result = FocusCondition.CODEC.parse(JsonOps.INSTANCE,
 			JsonParser.parseString("{\"condition\":\"teleporting\"}"));
-		assertTrue(result.isError(), "An unknown condition type must fail to decode.");
+		assertTrue(result.error().isPresent(), "An unknown condition type must fail to decode.");
 		assertTrue(result.error().orElseThrow().message().contains("Unknown Focus condition"),
 			"The decode error should name the unknown condition.");
 	}

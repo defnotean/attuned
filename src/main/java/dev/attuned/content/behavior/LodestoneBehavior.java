@@ -32,7 +32,7 @@ public final class LodestoneBehavior implements FocusBehavior {
 			return;
 		}
 		AABB area = player.getBoundingBox().inflate(RANGE);
-		List<ItemEntity> items = player.level().getEntitiesOfClass(ItemEntity.class, area);
+		List<ItemEntity> items = player.getLevel().getEntitiesOfClass(ItemEntity.class, area);
 		Vec3 target = player.position().add(0.0, player.getBbHeight() * 0.5, 0.0);
 		for (ItemEntity item : items) {
 			// Skip items still in their post-drop pickup delay (e.g. the player's

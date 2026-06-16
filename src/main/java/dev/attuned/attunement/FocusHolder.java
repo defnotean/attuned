@@ -1,10 +1,14 @@
 package dev.attuned.attunement;
 
 import com.mojang.serialization.Codec;
+import com.mojang.serialization.DataResult;
+import com.mojang.serialization.Dynamic;
 import java.util.ArrayList;
 import java.util.List;
-import net.minecraft.network.RegistryFriendlyByteBuf;
-import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.NbtOps;
+import net.minecraft.nbt.Tag;
 import net.minecraft.world.item.ItemStack;
 
 /**
@@ -26,15 +30,17 @@ public record FocusHolder(int size, int maxPerSlot, List<ItemStack> items) {
 	}
 
 	public static Codec<FocusHolder> codec(int size, int maxPerSlot) {
-		return ItemStack.OPTIONAL_CODEC.listOf().xmap(
-			items -> new FocusHolder(size, maxPerSlot, items),
-			FocusHolder::items);
+		return Codec.PASSTHROUGH.flatXmap(
+			dynamic -> decodeTag(dynamic, size, maxPerSlot),
+			holder -> DataResult.success(new Dynamic<>(NbtOps.INSTANCE, holder.toTag())));
 	}
 
-	public static StreamCodec<RegistryFriendlyByteBuf, FocusHolder> streamCodec(int size, int maxPerSlot) {
-		return ItemStack.OPTIONAL_LIST_STREAM_CODEC.map(
-			items -> new FocusHolder(size, maxPerSlot, items),
-			FocusHolder::items);
+	private static DataResult<FocusHolder> decodeTag(Dynamic<?> dynamic, int size, int maxPerSlot) {
+		Tag tag = dynamic.convert(NbtOps.INSTANCE).getValue();
+		if (tag instanceof CompoundTag compound) {
+			return DataResult.success(fromTag(compound, size, maxPerSlot));
+		}
+		return DataResult.error(() -> "FocusHolder must be encoded as a compound tag");
 	}
 
 	public List<ItemStack> items() {
@@ -49,6 +55,42 @@ public record FocusHolder(int size, int maxPerSlot, List<ItemStack> items) {
 		List<ItemStack> copy = new ArrayList<>(items);
 		copy.set(requireSlot(slot, size), copyStack(stack, maxPerSlot));
 		return new FocusHolder(size, maxPerSlot, copy);
+	}
+
+	public CompoundTag toTag() {
+		CompoundTag tag = new CompoundTag();
+		tag.putInt("Size", size);
+		tag.putInt("MaxPerSlot", maxPerSlot);
+		ListTag list = new ListTag();
+		for (int i = 0; i < size; i++) {
+			ItemStack stack = items.get(i);
+			if (stack.isEmpty()) {
+				continue;
+			}
+			CompoundTag entry = stack.save(new CompoundTag());
+			entry.putInt("Slot", i);
+			list.add(entry);
+		}
+		tag.put("Items", list);
+		return tag;
+	}
+
+	public static FocusHolder fromTag(CompoundTag tag, int size, int maxPerSlot) {
+		List<ItemStack> decoded = new ArrayList<>(size);
+		for (int i = 0; i < size; i++) {
+			decoded.add(ItemStack.EMPTY);
+		}
+		if (tag != null) {
+			ListTag list = tag.getList("Items", Tag.TAG_COMPOUND);
+			for (int i = 0; i < list.size(); i++) {
+				CompoundTag entry = list.getCompound(i);
+				int slot = entry.getInt("Slot");
+				if (slot >= 0 && slot < size) {
+					decoded.set(slot, ItemStack.of(entry));
+				}
+			}
+		}
+		return new FocusHolder(size, maxPerSlot, decoded);
 	}
 
 	private static List<ItemStack> sizedItems(int size, int maxPerSlot, List<ItemStack> source) {

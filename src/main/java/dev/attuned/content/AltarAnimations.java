@@ -125,9 +125,9 @@ public final class AltarAnimations {
 				it.remove();
 				continue;
 			}
-			if (!player.level().dimension().equals(p.level().dimension())) {
+			if (!player.getLevel().dimension().equals(p.level().dimension())) {
 				// Player crossed dimensions; play a short chime at their new location so they get closure.
-				player.level().playSound(null, player.blockPosition(),
+				player.getLevel().playSound(null, player.blockPosition(),
 					SoundEvents.BEACON_ACTIVATE, SoundSource.PLAYERS, 0.4F, 1.6F);
 				it.remove();
 				continue;
@@ -156,7 +156,7 @@ public final class AltarAnimations {
 			level.sendParticles(ParticleTypes.END_ROD,
 				altarPos.getX() + 0.5, altarPos.getY() + 1.15, altarPos.getZ() + 0.5,
 				Math.min(6, 2 + flair.amethyst()), 0.25, 0.2, 0.25, 0.015);
-			level.playSound(null, altarPos, SoundEvents.AMETHYST_BLOCK_RESONATE, SoundSource.BLOCKS, 0.25F, 1.35F);
+			level.playSound(null, altarPos, SoundEvents.AMETHYST_BLOCK_CHIME, SoundSource.BLOCKS, 0.25F, 1.35F);
 		}
 	}
 

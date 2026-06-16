@@ -1,13 +1,12 @@
 package dev.attuned.menu;
 
 import dev.attuned.Attuned;
-import net.minecraft.network.RegistryFriendlyByteBuf;
-import net.minecraft.network.codec.ByteBufCodecs;
-import net.minecraft.network.codec.StreamCodec;
-import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.fabricmc.fabric.api.networking.v1.FabricPacket;
+import net.fabricmc.fabric.api.networking.v1.PacketType;
+import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
 
-public record SavePresetPayload(String name) implements CustomPacketPayload {
+public record SavePresetPayload(String name) implements FabricPacket {
 	public SavePresetPayload {
 		name = name == null ? "" : name.trim();
 		if (name.length() > 32) {
@@ -15,14 +14,20 @@ public record SavePresetPayload(String name) implements CustomPacketPayload {
 		}
 	}
 
-	public static final Type<SavePresetPayload> TYPE =
-		new Type<>(new ResourceLocation(Attuned.MOD_ID, "save_preset"));
+	public static final PacketType<SavePresetPayload> TYPE =
+		PacketType.create(new ResourceLocation(Attuned.MOD_ID, "save_preset"), SavePresetPayload::new);
 
-	public static final StreamCodec<RegistryFriendlyByteBuf, SavePresetPayload> CODEC =
-		StreamCodec.composite(ByteBufCodecs.STRING_UTF8, SavePresetPayload::name, SavePresetPayload::new).cast();
+	public SavePresetPayload(FriendlyByteBuf buf) {
+		this(buf.readUtf(32));
+	}
 
 	@Override
-	public Type<SavePresetPayload> type() {
+	public void write(FriendlyByteBuf buf) {
+		buf.writeUtf(name);
+	}
+
+	@Override
+	public PacketType<?> getType() {
 		return TYPE;
 	}
 }

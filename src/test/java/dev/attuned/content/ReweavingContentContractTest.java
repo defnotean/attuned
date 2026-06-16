@@ -104,7 +104,8 @@ class ReweavingContentContractTest {
 	}
 
 	private static void assertStaleDimensionGuard(String source, String handlerName) {
-		assertTrue(source.contains("if (player.level() != serverLevel)"),
+		assertTrue(source.contains("if (player.level() != serverLevel)")
+				|| source.contains("if (player.getLevel() != serverLevel)"),
 			handlerName + " should reject stale menu access from a different server level.");
 	}
 }

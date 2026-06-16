@@ -29,14 +29,20 @@ class PaletteBreadthContractTest {
 	void buildDispatchesEveryPaletteTypeExhaustively() throws IOException {
 		String source = read(DATA_BEHAVIORS);
 
-		assertTrue(source.contains("case FocusBehaviorDef.ConditionalMobEffect effect -> new ConditionalMobEffectBehavior(effect)"),
+		assertTrue(source.contains("definition instanceof FocusBehaviorDef.ConditionalMobEffect effect")
+				&& source.contains("return new ConditionalMobEffectBehavior(effect);"),
 			"build should still construct ConditionalMobEffectBehavior.");
-		assertTrue(source.contains("case FocusBehaviorDef.OnHitEffect onHit -> new OnHitEffectBehavior(onHit)"),
+		assertTrue(source.contains("definition instanceof FocusBehaviorDef.OnHitEffect onHit")
+				&& source.contains("return new OnHitEffectBehavior(onHit);"),
 			"build should construct OnHitEffectBehavior for the on_hit_effect type.");
-		assertTrue(source.contains("case FocusBehaviorDef.PeriodicEffect periodic -> new PeriodicEffectBehavior(periodic)"),
+		assertTrue(source.contains("definition instanceof FocusBehaviorDef.PeriodicEffect periodic")
+				&& source.contains("return new PeriodicEffectBehavior(periodic);"),
 			"build should construct PeriodicEffectBehavior for the periodic_effect type.");
-		assertTrue(source.contains("case FocusBehaviorDef.AttributeWhile attributeWhile -> new AttributeWhileBehavior(behaviorId, attributeWhile)"),
+		assertTrue(source.contains("definition instanceof FocusBehaviorDef.AttributeWhile attributeWhile")
+				&& source.contains("return new AttributeWhileBehavior(behaviorId, attributeWhile);"),
 			"build should construct AttributeWhileBehavior for the attribute_while type, passing the behaviour id.");
+		assertTrue(source.contains("throw new IllegalArgumentException(\"Unknown focus behavior definition: \" + definition);"),
+			"build should reject unknown palette definitions if the hierarchy expands.");
 	}
 
 	@Test

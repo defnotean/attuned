@@ -38,12 +38,12 @@ public final class BloodfuryBehavior implements FocusBehavior {
 		double bonus = MAX_BONUS * Mth.clamp(missing, 0.0F, 1.0F);
 
 		AttributeModifier current = attackSpeed.getModifier(AttributeModifierIds.uuid(MODIFIER_ID));
-		if (current != null && current.amount() == bonus) {
+		if (current != null && current.getAmount() == bonus) {
 			return;
 		}
 		attackSpeed.removeModifier(AttributeModifierIds.uuid(MODIFIER_ID));
 		if (bonus > 0.0) {
-			attackSpeed.addTransientModifier(new AttributeModifier(AttributeModifierIds.uuid(MODIFIER_ID), AttributeModifierIds.name(MODIFIER_ID), bonus, AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL));
+			attackSpeed.addTransientModifier(new AttributeModifier(AttributeModifierIds.uuid(MODIFIER_ID), AttributeModifierIds.name(MODIFIER_ID), bonus, AttributeModifier.Operation.MULTIPLY_TOTAL));
 		}
 	}
 

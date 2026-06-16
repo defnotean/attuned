@@ -1,26 +1,29 @@
 package dev.attuned.network;
 
 import dev.attuned.Attuned;
-import net.minecraft.network.RegistryFriendlyByteBuf;
-import net.minecraft.network.codec.StreamCodec;
-import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.fabricmc.fabric.api.networking.v1.FabricPacket;
+import net.fabricmc.fabric.api.networking.v1.PacketType;
+import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
 
 /**
  * Client-to-server signal that the player pressed the Focus Ability keybind. It
  * carries no data; the server resolves the one active ability Focus entirely
- * from the player's own active Foci, so a forged payload triggers nothing extra.
+ * from the player's own active Foci.
  */
-public record AbilityPayload() implements CustomPacketPayload {
+public record AbilityPayload() implements FabricPacket {
+	public static final PacketType<AbilityPayload> TYPE =
+		PacketType.create(new ResourceLocation(Attuned.MOD_ID, "ability"), AbilityPayload::new);
 
-	public static final Type<AbilityPayload> TYPE =
-		new Type<>(new ResourceLocation(Attuned.MOD_ID, "ability"));
-
-	public static final StreamCodec<RegistryFriendlyByteBuf, AbilityPayload> CODEC =
-		StreamCodec.unit(new AbilityPayload());
+	public AbilityPayload(FriendlyByteBuf buf) {
+		this();
+	}
 
 	@Override
-	public Type<AbilityPayload> type() {
+	public void write(FriendlyByteBuf buf) {}
+
+	@Override
+	public PacketType<?> getType() {
 		return TYPE;
 	}
 }

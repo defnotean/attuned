@@ -1,7 +1,6 @@
 package dev.attuned.menu;
 
 import dev.attuned.Attuned;
-import dev.attuned.content.AttunedComponents;
 import dev.attuned.content.AttunedContent;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -51,7 +50,7 @@ public final class SatchelMenuType {
 			return new SimpleMenuProvider(
 				(containerId, inventory, p) -> new SatchelMenu(containerId, inventory,
 					new SatchelContainer(p, hand, AttunedContent.GRAND_SATCHEL_OF_FOCI,
-						AttunedComponents.GRAND_SATCHEL_CONTENTS, AttunedComponents.GRAND_SATCHEL_SIZE),
+						dev.attuned.content.AttunedComponents.GRAND_SATCHEL_SIZE, true),
 					hand, GRAND_TYPE),
 				GRAND_DISPLAY_NAME);
 		}

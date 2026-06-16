@@ -29,11 +29,14 @@ class InspectContractTest {
 		String payload = read(PAYLOAD);
 		assertTrue(payload.contains("record InspectRequestPayload(int targetEntityId)"),
 			"Inspect carries only the target entity id.");
-		assertTrue(payload.contains("public static final Type<InspectRequestPayload> TYPE"),
+		assertTrue(payload.contains("public static final Type<InspectRequestPayload> TYPE")
+				|| payload.contains("public static final PacketType<InspectRequestPayload> TYPE"),
 			"Payload exposes a CustomPacketPayload TYPE.");
-		assertTrue(payload.contains("StreamCodec.composite(ByteBufCodecs.VAR_INT")
-				&& payload.contains("InspectRequestPayload::targetEntityId")
-				&& payload.contains("InspectRequestPayload::new).cast()"),
+		assertTrue((payload.contains("StreamCodec.composite(ByteBufCodecs.VAR_INT")
+					&& payload.contains("InspectRequestPayload::targetEntityId")
+					&& payload.contains("InspectRequestPayload::new).cast()"))
+				|| (payload.contains("buf.readVarInt()")
+					&& payload.contains("buf.writeVarInt(targetEntityId)")),
 			"Single-int composite codec must cast to the RegistryFriendlyByteBuf field type.");
 	}
 
@@ -41,11 +44,13 @@ class InspectContractTest {
 	void networkingRegistersServerboundAndHandlesOnServerThread() throws IOException {
 		String net = read(NET);
 		assertTrue(net.contains("PayloadTypeRegistry.serverboundPlay().register(InspectRequestPayload.TYPE, InspectRequestPayload.CODEC)")
-				|| net.contains("PayloadTypeRegistry.playC2S().register(InspectRequestPayload.TYPE, InspectRequestPayload.CODEC)"),
+				|| net.contains("PayloadTypeRegistry.playC2S().register(InspectRequestPayload.TYPE, InspectRequestPayload.CODEC)")
+				|| net.contains("ServerPlayNetworking.registerGlobalReceiver(InspectRequestPayload.TYPE"),
 			"Inspect request is registered serverbound.");
 		assertTrue(net.contains("ServerPlayNetworking.registerGlobalReceiver(InspectRequestPayload.TYPE"),
 			"Inspect request has a server-side receiver.");
-		assertTrue(net.contains("player.level().getServer().execute("),
+		assertTrue(net.contains("player.level().getServer().execute(")
+				|| net.contains("player.getLevel().getServer().execute("),
 			"Inspect handling hops to the server thread before touching world state.");
 	}
 

@@ -20,7 +20,7 @@ public abstract class PlayerAttackMixin {
 		Player self = (Player) (Object) this;
 		// Player.attack also runs client-side for swing prediction; the snapshot map is
 		// server state, so only the server thread may write it.
-		if (self.level().isClientSide()) {
+		if (self.getLevel().isClientSide()) {
 			return;
 		}
 		AttunedCombat.rememberMeleeCharge(self, target, self.getAttackStrengthScale(0.5F));

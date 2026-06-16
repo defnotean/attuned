@@ -1,5 +1,6 @@
 package dev.attuned.client.hud;
 
+import com.mojang.blaze3d.vertex.PoseStack;
 import dev.attuned.Attuned;
 import dev.attuned.AttunedRegistries;
 import dev.attuned.api.focus.Affinity;
@@ -99,12 +100,13 @@ public final class FociHud {
 		return AttunedClientConfig.get().showFociHud();
 	}
 
-	private static void renderLayer(GuiGraphics graphics, float tickDelta) {
+	private static void renderLayer(PoseStack poseStack, float tickDelta) {
 		Minecraft minecraft = Minecraft.getInstance();
 		Player player = minecraft.player;
 		if (player == null || !isVisible(player)) {
 			return;
 		}
+		GuiGraphics graphics = new GuiGraphics(minecraft, poseStack);
 		draw(graphics, player);
 	}
 
@@ -273,7 +275,7 @@ public final class FociHud {
 				drawDormantOverlay(graphics, sx, sy);
 			}
 			graphics.renderItem(stack, sx + FocusLayout.SLOT_INSET, sy + FocusLayout.SLOT_INSET);
-			if (stack.has(AttunedComponents.TEMPERED)) {
+			if (AttunedComponents.isTempered(stack)) {
 				drawTemperedTick(graphics, sx, sy);
 			}
 		}
@@ -395,7 +397,7 @@ public final class FociHud {
 	private static long apexPulseGameTime() {
 		Minecraft minecraft = Minecraft.getInstance();
 		Player player = minecraft.player;
-		return player == null ? 0L : player.level().getGameTime();
+		return player == null ? 0L : player.getLevel().getGameTime();
 	}
 
 	private static int pulseArgb(int rgb, long gameTime) {

@@ -29,24 +29,24 @@ class ConfluenceDiscoveryContractTest {
 		assertTrue(attachments.contains(
 				"public static final AttachmentType<List<String>> DISCOVERED_CONFLUENCES = AttachmentRegistry.create(")
 				|| attachments.contains("public static final AttachmentType<List<String>> DISCOVERED_CONFLUENCES")
-				&& attachments.contains("AttachmentRegistry.<List<String>>builder()"),
-			"Discoveries must be a synced list attachment.");
+				&& attachments.contains("AttachmentRegistry.<List<String>>builder()")
+				|| attachments.contains("private static final String DISCOVERED_CONFLUENCES_KEY"),
+			"Discoveries must be stored in the active per-player state backend.");
 		assertTrue(attachments.contains(
-				"new ResourceLocation(Attuned.MOD_ID, \"discovered_confluences\")"),
-			"Discovery attachment must use the discovered_confluences id.");
-		assertTrue(attachments.contains(".persistent(Codec.STRING.listOf())"),
+				"new ResourceLocation(Attuned.MOD_ID, \"discovered_confluences\")")
+				|| attachments.contains("DiscoveredConfluences"),
+			"Discovery state must use a stable discovered_confluences/DiscoveredConfluences id.");
+		assertTrue(attachments.contains(".persistent(Codec.STRING.listOf())")
+				|| attachments.contains("tag.put(DISCOVERED_CONFLUENCES_KEY, stringList(discoveredConfluences));"),
 			"Discovered confluences must persist across restart.");
 		assertTrue(attachments.contains(
 				".syncWith(ByteBufCodecs.STRING_UTF8.apply(ByteBufCodecs.list()), AttachmentSyncPredicate.targetOnly())")
-				|| attachments.contains(".buildAndRegister(new ResourceLocation(Attuned.MOD_ID, \"discovered_confluences\"))"),
-			"Discovered confluences must sync to the owning client only when the active Fabric attachment API supports sync hooks.");
-
-		String block = methodRegion(attachments,
-			attachments.contains("DISCOVERED_CONFLUENCES = AttachmentRegistry.create(")
-				? "DISCOVERED_CONFLUENCES = AttachmentRegistry.create("
-				: "DISCOVERED_CONFLUENCES =\n\t\tAttachmentRegistry.<List<String>>builder()",
-			"public static void init()");
-		assertTrue(block.contains(".copyOnDeath()"), "Discoveries must survive death.");
+				|| attachments.contains(".buildAndRegister(new ResourceLocation(Attuned.MOD_ID, \"discovered_confluences\"))")
+				|| attachments.contains("AttunedStatePayload"),
+			"Discovered confluences must sync to the owning client through the active branch sync path.");
+		assertTrue(attachments.contains(".copyOnDeath()")
+				|| attachments.contains("STATES.put(to.getUUID(), state(from).copy());"),
+			"Discoveries must survive death.");
 
 		assertTrue(attachments.contains("public static List<String> getDiscoveredConfluences(Player player)"),
 			"A discovery getter must exist for the journal render.");
@@ -59,8 +59,11 @@ class ConfluenceDiscoveryContractTest {
 			"markConfluenceDiscovered must normalize the id like markOnboarding.");
 		assertTrue(body.contains("List.copyOf(updated)"),
 			"markConfluenceDiscovered must store an immutable snapshot.");
-		assertTrue(body.contains("setAttached(DISCOVERED_CONFLUENCES,"),
-			"markConfluenceDiscovered must write the discovery attachment.");
+		assertTrue(body.contains("setAttached(DISCOVERED_CONFLUENCES,")
+				|| body.contains("state(player).discoveredConfluences = List.copyOf(updated);"),
+			"markConfluenceDiscovered must write the discovery state.");
+		assertTrue(body.contains("sync(player)"),
+			"markConfluenceDiscovered must sync the discovery state to the owning client.");
 	}
 
 	@Test

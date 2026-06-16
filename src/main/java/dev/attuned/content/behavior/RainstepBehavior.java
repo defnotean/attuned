@@ -37,7 +37,7 @@ public final class RainstepBehavior implements FocusBehavior {
 	}
 
 	private static boolean isWet(ServerPlayer player) {
-		ServerLevel level = (ServerLevel) player.level();
+		ServerLevel level = (ServerLevel) player.getLevel();
 		if (level.isRainingAt(player.blockPosition()) || player.isInWaterOrRain()) {
 			return true;
 		}
@@ -51,7 +51,7 @@ public final class RainstepBehavior implements FocusBehavior {
 		if (attribute == null || attribute.getModifier(AttributeModifierIds.uuid(WET_SPEED_ID)) != null) {
 			return;
 		}
-		attribute.addTransientModifier(new AttributeModifier(AttributeModifierIds.uuid(WET_SPEED_ID), AttributeModifierIds.name(WET_SPEED_ID), WET_SPEED, AttributeModifier.Operation.ADD_MULTIPLIED_BASE));
+		attribute.addTransientModifier(new AttributeModifier(AttributeModifierIds.uuid(WET_SPEED_ID), AttributeModifierIds.name(WET_SPEED_ID), WET_SPEED, AttributeModifier.Operation.MULTIPLY_BASE));
 	}
 
 	private static void remove(ServerPlayer player) {

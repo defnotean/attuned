@@ -1,13 +1,12 @@
 package dev.attuned.menu;
 
 import dev.attuned.Attuned;
-import net.minecraft.network.RegistryFriendlyByteBuf;
-import net.minecraft.network.codec.ByteBufCodecs;
-import net.minecraft.network.codec.StreamCodec;
-import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.fabricmc.fabric.api.networking.v1.FabricPacket;
+import net.fabricmc.fabric.api.networking.v1.PacketType;
+import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
 
-public record DeletePresetPayload(int index, String name) implements CustomPacketPayload {
+public record DeletePresetPayload(int index, String name) implements FabricPacket {
 	public DeletePresetPayload {
 		if (index < 0) {
 			index = -1;
@@ -18,17 +17,21 @@ public record DeletePresetPayload(int index, String name) implements CustomPacke
 		}
 	}
 
-	public static final Type<DeletePresetPayload> TYPE =
-		new Type<>(new ResourceLocation(Attuned.MOD_ID, "delete_preset"));
+	public static final PacketType<DeletePresetPayload> TYPE =
+		PacketType.create(new ResourceLocation(Attuned.MOD_ID, "delete_preset"), DeletePresetPayload::new);
 
-	public static final StreamCodec<RegistryFriendlyByteBuf, DeletePresetPayload> CODEC =
-		StreamCodec.composite(
-			ByteBufCodecs.VAR_INT, DeletePresetPayload::index,
-			ByteBufCodecs.STRING_UTF8, DeletePresetPayload::name,
-			DeletePresetPayload::new).cast();
+	public DeletePresetPayload(FriendlyByteBuf buf) {
+		this(buf.readVarInt(), buf.readUtf(32));
+	}
 
 	@Override
-	public Type<DeletePresetPayload> type() {
+	public void write(FriendlyByteBuf buf) {
+		buf.writeVarInt(index);
+		buf.writeUtf(name);
+	}
+
+	@Override
+	public PacketType<?> getType() {
 		return TYPE;
 	}
 }

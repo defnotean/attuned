@@ -4,13 +4,13 @@ import dev.attuned.compat.PlayerMessages;
 import dev.attuned.AttunedPlayerCleanup;
 import dev.attuned.AttunedServerCleanup;
 import dev.attuned.api.focus.FocusBehavior;
+import dev.attuned.mixin.AbstractArrowAccessor;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
-import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
@@ -18,7 +18,6 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
-import net.minecraft.util.Unit;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.item.ItemEntity;
@@ -26,13 +25,13 @@ import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.projectile.ThrownTrident;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
-import net.minecraft.world.item.component.CustomData;
 
 /** Offshore Harpoon Focus: summons one temporary custom trident on the ability key. */
 public final class HarpoonBehavior implements FocusBehavior {
 	static final int DURATION_TICKS = 600;
 	static final int COOLDOWN_TICKS = 1200;
 	private static final int ENTITY_CLEANUP_INTERVAL_TICKS = 20;
+	private static final String ROOT_KEY = "AttunedHarpoon";
 	private static final String MARKER_ID = "attuned:offshore_harpoon";
 	private static final String MARKER_KEY = "marker";
 	private static final String OWNER_KEY = "owner";
@@ -58,7 +57,7 @@ public final class HarpoonBehavior implements FocusBehavior {
 
 	@Override
 	public boolean onAbility(ServerPlayer player, ItemStack focus) {
-		long now = player.level().getGameTime();
+		long now = player.getLevel().getGameTime();
 		removeInvalidInventoryHarpoons(player, now);
 		if (ACTIVE_HARPOONS.getOrDefault(player.getUUID(), -1L) > now) {
 			PlayerMessages.overlay(player, Component.translatable("item.attuned.harpoon_focus.active"));
@@ -72,14 +71,14 @@ public final class HarpoonBehavior implements FocusBehavior {
 		}
 
 		ACTIVE_HARPOONS.put(player.getUUID(), now + DURATION_TICKS);
-		player.level().playSound(null, player.blockPosition(),
+		player.getLevel().playSound(null, player.blockPosition(),
 			SoundEvents.TRIDENT_RETURN, SoundSource.PLAYERS, 0.75F, 0.85F);
 		return true;
 	}
 
 	@Override
 	public void onTick(ServerPlayer player, ItemStack focus) {
-		removeInvalidInventoryHarpoons(player, player.level().getGameTime());
+		removeInvalidInventoryHarpoons(player, player.getLevel().getGameTime());
 	}
 
 	@Override
@@ -112,9 +111,8 @@ public final class HarpoonBehavior implements FocusBehavior {
 		tag.putString(MARKER_KEY, MARKER_ID);
 		tag.putString(OWNER_KEY, player.getUUID().toString());
 		tag.putLong(EXPIRES_AT_KEY, now + DURATION_TICKS);
-		harpoon.set(DataComponents.CUSTOM_DATA, CustomData.of(tag));
-		harpoon.set(DataComponents.CUSTOM_NAME, HARPOON_NAME);
-		harpoon.set(DataComponents.INTANGIBLE_PROJECTILE, Unit.INSTANCE);
+		harpoon.getOrCreateTag().put(ROOT_KEY, tag);
+		harpoon.setHoverName(HARPOON_NAME);
 		return harpoon;
 	}
 
@@ -184,7 +182,7 @@ public final class HarpoonBehavior implements FocusBehavior {
 				if (entity instanceof ItemEntity item && isTemporaryHarpoon(item.getItem())) {
 					item.discard();
 				} else if (entity instanceof ThrownTrident trident
-						&& isTemporaryHarpoon(trident.getPickupItemStackOrigin())) {
+						&& isTemporaryHarpoon(pickupStack(trident))) {
 					trident.discard();
 				}
 			}
@@ -195,10 +193,9 @@ public final class HarpoonBehavior implements FocusBehavior {
 	private static void removeForPlayer(ServerPlayer player) {
 		UUID owner = player.getUUID();
 		removeInventoryHarpoons(player, owner, Long.MAX_VALUE, true);
-		if (player.level() instanceof ServerLevel level) {
-			removePlayerInventoriesForOwner(level.getServer(), owner);
-			removeEntitiesForOwner(level.getServer(), owner);
-		}
+		ServerLevel level = player.getLevel();
+		removePlayerInventoriesForOwner(level.getServer(), owner);
+		removeEntitiesForOwner(level.getServer(), owner);
 		ACTIVE_HARPOONS.remove(owner);
 	}
 
@@ -249,7 +246,7 @@ public final class HarpoonBehavior implements FocusBehavior {
 				if (entity instanceof ItemEntity item && shouldDiscardProjectile(item.getItem(), now)) {
 					item.discard();
 				} else if (entity instanceof ThrownTrident trident
-						&& shouldDiscardProjectile(trident.getPickupItemStackOrigin(), now)) {
+						&& shouldDiscardProjectile(pickupStack(trident), now)) {
 					trident.discard();
 				}
 			}
@@ -262,11 +259,15 @@ public final class HarpoonBehavior implements FocusBehavior {
 				if (entity instanceof ItemEntity item && isOwnedTemporaryHarpoon(item.getItem(), owner)) {
 					item.discard();
 				} else if (entity instanceof ThrownTrident trident
-						&& isOwnedTemporaryHarpoon(trident.getPickupItemStackOrigin(), owner)) {
+						&& isOwnedTemporaryHarpoon(pickupStack(trident), owner)) {
 					trident.discard();
 				}
 			}
 		}
+	}
+
+	private static ItemStack pickupStack(ThrownTrident trident) {
+		return ((AbstractArrowAccessor) trident).attuned$pickupItem();
 	}
 
 	private static boolean isOwnedTemporaryHarpoon(ItemStack stack, UUID owner) {
@@ -278,11 +279,11 @@ public final class HarpoonBehavior implements FocusBehavior {
 		if (stack == null || stack.isEmpty() || !stack.is(Items.TRIDENT)) {
 			return null;
 		}
-		CustomData data = stack.get(DataComponents.CUSTOM_DATA);
-		if (data == null) {
+		CompoundTag root = stack.getTag();
+		if (root == null || !root.contains(ROOT_KEY)) {
 			return null;
 		}
-		CompoundTag tag = data.copyTag();
+		CompoundTag tag = root.getCompound(ROOT_KEY);
 		return MARKER_ID.equals(tag.contains(MARKER_KEY) ? tag.getString(MARKER_KEY) : "") ? tag : null;
 	}
 

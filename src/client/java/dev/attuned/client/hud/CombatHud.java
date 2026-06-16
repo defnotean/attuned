@@ -1,5 +1,6 @@
 package dev.attuned.client.hud;
 
+import com.mojang.blaze3d.vertex.PoseStack;
 import dev.attuned.Attuned;
 import dev.attuned.api.focus.Affinity;
 import dev.attuned.client.AttunedClientConfig;
@@ -133,12 +134,13 @@ public final class CombatHud {
 
 	// The HudElement render entry point. Pulled out as a method reference so the
 	// registration call stays single-line and free of inline lambda bodies.
-	private static void renderLayer(GuiGraphics graphics, float tickDelta) {
+	private static void renderLayer(PoseStack poseStack, float tickDelta) {
 		Minecraft minecraft = Minecraft.getInstance();
 		Player player = minecraft.player;
 		if (player == null) {
 			return;
 		}
+		GuiGraphics graphics = new GuiGraphics(minecraft, poseStack);
 		draw(graphics, minecraft, player);
 	}
 

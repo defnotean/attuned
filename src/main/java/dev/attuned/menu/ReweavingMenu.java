@@ -197,7 +197,7 @@ public class ReweavingMenu extends AbstractContainerMenu {
 	}
 
 	private static boolean isTempered(ItemStack stack) {
-		return stack.has(AttunedComponents.TEMPERED);
+		return AttunedComponents.isTempered(stack);
 	}
 
 	public ItemStack outputStack() {

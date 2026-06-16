@@ -12,7 +12,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.TreeSet;
-import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -20,7 +19,6 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.Container;
-import net.minecraft.util.Unit;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -37,10 +35,8 @@ public final class ReweavingNetworking {
 			return;
 		}
 		initialized = true;
-		PayloadTypeRegistry.playC2S().register(ReweavePayload.TYPE, ReweavePayload.CODEC);
-		ServerPlayNetworking.registerGlobalReceiver(ReweavePayload.TYPE, (payload, context) -> {
-			ServerPlayer player = context.player();
-			player.level().getServer().execute(() -> tryReweave(player));
+		ServerPlayNetworking.registerGlobalReceiver(ReweavePayload.TYPE, (payload, player, sender) -> {
+			player.getLevel().getServer().execute(() -> tryReweave(player));
 		});
 	}
 
@@ -52,7 +48,7 @@ public final class ReweavingNetworking {
 			if (!(level instanceof ServerLevel serverLevel)) {
 				return;
 			}
-			if (player.level() != serverLevel) {
+			if (player.getLevel() != serverLevel) {
 				return;
 			}
 			BlockState state = serverLevel.getBlockState(pos);
@@ -124,7 +120,7 @@ public final class ReweavingNetworking {
 			return ItemStack.EMPTY;
 		}
 		ItemStack tempered = new ItemStack(source.getItem());
-		tempered.set(AttunedComponents.TEMPERED, Unit.INSTANCE);
+		AttunedComponents.setTempered(tempered);
 		return tempered;
 	}
 

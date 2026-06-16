@@ -88,13 +88,13 @@ public final class UnseenCombat {
 			// No proc this swing: still break the Veil, but only once the hit lands
 			// (recorded so a dodged hit cannot strip stealth for free).
 			PENDING_NEEDLE.put(attacker.getUUID(),
-				new PendingProc(defender.getUUID(), attacker.level().getGameTime(), false));
+				new PendingProc(defender.getUUID(), attacker.getLevel().getGameTime(), false));
 			return amount;
 		}
 		// Shape the damage now (it cannot be retro-multiplied) but defer burning the
 		// cooldown to the after-damage stage so a dodged hit keeps the opener.
 		PENDING_NEEDLE.put(attacker.getUUID(),
-			new PendingProc(defender.getUUID(), attacker.level().getGameTime(), true));
+			new PendingProc(defender.getUUID(), attacker.getLevel().getGameTime(), true));
 		needleFeedback(attacker, defender);
 		return amount * NEEDLE_MULTIPLIER;
 	}
@@ -108,7 +108,7 @@ public final class UnseenCombat {
 	}
 
 	private static boolean canNeedle(ServerPlayer attacker, LivingEntity defender, boolean wasVeiled) {
-		long now = attacker.level().getGameTime();
+		long now = attacker.getLevel().getGameTime();
 		Long last = LAST_NEEDLE.get(attacker.getUUID());
 		if (last != null && now - last < NEEDLE_COOLDOWN_TICKS) {
 			return false;
@@ -123,7 +123,7 @@ public final class UnseenCombat {
 	}
 
 	private static void needleFeedback(ServerPlayer attacker, LivingEntity defender) {
-		ServerLevel level = (ServerLevel) attacker.level();
+		ServerLevel level = (ServerLevel) attacker.getLevel();
 		level.sendParticles(ParticleTypes.CRIT,
 			defender.getX(), defender.getY() + defender.getBbHeight() * 0.65, defender.getZ(),
 			8, 0.2, 0.25, 0.2, 0.0);
@@ -140,10 +140,10 @@ public final class UnseenCombat {
 			PendingProc pending = PENDING_NEEDLE.remove(attacker.getUUID());
 			if (pending != null
 					&& pending.target().equals(defender.getUUID())
-					&& pending.gameTime() == attacker.level().getGameTime()) {
+					&& pending.gameTime() == attacker.getLevel().getGameTime()) {
 				VeilBehavior.breakVeil(attacker);
 				if (pending.consumes()) {
-					LAST_NEEDLE.put(attacker.getUUID(), attacker.level().getGameTime());
+					LAST_NEEDLE.put(attacker.getUUID(), attacker.getLevel().getGameTime());
 					applyNeedleSoftstepCombo(attacker, defender);
 				}
 			}
@@ -165,7 +165,7 @@ public final class UnseenCombat {
 	}
 
 	private static void needleSoftstepComboFeedback(ServerPlayer attacker, LivingEntity defender) {
-		ServerLevel level = (ServerLevel) attacker.level();
+		ServerLevel level = (ServerLevel) attacker.getLevel();
 		level.sendParticles(ParticleTypes.SCULK_SOUL,
 			defender.getX(), defender.getY() + defender.getBbHeight() * 0.65, defender.getZ(),
 			10, 0.2, 0.25, 0.2, 0.01);

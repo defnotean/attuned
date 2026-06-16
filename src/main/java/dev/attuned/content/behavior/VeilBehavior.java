@@ -40,7 +40,7 @@ public final class VeilBehavior implements FocusBehavior {
 	public void onTick(ServerPlayer player, ItemStack focus) {
 		UUID id = player.getUUID();
 		State state = STATES.computeIfAbsent(id, ignored -> new State());
-		long now = player.level().getGameTime();
+		long now = player.getLevel().getGameTime();
 		if (!canCharge(player, now)) {
 			clear(player, state, false);
 			return;
@@ -76,7 +76,7 @@ public final class VeilBehavior implements FocusBehavior {
 
 	@Override
 	public boolean onAbility(ServerPlayer player, ItemStack focus) {
-		long now = player.level().getGameTime();
+		long now = player.getLevel().getGameTime();
 		if (!canCharge(player, now)) {
 			breakVeil(player);
 			return false;
@@ -101,7 +101,7 @@ public final class VeilBehavior implements FocusBehavior {
 	}
 
 	public static void breakVeil(ServerPlayer player, int cooldownTicks) {
-		BLOCKED_UNTIL.put(player.getUUID(), player.level().getGameTime() + cooldownTicks);
+		BLOCKED_UNTIL.put(player.getUUID(), player.getLevel().getGameTime() + cooldownTicks);
 		State state = STATES.get(player.getUUID());
 		if (state != null) {
 			clear(player, state, true);
@@ -141,7 +141,7 @@ public final class VeilBehavior implements FocusBehavior {
 		if (player.getDeltaMovement().horizontalDistanceSqr() > MAX_STILL_SPEED_SQR) {
 			return false;
 		}
-		return player.level().getMaxLocalRawBrightness(player.blockPosition()) <= MAX_LIGHT;
+		return player.getLevel().getMaxLocalRawBrightness(player.blockPosition()) <= MAX_LIGHT;
 	}
 
 	private static void clear(ServerPlayer player, State state, boolean broken) {
@@ -162,7 +162,7 @@ public final class VeilBehavior implements FocusBehavior {
 	}
 
 	private static void veilFeedback(ServerPlayer player, float pitch) {
-		ServerLevel level = (ServerLevel) player.level();
+		ServerLevel level = (ServerLevel) player.getLevel();
 		level.sendParticles(ParticleTypes.SMOKE,
 			player.getX(), player.getY() + 0.9, player.getZ(), 10, 0.25, 0.45, 0.25, 0.01);
 		level.playSound(null, player.blockPosition(),

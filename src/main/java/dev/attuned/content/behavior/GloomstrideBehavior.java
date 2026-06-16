@@ -45,7 +45,7 @@ public final class GloomstrideBehavior implements FocusBehavior {
 		if (attribute == null || attribute.getModifier(AttributeModifierIds.uuid(GLOOM_SPEED_ID)) != null) {
 			return;
 		}
-		attribute.addTransientModifier(new AttributeModifier(AttributeModifierIds.uuid(GLOOM_SPEED_ID), AttributeModifierIds.name(GLOOM_SPEED_ID), GLOOM_SPEED, AttributeModifier.Operation.ADD_MULTIPLIED_BASE));
+		attribute.addTransientModifier(new AttributeModifier(AttributeModifierIds.uuid(GLOOM_SPEED_ID), AttributeModifierIds.name(GLOOM_SPEED_ID), GLOOM_SPEED, AttributeModifier.Operation.MULTIPLY_BASE));
 	}
 
 	private static void remove(ServerPlayer player) {

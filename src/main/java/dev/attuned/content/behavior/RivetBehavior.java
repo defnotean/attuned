@@ -21,7 +21,7 @@ public final class RivetBehavior implements FocusBehavior {
 
 	@Override
 	public void onTick(ServerPlayer player, ItemStack focus) {
-		if (player.onGround() && (player.isCrouching() || player.isBlocking() || onMetalFooting(player))) {
+		if (player.isOnGround() && (player.isCrouching() || player.isBlocking() || onMetalFooting(player))) {
 			apply(player);
 		} else {
 			remove(player);
@@ -34,7 +34,7 @@ public final class RivetBehavior implements FocusBehavior {
 	}
 
 	private static boolean onMetalFooting(ServerPlayer player) {
-		BlockState state = player.level().getBlockState(player.blockPosition().below());
+		BlockState state = player.getLevel().getBlockState(player.blockPosition().below());
 		return state.is(Blocks.IRON_BLOCK)
 			|| state.is(Blocks.RAW_IRON_BLOCK)
 			|| state.is(Blocks.GOLD_BLOCK)
@@ -52,7 +52,7 @@ public final class RivetBehavior implements FocusBehavior {
 		if (attribute == null || attribute.getModifier(AttributeModifierIds.uuid(BRACED_ID)) != null) {
 			return;
 		}
-		attribute.addTransientModifier(new AttributeModifier(AttributeModifierIds.uuid(BRACED_ID), AttributeModifierIds.name(BRACED_ID), KNOCKBACK_RESISTANCE, AttributeModifier.Operation.ADD_VALUE));
+		attribute.addTransientModifier(new AttributeModifier(AttributeModifierIds.uuid(BRACED_ID), AttributeModifierIds.name(BRACED_ID), KNOCKBACK_RESISTANCE, AttributeModifier.Operation.ADDITION));
 	}
 
 	private static void remove(ServerPlayer player) {

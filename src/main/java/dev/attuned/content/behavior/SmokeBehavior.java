@@ -32,7 +32,7 @@ public final class SmokeBehavior implements FocusBehavior {
 
 	@Override
 	public boolean onAbility(ServerPlayer player, ItemStack focus) {
-		ServerLevel level = (ServerLevel) player.level();
+		ServerLevel level = (ServerLevel) player.getLevel();
 		level.sendParticles(ParticleTypes.LARGE_SMOKE,
 			player.getX(), player.getY() + 0.6, player.getZ(), 42, 0.9, 0.45, 0.9, 0.02);
 		level.playSound(null, player.blockPosition(),

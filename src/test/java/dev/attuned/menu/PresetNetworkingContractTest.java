@@ -21,16 +21,20 @@ class PresetNetworkingContractTest {
 	@Test
 	void payloadsCarryMinimalSanitizedData() throws IOException {
 		assertTrue(read(SAVE).contains("record SavePresetPayload(String name)"), "Save carries only a name.");
-		assertTrue(read(SAVE).contains("ByteBufCodecs.STRING_UTF8"), "Save name serializes as UTF-8.");
-		assertTrue(read(SAVE).contains(".cast()"), "STRING_UTF8 composite must cast to the RegistryFriendlyByteBuf field type.");
+		assertTrue(read(SAVE).contains("ByteBufCodecs.STRING_UTF8")
+				|| read(SAVE).contains("readUtf(32)"), "Save name serializes as UTF-8.");
+		assertTrue(read(SAVE).contains(".cast()")
+				|| read(SAVE).contains("writeUtf(name)"), "STRING_UTF8 or FriendlyByteBuf serialization must match the branch packet API.");
 		assertTrue(read(APPLY).contains("record ApplyPresetPayload(int index)"), "Apply carries only an index.");
 		assertTrue(read(DELETE).contains("record DeletePresetPayload(int index, String name)"),
 			"Delete carries the selected name as an idempotency guard for duplicate clicks.");
-		assertTrue(read(DELETE).contains("ByteBufCodecs.STRING_UTF8"),
+		assertTrue(read(DELETE).contains("ByteBufCodecs.STRING_UTF8")
+				|| read(DELETE).contains("readUtf(32)"),
 			"Delete name serializes as UTF-8.");
 		assertTrue(read(IMPORT).contains("record ImportPresetPayload(String name, List<String> slots)"),
 			"Import carries the decoded preset name and slot ids.");
-		assertTrue(read(IMPORT).contains("ByteBufCodecs.STRING_UTF8"),
+		assertTrue(read(IMPORT).contains("ByteBufCodecs.STRING_UTF8")
+				|| read(IMPORT).contains("readUtf(32)"),
 			"Import serializes strings as UTF-8.");
 	}
 
@@ -43,7 +47,8 @@ class PresetNetworkingContractTest {
 		assertTrue(net.contains("ServerPlayNetworking.registerGlobalReceiver(ApplyPresetPayload.TYPE"), "Apply receiver.");
 		assertTrue(net.contains("ServerPlayNetworking.registerGlobalReceiver(DeletePresetPayload.TYPE"), "Delete receiver.");
 		assertTrue(net.contains("ServerPlayNetworking.registerGlobalReceiver(ImportPresetPayload.TYPE"), "Import receiver.");
-		assertTrue(net.contains("player.level().getServer().execute("), "Server-thread hop.");
+		assertTrue(net.contains("player.level().getServer().execute(")
+				|| net.contains("player.getLevel().getServer().execute("), "Server-thread hop.");
 		assertTrue(net.contains("PresetApplicationResolver."), "Apply must delegate to the pure resolver.");
 		assertTrue(read(BOOTSTRAP).contains("PresetNetworking.init()"), "Bootstrap wiring.");
 	}
@@ -95,7 +100,8 @@ class PresetNetworkingContractTest {
 			"Displaced Foci that do not fit back into the satchel should return to inventory with components intact.");
 		assertTrue(net.contains("BuiltInRegistries.ITEM.getKey"),
 			"Save must capture equipped foci by their registry id.");
-		assertTrue(net.contains("AttunedComponents.SATCHEL_CONTENTS"),
+		assertTrue(net.contains("AttunedComponents.SATCHEL_CONTENTS")
+				|| net.contains("AttunedComponents.setContents(satchelStack"),
 			"Apply must write the consumed satchel pool back to the component.");
 		assertTrue(net.contains("menu.broadcastChanges()"),
 			"Apply must broadcast so the open satchel grid reflects consumed foci.");
@@ -158,7 +164,9 @@ class PresetNetworkingContractTest {
 	}
 
 	private static String serverboundRegistrationNeedle(String source) {
-		return source.contains("PayloadTypeRegistry.serverboundPlay().register")
+		return source.contains("ServerPlayNetworking.registerGlobalReceiver")
+			? "ServerPlayNetworking.registerGlobalReceiver"
+			: source.contains("PayloadTypeRegistry.serverboundPlay().register")
 			? "PayloadTypeRegistry.serverboundPlay().register"
 			: "PayloadTypeRegistry.playC2S().register";
 	}

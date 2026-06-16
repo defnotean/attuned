@@ -17,7 +17,7 @@ public abstract class PlayerUpdraftMixin {
 	@Inject(method = "aiStep", at = @At("TAIL"))
 	private void attuned$updraftAfterAiStep(CallbackInfo ci) {
 		Player self = (Player) (Object) this;
-		if (self.level().isClientSide() || !(self instanceof ServerPlayer player)) {
+		if (self.getLevel().isClientSide() || !(self instanceof ServerPlayer player)) {
 			return;
 		}
 		UpdraftBehavior.tickFlight(player);

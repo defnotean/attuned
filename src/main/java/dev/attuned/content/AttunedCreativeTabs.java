@@ -11,13 +11,10 @@ import java.util.Set;
 import java.util.function.Predicate;
 import net.fabricmc.fabric.api.itemgroup.v1.FabricItemGroup;
 import net.minecraft.core.HolderLookup;
-import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.Item;
-import net.minecraft.world.item.ItemStack;
 
 /** Registers and orders Attuned creative-inventory tabs. */
 final class AttunedCreativeTabs {
@@ -72,15 +69,15 @@ final class AttunedCreativeTabs {
 
 	private static void registerFocusCreativeTab(String id, Component title, Item icon,
 			Predicate<FocusDefinition> include, boolean includeCoreItems) {
-		CreativeModeTab tab = FabricItemGroup.builder()
+		FabricItemGroup.builder(new ResourceLocation(Attuned.MOD_ID, id))
 			.title(title)
-			.icon(() -> new ItemStack(icon))
+			.icon(() -> new net.minecraft.world.item.ItemStack(icon))
 			.displayItems((parameters, output) -> {
-				HolderLookup.RegistryLookup<FocusDefinition> lookup =
-					parameters.holders().lookupOrThrow(AttunedRegistries.FOCUS_DEFINITIONS);
-				for (Item focus : fociInDisplayOrder(lookup, include)) {
-					output.accept(focus);
-				}
+				parameters.holders()
+					.lookup(AttunedRegistries.FOCUS_DEFINITIONS)
+					.map(lookup -> fociInDisplayOrder(lookup, include))
+					.orElse(List.of())
+					.forEach(output::accept);
 				if (includeCoreItems) {
 					output.accept(AttunedContent.ATTUNEMENT_SHARD);
 					output.accept(AttunedContent.ATTUNEMENT_SHARD_FRAGMENT);
@@ -97,8 +94,6 @@ final class AttunedCreativeTabs {
 				}
 			})
 			.build();
-		Registry.register(BuiltInRegistries.CREATIVE_MODE_TAB,
-			new ResourceLocation(Attuned.MOD_ID, id), tab);
 	}
 
 	/**

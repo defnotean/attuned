@@ -17,7 +17,7 @@ public final class CombatTargets {
 		return target != attacker
 			&& target.isAlive()
 			&& !target.isSpectator()
-			&& attacker.level() instanceof ServerLevel
+			&& attacker.getLevel() instanceof ServerLevel
 			&& attacker.canHarmPlayer(target);
 	}
 

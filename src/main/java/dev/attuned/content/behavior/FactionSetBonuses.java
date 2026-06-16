@@ -17,16 +17,15 @@ import java.util.Set;
 import java.util.UUID;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.Holder;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.tags.EntityTypeTags;
 import net.minecraft.tags.FluidTags;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.MobType;
 import net.minecraft.world.level.block.AbstractFurnaceBlock;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
@@ -185,7 +184,7 @@ public final class FactionSetBonuses {
 
 	/** Radiant: a brief Regeneration window when standing in strong light, on cooldown. */
 	private static void tryRadiant(ServerPlayer player) {
-		if (player.level().getMaxLocalRawBrightness(player.blockPosition()) < RADIANT_LIGHT_LEVEL) {
+		if (player.getLevel().getMaxLocalRawBrightness(player.blockPosition()) < RADIANT_LIGHT_LEVEL) {
 			return;
 		}
 		if (onCooldown(RADIANT_COOLDOWNS, player, RADIANT_COOLDOWN_TICKS)) {
@@ -193,7 +192,7 @@ public final class FactionSetBonuses {
 		}
 		player.addEffect(new MobEffectInstance(
 			MobEffects.REGENERATION, RADIANT_REGEN_TICKS, 0, true, false, false));
-		RADIANT_COOLDOWNS.put(player.getUUID(), player.level().getGameTime());
+		RADIANT_COOLDOWNS.put(player.getUUID(), player.getLevel().getGameTime());
 	}
 
 	/** Verdant Choir: a saturation tick while standing on grass, on cooldown. */
@@ -206,17 +205,15 @@ public final class FactionSetBonuses {
 		}
 		player.addEffect(new MobEffectInstance(
 			MobEffects.SATURATION, VERDANT_SATURATION_TICKS, 0, true, false, false));
-		VERDANT_COOLDOWNS.put(player.getUUID(), player.level().getGameTime());
+		VERDANT_COOLDOWNS.put(player.getUUID(), player.getLevel().getGameTime());
 	}
 
 	/** Revenant: nearby undead are chilled with Slowness, reusing Bonechill's shape. */
 	private static void chillNearbyUndead(ServerPlayer player) {
-		if (!(player.level() instanceof ServerLevel level)) {
-			return;
-		}
+		ServerLevel level = player.getLevel();
 		AABB area = player.getBoundingBox().inflate(REVENANT_RADIUS);
 		List<LivingEntity> undead = level.getEntitiesOfClass(LivingEntity.class, area, entity ->
-			entity != player && entity.isAlive() && entity.getType().is(EntityTypeTags.UNDEAD));
+			entity != player && entity.isAlive() && entity.getMobType() == MobType.UNDEAD);
 		for (LivingEntity entity : undead) {
 			entity.addEffect(new MobEffectInstance(
 				MobEffects.MOVEMENT_SLOWDOWN, REVENANT_SLOWNESS_TICKS, 0, true, false, true));
@@ -225,36 +222,36 @@ public final class FactionSetBonuses {
 
 	private static boolean onCooldown(Map<UUID, Long> cooldowns, ServerPlayer player, long cooldownTicks) {
 		Long last = cooldowns.get(player.getUUID());
-		return last != null && player.level().getGameTime() - last < cooldownTicks;
+		return last != null && player.getLevel().getGameTime() - last < cooldownTicks;
 	}
 
-	private static void refresh(ServerPlayer player, Holder<MobEffect> effect) {
+	private static void refresh(ServerPlayer player, MobEffect effect) {
 		PassiveEffectRefresher.refresh(player, effect, PASSIVE_DURATION, 0, true, false, false);
 	}
 
 	private static boolean inDark(ServerPlayer player) {
-		return player.level().getMaxLocalRawBrightness(player.blockPosition()) <= UMBRAL_MAX_LIGHT;
+		return player.getLevel().getMaxLocalRawBrightness(player.blockPosition()) <= UMBRAL_MAX_LIGHT;
 	}
 
 	private static boolean nearWater(ServerPlayer player) {
 		BlockPos pos = player.blockPosition();
-		return player.level().getFluidState(pos).is(FluidTags.WATER)
-			|| player.level().getFluidState(pos.below()).is(FluidTags.WATER)
-			|| player.level().getFluidState(pos.north()).is(FluidTags.WATER)
-			|| player.level().getFluidState(pos.south()).is(FluidTags.WATER)
-			|| player.level().getFluidState(pos.east()).is(FluidTags.WATER)
-			|| player.level().getFluidState(pos.west()).is(FluidTags.WATER);
+		return player.getLevel().getFluidState(pos).is(FluidTags.WATER)
+			|| player.getLevel().getFluidState(pos.below()).is(FluidTags.WATER)
+			|| player.getLevel().getFluidState(pos.north()).is(FluidTags.WATER)
+			|| player.getLevel().getFluidState(pos.south()).is(FluidTags.WATER)
+			|| player.getLevel().getFluidState(pos.east()).is(FluidTags.WATER)
+			|| player.getLevel().getFluidState(pos.west()).is(FluidTags.WATER);
 	}
 
 	private static boolean onGrass(ServerPlayer player) {
-		BlockState feet = player.level().getBlockState(player.blockPosition());
-		BlockState below = player.level().getBlockState(player.blockPosition().below());
+		BlockState feet = player.getLevel().getBlockState(player.blockPosition());
+		BlockState below = player.getLevel().getBlockState(player.blockPosition().below());
 		return isGrass(feet) || isGrass(below);
 	}
 
 	private static boolean isGrass(BlockState state) {
 		return state.is(Blocks.GRASS_BLOCK)
-			|| state.is(Blocks.SHORT_GRASS)
+			|| state.is(Blocks.GRASS)
 			|| state.is(Blocks.TALL_GRASS);
 	}
 
@@ -262,7 +259,7 @@ public final class FactionSetBonuses {
 		BlockPos origin = player.blockPosition();
 		for (BlockPos pos : BlockPos.betweenClosed(
 				origin.offset(-4, -2, -4), origin.offset(4, 2, 4))) {
-			if (isHeat(player.level().getBlockState(pos))) {
+			if (isHeat(player.getLevel().getBlockState(pos))) {
 				return true;
 			}
 		}

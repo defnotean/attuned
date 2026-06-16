@@ -47,12 +47,19 @@ public final class DataFocusBehaviors {
 	 * registry {@code behaviorId} qualifies any per-instance state (e.g. the {@code attribute_while}
 	 * modifier id) so two distinct palette behaviours never collide on the same attribute. */
 	public static FocusBehavior build(ResourceLocation behaviorId, FocusBehaviorDef definition) {
-		return switch (definition) {
-			case FocusBehaviorDef.ConditionalMobEffect effect -> new ConditionalMobEffectBehavior(effect);
-			case FocusBehaviorDef.OnHitEffect onHit -> new OnHitEffectBehavior(onHit);
-			case FocusBehaviorDef.PeriodicEffect periodic -> new PeriodicEffectBehavior(periodic);
-			case FocusBehaviorDef.AttributeWhile attributeWhile -> new AttributeWhileBehavior(behaviorId, attributeWhile);
-		};
+		if (definition instanceof FocusBehaviorDef.ConditionalMobEffect effect) {
+			return new ConditionalMobEffectBehavior(effect);
+		}
+		if (definition instanceof FocusBehaviorDef.OnHitEffect onHit) {
+			return new OnHitEffectBehavior(onHit);
+		}
+		if (definition instanceof FocusBehaviorDef.PeriodicEffect periodic) {
+			return new PeriodicEffectBehavior(periodic);
+		}
+		if (definition instanceof FocusBehaviorDef.AttributeWhile attributeWhile) {
+			return new AttributeWhileBehavior(behaviorId, attributeWhile);
+		}
+		throw new IllegalArgumentException("Unknown focus behavior definition: " + definition);
 	}
 
 	/**
@@ -73,10 +80,10 @@ public final class DataFocusBehaviors {
 			if (!def.condition().test(player)) {
 				return;
 			}
-			MobEffectInstance current = player.getEffect(def.effect());
+			MobEffectInstance current = player.getEffect(def.effect().value());
 			if (PassiveEffectRefresher.shouldRefresh(current, def.refreshTicks())) {
 				player.addEffect(new MobEffectInstance(
-					def.effect(), def.durationTicks(), def.amplifier(), true, false, false));
+					def.effect().value(), def.durationTicks(), def.amplifier(), true, false, false));
 			}
 		}
 
@@ -117,7 +124,7 @@ public final class DataFocusBehaviors {
 		/** Picks the recipient and applies the configured effect to it. */
 		public void applyTo(ServerPlayer attacker, LivingEntity victim) {
 			LivingEntity recipient = def.targetSelf() ? attacker : victim;
-			recipient.addEffect(new MobEffectInstance(def.effect(), def.durationTicks(), def.amplifier()));
+			recipient.addEffect(new MobEffectInstance(def.effect().value(), def.durationTicks(), def.amplifier()));
 		}
 	}
 
@@ -163,7 +170,7 @@ public final class DataFocusBehaviors {
 		@Override
 		public void onTick(ServerPlayer player, ItemStack focus) {
 			ModifierEntry modifier = def.modifier();
-			AttributeInstance ai = player.getAttribute(modifier.attribute());
+			AttributeInstance ai = player.getAttribute(modifier.attribute().value());
 			if (ai == null) {
 				return;
 			}
@@ -179,7 +186,7 @@ public final class DataFocusBehaviors {
 
 		@Override
 		public void onDeactivate(ServerPlayer player, ItemStack focus) {
-			AttributeInstance ai = player.getAttribute(def.modifier().attribute());
+			AttributeInstance ai = player.getAttribute(def.modifier().attribute().value());
 			if (ai != null) {
 				ai.removeModifier(AttributeModifierIds.uuid(modifierId));
 			}

@@ -23,11 +23,11 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.tags.DamageTypeTags;
-import net.minecraft.tags.EntityTypeTags;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.MobType;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -93,13 +93,13 @@ public final class RevenantCombat {
 		}
 		Debt debt = DEBTS.get(attacker.getUUID());
 		if (debt == null || !debt.target().equals(defender.getUUID())
-				|| attacker.level().getGameTime() > debt.expiresAt()) {
+				|| attacker.getLevel().getGameTime() > debt.expiresAt()) {
 			return amount;
 		}
 		// Shape the damage now (it cannot be retro-multiplied) but defer spending the
 		// debt to the after-damage stage so a dodged hit keeps the charge.
 		PENDING_DEBT.put(attacker.getUUID(),
-			new PendingProc(defender.getUUID(), attacker.level().getGameTime()));
+			new PendingProc(defender.getUUID(), attacker.getLevel().getGameTime()));
 		ashenDebtFeedback(attacker, defender);
 		return amount * DEBT_MULTIPLIER;
 	}
@@ -118,7 +118,7 @@ public final class RevenantCombat {
 		PendingProc pendingDebt = PENDING_DEBT.remove(attacker.getUUID());
 		if (pendingDebt != null
 				&& pendingDebt.target().equals(defender.getUUID())
-				&& pendingDebt.gameTime() == attacker.level().getGameTime()) {
+				&& pendingDebt.gameTime() == attacker.getLevel().getGameTime()) {
 			DEBTS.remove(attacker.getUUID());
 		}
 		if (defender instanceof ServerPlayer player && hasActiveFocus(player, ASHEN_DEBT_FOCUS)) {
@@ -126,14 +126,14 @@ public final class RevenantCombat {
 				return;
 			}
 			DEBTS.put(player.getUUID(), new Debt(attacker.getUUID(),
-				player.level().getGameTime() + DEBT_WINDOW_TICKS));
+				player.getLevel().getGameTime() + DEBT_WINDOW_TICKS));
 		}
 		if (defender instanceof ServerPlayer player && hasActiveFocus(player, BONECHILL_FOCUS)
 				&& canChillAttacker(player, attacker)) {
 			chill(attacker);
 		}
 		if (attacker instanceof ServerPlayer player && hasActiveFocus(player, BONECHILL_FOCUS)
-				&& defender.getType().is(EntityTypeTags.UNDEAD)) {
+				&& defender.getMobType() == MobType.UNDEAD) {
 			chill(defender);
 		}
 	}
@@ -147,7 +147,7 @@ public final class RevenantCombat {
 				|| !CombatTargets.isHostileOrPvpOpponent(entity, player)) {
 			return;
 		}
-		long now = player.level().getGameTime();
+		long now = player.getLevel().getGameTime();
 		Long last = LAST_RITES.get(player.getUUID());
 		if (last != null && now - last < LAST_RITES_CLEANSE_COOLDOWN) {
 			return;
@@ -164,7 +164,7 @@ public final class RevenantCombat {
 			player.clearFire();
 		}
 		LAST_RITES.put(player.getUUID(), now);
-		ServerLevel level = (ServerLevel) player.level();
+		ServerLevel level = (ServerLevel) player.getLevel();
 		level.sendParticles(ParticleTypes.SOUL_FIRE_FLAME,
 			player.getX(), player.getY() + 1.0D, player.getZ(), 24, 0.35D, 0.5D, 0.35D, 0.03D);
 		level.playSound(null, player.blockPosition(),
@@ -172,13 +172,13 @@ public final class RevenantCombat {
 	}
 
 	private static boolean canChillAttacker(ServerPlayer player, LivingEntity attacker) {
-		return attacker.getType().is(EntityTypeTags.UNDEAD)
+		return attacker.getMobType() == MobType.UNDEAD
 			|| CombatTargets.isHostileOrPvpOpponent(attacker, player);
 	}
 
 	private static void chill(LivingEntity target) {
 		target.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, BONECHILL_TICKS, 0, true, false, true));
-		if (target.level() instanceof ServerLevel level) {
+		if (target.getLevel() instanceof ServerLevel level) {
 			level.sendParticles(ParticleTypes.SNOWFLAKE,
 				target.getX(), target.getY() + target.getBbHeight() * 0.55D, target.getZ(),
 				9, 0.22D, 0.3D, 0.22D, 0.01D);
@@ -186,7 +186,7 @@ public final class RevenantCombat {
 	}
 
 	private static void ashenDebtFeedback(ServerPlayer attacker, LivingEntity defender) {
-		ServerLevel level = (ServerLevel) attacker.level();
+		ServerLevel level = (ServerLevel) attacker.getLevel();
 		level.sendParticles(ParticleTypes.ASH,
 			defender.getX(), defender.getY() + defender.getBbHeight() * 0.65D, defender.getZ(),
 			18, 0.25D, 0.3D, 0.25D, 0.02D);

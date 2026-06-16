@@ -16,7 +16,9 @@ class RadiantFocusBehaviorContractTest {
 	@Test
 	void censerTrimPreservesExistingEffectDisplayFlags() throws IOException {
 		String source = read(RADIANT_BEHAVIORS);
-		String trim = methodBody(source, "private static void trim(ServerPlayer player, Holder<MobEffect> effect)");
+		String trim = source.contains("private static void trim(ServerPlayer player, Holder<MobEffect> effect)")
+			? methodBody(source, "private static void trim(ServerPlayer player, Holder<MobEffect> effect)")
+			: methodBody(source, "private static void trim(ServerPlayer player, MobEffect effect)");
 
 		assertTrue(trim.contains("current.isAmbient(), current.isVisible(), current.showIcon()"),
 			"Censer should shorten poison/wither without forcing hidden or no-icon effects to become visible.");

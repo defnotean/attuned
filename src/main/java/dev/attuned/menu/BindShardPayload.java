@@ -1,28 +1,25 @@
 package dev.attuned.menu;
 
 import dev.attuned.Attuned;
-import net.minecraft.network.RegistryFriendlyByteBuf;
-import net.minecraft.network.codec.StreamCodec;
-import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.fabricmc.fabric.api.networking.v1.FabricPacket;
+import net.fabricmc.fabric.api.networking.v1.PacketType;
+import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
 
-/**
- * Client-to-server signal that the player pressed the Altar GUI's "Bind"
- * button. It carries no data; the server validates that the player has the
- * Altar menu open and a shard in the input slot before consuming one shard
- * and raising attunement capacity, so a forged payload only ever fires what
- * the player legitimately could.
- */
-public record BindShardPayload() implements CustomPacketPayload {
+/** Client-to-server signal that the player pressed the Altar GUI's Bind button. */
+public record BindShardPayload() implements FabricPacket {
+	public static final PacketType<BindShardPayload> TYPE =
+		PacketType.create(new ResourceLocation(Attuned.MOD_ID, "bind_shard"), BindShardPayload::new);
 
-	public static final Type<BindShardPayload> TYPE =
-		new Type<>(new ResourceLocation(Attuned.MOD_ID, "bind_shard"));
-
-	public static final StreamCodec<RegistryFriendlyByteBuf, BindShardPayload> CODEC =
-		StreamCodec.unit(new BindShardPayload());
+	public BindShardPayload(FriendlyByteBuf buf) {
+		this();
+	}
 
 	@Override
-	public Type<BindShardPayload> type() {
+	public void write(FriendlyByteBuf buf) {}
+
+	@Override
+	public PacketType<?> getType() {
 		return TYPE;
 	}
 }

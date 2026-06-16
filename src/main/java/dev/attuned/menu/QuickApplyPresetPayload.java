@@ -1,33 +1,33 @@
 package dev.attuned.menu;
 
 import dev.attuned.Attuned;
-import net.minecraft.network.RegistryFriendlyByteBuf;
-import net.minecraft.network.codec.ByteBufCodecs;
-import net.minecraft.network.codec.StreamCodec;
-import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.fabricmc.fabric.api.networking.v1.FabricPacket;
+import net.fabricmc.fabric.api.networking.v1.PacketType;
+import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
 
-/**
- * Hotkey-driven preset apply. Unlike {@link ApplyPresetPayload} this does not
- * require the reliquary screen to be open: the server sources Foci from the
- * first Focus Reliquary found in the player's inventory (plus equipped and
- * loose inventory Foci), so a bound build key works mid-gameplay.
- */
-public record QuickApplyPresetPayload(int index) implements CustomPacketPayload {
+public record QuickApplyPresetPayload(int index) implements FabricPacket {
 	public QuickApplyPresetPayload {
 		if (index < 0) {
 			index = -1;
 		}
 	}
 
-	public static final Type<QuickApplyPresetPayload> TYPE =
-		new Type<>(new ResourceLocation(Attuned.MOD_ID, "quick_apply_preset"));
+	public static final PacketType<QuickApplyPresetPayload> TYPE =
+		PacketType.create(new ResourceLocation(Attuned.MOD_ID, "quick_apply_preset"),
+			QuickApplyPresetPayload::new);
 
-	public static final StreamCodec<RegistryFriendlyByteBuf, QuickApplyPresetPayload> CODEC =
-		StreamCodec.composite(ByteBufCodecs.VAR_INT, QuickApplyPresetPayload::index, QuickApplyPresetPayload::new).cast();
+	public QuickApplyPresetPayload(FriendlyByteBuf buf) {
+		this(buf.readVarInt());
+	}
 
 	@Override
-	public Type<QuickApplyPresetPayload> type() {
+	public void write(FriendlyByteBuf buf) {
+		buf.writeVarInt(index);
+	}
+
+	@Override
+	public PacketType<?> getType() {
 		return TYPE;
 	}
 }

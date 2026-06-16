@@ -26,9 +26,10 @@ public final class RevenantFocusBehaviors {
 
 		@Override
 		public void onTick(ServerPlayer player, ItemStack focus) {
-			if (!(player.level() instanceof ServerLevel level) || player.tickCount % 2 != 0) {
+			if (player.tickCount % 2 != 0) {
 				return;
 			}
+			ServerLevel level = player.getLevel();
 			Vec3 target = player.position().add(0.0D, 0.65D, 0.0D);
 			List<ExperienceOrb> orbs = level.getEntitiesOfClass(ExperienceOrb.class,
 				player.getBoundingBox().inflate(RADIUS), orb -> orb.isAlive());
@@ -60,7 +61,7 @@ public final class RevenantFocusBehaviors {
 
 		@Override
 		public boolean onAbility(ServerPlayer player, ItemStack focus) {
-			ServerLevel level = (ServerLevel) player.level();
+			ServerLevel level = (ServerLevel) player.getLevel();
 			Vec3 origin = player.position();
 			Vec3 look = player.getLookAngle().normalize();
 			Vec3 destination = null;
