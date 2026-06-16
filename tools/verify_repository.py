@@ -926,20 +926,26 @@ def version_profile_problems(root: Path = ROOT) -> list[str]:
     except OSError as exc:
         problems.append(f"{CI_WORKFLOW_RELATIVE_FILE}: {exc}")
     else:
-        expected_java = str(active_profile.get("java_version", ""))
+        expected_build_java = ""
+        if active_profile:
+            expected_build_java = str(profile_tool.build_java_version(active_profile))
         uses_dynamic_profile = (
             "tools/minecraft_version_profile.py current --github-output" in ci_workflow
-            and "steps.versions.outputs.java_version" in ci_workflow
+            and "steps.versions.outputs.build_java_version" in ci_workflow
         )
         hardcoded_java = re.search(r"java-version:\s*[\"']?(?P<version>\d+)[\"']?", ci_workflow)
         if not uses_dynamic_profile and hardcoded_java is None:
             problems.append(
-                f"{CI_WORKFLOW_RELATIVE_FILE}: setup-java must use the active profile Java version"
+                f"{CI_WORKFLOW_RELATIVE_FILE}: setup-java must use the active profile build Java version"
             )
-        if hardcoded_java is not None and expected_java and hardcoded_java.group("version") != expected_java:
+        if (
+            hardcoded_java is not None
+            and expected_build_java
+            and hardcoded_java.group("version") != expected_build_java
+        ):
             problems.append(
                 f"{CI_WORKFLOW_RELATIVE_FILE}: java-version {hardcoded_java.group('version')} "
-                f"does not match active profile java_version {expected_java}"
+                f"does not match active profile build_java_version {expected_build_java}"
             )
         required_ci_snippets = {
             "git diff --check": "run whitespace diff check",
