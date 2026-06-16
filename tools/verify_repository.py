@@ -54,6 +54,7 @@ SOURCE_SUFFIXES = {
     ".java",
     ".js",
     ".json",
+    ".mcmeta",
     ".md",
     ".properties",
     ".py",
@@ -63,6 +64,7 @@ SOURCE_SUFFIXES = {
     ".yaml",
     ".yml",
 }
+JSON_SOURCE_SUFFIXES = {".json", ".mcmeta"}
 SOURCE_SKIP_DIRS = {
     ".git",
     ".gradle",
@@ -204,7 +206,11 @@ def source_files() -> list[Path]:
 
 
 def check_src_json() -> str:
-    json_files = sorted(SRC_ROOT.rglob("*.json"))
+    json_files = sorted(
+        path
+        for path in SRC_ROOT.rglob("*")
+        if path.is_file() and path.suffix.lower() in JSON_SOURCE_SUFFIXES
+    )
     problems: list[str] = []
     for path in json_files:
         try:
