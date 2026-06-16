@@ -24,14 +24,15 @@ Equip **Foci** into six inventory slots, but mind your **attunement capacity**. 
 ## Current release — Attuned 1.5.0
 
 - **Combat config tuning** — Discord damage multiplier and resonance gain/decay are server-configurable (`config/attuned.json`).
-- **Pact tacticals** on the Focus Ability key (**R** by default), plus new ability Foci that claim the keybind.
+- **Pact tacticals** on the Focus Ability key (**R** by default), including **crouch overcharge** (spends resonance for a stronger burst), plus new ability Foci that claim the keybind.
 - **Pact Trials (Tier 4)** — long-term goals per pact; permanent completion unlocks a small passive while that pact is awake again.
 - **Faction set bonuses** for Tideborn, Forgebound, Wildroot, and Umbral (three+ active Foci sharing the faction).
 - **Resonant surge interactivity** — server-wide surge fields grant amplified resonance; tunable interval, duration, and radius.
 - **Onboarding hints** — one-shot toasts for first shard, dormant Focus, confluence, pact trial completion, and more.
 - **Affinity Loom** at the Altar of Reweaving — reroll one Focus within its affinity for escalating Attunement Shards.
 - **Build sharing** — Reliquary Share/Import copies `attuned:v1:` clipboard presets between players.
-- **HUD and journal surfacing** — pact trial progress, Affinity Loom hints, and expanded rules in the Attunement Journal.
+- **Combat feedback** — particles and sounds on resonance swings, Apex procs, ability casts, and pact tacticals.
+- **HUD and journal surfacing** — pact trial progress, tactical cooldown ring, Affinity Loom hints, and expanded rules in the Attunement Journal.
 
 ## Foundation — Resonant Depths
 

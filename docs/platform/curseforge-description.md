@@ -6,7 +6,7 @@ Equip Foci into six inventory slots, manage your attunement capacity, and build 
 
 ## Highlights
 
-- Attuned 1.5.0 - Eightfold Affinities & Resonant Engagement adds the eightfold counter wheel, Pact Trials, pact tacticals on R at 50%+ resonance, five new ability Foci, Affinity Loom rerolls, Reliquary build codes, and expanded faction set bonuses.
+- Attuned 1.5.0 - Eightfold Affinities & Resonant Engagement adds the eightfold counter wheel, Pact Trials with combat-gated progression, pact tacticals on R at 50%+ resonance (with crouch overcharge), five new ability Foci, Affinity Loom rerolls, Reliquary build codes, combat feedback polish, and expanded faction set bonuses.
 - 94 Foci across mobility, defense, combat, stealth, holy, seafaring, shadow, utility, and the eightfold counter wheel.
 - 16 new pure-affinity modifier Foci fill out the expanded roster with simple, readable stat identities and animated medallion art.
 - Eight Affinity Pacts and expanded Apex capstones reward commitment to any single Affinity, while Discord and neutral builds keep their own endgame paths.
