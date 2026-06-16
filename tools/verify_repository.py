@@ -39,10 +39,16 @@ EXPECTED_MODRINTH_GALLERY_PNGS = (
     "attuned-all-foci-real-assets.png",
     "attuned-apex-discord-neutral.png",
     "attuned-bastion-foci.png",
+    "attuned-forge-foci.png",
     "attuned-fury-foci.png",
     "attuned-holy-foci.png",
+    "attuned-items-tools-and-altars.png",
     "attuned-neutral-foci-i.png",
     "attuned-neutral-foci-ii.png",
+    "attuned-tide-foci.png",
+    "attuned-umbral-foci-i.png",
+    "attuned-umbral-foci-ii.png",
+    "attuned-verdant-foci.png",
     "attuned-zephyr-foci.png",
 )
 MODRINTH_GALLERY_SIZE = (1920, 1080)

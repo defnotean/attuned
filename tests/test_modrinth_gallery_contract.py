@@ -24,6 +24,24 @@ class ModrinthGalleryContractTest(unittest.TestCase):
 		self.assertIn("suppresses affinity pressure", self.source)
 		self.assertIn("uses Absorption pulses", self.source)
 
+	def test_gallery_covers_all_eight_affinities_and_item_assets(self) -> None:
+		for affinity in ("fury", "bastion", "zephyr", "holy", "tide", "forge", "verdant", "umbral"):
+			self.assertIn(f'"{affinity}"', self.source)
+		for panel in (
+			"Tide Foci",
+			"Forge Foci",
+			"Verdant Foci",
+			"Umbral Foci I",
+			"Umbral Foci II",
+			"Items, Tools & Altars",
+		):
+			self.assertIn(panel, self.source)
+		self.assertIn("attuned-items-tools-and-altars.png", self.source)
+		self.assertIn("attunement_altar_top_tide", self.source)
+		self.assertIn("attunement_altar_top_forge", self.source)
+		self.assertIn("attunement_altar_top_verdant", self.source)
+		self.assertIn("attunement_altar_top_umbral", self.source)
+
 
 if __name__ == "__main__":
 	unittest.main()
