@@ -942,6 +942,7 @@ def version_profile_problems(root: Path = ROOT) -> list[str]:
                 f"does not match active profile java_version {expected_java}"
             )
         required_ci_snippets = {
+            "git diff --check": "run whitespace diff check",
             "tools/verify_repository.py": "run repository verification",
             "unittest discover -s tests": "run Python contract tests",
             "./gradlew test build --no-daemon": "run Gradle test/build",
