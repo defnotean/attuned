@@ -27,28 +27,34 @@ class UpdraftFocusContractTest {
 		assertTrue(behavior.contains("public void onTick(ServerPlayer player, ItemStack focus)"));
 		assertTrue(behavior.contains("tickFlight(player);"));
 		assertTrue(behavior.contains("public void onDeactivate(ServerPlayer player, ItemStack focus)"));
-		assertTrue(behavior.contains("setLifting(player.getUUID(), false);"));
+		assertTrue(behavior.contains("setControls(player.getUUID(), false, false);"));
 		assertTrue(behavior.contains("tickFlight("));
-		assertTrue(behavior.contains("applyFlightBoost("));
+		assertTrue(behavior.contains("applyFlightControls("));
 		assertTrue(behavior.contains("mitigatesFallDamage("));
-		assertTrue(behavior.contains("setLifting("));
+		assertTrue(behavior.contains("setControls("));
 		assertTrue(behavior.contains("LAST_FLIGHT_TICK"));
 		assertTrue(behavior.contains("startFallFlying()"));
 		assertTrue(behavior.contains("Items.ELYTRA"));
-		assertTrue(behavior.contains("THRUST"));
+		assertTrue(behavior.contains("BOOST_THRUST"));
+		assertTrue(behavior.contains("BRAKE_FACTOR"));
 		assertTrue(behavior.contains("MAX_SPEED"));
 
 		String networking = read(NETWORKING);
 		assertTrue(networking.contains("UpdraftLiftPayload.TYPE"));
-		assertTrue(networking.contains("UpdraftBehavior.setLifting"));
+		assertTrue(networking.contains("UpdraftBehavior.setControls"));
 
 		String client = read(CLIENT);
 		assertTrue(client.contains("UpdraftLiftPayload"));
 		assertTrue(client.contains("keyJump.isDown()"));
+		assertTrue(client.contains("keySprint.isDown()"));
 		assertTrue(client.contains("lastSent"));
+		assertTrue(client.contains("lastBrakeSent"));
 		assertTrue(client.contains("heartbeat"));
 		assertTrue(client.contains("wantsLift(Player player)"));
+		assertTrue(client.contains("wantsBrake(Player player)"));
 		assertTrue(client.contains("heartbeat % 10"));
+		assertTrue(client.contains("applyLocalPrediction("));
+		assertTrue(client.contains("UpdraftBehavior.controlledMotion("));
 
 		String mixins = read(Path.of("src/main/resources/attuned.mixins.json"));
 		assertTrue(mixins.contains("PlayerUpdraftMixin"));

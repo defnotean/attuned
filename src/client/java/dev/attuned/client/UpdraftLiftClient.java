@@ -1,6 +1,7 @@
 package dev.attuned.client;
 
 import dev.attuned.content.AttunedContent;
+import dev.attuned.content.behavior.UpdraftBehavior;
 import dev.attuned.attunement.AttunedAttachments;
 import dev.attuned.attunement.AttunedInv;
 import dev.attuned.attunement.Attunement;
@@ -19,6 +20,7 @@ import net.minecraft.world.item.Items;
 @Environment(EnvType.CLIENT)
 public final class UpdraftLiftClient {
 	private static boolean lastSent;
+	private static boolean lastBrakeSent;
 	private static boolean hasSent;
 	private static int heartbeat;
 	private static boolean initialized;
@@ -37,16 +39,24 @@ public final class UpdraftLiftClient {
 		Player player = client.player;
 		if (client.level == null || player == null) {
 			lastSent = false;
+			lastBrakeSent = false;
 			hasSent = false;
 			heartbeat = 0;
 			return;
 		}
 		boolean wantsLift = wantsLift(player);
-		heartbeat = wantsLift ? heartbeat + 1 : 0;
-		boolean send = !hasSent || wantsLift != lastSent || (wantsLift && heartbeat % 10 == 0);
+		boolean wantsBrake = wantsBrake(player);
+		if ((wantsLift || wantsBrake) && player.isFallFlying()) {
+			applyLocalPrediction(player, wantsLift, wantsBrake);
+		}
+		boolean active = wantsLift || wantsBrake;
+		heartbeat = active ? heartbeat + 1 : 0;
+		boolean send = !hasSent || wantsLift != lastSent || wantsBrake != lastBrakeSent
+			|| (active && heartbeat % 10 == 0);
 		if (send && ClientPlayNetworking.canSend(UpdraftLiftPayload.TYPE)) {
-			ClientPlayNetworking.send(new UpdraftLiftPayload(wantsLift));
+			ClientPlayNetworking.send(new UpdraftLiftPayload(wantsLift, wantsBrake));
 			lastSent = wantsLift;
+			lastBrakeSent = wantsBrake;
 			hasSent = true;
 		}
 	}
@@ -59,6 +69,23 @@ public final class UpdraftLiftClient {
 			return false;
 		}
 		return player.isFallFlying() || (!player.onGround() && !player.isInWater() && !player.isPassenger());
+	}
+
+	private static boolean wantsBrake(Player player) {
+		return hasActiveUpdraft(player)
+			&& hasFunctionalElytra(player)
+			&& player.isFallFlying()
+			&& Minecraft.getInstance().options.keySprint.isDown();
+	}
+
+	private static void applyLocalPrediction(Player player, boolean boosting, boolean braking) {
+		player.setDeltaMovement(UpdraftBehavior.controlledMotion(
+			player.getDeltaMovement(),
+			player.getLookAngle(),
+			player.getYRot(),
+			boosting,
+			braking
+		));
 	}
 
 	private static boolean hasActiveUpdraft(Player player) {
