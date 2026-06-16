@@ -18,17 +18,27 @@ import net.minecraft.world.phys.Vec3;
 
 /**
  * Updraft Focus: while fall-flying with a functional elytra, holding jump adds
- * strong forward thrust along horizontal look after vanilla movement resolves.
+ * pitch-controlled thrust after vanilla movement resolves.
  */
 public final class UpdraftBehavior implements FocusBehavior {
-	/** Forward thrust added per tick while boost is held (blocks/tick). */
-	static final double THRUST = 0.24D;
+	/** Gentle forward thrust at level pitch while boost is held (blocks/tick). */
+	static final double CRUISE_THRUST = 0.035D;
+	/** Extra forward thrust at full dive pitch. */
+	static final double DIVE_THRUST = 0.075D;
+	/** Forward speed bled off at full climb pitch. */
+	static final double CLIMB_BRAKE = 0.09D;
 	/** Extra vertical push per tick at full look-up; scaled by look pitch. */
-	static final double VERTICAL_THRUST = 0.04D;
+	static final double VERTICAL_THRUST = 0.055D;
+	/** Normal controllable cruise cap before dive pitch adds speed. */
+	static final double CRUISE_SPEED_CAP = 1.2D;
+	/** Highest forward speed the focus will actively push toward while diving. */
+	static final double DIVE_SPEED_CAP = 1.55D;
 	/** Hard cap on total flight speed (blocks/tick). */
-	static final double MAX_SPEED = 2.4D;
-	/** Minimum horizontal speed while boosting so the glide never stalls out. */
-	static final double MIN_HORIZONTAL = 0.6D;
+	static final double MAX_SPEED = 1.75D;
+	/** Floor that keeps the glide steerable without forcing the old high minimum. */
+	static final double MIN_CONTROL_SPEED = 0.08D;
+	/** Passive bleed used when existing velocity is above the current pitch cap. */
+	static final double OVERSPEED_BLEED = 0.035D;
 
 	private static final Map<UUID, Boolean> LIFTING = new HashMap<>();
 	private static final Map<UUID, Integer> LAST_FLIGHT_TICK = new HashMap<>();
@@ -123,14 +133,14 @@ public final class UpdraftBehavior implements FocusBehavior {
 		Vec3 look = player.getLookAngle();
 
 		double forwardSpeed = motion.x * forward.x + motion.z * forward.z;
-		double targetForward = Math.max(forwardSpeed + THRUST, MIN_HORIZONTAL);
+		double targetForward = controlledForwardSpeed(forwardSpeed, look.y);
 		Vec3 horizontal = new Vec3(motion.x, 0.0D, motion.z);
 		Vec3 lateral = horizontal.subtract(forward.scale(forwardSpeed));
 		Vec3 boostedHorizontal = lateral.add(forward.scale(targetForward));
 
 		Vec3 next = new Vec3(
 			boostedHorizontal.x,
-			motion.y + look.y * VERTICAL_THRUST,
+			motion.y + controlledVerticalBoost(look.y),
 			boostedHorizontal.z
 		);
 
@@ -143,6 +153,22 @@ public final class UpdraftBehavior implements FocusBehavior {
 		player.resetFallDistance();
 		player.fallDistance = 0.0F;
 		player.hurtMarked = true;
+	}
+
+	static double controlledForwardSpeed(double forwardSpeed, double lookY) {
+		double climb = clamp(lookY, 0.0D, 1.0D);
+		double dive = clamp(-lookY, 0.0D, 1.0D);
+		double cap = CRUISE_SPEED_CAP + (DIVE_SPEED_CAP - CRUISE_SPEED_CAP) * dive;
+		double next = forwardSpeed + CRUISE_THRUST + DIVE_THRUST * dive - CLIMB_BRAKE * climb;
+		if (next > cap) {
+			double bleed = OVERSPEED_BLEED + CLIMB_BRAKE * climb;
+			next = Math.max(cap, forwardSpeed - bleed);
+		}
+		return Math.max(next, MIN_CONTROL_SPEED);
+	}
+
+	static double controlledVerticalBoost(double lookY) {
+		return clamp(lookY, -1.0D, 1.0D) * VERTICAL_THRUST;
 	}
 
 	private static boolean canStartGlide(ServerPlayer player) {
@@ -161,5 +187,9 @@ public final class UpdraftBehavior implements FocusBehavior {
 			return new Vec3(-Math.sin(yawRad), 0.0D, Math.cos(yawRad));
 		}
 		return flat.normalize();
+	}
+
+	private static double clamp(double value, double min, double max) {
+		return Math.max(min, Math.min(max, value));
 	}
 }
