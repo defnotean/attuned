@@ -45,6 +45,7 @@ EXPECTED_MODRINTH_GALLERY_PNGS = (
     "attuned-items-tools-and-altars.png",
     "attuned-neutral-foci-i.png",
     "attuned-neutral-foci-ii.png",
+    "attuned-neutral-foci-iii.png",
     "attuned-tide-foci.png",
     "attuned-umbral-foci-i.png",
     "attuned-umbral-foci-ii.png",

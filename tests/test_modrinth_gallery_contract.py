@@ -33,6 +33,7 @@ class ModrinthGalleryContractTest(unittest.TestCase):
 			"Verdant Foci",
 			"Umbral Foci I",
 			"Umbral Foci II",
+			"Neutral Foci III",
 			"Items, Tools & Altars",
 		):
 			self.assertIn(panel, self.source)
