@@ -306,6 +306,21 @@ class VerifyRepositoryContractTest(unittest.TestCase):
             self.assertEqual(len(problems), 1)
             self.assertIn("missing parent model attuned:item/missing_parent", problems[0])
 
+    def test_attuned_asset_references_report_missing_blockstate_models(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            blockstate_dir = root / "src" / "main" / "resources" / "assets" / "attuned" / "blockstates"
+            blockstate_dir.mkdir(parents=True)
+            (blockstate_dir / "altar.json").write_text(
+                '{"variants": {"": {"model": "attuned:block/missing_altar"}}}',
+                encoding="utf-8",
+            )
+
+            problems = verify_repository.attuned_asset_reference_problems(root)
+
+            self.assertEqual(len(problems), 1)
+            self.assertIn("missing blockstate model attuned:block/missing_altar", problems[0])
+
     def test_attuned_asset_references_walk_nested_item_definition_models(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
             root = Path(temp_dir)
