@@ -1,5 +1,12 @@
 # Changelog
 
+## Attuned 1.5.2+mc1.21.11 - Minecraft 1.21.11 Maintenance Build
+
+### Changed
+- Published a dedicated Minecraft 1.21.11 maintenance artifact using the verified compatibility branch.
+- Carries forward Attuned 1.5.1 Updraft Flight Polish and the 1.5.0 eightfold affinity, Pact, Apex, Confluence, and 95-Focus roster.
+- Release metadata targets Minecraft 1.21.11, Java 21, Fabric Loader 0.19.3, and Fabric API 0.141.4+1.21.11.
+
 ## Attuned 1.5.1 - Updraft Flight Polish
 
 ### Added
