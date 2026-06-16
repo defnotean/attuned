@@ -122,22 +122,45 @@ class VerifyRepositoryContractTest(unittest.TestCase):
 
             self.assertEqual(problems, [])
 
-    def test_src_json_parsing_reports_malformed_mcmeta_sidecars(self) -> None:
+    def test_repository_json_parsing_reports_malformed_mcmeta_sidecars(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
             root = Path(temp_dir)
             mcmeta = root / "src" / "main" / "resources" / "assets" / "attuned" / "textures" / "item" / "focus.png.mcmeta"
             mcmeta.parent.mkdir(parents=True)
             mcmeta.write_text('{"animation": ', encoding="utf-8")
-            original_src_root = verify_repository.SRC_ROOT
-            verify_repository.SRC_ROOT = root / "src"
+            original_root = verify_repository.ROOT
+            original_source_scan_roots = verify_repository.SOURCE_SCAN_ROOTS
+            verify_repository.ROOT = root
+            verify_repository.SOURCE_SCAN_ROOTS = (root / "src",)
             try:
                 with self.assertRaises(verify_repository.CheckFailed) as failure:
-                    verify_repository.check_src_json()
+                    verify_repository.check_repository_json()
             finally:
-                verify_repository.SRC_ROOT = original_src_root
+                verify_repository.ROOT = original_root
+                verify_repository.SOURCE_SCAN_ROOTS = original_source_scan_roots
 
-            self.assertEqual("src JSON parsing", failure.exception.title)
+            self.assertEqual("repository JSON parsing", failure.exception.title)
             self.assertIn("focus.png.mcmeta", failure.exception.problems[0])
+
+    def test_repository_json_parsing_reports_malformed_tool_json(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            tool_json = root / "tools" / "asset_customizer" / "asset-manifest.json"
+            tool_json.parent.mkdir(parents=True)
+            tool_json.write_text('{"assets": ', encoding="utf-8")
+            original_root = verify_repository.ROOT
+            original_source_scan_roots = verify_repository.SOURCE_SCAN_ROOTS
+            verify_repository.ROOT = root
+            verify_repository.SOURCE_SCAN_ROOTS = (root / "src", root / "tools")
+            try:
+                with self.assertRaises(verify_repository.CheckFailed) as failure:
+                    verify_repository.check_repository_json()
+            finally:
+                verify_repository.ROOT = original_root
+                verify_repository.SOURCE_SCAN_ROOTS = original_source_scan_roots
+
+            self.assertEqual("repository JSON parsing", failure.exception.title)
+            self.assertIn("tools/asset_customizer/asset-manifest.json", failure.exception.problems[0])
 
     def test_sensitive_assignment_scan_omits_assigned_value(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
