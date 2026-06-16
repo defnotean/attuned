@@ -129,6 +129,7 @@ def load_font(name: str, size: int) -> ImageFont.FreeTypeFont | ImageFont.ImageF
 FONT_TITLE = load_font("segoeuib.ttf", 52)
 FONT_SUBTITLE = load_font("segoeui.ttf", 25)
 FONT_CARD_TITLE = load_font("segoeuib.ttf", 24)
+FONT_ASSET_TITLE = load_font("segoeuib.ttf", 21)
 FONT_LABEL = load_font("segoeuib.ttf", 16)
 FONT_BODY = load_font("segoeui.ttf", 17)
 FONT_BODY_BOLD = load_font("segoeuib.ttf", 17)
@@ -136,6 +137,8 @@ FONT_SMALL = load_font("segoeui.ttf", 15)
 FONT_APEX_TITLE = load_font("segoeuib.ttf", 29)
 FONT_APEX_BODY = load_font("segoeui.ttf", 19)
 FONT_APEX_SMALL = load_font("segoeui.ttf", 16)
+
+MIN_FOCUS_CARD_HEIGHT = 360
 
 
 def clean_faction(faction: str) -> str:
@@ -259,6 +262,15 @@ def draw_text(draw: ImageDraw.ImageDraw, xy: tuple[int, int], text: str, font, f
 	return y
 
 
+def ellipsize(draw: ImageDraw.ImageDraw, text: str, font, max_width: int) -> str:
+	if draw.textlength(text, font=font) <= max_width:
+		return text
+	shortened = text
+	while shortened and draw.textlength(shortened + "...", font=font) > max_width:
+		shortened = shortened[:-1]
+	return shortened + "..." if shortened else "..."
+
+
 def make_background(accent: tuple[int, int, int]) -> Image.Image:
 	bg = Image.new("RGB", (WIDTH, HEIGHT), (13, 15, 21))
 	draw = ImageDraw.Draw(bg)
@@ -322,6 +334,16 @@ def draw_focus_card(canvas: Image.Image, focus: Focus, box: tuple[int, int, int,
 	draw_text(draw, (x0 + 18, effect_y + 24), focus.effect, FONT_SMALL, (232, 236, 224), x1 - x0 - 36, line_spacing=2, max_lines=3)
 
 
+def focus_panel_columns(count: int) -> int:
+	if count <= 5:
+		return max(count, 1)
+	if count <= 6:
+		return 3
+	if count <= 8:
+		return 4
+	return 5
+
+
 def panel_filename(title: str) -> str:
 	return "attuned-" + title.lower().replace(" ", "-").replace("/", "-") + ".png"
 
@@ -337,7 +359,7 @@ def render_panel(title: str, subtitle: str, foci: list[Focus]) -> Path:
 	draw.text((WIDTH - 410, 39), "Actual in-game Focus assets", font=FONT_BODY_BOLD, fill=(234, 235, 242))
 	draw.text((WIDTH - 410, 68), "Lore, effect, affinity, faction, cost", font=FONT_SMALL, fill=(174, 178, 190))
 
-	cols = 5
+	cols = focus_panel_columns(len(foci))
 	rows = math.ceil(len(foci) / cols)
 	margin_x = 54
 	gap_x = 18
@@ -345,6 +367,10 @@ def render_panel(title: str, subtitle: str, foci: list[Focus]) -> Path:
 	top = 150
 	card_w = (WIDTH - margin_x * 2 - gap_x * (cols - 1)) // cols
 	card_h = (HEIGHT - top - 54 - gap_y * (rows - 1)) // rows
+	if card_h < MIN_FOCUS_CARD_HEIGHT:
+		raise ValueError(
+			f"{title} would render {len(foci)} Foci with {card_h}px-tall cards; split the panel before generating."
+		)
 	for idx, focus in enumerate(foci):
 		col = idx % cols
 		row = idx // cols
@@ -401,16 +427,18 @@ def draw_gallery_asset_card(canvas: Image.Image, asset: GalleryAsset, box: tuple
 	x0, y0, x1, y1 = box
 	accent = (151, 217, 150) if asset.kind == "Item" else (105, 185, 235)
 	rounded_rectangle(draw, box, 12, (25, 27, 36, 235), outline=(*accent, 230), width=2)
-	draw.rectangle((x0 + 2, y0 + 2, x1 - 2, y0 + 48), fill=(*accent, 38))
-	draw.text((x0 + 18, y0 + 15), asset.name, font=FONT_CARD_TITLE, fill=(252, 252, 255))
+	draw.rectangle((x0 + 2, y0 + 2, x1 - 2, y0 + 42), fill=(*accent, 38))
+	title = ellipsize(draw, asset.name, FONT_ASSET_TITLE, x1 - x0 - 32)
+	draw.text((x0 + 16, y0 + 10), title, font=FONT_ASSET_TITLE, fill=(252, 252, 255))
 
-	icon_back = (x0 + 22, y0 + 72, x0 + 138, y0 + 188)
+	icon_back = (x0 + 18, y0 + 58, x0 + 106, y0 + 146)
 	rounded_rectangle(draw, icon_back, 10, (11, 12, 17, 255), outline=(73, 75, 89), width=2)
-	sprite = first_frame(asset.texture).resize((88, 88), Image.Resampling.NEAREST)
-	canvas.alpha_composite(sprite, (x0 + 36, y0 + 86))
+	sprite = first_frame(asset.texture).resize((72, 72), Image.Resampling.NEAREST)
+	canvas.alpha_composite(sprite, (x0 + 26, y0 + 66))
 
-	chip(draw, x0 + 156, y0 + 78, asset.kind, accent, text_fill=(16, 16, 18))
-	draw_text(draw, (x0 + 156, y0 + 122), asset.description, FONT_BODY, (226, 228, 236), x1 - x0 - 180, line_spacing=4, max_lines=4)
+	text_x = x0 + 124
+	chip(draw, text_x, y0 + 60, asset.kind, accent, text_fill=(16, 16, 18))
+	draw_text(draw, (text_x, y0 + 98), asset.description, FONT_SMALL, (226, 228, 236), x1 - text_x - 18, line_spacing=2, max_lines=2)
 
 
 def render_items_and_altars_panel(assets: list[GalleryAsset]) -> Path:
@@ -620,7 +648,8 @@ def main() -> None:
 
 	neutral = by_affinity["neutral"]
 	outputs.append(render_panel("Neutral Foci I", "Utility, exploration, farming, mining, and survival relics with no affinity lock.", neutral[:10]))
-	outputs.append(render_panel("Neutral Foci II", "Seafarers, Unseen, Verdant, travel, and mixed-build utility relics.", neutral[10:]))
+	outputs.append(render_panel("Neutral Foci II", "Wayfinding, offshore, revenant, and seafaring utility relics.", neutral[10:16]))
+	outputs.append(render_panel("Neutral Foci III", "Seafaring support, Unseen, and Verdant Choir utility relics.", neutral[16:]))
 	outputs.append(render_items_and_altars_panel(gallery_assets))
 
 	print("Generated Modrinth gallery panels:")
