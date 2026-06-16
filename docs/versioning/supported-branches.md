@@ -16,21 +16,36 @@ to `latest` unless the change is also intended for the newest target.
 
 All branches below were pushed to `origin` after their branch-local version
 profile, Gradle properties, Fabric metadata, README requirements, dependency
-locks, and verification metadata were aligned.
+locks, and verification metadata were aligned. The second pass added manual
+runtime launch coverage and GitHub Actions confirmation for every supported
+branch.
 
 | Branch | Result | Verification |
 | --- | --- | --- |
-| `latest` | pass | `python -B tools\verify_repository.py`, `python -B -m unittest discover -s tests`, `uv run --with pytest --with pillow -m pytest tests/ -q`, `.\gradlew.bat test build --no-daemon`, and `python -B tools\minecraft_runtime_smoke.py --accept-eula --timeout 240 --stop-timeout 60` passed; smoke reached `Done (0.462s)!`. 1.5.1 platform release to Modrinth, CurseForge, and GitHub also completed from this line. |
-| `maintenance/minecraft-1.21.11` | pass | Branch-local profile/build migration passed full Gradle build, automated tests, and dedicated-server launch smoke. |
-| `maintenance/minecraft-1.20.6` | pass | `.\gradlew.bat test build --no-daemon` passed; dedicated-server launch smoke passed; 1.20.6 compatibility shims are branch-local. |
-| `maintenance/minecraft-1.19.4` | pass | `.\gradlew.bat test build --no-daemon` passed with 565 tests and 8 skipped; dedicated-server launch smoke reached `Done (14.092s)!`. |
-| `maintenance/minecraft-1.18.2` | pass | `.\gradlew.bat test build --no-daemon` passed; dedicated-server launch smoke reached `Done (14.122s)!` in world `attuned_smoke_1182_20260616093616`. |
+| `latest` | pass | Repository verifier, Python unittest discovery, pytest/Pillow, Gradle `test build`, dedicated-server smoke, client `runClient` smoke, GUI preview render, and visual GUI contact-sheet inspection passed. |
+| `maintenance/minecraft-1.21.11` | pass | Same gate passed; server smoke used fresh world `attuned_smoke_12111_20260616103713`; GitHub CI run `27631781707` passed. |
+| `maintenance/minecraft-1.20.6` | pass | Same gate passed after one local client asset-cache retry; server smoke used fresh world `attuned_smoke_1206_20260616103909`; GitHub CI run `27631829397` passed. |
+| `maintenance/minecraft-1.19.4` | pass | Same gate passed after fixing the client mixin Java compatibility and adding Linux LWJGL native verification; server smoke used fresh world `attuned_smoke_1194_fix_20260616105514`; GitHub CI run `27632282182` passed. |
+| `maintenance/minecraft-1.18.2` | pass | Same gate passed after fixing the client mixin Java compatibility; server smoke used fresh world `attuned_smoke_1182_20260616105835`; GitHub CI run `27631931192` passed. |
 
-Automated coverage includes repository/resource validation, focus definition and
-behavior contracts, asset/model/lang contracts, GUI resource/layout contracts,
-and dedicated-server startup. Manual client click-through QA should still be
-run before uploading maintenance jars to distribution platforms, especially for
-branch-specific client renderer or screen changes.
+Manual runtime coverage included:
+
+- 95-Focus catalog asset sanity: every FocusDefinition resolves to a unique
+  item with item definition, model, and texture.
+- Repository/resource validation, Python unittest discovery, pytest/Pillow,
+  and Gradle `test build`.
+- GUI preview rendering for altar, reweaving, satchel, and journal screens,
+  with the generated contact sheet at
+  `build/manual-qa/contact-sheets/all-branch-gui-previews.png` visually
+  inspected for blank panels, HUD/resource breakage, and slot-overlay drift.
+- Dedicated-server smoke on every branch with fatal log scanning.
+- Client `runClient` smoke on every branch through Attuned initialization,
+  resource reload/audio initialization, atlas creation, and fatal log scanning.
+
+This is not a full human playthrough of every Focus effect. It does verify that
+all shipped Focus definitions and behavior contracts load, all branch jars
+build, every supported branch launches in server and client dev runtime, and
+the HUD/GUI resources render without the issues targeted by this QA pass.
 
 ## Version-Specific Notes
 
@@ -54,6 +69,11 @@ branch-specific client renderer or screen changes.
 | `1.20.6` | `21` | `0.19.3` | `0.100.8+1.20.6` | `1.16.3` |
 | `1.19.4` | `17` | `0.19.3` | `0.87.2+1.19.4` | `1.16.3` |
 | `1.18.2` | `17` | `0.19.3` | `0.77.0+1.18.2` | `1.16.3` |
+
+CI uses `build_java_version` from `tools/minecraft_version_profile.py` for the
+Gradle/Loom JVM. That value is at least Java 21 because Loom `1.16.3` requires a
+Java 21+ build runtime; the mod bytecode target and platform metadata still use
+the branch `java_version` shown above.
 
 ## Branch Policy
 
