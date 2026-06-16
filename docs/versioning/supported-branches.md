@@ -20,7 +20,7 @@ locks, and verification metadata were aligned.
 
 | Branch | Result | Verification |
 | --- | --- | --- |
-| `latest` | pass | `python -B tools\verify_repository.py`, `python -B -m unittest discover -s tests`, `uv run --with pytest --with pillow -m pytest tests/ -q`, `.\gradlew.bat test build --no-daemon`, and `python -B tools\minecraft_runtime_smoke.py --accept-eula --timeout 240 --stop-timeout 60` passed; smoke reached `Done (0.424s)!`. 1.5.1 platform release to Modrinth, CurseForge, and GitHub also completed from this line. |
+| `latest` | pass | `python -B tools\verify_repository.py`, `python -B -m unittest discover -s tests`, `uv run --with pytest --with pillow -m pytest tests/ -q`, `.\gradlew.bat test build --no-daemon`, and `python -B tools\minecraft_runtime_smoke.py --accept-eula --timeout 240 --stop-timeout 60` passed; smoke reached `Done (0.462s)!`. 1.5.1 platform release to Modrinth, CurseForge, and GitHub also completed from this line. |
 | `maintenance/minecraft-1.21.11` | pass | Branch-local profile/build migration passed full Gradle build, automated tests, and dedicated-server launch smoke. |
 | `maintenance/minecraft-1.20.6` | pass | `.\gradlew.bat test build --no-daemon` passed; dedicated-server launch smoke passed; 1.20.6 compatibility shims are branch-local. |
 | `maintenance/minecraft-1.19.4` | pass | `.\gradlew.bat test build --no-daemon` passed with 565 tests and 8 skipped; dedicated-server launch smoke reached `Done (14.092s)!`. |
