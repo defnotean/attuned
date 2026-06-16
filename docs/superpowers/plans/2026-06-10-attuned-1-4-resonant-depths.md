@@ -1,6 +1,6 @@
 # Attuned 1.4 "Resonant Depths" Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking. Work the tasks IN ORDER — later tasks assume earlier ones landed.
+> **Implementation:** Work tasks in order using the checkbox (`- [ ]`) syntax below. Work the tasks IN ORDER — later tasks assume earlier ones landed.
 
 **Goal:** Ship Attuned 1.4: a performance/cleanup pass (resolution caching, shared HUD snapshots, proc-timing fixes, dead-code removal), Reliquary polish (build previews, quick-swap keybind, Grand Reliquary), new gameplay systems (faction set bonuses, trial pacts, focus tempering, Apex identity abilities), and content/world features (Attunement Sanctum structure, resonant surge events, affinity inspect).
 

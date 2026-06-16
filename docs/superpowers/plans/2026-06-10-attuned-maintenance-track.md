@@ -1,6 +1,6 @@
 # Attuned Maintenance Track Plan (runs parallel to 1.4)
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax.
+> **Implementation:** Work tasks in order using the checkbox (`- [ ]`) syntax below.
 >
 > **The "READ THIS FIRST" constraints section of `docs/superpowers/plans/2026-06-10-attuned-1-4-resonant-depths.md` applies VERBATIM to this plan. Read it before starting.**
 >

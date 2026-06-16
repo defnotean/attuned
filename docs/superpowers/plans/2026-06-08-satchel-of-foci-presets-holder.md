@@ -1,6 +1,6 @@
 # Satchel of Foci, Presets, and Foci Holder Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **Implementation:** Work tasks in order using the checkbox (`- [ ]`) syntax below.
 
 **Goal:** Ship three connected systems for managing Focus accessories: (1) a reusable **foci holder** value type that a new bag serializes through (parameterizing the size/cap that `AttunedInv` hard-codes); (2) the **Satchel of Foci**, a craftable `stacksTo(1)` bag whose contents live in the codebase's first custom `DataComponentType<FocusHolder>`, with its own screen for moving Foci to/from the six equipped slots and a verified drop/death round-trip; and (3) **Presets**, per-player named loadouts (captured by item-registry id) that re-equip by sourcing real Focus stacks from the satchel and player inventory, with item conservation, missing-focus reporting, and over-capacity tolerance.
 

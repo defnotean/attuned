@@ -1,6 +1,6 @@
 # Simple Altar Textures Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **Implementation:** Work tasks in order using the checkbox (`- [ ]`) syntax below.
 
 **Goal:** Replace the noisy altar textures with simple, readable Minecraft-style block textures that still feel polished.
 
