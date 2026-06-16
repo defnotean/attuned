@@ -21,6 +21,7 @@ ATTUNED_LANG_RELATIVE_FILE = Path("src/main/resources/assets/attuned/lang/en_us.
 MODRINTH_GALLERY_RELATIVE_DIR = Path("docs/modrinth-gallery")
 PYTHON_ROOTS = (ROOT / "tools", ROOT / "tests")
 SOURCE_SCAN_ROOTS = (ROOT / "src", ROOT / "tools", ROOT / "tests", ROOT / ".github")
+JSON_EXTRA_RELATIVE_DIRS = (Path("docs"), Path("config"))
 JAVA_SOURCE_RELATIVE_DIRS = (
     Path("src/main/java"),
     Path("src/client/java"),
@@ -205,12 +206,24 @@ def source_files() -> list[Path]:
     return sorted(files)
 
 
-def check_src_json() -> str:
-    json_files = sorted(
-        path
-        for path in SRC_ROOT.rglob("*")
-        if path.is_file() and path.suffix.lower() in JSON_SOURCE_SUFFIXES
-    )
+def json_source_files(root: Path = ROOT) -> list[Path]:
+    scan_roots = list(SOURCE_SCAN_ROOTS) + [root / relative_dir for relative_dir in JSON_EXTRA_RELATIVE_DIRS]
+    seen: set[str] = set()
+    files: list[Path] = []
+    for scan_root in scan_roots:
+        for path in iter_files(scan_root, SOURCE_SKIP_DIRS):
+            if path.suffix.lower() not in JSON_SOURCE_SUFFIXES:
+                continue
+            key = str(path.resolve())
+            if key in seen:
+                continue
+            seen.add(key)
+            files.append(path)
+    return sorted(files)
+
+
+def check_repository_json() -> str:
+    json_files = json_source_files()
     problems: list[str] = []
     for path in json_files:
         try:
@@ -221,8 +234,12 @@ def check_src_json() -> str:
         except OSError as exc:
             problems.append(f"{relative(path)}: {exc}")
     if problems:
-        raise CheckFailed("src JSON parsing", problems)
-    return f"src JSON parsing: {len(json_files)} files"
+        raise CheckFailed("repository JSON parsing", problems)
+    return f"repository JSON parsing: {len(json_files)} files"
+
+
+def check_src_json() -> str:
+    return check_repository_json()
 
 
 def png_dimensions(path: Path) -> tuple[int, int]:
@@ -858,7 +875,7 @@ def check_version_profile() -> str:
 
 def run_checks() -> int:
     checks = (
-        check_src_json,
+        check_repository_json,
         check_png_resources,
         check_attuned_asset_references,
         check_static_translation_keys,
