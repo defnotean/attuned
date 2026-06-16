@@ -222,17 +222,37 @@ def json_source_files(root: Path = ROOT) -> list[Path]:
     return sorted(files)
 
 
+def load_json_with_duplicate_key_problems(path: Path) -> tuple[object, list[str]]:
+    duplicate_keys: list[str] = []
+
+    def object_pairs_hook(pairs: list[tuple[str, object]]) -> dict[str, object]:
+        seen: set[str] = set()
+        data: dict[str, object] = {}
+        for key, value in pairs:
+            if key in seen:
+                duplicate_keys.append(key)
+            seen.add(key)
+            data[key] = value
+        return data
+
+    data = json.loads(path.read_text(encoding="utf-8"), object_pairs_hook=object_pairs_hook)
+    return data, sorted(set(duplicate_keys))
+
+
 def check_repository_json() -> str:
     json_files = json_source_files()
     problems: list[str] = []
     for path in json_files:
         try:
-            with path.open("r", encoding="utf-8") as handle:
-                json.load(handle)
+            _data, duplicate_keys = load_json_with_duplicate_key_problems(path)
         except json.JSONDecodeError as exc:
             problems.append(f"{relative(path)}:{exc.lineno}:{exc.colno}: {exc.msg}")
+            continue
         except OSError as exc:
             problems.append(f"{relative(path)}: {exc}")
+            continue
+        for key in duplicate_keys:
+            problems.append(f"{relative(path)}: duplicate key {key}")
     if problems:
         raise CheckFailed("repository JSON parsing", problems)
     return f"repository JSON parsing: {len(json_files)} files"
@@ -503,10 +523,12 @@ def language_file_problems(root: Path = ROOT) -> list[str]:
         if not is_language_file(path):
             continue
         try:
-            data = json.loads(path.read_text(encoding="utf-8"))
+            data, duplicate_keys = load_json_with_duplicate_key_problems(path)
         except (OSError, json.JSONDecodeError) as exc:
             problems.append(f"{relative(path, root)}: {exc}")
             continue
+        for key in duplicate_keys:
+            problems.append(f"{relative(path, root)}: duplicate key {key}")
         problems.extend(language_data_problems(path, data, root))
     return problems
 
@@ -521,9 +543,9 @@ def check_language_files() -> str:
 
 def load_attuned_lang(root: Path = ROOT) -> dict[str, object]:
     lang_path = root / ATTUNED_LANG_RELATIVE_FILE
-    with lang_path.open("r", encoding="utf-8") as handle:
-        data = json.load(handle)
+    data, duplicate_keys = load_json_with_duplicate_key_problems(lang_path)
     problems = language_data_problems(lang_path, data, root)
+    problems.extend(f"{relative(lang_path, root)}: duplicate key {key}" for key in duplicate_keys)
     if problems:
         raise ValueError("; ".join(problems))
     return data
