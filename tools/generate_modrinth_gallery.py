@@ -25,6 +25,10 @@ AFFINITY_LABELS = {
 	"bastion": "Bastion",
 	"zephyr": "Zephyr",
 	"holy": "Holy",
+	"tide": "Tide",
+	"forge": "Forge",
+	"verdant": "Verdant",
+	"umbral": "Umbral",
 	"neutral": "Neutral",
 }
 
@@ -33,6 +37,10 @@ AFFINITY_COLORS = {
 	"bastion": (84, 180, 116),
 	"zephyr": (77, 178, 235),
 	"holy": (255, 218, 105),
+	"tide": (64, 177, 222),
+	"forge": (230, 124, 60),
+	"verdant": (112, 196, 94),
+	"umbral": (168, 88, 220),
 	"neutral": (176, 170, 190),
 }
 
@@ -41,7 +49,38 @@ PANEL_ORDER = [
 	("bastion", "Bastion Foci", "Defensive relics for armor, resistance, survival, and held ground."),
 	("zephyr", "Zephyr Foci", "Mobility relics for speed, air, weather, travel, and quiet movement."),
 	("holy", "Holy Foci", "Radiant and reliquary relics built around light, vows, witness, and protection."),
+	("tide", "Tide Foci", "Water, current, pearl, and seafaring relics for swimming, control, and resilient pressure."),
+	("forge", "Forge Foci", "Cinder, anvil, kiln, and spark relics for heat, armor, toughness, and tempo."),
+	("verdant", "Verdant Foci", "Root, fern, sap, thorn, and seed relics for growth, vitality, and mobile defense."),
 ]
+
+ITEM_PANEL_ASSETS = (
+	("item", "attunement_shard"),
+	("item", "attunement_shard_fragment"),
+	("item", "attunement_journal"),
+	("item", "satchel_of_foci"),
+	("item", "grand_satchel_of_foci"),
+	("item", "ocean_relic_trident"),
+	("item", "frostbound_trident"),
+	("item", "offshore_harpoon"),
+	("item", "custom_focus_1"),
+	("item", "custom_focus_2"),
+	("item", "custom_focus_3"),
+	("item", "custom_focus_4"),
+	("item", "custom_focus_5"),
+	("item", "custom_focus_6"),
+	("item", "custom_focus_7"),
+	("item", "custom_focus_8"),
+	("block", "attunement_altar_top_fury"),
+	("block", "attunement_altar_top_bastion"),
+	("block", "attunement_altar_top_zephyr"),
+	("block", "attunement_altar_top_holy"),
+	("block", "attunement_altar_top_tide"),
+	("block", "attunement_altar_top_forge"),
+	("block", "attunement_altar_top_verdant"),
+	("block", "attunement_altar_top_umbral"),
+	("block", "altar_of_reweaving_top"),
+)
 
 
 @dataclass(frozen=True)
@@ -54,6 +93,15 @@ class Focus:
 	lore: tuple[str, str]
 	effect: str
 	texture: Path
+
+
+@dataclass(frozen=True)
+class GalleryAsset:
+	id: str
+	name: str
+	kind: str
+	texture: Path
+	description: str
 
 
 def load_font(name: str, size: int) -> ImageFont.FreeTypeFont | ImageFont.ImageFont:
@@ -97,6 +145,10 @@ def clean_faction(faction: str) -> str:
 	return raw.replace("_", " ").title()
 
 
+def title_from_id(item_id: str) -> str:
+	return item_id.replace("_", " ").title()
+
+
 def load_foci() -> list[Focus]:
 	lang = json.loads(LANG_FILE.read_text(encoding="utf-8"))
 	foci: list[Focus] = []
@@ -125,6 +177,47 @@ def load_foci() -> list[Focus]:
 			)
 		)
 	return foci
+
+
+def load_gallery_assets() -> list[GalleryAsset]:
+	lang = json.loads(LANG_FILE.read_text(encoding="utf-8"))
+	descriptions = {
+		"attunement_shard": "Capacity progression item used at the Attunement Altar.",
+		"attunement_shard_fragment": "Smaller loot reward; four fragments craft into one shard.",
+		"attunement_journal": "The in-game guide for Foci, pacts, affinities, and matchup reference.",
+		"satchel_of_foci": "Focus Reliquary storage with equipped-slot management and saved builds.",
+		"grand_satchel_of_foci": "Expanded 54-slot reliquary for larger Focus collections.",
+		"ocean_relic_trident": "Seafaring trident model with custom inventory and held art.",
+		"frostbound_trident": "Icy trident model with its own voxel-style item art.",
+		"offshore_harpoon": "Offshore utility weapon art alongside the seafaring relic set.",
+		"custom_focus_1": "Resource-pack-skinnable blank Focus shell for datapack authors.",
+		"custom_focus_2": "Resource-pack-skinnable blank Focus shell for datapack authors.",
+		"custom_focus_3": "Resource-pack-skinnable blank Focus shell for datapack authors.",
+		"custom_focus_4": "Resource-pack-skinnable blank Focus shell for datapack authors.",
+		"custom_focus_5": "Resource-pack-skinnable blank Focus shell for datapack authors.",
+		"custom_focus_6": "Resource-pack-skinnable blank Focus shell for datapack authors.",
+		"custom_focus_7": "Resource-pack-skinnable blank Focus shell for datapack authors.",
+		"custom_focus_8": "Resource-pack-skinnable blank Focus shell for datapack authors.",
+		"attunement_altar_top_fury": "Fury altar variant texture.",
+		"attunement_altar_top_bastion": "Bastion altar variant texture.",
+		"attunement_altar_top_zephyr": "Zephyr altar variant texture.",
+		"attunement_altar_top_holy": "Holy altar variant texture.",
+		"attunement_altar_top_tide": "Tide altar variant texture.",
+		"attunement_altar_top_forge": "Forge altar variant texture.",
+		"attunement_altar_top_verdant": "Verdant altar variant texture.",
+		"attunement_altar_top_umbral": "Umbral altar variant texture.",
+		"altar_of_reweaving_top": "Altar of Reweaving top texture.",
+	}
+	assets: list[GalleryAsset] = []
+	for kind, asset_id in ITEM_PANEL_ASSETS:
+		texture_dir = ITEM_TEXTURE_DIR if kind == "item" else ROOT / "src/main/resources/assets/attuned/textures/block"
+		texture = texture_dir / f"{asset_id}.png"
+		if not texture.exists():
+			raise FileNotFoundError(f"Missing gallery asset texture for {asset_id}: {texture}")
+		lang_key = f"item.attuned.{asset_id}" if kind == "item" else f"block.attuned.{asset_id}"
+		name = lang.get(lang_key, title_from_id(asset_id))
+		assets.append(GalleryAsset(asset_id, name, kind.title(), texture, descriptions[asset_id]))
+	return assets
 
 
 def first_frame(path: Path) -> Image.Image:
@@ -270,14 +363,14 @@ def render_all_foci_index(foci: list[Focus]) -> Path:
 	draw = ImageDraw.Draw(canvas)
 	draw.rectangle((0, 0, WIDTH, 126), fill=(9, 10, 15, 225))
 	draw.text((64, 28), "Attuned Focus Collection", font=FONT_TITLE, fill=(255, 255, 255))
-	draw.text((66, 89), "Every displayed icon is copied directly from the mod's shipped item textures.", font=FONT_SUBTITLE, fill=(203, 207, 218))
+	draw.text((66, 89), f"All {len(foci)} Foci, copied directly from the mod's shipped item textures.", font=FONT_SUBTITLE, fill=(203, 207, 218))
 
-	cols = 11
-	card = 146
-	gap_x = 19
-	gap_y = 21
+	cols = 16
+	card = 104
+	gap_x = 10
+	gap_y = 16
 	start_x = (WIDTH - cols * card - (cols - 1) * gap_x) // 2
-	start_y = 158
+	start_y = 150
 	for idx, focus in enumerate(foci):
 		col = idx % cols
 		row = idx // cols
@@ -285,20 +378,65 @@ def render_all_foci_index(foci: list[Focus]) -> Path:
 		y = start_y + row * (card + gap_y)
 		accent = AFFINITY_COLORS[focus.affinity]
 		rounded_rectangle(draw, (x, y, x + card, y + card), 10, (25, 27, 36, 236), outline=(*accent, 220), width=2)
-		sprite = first_frame(focus.texture).resize((82, 82), Image.Resampling.NEAREST)
-		canvas.alpha_composite(sprite, (x + 32, y + 15))
+		sprite = first_frame(focus.texture).resize((50, 50), Image.Resampling.NEAREST)
+		canvas.alpha_composite(sprite, (x + 27, y + 8))
 		name_lines = textwrap.wrap(focus.name.replace(" Focus", ""), width=12)
-		text_y = y + 102
+		text_y = y + 61
 		for line in name_lines[:2]:
-			w = draw.textlength(line, font=FONT_SMALL)
-			draw.text((x + (card - w) / 2, text_y), line, font=FONT_SMALL, fill=(238, 239, 244))
-			text_y += 18
+			w = draw.textlength(line, font=FONT_LABEL)
+			draw.text((x + (card - w) / 2, text_y), line, font=FONT_LABEL, fill=(238, 239, 244))
+			text_y += 16
 		aff = AFFINITY_LABELS[focus.affinity]
 		w = draw.textlength(aff, font=FONT_LABEL)
-		draw.text((x + (card - w) / 2, y + card - 24), aff, font=FONT_LABEL, fill=accent)
+		draw.text((x + (card - w) / 2, y + card - 18), aff, font=FONT_LABEL, fill=accent)
 
 	OUT_DIR.mkdir(parents=True, exist_ok=True)
 	out = OUT_DIR / "attuned-all-foci-real-assets.png"
+	canvas.convert("RGB").save(out, quality=96)
+	return out
+
+
+def draw_gallery_asset_card(canvas: Image.Image, asset: GalleryAsset, box: tuple[int, int, int, int]) -> None:
+	draw = ImageDraw.Draw(canvas)
+	x0, y0, x1, y1 = box
+	accent = (151, 217, 150) if asset.kind == "Item" else (105, 185, 235)
+	rounded_rectangle(draw, box, 12, (25, 27, 36, 235), outline=(*accent, 230), width=2)
+	draw.rectangle((x0 + 2, y0 + 2, x1 - 2, y0 + 48), fill=(*accent, 38))
+	draw.text((x0 + 18, y0 + 15), asset.name, font=FONT_CARD_TITLE, fill=(252, 252, 255))
+
+	icon_back = (x0 + 22, y0 + 72, x0 + 138, y0 + 188)
+	rounded_rectangle(draw, icon_back, 10, (11, 12, 17, 255), outline=(73, 75, 89), width=2)
+	sprite = first_frame(asset.texture).resize((88, 88), Image.Resampling.NEAREST)
+	canvas.alpha_composite(sprite, (x0 + 36, y0 + 86))
+
+	chip(draw, x0 + 156, y0 + 78, asset.kind, accent, text_fill=(16, 16, 18))
+	draw_text(draw, (x0 + 156, y0 + 122), asset.description, FONT_BODY, (226, 228, 236), x1 - x0 - 180, line_spacing=4, max_lines=4)
+
+
+def render_items_and_altars_panel(assets: list[GalleryAsset]) -> Path:
+	canvas = make_background((126, 173, 223))
+	draw = ImageDraw.Draw(canvas)
+	draw.rectangle((0, 0, WIDTH, 126), fill=(9, 10, 15, 225))
+	draw.text((64, 28), "Items, Tools & Altars", font=FONT_TITLE, fill=(255, 255, 255))
+	draw.text((66, 89), "Shipped item textures, custom Focus shells, tridents, reliquaries, shards, and affinity altar variants.", font=FONT_SUBTITLE, fill=(203, 207, 218))
+
+	cols = 5
+	rows = math.ceil(len(assets) / cols)
+	margin_x = 54
+	gap_x = 18
+	gap_y = 18
+	top = 150
+	card_w = (WIDTH - margin_x * 2 - gap_x * (cols - 1)) // cols
+	card_h = (HEIGHT - top - 54 - gap_y * (rows - 1)) // rows
+	for idx, asset in enumerate(assets):
+		col = idx % cols
+		row = idx // cols
+		x0 = margin_x + col * (card_w + gap_x)
+		y0 = top + row * (card_h + gap_y)
+		draw_gallery_asset_card(canvas, asset, (x0, y0, x0 + card_w, y0 + card_h))
+
+	OUT_DIR.mkdir(parents=True, exist_ok=True)
+	out = OUT_DIR / "attuned-items-tools-and-altars.png"
 	canvas.convert("RGB").save(out, quality=96)
 	return out
 
@@ -462,6 +600,7 @@ def render_apex_stances_panel(foci: list[Focus]) -> Path:
 
 def main() -> None:
 	foci = load_foci()
+	gallery_assets = load_gallery_assets()
 	by_affinity: dict[str, list[Focus]] = {}
 	for focus in foci:
 		by_affinity.setdefault(focus.affinity, []).append(focus)
@@ -475,9 +614,14 @@ def main() -> None:
 	for affinity, title, subtitle in PANEL_ORDER:
 		outputs.append(render_panel(title, subtitle, by_affinity[affinity]))
 
+	umbral = by_affinity["umbral"]
+	outputs.append(render_panel("Umbral Foci I", "Shadow, smoke, debt, dread, and ambush relics for the first half of the Umbral lane.", umbral[:9]))
+	outputs.append(render_panel("Umbral Foci II", "Null, snare, rite, eclipse, and low-light relics for the second half of the Umbral lane.", umbral[9:]))
+
 	neutral = by_affinity["neutral"]
 	outputs.append(render_panel("Neutral Foci I", "Utility, exploration, farming, mining, and survival relics with no affinity lock.", neutral[:10]))
 	outputs.append(render_panel("Neutral Foci II", "Seafarers, Unseen, Verdant, travel, and mixed-build utility relics.", neutral[10:]))
+	outputs.append(render_items_and_altars_panel(gallery_assets))
 
 	print("Generated Modrinth gallery panels:")
 	for output in outputs:
