@@ -21,11 +21,11 @@ spec.loader.exec_module(minecraft_version_profile)
 
 CURRENT_PROFILE = {
     "minecraft_version": "26.1.2",
-    "loader_version": "0.19.2",
-    "loom_version": "1.16.3",
-    "fabric_api_version": "0.149.0+26.1.2",
+    "loader_version": "0.19.3",
+    "loom_version": "1.17.11",
+    "fabric_api_version": "0.152.1+26.1.2",
     "java_version": "25",
-    "fabric_loader_range": ">=0.19.2",
+    "fabric_loader_range": ">=0.19.3",
     "status": "current",
     "notes": ["Current released target."],
 }
@@ -87,15 +87,15 @@ def write_gradle_properties(root: Path) -> None:
     (root / "gradle.properties").write_text(
         "# Fabric Properties\n"
         "minecraft_version=26.1.2\n"
-        "loader_version=0.19.2\n"
-        "loom_version=1.16.3\n"
+        "loader_version=0.19.3\n"
+        "loom_version=1.17.11\n"
         "\n"
         "# Mod Properties\n"
         "mod_version=1.4.0\n"
         "maven_group=dev.attuned\n"
         "\n"
         "# Dependencies\n"
-        "fabric_api_version=0.149.0+26.1.2\n"
+        "fabric_api_version=0.152.1+26.1.2\n"
         "custom.keep=this-line\n",
         encoding="utf-8",
     )
