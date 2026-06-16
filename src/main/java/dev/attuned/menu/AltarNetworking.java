@@ -47,7 +47,7 @@ public final class AltarNetworking {
 			return;
 		}
 		initialized = true;
-		PayloadTypeRegistry.serverboundPlay().register(BindShardPayload.TYPE, BindShardPayload.CODEC);
+		PayloadTypeRegistry.playC2S().register(BindShardPayload.TYPE, BindShardPayload.CODEC);
 		ServerPlayNetworking.registerGlobalReceiver(BindShardPayload.TYPE, (payload, context) -> {
 			ServerPlayer player = context.player();
 			player.level().getServer().execute(() -> tryBind(player));
@@ -79,7 +79,8 @@ public final class AltarNetworking {
 			if (!state.is(AttunedContent.ATTUNEMENT_ALTAR)) {
 				return;
 			}
-			if (!player.isWithinBlockInteractionRange(pos, 4.0)) {
+			if (player.distanceToSqr(
+					pos.getX() + 0.5D, pos.getY() + 0.5D, pos.getZ() + 0.5D) > 16.0D) {
 				return;
 			}
 			Container input = menu.inputContainer();

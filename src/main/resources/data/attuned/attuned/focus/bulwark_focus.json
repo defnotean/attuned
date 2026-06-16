@@ -1,17 +1,17 @@
 {
-	"item": "attuned:bulwark_focus",
-	"cost": 4,
-	"affinity": "bastion",
-	"modifiers": [
-		{
-			"attribute": "minecraft:knockback_resistance",
-			"amount": 0.4,
-			"operation": "add_value"
-		},
-		{
-			"attribute": "minecraft:armor_toughness",
-			"amount": 4.0,
-			"operation": "add_value"
-		}
-	]
+    "item":  "attuned:bulwark_focus",
+    "cost":  4,
+    "affinity":  "bastion",
+    "modifiers":  [
+                      {
+                          "attribute":  "minecraft:generic.knockback_resistance",
+                          "amount":  0.4,
+                          "operation":  "add_value"
+                      },
+                      {
+                          "attribute":  "minecraft:generic.armor_toughness",
+                          "amount":  4.0,
+                          "operation":  "add_value"
+                      }
+                  ]
 }

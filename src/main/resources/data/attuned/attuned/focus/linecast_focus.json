@@ -1,13 +1,13 @@
 {
-	"item": "attuned:linecast_focus",
-	"cost": 2,
-	"unique": true,
-	"faction": "attuned:seafarers",
-	"modifiers": [
-		{
-			"attribute": "minecraft:luck",
-			"amount": 1.0,
-			"operation": "add_value"
-		}
-	]
+    "item":  "attuned:linecast_focus",
+    "cost":  2,
+    "unique":  true,
+    "faction":  "attuned:seafarers",
+    "modifiers":  [
+                      {
+                          "attribute":  "minecraft:generic.luck",
+                          "amount":  1.0,
+                          "operation":  "add_value"
+                      }
+                  ]
 }

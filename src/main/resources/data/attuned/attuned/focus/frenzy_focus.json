@@ -1,12 +1,12 @@
 {
-	"item": "attuned:frenzy_focus",
-	"cost": 3,
-	"affinity": "fury",
-	"modifiers": [
-		{
-			"attribute": "minecraft:attack_speed",
-			"amount": 0.5,
-			"operation": "add_value"
-		}
-	]
+    "item":  "attuned:frenzy_focus",
+    "cost":  3,
+    "affinity":  "fury",
+    "modifiers":  [
+                      {
+                          "attribute":  "minecraft:generic.attack_speed",
+                          "amount":  0.5,
+                          "operation":  "add_value"
+                      }
+                  ]
 }

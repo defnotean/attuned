@@ -51,9 +51,10 @@ class AttunementJournalUiContractTest {
 
 		assertTrue(screenSource.contains("extends Screen"),
 			"Journal UI should be its own screen");
-		assertTrue(screenSource.contains("GuiGraphicsExtractor"),
-			"Journal UI should use the current client render extraction API");
-		assertTrue(screenSource.contains("extractBackground(GuiGraphicsExtractor"),
+		assertTrue(screenSource.contains("GuiGraphicsExtractor") || screenSource.contains("GuiGraphics"),
+			"Journal UI should use the current client render API");
+		assertTrue(screenSource.contains("extractBackground(GuiGraphicsExtractor")
+				|| screenSource.contains("public void render(GuiGraphics"),
 			"Journal UI should draw a custom background/content layer");
 		assertTrue(screenSource.contains("textures/gui/attunement_journal.png"),
 			"Journal UI should use its generated custom book texture");
@@ -61,8 +62,10 @@ class AttunementJournalUiContractTest {
 			"Journal UI should keep chapter navigation separate from vanilla book pages");
 		assertTrue(screenSource.contains("private static final class JournalButton extends Button"),
 			"Journal UI should render chapter/page controls with codex-style custom buttons");
-		assertTrue(screenSource.contains("extractContents(GuiGraphicsExtractor"),
-			"Journal buttons should draw their own face through the render extraction API");
+		assertTrue(screenSource.contains("extractContents(GuiGraphicsExtractor")
+				|| screenSource.contains("renderContents(GuiGraphics")
+				|| screenSource.contains("renderWidget(GuiGraphics"),
+			"Journal buttons should draw their own face through the active render API");
 		assertTrue(screenSource.contains("private static final int NAV_X_OFFSET = 34"),
 			"Chapter buttons should align to the painted journal navigation rail");
 		assertTrue(screenSource.contains("private static final int CHAPTER_BUTTON_Y = 34"),

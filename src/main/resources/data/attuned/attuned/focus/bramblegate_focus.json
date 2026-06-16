@@ -1,15 +1,15 @@
 {
-	"item": "attuned:bramblegate_focus",
-	"cost": 4,
-	"unique": true,
-	"affinity": "verdant",
-	"faction": "attuned:wildroot",
-	"modifiers": [
-		{
-			"attribute": "minecraft:knockback_resistance",
-			"amount": 0.25,
-			"operation": "add_value"
-		}
-	],
-	"behavior": "attuned:bramblegate"
+    "item":  "attuned:bramblegate_focus",
+    "cost":  4,
+    "unique":  true,
+    "affinity":  "verdant",
+    "faction":  "attuned:wildroot",
+    "modifiers":  [
+                      {
+                          "attribute":  "minecraft:generic.knockback_resistance",
+                          "amount":  0.25,
+                          "operation":  "add_value"
+                      }
+                  ],
+    "behavior":  "attuned:bramblegate"
 }

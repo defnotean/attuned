@@ -7,12 +7,12 @@ import dev.attuned.client.hud.CombatHud;
 import dev.attuned.menu.AltarMenu;
 import dev.attuned.menu.BindShardPayload;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
-import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
@@ -24,8 +24,8 @@ import net.minecraft.world.item.ItemStack;
  * stance, capacity, hover, and status details.
  */
 public class AltarScreen extends AbstractContainerScreen<AltarMenu> {
-	private static final Identifier BACKGROUND_TEXTURE =
-		Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "textures/gui/altar.png");
+	private static final ResourceLocation BACKGROUND_TEXTURE =
+		new ResourceLocation(Attuned.MOD_ID, "textures/gui/altar.png");
 
 	// Window dimensions, in GUI pixels. Wider and taller than a vanilla chest row
 	// so the altar readout can breathe above the centered player inventory.
@@ -77,7 +77,9 @@ public class AltarScreen extends AbstractContainerScreen<AltarMenu> {
 	private Button bindButton;
 
 	public AltarScreen(AltarMenu menu, Inventory inventory, Component title) {
-		super(menu, inventory, title, IMAGE_WIDTH, IMAGE_HEIGHT);
+		super(menu, inventory, title);
+		this.imageWidth = IMAGE_WIDTH;
+		this.imageHeight = IMAGE_HEIGHT;
 		this.titleLabelX = READOUT_X;
 		this.titleLabelY = 13;
 		this.inventoryLabelY = AltarMenu.INVENTORY_Y - 10;
@@ -122,12 +124,12 @@ public class AltarScreen extends AbstractContainerScreen<AltarMenu> {
 	}
 
 	@Override
-	public void extractBackground(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
+	protected void renderBg(GuiGraphics graphics, float partialTick, int mouseX, int mouseY) {
 		int x = this.leftPos;
 		int y = this.topPos;
 
 		graphics.fill(0, 0, this.width, this.height, SCREEN_BACKDROP);
-		graphics.blit(RenderPipelines.GUI_TEXTURED, BACKGROUND_TEXTURE, x, y,
+		graphics.blit(BACKGROUND_TEXTURE, x, y,
 			0.0F, 0.0F, IMAGE_WIDTH, IMAGE_HEIGHT, IMAGE_WIDTH, IMAGE_HEIGHT);
 
 		int sx = x + SLOT_WELL_X;
@@ -173,7 +175,7 @@ public class AltarScreen extends AbstractContainerScreen<AltarMenu> {
 	 * of the well's outer dark border; the custom well rectangle inside it is
 	 * the face that holds the slot itself.
 	 */
-	private static void drawWellInnerBorder(GuiGraphicsExtractor graphics, int wellX, int wellY, int argb) {
+	private static void drawWellInnerBorder(GuiGraphics graphics, int wellX, int wellY, int argb) {
 		int innerX0 = wellX + 1;
 		int innerY0 = wellY + 1;
 		int innerX1 = wellX + SLOT_WELL_WIDTH - 1;
@@ -192,7 +194,7 @@ public class AltarScreen extends AbstractContainerScreen<AltarMenu> {
 	 * pixels above the readout label (which renders at {@code y + 18}) so the
 	 * accent feels anchored to the text without crowding it.
 	 */
-	private static void drawReadoutAccent(GuiGraphicsExtractor graphics, int panelX, int panelY, int stance) {
+	private static void drawReadoutAccent(GuiGraphics graphics, int panelX, int panelY, int stance) {
 		int accentY = panelY + 17;
 		int accentWidth = IMAGE_WIDTH * 6 / 10;
 		int accentX = panelX + (IMAGE_WIDTH - accentWidth) / 2;
@@ -200,9 +202,9 @@ public class AltarScreen extends AbstractContainerScreen<AltarMenu> {
 	}
 
 	@Override
-	protected void extractLabels(GuiGraphicsExtractor graphics, int mouseX, int mouseY) {
+	protected void renderLabels(GuiGraphics graphics, int mouseX, int mouseY) {
 		// Window title: drawn ourselves so it stays readable over the dark altar art.
-		graphics.text(this.font, this.title, this.titleLabelX, this.titleLabelY, TITLE_TEXT, false);
+		graphics.drawString(this.font, this.title, this.titleLabelX, this.titleLabelY, TITLE_TEXT, false);
 
 		Player player = this.minecraft != null ? this.minecraft.player : null;
 		if (player == null) {
@@ -217,7 +219,7 @@ public class AltarScreen extends AbstractContainerScreen<AltarMenu> {
 		int active = readout.active();
 
 		Component budgetText = Component.translatable("screen.attuned.altar.budget", used, capacity);
-		graphics.text(this.font, budgetText, READOUT_X, 24, BODY_TEXT, false);
+		graphics.drawString(this.font, budgetText, READOUT_X, 24, BODY_TEXT, false);
 
 		// Stance row: a small textured gem prefix that visually says "this is your
 		// stance," followed only by the affinity name in its colour. Dropping the
@@ -230,7 +232,7 @@ public class AltarScreen extends AbstractContainerScreen<AltarMenu> {
 		CombatHud.drawPlayerGem(graphics, stanceGemX, stanceGemY, stanceGemSize,
 			readout.committed().orElse(null), readout.discord(), readout.capstone().orElse(null),
 			readout.atApex());
-		graphics.text(this.font, AttunementReadout.stanceLabel(readout),
+		graphics.drawString(this.font, AttunementReadout.stanceLabel(readout),
 			stanceGemX + stanceGemSize + 4, 41, BODY_TEXT, false);
 		drawTrimmedText(graphics, Component.literal(active + " active"),
 			STATUS_X, STATUS_Y, STATUS_MAX_WIDTH, BODY_TEXT);
@@ -256,15 +258,15 @@ public class AltarScreen extends AbstractContainerScreen<AltarMenu> {
 		drawTrimmedText(graphics, hint, TEXT_BOX_X, HINT_Y, HINT_MAX_WIDTH, hintColor);
 	}
 
-	private void drawTrimmedText(GuiGraphicsExtractor graphics, Component text, int x, int y, int maxWidth, int color) {
+	private void drawTrimmedText(GuiGraphics graphics, Component text, int x, int y, int maxWidth, int color) {
 		if (this.font.width(text) <= maxWidth) {
-			graphics.text(this.font, text, x, y, color, false);
+			graphics.drawString(this.font, text, x, y, color, false);
 			return;
 		}
 		String ellipsis = "...";
 		int ellipsisWidth = this.font.width(ellipsis);
 		String trimmed = this.font.plainSubstrByWidth(text.getString(), Math.max(0, maxWidth - ellipsisWidth));
-		graphics.text(this.font, Component.literal(trimmed + ellipsis), x, y, color, false);
+		graphics.drawString(this.font, Component.literal(trimmed + ellipsis), x, y, color, false);
 	}
 
 	private static Component detailLine(AttunementReadout.Snapshot readout) {
@@ -278,7 +280,7 @@ public class AltarScreen extends AbstractContainerScreen<AltarMenu> {
 		return prefix;
 	}
 
-	private static void drawButtonOutline(GuiGraphicsExtractor graphics, int x0, int y0, int x1, int y1, int argb) {
+	private static void drawButtonOutline(GuiGraphics graphics, int x0, int y0, int x1, int y1, int argb) {
 		graphics.fill(x0, y0, x1, y0 + 1, argb);
 		graphics.fill(x0, y1 - 1, x1, y1, argb);
 		graphics.fill(x0, y0 + 1, x0 + 1, y1 - 1, argb);
@@ -291,7 +293,7 @@ public class AltarScreen extends AbstractContainerScreen<AltarMenu> {
 		}
 
 		@Override
-		protected void extractContents(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
+		protected void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
 			int x0 = getX();
 			int y0 = getY();
 			int x1 = x0 + getWidth();
@@ -301,7 +303,7 @@ public class AltarScreen extends AbstractContainerScreen<AltarMenu> {
 			} else if (isHoveredOrFocused()) {
 				drawButtonOutline(graphics, x0, y0, x1, y1, BUTTON_HOVER_ARGB);
 			}
-			extractDefaultLabel(graphics.textRendererForWidget(this, GuiGraphicsExtractor.HoveredTextEffects.NONE));
+			renderString(graphics, Minecraft.getInstance().font, BODY_TEXT);
 		}
 	}
 }

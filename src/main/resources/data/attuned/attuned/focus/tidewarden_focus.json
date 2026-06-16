@@ -1,17 +1,17 @@
 {
-	"item": "attuned:tidewarden_focus",
-	"cost": 4,
-	"affinity": "tide",
-	"modifiers": [
-		{
-			"attribute": "minecraft:armor",
-			"amount": 3.0,
-			"operation": "add_value"
-		},
-		{
-			"attribute": "minecraft:knockback_resistance",
-			"amount": 0.3,
-			"operation": "add_value"
-		}
-	]
+    "item":  "attuned:tidewarden_focus",
+    "cost":  4,
+    "affinity":  "tide",
+    "modifiers":  [
+                      {
+                          "attribute":  "minecraft:generic.armor",
+                          "amount":  3.0,
+                          "operation":  "add_value"
+                      },
+                      {
+                          "attribute":  "minecraft:generic.knockback_resistance",
+                          "amount":  0.3,
+                          "operation":  "add_value"
+                      }
+                  ]
 }

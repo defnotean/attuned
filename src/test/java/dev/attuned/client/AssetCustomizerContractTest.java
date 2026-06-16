@@ -3,6 +3,7 @@ package dev.attuned.client;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -535,6 +536,8 @@ class AssetCustomizerContractTest {
 	@Test
 	void temporaryHarpoonProjectileUsesCustomThrownModelRenderer() throws IOException {
 		String clientMixins = read(CLIENT_MIXIN_CONFIG);
+		assumeTrue(clientMixins.contains("ThrownTridentRendererMixin"),
+			"Minecraft 1.20.6 maintenance builds use the vanilla thrown-trident renderer.");
 		String rendererMixin = read(Path.of("src/client/java/dev/attuned/client/mixin/ThrownTridentRendererMixin.java"));
 		String stateMixin = read(Path.of("src/client/java/dev/attuned/client/mixin/ThrownTridentRenderStateMixin.java"));
 		assertTrue(clientMixins.contains("ThrownTridentRendererMixin"),

@@ -40,7 +40,8 @@ class InspectContractTest {
 	@Test
 	void networkingRegistersServerboundAndHandlesOnServerThread() throws IOException {
 		String net = read(NET);
-		assertTrue(net.contains("PayloadTypeRegistry.serverboundPlay().register(InspectRequestPayload.TYPE, InspectRequestPayload.CODEC)"),
+		assertTrue(net.contains("PayloadTypeRegistry.serverboundPlay().register(InspectRequestPayload.TYPE, InspectRequestPayload.CODEC)")
+				|| net.contains("PayloadTypeRegistry.playC2S().register(InspectRequestPayload.TYPE, InspectRequestPayload.CODEC)"),
 			"Inspect request is registered serverbound.");
 		assertTrue(net.contains("ServerPlayNetworking.registerGlobalReceiver(InspectRequestPayload.TYPE"),
 			"Inspect request has a server-side receiver.");
@@ -80,7 +81,7 @@ class InspectContractTest {
 			"Inspect derives committed affinity / Discord server-side from the target's attunement.");
 		assertTrue(net.contains("Apex.capstoneOf") && net.contains("Resonance.atApex"),
 			"Inspect reports the target's Apex capstone and whether it is armed.");
-		assertTrue(net.contains("sendOverlayMessage"),
+		assertTrue(net.contains("sendOverlayMessage") || net.contains("PlayerMessages.overlay"),
 			"Inspect replies on the requester's action bar.");
 	}
 

@@ -1,5 +1,8 @@
 package dev.attuned.synergy;
 
+import dev.attuned.compat.AttributeModifierIds;
+
+import dev.attuned.compat.PlayerMessages;
 import dev.attuned.Attuned;
 import dev.attuned.AttunedAdvancements;
 import dev.attuned.AttunedPlayerCleanup;
@@ -27,7 +30,7 @@ import net.minecraft.core.Registry;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -101,14 +104,13 @@ public final class Synergies {
 		}
 
 		Registry<SynergyDefinition> registry =
-			player.level().registryAccess().lookupOrThrow(AttunedRegistries.SYNERGY_DEFINITIONS);
+			player.level().registryAccess().registryOrThrow(AttunedRegistries.SYNERGY_DEFINITIONS);
 		List<SynergyResolver.SynergyDef> defs = new ArrayList<>();
 		Map<String, SynergyDefinition> byId = new HashMap<>();
-		registry.listElements().forEach(holder -> {
-			SynergyDefinition def = holder.value();
+		registry.stream().forEach(def -> {
 			String id = registry.getKey(def).toString();
 			byId.put(id, def);
-			List<String> members = def.members().stream().map(Identifier::toString).toList();
+			List<String> members = def.members().stream().map(ResourceLocation::toString).toList();
 			defs.add(new SynergyResolver.SynergyDef(id, members));
 		});
 
@@ -171,7 +173,7 @@ public final class Synergies {
 				behavior.onActivate(player, ItemStack.EMPTY); // a Confluence has no backing stack
 			}
 		});
-		player.sendSystemMessage(Component.translatable("confluence.attuned.gained", nameOf(confluenceId)));
+		PlayerMessages.system(player, Component.translatable("confluence.attuned.gained", nameOf(confluenceId)));
 		AttunedAdvancements.award(player, "attunement/confluence_" + pathOf(confluenceId));
 		maybeFanfare(player, confluenceId);
 	}
@@ -187,7 +189,7 @@ public final class Synergies {
 				behavior.onDeactivate(player, ItemStack.EMPTY);
 			}
 		});
-		player.sendSystemMessage(Component.translatable("confluence.attuned.faded", nameOf(confluenceId)));
+		PlayerMessages.system(player, Component.translatable("confluence.attuned.faded", nameOf(confluenceId)));
 	}
 
 	private static void applyModifiers(ServerPlayer player, String confluenceId, SynergyDefinition def) {
@@ -197,9 +199,9 @@ public final class Synergies {
 			if (ai == null) {
 				continue;
 			}
-			Identifier id = modifierId(confluenceId, i);
-			if (ai.getModifier(id) == null) {
-				ai.addTransientModifier(new AttributeModifier(id, entry.amount(), entry.operation()));
+			ResourceLocation id = modifierId(confluenceId, i);
+			if (ai.getModifier(AttributeModifierIds.uuid(id)) == null) {
+				ai.addTransientModifier(new AttributeModifier(AttributeModifierIds.uuid(id), AttributeModifierIds.name(id), entry.amount(), entry.operation()));
 			}
 		}
 	}
@@ -211,7 +213,7 @@ public final class Synergies {
 			if (ai == null) {
 				continue;
 			}
-			ai.removeModifier(modifierId(confluenceId, i));
+			ai.removeModifier(AttributeModifierIds.uuid(modifierId(confluenceId, i)));
 		}
 	}
 
@@ -223,9 +225,8 @@ public final class Synergies {
 	 */
 	private static void reconcileOnJoin(ServerPlayer player) {
 		Registry<SynergyDefinition> registry =
-			player.level().registryAccess().lookupOrThrow(AttunedRegistries.SYNERGY_DEFINITIONS);
-		registry.listElements().forEach(holder -> {
-			SynergyDefinition def = holder.value();
+			player.level().registryAccess().registryOrThrow(AttunedRegistries.SYNERGY_DEFINITIONS);
+		registry.stream().forEach(def -> {
 			removeModifiers(player, registry.getKey(def).toString(), def);
 		});
 		synergyState.remove(player.getUUID());
@@ -258,8 +259,8 @@ public final class Synergies {
 				player.getZ(),
 				16, 0.5, 0.7, 0.5, 0.4);
 		}
-		player.sendOverlayMessage(discovery);
-		player.sendSystemMessage(discovery);
+		PlayerMessages.overlay(player, discovery);
+		PlayerMessages.system(player, discovery);
 	}
 
 	/**
@@ -312,20 +313,19 @@ public final class Synergies {
 	 */
 	public static List<SynergyResolver.SynergyDef> definitions(Player player) {
 		Registry<SynergyDefinition> registry =
-			player.level().registryAccess().lookupOrThrow(AttunedRegistries.SYNERGY_DEFINITIONS);
+			player.level().registryAccess().registryOrThrow(AttunedRegistries.SYNERGY_DEFINITIONS);
 		List<SynergyResolver.SynergyDef> defs = new ArrayList<>();
-		registry.listElements().forEach(holder -> {
-			SynergyDefinition def = holder.value();
+		registry.stream().forEach(def -> {
 			defs.add(new SynergyResolver.SynergyDef(
 				registry.getKey(def).toString(),
-				def.members().stream().map(Identifier::toString).toList()));
+				def.members().stream().map(ResourceLocation::toString).toList()));
 		});
 		return defs;
 	}
 
 	/** Stable per-Confluence, per-modifier-index id, distinct from the slot-based Focus scheme. */
-	private static Identifier modifierId(String confluenceId, int index) {
-		return Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "confluence_"
+	private static ResourceLocation modifierId(String confluenceId, int index) {
+		return new ResourceLocation(Attuned.MOD_ID, "confluence_"
 			+ confluenceId.replace(':', '_') + "_mod_" + index);
 	}
 

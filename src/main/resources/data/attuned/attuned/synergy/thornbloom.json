@@ -1,13 +1,13 @@
 {
-	"members": [
-		"attuned:seedcall_focus",
-		"attuned:thornwake_focus"
-	],
-	"modifiers": [
-		{
-			"attribute": "minecraft:armor",
-			"amount": 1.0,
-			"operation": "add_value"
-		}
-	]
+    "members":  [
+                    "attuned:seedcall_focus",
+                    "attuned:thornwake_focus"
+                ],
+    "modifiers":  [
+                      {
+                          "attribute":  "minecraft:generic.armor",
+                          "amount":  1.0,
+                          "operation":  "add_value"
+                      }
+                  ]
 }

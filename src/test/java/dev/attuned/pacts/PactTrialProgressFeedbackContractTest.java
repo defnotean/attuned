@@ -30,7 +30,7 @@ class PactTrialProgressFeedbackContractTest {
 			"Milestone feedback should mark onboarding before firing.");
 		assertTrue(trials.contains("\"pact_trial_\" + id + \"_\" + percent"),
 			"Milestone onboarding ids should be pact-scoped, e.g. pact_trial_pyresworn_25.");
-		assertTrue(trials.contains("sendOverlayMessage"),
+		assertTrue(trials.contains("sendOverlayMessage") || trials.contains("PlayerMessages.overlay"),
 			"Milestone feedback should use action-bar overlay toasts.");
 		assertTrue(trials.contains("pact.attuned.trial.progress"),
 			"Milestone overlay should use the shared trial progress lang key.");

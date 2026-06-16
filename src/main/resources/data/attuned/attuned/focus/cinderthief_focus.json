@@ -1,15 +1,15 @@
 {
-	"item": "attuned:cinderthief_focus",
-	"cost": 4,
-	"unique": true,
-	"affinity": "umbral",
-	"faction": "attuned:umbral",
-	"modifiers": [
-		{
-			"attribute": "minecraft:attack_damage",
-			"amount": 1.0,
-			"operation": "add_value"
-		}
-	],
-	"behavior": "attuned:cinderthief"
+    "item":  "attuned:cinderthief_focus",
+    "cost":  4,
+    "unique":  true,
+    "affinity":  "umbral",
+    "faction":  "attuned:umbral",
+    "modifiers":  [
+                      {
+                          "attribute":  "minecraft:generic.attack_damage",
+                          "amount":  1.0,
+                          "operation":  "add_value"
+                      }
+                  ],
+    "behavior":  "attuned:cinderthief"
 }

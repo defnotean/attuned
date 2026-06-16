@@ -1,5 +1,6 @@
 package dev.attuned.pacts;
 
+import dev.attuned.compat.PlayerMessages;
 import dev.attuned.AttunedPlayerCleanup;
 import dev.attuned.AttunedServerCleanup;
 import dev.attuned.combat.CombatTargets;
@@ -62,7 +63,7 @@ public final class PactTacticals {
 		Long endsAt = COOLDOWN_ENDS.get(player.getUUID());
 		if (endsAt != null && now < endsAt) {
 			int remaining = (int) (endsAt - now);
-			player.sendOverlayMessage(Component.translatable(
+			PlayerMessages.overlay(player, Component.translatable(
 				"pact.attuned.tactical.cooldown",
 				FocusAbilityState.cooldownSecondsForMessage(remaining)));
 			FocusAbilityState.syncStatus(player,
@@ -74,7 +75,7 @@ public final class PactTacticals {
 		fireTactical(player, pact.get(), overcharge);
 		if (overcharge) {
 			Resonance.add(player, -OVERCHARGE_SPEND);
-			player.sendOverlayMessage(Component.translatable("pact.attuned.tactical.overcharge"));
+			PlayerMessages.overlay(player, Component.translatable("pact.attuned.tactical.overcharge"));
 		}
 		CombatFeedback.pactTactical(player, pact.get(), overcharge);
 		int cooldown = CombatMomentum.effectiveCooldown(
@@ -82,7 +83,7 @@ public final class PactTacticals {
 		COOLDOWN_ENDS.put(player.getUUID(), now + cooldown);
 		FocusAbilityState.syncStatus(player,
 			FocusAbilityStatusPayload.PACT_TACTICAL_SLOT, cooldown, cooldown);
-		player.sendOverlayMessage(Component.translatable(tacticalMessageKey(pact.get())));
+		PlayerMessages.overlay(player, Component.translatable(tacticalMessageKey(pact.get())));
 		return true;
 	}
 
@@ -132,9 +133,9 @@ public final class PactTacticals {
 		switch (pact) {
 			case PYRESWORN -> firePyresworn(player, level, overcharge, radiusScale);
 			case STONEHEART -> player.addEffect(new MobEffectInstance(
-				MobEffects.RESISTANCE, overcharge ? 80 : 40, overcharge ? 2 : 1, true, false, true));
+				MobEffects.DAMAGE_RESISTANCE, overcharge ? 80 : 40, overcharge ? 2 : 1, true, false, true));
 			case WINDRUNNER -> player.addEffect(new MobEffectInstance(
-				MobEffects.SPEED, overcharge ? 60 : 40, overcharge ? 2 : 1, true, false, true));
+				MobEffects.MOVEMENT_SPEED, overcharge ? 60 : 40, overcharge ? 2 : 1, true, false, true));
 			case RADIANT_COVENANT -> glowHostiles(player, level, 6.0D * radiusScale, overcharge ? 90 : 60);
 			case TIDESWORN -> slowHostiles(player, level, 5.0D * radiusScale, overcharge ? 60 : 40);
 			case FORGEBOUND -> igniteHostiles(player, level, 4.0D * radiusScale, overcharge ? 3 : 2);
@@ -156,7 +157,7 @@ public final class PactTacticals {
 			return;
 		}
 		player.addEffect(new MobEffectInstance(MobEffects.FIRE_RESISTANCE, 40, 0, true, false, true));
-		player.addEffect(new MobEffectInstance(MobEffects.SPEED, overcharge ? 30 : 20, 0, true, false, true));
+		player.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, overcharge ? 30 : 20, 0, true, false, true));
 	}
 
 	private static void glowHostiles(ServerPlayer player, ServerLevel level, double radius, int ticks) {
@@ -167,7 +168,7 @@ public final class PactTacticals {
 
 	private static void slowHostiles(ServerPlayer player, ServerLevel level, double radius, int ticks) {
 		for (LivingEntity target : nearbyHostiles(player, level, radius)) {
-			target.addEffect(new MobEffectInstance(MobEffects.SLOWNESS, ticks, 0, true, false, true));
+			target.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, ticks, 0, true, false, true));
 		}
 	}
 

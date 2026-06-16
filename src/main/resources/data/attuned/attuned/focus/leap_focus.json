@@ -1,12 +1,12 @@
 {
-	"item": "attuned:leap_focus",
-	"cost": 2,
-	"affinity": "zephyr",
-	"modifiers": [
-		{
-			"attribute": "minecraft:jump_strength",
-			"amount": 0.3,
-			"operation": "add_multiplied_base"
-		}
-	]
+    "item":  "attuned:leap_focus",
+    "cost":  2,
+    "affinity":  "zephyr",
+    "modifiers":  [
+                      {
+                          "attribute":  "minecraft:generic.jump_strength",
+                          "amount":  0.3,
+                          "operation":  "add_multiplied_base"
+                      }
+                  ]
 }

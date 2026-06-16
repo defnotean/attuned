@@ -81,8 +81,9 @@ class FocusPresentationConsistencyTest {
 		assertTrue(!attributes.isEmpty(), "Expected shipped Focus modifier attributes.");
 
 		for (String attribute : attributes) {
-			assertTrue(lang.has("tooltip.attuned.modifier.attribute." + attribute),
-				"Modifier attribute should have a tooltip label: " + attribute);
+			String tooltipAttribute = tooltipAttributePath(attribute);
+			assertTrue(lang.has("tooltip.attuned.modifier.attribute." + tooltipAttribute),
+				"Modifier attribute should have a tooltip label: " + tooltipAttribute);
 		}
 	}
 
@@ -126,6 +127,11 @@ class FocusPresentationConsistencyTest {
 			}
 		}
 		return attributes;
+	}
+
+	private static String tooltipAttributePath(String path) {
+		int dot = path.indexOf('.');
+		return dot >= 0 ? path.substring(dot + 1) : path;
 	}
 
 	private static JsonObject languageRoot() throws IOException {

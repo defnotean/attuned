@@ -1,13 +1,13 @@
 {
-	"members": [
-		"attuned:edge_focus",
-		"attuned:frenzy_focus"
-	],
-	"modifiers": [
-		{
-			"attribute": "minecraft:attack_speed",
-			"amount": 0.25,
-			"operation": "add_value"
-		}
-	]
+    "members":  [
+                    "attuned:edge_focus",
+                    "attuned:frenzy_focus"
+                ],
+    "modifiers":  [
+                      {
+                          "attribute":  "minecraft:generic.attack_speed",
+                          "amount":  0.25,
+                          "operation":  "add_value"
+                      }
+                  ]
 }

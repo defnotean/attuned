@@ -1,10 +1,13 @@
 {
-	"members": ["attuned:anchor_focus", "attuned:rivet_focus"],
-	"modifiers": [
-		{
-			"attribute": "minecraft:knockback_resistance",
-			"amount": 0.1,
-			"operation": "add_value"
-		}
-	]
+    "members":  [
+                    "attuned:anchor_focus",
+                    "attuned:rivet_focus"
+                ],
+    "modifiers":  [
+                      {
+                          "attribute":  "minecraft:generic.knockback_resistance",
+                          "amount":  0.1,
+                          "operation":  "add_value"
+                      }
+                  ]
 }

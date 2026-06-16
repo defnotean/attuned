@@ -49,7 +49,7 @@ class GrandSatchelContractTest {
 			"AttunedComponents should expose an emptyGrandContents() default for the grand item.");
 		// Both registrations must live after the single idempotent guard flip.
 		assertBefore(components, "initialized = true;",
-			"Identifier.fromNamespaceAndPath(Attuned.MOD_ID, \"grand_satchel_contents\")");
+			"new ResourceLocation(Attuned.MOD_ID, \"grand_satchel_contents\")");
 	}
 
 	@Test

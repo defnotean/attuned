@@ -1,15 +1,11 @@
 {
-	"item": "attuned:nullveil_focus",
-	"cost": 4,
-	"unique": true,
-	"affinity": "umbral",
-	"faction": "attuned:umbral",
-	"modifiers": [
-		{
-			"attribute": "minecraft:sneaking_speed",
-			"amount": 0.2,
-			"operation": "add_value"
-		}
-	],
-	"behavior": "attuned:nullveil"
+    "item":  "attuned:nullveil_focus",
+    "cost":  4,
+    "unique":  true,
+    "affinity":  "umbral",
+    "faction":  "attuned:umbral",
+    "modifiers":  [
+
+                  ],
+    "behavior":  "attuned:nullveil"
 }

@@ -20,7 +20,7 @@ public final class PearlguardBehavior implements FocusBehavior {
 		if (!WET.test(player)) {
 			return;
 		}
-		PassiveEffectRefresher.refresh(player, MobEffects.RESISTANCE,
+		PassiveEffectRefresher.refresh(player, MobEffects.DAMAGE_RESISTANCE,
 			RESIST_DURATION_TICKS, 0, true, false, false);
 	}
 

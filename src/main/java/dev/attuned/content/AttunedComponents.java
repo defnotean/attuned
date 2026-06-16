@@ -2,10 +2,13 @@ package dev.attuned.content;
 
 import dev.attuned.Attuned;
 import dev.attuned.attunement.FocusHolder;
+import com.mojang.serialization.Codec;
 import net.minecraft.core.Registry;
 import net.minecraft.core.component.DataComponentType;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.Identifier;
+import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Unit;
 
 /** Registers custom item data components used by Attuned items. */
@@ -25,6 +28,9 @@ public final class AttunedComponents {
 
 	/** Marker on a Focus that has been tempered at the Altar of Reweaving. */
 	public static DataComponentType<Unit> TEMPERED;
+	private static final Codec<Unit> UNIT_CODEC = Codec.unit(Unit.INSTANCE);
+	private static final StreamCodec<RegistryFriendlyByteBuf, Unit> UNIT_STREAM_CODEC =
+		StreamCodec.unit(Unit.INSTANCE);
 
 	public static FocusHolder emptyContents() {
 		return FocusHolder.empty(SATCHEL_SIZE, 1);
@@ -40,22 +46,22 @@ public final class AttunedComponents {
 		}
 		initialized = true;
 		SATCHEL_CONTENTS = Registry.register(BuiltInRegistries.DATA_COMPONENT_TYPE,
-			Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "satchel_contents"),
+			new ResourceLocation(Attuned.MOD_ID, "satchel_contents"),
 			DataComponentType.<FocusHolder>builder()
 				.persistent(FocusHolder.codec(SATCHEL_SIZE, 1))
 				.networkSynchronized(FocusHolder.streamCodec(SATCHEL_SIZE, 1))
 				.build());
 		GRAND_SATCHEL_CONTENTS = Registry.register(BuiltInRegistries.DATA_COMPONENT_TYPE,
-			Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "grand_satchel_contents"),
+			new ResourceLocation(Attuned.MOD_ID, "grand_satchel_contents"),
 			DataComponentType.<FocusHolder>builder()
 				.persistent(FocusHolder.codec(GRAND_SATCHEL_SIZE, 1))
 				.networkSynchronized(FocusHolder.streamCodec(GRAND_SATCHEL_SIZE, 1))
 				.build());
 		TEMPERED = Registry.register(BuiltInRegistries.DATA_COMPONENT_TYPE,
-			Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "tempered"),
+			new ResourceLocation(Attuned.MOD_ID, "tempered"),
 			DataComponentType.<Unit>builder()
-				.persistent(Unit.CODEC)
-				.networkSynchronized(Unit.STREAM_CODEC)
+				.persistent(UNIT_CODEC)
+				.networkSynchronized(UNIT_STREAM_CODEC)
 				.build());
 	}
 }

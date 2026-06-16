@@ -1,8 +1,10 @@
 package dev.attuned.content.behavior;
 
+import dev.attuned.compat.AttributeModifierIds;
+
 import dev.attuned.Attuned;
 import dev.attuned.api.focus.FocusBehavior;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
@@ -20,8 +22,8 @@ import net.minecraft.world.item.ItemStack;
  */
 public final class BloodfuryBehavior implements FocusBehavior {
 
-	private static final Identifier MODIFIER_ID =
-		Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "bloodfury");
+	private static final ResourceLocation MODIFIER_ID =
+		new ResourceLocation(Attuned.MOD_ID, "bloodfury");
 	/** Attack-speed bonus at the brink of death (+40%). */
 	private static final double MAX_BONUS = 0.40;
 
@@ -35,14 +37,13 @@ public final class BloodfuryBehavior implements FocusBehavior {
 		float missing = maxHealth <= 0.0F ? 0.0F : 1.0F - player.getHealth() / maxHealth;
 		double bonus = MAX_BONUS * Mth.clamp(missing, 0.0F, 1.0F);
 
-		AttributeModifier current = attackSpeed.getModifier(MODIFIER_ID);
+		AttributeModifier current = attackSpeed.getModifier(AttributeModifierIds.uuid(MODIFIER_ID));
 		if (current != null && current.amount() == bonus) {
 			return;
 		}
-		attackSpeed.removeModifier(MODIFIER_ID);
+		attackSpeed.removeModifier(AttributeModifierIds.uuid(MODIFIER_ID));
 		if (bonus > 0.0) {
-			attackSpeed.addTransientModifier(new AttributeModifier(
-				MODIFIER_ID, bonus, AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL));
+			attackSpeed.addTransientModifier(new AttributeModifier(AttributeModifierIds.uuid(MODIFIER_ID), AttributeModifierIds.name(MODIFIER_ID), bonus, AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL));
 		}
 	}
 
@@ -50,7 +51,7 @@ public final class BloodfuryBehavior implements FocusBehavior {
 	public void onDeactivate(ServerPlayer player, ItemStack focus) {
 		AttributeInstance attackSpeed = player.getAttribute(Attributes.ATTACK_SPEED);
 		if (attackSpeed != null) {
-			attackSpeed.removeModifier(MODIFIER_ID);
+			attackSpeed.removeModifier(AttributeModifierIds.uuid(MODIFIER_ID));
 		}
 	}
 }

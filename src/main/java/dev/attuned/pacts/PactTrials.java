@@ -1,5 +1,8 @@
 package dev.attuned.pacts;
 
+import dev.attuned.compat.ParticleCompat;
+
+import dev.attuned.compat.PlayerMessages;
 import dev.attuned.Milestones;
 import dev.attuned.AttunedAdvancements;
 import dev.attuned.AttunedPlayerCleanup;
@@ -123,7 +126,7 @@ public final class PactTrials {
 		PactTrialProgress progress = get(player).withTier4Completed(id);
 		player.setAttached(AttunedAttachments.PACT_TRIAL_PROGRESS, progress);
 		AttunedAdvancements.award(player, "attunement/pact_" + id + "_trial");
-		player.sendSystemMessage(Component.translatable("pact.attuned." + id + "_trial.title")
+		PlayerMessages.system(player, Component.translatable("pact.attuned." + id + "_trial.title")
 			.withStyle(pact.chatColor(), ChatFormatting.BOLD)
 			.append(Component.translatable("pact.attuned.trial.complete").withStyle(ChatFormatting.GRAY)));
 		ServerLevel level = (ServerLevel) player.level();
@@ -135,7 +138,7 @@ public final class PactTrials {
 		double py = player.getY() + player.getBbHeight() * 0.65;
 		double pz = player.getZ();
 		level.sendParticles(ParticleTypes.END_ROD, px, py, pz, 14, 0.5, 0.4, 0.5, 0.02);
-		level.sendParticles(new DustParticleOptions(pact.argb() & 0x00FFFFFF, 0.9F),
+		level.sendParticles(ParticleCompat.dust(pact.argb() & 0x00FFFFFF, 0.9F),
 			px, py, pz, 6, 0.4, 0.3, 0.4, 0.0);
 		Onboarding.tryPactTrialCompleteHint(player);
 		Milestones.onPactTrialComplete(player);
@@ -241,7 +244,7 @@ public final class PactTrials {
 			AttunedAttachments.markOnboarding(player, onboardId);
 			((ServerLevel) player.level()).playSound(null, player.blockPosition(),
 				SoundEvents.EXPERIENCE_ORB_PICKUP, SoundSource.PLAYERS, 0.35F, 1.25F);
-			player.sendOverlayMessage(
+			PlayerMessages.overlay(player,
 				Component.translatable("pact.attuned." + id + "_trial.title")
 					.withStyle(pact.chatColor())
 					.append(Component.translatable("pact.attuned.trial.progress", percent)

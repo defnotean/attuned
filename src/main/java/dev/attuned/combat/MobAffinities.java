@@ -4,7 +4,7 @@ import dev.attuned.Attuned;
 import dev.attuned.api.focus.Affinity;
 import java.util.Optional;
 import net.minecraft.core.registries.Registries;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
@@ -25,7 +25,7 @@ import net.minecraft.world.entity.LivingEntity;
  * the first match. An untagged entity has no affinity and deals and takes
  * normal damage.
  *
- * <p>Tag membership is read through {@link LivingEntity#typeHolder()}, which
+ * <p>Tag membership is read through {@link net.minecraft.world.entity.EntityType#is(net.minecraft.tags.TagKey)}, which
  * is the non-deprecated path to the entity's {@code Holder<EntityType<?>>} in
  * MC 26.1.2.
  */
@@ -42,7 +42,7 @@ public final class MobAffinities {
 	private static final TagKey<EntityType<?>> UMBRAL_MOBS = tag("umbral_mobs");
 
 	private static TagKey<EntityType<?>> tag(String name) {
-		return TagKey.create(Registries.ENTITY_TYPE, Identifier.fromNamespaceAndPath(Attuned.MOD_ID, name));
+		return TagKey.create(Registries.ENTITY_TYPE, new ResourceLocation(Attuned.MOD_ID, name));
 	}
 
 	/** The combat affinity of a living entity by its entity-type tag, if any. */
@@ -50,28 +50,28 @@ public final class MobAffinities {
 		if (entity == null) {
 			return Optional.empty();
 		}
-		if (entity.typeHolder().is(FURY_MOBS)) {
+		if (entity.getType().is(FURY_MOBS)) {
 			return Optional.of(Affinity.FURY);
 		}
-		if (entity.typeHolder().is(BASTION_MOBS)) {
+		if (entity.getType().is(BASTION_MOBS)) {
 			return Optional.of(Affinity.BASTION);
 		}
-		if (entity.typeHolder().is(ZEPHYR_MOBS)) {
+		if (entity.getType().is(ZEPHYR_MOBS)) {
 			return Optional.of(Affinity.ZEPHYR);
 		}
-		if (entity.typeHolder().is(HOLY_MOBS)) {
+		if (entity.getType().is(HOLY_MOBS)) {
 			return Optional.of(Affinity.HOLY);
 		}
-		if (entity.typeHolder().is(TIDE_MOBS)) {
+		if (entity.getType().is(TIDE_MOBS)) {
 			return Optional.of(Affinity.TIDE);
 		}
-		if (entity.typeHolder().is(FORGE_MOBS)) {
+		if (entity.getType().is(FORGE_MOBS)) {
 			return Optional.of(Affinity.FORGE);
 		}
-		if (entity.typeHolder().is(VERDANT_MOBS)) {
+		if (entity.getType().is(VERDANT_MOBS)) {
 			return Optional.of(Affinity.VERDANT);
 		}
-		if (entity.typeHolder().is(UMBRAL_MOBS)) {
+		if (entity.getType().is(UMBRAL_MOBS)) {
 			return Optional.of(Affinity.UMBRAL);
 		}
 		return Optional.empty();

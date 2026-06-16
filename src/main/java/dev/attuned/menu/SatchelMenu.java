@@ -136,6 +136,18 @@ public class SatchelMenu extends AbstractContainerMenu {
 		return hand;
 	}
 
+	private void addStandardInventorySlots(Inventory inventory, int x, int y) {
+		for (int row = 0; row < 3; row++) {
+			for (int col = 0; col < 9; col++) {
+				this.addSlot(new Slot(inventory, col + row * 9 + 9,
+					x + col * 18, y + row * 18));
+			}
+		}
+		for (int col = 0; col < 9; col++) {
+			this.addSlot(new Slot(inventory, col, x + col * 18, y + 58));
+		}
+	}
+
 	@Override
 	public boolean stillValid(Player player) {
 		return player == owner && hasLiveSatchel(player);

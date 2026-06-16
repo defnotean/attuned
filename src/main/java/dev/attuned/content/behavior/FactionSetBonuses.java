@@ -137,7 +137,7 @@ public final class FactionSetBonuses {
 		switch (faction) {
 			case FACTION_UNSEEN -> {
 				if (player.isCrouching()) {
-					refresh(player, MobEffects.SPEED);
+					refresh(player, MobEffects.MOVEMENT_SPEED);
 				}
 			}
 			case FACTION_SEAFARERS -> {
@@ -166,7 +166,7 @@ public final class FactionSetBonuses {
 			}
 			case FACTION_FORGEBOUND -> {
 				if (nearHeat(player)) {
-					refresh(player, MobEffects.HASTE);
+					refresh(player, MobEffects.DIG_SPEED);
 				}
 			}
 			case FACTION_WILDROOT -> {
@@ -176,7 +176,7 @@ public final class FactionSetBonuses {
 			}
 			case FACTION_UMBRAL -> {
 				if (inDark(player)) {
-					refresh(player, MobEffects.SPEED);
+					refresh(player, MobEffects.MOVEMENT_SPEED);
 				}
 			}
 			default -> { /* Unknown faction: no perk. */ }
@@ -216,10 +216,10 @@ public final class FactionSetBonuses {
 		}
 		AABB area = player.getBoundingBox().inflate(REVENANT_RADIUS);
 		List<LivingEntity> undead = level.getEntitiesOfClass(LivingEntity.class, area, entity ->
-			entity != player && entity.isAlive() && entity.typeHolder().is(EntityTypeTags.UNDEAD));
+			entity != player && entity.isAlive() && entity.getType().is(EntityTypeTags.UNDEAD));
 		for (LivingEntity entity : undead) {
 			entity.addEffect(new MobEffectInstance(
-				MobEffects.SLOWNESS, REVENANT_SLOWNESS_TICKS, 0, true, false, true));
+				MobEffects.MOVEMENT_SLOWDOWN, REVENANT_SLOWNESS_TICKS, 0, true, false, true));
 		}
 	}
 

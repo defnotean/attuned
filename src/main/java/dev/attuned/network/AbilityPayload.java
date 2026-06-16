@@ -4,7 +4,7 @@ import dev.attuned.Attuned;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 
 /**
  * Client-to-server signal that the player pressed the Focus Ability keybind. It
@@ -14,7 +14,7 @@ import net.minecraft.resources.Identifier;
 public record AbilityPayload() implements CustomPacketPayload {
 
 	public static final Type<AbilityPayload> TYPE =
-		new Type<>(Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "ability"));
+		new Type<>(new ResourceLocation(Attuned.MOD_ID, "ability"));
 
 	public static final StreamCodec<RegistryFriendlyByteBuf, AbilityPayload> CODEC =
 		StreamCodec.unit(new AbilityPayload());

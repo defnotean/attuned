@@ -18,7 +18,7 @@ import net.minecraft.core.GlobalPos;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.item.ItemStack;
@@ -29,8 +29,8 @@ import net.minecraft.world.item.component.LodestoneTracker;
  * Waystone Focus: points held compasses back toward the wearer's last death.
  */
 public final class WaystoneBehavior implements FocusBehavior {
-	private static final Identifier BEACON_FOCUS =
-		Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "beacon_focus");
+	private static final ResourceLocation BEACON_FOCUS =
+		new ResourceLocation(Attuned.MOD_ID, "beacon_focus");
 	private static final Component WAYSTONE_COMPASS_NAME =
 		Component.translatable("item.attuned.waystone_compass");
 
@@ -68,12 +68,12 @@ public final class WaystoneBehavior implements FocusBehavior {
 	}
 
 	private static boolean hasActiveBeaconTarget(ServerPlayer player) {
-		if (player.getRespawnConfig() == null) {
+		if (player.getRespawnPosition() == null) {
 			return false;
 		}
 		AttunedInv inv = AttunedAttachments.getInventory(player);
 		for (int slot : Attunement.activeSlots(player)) {
-			Identifier id = BuiltInRegistries.ITEM.getKey(inv.get(slot).getItem());
+			ResourceLocation id = BuiltInRegistries.ITEM.getKey(inv.get(slot).getItem());
 			if (BEACON_FOCUS.equals(id)) {
 				return true;
 			}

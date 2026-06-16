@@ -7,7 +7,6 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.level.gamerules.GameRules;
 
 /** Shared target predicates for Attuned combat, PvP, and reveal effects. */
 public final class CombatTargets {
@@ -18,8 +17,7 @@ public final class CombatTargets {
 		return target != attacker
 			&& target.isAlive()
 			&& !target.isSpectator()
-			&& attacker.level() instanceof ServerLevel level
-			&& level.getGameRules().get(GameRules.PVP)
+			&& attacker.level() instanceof ServerLevel
 			&& attacker.canHarmPlayer(target);
 	}
 

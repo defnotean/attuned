@@ -19,7 +19,7 @@ public final class SparkweldBehavior implements FocusBehavior {
 		if (player.tickCount % HASTE_REFRESH_TICKS != 0) {
 			return;
 		}
-		PassiveEffectRefresher.refresh(player, MobEffects.HASTE,
+		PassiveEffectRefresher.refresh(player, MobEffects.DIG_SPEED,
 			HASTE_DURATION_TICKS, 0, true, false, false);
 	}
 
@@ -36,7 +36,7 @@ public final class SparkweldBehavior implements FocusBehavior {
 	@Override
 	public boolean onAbility(ServerPlayer player, ItemStack focus) {
 		player.addEffect(new MobEffectInstance(
-			MobEffects.STRENGTH, STRENGTH_TICKS, 0, true, false, true));
+			MobEffects.DAMAGE_BOOST, STRENGTH_TICKS, 0, true, false, true));
 		CombatFeedback.abilityCast(player, CombatFeedback.AbilityFlavor.FORGE);
 		return true;
 	}

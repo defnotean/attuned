@@ -58,15 +58,17 @@ class FociHudContractTest {
 	void fociHudDrawsActualEquippedFocusStacksAndDormantState() throws IOException {
 		String hud = read(FOCI_HUD);
 
-		assertTrue(hud.contains("HudElementRegistry.attachElementAfter"),
+		assertTrue(hud.contains("HudElementRegistry.attachElementAfter")
+				|| hud.contains("HudRenderCallback.EVENT.register"),
 			"The Foci HUD should register as its own HUD layer.");
-		assertTrue(hud.contains("VanillaHudElements.HOTBAR"),
+		assertTrue(hud.contains("VanillaHudElements.HOTBAR")
+				|| hud.contains("HudRenderCallback.EVENT.register"),
 			"The Foci HUD should anchor near the hotbar.");
 		assertTrue(hud.contains("textures/gui/foci_hud.png"),
 			"The Foci HUD should use its dedicated frame art.");
 		assertTrue(hud.contains("AttunedAttachments.getInventory(player)"),
 			"The HUD should read the equipped Focus inventory.");
-		assertTrue(hud.contains("graphics.item("),
+		assertTrue(hud.contains("graphics.item(") || hud.contains("graphics.renderItem("),
 			"The HUD should render actual equipped item stacks.");
 		assertTrue(hud.contains("dormantReasons"),
 			"The HUD should distinguish active and dormant equipped Foci.");

@@ -5,27 +5,28 @@ import java.util.ArrayList;
 import java.util.List;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
-import net.fabricmc.fabric.api.client.rendering.v1.level.LevelRenderContext;
-import net.fabricmc.fabric.api.client.rendering.v1.level.LevelRenderEvents;
+import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderContext;
+import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderEvents;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
-import net.minecraft.client.renderer.ShapeRenderer;
-import net.minecraft.client.renderer.rendertype.RenderType;
+import net.minecraft.client.renderer.LevelRenderer;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.Registries;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.phys.Vec3;
-import net.minecraft.world.phys.shapes.Shapes;
 
 /** Client-side timed ore outline shown by the Tremor Focus. */
 public final class TremorOreOutlines {
 	private static final TagKey<Block> ORES =
-		TagKey.create(Registries.BLOCK, Identifier.fromNamespaceAndPath("c", "ores"));
+		TagKey.create(Registries.BLOCK, new ResourceLocation("c", "ores"));
 	private static final int OUTLINE_TICKS = 120;
-	private static final int OUTLINE_COLOR = 0xCCB266FF;
-	private static final float LINE_WIDTH = 3.0F;
+	private static final float OUTLINE_R = 0xB2 / 255.0F;
+	private static final float OUTLINE_G = 0x66 / 255.0F;
+	private static final float OUTLINE_B = 0xFF / 255.0F;
+	private static final float OUTLINE_A = 0xCC / 255.0F;
 
 	private static final List<BlockPos> orePositions = new ArrayList<>();
 	private static ClientLevel highlightedLevel;
@@ -42,7 +43,7 @@ public final class TremorOreOutlines {
 
 		ClientPlayNetworking.registerGlobalReceiver(TremorOreHintPayload.TYPE, (payload, context) ->
 			context.client().execute(() -> highlight(payload.orePositions())));
-		LevelRenderEvents.END_MAIN.register(TremorOreOutlines::render);
+		WorldRenderEvents.END.register(TremorOreOutlines::render);
 		// Drop the highlighted-level reference on disconnect; render() does not run
 		// on the title screen, so without this the old ClientLevel would stay pinned.
 		ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> clear());
@@ -61,7 +62,7 @@ public final class TremorOreOutlines {
 		expiresAt = minecraft.level.getGameTime() + OUTLINE_TICKS;
 	}
 
-	private static void render(LevelRenderContext context) {
+	private static void render(WorldRenderContext context) {
 		Minecraft minecraft = Minecraft.getInstance();
 		if (minecraft.level == null || orePositions.isEmpty()) {
 			return;
@@ -77,21 +78,19 @@ public final class TremorOreOutlines {
 			return;
 		}
 
-		Vec3 camera = context.gameRenderer().getMainCamera().position();
+		Vec3 camera = context.camera().getPosition();
 		RenderType outline = TremorOreRenderTypes.oreOutline();
 		for (BlockPos orePos : orePositions) {
 			double x = orePos.getX() - camera.x();
 			double y = orePos.getY() - camera.y();
 			double z = orePos.getZ() - camera.z();
-			ShapeRenderer.renderShape(
-				context.poseStack(),
-				context.bufferSource().getBuffer(outline),
-				Shapes.block(),
+			LevelRenderer.renderLineBox(
+				context.matrixStack(),
+				context.consumers().getBuffer(outline),
 				x, y, z,
-				OUTLINE_COLOR,
-				LINE_WIDTH);
+				x + 1.0D, y + 1.0D, z + 1.0D,
+				OUTLINE_R, OUTLINE_G, OUTLINE_B, OUTLINE_A);
 		}
-		context.bufferSource().endBatch(outline);
 	}
 
 	private static void clear() {

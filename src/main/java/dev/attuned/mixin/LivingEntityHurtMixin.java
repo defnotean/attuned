@@ -1,5 +1,6 @@
 package dev.attuned.mixin;
 
+import dev.attuned.compat.AfterDamageCallback;
 import dev.attuned.combat.Apex;
 import dev.attuned.combat.AttunedCombat;
 import dev.attuned.combat.CombatContext;
@@ -11,8 +12,11 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.LivingEntity;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 /**
  * Shapes incoming damage for three Attuned systems: the rock-paper-scissors
@@ -20,8 +24,8 @@ import org.spongepowered.asm.mixin.injection.ModifyVariable;
  * the Pacts set bonuses (Stoneheart's dampen, Untethered's amplifier), and
  * The Unseen's direct-melee opener.
  *
- * <p>{@code LivingEntity.hurtServer(ServerLevel, DamageSource, float)} is the
- * single server-side entry point for all damage. We rescale its {@code float}
+ * <p>{@code LivingEntity.hurt(DamageSource, float)} is the 1.20.6
+ * server-side entry point for all damage. We rescale its {@code float}
  * amount argument at HEAD, before armour, absorption and resistance, so every
  * system compounds correctly with the rest of the damage pipeline. The matchup
  * logic lives in {@link AttunedCombat}; the capstones in {@link Apex}; the set
@@ -29,13 +33,25 @@ import org.spongepowered.asm.mixin.injection.ModifyVariable;
  */
 @Mixin(LivingEntity.class)
 public abstract class LivingEntityHurtMixin {
+	@Unique
+	private float attuned$beforeDamagePool;
 
-	@ModifyVariable(method = "hurtServer", at = @At("HEAD"), argsOnly = true)
-	private float attuned$adjustDamage(float amount, ServerLevel level, DamageSource source) {
+	@Inject(method = "hurt", at = @At("HEAD"))
+	private void attuned$captureDamagePool(DamageSource source, float amount,
+			CallbackInfoReturnable<Boolean> cir) {
+		LivingEntity self = (LivingEntity) (Object) this;
+		attuned$beforeDamagePool = self.getHealth() + self.getAbsorptionAmount();
+	}
+
+	@ModifyVariable(method = "hurt", at = @At("HEAD"), argsOnly = true, ordinal = 0)
+	private float attuned$adjustDamage(float amount, DamageSource source) {
 		if (amount <= 0.0F) {
 			return amount;
 		}
 		LivingEntity self = (LivingEntity) (Object) this;
+		if (!(self.level() instanceof ServerLevel level)) {
+			return amount;
+		}
 		UpdraftBehavior.recordPvpDamage(self, source);
 		CombatContext context = CombatContext.of(self, source);
 		float scaled = AttunedCombat.applyAffinity(level, self, source, amount, context);
@@ -43,5 +59,23 @@ public abstract class LivingEntityHurtMixin {
 		float adjusted = Pacts.adjustDamage(self, source, capped, context);
 		float unseen = UnseenCombat.adjustDamage(self, source, adjusted);
 		return RevenantCombat.adjustDamage(self, source, unseen);
+	}
+
+	@Inject(method = "hurt", at = @At("RETURN"))
+	private void attuned$afterDamage(DamageSource source, float amount,
+			CallbackInfoReturnable<Boolean> cir) {
+		if (!Boolean.TRUE.equals(cir.getReturnValue())) {
+			return;
+		}
+		LivingEntity self = (LivingEntity) (Object) this;
+		if (!(self.level() instanceof ServerLevel)) {
+			return;
+		}
+		float afterDamagePool = self.getHealth() + self.getAbsorptionAmount();
+		float dealtDamage = Math.max(0.0F, attuned$beforeDamagePool - afterDamagePool);
+		if (dealtDamage <= 0.0F) {
+			return;
+		}
+		AfterDamageCallback.EVENT.invoker().afterDamage(self, source, amount, dealtDamage, false);
 	}
 }

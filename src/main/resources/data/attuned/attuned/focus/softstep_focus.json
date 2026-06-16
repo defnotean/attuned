@@ -1,15 +1,11 @@
 {
-	"item": "attuned:softstep_focus",
-	"cost": 2,
-	"unique": true,
-	"affinity": "umbral",
-	"faction": "attuned:unseen",
-	"modifiers": [
-		{
-			"attribute": "minecraft:sneaking_speed",
-			"amount": 0.35,
-			"operation": "add_value"
-		}
-	],
-	"behavior": "attuned:softstep"
+    "item":  "attuned:softstep_focus",
+    "cost":  2,
+    "unique":  true,
+    "affinity":  "umbral",
+    "faction":  "attuned:unseen",
+    "modifiers":  [
+
+                  ],
+    "behavior":  "attuned:softstep"
 }

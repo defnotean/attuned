@@ -180,7 +180,8 @@ class RadiantExpansionContractTest {
 		String behavior = Files.readString(RADIANT_BEHAVIORS_SOURCE, StandardCharsets.UTF_8);
 		assertTrue(behavior.contains("class Votive implements FocusBehavior"),
 			"Votive should remain a normal server-side Focus behavior");
-		assertTrue(behavior.contains("ServerLivingEntityEvents.AFTER_DAMAGE.register(Votive::afterDamage)"),
+		assertTrue(behavior.contains("ServerLivingEntityEvents.AFTER_DAMAGE.register(Votive::afterDamage)")
+				|| behavior.contains("AfterDamageCallback.EVENT.register(Votive::afterDamage)"),
 			"Votive should react to actual hostile hits");
 		assertTrue(behavior.contains("CombatTargets.isHostileOrPvpOpponent"),
 			"Votive should only trigger from hostile mobs or valid PvP opponents");
@@ -212,7 +213,8 @@ class RadiantExpansionContractTest {
 		String behavior = Files.readString(RADIANT_BEHAVIORS_SOURCE, StandardCharsets.UTF_8);
 		assertTrue(behavior.contains("class Oathguard implements FocusBehavior"),
 			"Oathguard should remain a normal server-side Focus behavior");
-		assertTrue(behavior.contains("ServerLivingEntityEvents.AFTER_DAMAGE.register(this::afterDamage)"),
+		assertTrue(behavior.contains("ServerLivingEntityEvents.AFTER_DAMAGE.register(this::afterDamage)")
+				|| behavior.contains("AfterDamageCallback.EVENT.register(this::afterDamage)"),
 			"Oathguard should react to hostile hits as well as blocking");
 		assertTrue(behavior.contains("private void afterDamage(LivingEntity defender, DamageSource source,"),
 			"Oathguard should own a damage event handler");
@@ -367,11 +369,12 @@ class RadiantExpansionContractTest {
 		String behavior = Files.readString(MOSSHEART_BEHAVIOR_SOURCE, StandardCharsets.UTF_8);
 		assertTrue(behavior.contains("class MossheartBehavior implements FocusBehavior"),
 			"Mossheart should be a normal server-side Focus behavior");
-		assertTrue(behavior.contains("ServerLivingEntityEvents.AFTER_DAMAGE.register(MossheartBehavior::afterDamage)"),
+		assertTrue(behavior.contains("ServerLivingEntityEvents.AFTER_DAMAGE.register(MossheartBehavior::afterDamage)")
+				|| behavior.contains("AfterDamageCallback.EVENT.register(MossheartBehavior::afterDamage)"),
 			"Mossheart should react to actual hostile hits");
 		assertTrue(behavior.contains("CombatTargets.isHostileOrPvpOpponent"),
 			"Mossheart should only trigger from hostile mobs or valid PvP opponents");
-		assertTrue(behavior.contains("MobEffects.RESISTANCE")
+		assertTrue(behavior.contains("MobEffects.DAMAGE_RESISTANCE")
 				&& behavior.contains("RESISTANCE_TICKS = 60")
 				&& behavior.contains("COOLDOWN_TICKS = 240"),
 			"Mossheart should grant Resistance I for 60 ticks on a 240-tick cooldown");
@@ -446,11 +449,12 @@ class RadiantExpansionContractTest {
 		String behavior = Files.readString(KILNWARD_BEHAVIOR_SOURCE, StandardCharsets.UTF_8);
 		assertTrue(behavior.contains("class KilnwardBehavior implements FocusBehavior"),
 			"Kilnward should be a normal server-side Focus behavior");
-		assertTrue(behavior.contains("ServerLivingEntityEvents.AFTER_DAMAGE.register(KilnwardBehavior::afterDamage)"),
+		assertTrue(behavior.contains("ServerLivingEntityEvents.AFTER_DAMAGE.register(KilnwardBehavior::afterDamage)")
+				|| behavior.contains("AfterDamageCallback.EVENT.register(KilnwardBehavior::afterDamage)"),
 			"Kilnward should react to actual hostile hits");
 		assertTrue(behavior.contains("CombatTargets.isHostileOrPvpOpponent"),
 			"Kilnward should only trigger from hostile mobs or valid PvP opponents");
-		assertTrue(behavior.contains("MobEffects.RESISTANCE")
+		assertTrue(behavior.contains("MobEffects.DAMAGE_RESISTANCE")
 				&& behavior.contains("RESISTANCE_TICKS = 60")
 				&& behavior.contains("COOLDOWN_TICKS = 240"),
 			"Kilnward should grant Resistance I for 60 ticks on a 240-tick cooldown");

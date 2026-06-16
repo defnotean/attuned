@@ -1,17 +1,12 @@
 {
-	"item": "attuned:wellspring_focus",
-	"cost": 4,
-	"affinity": "tide",
-	"modifiers": [
-		{
-			"attribute": "minecraft:max_health",
-			"amount": 6.0,
-			"operation": "add_value"
-		},
-		{
-			"attribute": "minecraft:water_movement_efficiency",
-			"amount": 0.4,
-			"operation": "add_value"
-		}
-	]
+    "item":  "attuned:wellspring_focus",
+    "cost":  4,
+    "affinity":  "tide",
+    "modifiers":  [
+                      {
+                          "attribute":  "minecraft:generic.max_health",
+                          "amount":  6.0,
+                          "operation":  "add_value"
+                      }
+                  ]
 }

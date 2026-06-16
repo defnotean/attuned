@@ -41,12 +41,11 @@ public final class BeaconBehavior implements FocusBehavior {
 
 	@Override
 	public void onTick(ServerPlayer player, ItemStack focus) {
-		ServerPlayer.RespawnConfig respawn = player.getRespawnConfig();
-		if (respawn == null) {
+		if (player.getRespawnPosition() == null) {
 			restorePlayer(player);
 			return;
 		}
-		GlobalPos home = respawn.respawnData().globalPos();
+		GlobalPos home = GlobalPos.of(player.getRespawnDimension(), player.getRespawnPosition());
 		LodestoneTracker tracker = new LodestoneTracker(Optional.of(home), false);
 		restoreCompassesNoLongerHeld(player);
 		for (InteractionHand hand : InteractionHand.values()) {

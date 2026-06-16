@@ -1,5 +1,7 @@
 package dev.attuned.combat;
 
+import dev.attuned.compat.AfterDamageCallback;
+
 import dev.attuned.Attuned;
 import dev.attuned.AttunedPlayerCleanup;
 import dev.attuned.AttunedServerCleanup;
@@ -14,7 +16,7 @@ import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -32,12 +34,12 @@ import net.minecraft.world.item.ItemStack;
 
 /** Combat hooks for The Revenant faction: debts, rites, and bone-cold reprisals. */
 public final class RevenantCombat {
-	private static final Identifier ASHEN_DEBT_FOCUS =
-		Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "ashen_debt_focus");
-	private static final Identifier LAST_RITES_FOCUS =
-		Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "last_rites_focus");
-	private static final Identifier BONECHILL_FOCUS =
-		Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "bonechill_focus");
+	private static final ResourceLocation ASHEN_DEBT_FOCUS =
+		new ResourceLocation(Attuned.MOD_ID, "ashen_debt_focus");
+	private static final ResourceLocation LAST_RITES_FOCUS =
+		new ResourceLocation(Attuned.MOD_ID, "last_rites_focus");
+	private static final ResourceLocation BONECHILL_FOCUS =
+		new ResourceLocation(Attuned.MOD_ID, "bonechill_focus");
 
 	private static final int DEBT_WINDOW_TICKS = 160;
 	private static final float DEBT_MULTIPLIER = 1.25F;
@@ -62,7 +64,7 @@ public final class RevenantCombat {
 		}
 		initialized = true;
 
-		ServerLivingEntityEvents.AFTER_DAMAGE.register(RevenantCombat::afterDamage);
+		AfterDamageCallback.EVENT.register(RevenantCombat::afterDamage);
 		ServerLivingEntityEvents.AFTER_DEATH.register(RevenantCombat::afterDeath);
 		ServerTickEvents.END_SERVER_TICK.register(RevenantCombat::tick);
 		AttunedPlayerCleanup.onForget(uuid -> {
@@ -131,7 +133,7 @@ public final class RevenantCombat {
 			chill(attacker);
 		}
 		if (attacker instanceof ServerPlayer player && hasActiveFocus(player, BONECHILL_FOCUS)
-				&& defender.typeHolder().is(EntityTypeTags.UNDEAD)) {
+				&& defender.getType().is(EntityTypeTags.UNDEAD)) {
 			chill(defender);
 		}
 	}
@@ -153,7 +155,7 @@ public final class RevenantCombat {
 		boolean wasOnFire = player.isOnFire();
 		boolean cleansed = player.removeEffect(MobEffects.POISON)
 			| player.removeEffect(MobEffects.WITHER)
-			| player.removeEffect(MobEffects.SLOWNESS)
+			| player.removeEffect(MobEffects.MOVEMENT_SLOWDOWN)
 			| wasOnFire;
 		if (!cleansed) {
 			return;
@@ -170,12 +172,12 @@ public final class RevenantCombat {
 	}
 
 	private static boolean canChillAttacker(ServerPlayer player, LivingEntity attacker) {
-		return attacker.typeHolder().is(EntityTypeTags.UNDEAD)
+		return attacker.getType().is(EntityTypeTags.UNDEAD)
 			|| CombatTargets.isHostileOrPvpOpponent(attacker, player);
 	}
 
 	private static void chill(LivingEntity target) {
-		target.addEffect(new MobEffectInstance(MobEffects.SLOWNESS, BONECHILL_TICKS, 0, true, false, true));
+		target.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, BONECHILL_TICKS, 0, true, false, true));
 		if (target.level() instanceof ServerLevel level) {
 			level.sendParticles(ParticleTypes.SNOWFLAKE,
 				target.getX(), target.getY() + target.getBbHeight() * 0.55D, target.getZ(),
@@ -209,7 +211,7 @@ public final class RevenantCombat {
 		}
 	}
 
-	private static boolean hasActiveFocus(Player player, Identifier targetId) {
+	private static boolean hasActiveFocus(Player player, ResourceLocation targetId) {
 		AttunedInv inventory = AttunedAttachments.getInventory(player);
 		for (int slot : Attunement.activeSlots(player)) {
 			ItemStack stack = inventory.get(slot);
@@ -217,7 +219,7 @@ public final class RevenantCombat {
 				continue;
 			}
 			Item item = stack.getItem();
-			Identifier itemId = BuiltInRegistries.ITEM.getKey(item);
+			ResourceLocation itemId = BuiltInRegistries.ITEM.getKey(item);
 			if (targetId.equals(itemId)) {
 				return true;
 			}

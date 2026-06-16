@@ -1,11 +1,13 @@
 package dev.attuned.content;
 
+import dev.attuned.compat.PlayerMessages;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 
@@ -21,11 +23,12 @@ public class AttunementShardFragmentItem extends Item {
 	}
 
 	@Override
-	public InteractionResult use(Level level, Player player, InteractionHand hand) {
+	public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
+		ItemStack stack = player.getItemInHand(hand);
 		if (!level.isClientSide()) {
 			sendProgressHint(player);
 		}
-		return level.isClientSide() ? InteractionResult.SUCCESS : InteractionResult.SUCCESS_SERVER;
+		return InteractionResultHolder.sidedSuccess(stack, level.isClientSide());
 	}
 
 	public static void sendProgressHint(Player player) {
@@ -34,7 +37,7 @@ public class AttunementShardFragmentItem extends Item {
 			? Component.translatable("item.attuned.attunement_shard_fragment.use.ready", count)
 			: Component.translatable("item.attuned.attunement_shard_fragment.use.progress",
 				count, FRAGMENTS_PER_SHARD);
-		player.sendSystemMessage(message.copy().withStyle(ChatFormatting.GRAY));
+		PlayerMessages.system(player, message.copy().withStyle(ChatFormatting.GRAY));
 	}
 
 	private static int countFragments(Player player) {

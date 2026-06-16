@@ -1,12 +1,12 @@
 {
-	"item": "attuned:drift_focus",
-	"cost": 2,
-	"affinity": "zephyr",
-	"modifiers": [
-		{
-			"attribute": "minecraft:fall_damage_multiplier",
-			"amount": -1.0,
-			"operation": "add_multiplied_total"
-		}
-	]
+    "item":  "attuned:drift_focus",
+    "cost":  2,
+    "affinity":  "zephyr",
+    "modifiers":  [
+                      {
+                          "attribute":  "minecraft:generic.fall_damage_multiplier",
+                          "amount":  -1.0,
+                          "operation":  "add_multiplied_total"
+                      }
+                  ]
 }

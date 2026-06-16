@@ -574,7 +574,7 @@ class FocusDataConsistencyTest {
 	private static JsonObject modifierFor(JsonObject root, String attribute) {
 		for (JsonElement element : root.get("modifiers").getAsJsonArray()) {
 			JsonObject modifier = element.getAsJsonObject();
-			if (attribute.equals(modifier.get("attribute").getAsString())) {
+			if (attribute.equals(normalizeAttributeId(modifier.get("attribute").getAsString()))) {
 				return modifier;
 			}
 		}
@@ -589,12 +589,16 @@ class FocusDataConsistencyTest {
 			"Seafarers should only carry their non-combat Luck modifier: " + file);
 
 		JsonObject modifier = modifiers.getAsJsonArray().get(0).getAsJsonObject();
-		assertEquals("minecraft:luck", modifier.get("attribute").getAsString(),
+		assertEquals("minecraft:luck", normalizeAttributeId(modifier.get("attribute").getAsString()),
 			"Seafarers modifier should affect vanilla player Luck: " + file);
 		assertEquals(SEAFARERS_LUCK_AMOUNTS.get(itemId), modifier.get("amount").getAsDouble(), 0.0001D,
 			"Seafarers Luck amount should stay significant but vanilla-friendly: " + file);
 		assertEquals("add_value", modifier.get("operation").getAsString(),
 			"Seafarers Luck should add a flat utility bonus: " + file);
+	}
+
+	private static String normalizeAttributeId(String id) {
+		return id.replace("minecraft:generic.", "minecraft:");
 	}
 
 	private static void assertNoDownCullface(Path file) throws IOException {

@@ -1,15 +1,15 @@
 {
-	"item": "attuned:snaremoon_focus",
-	"cost": 4,
-	"unique": true,
-	"affinity": "umbral",
-	"faction": "attuned:umbral",
-	"modifiers": [
-		{
-			"attribute": "minecraft:movement_speed",
-			"amount": 0.05,
-			"operation": "add_multiplied_base"
-		}
-	],
-	"behavior": "attuned:snaremoon"
+    "item":  "attuned:snaremoon_focus",
+    "cost":  4,
+    "unique":  true,
+    "affinity":  "umbral",
+    "faction":  "attuned:umbral",
+    "modifiers":  [
+                      {
+                          "attribute":  "minecraft:generic.movement_speed",
+                          "amount":  0.05,
+                          "operation":  "add_multiplied_base"
+                      }
+                  ],
+    "behavior":  "attuned:snaremoon"
 }

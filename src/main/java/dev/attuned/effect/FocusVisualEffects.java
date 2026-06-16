@@ -1,11 +1,13 @@
 package dev.attuned.effect;
 
+import dev.attuned.compat.ParticleCompat;
+
 import dev.attuned.Attuned;
 import dev.attuned.attunement.AttunedInv;
 import net.minecraft.core.particles.DustParticleOptions;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.ItemStack;
@@ -22,10 +24,10 @@ import net.minecraft.world.phys.Vec3;
 public final class FocusVisualEffects {
 	private FocusVisualEffects() {}
 
-	private static final Identifier SOFTSTEP_FOCUS = focusId("softstep_focus");
-	private static final Identifier AEGIS_FOCUS = focusId("aegis_focus");
-	private static final Identifier TIDE_FOCUS = focusId("tide_focus");
-	private static final Identifier CINDER_FOCUS = focusId("cinder_focus");
+	private static final ResourceLocation SOFTSTEP_FOCUS = focusId("softstep_focus");
+	private static final ResourceLocation AEGIS_FOCUS = focusId("aegis_focus");
+	private static final ResourceLocation TIDE_FOCUS = focusId("tide_focus");
+	private static final ResourceLocation CINDER_FOCUS = focusId("cinder_focus");
 
 	private static final int SOFTSTEP_PURPLE = 0x5B2C86;
 	private static final int AEGIS_GOLD = 0xF6B73C;
@@ -40,7 +42,7 @@ public final class FocusVisualEffects {
 			if (stack.isEmpty()) {
 				continue;
 			}
-			Identifier focusId = BuiltInRegistries.ITEM.getKey(stack.getItem());
+			ResourceLocation focusId = BuiltInRegistries.ITEM.getKey(stack.getItem());
 			if (SOFTSTEP_FOCUS.equals(focusId)) {
 				spawnSoftstep(level, player, tick, slot);
 			} else if (AEGIS_FOCUS.equals(focusId)) {
@@ -53,8 +55,8 @@ public final class FocusVisualEffects {
 		}
 	}
 
-	private static Identifier focusId(String path) {
-		return Identifier.fromNamespaceAndPath(Attuned.MOD_ID, path);
+	private static ResourceLocation focusId(String path) {
+		return new ResourceLocation(Attuned.MOD_ID, path);
 	}
 
 	/** Softstep/Umbral: smoky violet footprints and low ground wisps. */
@@ -73,7 +75,7 @@ public final class FocusVisualEffects {
 
 		level.sendParticles(ParticleTypes.SCULK_SOUL,
 			footX, y + 0.05D, footZ, 1, 0.04D, 0.02D, 0.04D, 0.0D);
-		level.sendParticles(new DustParticleOptions(SOFTSTEP_PURPLE, 0.75F),
+		level.sendParticles(ParticleCompat.dust(SOFTSTEP_PURPLE, 0.75F),
 			footX, y, footZ, 2, 0.08D, 0.01D, 0.08D, 0.0D);
 	}
 
@@ -82,7 +84,7 @@ public final class FocusVisualEffects {
 		double phase = (tick + slot * 5) * 0.12D;
 		double radius = 0.72D;
 		double y = player.getY() + 1.0D;
-		DustParticleOptions gold = new DustParticleOptions(AEGIS_GOLD, 1.0F);
+		DustParticleOptions gold = ParticleCompat.dust(AEGIS_GOLD, 1.0F);
 		for (int i = 0; i < 6; i++) {
 			double angle = phase + i * TAU / 6.0D;
 			level.sendParticles(gold,
@@ -103,7 +105,7 @@ public final class FocusVisualEffects {
 		}
 		level.sendParticles(ParticleTypes.SPLASH,
 			player.getX(), player.getY() + 0.12D, player.getZ(), 2, 0.24D, 0.02D, 0.24D, 0.0D);
-		level.sendParticles(new DustParticleOptions(TIDE_CYAN, 0.75F),
+		level.sendParticles(ParticleCompat.dust(TIDE_CYAN, 0.75F),
 			player.getX(), player.getY() + 0.72D, player.getZ(), 1, 0.28D, 0.18D, 0.28D, 0.0D);
 	}
 
@@ -120,7 +122,7 @@ public final class FocusVisualEffects {
 		}
 		level.sendParticles(ParticleTypes.LAVA,
 			player.getX(), player.getY() + 0.9D, player.getZ(), 1, 0.18D, 0.16D, 0.18D, 0.0D);
-		level.sendParticles(new DustParticleOptions(CINDER_ORANGE, 0.85F),
+		level.sendParticles(ParticleCompat.dust(CINDER_ORANGE, 0.85F),
 			player.getX(), player.getY() + 0.85D, player.getZ(), 1, 0.24D, 0.16D, 0.24D, 0.0D);
 	}
 }

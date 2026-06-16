@@ -1,5 +1,8 @@
 package dev.attuned.combat;
 
+import dev.attuned.compat.AfterDamageCallback;
+
+import dev.attuned.compat.PlayerMessages;
 import dev.attuned.AttunedPlayerCleanup;
 import dev.attuned.AttunedServerCleanup;
 import dev.attuned.attunement.AttunedAttachments;
@@ -10,7 +13,7 @@ import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
@@ -37,10 +40,10 @@ import java.util.UUID;
 public final class UnseenCombat {
 	private UnseenCombat() {}
 
-	private static final Identifier NEEDLE_FOCUS =
-		Identifier.fromNamespaceAndPath("attuned", "needle_focus");
-	private static final Identifier SOFTSTEP_FOCUS =
-		Identifier.fromNamespaceAndPath("attuned", "softstep_focus");
+	private static final ResourceLocation NEEDLE_FOCUS =
+		new ResourceLocation("attuned", "needle_focus");
+	private static final ResourceLocation SOFTSTEP_FOCUS =
+		new ResourceLocation("attuned", "softstep_focus");
 	private static final float NEEDLE_MULTIPLIER = 1.35F;
 	private static final int NEEDLE_COOLDOWN_TICKS = 120;
 	private static final int NEEDLE_SOFTSTEP_WEAKNESS_TICKS = 80;
@@ -66,7 +69,7 @@ public final class UnseenCombat {
 		AttunedPlayerCleanup.onForget(PENDING_NEEDLE::remove);
 		AttunedServerCleanup.onStop(LAST_NEEDLE::clear);
 		AttunedServerCleanup.onStop(PENDING_NEEDLE::clear);
-		ServerLivingEntityEvents.AFTER_DAMAGE.register(UnseenCombat::afterDamage);
+		AfterDamageCallback.EVENT.register(UnseenCombat::afterDamage);
 		ServerLivingEntityEvents.AFTER_DEATH.register((entity, source) -> {
 			LAST_NEEDLE.remove(entity.getUUID());
 			PENDING_NEEDLE.remove(entity.getUUID());
@@ -168,10 +171,10 @@ public final class UnseenCombat {
 			10, 0.2, 0.25, 0.2, 0.01);
 		level.playSound(null, defender.blockPosition(),
 			SoundEvents.SCULK_SHRIEKER_SHRIEK, SoundSource.PLAYERS, 0.35F, 1.8F);
-		attacker.sendOverlayMessage(Component.translatable("combo.attuned.softstep_needle"));
+		PlayerMessages.overlay(attacker, Component.translatable("combo.attuned.softstep_needle"));
 	}
 
-	private static boolean hasActiveFocus(Player player, Identifier targetId) {
+	private static boolean hasActiveFocus(Player player, ResourceLocation targetId) {
 		AttunedInv inventory = AttunedAttachments.getInventory(player);
 		for (int slot : Attunement.activeSlots(player)) {
 			ItemStack stack = inventory.get(slot);
@@ -179,7 +182,7 @@ public final class UnseenCombat {
 				continue;
 			}
 			Item item = stack.getItem();
-			Identifier itemId = BuiltInRegistries.ITEM.getKey(item);
+			ResourceLocation itemId = BuiltInRegistries.ITEM.getKey(item);
 			if (targetId.equals(itemId)) {
 				return true;
 			}

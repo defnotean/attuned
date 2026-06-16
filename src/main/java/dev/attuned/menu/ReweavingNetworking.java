@@ -16,7 +16,7 @@ import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.Container;
@@ -37,7 +37,7 @@ public final class ReweavingNetworking {
 			return;
 		}
 		initialized = true;
-		PayloadTypeRegistry.serverboundPlay().register(ReweavePayload.TYPE, ReweavePayload.CODEC);
+		PayloadTypeRegistry.playC2S().register(ReweavePayload.TYPE, ReweavePayload.CODEC);
 		ServerPlayNetworking.registerGlobalReceiver(ReweavePayload.TYPE, (payload, context) -> {
 			ServerPlayer player = context.player();
 			player.level().getServer().execute(() -> tryReweave(player));
@@ -59,12 +59,13 @@ public final class ReweavingNetworking {
 			if (!state.is(AttunedContent.ALTAR_OF_REWEAVING)) {
 				return;
 			}
-			if (!player.isWithinBlockInteractionRange(pos, 4.0)) {
+			if (player.distanceToSqr(
+					pos.getX() + 0.5D, pos.getY() + 0.5D, pos.getZ() + 0.5D) > 16.0D) {
 				return;
 			}
 			Container container = menu.container();
 			Registry<FocusDefinition> registry =
-				serverLevel.registryAccess().lookupOrThrow(AttunedRegistries.FOCUS_DEFINITIONS);
+				serverLevel.registryAccess().registryOrThrow(AttunedRegistries.FOCUS_DEFINITIONS);
 			if (!container.getItem(ReweavingMenu.OUTPUT_SLOT).isEmpty()) {
 				return;
 			}
@@ -152,7 +153,7 @@ public final class ReweavingNetworking {
 		if (picked.isEmpty()) {
 			return ItemStack.EMPTY;
 		}
-		Item item = BuiltInRegistries.ITEM.getValue(identifier(picked.get()));
+		Item item = BuiltInRegistries.ITEM.get(ResourceLocation(picked.get()));
 		if (item == Items.AIR) {
 			Attuned.LOGGER.warn("Affinity Loom picked unknown Focus item id {}", picked.get());
 			return ItemStack.EMPTY;
@@ -171,7 +172,7 @@ public final class ReweavingNetworking {
 		if (picked.isEmpty()) {
 			return ItemStack.EMPTY;
 		}
-		Item item = BuiltInRegistries.ITEM.getValue(identifier(picked.get()));
+		Item item = BuiltInRegistries.ITEM.get(ResourceLocation(picked.get()));
 		if (item == Items.AIR) {
 			Attuned.LOGGER.warn("Reweaving picked unknown Focus item id {}", picked.get());
 			return ItemStack.EMPTY;
@@ -205,11 +206,11 @@ public final class ReweavingNetworking {
 		return FocusLookup.forItem(registry, stack.getItem());
 	}
 
-	private static Identifier identifier(String id) {
+	private static ResourceLocation ResourceLocation(String id) {
 		String[] parts = id.split(":", 2);
 		if (parts.length == 2) {
-			return Identifier.fromNamespaceAndPath(parts[0], parts[1]);
+			return new ResourceLocation(parts[0], parts[1]);
 		}
-		return Identifier.fromNamespaceAndPath("minecraft", id);
+		return new ResourceLocation("minecraft", id);
 	}
 }
