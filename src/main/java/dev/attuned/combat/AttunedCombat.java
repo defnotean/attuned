@@ -23,10 +23,10 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.tags.DamageTypeTags;
-import net.minecraft.tags.EntityTypeTags;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.MobType;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -119,7 +119,7 @@ public final class AttunedCombat {
 
 	public static void rememberMeleeCharge(Player attacker, Entity target, float charge) {
 		MELEE_CHARGE_SNAPSHOTS.put(attacker.getUUID(),
-			new MeleeChargeSnapshot(target.getUUID(), charge, attacker.level().getGameTime()));
+			new MeleeChargeSnapshot(target.getUUID(), charge, attacker.getLevel().getGameTime()));
 	}
 
 	public static boolean isReflecting() {
@@ -174,7 +174,7 @@ public final class AttunedCombat {
 				SUNLANCE_CHARGED_SWING_THRESHOLD) || !context.hasActiveFocus(player, SUNLANCE_FOCUS)) {
 			return false;
 		}
-		return defender.getType().is(EntityTypeTags.UNDEAD)
+		return defender.getMobType() == MobType.UNDEAD
 			|| context.affinityOf(defender).filter(affinity -> affinity == Affinity.FURY).isPresent();
 	}
 
@@ -198,7 +198,7 @@ public final class AttunedCombat {
 		if (snapshot == null || !snapshot.targetId().equals(defender.getUUID())) {
 			return 0.0F;
 		}
-		long now = attacker.level().getGameTime();
+		long now = attacker.getLevel().getGameTime();
 		if (now - snapshot.gameTime() > MELEE_CHARGE_SNAPSHOT_TTL_TICKS) {
 			MELEE_CHARGE_SNAPSHOTS.remove(attacker.getUUID());
 			return 0.0F;
@@ -350,7 +350,7 @@ public final class AttunedCombat {
 				&& isDirectMelee(attacker, source)
 				&& attacker.isAlive()) {
 			float reflected = pooledDamage * THORNWARD_REFLECT;
-			if (reflected > 0.0F && attacker.level() instanceof net.minecraft.server.level.ServerLevel serverLevel) {
+			if (reflected > 0.0F && attacker.getLevel() instanceof net.minecraft.server.level.ServerLevel serverLevel) {
 				REFLECTING.set(true);
 				try {
 					attacker.hurt(defender.damageSources().thorns(defenderPlayer), reflected);

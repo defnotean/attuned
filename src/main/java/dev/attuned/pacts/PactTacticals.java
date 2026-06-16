@@ -59,7 +59,7 @@ public final class PactTacticals {
 			return false;
 		}
 
-		long now = player.level().getGameTime();
+		long now = player.getLevel().getGameTime();
 		Long endsAt = COOLDOWN_ENDS.get(player.getUUID());
 		if (endsAt != null && now < endsAt) {
 			int remaining = (int) (endsAt - now);
@@ -96,7 +96,7 @@ public final class PactTacticals {
 		if (endsAt == null) {
 			return;
 		}
-		long now = player.level().getGameTime();
+		long now = player.getLevel().getGameTime();
 		if (now >= endsAt) {
 			COOLDOWN_ENDS.remove(player.getUUID());
 			return;
@@ -119,7 +119,7 @@ public final class PactTacticals {
 		if (endsAt == null) {
 			return 0;
 		}
-		int remaining = (int) Math.max(0, endsAt - player.level().getGameTime());
+		int remaining = (int) Math.max(0, endsAt - player.getLevel().getGameTime());
 		if (remaining <= 0) {
 			COOLDOWN_ENDS.remove(player.getUUID());
 			return 0;
@@ -128,7 +128,7 @@ public final class PactTacticals {
 	}
 
 	private static void fireTactical(ServerPlayer player, Pact pact, boolean overcharge) {
-		ServerLevel level = (ServerLevel) player.level();
+		ServerLevel level = (ServerLevel) player.getLevel();
 		double radiusScale = overcharge ? 1.5D : 1.0D;
 		switch (pact) {
 			case PYRESWORN -> firePyresworn(player, level, overcharge, radiusScale);
@@ -152,7 +152,7 @@ public final class PactTacticals {
 		List<LivingEntity> hostiles = nearbyHostiles(player, level, 4.0D * radiusScale);
 		if (!hostiles.isEmpty()) {
 			for (LivingEntity target : hostiles) {
-				target.igniteForSeconds(seconds);
+				target.setSecondsOnFire(seconds);
 			}
 			return;
 		}
@@ -174,7 +174,7 @@ public final class PactTacticals {
 
 	private static void igniteHostiles(ServerPlayer player, ServerLevel level, double radius, int seconds) {
 		for (LivingEntity target : nearbyHostiles(player, level, radius)) {
-			target.igniteForSeconds(seconds);
+			target.setSecondsOnFire(seconds);
 		}
 	}
 

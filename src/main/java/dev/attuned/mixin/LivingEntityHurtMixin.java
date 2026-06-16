@@ -49,7 +49,7 @@ public abstract class LivingEntityHurtMixin {
 			return amount;
 		}
 		LivingEntity self = (LivingEntity) (Object) this;
-		if (!(self.level() instanceof ServerLevel level)) {
+		if (!(self.getLevel() instanceof ServerLevel level)) {
 			return amount;
 		}
 		UpdraftBehavior.recordPvpDamage(self, source);
@@ -68,7 +68,7 @@ public abstract class LivingEntityHurtMixin {
 			return;
 		}
 		LivingEntity self = (LivingEntity) (Object) this;
-		if (!(self.level() instanceof ServerLevel)) {
+		if (!(self.getLevel() instanceof ServerLevel)) {
 			return;
 		}
 		float afterDamagePool = self.getHealth() + self.getAbsorptionAmount();

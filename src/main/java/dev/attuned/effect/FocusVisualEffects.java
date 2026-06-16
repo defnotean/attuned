@@ -36,7 +36,7 @@ public final class FocusVisualEffects {
 	private static final double TAU = Math.PI * 2.0D;
 
 	public static void spawn(ServerPlayer player, AttunedInv inventory, Iterable<Integer> activeSlots, int tick) {
-		ServerLevel level = (ServerLevel) player.level();
+		ServerLevel level = (ServerLevel) player.getLevel();
 		for (int slot : activeSlots) {
 			ItemStack stack = inventory.get(slot);
 			if (stack.isEmpty()) {

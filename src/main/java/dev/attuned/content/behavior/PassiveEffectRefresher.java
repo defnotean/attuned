@@ -10,6 +10,11 @@ final class PassiveEffectRefresher {
 
 	static void refresh(ServerPlayer player, Holder<MobEffect> effect, int duration, int amplifier,
 			boolean ambient, boolean visible, boolean showIcon) {
+		refresh(player, effect.value(), duration, amplifier, ambient, visible, showIcon);
+	}
+
+	static void refresh(ServerPlayer player, MobEffect effect, int duration, int amplifier,
+			boolean ambient, boolean visible, boolean showIcon) {
 		if (shouldRefresh(player.getEffect(effect), refreshThreshold(duration))) {
 			player.addEffect(new MobEffectInstance(effect, duration, amplifier, ambient, visible, showIcon));
 		}

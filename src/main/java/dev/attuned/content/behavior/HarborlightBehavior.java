@@ -45,7 +45,7 @@ public final class HarborlightBehavior implements FocusBehavior {
 			return;
 		}
 		if (!(holdsLantern(player) || nearLantern(player))
-				|| player.level().getMaxLocalRawBrightness(player.blockPosition()) > MAX_LIGHT) {
+				|| player.getLevel().getMaxLocalRawBrightness(player.blockPosition()) > MAX_LIGHT) {
 			return;
 		}
 		PassiveEffectRefresher.refresh(player, MobEffects.NIGHT_VISION, DURATION, 0, true, false, false);
@@ -67,7 +67,7 @@ public final class HarborlightBehavior implements FocusBehavior {
 	private static boolean nearLantern(ServerPlayer player) {
 		BlockPos center = player.blockPosition();
 		for (BlockPos pos : BlockPos.betweenClosed(center.offset(-3, -1, -3), center.offset(3, 2, 3))) {
-			BlockState state = player.level().getBlockState(pos);
+			BlockState state = player.getLevel().getBlockState(pos);
 			if (state.is(Blocks.LANTERN) || state.is(Blocks.SOUL_LANTERN)) {
 				return true;
 			}
@@ -77,11 +77,11 @@ public final class HarborlightBehavior implements FocusBehavior {
 
 	private static boolean nearWater(ServerPlayer player) {
 		BlockPos pos = player.blockPosition();
-		return player.level().getFluidState(pos).is(FluidTags.WATER)
-			|| player.level().getFluidState(pos.below()).is(FluidTags.WATER)
-			|| player.level().getFluidState(pos.north()).is(FluidTags.WATER)
-			|| player.level().getFluidState(pos.south()).is(FluidTags.WATER)
-			|| player.level().getFluidState(pos.east()).is(FluidTags.WATER)
-			|| player.level().getFluidState(pos.west()).is(FluidTags.WATER);
+		return player.getLevel().getFluidState(pos).is(FluidTags.WATER)
+			|| player.getLevel().getFluidState(pos.below()).is(FluidTags.WATER)
+			|| player.getLevel().getFluidState(pos.north()).is(FluidTags.WATER)
+			|| player.getLevel().getFluidState(pos.south()).is(FluidTags.WATER)
+			|| player.getLevel().getFluidState(pos.east()).is(FluidTags.WATER)
+			|| player.getLevel().getFluidState(pos.west()).is(FluidTags.WATER);
 	}
 }

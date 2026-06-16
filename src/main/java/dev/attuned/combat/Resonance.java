@@ -240,7 +240,7 @@ public final class Resonance {
 
 	private static void recordKillStreak(ServerPlayer player) {
 		UUID id = player.getUUID();
-		long now = player.level().getGameTime();
+		long now = player.getLevel().getGameTime();
 		Long last = LAST_KILL_TICK.get(id);
 		int streak = last != null && now - last <= KILL_STREAK_WINDOW_TICKS
 			? KILL_STREAK.getOrDefault(id, 0) + 1
@@ -276,7 +276,7 @@ public final class Resonance {
 			}
 			float current = get(player);
 			if (current > 0.0F) {
-				long now = player.level().getGameTime();
+				long now = player.getLevel().getGameTime();
 				Long lastCombat = LAST_COMBAT_TICK.get(player.getUUID());
 				if (lastCombat != null && now - lastCombat < COMBAT_GRACE_TICKS) {
 					continue;
@@ -289,7 +289,7 @@ public final class Resonance {
 	}
 
 	private static void markCombat(Player player) {
-		LAST_COMBAT_TICK.put(player.getUUID(), player.level().getGameTime());
+		LAST_COMBAT_TICK.put(player.getUUID(), player.getLevel().getGameTime());
 	}
 
 	/** How a player's committed affinity fares against another combatant's. */

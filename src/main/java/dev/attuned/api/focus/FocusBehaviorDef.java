@@ -45,18 +45,18 @@ public sealed interface FocusBehaviorDef {
 		ATTRIBUTE_WHILE("attuned:attribute_while", AttributeWhile.MAP_CODEC);
 
 		private final String id;
-		private final MapCodec<? extends FocusBehaviorDef> codec;
+		private final Codec<? extends FocusBehaviorDef> codec;
 
 		Type(String id, MapCodec<? extends FocusBehaviorDef> codec) {
 			this.id = id;
-			this.codec = codec;
+			this.codec = codec.codec();
 		}
 
 		public String id() {
 			return id;
 		}
 
-		public MapCodec<? extends FocusBehaviorDef> codec() {
+		public Codec<? extends FocusBehaviorDef> codec() {
 			return codec;
 		}
 	}

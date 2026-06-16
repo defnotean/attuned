@@ -1,20 +1,25 @@
 package dev.attuned.menu;
 
 import dev.attuned.Attuned;
-import net.minecraft.network.RegistryFriendlyByteBuf;
-import net.minecraft.network.codec.StreamCodec;
-import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.fabricmc.fabric.api.networking.v1.FabricPacket;
+import net.fabricmc.fabric.api.networking.v1.PacketType;
+import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
 
-/** Client-to-server signal that the Reweave button was pressed. */
-public record ReweavePayload() implements CustomPacketPayload {
-	public static final Type<ReweavePayload> TYPE =
-		new Type<>(new ResourceLocation(Attuned.MOD_ID, "reweave"));
-	public static final StreamCodec<RegistryFriendlyByteBuf, ReweavePayload> CODEC =
-		StreamCodec.unit(new ReweavePayload());
+/** Client-to-server signal that the player pressed the Reweave button. */
+public record ReweavePayload() implements FabricPacket {
+	public static final PacketType<ReweavePayload> TYPE =
+		PacketType.create(new ResourceLocation(Attuned.MOD_ID, "reweave"), ReweavePayload::new);
+
+	public ReweavePayload(FriendlyByteBuf buf) {
+		this();
+	}
 
 	@Override
-	public Type<ReweavePayload> type() {
+	public void write(FriendlyByteBuf buf) {}
+
+	@Override
+	public PacketType<?> getType() {
 		return TYPE;
 	}
 }

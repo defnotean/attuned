@@ -3,7 +3,6 @@ package dev.attuned.content;
 import dev.attuned.compat.ParticleCompat;
 
 import dev.attuned.compat.PlayerMessages;
-import com.mojang.serialization.MapCodec;
 import dev.attuned.AttunedConfig;
 import dev.attuned.AttunedServerCleanup;
 import dev.attuned.api.focus.Affinity;
@@ -30,7 +29,6 @@ import net.minecraft.tags.BlockTags;
 import net.minecraft.util.RandomSource;
 import net.minecraft.util.StringRepresentable;
 import net.minecraft.world.InteractionHand;
-import net.minecraft.world.ItemInteractionResult;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
@@ -85,7 +83,6 @@ public class AttunementAltarBlock extends Block {
 	public static final EnumProperty<AltarAffinity> AFFINITY =
 		EnumProperty.create("affinity", AltarAffinity.class);
 
-	public static final MapCodec<AttunementAltarBlock> CODEC = simpleCodec(AttunementAltarBlock::new);
 	private static final double PROXIMITY_PULSE_RADIUS = 5.0;
 	private static final long PROXIMITY_PULSE_COOLDOWN_TICKS = 100L;
 	private static final long PROXIMITY_PULSE_RETENTION_TICKS = PROXIMITY_PULSE_COOLDOWN_TICKS * 4;
@@ -116,24 +113,20 @@ public class AttunementAltarBlock extends Block {
 	}
 
 	@Override
-	protected MapCodec<? extends Block> codec() {
-		return CODEC;
-	}
-
-	@Override
 	protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
 		builder.add(AFFINITY);
 	}
 
 	@Override
-	protected VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
+	public VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
 		return SHAPE;
 	}
 
 	/** Right-click with Attunement Shards: bind one into capacity and take on the binder's affinity. */
 	@Override
-	protected ItemInteractionResult useItemOn(ItemStack stack, BlockState state, Level level, BlockPos pos,
+	public InteractionResult use(BlockState state, Level level, BlockPos pos,
 			Player player, InteractionHand hand, BlockHitResult hitResult) {
+		ItemStack stack = player.getItemInHand(hand);
 		// When the held stack isn't a shard (including the empty hand), defer to
 		// the empty-hand path so {@link #useWithoutItem} gets a chance to fire. In
 		// 26.1.2 the dispatcher in ServerPlayerGameMode only calls useWithoutItem
@@ -143,32 +136,28 @@ public class AttunementAltarBlock extends Block {
 			if (!level.isClientSide()) {
 				AttunementShardFragmentItem.sendProgressHint(player);
 			}
-			return ItemInteractionResult.sidedSuccess(level.isClientSide());
+			return InteractionResult.sidedSuccess(level.isClientSide());
 		}
 		if (!stack.is(AttunedContent.ATTUNEMENT_SHARD)) {
-			return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
+			if (!stack.isEmpty()) {
+				return InteractionResult.PASS;
+			}
+			if (level.isClientSide()) {
+				return InteractionResult.SUCCESS;
+			}
+			player.openMenu(AltarMenuType.provider(level, pos));
+			if (player instanceof ServerPlayer serverPlayer) {
+				Onboarding.tryAltarHint(serverPlayer);
+			}
+			return InteractionResult.SUCCESS;
 		}
 		if (level.isClientSide()) {
-			return ItemInteractionResult.SUCCESS;
+			return InteractionResult.SUCCESS;
 		}
 		if (bindShard(level, pos, state, player, stack)) {
 			if (player instanceof ServerPlayer serverPlayer) {
 				Onboarding.tryAltarHint(serverPlayer);
 			}
-		}
-		return ItemInteractionResult.SUCCESS;
-	}
-
-	/** Right-click empty-handed: open the Altar GUI so the player can bind shards visually. */
-	@Override
-	protected InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos,
-			Player player, BlockHitResult hitResult) {
-		if (level.isClientSide()) {
-			return InteractionResult.SUCCESS;
-		}
-		player.openMenu(AltarMenuType.provider(level, pos));
-		if (player instanceof ServerPlayer serverPlayer) {
-			Onboarding.tryAltarHint(serverPlayer);
 		}
 		return InteractionResult.SUCCESS;
 	}

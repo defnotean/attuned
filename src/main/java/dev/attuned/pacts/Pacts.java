@@ -46,15 +46,13 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
-import net.minecraft.tags.EntityTypeTags;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.MobType;
 import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.entity.TamableAnimal;
-import net.minecraft.world.entity.ai.attributes.AttributeInstance;
-import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.npc.AbstractVillager;
 import net.minecraft.world.entity.player.Player;
@@ -316,7 +314,7 @@ public final class Pacts {
 
 	private static int cheapestFocusCost(Player player, Affinity affinity) {
 		int cheapest = Integer.MAX_VALUE;
-		var registry = player.level().registryAccess().registryOrThrow(AttunedRegistries.FOCUS_DEFINITIONS);
+		var registry = player.getLevel().registryAccess().registryOrThrow(AttunedRegistries.FOCUS_DEFINITIONS);
 		for (FocusDefinition definition : registry) {
 			if (definition.affinity().filter(a -> a == affinity).isPresent()) {
 				cheapest = Math.min(cheapest, definition.cost());
@@ -382,7 +380,7 @@ public final class Pacts {
 			if (attackerPact == Pact.RADIANT_COVENANT
 					&& !(defender instanceof Player)
 					&& isHostile(defender)
-					&& defender.getType().is(EntityTypeTags.UNDEAD)
+					&& defender.getMobType() == MobType.UNDEAD
 					&& AttunedCombat.isChargedDirectMelee(attackerPlayer, defender, source, RADIANT_COVENANT_SWING_THRESHOLD)) {
 				amount *= (1.0F + PactTier4.radiantUndeadBonus(attackerPlayer));
 			}
@@ -440,7 +438,7 @@ public final class Pacts {
 		}
 		defender.addEffect(new MobEffectInstance(
 			MobEffects.GLOWING, RADIANT_COVENANT_REVEAL_TICKS, 0, true, false, true));
-		if (defender.level() instanceof ServerLevel level) {
+		if (defender.getLevel() instanceof ServerLevel level) {
 			level.sendParticles(ParticleCompat.dust(Affinity.HOLY.argb() & 0x00FFFFFF, 0.9F),
 				defender.getX(), defender.getY() + defender.getBbHeight() * 0.65, defender.getZ(),
 				5, 0.25, 0.25, 0.25, 0.0);
@@ -486,7 +484,7 @@ public final class Pacts {
 		} else if (defender instanceof AbstractVillager) {
 			return;
 		}
-		defender.igniteForSeconds(PactTier4.pyreswornIgniteSeconds(attacker));
+		defender.setSecondsOnFire(PactTier4.pyreswornIgniteSeconds(attacker));
 		markPyreswornFire(attacker, defender);
 		if (attacker instanceof ServerPlayer serverPlayer) {
 			PactTrials.onPyreswornIgnite(serverPlayer);
@@ -520,7 +518,7 @@ public final class Pacts {
 		if (!isDirectMelee(attacker, source) || !canStrikePactTarget(attacker, defender)) {
 			return;
 		}
-		defender.igniteForSeconds(PactTier4.forgeboundIgniteSeconds(attacker));
+		defender.setSecondsOnFire(PactTier4.forgeboundIgniteSeconds(attacker));
 		if (attacker instanceof ServerPlayer serverPlayer) {
 			PactTrials.onForgeboundIgnite(serverPlayer);
 		}
@@ -560,7 +558,7 @@ public final class Pacts {
 
 	/** Whether a player stands in light dim enough for Nightsworn's shelter to hold. */
 	private static boolean isInDark(Player player) {
-		return player.level().getMaxLocalRawBrightness(player.blockPosition()) <= NIGHTSWORN_MAX_LIGHT;
+		return player.getLevel().getMaxLocalRawBrightness(player.blockPosition()) <= NIGHTSWORN_MAX_LIGHT;
 	}
 
 	private static void markPyreswornFire(Player attacker, LivingEntity defender) {
@@ -577,7 +575,7 @@ public final class Pacts {
 	 */
 	private static void untetheredImpactSparkle(LivingEntity defender) {
 		Optional<Integer> color = affinityColor(defender);
-		if (color.isEmpty() || !(defender.level() instanceof ServerLevel level)) {
+		if (color.isEmpty() || !(defender.getLevel() instanceof ServerLevel level)) {
 			return;
 		}
 		// DustParticleOptions takes an opaque RGB, not an ARGB — strip the alpha byte.
@@ -616,7 +614,7 @@ public final class Pacts {
 	private static void maybeAwardPyreswornChallenge(LivingEntity entity, DamageSource source) {
 		PyreswornFireMark mark = pyreswornFireMarks.get(entity.getUUID());
 		if (mark == null || mark.expiresAt() < ticks || !isHostile(entity)
-				|| !(entity.level() instanceof ServerLevel level)) {
+				|| !(entity.getLevel() instanceof ServerLevel level)) {
 			return;
 		}
 		LivingEntity killer = AttunedCombat.attackerOf(source);
@@ -746,7 +744,7 @@ public final class Pacts {
 			windrunnerRuns.remove(id);
 			return;
 		}
-		ResourceKey<Level> dimension = player.level().dimension();
+		ResourceKey<Level> dimension = player.getLevel().dimension();
 		double x = player.getX();
 		double z = player.getZ();
 		WindrunnerRun previous = windrunnerRuns.get(id);
@@ -776,29 +774,17 @@ public final class Pacts {
 	 * carries the modifier is left untouched.
 	 */
 	private static void applyWindrunnerStepHeight(ServerPlayer player) {
-		AttributeInstance attr = player.getAttribute(Attributes.STEP_HEIGHT);
-		if (attr == null) {
-			return;
-		}
-		if (attr.getModifier(AttributeModifierIds.uuid(WINDRUNNER_STEP_MODIFIER_ID)) != null) {
-			return;
-		}
-		attr.addPermanentModifier(new AttributeModifier(AttributeModifierIds.uuid(WINDRUNNER_STEP_MODIFIER_ID), AttributeModifierIds.name(WINDRUNNER_STEP_MODIFIER_ID),
-			WINDRUNNER_STEP_BONUS,
-			AttributeModifier.Operation.ADD_VALUE));
+		// Minecraft 1.19.4 has no step-height attribute; Windrunner keeps its
+		// speed/aura/challenge behavior on this branch.
 	}
 
 	/** Drops the Windrunner step-height modifier if present. */
 	private static void removeWindrunnerStepHeight(ServerPlayer player) {
-		AttributeInstance attr = player.getAttribute(Attributes.STEP_HEIGHT);
-		if (attr == null) {
-			return;
-		}
-		attr.removeModifier(AttributeModifierIds.uuid(WINDRUNNER_STEP_MODIFIER_ID));
+		// No step-height attribute exists to clean up before Minecraft 1.20.5.
 	}
 
 	private static void paintAura(ServerPlayer player, Pact pact) {
-		ServerLevel level = (ServerLevel) player.level();
+		ServerLevel level = (ServerLevel) player.getLevel();
 		double x = player.getX();
 		double y = player.getY() + 0.05;
 		double z = player.getZ();
@@ -884,7 +870,7 @@ public final class Pacts {
 	}
 
 	private static void playPactSound(ServerPlayer player, Pact pact, boolean awakening) {
-		ServerLevel level = (ServerLevel) player.level();
+		ServerLevel level = (ServerLevel) player.getLevel();
 		PactSound sound = awakening ? awakenSound(pact) : fadeSound(pact);
 		level.playSound(null, player.blockPosition(), sound.event(),
 			SoundSource.PLAYERS, sound.volume(), sound.pitch());
@@ -894,7 +880,7 @@ public final class Pacts {
 		return switch (pact) {
 			case PYRESWORN -> new PactSound(SoundEvents.FLINTANDSTEEL_USE, 0.45F, 1.25F);
 			case STONEHEART -> new PactSound(SoundEvents.TUFF_PLACE, 0.45F, 0.85F);
-			case WINDRUNNER -> new PactSound(SoundEvents.WIND_CHARGE_THROW, 0.35F, 1.55F);
+			case WINDRUNNER -> new PactSound(SoundEvents.PHANTOM_FLAP, 0.35F, 1.55F);
 			case RADIANT_COVENANT -> new PactSound(SoundEvents.AMETHYST_BLOCK_CHIME, 0.45F, 1.45F);
 			case TIDESWORN -> new PactSound(SoundEvents.BUBBLE_COLUMN_UPWARDS_AMBIENT, 0.55F, 1.2F);
 			case FORGEBOUND -> new PactSound(SoundEvents.ANVIL_LAND, 0.35F, 1.35F);
@@ -909,7 +895,7 @@ public final class Pacts {
 			case PYRESWORN -> new PactSound(SoundEvents.FIRE_EXTINGUISH, 0.35F, 1.35F);
 			case STONEHEART -> new PactSound(SoundEvents.TUFF_HIT, 0.4F, 0.7F);
 			case WINDRUNNER -> new PactSound(SoundEvents.WOOL_STEP, 0.35F, 1.6F);
-			case RADIANT_COVENANT -> new PactSound(SoundEvents.AMETHYST_BLOCK_RESONATE, 0.35F, 0.9F);
+			case RADIANT_COVENANT -> new PactSound(SoundEvents.AMETHYST_BLOCK_CHIME, 0.35F, 0.9F);
 			case TIDESWORN -> new PactSound(SoundEvents.AMBIENT_UNDERWATER_EXIT, 0.4F, 0.9F);
 			case FORGEBOUND -> new PactSound(SoundEvents.ANVIL_HIT, 0.35F, 0.8F);
 			case WILDROOT -> new PactSound(SoundEvents.GRASS_HIT, 0.4F, 0.85F);
@@ -943,7 +929,7 @@ public final class Pacts {
 	 * announcing the milestone in the pact's colour.
 	 */
 	private static void fanfare(ServerPlayer player, Pact pact) {
-		ServerLevel level = (ServerLevel) player.level();
+		ServerLevel level = (ServerLevel) player.getLevel();
 		level.playSound(null, player.blockPosition(),
 			SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, SoundSource.PLAYERS, 0.8F, 0.8F);
 		level.playSound(null, player.blockPosition(),

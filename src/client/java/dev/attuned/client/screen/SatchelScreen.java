@@ -1,5 +1,6 @@
 package dev.attuned.client.screen;
 
+import com.mojang.blaze3d.vertex.PoseStack;
 import dev.attuned.Attuned;
 import dev.attuned.attunement.AttunedAttachments;
 import dev.attuned.attunement.AttunedInv;
@@ -294,7 +295,8 @@ public class SatchelScreen extends AbstractContainerScreen<SatchelMenu> {
 	}
 
 	@Override
-	protected void renderBg(GuiGraphics graphics, float partialTick, int mouseX, int mouseY) {
+	protected void renderBg(PoseStack poseStack, float partialTick, int mouseX, int mouseY) {
+		GuiGraphics graphics = new GuiGraphics(Minecraft.getInstance(), poseStack);
 		graphics.fill(0, 0, this.width, this.height, SCREEN_BACKDROP);
 		// Solid window base so the right-hand panel reads as part of the window, then the
 		// leather reliquary texture over the grid/inventory in the left half. The window
@@ -348,7 +350,8 @@ public class SatchelScreen extends AbstractContainerScreen<SatchelMenu> {
 	}
 
 	@Override
-	protected void renderLabels(GuiGraphics graphics, int mouseX, int mouseY) {
+	protected void renderLabels(PoseStack poseStack, int mouseX, int mouseY) {
+		GuiGraphics graphics = new GuiGraphics(Minecraft.getInstance(), poseStack);
 		graphics.drawString(this.font, Component.translatable("screen.attuned.equipped"),
 			EQUIPPED_X - 2, EQUIPPED_LABEL_Y, LABEL_TEXT, false);
 		graphics.drawString(this.font, Component.translatable("screen.attuned.builds"),
@@ -546,7 +549,8 @@ public class SatchelScreen extends AbstractContainerScreen<SatchelMenu> {
 		}
 
 		@Override
-		protected void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+		public void renderWidget(PoseStack poseStack, int mouseX, int mouseY, float partialTick) {
+			GuiGraphics graphics = new GuiGraphics(Minecraft.getInstance(), poseStack);
 			int x0 = getX();
 			int y0 = getY();
 			int x1 = x0 + getWidth();
@@ -559,7 +563,7 @@ public class SatchelScreen extends AbstractContainerScreen<SatchelMenu> {
 			} else if (isHoveredOrFocused()) {
 				drawButtonOutline(graphics, x0, y0, x1, y1, BUTTON_HOVER_ARGB);
 			}
-			renderString(graphics, Minecraft.getInstance().font, LABEL_TEXT);
+			renderString(poseStack, Minecraft.getInstance().font, LABEL_TEXT);
 		}
 	}
 }

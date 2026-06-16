@@ -43,7 +43,7 @@ public final class WhisperBehavior implements FocusBehavior {
 	@Override
 	public boolean onAbility(ServerPlayer player, ItemStack focus) {
 		ACTIVE_WINDOWS.put(player.getUUID(), SOFTEN_TICKS);
-		ServerLevel level = (ServerLevel) player.level();
+		ServerLevel level = (ServerLevel) player.getLevel();
 		level.sendParticles(ParticleTypes.SMOKE,
 			player.getX(), player.getY() + 0.55D, player.getZ(), 8, 0.35D, 0.2D, 0.35D, 0.005D);
 		level.playSound(null, player.blockPosition(),
@@ -58,7 +58,7 @@ public final class WhisperBehavior implements FocusBehavior {
 		if (remaining <= 0) {
 			return;
 		}
-		softenDetection(player, (ServerLevel) player.level());
+		softenDetection(player, (ServerLevel) player.getLevel());
 		if (remaining == 1) {
 			ACTIVE_WINDOWS.remove(player.getUUID());
 		} else {

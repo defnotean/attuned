@@ -42,7 +42,7 @@ public abstract class ServerGamePacketListenerImplMixin {
 		cancellable = true
 	)
 	private void attuned$routeFocusSlot(ServerboundSetCreativeModeSlotPacket packet, CallbackInfo ci) {
-		int slotNum = packet.slotNum();
+		int slotNum = packet.getSlotNum();
 		AbstractContainerMenu menu = this.player.inventoryMenu;
 		if (slotNum < 0 || slotNum >= menu.slots.size()
 				|| !(menu.getSlot(slotNum) instanceof FocusSlot)) {
@@ -51,13 +51,10 @@ public abstract class ServerGamePacketListenerImplMixin {
 		}
 		FocusSlot slot = (FocusSlot) menu.getSlot(slotNum);
 		ci.cancel();
-		if (!this.player.hasInfiniteMaterials()) {
+		if (!this.player.getAbilities().instabuild) {
 			return;
 		}
-		ItemStack stack = packet.itemStack();
-		if (!stack.isItemEnabled(this.player.level().enabledFeatures())) {
-			return;
-		}
+		ItemStack stack = packet.getItem();
 		if (!stack.isEmpty() && !slot.mayPlace(stack)) {
 			return;
 		}

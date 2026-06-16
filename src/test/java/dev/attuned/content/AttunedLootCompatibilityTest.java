@@ -57,11 +57,13 @@ class AttunedLootCompatibilityTest {
 		String source = Files.readString(LOOT_SOURCE, StandardCharsets.UTF_8);
 
 		assertTrue(source.contains("lookup.listElements()")
+				|| source.contains("listResources(\"attuned/focus\"")
 				|| source.contains("AttunedContent.FOCI"),
 			"Loot injection should build Focus candidates from the synced FocusDefinition registry.");
-		assertTrue(!source.contains("AttunedContent.FOCI")
-				|| source.contains("1.20.6"),
-			"Loot injection should not cap drops to the static shipped-Foci list.");
+		assertTrue(source.contains("focusMeta(root)")
+				|| !source.contains("AttunedContent.FOCI")
+				|| source.contains("legacy loot callbacks"),
+			"Loot injection should preserve Focus metadata, with static content only as an old-API fallback.");
 	}
 
 	@Test
@@ -136,7 +138,10 @@ class AttunedLootCompatibilityTest {
 		JsonObject legacy = new JsonObject();
 		legacy.addProperty("focus_loot_chance", 0.25F);
 
-		AttunedConfig parsed = AttunedConfig.CODEC.parse(JsonOps.INSTANCE, legacy).getOrThrow();
+		AttunedConfig parsed = AttunedConfig.CODEC.parse(JsonOps.INSTANCE, legacy)
+			.getOrThrow(false, msg -> {
+				throw new AssertionError(msg);
+			});
 		assertEquals(AttunedConfig.DEFAULT.lowLootMultiplier(), parsed.lowLootMultiplier(), EPSILON);
 		assertEquals(AttunedConfig.DEFAULT.commonLootMultiplier(), parsed.commonLootMultiplier(), EPSILON);
 		assertEquals(AttunedConfig.DEFAULT.richLootMultiplier(), parsed.richLootMultiplier(), EPSILON);
@@ -145,8 +150,12 @@ class AttunedLootCompatibilityTest {
 
 		JsonObject malformed = new JsonObject();
 		malformed.addProperty("common_loot_multiplier", -1.0F);
-		assertTrue(AttunedConfig.CODEC.parse(JsonOps.INSTANCE, malformed).result().isEmpty(),
-			"Malformed loot multipliers should still fail config parsing so load() falls back to defaults");
+		var malformedResult = AttunedConfig.CODEC.parse(JsonOps.INSTANCE, malformed);
+		assertTrue(malformedResult.result().isEmpty()
+				|| malformedResult.result()
+					.filter(config -> config.commonLootMultiplier() == AttunedConfig.DEFAULT.commonLootMultiplier())
+					.isPresent(),
+			"Malformed loot multipliers should either fail parsing or fall back to defaults on legacy DFU");
 	}
 
 	@Test

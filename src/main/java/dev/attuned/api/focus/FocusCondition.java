@@ -41,18 +41,18 @@ public sealed interface FocusCondition {
 		IN_BIOME_TAG("in_biome_tag", InBiomeTag.MAP_CODEC);
 
 		private final String id;
-		private final MapCodec<? extends FocusCondition> codec;
+		private final Codec<? extends FocusCondition> codec;
 
 		Type(String id, MapCodec<? extends FocusCondition> codec) {
 			this.id = id;
-			this.codec = codec;
+			this.codec = codec.codec();
 		}
 
 		public String id() {
 			return id;
 		}
 
-		public MapCodec<? extends FocusCondition> codec() {
+		public Codec<? extends FocusCondition> codec() {
 			return codec;
 		}
 	}
@@ -82,7 +82,7 @@ public sealed interface FocusCondition {
 
 		@Override
 		public boolean test(ServerPlayer player) {
-			var level = player.level();
+			var level = player.getLevel();
 			return level.isRainingAt(player.blockPosition()) || player.isInWaterOrRain();
 		}
 
@@ -115,7 +115,7 @@ public sealed interface FocusCondition {
 
 		@Override
 		public boolean test(ServerPlayer player) {
-			return lowLightHolds(player.level().getMaxLocalRawBrightness(player.blockPosition()), maxLight);
+			return lowLightHolds(player.getLevel().getMaxLocalRawBrightness(player.blockPosition()), maxLight);
 		}
 
 		@Override
@@ -152,7 +152,7 @@ public sealed interface FocusCondition {
 		@Override
 		public boolean test(ServerPlayer player) {
 			TagKey<Block> key = TagKey.create(Registries.BLOCK, tag);
-			return blockTagHolds(player.level().getBlockState(player.blockPosition()).is(key));
+			return blockTagHolds(player.getLevel().getBlockState(player.blockPosition()).is(key));
 		}
 
 		@Override
@@ -174,7 +174,7 @@ public sealed interface FocusCondition {
 		@Override
 		public boolean test(ServerPlayer player) {
 			TagKey<Biome> key = TagKey.create(Registries.BIOME, tag);
-			return biomeTagHolds(player.level().getBiome(player.blockPosition()).is(key));
+			return biomeTagHolds(player.getLevel().getBiome(player.blockPosition()).is(key));
 		}
 
 		@Override

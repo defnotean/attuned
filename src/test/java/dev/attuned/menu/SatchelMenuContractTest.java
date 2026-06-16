@@ -31,11 +31,14 @@ class SatchelMenuContractTest {
 			"isEmpty should ignore malformed non-Focus component contents.");
 		// The container is now parameterized by the contents component type so the same
 		// class backs both the small satchel and the Grand Focus Reliquary tiers.
-		assertTrue(container.contains("satchel().set(contentsType"),
+		assertTrue(container.contains("satchel().set(contentsType")
+				|| container.contains("AttunedComponents.setContents(satchel(), grand"),
 			"Writes must persist the holder back into the live held stack's component.");
-		assertTrue(container.contains("satchel().get(contentsType"),
+		assertTrue(container.contains("satchel().get(contentsType")
+				|| container.contains("AttunedComponents.getContents(satchel(), grand)"),
 			"Reads must pull the holder from the live held stack's component.");
-		assertTrue(container.contains("DataComponentType<FocusHolder> contentsType"),
+		assertTrue(container.contains("DataComponentType<FocusHolder> contentsType")
+				|| container.contains("private final boolean grand;"),
 			"The component type must be a per-instance field so each tier reads its own holder.");
 		assertTrue(container.contains("private boolean hasLiveSatchel()"),
 			"Container reads/writes should refuse to touch a hand stack after the satchel is swapped out.");

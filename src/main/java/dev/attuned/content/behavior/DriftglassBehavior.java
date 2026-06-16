@@ -7,15 +7,15 @@ import dev.attuned.api.focus.FocusBehavior;
 import dev.attuned.attunement.AttunedAttachments;
 import dev.attuned.attunement.AttunedInv;
 import dev.attuned.attunement.Attunement;
+import dev.attuned.compat.CompassTags;
+import dev.attuned.compat.CompassTags.LodestoneTags;
 import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.UUID;
 import net.minecraft.core.GlobalPos;
-import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -24,7 +24,6 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.vehicle.Boat;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
-import net.minecraft.world.item.component.LodestoneTracker;
 
 /**
  * Driftglass Focus: held compasses point back to the player's latest fishing or
@@ -56,14 +55,14 @@ public final class DriftglassBehavior implements FocusBehavior {
 			return;
 		}
 		if (player.getVehicle() instanceof Boat || player.fishing != null) {
-			points.put(player.getUUID(), GlobalPos.of(player.level().dimension(), player.blockPosition()));
+			points.put(player.getUUID(), GlobalPos.of(player.getLevel().dimension(), player.blockPosition()));
 		}
 		GlobalPos point = points.get(player.getUUID());
 		if (point == null) {
 			restorePlayer(player);
 			return;
 		}
-		LodestoneTracker tracker = new LodestoneTracker(Optional.of(point), false);
+		LodestoneTags tracker = CompassTags.target(point);
 		restoreCompassesNoLongerHeld(player);
 		for (InteractionHand hand : InteractionHand.values()) {
 			ItemStack held = player.getItemInHand(hand);
@@ -97,8 +96,8 @@ public final class DriftglassBehavior implements FocusBehavior {
 		return false;
 	}
 
-	private void applyTracker(UUID playerId, ItemStack compass, LodestoneTracker tracker) {
-		LodestoneTracker current = compass.get(DataComponents.LODESTONE_TRACKER);
+	private void applyTracker(UUID playerId, ItemStack compass, LodestoneTags tracker) {
+		LodestoneTags current = CompassTags.lodestone(compass);
 		TrackerSnapshot snapshot = snapshotFor(playerId, compass);
 		if (snapshot != null && !Objects.equals(current, snapshot.focusTracker)) {
 			restoreNameIfStillFocusName(compass, snapshot);
@@ -106,20 +105,20 @@ public final class DriftglassBehavior implements FocusBehavior {
 			snapshot = null;
 		}
 		if (snapshot == null) {
-			Component originalName = compass.get(DataComponents.CUSTOM_NAME);
+			Component originalName = CompassTags.customName(compass);
 			changedCompasses
 				.computeIfAbsent(playerId, id -> new IdentityHashMap<>())
 				.put(compass, new TrackerSnapshot(
-					current, current != null, originalName, originalName != null, tracker));
-			compass.set(DataComponents.LODESTONE_TRACKER, tracker);
-			compass.set(DataComponents.CUSTOM_NAME, DRIFTGLASS_COMPASS_NAME);
+					current, !current.isEmpty(), originalName, originalName != null, tracker));
+			CompassTags.setLodestone(compass, tracker);
+			CompassTags.setCustomName(compass, DRIFTGLASS_COMPASS_NAME);
 			return;
 		}
 		if (!Objects.equals(current, tracker)) {
-			compass.set(DataComponents.LODESTONE_TRACKER, tracker);
+			CompassTags.setLodestone(compass, tracker);
 		}
-		if (!Objects.equals(compass.get(DataComponents.CUSTOM_NAME), DRIFTGLASS_COMPASS_NAME)) {
-			compass.set(DataComponents.CUSTOM_NAME, DRIFTGLASS_COMPASS_NAME);
+		if (!Objects.equals(CompassTags.customName(compass), DRIFTGLASS_COMPASS_NAME)) {
+			CompassTags.setCustomName(compass, DRIFTGLASS_COMPASS_NAME);
 		}
 		snapshot.focusTracker = tracker;
 	}
@@ -189,14 +188,14 @@ public final class DriftglassBehavior implements FocusBehavior {
 		if (!canTrack(compass)) {
 			return;
 		}
-		if (!Objects.equals(compass.get(DataComponents.LODESTONE_TRACKER), snapshot.focusTracker)) {
+		if (!Objects.equals(CompassTags.lodestone(compass), snapshot.focusTracker)) {
 			restoreNameIfStillFocusName(compass, snapshot);
 			return;
 		}
 		if (snapshot.hadOriginal) {
-			compass.set(DataComponents.LODESTONE_TRACKER, snapshot.originalTracker);
+			CompassTags.setLodestone(compass, snapshot.originalTracker);
 		} else {
-			compass.remove(DataComponents.LODESTONE_TRACKER);
+			CompassTags.setLodestone(compass, null);
 		}
 		restoreName(compass, snapshot);
 	}
@@ -206,32 +205,32 @@ public final class DriftglassBehavior implements FocusBehavior {
 	}
 
 	private static void restoreNameIfStillFocusName(ItemStack compass, TrackerSnapshot snapshot) {
-		if (Objects.equals(compass.get(DataComponents.CUSTOM_NAME), DRIFTGLASS_COMPASS_NAME)) {
+		if (Objects.equals(CompassTags.customName(compass), DRIFTGLASS_COMPASS_NAME)) {
 			restoreName(compass, snapshot);
 		}
 	}
 
 	private static void restoreName(ItemStack compass, TrackerSnapshot snapshot) {
 		if (snapshot.hadOriginalName) {
-			compass.set(DataComponents.CUSTOM_NAME, snapshot.originalName);
+			CompassTags.setCustomName(compass, snapshot.originalName);
 		} else {
-			compass.remove(DataComponents.CUSTOM_NAME);
+			CompassTags.setCustomName(compass, null);
 		}
 	}
 
 	private static final class TrackerSnapshot {
-		private final LodestoneTracker originalTracker;
+		private final LodestoneTags originalTracker;
 		private final boolean hadOriginal;
 		private final Component originalName;
 		private final boolean hadOriginalName;
-		private LodestoneTracker focusTracker;
+		private LodestoneTags focusTracker;
 
 		private TrackerSnapshot(
-				LodestoneTracker originalTracker,
+				LodestoneTags originalTracker,
 				boolean hadOriginal,
 				Component originalName,
 				boolean hadOriginalName,
-				LodestoneTracker focusTracker) {
+				LodestoneTags focusTracker) {
 			this.originalTracker = originalTracker;
 			this.hadOriginal = hadOriginal;
 			this.originalName = originalName;

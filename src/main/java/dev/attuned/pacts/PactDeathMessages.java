@@ -71,6 +71,6 @@ public final class PactDeathMessages {
 			victim.getDisplayName(),
 			pactName
 		);
-		victim.level().getServer().getPlayerList().broadcastSystemMessage(message, false);
+		victim.getLevel().getServer().getPlayerList().broadcastSystemMessage(message, false);
 	}
 }

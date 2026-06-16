@@ -84,7 +84,7 @@ public final class AttunedCommands {
 						ServerPlayer player = ctx.getSource().getPlayerOrException();
 						int capacity = AttunedAttachments.getCapacity(player);
 						ctx.getSource().sendSuccess(
-							() -> Component.literal("Attunement capacity: " + capacity), false);
+							Component.literal("Attunement capacity: " + capacity), false);
 						return capacity;
 					})
 					.then(Commands.argument("amount", IntegerArgumentType.integer(0))
@@ -94,7 +94,7 @@ public final class AttunedCommands {
 							AttunedAttachments.setCapacity(player, amount);
 							int capacity = AttunedAttachments.getCapacity(player);
 							ctx.getSource().sendSuccess(
-								() -> Component.literal("Attunement capacity set to " + capacity), false);
+								Component.literal("Attunement capacity set to " + capacity), false);
 							return capacity;
 						})))
 				.then(Commands.literal("status")
@@ -130,7 +130,7 @@ public final class AttunedCommands {
 		}
 		AttunedAttachments.setSlot(player, from, second);
 		AttunedAttachments.setSlot(player, to, first);
-		source.sendSuccess(() -> Component.literal(
+		source.sendSuccess(Component.literal(
 			"Swapped Focus slots " + (from + 1) + " and " + (to + 1) + "."), false);
 		return 1;
 	}
@@ -185,16 +185,16 @@ public final class AttunedCommands {
 		int paletteCount = (int) behaviorRegistry.listElements().count();
 
 		if (problems.isEmpty()) {
-			source.sendSuccess(() -> Component.literal("Attuned validation passed: "
+			source.sendSuccess(Component.literal("Attuned validation passed: "
 				+ byItem.size() + " Focus definitions and " + paletteCount + " palette behavior(s) checked."), false);
 			if (!warnings.isEmpty()) {
-				source.sendSuccess(() -> Component.literal(
+				source.sendSuccess(Component.literal(
 					"Attuned validation: " + warnings.size() + " warning(s) (missing lang keys)."), false);
 				for (String warning : warnings.subList(0, Math.min(8, warnings.size()))) {
-					source.sendSuccess(() -> Component.literal("- " + warning), false);
+					source.sendSuccess(Component.literal("- " + warning), false);
 				}
 				if (warnings.size() > 8) {
-					source.sendSuccess(() -> Component.literal(
+					source.sendSuccess(Component.literal(
 						"- ...and " + (warnings.size() - 8) + " more."), false);
 				}
 			}
@@ -230,26 +230,26 @@ public final class AttunedCommands {
 		Optional<Apex.Capstone> apexCapstone = Apex.capstoneOf(player);
 		boolean apexFiring = apexCapstone.isPresent() && Resonance.atApex(player);
 
-		source.sendSuccess(() -> Component.literal("=== Attuned status for " + player.getName().getString() + " ===")
+		source.sendSuccess(Component.literal("=== Attuned status for " + player.getName().getString() + " ===")
 			.withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD), false);
 
-		source.sendSuccess(() -> label("Capacity: ")
+		source.sendSuccess(label("Capacity: ")
 			.append(Component.literal(used + " / " + capacity).withStyle(ChatFormatting.AQUA)), false);
 
-		source.sendSuccess(() -> label("Used: ")
+		source.sendSuccess(label("Used: ")
 			.append(Component.literal(Integer.toString(used)).withStyle(ChatFormatting.AQUA)), false);
 
-		source.sendSuccess(() -> label("Title: ")
+		source.sendSuccess(label("Title: ")
 			.append(Component.literal(titleText(activeSlots.size(), used))
 				.withStyle(rankColor(used, activeSlots.size()))), false);
 
-		source.sendSuccess(() -> label("Stance: ")
+		source.sendSuccess(label("Stance: ")
 			.append(stanceComponent(committed, discord)), false);
 
-		source.sendSuccess(() -> label("Active Foci (" + activeSlots.size() + "):")
+		source.sendSuccess(label("Active Foci (" + activeSlots.size() + "):")
 			.withStyle(ChatFormatting.GRAY), false);
 		if (activeSlots.isEmpty()) {
-			source.sendSuccess(() -> Component.literal("  (none)")
+			source.sendSuccess(Component.literal("  (none)")
 				.withStyle(ChatFormatting.DARK_GRAY), false);
 		} else {
 			for (int slot : activeSlots) {
@@ -259,7 +259,7 @@ public final class AttunedCommands {
 				int cost = def.map(FocusDefinition::cost).orElse(0);
 				Optional<Affinity> aff = def.flatMap(FocusDefinition::affinity);
 				String affName = aff.map(a -> a.name().toLowerCase(Locale.ROOT)).orElse("neutral");
-				source.sendSuccess(() -> Component.literal("  - ")
+				source.sendSuccess(Component.literal("  - ")
 					.withStyle(ChatFormatting.DARK_GRAY)
 					.append(Component.literal(name).withStyle(ChatFormatting.WHITE))
 					.append(Component.literal(" (cost " + cost + ", ").withStyle(ChatFormatting.GRAY))
@@ -268,33 +268,35 @@ public final class AttunedCommands {
 			}
 		}
 
-		source.sendSuccess(() -> label("Pact: ")
+		source.sendSuccess(label("Pact: ")
 			.append(pact.map(p -> (Component) p.displayName().withStyle(p.chatColor(), ChatFormatting.BOLD))
 				.orElse(Component.literal("none").withStyle(ChatFormatting.DARK_GRAY))), false);
 
-		source.sendSuccess(() -> label("Resonance: ")
+		source.sendSuccess(label("Resonance: ")
 			.append(Component.literal(String.format(Locale.ROOT, "%.2f", resonance))
 				.withStyle(ChatFormatting.AQUA))
 			.append(Component.literal(" (Apex threshold " + String.format(Locale.ROOT, "%.2f", Resonance.APEX_THRESHOLD) + ")")
 				.withStyle(ChatFormatting.DARK_GRAY)), false);
 
-		source.sendSuccess(() -> {
-			if (apexCapstone.isEmpty()) {
-				return label("Apex: ")
-					.append(Component.literal("Foci do not qualify").withStyle(ChatFormatting.DARK_GRAY));
-			}
+		Component apexStatus;
+		if (apexCapstone.isEmpty()) {
+			apexStatus = label("Apex: ")
+				.append(Component.literal("Foci do not qualify").withStyle(ChatFormatting.DARK_GRAY));
+		} else {
 			Apex.Capstone capstone = apexCapstone.get();
 			String name = capstone.displayName();
 			if (apexFiring) {
-				return label("Apex: ")
-					.append(Component.literal("active — " + name)
+				apexStatus = label("Apex: ")
+					.append(Component.literal("active - " + name)
 						.withStyle(capstone.chatColor(), ChatFormatting.BOLD));
+			} else {
+				apexStatus = label("Apex: ")
+					.append(Component.literal("not active (would be " + name + " when resonance >= "
+						+ String.format(Locale.ROOT, "%.2f", Resonance.APEX_THRESHOLD) + ")")
+						.withStyle(ChatFormatting.GRAY));
 			}
-			return label("Apex: ")
-				.append(Component.literal("not active (would be " + name + " when resonance >= "
-					+ String.format(Locale.ROOT, "%.2f", Resonance.APEX_THRESHOLD) + ")")
-					.withStyle(ChatFormatting.GRAY));
-		}, false);
+		}
+		source.sendSuccess(apexStatus, false);
 	}
 
 	private static net.minecraft.network.chat.MutableComponent label(String text) {

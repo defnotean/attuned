@@ -111,7 +111,7 @@ public final class GalespurBehavior implements FocusBehavior {
 		if (attribute == null || attribute.getModifier(AttributeModifierIds.uuid(id)) != null) {
 			return;
 		}
-		attribute.addTransientModifier(new AttributeModifier(AttributeModifierIds.uuid(id), AttributeModifierIds.name(id), amount, AttributeModifier.Operation.ADD_MULTIPLIED_BASE));
+		attribute.addTransientModifier(new AttributeModifier(AttributeModifierIds.uuid(id), AttributeModifierIds.name(id), amount, AttributeModifier.Operation.MULTIPLY_BASE));
 	}
 
 	private static void removeBoost(LivingEntity mount) {

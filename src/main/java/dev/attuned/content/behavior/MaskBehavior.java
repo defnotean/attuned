@@ -81,7 +81,7 @@ public final class MaskBehavior implements FocusBehavior {
 
 	private static boolean canCharge(ServerPlayer player) {
 		return player.isCrouching()
-			&& player.level().getMaxLocalRawBrightness(player.blockPosition()) <= MAX_LIGHT;
+			&& player.getLevel().getMaxLocalRawBrightness(player.blockPosition()) <= MAX_LIGHT;
 	}
 
 	private static final class State {

@@ -67,7 +67,7 @@ public final class ForagerBehavior implements dev.attuned.api.focus.FocusBehavio
 	}
 
 	private static boolean isGrassLike(BlockState state) {
-		return state.is(Blocks.SHORT_GRASS)
+		return state.is(Blocks.GRASS)
 			|| state.is(Blocks.TALL_GRASS)
 			|| state.is(Blocks.FERN)
 			|| state.is(Blocks.LARGE_FERN);

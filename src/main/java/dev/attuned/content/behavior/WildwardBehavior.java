@@ -32,15 +32,15 @@ public final class WildwardBehavior implements FocusBehavior {
 
 	/** Mirrors {@code MossheartBehavior}'s ground predicate: green footing at feet or below. */
 	private static boolean onGreenFooting(ServerPlayer player) {
-		BlockState feet = player.level().getBlockState(player.blockPosition());
-		BlockState below = player.level().getBlockState(player.blockPosition().below());
+		BlockState feet = player.getLevel().getBlockState(player.blockPosition());
+		BlockState below = player.getLevel().getBlockState(player.blockPosition().below());
 		return isGreenFooting(feet) || isGreenFooting(below);
 	}
 
 	private static boolean isGreenFooting(BlockState state) {
 		return state.is(BlockTags.LEAVES)
 			|| state.is(Blocks.GRASS_BLOCK)
-			|| state.is(Blocks.SHORT_GRASS)
+			|| state.is(Blocks.GRASS)
 			|| state.is(Blocks.TALL_GRASS)
 			|| state.is(Blocks.MOSS_BLOCK)
 			|| state.is(Blocks.MOSS_CARPET);

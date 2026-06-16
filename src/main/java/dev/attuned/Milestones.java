@@ -116,7 +116,7 @@ public final class Milestones {
 		int after = Math.min(cap, before + milestone.capacity);
 		AttunedAttachments.setCapacity(player, after);
 
-		((ServerLevel) player.level()).playSound(null, player.blockPosition(),
+		((ServerLevel) player.getLevel()).playSound(null, player.blockPosition(),
 			SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, SoundSource.PLAYERS, 0.7F, 1.2F);
 		PlayerMessages.system(player, Component.literal("Your attunement deepens — you " + milestone.feat + ". ")
 			.withStyle(ChatFormatting.GRAY)

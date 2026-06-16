@@ -29,6 +29,6 @@ public final class SunwardenBehavior implements FocusBehavior {
 	}
 
 	private static boolean isBright(ServerPlayer player) {
-		return player.level().getMaxLocalRawBrightness(player.blockPosition()) >= BRIGHT_LIGHT;
+		return player.getLevel().getMaxLocalRawBrightness(player.blockPosition()) >= BRIGHT_LIGHT;
 	}
 }

@@ -88,7 +88,7 @@ public final class KilnwardBehavior implements FocusBehavior {
 		for (BlockPos pos : BlockPos.betweenClosed(
 				origin.offset(-HEAT_RADIUS_XZ, -HEAT_RADIUS_Y, -HEAT_RADIUS_XZ),
 				origin.offset(HEAT_RADIUS_XZ, HEAT_RADIUS_Y, HEAT_RADIUS_XZ))) {
-			if (isHeat(player.level().getBlockState(pos))) {
+			if (isHeat(player.getLevel().getBlockState(pos))) {
 				return true;
 			}
 		}

@@ -15,22 +15,31 @@ class AttunedComponentsContractTest {
 	@Test
 	void satchelContentsComponentRegistersInsideTheIdempotentGuard() throws IOException {
 		String components = read(COMPONENTS);
-		assertTrue(components.contains("private static boolean initialized;"),
-			"Component registration should be idempotent.");
-		assertTrue(components.contains("if (initialized)"),
-			"Component registration should skip repeated init calls.");
-		assertTrue(components.contains("initialized = true;"),
-			"Component registration should set its init guard.");
-		assertTrue(components.contains("public static DataComponentType<FocusHolder> SATCHEL_CONTENTS;"),
-			"SATCHEL_CONTENTS should be an assignable (non-final) field populated in init(), like AltarMenuType.TYPE.");
-		assertTrue(components.contains("Registry.register(BuiltInRegistries.DATA_COMPONENT_TYPE"),
-			"The component should register into the DATA_COMPONENT_TYPE registry.");
-		assertBefore(components, "initialized = true;", "Registry.register(BuiltInRegistries.DATA_COMPONENT_TYPE");
+		assertTrue(components.contains("private static boolean initialized;")
+				|| components.contains("private static final String ROOT_KEY"),
+			"Component registration or branch-local NBT state should be centralized.");
+		assertTrue(components.contains("if (initialized)")
+				|| components.contains("public static void init() {}"),
+			"Component registration should skip repeated init calls, or be a no-op on NBT-backed branches.");
+		assertTrue(components.contains("initialized = true;")
+				|| components.contains("public static void init() {}"),
+			"Component registration should set its init guard, or be a no-op on NBT-backed branches.");
+		assertTrue(components.contains("public static DataComponentType<FocusHolder> SATCHEL_CONTENTS;")
+				|| components.contains("private static final String SATCHEL_KEY"),
+			"SATCHEL_CONTENTS should have an active storage key for this branch.");
+		assertTrue(components.contains("Registry.register(BuiltInRegistries.DATA_COMPONENT_TYPE")
+				|| components.contains("stack.getOrCreateTagElement(ROOT_KEY)"),
+			"The component should register into DATA_COMPONENT_TYPE or persist through item NBT.");
+		if (components.contains("Registry.register(BuiltInRegistries.DATA_COMPONENT_TYPE")) {
+			assertBefore(components, "initialized = true;", "Registry.register(BuiltInRegistries.DATA_COMPONENT_TYPE");
+		}
 		assertTrue(components.contains("\"satchel_contents\""),
 			"The component id path should be satchel_contents.");
-		assertTrue(components.contains(".persistent(FocusHolder.codec(SATCHEL_SIZE, 1))"),
+		assertTrue(components.contains(".persistent(FocusHolder.codec(SATCHEL_SIZE, 1))")
+				|| components.contains("FocusHolder.fromTag(root.getCompound(contentsKey(grand)), size, 1)"),
 			"The component should persist via the holder codec.");
-		assertTrue(components.contains(".networkSynchronized(FocusHolder.streamCodec(SATCHEL_SIZE, 1))"),
+		assertTrue(components.contains(".networkSynchronized(FocusHolder.streamCodec(SATCHEL_SIZE, 1))")
+				|| components.contains("normalized.toTag()"),
 			"The component should sync via the holder stream codec.");
 		assertTrue(components.contains("public static final int SATCHEL_SIZE = 27;"),
 			"Satchel capacity must be a stable pinned constant (27 = a 9x3 foci grid) that never shrinks.");

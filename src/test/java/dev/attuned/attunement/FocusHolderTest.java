@@ -62,13 +62,16 @@ class FocusHolderTest {
 			"FocusHolder should cap each stored stack to maxPerSlot (its OWN parameterized cap).");
 		assertTrue(holder.contains("public static Codec<FocusHolder> codec(int size, int maxPerSlot)"),
 			"FocusHolder should build a size/cap-bound persistence Codec.");
-		assertTrue(holder.contains("ItemStack.OPTIONAL_CODEC.listOf()"),
-			"FocusHolder persistence should reuse the OPTIONAL_CODEC list pattern.");
+		assertTrue(holder.contains("ItemStack.OPTIONAL_CODEC.listOf()")
+				|| holder.contains("Codec.PASSTHROUGH.flatXmap"),
+			"FocusHolder persistence should use the active branch's safe item-stack persistence pattern.");
 		assertTrue(holder.contains(
-			"public static StreamCodec<RegistryFriendlyByteBuf, FocusHolder> streamCodec(int size, int maxPerSlot)"),
-			"FocusHolder should build a size/cap-bound network StreamCodec.");
-		assertTrue(holder.contains("ItemStack.OPTIONAL_LIST_STREAM_CODEC"),
-			"FocusHolder sync should reuse the OPTIONAL_LIST_STREAM_CODEC pattern.");
+				"public static StreamCodec<RegistryFriendlyByteBuf, FocusHolder> streamCodec(int size, int maxPerSlot)")
+				|| holder.contains("public CompoundTag toTag()"),
+			"FocusHolder should expose a size/cap-bound sync or tag representation.");
+		assertTrue(holder.contains("ItemStack.OPTIONAL_LIST_STREAM_CODEC")
+				|| holder.contains("public static FocusHolder fromTag(CompoundTag tag, int size, int maxPerSlot)"),
+			"FocusHolder sync should preserve slot data through the active branch representation.");
 	}
 
 	private static String read(Path file) throws IOException {

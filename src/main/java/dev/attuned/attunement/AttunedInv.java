@@ -1,8 +1,9 @@
 package dev.attuned.attunement;
 
 import com.mojang.serialization.Codec;
-import net.minecraft.network.RegistryFriendlyByteBuf;
-import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.Tag;
 import net.minecraft.world.item.ItemStack;
 
 import java.util.ArrayList;
@@ -21,10 +22,7 @@ public record AttunedInv(List<ItemStack> items) {
 	}
 
 	public static final Codec<AttunedInv> CODEC =
-		ItemStack.OPTIONAL_CODEC.listOf().xmap(AttunedInv::sized, AttunedInv::items);
-
-	public static final StreamCodec<RegistryFriendlyByteBuf, AttunedInv> STREAM_CODEC =
-		ItemStack.OPTIONAL_LIST_STREAM_CODEC.map(AttunedInv::sized, AttunedInv::items);
+		ItemStack.CODEC.listOf().xmap(AttunedInv::sized, AttunedInv::items);
 
 	public static AttunedInv empty() {
 		return sized(List.of());
@@ -73,6 +71,40 @@ public record AttunedInv(List<ItemStack> items) {
 		List<ItemStack> copy = new ArrayList<>(items);
 		copy.set(requireSlot(slot), copyStack(stack));
 		return new AttunedInv(copy);
+	}
+
+	public CompoundTag toTag() {
+		CompoundTag tag = new CompoundTag();
+		ListTag list = new ListTag();
+		for (int i = 0; i < SIZE; i++) {
+			ItemStack stack = items.get(i);
+			if (stack.isEmpty()) {
+				continue;
+			}
+			CompoundTag entry = stack.save(new CompoundTag());
+			entry.putInt("Slot", i);
+			list.add(entry);
+		}
+		tag.put("Items", list);
+		return tag;
+	}
+
+	public static AttunedInv fromTag(CompoundTag tag) {
+		List<ItemStack> decoded = new ArrayList<>(SIZE);
+		for (int i = 0; i < SIZE; i++) {
+			decoded.add(ItemStack.EMPTY);
+		}
+		if (tag != null) {
+			ListTag list = tag.getList("Items", Tag.TAG_COMPOUND);
+			for (int i = 0; i < list.size(); i++) {
+				CompoundTag entry = list.getCompound(i);
+				int slot = entry.getInt("Slot");
+				if (slot >= 0 && slot < SIZE) {
+					decoded.set(slot, ItemStack.of(entry));
+				}
+			}
+		}
+		return new AttunedInv(decoded);
 	}
 
 	private static int requireSlot(int slot) {

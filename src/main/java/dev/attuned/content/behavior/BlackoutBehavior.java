@@ -35,7 +35,7 @@ public final class BlackoutBehavior implements FocusBehavior {
 
 	@Override
 	public boolean onAbility(ServerPlayer player, ItemStack focus) {
-		ServerLevel level = (ServerLevel) player.level();
+		ServerLevel level = (ServerLevel) player.getLevel();
 		level.sendParticles(ParticleTypes.SMOKE,
 			player.getX(), player.getY() + 0.7D, player.getZ(),
 			24, 0.55D, 0.3D, 0.55D, 0.02D);

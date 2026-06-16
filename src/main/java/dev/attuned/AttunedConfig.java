@@ -344,7 +344,8 @@ public record AttunedConfig(
 		if (Files.exists(path)) {
 			try {
 				JsonElement json = JsonParser.parseString(Files.readString(path));
-				current = CODEC.parse(JsonOps.INSTANCE, json).getOrThrow();
+				current = CODEC.parse(JsonOps.INSTANCE, json)
+					.getOrThrow(false, message -> Attuned.LOGGER.error(message));
 			} catch (Exception e) {
 				Attuned.LOGGER.error("Invalid {} — using defaults; fix or delete the file.", path, e);
 				current = DEFAULT;

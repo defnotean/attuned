@@ -1,5 +1,6 @@
 package dev.attuned.client.screen;
 
+import com.mojang.blaze3d.vertex.PoseStack;
 import dev.attuned.Attuned;
 import dev.attuned.AttunedRegistries;
 import dev.attuned.api.focus.Affinity;
@@ -150,9 +151,9 @@ public final class AttunementJournalScreen extends Screen {
 		}
 		initialized = true;
 
-		ClientPlayNetworking.registerGlobalReceiver(OpenJournalPayload.TYPE, (payload, context) ->
-			context.client().execute(() ->
-				context.client().setScreen(new AttunementJournalScreen())));
+		ClientPlayNetworking.registerGlobalReceiver(OpenJournalPayload.TYPE, (payload, player, sender) ->
+			Minecraft.getInstance().execute(() ->
+				Minecraft.getInstance().setScreen(new AttunementJournalScreen())));
 	}
 
 	@Override
@@ -182,20 +183,22 @@ public final class AttunementJournalScreen extends Screen {
 	}
 
 	@Override
-	public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+	public void render(PoseStack poseStack, int mouseX, int mouseY, float partialTick) {
+		GuiGraphics graphics = new GuiGraphics(Minecraft.getInstance(), poseStack);
 		drawFrame(graphics);
 		drawNavigation(graphics);
 		drawChapter(graphics);
+		super.render(poseStack, mouseX, mouseY, partialTick);
 	}
 
 	@Override
-	public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
+	public boolean mouseScrolled(double mouseX, double mouseY, double scrollY) {
 		if (this.maxScroll > 0) {
 			int next = this.scrollOffset - (int) Math.round(scrollY) * SCROLL_STEP;
 			this.scrollOffset = Math.max(0, Math.min(this.maxScroll, next));
 			return true;
 		}
-		return super.mouseScrolled(mouseX, mouseY, scrollX, scrollY);
+		return super.mouseScrolled(mouseX, mouseY, scrollY);
 	}
 
 	@Override
@@ -501,7 +504,7 @@ public final class AttunementJournalScreen extends Screen {
 		if (player != null) {
 			Set<String> discovered = new HashSet<>(AttunedAttachments.getDiscoveredConfluences(player));
 			Registry<SynergyDefinition> registry =
-				player.level().registryAccess().registryOrThrow(AttunedRegistries.SYNERGY_DEFINITIONS);
+				player.getLevel().registryAccess().registryOrThrow(AttunedRegistries.SYNERGY_DEFINITIONS);
 			registry.stream().forEach(def -> {
 				String id = registry.getKey(def).toString();
 				if (discovered.contains(id)) {
@@ -589,7 +592,8 @@ public final class AttunementJournalScreen extends Screen {
 		}
 
 		@Override
-		protected void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+		public void renderWidget(PoseStack poseStack, int mouseX, int mouseY, float partialTick) {
+			GuiGraphics graphics = new GuiGraphics(Minecraft.getInstance(), poseStack);
 			int x0 = getX();
 			int y0 = getY();
 			int x1 = x0 + getWidth();
@@ -598,7 +602,7 @@ public final class AttunementJournalScreen extends Screen {
 				if (isHoveredOrFocused()) {
 					graphics.fill(x0, y0, x1, y1, ROW_HOVER);
 				}
-				renderString(graphics, Minecraft.getInstance().font, LABEL_LIGHT);
+				renderString(poseStack, Minecraft.getInstance().font, LABEL_LIGHT);
 				return;
 			}
 			int face = this.active
@@ -610,7 +614,7 @@ public final class AttunementJournalScreen extends Screen {
 			graphics.fill(x0 + 2, y0 + 2, x1 - 2, y1 - 2, face);
 			graphics.fill(x0 + 3, y0 + 3, x1 - 3, y0 + 4, this.active ? 0xFFE0C6FF : 0xFF77707E);
 			graphics.fill(x0 + 3, y1 - 4, x1 - 3, y1 - 3, 0xFF17151D);
-			renderString(graphics, Minecraft.getInstance().font, LABEL_LIGHT);
+			renderString(poseStack, Minecraft.getInstance().font, LABEL_LIGHT);
 		}
 	}
 

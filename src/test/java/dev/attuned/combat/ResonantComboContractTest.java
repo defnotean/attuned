@@ -43,7 +43,8 @@ class ResonantComboContractTest {
 			"The combo should use Needle's pending opener confirmation.");
 		assertTrue(afterDamage.contains("pending.target().equals(defender.getUUID())"),
 			"The combo should only fire for the target Needle actually shaped.");
-		assertTrue(afterDamage.contains("pending.gameTime() == attacker.level().getGameTime()"),
+		assertTrue(afterDamage.contains("pending.gameTime() == attacker.level().getGameTime()")
+				|| afterDamage.contains("pending.gameTime() == attacker.getLevel().getGameTime()"),
 			"The combo should only fire on the same tick as the shaped opener.");
 
 		int consumesIndex = afterDamage.indexOf("if (pending.consumes())");

@@ -38,7 +38,7 @@ public final class VoidstepBehavior implements FocusBehavior {
 
 	@Override
 	public boolean onAbility(ServerPlayer player, ItemStack focus) {
-		ServerLevel level = (ServerLevel) player.level();
+		ServerLevel level = (ServerLevel) player.getLevel();
 		Vec3 origin = player.position();
 		Vec3 look = player.getLookAngle();
 		Vec3 destination = null;

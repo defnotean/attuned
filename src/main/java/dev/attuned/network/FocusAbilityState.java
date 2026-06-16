@@ -85,7 +85,7 @@ public final class FocusAbilityState {
 
 		int total = abilityCooldownTicks(selection.behavior(), player, selection.stack());
 		if (total > 0) {
-			long endsAt = player.level().getGameTime() + total;
+			long endsAt = player.getLevel().getGameTime() + total;
 			COOLDOWNS.put(selection.cooldownKey(player.getUUID()), new Cooldown(endsAt, total));
 			sync(player, selection.slot(), total, total);
 		} else {
@@ -100,7 +100,7 @@ public final class FocusAbilityState {
 			ItemStack stack = inv.get(slot);
 			FocusBehavior behavior = Attunement.definitionFor(player, stack)
 				.flatMap(FocusDefinition::behavior)
-				.map(behaviorId -> AttunedRegistries.getBehavior(behaviorId, player.registryAccess()))
+				.map(behaviorId -> AttunedRegistries.getBehavior(behaviorId, player.getLevel().registryAccess()))
 				.orElse(null);
 			if (behavior != null && hasActiveAbility(behavior, player, stack)) {
 				String itemId = BuiltInRegistries.ITEM.getKey(stack.getItem()).toString();
@@ -120,7 +120,7 @@ public final class FocusAbilityState {
 		if (cooldown == null) {
 			return 0;
 		}
-		int remaining = (int) Math.max(0, cooldown.endsAt() - player.level().getGameTime());
+		int remaining = (int) Math.max(0, cooldown.endsAt() - player.getLevel().getGameTime());
 		if (remaining <= 0) {
 			COOLDOWNS.remove(selection.cooldownKey(player.getUUID()));
 			return 0;

@@ -16,6 +16,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.state.BlockBehaviour;
+import net.minecraft.world.level.material.Material;
 
 /**
  * The bundled Focus items shipped with Attuned. Each item's accessory behaviour
@@ -222,7 +223,7 @@ public final class AttunedContent {
 	private static Block registerAltar() {
 		ResourceLocation id = new ResourceLocation(Attuned.MOD_ID, "attunement_altar");
 		ResourceKey<Block> blockKey = ResourceKey.create(Registries.BLOCK, id);
-		Block block = new AttunementAltarBlock(BlockBehaviour.Properties.of()
+		Block block = new AttunementAltarBlock(BlockBehaviour.Properties.of(Material.STONE)
 			.strength(3.5F, 6.0F)
 			.sound(SoundType.DEEPSLATE)
 			.lightLevel(state -> 7)
@@ -239,7 +240,7 @@ public final class AttunedContent {
 	private static Block registerReweavingAltar() {
 		ResourceLocation id = new ResourceLocation(Attuned.MOD_ID, "altar_of_reweaving");
 		ResourceKey<Block> blockKey = ResourceKey.create(Registries.BLOCK, id);
-		Block block = new AltarOfReweavingBlock(BlockBehaviour.Properties.of()
+		Block block = new AltarOfReweavingBlock(BlockBehaviour.Properties.of(Material.STONE)
 			.strength(3.5F, 6.0F)
 			.sound(SoundType.DEEPSLATE)
 			.lightLevel(state -> 6)

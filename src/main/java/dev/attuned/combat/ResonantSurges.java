@@ -115,7 +115,7 @@ public final class ResonantSurges {
 		List<ServerPlayer> players = server.getPlayerList().getPlayers();
 		List<ServerPlayer> candidates = new ArrayList<>();
 		for (ServerPlayer player : players) {
-			if (player.level().isThundering()) {
+			if (player.getLevel().isThundering()) {
 				candidates.add(player);
 			}
 		}
@@ -124,7 +124,7 @@ public final class ResonantSurges {
 			return;
 		}
 		ServerPlayer anchor = candidates.get(anchor(candidates).nextInt(candidates.size()));
-		ServerLevel level = (ServerLevel) anchor.level();
+		ServerLevel level = (ServerLevel) anchor.getLevel();
 		RandomSource random = anchor.getRandom();
 		int offsetX = signedOffset(random);
 		int offsetZ = signedOffset(random);
@@ -148,7 +148,7 @@ public final class ResonantSurges {
 	/** Whether the player is standing inside the live surge radius. */
 	static boolean containsPlayer(ServerPlayer player) {
 		Surge surge = active;
-		if (surge == null || !player.level().dimension().equals(surge.dimension())) {
+		if (surge == null || !player.getLevel().dimension().equals(surge.dimension())) {
 			return false;
 		}
 		BlockPos pos = surge.pos();
@@ -171,9 +171,9 @@ public final class ResonantSurges {
 			PlayerMessages.overlay(player, Component.translatable("surge.attuned.kill_reward", count));
 			return;
 		}
-		ItemEntity drop = new ItemEntity(player.level(), player.getX(), player.getY() + 0.5, player.getZ(), stack);
+		ItemEntity drop = new ItemEntity(player.getLevel(), player.getX(), player.getY() + 0.5, player.getZ(), stack);
 		drop.setDefaultPickUpDelay();
-		player.level().addFreshEntity(drop);
+		player.getLevel().addFreshEntity(drop);
 		PlayerMessages.overlay(player, Component.translatable("surge.attuned.kill_reward", count));
 	}
 
@@ -200,9 +200,7 @@ public final class ResonantSurges {
 				PlayerMessages.overlay(player, Component.translatable("surge.attuned.faded"));
 			} else {
 				Resonance.grantSurge(player, surgeResonanceGain(player, gain));
-				if (player instanceof ServerPlayer serverPlayer) {
-					CombatFeedback.surgeCharge(serverPlayer);
-				}
+				CombatFeedback.surgeCharge(player);
 			}
 		}
 		if (expired) {

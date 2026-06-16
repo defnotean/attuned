@@ -45,7 +45,7 @@ public final class GravebindSave {
 			if (!(entity instanceof ServerPlayer player) || !hasGravebindActive(player)) {
 				return true;
 			}
-			long now = player.level().getGameTime();
+			long now = player.getLevel().getGameTime();
 			Long last = lastSave.get(player.getUUID());
 			if (last != null && now - last < AttunedConfig.get().gravebindCooldownTicks()) {
 				return true;
@@ -75,7 +75,7 @@ public final class GravebindSave {
 		player.addEffect(new MobEffectInstance(MobEffects.REGENERATION, 100, 1));
 		player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 100, 1));
 
-		ServerLevel level = (ServerLevel) player.level();
+		ServerLevel level = (ServerLevel) player.getLevel();
 		level.sendParticles(ParticleTypes.TOTEM_OF_UNDYING,
 			player.getX(), player.getY() + 1.0, player.getZ(),
 			40, 0.5, 0.6, 0.5, 0.25);

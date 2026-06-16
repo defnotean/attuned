@@ -35,12 +35,15 @@ class TemperingContractTest {
 	@Test
 	void temperedComponentRegistersInsideTheIdempotentGuard() throws IOException {
 		String components = read(COMPONENTS);
-		assertTrue(components.contains("public static DataComponentType<Unit> TEMPERED;"),
-			"TEMPERED should be an assignable component field populated in init().");
+		assertTrue(components.contains("public static DataComponentType<Unit> TEMPERED;")
+				|| components.contains("private static final String TEMPERED_KEY"),
+			"TEMPERED should be an assignable component field or branch-local NBT key.");
 		assertTrue(components.contains("\"tempered\""),
 			"The Tempered component id path should be tempered.");
-		assertBefore(components, "initialized = true;",
-			"new ResourceLocation(Attuned.MOD_ID, \"tempered\")");
+		if (components.contains("initialized = true;")) {
+			assertBefore(components, "initialized = true;",
+				"new ResourceLocation(Attuned.MOD_ID, \"tempered\")");
+		}
 	}
 
 	@Test
@@ -48,7 +51,8 @@ class TemperingContractTest {
 		String effects = read(EFFECTS);
 		assertTrue(effects.contains("* 1.25") || effects.contains("TEMPERED_MODIFIER_MULTIPLIER"),
 			"AttunedEffects should boost a Tempered Focus's modifiers by 25%.");
-		assertTrue(effects.contains("AttunedComponents.TEMPERED"),
+		assertTrue(effects.contains("AttunedComponents.TEMPERED")
+				|| effects.contains("AttunedComponents.isTempered"),
 			"AttunedEffects should key the boost off the Tempered component.");
 	}
 
@@ -77,7 +81,8 @@ class TemperingContractTest {
 		String networking = read(REWEAVING_NETWORKING);
 		assertTrue(networking.contains("menu.canTemper()"),
 			"Server-side reweaving should branch to the temper path when canTemper().");
-		assertTrue(networking.contains("AttunedComponents.TEMPERED"),
+		assertTrue(networking.contains("AttunedComponents.TEMPERED")
+				|| networking.contains("AttunedComponents.setTempered"),
 			"The temper result should carry the Tempered component.");
 	}
 

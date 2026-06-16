@@ -37,17 +37,23 @@ class FocusPresetTest {
 	@Test
 	void presetsAttachmentMatchesInventoryPersistenceContract() throws IOException {
 		String attachments = read(ATTACHMENTS);
-		assertTrue(attachments.contains("AttachmentType<List<FocusPreset>> PRESETS"),
-			"Presets should be a per-player list attachment.");
-		assertTrue(attachments.contains("FocusPreset.CODEC.listOf()"),
-			"Presets should persist via the preset codec list.");
+		assertTrue(attachments.contains("AttachmentType<List<FocusPreset>> PRESETS")
+				|| attachments.contains("private static final String PRESETS_KEY"),
+			"Presets should be stored per-player.");
+		assertTrue(attachments.contains("FocusPreset.CODEC.listOf()")
+				|| attachments.contains("preset.toTag()"),
+			"Presets should persist via a normalized preset representation.");
 		assertTrue(attachments.contains("FocusPreset.STREAM_CODEC.apply(ByteBufCodecs.list())")
-				|| attachments.contains(".buildAndRegister(new ResourceLocation(Attuned.MOD_ID, \"presets\"))"),
-			"Presets should sync via a list-wrapped preset stream codec when the active Fabric attachment API supports sync hooks.");
+				|| attachments.contains(".buildAndRegister(new ResourceLocation(Attuned.MOD_ID, \"presets\"))")
+				|| attachments.contains("AttunedStatePayload"),
+			"Presets should sync to the owning client through the active branch sync path.");
 		assertTrue(attachments.contains("AttachmentSyncPredicate.targetOnly()")
-				|| attachments.contains("AttachmentRegistry.<List<FocusPreset>>builder()"),
-			"Presets should sync only to the owning client when attachment sync is available.");
-		assertTrue(attachments.contains(".copyOnDeath()"), "Presets should survive death.");
+				|| attachments.contains("AttachmentRegistry.<List<FocusPreset>>builder()")
+				|| attachments.contains("ServerPlayNetworking.send(serverPlayer"),
+			"Presets should sync only to the owning client when sync is available.");
+		assertTrue(attachments.contains(".copyOnDeath()")
+				|| attachments.contains("STATES.put(to.getUUID(), state(from).copy());"),
+			"Presets should survive death.");
 		assertTrue(attachments.contains("public static List<FocusPreset> getPresets(Player player)"),
 			"There should be a read helper.");
 		assertTrue(attachments.contains("public static void savePreset(Player player, FocusPreset preset)"),
@@ -61,7 +67,8 @@ class FocusPresetTest {
 	@Test
 	void presetReadsClampOldPersistedListsToTheMaxPresetCap() throws IOException {
 		String attachments = read(ATTACHMENTS);
-		assertTrue(attachments.contains("return normalizePresets(player.getAttachedOrElse(PRESETS, List.of()));"),
+		assertTrue(attachments.contains("return normalizePresets(player.getAttachedOrElse(PRESETS, List.of()));")
+				|| attachments.contains("return normalizePresets(state(player).presets);"),
 			"Preset reads should clamp old persisted/synced lists instead of exposing more than MAX_PRESETS.");
 		assertTrue(attachments.contains("private static List<FocusPreset> normalizePresets(List<FocusPreset> presets)"),
 			"Preset list normalization should be centralized.");

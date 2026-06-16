@@ -104,7 +104,7 @@ public final class Synergies {
 		}
 
 		Registry<SynergyDefinition> registry =
-			player.level().registryAccess().registryOrThrow(AttunedRegistries.SYNERGY_DEFINITIONS);
+			player.getLevel().registryAccess().registryOrThrow(AttunedRegistries.SYNERGY_DEFINITIONS);
 		List<SynergyResolver.SynergyDef> defs = new ArrayList<>();
 		Map<String, SynergyDefinition> byId = new HashMap<>();
 		registry.stream().forEach(def -> {
@@ -195,7 +195,7 @@ public final class Synergies {
 	private static void applyModifiers(ServerPlayer player, String confluenceId, SynergyDefinition def) {
 		for (int i = 0; i < def.modifiers().size(); i++) {
 			ModifierEntry entry = def.modifiers().get(i);
-			AttributeInstance ai = player.getAttribute(entry.attribute());
+			AttributeInstance ai = player.getAttribute(entry.attribute().value());
 			if (ai == null) {
 				continue;
 			}
@@ -209,7 +209,7 @@ public final class Synergies {
 	private static void removeModifiers(ServerPlayer player, String confluenceId, SynergyDefinition def) {
 		for (int i = 0; i < def.modifiers().size(); i++) {
 			ModifierEntry entry = def.modifiers().get(i);
-			AttributeInstance ai = player.getAttribute(entry.attribute());
+			AttributeInstance ai = player.getAttribute(entry.attribute().value());
 			if (ai == null) {
 				continue;
 			}
@@ -225,7 +225,7 @@ public final class Synergies {
 	 */
 	private static void reconcileOnJoin(ServerPlayer player) {
 		Registry<SynergyDefinition> registry =
-			player.level().registryAccess().registryOrThrow(AttunedRegistries.SYNERGY_DEFINITIONS);
+			player.getLevel().registryAccess().registryOrThrow(AttunedRegistries.SYNERGY_DEFINITIONS);
 		registry.stream().forEach(def -> {
 			removeModifiers(player, registry.getKey(def).toString(), def);
 		});
@@ -250,15 +250,14 @@ public final class Synergies {
 		}
 		Component discovery = Component.translatable("confluence.attuned.first_discovery", nameOf(confluenceId))
 			.withStyle(ChatFormatting.LIGHT_PURPLE, ChatFormatting.BOLD);
-		if (player.level() instanceof ServerLevel level) {
-			level.playSound(null, player.blockPosition(),
-				SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, SoundSource.PLAYERS, 0.7F, 1.0F);
-			level.sendParticles(ParticleTypes.ENCHANT,
-				player.getX(),
-				player.getY() + player.getBbHeight() * 0.5,
-				player.getZ(),
-				16, 0.5, 0.7, 0.5, 0.4);
-		}
+		ServerLevel level = player.getLevel();
+		level.playSound(null, player.blockPosition(),
+			SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, SoundSource.PLAYERS, 0.7F, 1.0F);
+		level.sendParticles(ParticleTypes.ENCHANT,
+			player.getX(),
+			player.getY() + player.getBbHeight() * 0.5,
+			player.getZ(),
+			16, 0.5, 0.7, 0.5, 0.4);
 		PlayerMessages.overlay(player, discovery);
 		PlayerMessages.system(player, discovery);
 	}
@@ -313,7 +312,7 @@ public final class Synergies {
 	 */
 	public static List<SynergyResolver.SynergyDef> definitions(Player player) {
 		Registry<SynergyDefinition> registry =
-			player.level().registryAccess().registryOrThrow(AttunedRegistries.SYNERGY_DEFINITIONS);
+			player.getLevel().registryAccess().registryOrThrow(AttunedRegistries.SYNERGY_DEFINITIONS);
 		List<SynergyResolver.SynergyDef> defs = new ArrayList<>();
 		registry.stream().forEach(def -> {
 			defs.add(new SynergyResolver.SynergyDef(

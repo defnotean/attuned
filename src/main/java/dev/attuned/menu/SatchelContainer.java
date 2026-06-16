@@ -4,7 +4,6 @@ import dev.attuned.attunement.Attunement;
 import dev.attuned.attunement.FocusHolder;
 import dev.attuned.content.AttunedComponents;
 import dev.attuned.content.AttunedContent;
-import net.minecraft.core.component.DataComponentType;
 import net.minecraft.world.Container;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.player.Player;
@@ -21,22 +20,21 @@ public final class SatchelContainer implements Container {
 	private final Player player;
 	private final InteractionHand hand;
 	private final Item reliquaryItem;
-	private final DataComponentType<FocusHolder> contentsType;
 	private final int size;
+	private final boolean grand;
 
 	/** Small Focus Reliquary view (27 slots). */
 	public SatchelContainer(Player player, InteractionHand hand) {
 		this(player, hand, AttunedContent.SATCHEL_OF_FOCI,
-			AttunedComponents.SATCHEL_CONTENTS, AttunedComponents.SATCHEL_SIZE);
+			AttunedComponents.SATCHEL_SIZE, false);
 	}
 
-	public SatchelContainer(Player player, InteractionHand hand, Item reliquaryItem,
-			DataComponentType<FocusHolder> contentsType, int size) {
+	public SatchelContainer(Player player, InteractionHand hand, Item reliquaryItem, int size, boolean grand) {
 		this.player = player;
 		this.hand = hand;
 		this.reliquaryItem = reliquaryItem;
-		this.contentsType = contentsType;
 		this.size = size;
+		this.grand = grand;
 	}
 
 	private ItemStack satchel() {
@@ -55,8 +53,7 @@ public final class SatchelContainer implements Container {
 		if (!hasLiveSatchel()) {
 			return emptyContents();
 		}
-		FocusHolder holder = satchel().get(contentsType);
-		return holder == null ? emptyContents() : holder;
+		return AttunedComponents.getContents(satchel(), grand);
 	}
 
 	@Override
@@ -97,7 +94,7 @@ public final class SatchelContainer implements Container {
 		}
 		ItemStack remaining = current.copy();
 		ItemStack taken = remaining.split(amount);
-		satchel().set(contentsType,
+		AttunedComponents.setContents(satchel(), grand,
 			holder().with(slot, remaining.isEmpty() ? ItemStack.EMPTY : remaining));
 		return taken;
 	}
@@ -111,7 +108,7 @@ public final class SatchelContainer implements Container {
 		if (current.isEmpty()) {
 			return ItemStack.EMPTY;
 		}
-		satchel().set(contentsType, holder().with(slot, ItemStack.EMPTY));
+		AttunedComponents.setContents(satchel(), grand, holder().with(slot, ItemStack.EMPTY));
 		return current;
 	}
 
@@ -124,13 +121,13 @@ public final class SatchelContainer implements Container {
 			return;
 		}
 		if (stack == null || stack.isEmpty()) {
-			satchel().set(contentsType, holder().with(slot, ItemStack.EMPTY));
+			AttunedComponents.setContents(satchel(), grand, holder().with(slot, ItemStack.EMPTY));
 			return;
 		}
 		if (Attunement.definitionFor(player, stack).isEmpty()) {
 			return;
 		}
-		satchel().set(contentsType, holder().with(slot, cappedStack(stack)));
+		AttunedComponents.setContents(satchel(), grand, holder().with(slot, cappedStack(stack)));
 	}
 
 	@Override

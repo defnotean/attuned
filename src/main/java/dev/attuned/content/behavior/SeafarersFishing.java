@@ -63,15 +63,15 @@ public final class SeafarersFishing {
 		}
 		if (hasActive(player, AttunedContent.LINECAST_FOCUS)
 				&& player.getRandom().nextFloat() < LINECAST_EXTRA_FISH_CHANCE) {
-			ItemEntity extra = new ItemEntity(player.level(), player.getX(), player.getY() + 0.5, player.getZ(),
+			ItemEntity extra = new ItemEntity(player.getLevel(), player.getX(), player.getY() + 0.5, player.getZ(),
 				new ItemStack(Items.COD));
-			player.level().addFreshEntity(extra);
+			player.getLevel().addFreshEntity(extra);
 		}
 		if (hasActive(player, AttunedContent.NETMENDER_FOCUS)
 				&& canRepairWithNetmender(player, rod)
 				&& player.getRandom().nextFloat() < NETMENDER_REPAIR_CHANCE) {
 			rod.setDamageValue(rod.getDamageValue() - 1);
-			netmenderCooldowns.put(player.getUUID(), player.level().getGameTime() + NETMENDER_REPAIR_COOLDOWN_TICKS);
+			netmenderCooldowns.put(player.getUUID(), player.getLevel().getGameTime() + NETMENDER_REPAIR_COOLDOWN_TICKS);
 			return 0;
 		}
 		return damage;
@@ -81,7 +81,7 @@ public final class SeafarersFishing {
 		Long readyAt = netmenderCooldowns.get(player.getUUID());
 		return rod.isDamageableItem()
 			&& rod.getDamageValue() > 0
-			&& (readyAt == null || player.level().getGameTime() >= readyAt);
+			&& (readyAt == null || player.getLevel().getGameTime() >= readyAt);
 	}
 
 	private static boolean hasActive(Player player, Item focus) {

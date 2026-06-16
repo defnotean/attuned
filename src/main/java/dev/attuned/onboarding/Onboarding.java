@@ -222,7 +222,7 @@ public final class Onboarding {
 		}
 		AttunedAttachments.markOnboarding(player, key);
 		Pacts.previewOf(player).ifPresent(preview -> {
-			((ServerLevel) player.level()).playSound(null, player.blockPosition(),
+			((ServerLevel) player.getLevel()).playSound(null, player.blockPosition(),
 				SoundEvents.EXPERIENCE_ORB_PICKUP, SoundSource.PLAYERS, 0.35F, 1.25F);
 			PlayerMessages.overlay(player, preview);
 		});
@@ -243,7 +243,7 @@ public final class Onboarding {
 		}
 		AttunedAttachments.markOnboarding(player, key);
 		Synergies.previewOf(player).ifPresent(preview -> {
-			((ServerLevel) player.level()).playSound(null, player.blockPosition(),
+			((ServerLevel) player.getLevel()).playSound(null, player.blockPosition(),
 				SoundEvents.EXPERIENCE_ORB_PICKUP, SoundSource.PLAYERS, 0.35F, 1.25F);
 			PlayerMessages.overlay(player, preview);
 		});
@@ -288,7 +288,7 @@ public final class Onboarding {
 			return false;
 		}
 		BlockPos pos = ((BlockHitResult) hit).getBlockPos();
-		return player.level().getBlockState(pos).is(AttunedContent.ATTUNEMENT_ALTAR);
+		return player.getLevel().getBlockState(pos).is(AttunedContent.ATTUNEMENT_ALTAR);
 	}
 
 	private static String confluencePath(String confluenceId) {
@@ -309,7 +309,7 @@ public final class Onboarding {
 		}
 		AttunedAttachments.markOnboarding(player, id);
 		PlayerMessages.system(player, message);
-		((ServerLevel) player.level()).playSound(null, player.blockPosition(),
+		((ServerLevel) player.getLevel()).playSound(null, player.blockPosition(),
 			SoundEvents.AMETHYST_BLOCK_CHIME, SoundSource.PLAYERS, 0.5F, 1.4F);
 	}
 }

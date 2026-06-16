@@ -156,7 +156,7 @@ public final class UpdraftBehavior implements FocusBehavior {
 				|| attacker == victim) {
 			return;
 		}
-		long now = victim.level().getGameTime();
+		long now = victim.getLevel().getGameTime();
 		markPvpCombat(victim, now);
 		markPvpCombat(attacker, now);
 	}
@@ -241,10 +241,10 @@ public final class UpdraftBehavior implements FocusBehavior {
 	}
 
 	private static void spawnFlightEffects(ServerPlayer player, Controls controls) {
-		if (!(player.level() instanceof ServerLevel level)
-				|| player.tickCount % FLIGHT_EFFECT_INTERVAL != 0) {
+		if (player.tickCount % FLIGHT_EFFECT_INTERVAL != 0) {
 			return;
 		}
+		ServerLevel level = player.getLevel();
 		if (controls.braking()) {
 			spawnBrakeEffects(level, player);
 		} else if (controls.boosting()) {
@@ -256,13 +256,13 @@ public final class UpdraftBehavior implements FocusBehavior {
 		Vec3 look = player.getLookAngle();
 		Vec3 trail = player.position().subtract(look.scale(0.75D))
 			.add(0.0D, player.getBbHeight() * 0.45D, 0.0D);
-		level.sendParticles(ParticleTypes.GUST,
+		level.sendParticles(ParticleTypes.CLOUD,
 			trail.x, trail.y, trail.z, 1, 0.08D, 0.05D, 0.08D, 0.01D);
 		level.sendParticles(ParticleTypes.CLOUD,
 			trail.x, trail.y, trail.z, 2, 0.12D, 0.06D, 0.12D, 0.02D);
 		if (player.tickCount % FLIGHT_SOUND_INTERVAL == 0) {
 			level.playSound(null, player.blockPosition(),
-				SoundEvents.WIND_CHARGE_THROW, SoundSource.PLAYERS, 0.22F, 1.65F);
+				SoundEvents.PHANTOM_FLAP, SoundSource.PLAYERS, 0.22F, 1.65F);
 		}
 	}
 
@@ -296,7 +296,7 @@ public final class UpdraftBehavior implements FocusBehavior {
 		if (started == null || last == null) {
 			return false;
 		}
-		long now = player.level().getGameTime();
+		long now = player.getLevel().getGameTime();
 		if (now - last > PVP_COMBAT_GRACE_TICKS) {
 			PVP_STARTED.remove(id);
 			PVP_LAST.remove(id);
@@ -323,19 +323,18 @@ public final class UpdraftBehavior implements FocusBehavior {
 			EXHAUSTION_DEBUFF_TICKS, 0, true, true, true));
 		PlayerMessages.overlay(player, Component.translatable(
 			"item.attuned.updraft_focus.exhausted"));
-		if (player.level() instanceof ServerLevel level) {
-			Vec3 at = player.position().add(0.0D, player.getBbHeight() * 0.55D, 0.0D);
-			level.sendParticles(ParticleTypes.SMOKE,
-				at.x, at.y, at.z, 8, 0.25D, 0.20D, 0.25D, 0.015D);
-			level.sendParticles(ParticleTypes.POOF,
-				at.x, at.y, at.z, 4, 0.20D, 0.12D, 0.20D, 0.01D);
-			level.playSound(null, player.blockPosition(),
-				SoundEvents.WOOL_STEP, SoundSource.PLAYERS, 0.45F, 0.65F);
-		}
+		ServerLevel level = player.getLevel();
+		Vec3 at = player.position().add(0.0D, player.getBbHeight() * 0.55D, 0.0D);
+		level.sendParticles(ParticleTypes.SMOKE,
+			at.x, at.y, at.z, 8, 0.25D, 0.20D, 0.25D, 0.015D);
+		level.sendParticles(ParticleTypes.POOF,
+			at.x, at.y, at.z, 4, 0.20D, 0.12D, 0.20D, 0.01D);
+		level.playSound(null, player.blockPosition(),
+			SoundEvents.WOOL_STEP, SoundSource.PLAYERS, 0.45F, 0.65F);
 	}
 
 	private static boolean canStartGlide(ServerPlayer player) {
-		return !player.onGround()
+		return !player.isOnGround()
 			&& !player.isInWater()
 			&& !player.isPassenger()
 			&& !player.isFallFlying()

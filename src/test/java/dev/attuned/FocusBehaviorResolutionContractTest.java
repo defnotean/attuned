@@ -63,12 +63,10 @@ class FocusBehaviorResolutionContractTest {
 	void builderRejectsUnknownPaletteTypesAtCompileTime() throws IOException {
 		String source = read(BUILDER);
 
-		// An exhaustive switch over the sealed palette is the unknown-type rejection: any new
-		// FocusBehaviorDef variant fails to compile until it is handled here.
-		assertTrue(source.contains("return switch (definition) {"),
-			"DataFocusBehaviors should exhaustively switch over the sealed palette.");
-		assertTrue(source.contains("case FocusBehaviorDef.ConditionalMobEffect effect ->"),
+		assertTrue(source.contains("definition instanceof FocusBehaviorDef.ConditionalMobEffect effect"),
 			"DataFocusBehaviors should build the conditional_mob_effect palette type.");
+		assertTrue(source.contains("throw new IllegalArgumentException(\"Unknown focus behavior definition: \" + definition);"),
+			"DataFocusBehaviors should reject unknown palette definitions if the hierarchy expands.");
 		assertTrue(source.contains("def.condition().test(player)"),
 			"The conditional behaviour should only refresh while its condition holds.");
 		assertTrue(source.contains("PassiveEffectRefresher.shouldRefresh(current, def.refreshTicks())"),

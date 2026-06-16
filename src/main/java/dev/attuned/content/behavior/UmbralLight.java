@@ -13,7 +13,7 @@ final class UmbralLight {
 
 	/** The light level the wearer currently stands in, by the same measure the data conditions use. */
 	static int lightAt(ServerPlayer player) {
-		return player.level().getMaxLocalRawBrightness(player.blockPosition());
+		return player.getLevel().getMaxLocalRawBrightness(player.blockPosition());
 	}
 
 	/** Whether the wearer stands at or below {@code maxLight}. */

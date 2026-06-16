@@ -27,10 +27,12 @@ class SatchelScreenContractTest {
 		assertTrue(screen.contains("extends AbstractContainerScreen<SatchelMenu>"),
 			"SatchelScreen should be a container screen over the satchel menu.");
 		assertTrue(screen.contains("extractBackground(GuiGraphicsExtractor")
-				|| screen.contains("renderBg(GuiGraphics"),
+				|| screen.contains("renderBg(GuiGraphics")
+				|| screen.contains("renderBg(PoseStack"),
 			"SatchelScreen must use the active background render hook.");
 		assertTrue(screen.contains("extractLabels(GuiGraphicsExtractor")
-				|| screen.contains("renderLabels(GuiGraphics"),
+				|| screen.contains("renderLabels(GuiGraphics")
+				|| screen.contains("renderLabels(PoseStack"),
 			"SatchelScreen must use the active label render hook.");
 		assertTrue(screen.contains("textures/gui/satchel.png"),
 			"SatchelScreen must reference its background texture.");

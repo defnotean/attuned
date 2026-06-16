@@ -18,7 +18,10 @@ class AttunedConfigContractTest {
 		JsonObject json = new JsonObject();
 		json.addProperty("starting_capacity", 30);
 		json.addProperty("capacity_cap", 12);
-		AttunedConfig parsed = AttunedConfig.CODEC.parse(JsonOps.INSTANCE, json).getOrThrow();
+		AttunedConfig parsed = AttunedConfig.CODEC.parse(JsonOps.INSTANCE, json)
+			.getOrThrow(false, msg -> {
+				throw new AssertionError(msg);
+			});
 
 		assertEquals(12, parsed.capacityCap());
 		assertEquals(12, parsed.startingCapacity(),
@@ -70,7 +73,10 @@ class AttunedConfigContractTest {
 		json.addProperty("resonance_hit_neutralized_loss", 0.15F);
 		json.addProperty("resonance_kill_empowered_gain", 0.4F);
 		json.addProperty("resonance_decay_per_tick", 0.0005F);
-		AttunedConfig parsed = AttunedConfig.CODEC.parse(JsonOps.INSTANCE, json).getOrThrow();
+		AttunedConfig parsed = AttunedConfig.CODEC.parse(JsonOps.INSTANCE, json)
+			.getOrThrow(false, msg -> {
+				throw new AssertionError(msg);
+			});
 		assertEquals(1.5F, parsed.advantageMultiplier());
 		assertEquals(0.6F, parsed.disadvantageMultiplier());
 		assertEquals(1.25F, parsed.discordDamageMultiplier());
@@ -96,7 +102,10 @@ class AttunedConfigContractTest {
 		json.addProperty("surge_interval_ticks", 4000);
 		json.addProperty("surge_duration_ticks", 800);
 		json.addProperty("surge_radius", 24);
-		AttunedConfig parsed = AttunedConfig.CODEC.parse(JsonOps.INSTANCE, json).getOrThrow();
+		AttunedConfig parsed = AttunedConfig.CODEC.parse(JsonOps.INSTANCE, json)
+			.getOrThrow(false, msg -> {
+				throw new AssertionError(msg);
+			});
 		assertEquals(4000, parsed.surgeIntervalTicks());
 		assertEquals(800, parsed.surgeDurationTicks());
 		assertEquals(24, parsed.surgeRadius());
@@ -153,7 +162,10 @@ class AttunedConfigContractTest {
 		JsonObject json = new JsonObject();
 		json.addProperty("affinity_loom_base_shard_cost", 2);
 		json.addProperty("affinity_loom_max_shard_cost", 5);
-		AttunedConfig parsed = AttunedConfig.CODEC.parse(JsonOps.INSTANCE, json).getOrThrow();
+		AttunedConfig parsed = AttunedConfig.CODEC.parse(JsonOps.INSTANCE, json)
+			.getOrThrow(false, msg -> {
+				throw new AssertionError(msg);
+			});
 		assertEquals(2, parsed.affinityLoomBaseShardCost());
 		assertEquals(5, parsed.affinityLoomMaxShardCost());
 	}
