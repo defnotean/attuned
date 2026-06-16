@@ -52,11 +52,11 @@ def write_version_profile_fixture(root: Path, *, java_version: str = "25") -> No
   "profiles": {
     "26.1.2": {
       "minecraft_version": "26.1.2",
-      "loader_version": "0.19.2",
-      "loom_version": "1.16.3",
-      "fabric_api_version": "0.149.0+26.1.2",
+      "loader_version": "0.19.3",
+      "loom_version": "1.17.11",
+      "fabric_api_version": "0.152.1+26.1.2",
       "java_version": "25",
-      "fabric_loader_range": ">=0.19.2",
+      "fabric_loader_range": ">=0.19.3",
       "status": "current",
       "notes": ["Current released target."]
     }
@@ -66,8 +66,8 @@ def write_version_profile_fixture(root: Path, *, java_version: str = "25") -> No
         encoding="utf-8",
     )
     (root / "gradle.properties").write_text(
-        f"minecraft_version=26.1.2\nloader_version=0.19.2\nloom_version=1.16.3\n"
-        f"java_version={java_version}\nfabric_api_version=0.149.0+26.1.2\n",
+        f"minecraft_version=26.1.2\nloader_version=0.19.3\nloom_version=1.17.11\n"
+        f"java_version={java_version}\nfabric_api_version=0.152.1+26.1.2\n",
         encoding="utf-8",
     )
     (root / "build.gradle").write_text(
