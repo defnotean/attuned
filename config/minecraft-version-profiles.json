@@ -3,11 +3,11 @@
   "profiles": {
     "26.1.2": {
       "minecraft_version": "26.1.2",
-      "loader_version": "0.19.2",
-      "loom_version": "1.16.3",
-      "fabric_api_version": "0.149.0+26.1.2",
+      "loader_version": "0.19.3",
+      "loom_version": "1.17.11",
+      "fabric_api_version": "0.152.1+26.1.2",
       "java_version": "25",
-      "fabric_loader_range": ">=0.19.2",
+      "fabric_loader_range": ">=0.19.3",
       "status": "current",
       "notes": [
         "Current released target. Use as the known-good baseline before creating newer or older port profiles."
@@ -16,7 +16,7 @@
     "1.21.11": {
       "minecraft_version": "1.21.11",
       "loader_version": "0.19.3",
-      "loom_version": "1.16.3",
+      "loom_version": "1.17.11",
       "fabric_api_version": "0.141.4+1.21.11",
       "java_version": "21",
       "fabric_loader_range": ">=0.19.3",
@@ -29,7 +29,7 @@
     "1.20.6": {
       "minecraft_version": "1.20.6",
       "loader_version": "0.19.3",
-      "loom_version": "1.16.3",
+      "loom_version": "1.17.11",
       "fabric_api_version": "0.100.8+1.20.6",
       "java_version": "21",
       "fabric_loader_range": ">=0.19.3",
@@ -42,7 +42,7 @@
     "1.19.4": {
       "minecraft_version": "1.19.4",
       "loader_version": "0.19.3",
-      "loom_version": "1.16.3",
+      "loom_version": "1.17.11",
       "fabric_api_version": "0.87.2+1.19.4",
       "java_version": "17",
       "fabric_loader_range": ">=0.19.3",
@@ -55,7 +55,7 @@
     "1.18.2": {
       "minecraft_version": "1.18.2",
       "loader_version": "0.19.3",
-      "loom_version": "1.16.3",
+      "loom_version": "1.17.11",
       "fabric_api_version": "0.77.0+1.18.2",
       "java_version": "17",
       "fabric_loader_range": ">=0.19.3",
