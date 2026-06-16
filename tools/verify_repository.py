@@ -482,12 +482,50 @@ def check_attuned_asset_references() -> str:
     return f"Attuned asset references: {item_defs} item definitions, {blockstates} blockstates, {models} models"
 
 
+def is_language_file(path: Path) -> bool:
+    return path.suffix.lower() == ".json" and path.parent.name == "lang" and "assets" in path.parts
+
+
+def language_data_problems(path: Path, data: object, root: Path = ROOT) -> list[str]:
+    relative_path = relative(path, root)
+    if not isinstance(data, dict):
+        return [f"{relative_path}: language file must be a JSON object"]
+    problems: list[str] = []
+    for key, value in sorted(data.items()):
+        if not isinstance(value, str):
+            problems.append(f"{relative_path}: {key} must be a string")
+    return problems
+
+
+def language_file_problems(root: Path = ROOT) -> list[str]:
+    problems: list[str] = []
+    for path in json_source_files(root):
+        if not is_language_file(path):
+            continue
+        try:
+            data = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError) as exc:
+            problems.append(f"{relative(path, root)}: {exc}")
+            continue
+        problems.extend(language_data_problems(path, data, root))
+    return problems
+
+
+def check_language_files() -> str:
+    problems = language_file_problems()
+    if problems:
+        raise CheckFailed("Language files", problems)
+    count = sum(1 for path in json_source_files() if is_language_file(path))
+    return f"Language files: {count} files"
+
+
 def load_attuned_lang(root: Path = ROOT) -> dict[str, object]:
     lang_path = root / ATTUNED_LANG_RELATIVE_FILE
     with lang_path.open("r", encoding="utf-8") as handle:
         data = json.load(handle)
-    if not isinstance(data, dict):
-        raise ValueError(f"{relative(lang_path, root)}: language file must be a JSON object")
+    problems = language_data_problems(lang_path, data, root)
+    if problems:
+        raise ValueError("; ".join(problems))
     return data
 
 
@@ -878,6 +916,7 @@ def run_checks() -> int:
         check_repository_json,
         check_png_resources,
         check_attuned_asset_references,
+        check_language_files,
         check_static_translation_keys,
         check_modrinth_gallery_pngs,
         check_public_focus_counts,
