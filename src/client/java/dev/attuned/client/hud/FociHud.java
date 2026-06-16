@@ -18,6 +18,7 @@ import dev.attuned.client.FocusAbilityClientState;
 import dev.attuned.combat.Resonance;
 import dev.attuned.menu.FocusLayout;
 import dev.attuned.pacts.Pact;
+import dev.attuned.pacts.PactTacticals;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -61,6 +62,7 @@ public final class FociHud {
 	private static final int DORMANT_DIM = 0x78000000;
 	private static final int COOLDOWN_SHADE = 0x9C0A0812;
 	private static final int COOLDOWN_RING = 0xDCCB93FF;
+	private static final int OVERCHARGE_RING = 0xFFE8A317;
 	private static final int BAR_TRACK = 0xB0111118;
 	private static final int BAR_EMPTY_FILL = 0x663A2E64;
 	private static final int APEX_MARK = 0xD8F4D06A;
@@ -134,9 +136,9 @@ public final class FociHud {
 		Map<Integer, BudgetResolver.DormantReason> dormantReasons = readout.dormantReasons();
 		FocusDefinition[] slotDefinitions = activeSlotDefinitions(player, inv, activeSlots);
 
-		drawAbilityWell(graphics, player, inv, activeSlots, slotDefinitions, readout.stanceArgb(),
+		drawAbilityWell(graphics, player, inv, activeSlots, slotDefinitions, readout,
 			x + ABILITY_WELL_X, y + ABILITY_WELL_Y);
-		drawApexBar(graphics, readout,
+		drawApexBar(graphics, player, readout,
 			x + APEX_GEM_X, y + APEX_GEM_Y, x + APEX_BAR_X, y + APEX_BAR_Y);
 		drawTrialPip(graphics, player, readout,
 			x + APEX_BAR_X + (APEX_BAR_W - TRIAL_PIP_W) / 2, y + APEX_BAR_Y + APEX_BAR_H + 2);
@@ -181,7 +183,9 @@ public final class FociHud {
 	}
 
 	private static void drawAbilityWell(GuiGraphicsExtractor graphics, Player player, AttunedInv inv,
-			List<Integer> activeSlots, FocusDefinition[] slotDefinitions, int stanceArgb, int x, int y) {
+			List<Integer> activeSlots, FocusDefinition[] slotDefinitions,
+			AttunementReadout.Snapshot readout, int x, int y) {
+		int stanceArgb = readout.stanceArgb();
 		int syncedSlot = FocusAbilityClientState.slot();
 		if (syncedSlot == FocusAbilityStatusPayload.PACT_TACTICAL_SLOT) {
 			graphics.fill(x + 4, y + 4, x + ABILITY_WELL_SIZE - 4, y + ABILITY_WELL_SIZE - 4,
@@ -197,12 +201,30 @@ public final class FociHud {
 		int total = FocusAbilityClientState.totalTicks();
 		if (remaining > 0 && total > 0) {
 			drawCooldownRing(graphics, x, y, ABILITY_WELL_SIZE, remaining, total);
+		} else if (syncedSlot == FocusAbilityStatusPayload.PACT_TACTICAL_SLOT
+				&& player.isCrouching()
+				&& readout.atApex()
+				&& readout.resonance() >= PactTacticals.OVERCHARGE_SPEND) {
+			drawOverchargeRing(graphics, x, y, ABILITY_WELL_SIZE);
 		}
 		if (player.getAttackStrengthScale(0.0F) >= CHARGED_MELEE_THRESHOLD) {
 			int dotX = x + ABILITY_WELL_SIZE - 4;
 			int dotY = y + 1;
 			graphics.fill(dotX, dotY, dotX + 3, dotY + 3, CHARGED_MELEE_DOT);
 		}
+	}
+
+	private static void drawOverchargeRing(GuiGraphicsExtractor graphics, int x, int y, int size) {
+		long gameTime = apexPulseGameTime();
+		float pulse = (float) (Math.sin((gameTime / 8.0) * Math.PI * 2.0) * 0.5 + 0.5);
+		int alpha = Math.round(0x90 + pulse * 0x60);
+		int color = (alpha << 24) | (OVERCHARGE_RING & 0x00FFFFFF);
+		int x1 = x + size;
+		int y1 = y + size;
+		graphics.fill(x, y, x1, y + 1, color);
+		graphics.fill(x, y1 - 1, x1, y1, color);
+		graphics.fill(x, y + 1, x + 1, y1 - 1, color);
+		graphics.fill(x1 - 1, y + 1, x1, y1 - 1, color);
 	}
 
 	private static int selectedAbilitySlot(Player player, AttunedInv inv, List<Integer> activeSlots,
@@ -334,15 +356,15 @@ public final class FociHud {
 		}
 	}
 
-	private static void drawApexBar(GuiGraphicsExtractor graphics, AttunementReadout.Snapshot readout,
-			int gemX, int gemY, int barX, int barY) {
+	private static void drawApexBar(GuiGraphicsExtractor graphics, Player player,
+			AttunementReadout.Snapshot readout, int gemX, int gemY, int barX, int barY) {
 		CombatHud.drawPlayerGem(graphics, gemX, gemY, APEX_GEM_SIZE,
 			readout.committed().orElse(null), readout.discord(), readout.capstone().orElse(null), readout.atApex());
 
 		graphics.fill(barX - 1, barY - 1, barX + APEX_BAR_W + 1, barY + APEX_BAR_H + 1, BAR_EMPTY_FILL);
 		graphics.fill(barX, barY, barX + APEX_BAR_W, barY + APEX_BAR_H, BAR_TRACK);
 		graphics.fill(barX + 1, barY + 1, barX + APEX_BAR_W - 1, barY + APEX_BAR_H - 1, BAR_EMPTY_FILL);
-		float resonance = Math.max(0.0F, Math.min(1.0F, readout.resonance()));
+		float resonance = AttunementReadout.displayResonance(player);
 		int fill = Math.round(APEX_BAR_W * resonance);
 		if (fill > 0) {
 			int color = readout.stanceArgb();

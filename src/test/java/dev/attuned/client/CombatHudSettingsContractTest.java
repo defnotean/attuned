@@ -63,8 +63,8 @@ class CombatHudSettingsContractTest {
 			"Own Combat HUD stance should reuse the resonance value already read for the frame.");
 		assertTrue(source.contains("OwnStance ownStance = showOwn ? ownStance(player) : OwnStance.hidden()"),
 			"Own stance should be skipped entirely when the player HUD section is hidden.");
-		assertTrue(source.contains("new OwnStance(readout.committed(), readout.discord(), readout.capstone(), readout.resonance())"),
-			"Own Combat HUD stance should be adapted directly from the shared readout.");
+		assertTrue(source.contains("AttunementReadout.displayResonance(player)"),
+			"Own Combat HUD stance should use smoothed resonance for the bar fill.");
 	}
 
 	private static int countOccurrences(String value, String needle) {

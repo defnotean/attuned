@@ -1,0 +1,7 @@
+{
+	"item": "attuned:updraft_focus",
+	"cost": 5,
+	"unique": true,
+	"affinity": "zephyr",
+	"behavior": "attuned:updraft"
+}

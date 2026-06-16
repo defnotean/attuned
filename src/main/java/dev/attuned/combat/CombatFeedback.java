@@ -12,6 +12,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.entity.LivingEntity;
 
 /**
  * Short server-side combat feedback — particles and sounds that make resonance,
@@ -85,6 +86,8 @@ public final class CombatFeedback {
 		float pitch = 1.0F + Math.min(0.4F, (streak - 2) * 0.08F);
 		level.playSound(null, player.blockPosition(),
 			SoundEvents.PLAYER_LEVELUP, SoundSource.PLAYERS, 0.25F, pitch);
+		player.sendOverlayMessage(net.minecraft.network.chat.Component.translatable(
+			"resonance.attuned.kill_streak", streak));
 	}
 
 	public static void surgeCharge(ServerPlayer player) {
@@ -175,6 +178,135 @@ public final class CombatFeedback {
 			x, y, z, 8, 0.35, 0.35, 0.35, 0.0);
 		level.playSound(null, player.blockPosition(),
 			SoundEvents.PLAYER_ATTACK_STRONG, SoundSource.PLAYERS, 0.55F, procPitch(capstone));
+	}
+
+	/** Riptide slowness drag landed on a foe. */
+	public static void riptideDrag(ServerPlayer player, LivingEntity victim) {
+		ServerLevel level = (ServerLevel) player.level();
+		double x = victim.getX();
+		double y = victim.getY() + victim.getBbHeight() * 0.4;
+		double z = victim.getZ();
+		int color = Affinity.TIDE.argb() & 0x00FFFFFF;
+		level.sendParticles(ParticleTypes.SPLASH, x, y, z, 14, 0.4, 0.25, 0.4, 0.06);
+		level.sendParticles(ParticleTypes.BUBBLE, x, y + 0.2, z, 8, 0.3, 0.2, 0.3, 0.03);
+		level.sendParticles(new DustParticleOptions(color, 0.9F), x, y, z, 4, 0.2, 0.2, 0.2, 0.0);
+		level.playSound(null, victim.blockPosition(),
+			SoundEvents.BUBBLE_COLUMN_UPWARDS_AMBIENT, SoundSource.PLAYERS, 0.45F, 1.35F);
+	}
+
+	/** Crucible ignite landed on a foe. */
+	public static void crucibleIgnite(ServerPlayer player, LivingEntity victim) {
+		ServerLevel level = (ServerLevel) player.level();
+		double x = victim.getX();
+		double y = victim.getY() + victim.getBbHeight() * 0.5;
+		double z = victim.getZ();
+		int color = Affinity.FORGE.argb() & 0x00FFFFFF;
+		level.sendParticles(ParticleTypes.FLAME, x, y, z, 12, 0.35, 0.3, 0.35, 0.03);
+		level.sendParticles(ParticleTypes.LAVA, x, y, z, 4, 0.25, 0.2, 0.25, 0.01);
+		level.sendParticles(new DustParticleOptions(color, 1.0F), x, y, z, 6, 0.25, 0.25, 0.25, 0.0);
+		level.playSound(null, victim.blockPosition(),
+			SoundEvents.FIRECHARGE_USE, SoundSource.PLAYERS, 0.55F, 0.9F);
+	}
+
+	/** Bloomward lifesteal heal returned to the attacker. */
+	public static void bloomwardHeal(ServerPlayer player) {
+		ServerLevel level = (ServerLevel) player.level();
+		double x = player.getX();
+		double y = player.getY() + player.getBbHeight() * 0.55;
+		double z = player.getZ();
+		int color = Affinity.VERDANT.argb() & 0x00FFFFFF;
+		level.sendParticles(ParticleTypes.HAPPY_VILLAGER, x, y, z, 8, 0.35, 0.35, 0.35, 0.02);
+		level.sendParticles(new DustParticleOptions(color, 0.85F), x, y, z, 5, 0.25, 0.25, 0.25, 0.0);
+		level.playSound(null, player.blockPosition(),
+			SoundEvents.GRASS_STEP, SoundSource.PLAYERS, 0.5F, 1.3F);
+	}
+
+	/** Gloaming weakness landed on a foe. */
+	public static void gloamingWeakness(ServerPlayer player, LivingEntity victim) {
+		ServerLevel level = (ServerLevel) player.level();
+		double x = victim.getX();
+		double y = victim.getY() + victim.getBbHeight() * 0.5;
+		double z = victim.getZ();
+		int color = Affinity.UMBRAL.argb() & 0x00FFFFFF;
+		level.sendParticles(ParticleTypes.SQUID_INK, x, y, z, 10, 0.35, 0.3, 0.35, 0.02);
+		level.sendParticles(new DustParticleOptions(color, 0.95F), x, y, z, 6, 0.25, 0.25, 0.25, 0.0);
+		level.playSound(null, victim.blockPosition(),
+			SoundEvents.WARDEN_HEARTBEAT, SoundSource.PLAYERS, 0.35F, 1.2F);
+	}
+
+	/** Judgment bonus strike on a wounded Fury-aligned foe. */
+	public static void judgmentStrike(ServerPlayer player, LivingEntity victim) {
+		ServerLevel level = (ServerLevel) player.level();
+		double x = victim.getX();
+		double y = victim.getY() + victim.getBbHeight() * 0.55;
+		double z = victim.getZ();
+		int color = Affinity.HOLY.argb() & 0x00FFFFFF;
+		level.sendParticles(ParticleTypes.GLOW, x, y, z, 10, 0.35, 0.35, 0.35, 0.02);
+		level.sendParticles(ParticleTypes.CRIT, x, y, z, 8, 0.3, 0.3, 0.3, 0.1);
+		level.sendParticles(new DustParticleOptions(color, 1.1F), x, y, z, 8, 0.3, 0.3, 0.3, 0.0);
+		level.playSound(null, victim.blockPosition(),
+			SoundEvents.AMETHYST_BLOCK_CHIME, SoundSource.PLAYERS, 0.6F, 1.5F);
+	}
+
+	/** Maelstrom damage bonus hit — light discord spark. */
+	public static void maelstromHit(ServerPlayer player, LivingEntity victim) {
+		ServerLevel level = (ServerLevel) player.level();
+		double x = victim.getX();
+		double y = victim.getY() + victim.getBbHeight() * 0.5;
+		double z = victim.getZ();
+		level.sendParticles(ParticleTypes.ELECTRIC_SPARK, x, y, z, 4, 0.25, 0.25, 0.25, 0.06);
+		level.sendParticles(new DustParticleOptions(AffinityColors.DISCORD_RGB, 0.75F),
+			x, y, z, 3, 0.2, 0.2, 0.2, 0.0);
+		level.playSound(null, victim.blockPosition(),
+			SoundEvents.LIGHTNING_BOLT_IMPACT, SoundSource.PLAYERS, 0.25F, 1.6F);
+	}
+
+	/** A guaranteed Execute finisher — heavier than a generic capstone proc. */
+	public static void executeFinisher(ServerPlayer player, LivingEntity victim) {
+		ServerLevel level = (ServerLevel) player.level();
+		double x = victim.getX();
+		double y = victim.getY() + victim.getBbHeight() * 0.55;
+		double z = victim.getZ();
+		int color = Affinity.FURY.argb() & 0x00FFFFFF;
+		level.sendParticles(new DustParticleOptions(color, 1.4F), x, y, z, 24, 0.55, 0.45, 0.55, 0.0);
+		level.sendParticles(ParticleTypes.CRIT, x, y, z, 20, 0.5, 0.4, 0.5, 0.18);
+		level.sendParticles(ParticleTypes.SOUL_FIRE_FLAME, x, y, z, 10, 0.35, 0.35, 0.35, 0.04);
+		level.playSound(null, victim.blockPosition(),
+			SoundEvents.PLAYER_ATTACK_CRIT, SoundSource.PLAYERS, 0.85F, 0.75F);
+		level.playSound(null, victim.blockPosition(),
+			SoundEvents.ANVIL_LAND, SoundSource.PLAYERS, 0.35F, 1.6F);
+	}
+
+	/** Unyielding capped a single heavy blow. */
+	public static void unyieldingCap(ServerPlayer player) {
+		if (!cooldownReady(player)) {
+			return;
+		}
+		ServerLevel level = (ServerLevel) player.level();
+		double x = player.getX();
+		double y = player.getY() + player.getBbHeight() * 0.55;
+		double z = player.getZ();
+		int color = Affinity.BASTION.argb() & 0x00FFFFFF;
+		level.sendParticles(new DustParticleOptions(color, 1.0F), x, y, z, 10, 0.35, 0.35, 0.35, 0.0);
+		level.sendParticles(ParticleTypes.CRIT, x, y, z, 6, 0.25, 0.25, 0.25, 0.08);
+		level.playSound(null, player.blockPosition(),
+			SoundEvents.SHIELD_BLOCK.value(), SoundSource.PLAYERS, 0.7F, 0.95F);
+		markFeedback(player);
+	}
+
+	/** Stillpoint absorption pulse landed. */
+	public static void stillpointPulse(ServerPlayer player) {
+		if (!cooldownReady(player)) {
+			return;
+		}
+		ServerLevel level = (ServerLevel) player.level();
+		double x = player.getX();
+		double y = player.getY() + player.getBbHeight() * 0.6;
+		double z = player.getZ();
+		level.sendParticles(ParticleTypes.END_ROD, x, y, z, 6, 0.3, 0.35, 0.3, 0.02);
+		level.playSound(null, player.blockPosition(),
+			SoundEvents.AMETHYST_BLOCK_CHIME, SoundSource.PLAYERS, 0.45F, 1.1F);
+		markFeedback(player);
 	}
 
 	public static void abilityCast(ServerPlayer player, AbilityFlavor flavor) {

@@ -230,7 +230,8 @@ public final class CombatHud {
 
 	private static OwnStance ownStance(Player player) {
 		AttunementReadout.Snapshot readout = AttunementReadout.cached(player);
-		return new OwnStance(readout.committed(), readout.discord(), readout.capstone(), readout.resonance());
+		return new OwnStance(readout.committed(), readout.discord(), readout.capstone(),
+			AttunementReadout.displayResonance(player));
 	}
 
 	private static TargetStance targetedStance(@Nullable LivingEntity target) {

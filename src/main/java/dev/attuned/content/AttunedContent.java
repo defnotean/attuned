@@ -42,6 +42,7 @@ public final class AttunedContent {
 	public static final Item TIDE_FOCUS = registerFocus("tide_focus");
 	public static final Item GALESPUR_FOCUS = registerFocus("galespur_focus");
 	public static final Item RAINSTEP_FOCUS = registerFocus("rainstep_focus");
+	public static final Item UPDRAFT_FOCUS = registerFocus("updraft_focus");
 	public static final Item EMBERWARD_FOCUS = registerFocus("emberward_focus");
 	public static final Item ANCHOR_FOCUS = registerFocus("anchor_focus");
 	public static final Item AEGIS_FOCUS = registerFocus("aegis_focus");

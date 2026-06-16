@@ -40,6 +40,7 @@ class FocusUniquenessContractTest {
 		"mossheart_focus",
 		"nightgaze_focus",
 		"rainstep_focus",
+		"updraft_focus",
 		"rivet_focus",
 		"rootstep_focus",
 		"softstep_focus",

@@ -44,6 +44,7 @@ import dev.attuned.content.behavior.SunwardenBehavior;
 import dev.attuned.content.behavior.TemperBehavior;
 import dev.attuned.content.behavior.TideBehavior;
 import dev.attuned.content.behavior.TremorBehavior;
+import dev.attuned.content.behavior.UpdraftBehavior;
 import dev.attuned.content.behavior.VeilBehavior;
 import dev.attuned.content.behavior.VoidstepBehavior;
 import dev.attuned.content.behavior.WaystoneBehavior;
@@ -67,6 +68,7 @@ final class AttunedFocusBehaviors {
 		register("pearlguard", new PearlguardBehavior());
 		register("galespur", new GalespurBehavior());
 		register("rainstep", new RainstepBehavior());
+		register("updraft", new UpdraftBehavior());
 		register("emberward", new EmberwardBehavior());
 		register("anchor", new AnchorBehavior());
 		register("aegis", new AegisBehavior());

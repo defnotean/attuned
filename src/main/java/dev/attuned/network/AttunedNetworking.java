@@ -6,6 +6,7 @@ import dev.attuned.api.focus.Affinity;
 import dev.attuned.attunement.Attunement;
 import dev.attuned.combat.Apex;
 import dev.attuned.combat.Resonance;
+import dev.attuned.content.behavior.UpdraftBehavior;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
@@ -67,6 +68,18 @@ public final class AttunedNetworking {
 
 		AttunedServerCleanup.onStop(LAST_INSPECT::clear);
 		AttunedPlayerCleanup.onForget(LAST_INSPECT::remove);
+
+		PayloadTypeRegistry.serverboundPlay().register(UpdraftLiftPayload.TYPE, UpdraftLiftPayload.CODEC);
+		ServerPlayNetworking.registerGlobalReceiver(UpdraftLiftPayload.TYPE, (payload, context) -> {
+			ServerPlayer player = context.player();
+			player.level().getServer().execute(() -> {
+				if (!UpdraftBehavior.isActive(player) || !UpdraftBehavior.hasFunctionalElytra(player)) {
+					UpdraftBehavior.setLifting(player.getUUID(), false);
+					return;
+				}
+				UpdraftBehavior.setLifting(player.getUUID(), payload.lifting());
+			});
+		});
 
 		FocusAbilityState.init();
 	}

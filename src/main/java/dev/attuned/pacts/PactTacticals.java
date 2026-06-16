@@ -4,6 +4,7 @@ import dev.attuned.AttunedPlayerCleanup;
 import dev.attuned.AttunedServerCleanup;
 import dev.attuned.combat.CombatTargets;
 import dev.attuned.combat.CombatFeedback;
+import dev.attuned.combat.CombatMomentum;
 import dev.attuned.combat.Resonance;
 import dev.attuned.network.FocusAbilityState;
 import dev.attuned.network.FocusAbilityStatusPayload;
@@ -76,11 +77,40 @@ public final class PactTacticals {
 			player.sendOverlayMessage(Component.translatable("pact.attuned.tactical.overcharge"));
 		}
 		CombatFeedback.pactTactical(player, pact.get(), overcharge);
-		COOLDOWN_ENDS.put(player.getUUID(), now + COOLDOWN_TICKS);
+		int cooldown = CombatMomentum.effectiveCooldown(
+			COOLDOWN_TICKS, Resonance.killStreak(player), Resonance.atApex(player));
+		COOLDOWN_ENDS.put(player.getUUID(), now + cooldown);
 		FocusAbilityState.syncStatus(player,
-			FocusAbilityStatusPayload.PACT_TACTICAL_SLOT, COOLDOWN_TICKS, COOLDOWN_TICKS);
+			FocusAbilityStatusPayload.PACT_TACTICAL_SLOT, cooldown, cooldown);
 		player.sendOverlayMessage(Component.translatable(tacticalMessageKey(pact.get())));
 		return true;
+	}
+
+	/** Shaves ticks off an in-flight tactical cooldown (kill-streak momentum). */
+	public static void shaveCooldown(ServerPlayer player, int ticks) {
+		if (ticks <= 0) {
+			return;
+		}
+		Long endsAt = COOLDOWN_ENDS.get(player.getUUID());
+		if (endsAt == null) {
+			return;
+		}
+		long now = player.level().getGameTime();
+		if (now >= endsAt) {
+			COOLDOWN_ENDS.remove(player.getUUID());
+			return;
+		}
+		long newEnds = Math.max(now, endsAt - ticks);
+		if (newEnds <= now) {
+			COOLDOWN_ENDS.remove(player.getUUID());
+			FocusAbilityState.syncStatus(player,
+				FocusAbilityStatusPayload.PACT_TACTICAL_SLOT, 0, COOLDOWN_TICKS);
+		} else {
+			COOLDOWN_ENDS.put(player.getUUID(), newEnds);
+			int remaining = (int) (newEnds - now);
+			FocusAbilityState.syncStatus(player,
+				FocusAbilityStatusPayload.PACT_TACTICAL_SLOT, remaining, COOLDOWN_TICKS);
+		}
 	}
 
 	public static int remainingCooldown(ServerPlayer player) {

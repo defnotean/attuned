@@ -141,6 +141,14 @@ class SynergiesRuntimeContractTest {
 		assertBefore(synergies, "sawOnboarding(player", "markOnboarding(player");
 		assertTrue(synergies.contains("AttunedAttachments.markConfluenceDiscovered("),
 			"First-discovery fanfare must record the discovery for the journal.");
+		assertTrue(synergies.contains("sendOverlayMessage(discovery)"),
+			"First-discovery fanfare should surface an overlay in addition to chat.");
+		assertTrue(synergies.contains("ParticleTypes.ENCHANT"),
+			"First-discovery fanfare should add a lightweight particle burst.");
+		assertTrue(synergies.contains("oneAwayConfluence("),
+			"Synergies should expose the one-away Confluence resolver for onboarding.");
+		assertTrue(synergies.contains("SynergyResolver.previewOf("),
+			"Synergies should delegate one-away policy to SynergyResolver.previewOf.");
 	}
 
 	@Test

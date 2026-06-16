@@ -12,9 +12,11 @@ ITEM_TEXTURE_DIR = ROOT / "src" / "main" / "resources" / "assets" / "attuned" / 
 UMBRAL_DOC_DIR = ROOT / "docs" / "superpowers" / "assets" / "umbral-eclipse"
 CUSTOM_DOC_DIR = ROOT / "docs" / "superpowers" / "assets" / "custom-foci"
 ASPECT_REPLACEMENT_DOC_DIR = ROOT / "docs" / "superpowers" / "assets" / "aspect-counter-foci" / "replacements"
+UPDraft_DOC_DIR = ROOT / "docs" / "superpowers" / "assets" / "updraft-focus"
 UMBRAL_GENERATOR = ROOT / "tools" / "generate_umbral_eclipse_focus_assets.py"
 CUSTOM_GENERATOR = ROOT / "tools" / "generate_custom_focus_assets.py"
 ASPECT_REPLACEMENT_GENERATOR = ROOT / "tools" / "generate_aspect_counter_replacement_assets.py"
+UPDraft_GENERATOR = ROOT / "tools" / "generate_updraft_focus_assets.py"
 UI_GENERATOR = ROOT / "tools" / "generate_ui_art.py"
 
 UMBRAL_FOCI = (
@@ -58,6 +60,7 @@ class GenerateImageFocusAssetsContractTest(unittest.TestCase):
 			(UMBRAL_GENERATOR, "umbral-eclipse-foci-source.png"),
 			(CUSTOM_GENERATOR, "custom-foci-source.png"),
 			(ASPECT_REPLACEMENT_GENERATOR, "aspect-counter-replacements-source.png"),
+			(UPDraft_GENERATOR, "updraft-focus-source.png"),
 		):
 			source = generator.read_text(encoding="utf-8")
 			self.assertIn(source_name, source)
@@ -84,14 +87,16 @@ class GenerateImageFocusAssetsContractTest(unittest.TestCase):
 		umbral_report = json.loads((UMBRAL_DOC_DIR / "umbral-eclipse-foci-report.json").read_text(encoding="utf-8"))
 		custom_report = json.loads((CUSTOM_DOC_DIR / "asset-verification.json").read_text(encoding="utf-8"))
 		aspect_report = json.loads((ASPECT_REPLACEMENT_DOC_DIR / "asset-verification.json").read_text(encoding="utf-8"))
+		updraft_report = json.loads((UPDraft_DOC_DIR / "asset-verification.json").read_text(encoding="utf-8"))
 
-		for report in (umbral_report, custom_report, aspect_report):
+		for report in (umbral_report, custom_report, aspect_report, updraft_report):
 			self.assertEqual("OpenAI built-in image_gen", report["generated_by"])
 			self.assertNotIn("cleaned deterministic", json.dumps(report))
 
 		self.assertTrue((UMBRAL_DOC_DIR / "umbral-eclipse-foci-source.png").is_file())
 		self.assertTrue((CUSTOM_DOC_DIR / "custom-foci-source.png").is_file())
 		self.assertTrue((ASPECT_REPLACEMENT_DOC_DIR / "aspect-counter-replacements-source.png").is_file())
+		self.assertTrue((UPDraft_DOC_DIR / "updraft-focus-source.png").is_file())
 
 	def assert_animated_focus_textures(self, item_ids: tuple[str, ...]) -> None:
 		for item_id in item_ids:
@@ -116,6 +121,9 @@ class GenerateImageFocusAssetsContractTest(unittest.TestCase):
 
 	def test_aspect_counter_replacements_are_animated_focus_textures(self) -> None:
 		self.assert_animated_focus_textures(ASPECT_REPLACEMENT_FOCI)
+
+	def test_updraft_focus_is_animated_focus_texture(self) -> None:
+		self.assert_animated_focus_textures(("updraft_focus",))
 
 	def test_custom_focus_replacements_are_static_item_textures(self) -> None:
 		for item_id in CUSTOM_FOCI:

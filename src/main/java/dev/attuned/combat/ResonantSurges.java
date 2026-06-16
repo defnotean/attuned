@@ -2,9 +2,12 @@ package dev.attuned.combat;
 
 import dev.attuned.AttunedConfig;
 import dev.attuned.AttunedServerCleanup;
+import dev.attuned.content.AttunedContent;
 import dev.attuned.attunement.Attunement;
 import java.util.ArrayList;
 import java.util.List;
+import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.item.ItemStack;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleTypes;
@@ -62,6 +65,8 @@ public final class ResonantSurges {
 	private static final double SURGE_COORD_HINT_RADIUS = 128.0;
 	/** Approximate coordinate grid for the surge start broadcast. */
 	private static final int SURGE_COORD_GRID = 8;
+	/** Chance a kill inside an active surge drops shard fragments. */
+	private static final float SURGE_KILL_REWARD_CHANCE = 0.45F;
 
 	/** The single active surge, or {@code null} when none is live. Server-thread only. */
 	private static Surge active;
@@ -137,6 +142,38 @@ public final class ResonantSurges {
 
 	static float surgeResonanceGain(Player player, float baseGain) {
 		return surgeResonanceGain(baseGain, Attunement.isDiscord(player));
+	}
+
+	/** Whether the player is standing inside the live surge radius. */
+	static boolean containsPlayer(ServerPlayer player) {
+		Surge surge = active;
+		if (surge == null || !player.level().dimension().equals(surge.dimension())) {
+			return false;
+		}
+		BlockPos pos = surge.pos();
+		double dx = player.getX() - (pos.getX() + 0.5);
+		double dz = player.getZ() - (pos.getZ() + 0.5);
+		return ResonantSurgeResolver.isInside(dx, dz, AttunedConfig.get().surgeRadius());
+	}
+
+	/**
+	 * Bonus loot for fighting at the surge site — a small shard-fragment drip that
+	 * rewards players who answer the storm beacon.
+	 */
+	static void tryKillReward(ServerPlayer player) {
+		if (!containsPlayer(player) || player.getRandom().nextFloat() > SURGE_KILL_REWARD_CHANCE) {
+			return;
+		}
+		int count = 1 + player.getRandom().nextInt(2);
+		ItemStack stack = new ItemStack(AttunedContent.ATTUNEMENT_SHARD_FRAGMENT, count);
+		if (player.getInventory().add(stack)) {
+			player.sendOverlayMessage(Component.translatable("surge.attuned.kill_reward", count));
+			return;
+		}
+		ItemEntity drop = new ItemEntity(player.level(), player.getX(), player.getY() + 0.5, player.getZ(), stack);
+		drop.setDefaultPickUpDelay();
+		player.level().addFreshEntity(drop);
+		player.sendOverlayMessage(Component.translatable("surge.attuned.kill_reward", count));
 	}
 
 	/** Grants resonance and emits feedback while a surge is live; ends it on expiry. */
@@ -225,6 +262,7 @@ public final class ResonantSurges {
 		double z = pos.getZ() + 0.5;
 		level.sendParticles(ParticleTypes.ELECTRIC_SPARK, x, y, z, 40, 0.6, 3.0, 0.6, 0.5);
 		level.sendParticles(ParticleTypes.END_ROD, x, y + 2.0, z, 18, 0.3, 3.0, 0.3, 0.02);
+		level.sendParticles(ParticleTypes.END_ROD, x, y + 6.0, z, 12, 0.15, 4.0, 0.15, 0.01);
 		level.playSound(null, pos, SoundEvents.BEACON_AMBIENT, SoundSource.AMBIENT, 1.4F, 1.6F);
 	}
 

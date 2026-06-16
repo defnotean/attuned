@@ -33,7 +33,10 @@ public final class Milestones {
 		WITHER("wither", 3, "felled the Wither"),
 		END("end", 3, "reached the End"),
 		DRAGON("dragon", 4, "slew the Ender Dragon"),
-		ELDER_GUARDIAN("elder_guardian", 3, "bested an Elder Guardian");
+		ELDER_GUARDIAN("elder_guardian", 3, "bested an Elder Guardian"),
+		APEX_ARMED("apex_armed", 2, "awoke your Apex in combat"),
+		FIRST_CONFLUENCE("first_confluence", 2, "discovered your first Confluence"),
+		PACT_TRIAL("pact_trial", 3, "completed a Pact Trial");
 
 		private final String id;
 		private final int capacity;
@@ -66,6 +69,21 @@ public final class Milestones {
 				grant(player, milestone);
 			}
 		});
+	}
+
+	/** One-time capacity for the first time resonance crosses the Apex threshold. */
+	public static void onApexArmed(ServerPlayer player) {
+		grant(player, Milestone.APEX_ARMED);
+	}
+
+	/** One-time capacity for discovering any Confluence. */
+	public static void onFirstConfluence(ServerPlayer player) {
+		grant(player, Milestone.FIRST_CONFLUENCE);
+	}
+
+	/** One-time capacity for finishing any Pact Trial. */
+	public static void onPactTrialComplete(ServerPlayer player) {
+		grant(player, Milestone.PACT_TRIAL);
 	}
 
 	/** The boss-kill milestone for an entity type, or {@code null} if it is not a milestone boss. */
