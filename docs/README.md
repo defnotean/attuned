@@ -36,12 +36,11 @@ add a Focus.
 - Creative inventory content is split into **Fury & Bastion**, **Zephyr &
   Holy**, **Tide & Forge**, **Verdant & Umbral**, and **Utility & Tools** tabs
   so the full roster is easy to scan.
-- Current release headline: **Attuned 1.6.0 — Echoes & Accords** adds Pact
+- Current release headline: **Attuned 1.5.0 — Eightfold Affinities & Resonant Engagement** adds the eightfold counter wheel, Pact
   Trials (Tier 4), Affinity Loom reweaving, build sharing, faction set bonuses
   for Tideborn/Forgebound/Wildroot/Umbral, pact tacticals on the Focus Ability
   key, combat config tuning (Discord damage, resonance in config), resonant surge
-  interactivity, onboarding hints, and HUD/journal surfacing — on top of the
-  eightfold roster from 1.5.0.
+  interactivity, onboarding hints, and HUD/journal surfacing.
 
 That is the whole idea: a Focus is a trade-off, never a free bonus.
 

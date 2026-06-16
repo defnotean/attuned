@@ -21,7 +21,7 @@ Equip **Foci** into six inventory slots, but mind your **attunement capacity**. 
 - Lootr-friendly survival loot: every Focus and shard fragment rolls through vanilla structures, fishing treasure, archaeology, and trial rewards; wandering traders can rarely offer the journal or a shard fragment
 - Combat HUD shows your gem, your target's gem, and resonance at a glance
 
-## Current release — Attuned 1.6.0
+## Current release — Attuned 1.5.0
 
 - **Combat config tuning** — Discord damage multiplier and resonance gain/decay are server-configurable (`config/attuned.json`).
 - **Pact tacticals** on the Focus Ability key (**R** by default), plus new ability Foci that claim the keybind.
