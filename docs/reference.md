@@ -234,7 +234,7 @@ examples to copy from:
 | `attuned:tide`       | `TideBehavior`           | Underwater breathing. |
 | `attuned:galespur`   | `GalespurBehavior`       | Doubles the speed of living mounts while riding. |
 | `attuned:rainstep`   | `RainstepBehavior`       | Movement speed in rain, water, or waterlogged blocks. |
-| `attuned:updraft`    | `UpdraftBehavior`        | Hold jump while gliding with an elytra for smooth, steerable lift. |
+| `attuned:updraft`    | `UpdraftBehavior`        | Hold jump while gliding with an elytra for strong forward boost; pitch steers climb/dive. |
 | `attuned:anchor`     | `AnchorBehavior`         | Knockback resistance while sneaking or blocking. |
 | `attuned:rivet`      | `RivetBehavior`          | Grounded knockback resistance while crouching, blocking, or standing on metal blocks. |
 | `attuned:kilnward`   | `KilnwardBehavior`       | Hostile hits near lit furnaces, magma, or lava grant brief Resistance. |

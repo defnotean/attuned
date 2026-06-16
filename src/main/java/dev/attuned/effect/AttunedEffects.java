@@ -114,7 +114,8 @@ public final class AttunedEffects {
 
 		// A subtle ambient aura while the player has anything active, plus small
 		// custom visual motifs for specific active Foci.
-		if (!currentActive.isEmpty() && auraTick % AURA_INTERVAL == 0) {
+		// Elytra flight already fills the screen; skip head-height aura bursts.
+		if (!currentActive.isEmpty() && !player.isFallFlying() && auraTick % AURA_INTERVAL == 0) {
 			spawnAura(player, activeAffinities);
 			FocusVisualEffects.spawn(player, inv, currentActive, auraTick);
 		}

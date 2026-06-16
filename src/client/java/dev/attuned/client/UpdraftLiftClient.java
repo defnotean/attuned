@@ -1,7 +1,6 @@
 package dev.attuned.client;
 
 import dev.attuned.content.AttunedContent;
-import dev.attuned.content.behavior.UpdraftBehavior;
 import dev.attuned.attunement.AttunedAttachments;
 import dev.attuned.attunement.AttunedInv;
 import dev.attuned.attunement.Attunement;
@@ -16,12 +15,11 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 
-/**
- * Relays jump-hold while gliding to the server for {@link UpdraftBehavior}.
- */
+/** Relays jump-hold while gliding to the server for {@link dev.attuned.content.behavior.UpdraftBehavior}. */
 @Environment(EnvType.CLIENT)
 public final class UpdraftLiftClient {
 	private static boolean lastSent;
+	private static boolean hasSent;
 	private static int heartbeat;
 	private static boolean initialized;
 
@@ -39,18 +37,17 @@ public final class UpdraftLiftClient {
 		Player player = client.player;
 		if (client.level == null || player == null) {
 			lastSent = false;
+			hasSent = false;
 			heartbeat = 0;
 			return;
 		}
 		boolean wantsLift = wantsLift(player);
 		heartbeat = wantsLift ? heartbeat + 1 : 0;
-		boolean send = wantsLift != lastSent || (wantsLift && heartbeat % 10 == 0);
+		boolean send = !hasSent || wantsLift != lastSent || (wantsLift && heartbeat % 10 == 0);
 		if (send && ClientPlayNetworking.canSend(UpdraftLiftPayload.TYPE)) {
 			ClientPlayNetworking.send(new UpdraftLiftPayload(wantsLift));
 			lastSent = wantsLift;
-		}
-		if (!wantsLift && lastSent) {
-			lastSent = false;
+			hasSent = true;
 		}
 	}
 

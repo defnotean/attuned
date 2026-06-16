@@ -10,53 +10,48 @@ import dev.attuned.attunement.Attunement;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
-import net.minecraft.core.particles.ParticleTypes;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.sounds.SoundEvents;
-import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.phys.Vec3;
 
 /**
- * Updraft Focus: while fall-flying with a functional elytra, holding jump sends
- * smooth thrust along the look vector — faster than gliding alone, gentler and
- * more steerable than a firework rocket.
+ * Updraft Focus: while fall-flying with a functional elytra, holding jump adds
+ * strong forward thrust along horizontal look after vanilla movement resolves.
  */
 public final class UpdraftBehavior implements FocusBehavior {
-	/** Thrust added per tick while lift is held (blocks/tick). */
-	static final double THRUST = 0.07D;
+	/** Forward thrust added per tick while boost is held (blocks/tick). */
+	static final double THRUST = 0.24D;
+	/** Extra vertical push per tick at full look-up; scaled by look pitch. */
+	static final double VERTICAL_THRUST = 0.04D;
 	/** Hard cap on total flight speed (blocks/tick). */
-	static final double MAX_SPEED = 1.28D;
+	static final double MAX_SPEED = 2.4D;
 	/** Minimum horizontal speed while boosting so the glide never stalls out. */
-	static final double MIN_HORIZONTAL = 0.12D;
+	static final double MIN_HORIZONTAL = 0.6D;
 
 	private static final Map<UUID, Boolean> LIFTING = new HashMap<>();
+	private static final Map<UUID, Integer> LAST_FLIGHT_TICK = new HashMap<>();
 
 	static {
-		AttunedServerCleanup.onStop(LIFTING::clear);
-		AttunedPlayerCleanup.onForget(LIFTING::remove);
+		AttunedServerCleanup.onStop(() -> {
+			LIFTING.clear();
+			LAST_FLIGHT_TICK.clear();
+		});
+		AttunedPlayerCleanup.onForget(uuid -> {
+			LIFTING.remove(uuid);
+			LAST_FLIGHT_TICK.remove(uuid);
+		});
 	}
 
 	@Override
 	public void onTick(ServerPlayer player, ItemStack focus) {
-		if (!isLifting(player.getUUID())) {
-			return;
-		}
-		if (!hasFunctionalElytra(player)) {
-			setLifting(player.getUUID(), false);
-			return;
-		}
-		if (!player.isFallFlying()) {
-			if (canStartGlide(player)) {
-				player.startFallFlying();
-			} else {
-				return;
-			}
-		}
-		applyBoost(player);
+		tickFlight(player);
+	}
+
+	@Override
+	public void onDeactivate(ServerPlayer player, ItemStack focus) {
+		setLifting(player.getUUID(), false);
 	}
 
 	public static void setLifting(UUID playerId, boolean lifting) {
@@ -65,10 +60,6 @@ public final class UpdraftBehavior implements FocusBehavior {
 		} else {
 			LIFTING.remove(playerId);
 		}
-	}
-
-	static boolean isLifting(UUID playerId) {
-		return LIFTING.getOrDefault(playerId, false);
 	}
 
 	public static boolean isActive(ServerPlayer player) {
@@ -89,25 +80,59 @@ public final class UpdraftBehavior implements FocusBehavior {
 		return chest.getDamageValue() < chest.getMaxDamage() - 1;
 	}
 
-	private static boolean canStartGlide(ServerPlayer player) {
-		return !player.onGround()
-			&& !player.isInWater()
-			&& !player.isPassenger()
-			&& !player.isFallFlying()
-			&& hasFunctionalElytra(player);
+	public static void tickFlight(ServerPlayer player) {
+		if (player.tickCount == LAST_FLIGHT_TICK.getOrDefault(player.getUUID(), -1)) {
+			return;
+		}
+		LAST_FLIGHT_TICK.put(player.getUUID(), player.tickCount);
+
+		if (!isActive(player) || !hasFunctionalElytra(player)) {
+			setLifting(player.getUUID(), false);
+			return;
+		}
+		if (!wantsBoost(player)) {
+			return;
+		}
+
+		player.resetFallDistance();
+		player.fallDistance = 0.0F;
+
+		if (!player.isFallFlying() && canStartGlide(player)) {
+			player.startFallFlying();
+		}
+		if (!player.isFallFlying()) {
+			return;
+		}
+		applyFlightBoost(player);
 	}
 
-	static void applyBoost(ServerPlayer player) {
-		Vec3 look = player.getLookAngle().normalize();
-		Vec3 motion = player.getDeltaMovement();
-		Vec3 next = motion.add(look.scale(THRUST));
+	public static boolean mitigatesFallDamage(ServerPlayer player) {
+		return isActive(player) && hasFunctionalElytra(player) && wantsBoost(player);
+	}
 
-		double horizontal = Math.sqrt(next.x * next.x + next.z * next.z);
-		if (horizontal < MIN_HORIZONTAL) {
-			double yawRad = Math.toRadians(player.getYRot());
-			next = next.add(-Math.sin(yawRad) * MIN_HORIZONTAL * 0.15D, 0.0D,
-				Math.cos(yawRad) * MIN_HORIZONTAL * 0.15D);
+	static boolean wantsBoost(ServerPlayer player) {
+		if (LIFTING.getOrDefault(player.getUUID(), false)) {
+			return true;
 		}
+		return player.getLastClientInput().jump();
+	}
+
+	public static void applyFlightBoost(ServerPlayer player) {
+		Vec3 forward = horizontalLook(player);
+		Vec3 motion = player.getDeltaMovement();
+		Vec3 look = player.getLookAngle();
+
+		double forwardSpeed = motion.x * forward.x + motion.z * forward.z;
+		double targetForward = Math.max(forwardSpeed + THRUST, MIN_HORIZONTAL);
+		Vec3 horizontal = new Vec3(motion.x, 0.0D, motion.z);
+		Vec3 lateral = horizontal.subtract(forward.scale(forwardSpeed));
+		Vec3 boostedHorizontal = lateral.add(forward.scale(targetForward));
+
+		Vec3 next = new Vec3(
+			boostedHorizontal.x,
+			motion.y + look.y * VERTICAL_THRUST,
+			boostedHorizontal.z
+		);
 
 		double speed = next.length();
 		if (speed > MAX_SPEED) {
@@ -117,15 +142,24 @@ public final class UpdraftBehavior implements FocusBehavior {
 		player.setDeltaMovement(next);
 		player.resetFallDistance();
 		player.fallDistance = 0.0F;
+		player.hurtMarked = true;
+	}
 
-		if (!(player.level() instanceof ServerLevel level) || player.tickCount % 3 != 0) {
-			return;
+	private static boolean canStartGlide(ServerPlayer player) {
+		return !player.onGround()
+			&& !player.isInWater()
+			&& !player.isPassenger()
+			&& !player.isFallFlying()
+			&& hasFunctionalElytra(player);
+	}
+
+	private static Vec3 horizontalLook(ServerPlayer player) {
+		Vec3 look = player.getLookAngle();
+		Vec3 flat = new Vec3(look.x, 0.0D, look.z);
+		if (flat.lengthSqr() < 1.0E-4D) {
+			double yawRad = Math.toRadians(player.getYRot());
+			return new Vec3(-Math.sin(yawRad), 0.0D, Math.cos(yawRad));
 		}
-		Vec3 trail = player.position().subtract(look.scale(0.6D)).add(0.0D, player.getBbHeight() * 0.45D, 0.0D);
-		level.sendParticles(ParticleTypes.CLOUD, trail.x, trail.y, trail.z, 2, 0.08D, 0.05D, 0.08D, 0.01D);
-		if (player.tickCount % 12 == 0) {
-			level.playSound(null, player.blockPosition(),
-				SoundEvents.FIREWORK_ROCKET_LAUNCH, SoundSource.PLAYERS, 0.12F, 1.65F);
-		}
+		return flat.normalize();
 	}
 }
