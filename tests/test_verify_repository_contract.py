@@ -288,6 +288,24 @@ class VerifyRepositoryContractTest(unittest.TestCase):
             self.assertTrue(any("missing model attuned:item/missing_model" in problem for problem in problems))
             self.assertTrue(any("missing texture attuned:item/missing_texture" in problem for problem in problems))
 
+    def test_attuned_asset_references_report_missing_model_parents(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            model_dir = root / "src" / "main" / "resources" / "assets" / "attuned" / "models" / "item"
+            texture_dir = root / "src" / "main" / "resources" / "assets" / "attuned" / "textures" / "item"
+            model_dir.mkdir(parents=True)
+            texture_dir.mkdir(parents=True)
+            (model_dir / "child.json").write_text(
+                '{"parent": "attuned:item/missing_parent", "textures": {"layer0": "attuned:item/child"}}',
+                encoding="utf-8",
+            )
+            write_complete_png(texture_dir / "child.png", 16, 16)
+
+            problems = verify_repository.attuned_asset_reference_problems(root)
+
+            self.assertEqual(len(problems), 1)
+            self.assertIn("missing parent model attuned:item/missing_parent", problems[0])
+
     def test_attuned_asset_references_walk_nested_item_definition_models(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
             root = Path(temp_dir)
@@ -322,6 +340,24 @@ class VerifyRepositoryContractTest(unittest.TestCase):
             problems = verify_repository.attuned_asset_reference_problems(root)
 
             self.assertEqual([], problems)
+
+    def test_static_translation_key_problems_report_missing_java_literals(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            lang_path = root / "src" / "main" / "resources" / "assets" / "attuned" / "lang" / "en_us.json"
+            java_path = root / "src" / "main" / "java" / "dev" / "attuned" / "Sample.java"
+            lang_path.parent.mkdir(parents=True)
+            java_path.parent.mkdir(parents=True)
+            lang_path.write_text('{"item.attuned.present": "Present"}\n', encoding="utf-8")
+            java_path.write_text(
+                'class Sample { void run() { Component.translatable("item.attuned.missing"); } }\n',
+                encoding="utf-8",
+            )
+
+            problems = verify_repository.static_translation_key_problems(root)
+
+            self.assertEqual(len(problems), 1)
+            self.assertIn("missing lang item.attuned.missing", problems[0])
 
 
 if __name__ == "__main__":

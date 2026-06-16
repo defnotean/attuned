@@ -17,9 +17,14 @@ ROOT = Path(__file__).resolve().parents[1]
 SRC_ROOT = ROOT / "src"
 PNG_RESOURCE_ROOT = SRC_ROOT / "main" / "resources"
 ATTUNED_ASSET_RELATIVE_DIR = Path("src/main/resources/assets/attuned")
+ATTUNED_LANG_RELATIVE_FILE = Path("src/main/resources/assets/attuned/lang/en_us.json")
 MODRINTH_GALLERY_RELATIVE_DIR = Path("docs/modrinth-gallery")
 PYTHON_ROOTS = (ROOT / "tools", ROOT / "tests")
 SOURCE_SCAN_ROOTS = (ROOT / "src", ROOT / "tools", ROOT / "tests", ROOT / ".github")
+JAVA_SOURCE_RELATIVE_DIRS = (
+    Path("src/main/java"),
+    Path("src/client/java"),
+)
 FOCUS_DEFINITION_RELATIVE_DIR = Path("src/main/resources/data/attuned/attuned/focus")
 GRADLE_PROPERTIES_RELATIVE_FILE = Path("gradle.properties")
 BUILD_GRADLE_RELATIVE_FILE = Path("build.gradle")
@@ -130,6 +135,24 @@ ASSIGNMENT_PATTERN = re.compile(
     re.IGNORECASE,
 )
 README_FOCI_PATTERN = re.compile(r"\b(?P<count>\d+)\s+Foci\b")
+STATIC_TRANSLATION_PATTERNS = (
+    re.compile(r"Component\.translatable\(\"(?P<key>[^\"]+)\"\)"),
+    re.compile(r"I18n\.get\(\"(?P<key>[^\"]+)\"\)"),
+)
+ATTUNED_TRANSLATION_PREFIXES = (
+    "advancement.attuned.",
+    "block.attuned.",
+    "confluence.attuned.",
+    "container.attuned.",
+    "inspect.attuned.",
+    "item.attuned.",
+    "journal.attuned.",
+    "key.attuned.",
+    "message.attuned.",
+    "pact.attuned.",
+    "screen.attuned.",
+    "tooltip.attuned.",
+)
 PUBLIC_FOCUS_COUNT_RELATIVE_FILES = (
     Path("README.md"),
     Path("docs/platform/modrinth-description.md"),
@@ -353,6 +376,10 @@ def attuned_model_path(asset_dir: Path, model_id: str) -> Path | None:
     return asset_dir / "models" / f"{path}.json"
 
 
+def attuned_model_parent_path(asset_dir: Path, parent_id: str) -> Path | None:
+    return attuned_model_path(asset_dir, parent_id)
+
+
 def attuned_asset_reference_problems(root: Path = ROOT) -> list[str]:
     asset_dir = root / ATTUNED_ASSET_RELATIVE_DIR
     problems: list[str] = []
@@ -384,6 +411,11 @@ def attuned_asset_reference_problems(root: Path = ROOT) -> list[str]:
         except (OSError, json.JSONDecodeError) as exc:
             problems.append(f"{relative(path, root)}: {exc}")
             continue
+        parent_id = data.get("parent")
+        if isinstance(parent_id, str):
+            parent_path = attuned_model_parent_path(asset_dir, parent_id)
+            if parent_path is not None and not parent_path.is_file():
+                problems.append(f"{relative(path, root)}: missing parent model {parent_id}")
         for texture_id in sorted(set(iter_model_texture_values(data))):
             texture_path = attuned_texture_path(asset_dir, texture_id)
             if texture_path is not None and not texture_path.is_file():
@@ -399,6 +431,51 @@ def check_attuned_asset_references() -> str:
     item_defs = len(list((asset_dir / "items").glob("*.json")))
     models = len(list((asset_dir / "models").rglob("*.json")))
     return f"Attuned asset references: {item_defs} item definitions, {models} models"
+
+
+def load_attuned_lang(root: Path = ROOT) -> dict[str, object]:
+    lang_path = root / ATTUNED_LANG_RELATIVE_FILE
+    with lang_path.open("r", encoding="utf-8") as handle:
+        data = json.load(handle)
+    if not isinstance(data, dict):
+        raise ValueError(f"{relative(lang_path, root)}: language file must be a JSON object")
+    return data
+
+
+def is_attuned_translation_key(key: str) -> bool:
+    return key.startswith(ATTUNED_TRANSLATION_PREFIXES)
+
+
+def static_translation_key_problems(root: Path = ROOT) -> list[str]:
+    try:
+        lang = load_attuned_lang(root)
+    except (OSError, json.JSONDecodeError, ValueError) as exc:
+        return [str(exc)]
+
+    problems: list[str] = []
+    for relative_dir in JAVA_SOURCE_RELATIVE_DIRS:
+        source_dir = root / relative_dir
+        if not source_dir.is_dir():
+            continue
+        for path in sorted(source_dir.rglob("*.java")):
+            try:
+                text = path.read_text(encoding="utf-8")
+            except OSError as exc:
+                problems.append(f"{relative(path, root)}: {exc}")
+                continue
+            for pattern in STATIC_TRANSLATION_PATTERNS:
+                for match in pattern.finditer(text):
+                    key = match.group("key")
+                    if is_attuned_translation_key(key) and key not in lang:
+                        problems.append(f"{relative(path, root)}: missing lang {key}")
+    return sorted(set(problems))
+
+
+def check_static_translation_keys() -> str:
+    problems = static_translation_key_problems()
+    if problems:
+        raise CheckFailed("Static translation keys", problems)
+    return "Static translation keys: Java literals resolve"
 
 
 def scan_issue_markers(paths: Iterable[Path], root: Path = ROOT) -> list[str]:
@@ -752,6 +829,7 @@ def run_checks() -> int:
         check_src_json,
         check_png_resources,
         check_attuned_asset_references,
+        check_static_translation_keys,
         check_modrinth_gallery_pngs,
         check_public_focus_counts,
         check_modrinth_changelog,
