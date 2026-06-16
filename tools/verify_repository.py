@@ -16,6 +16,7 @@ from typing import Iterable
 ROOT = Path(__file__).resolve().parents[1]
 SRC_ROOT = ROOT / "src"
 PNG_RESOURCE_ROOT = SRC_ROOT / "main" / "resources"
+ATTUNED_ASSET_RELATIVE_DIR = Path("src/main/resources/assets/attuned")
 MODRINTH_GALLERY_RELATIVE_DIR = Path("docs/modrinth-gallery")
 PYTHON_ROOTS = (ROOT / "tools", ROOT / "tests")
 SOURCE_SCAN_ROOTS = (ROOT / "src", ROOT / "tools", ROOT / "tests", ROOT / ".github")
@@ -300,6 +301,104 @@ def check_modrinth_gallery_pngs() -> str:
     if problems:
         raise CheckFailed("Modrinth gallery PNGs", problems)
     return f"Modrinth gallery PNGs: {len(EXPECTED_MODRINTH_GALLERY_PNGS)} files"
+
+
+def iter_item_definition_model_ids(value: object) -> Iterable[str]:
+    if isinstance(value, dict):
+        model = value.get("model")
+        if isinstance(model, str):
+            yield model
+        for nested in value.values():
+            yield from iter_item_definition_model_ids(nested)
+    elif isinstance(value, list):
+        for nested in value:
+            yield from iter_item_definition_model_ids(nested)
+
+
+def iter_model_texture_values(value: object) -> Iterable[str]:
+    if isinstance(value, dict):
+        textures = value.get("textures")
+        if isinstance(textures, dict):
+            for texture in textures.values():
+                if isinstance(texture, str):
+                    yield texture
+        for key, nested in value.items():
+            if key == "texture" and isinstance(nested, str):
+                yield nested
+            yield from iter_model_texture_values(nested)
+    elif isinstance(value, list):
+        for nested in value:
+            yield from iter_model_texture_values(nested)
+
+
+def attuned_texture_path(asset_dir: Path, texture_id: str) -> Path | None:
+    if texture_id.startswith("#"):
+        return None
+    namespace, separator, path = texture_id.partition(":")
+    if not separator:
+        namespace = "minecraft"
+        path = texture_id
+    if namespace != "attuned":
+        return None
+    return asset_dir / "textures" / f"{path}.png"
+
+
+def attuned_model_path(asset_dir: Path, model_id: str) -> Path | None:
+    namespace, separator, path = model_id.partition(":")
+    if not separator:
+        namespace = "minecraft"
+        path = model_id
+    if namespace != "attuned":
+        return None
+    return asset_dir / "models" / f"{path}.json"
+
+
+def attuned_asset_reference_problems(root: Path = ROOT) -> list[str]:
+    asset_dir = root / ATTUNED_ASSET_RELATIVE_DIR
+    problems: list[str] = []
+    item_definitions = asset_dir / "items"
+    model_dir = asset_dir / "models"
+    if not asset_dir.is_dir():
+        return [f"{relative(asset_dir, root)}: missing Attuned asset directory"]
+
+    item_definition_paths = sorted(item_definitions.glob("*.json")) if item_definitions.is_dir() else []
+    for path in item_definition_paths:
+        try:
+            data = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError) as exc:
+            problems.append(f"{relative(path, root)}: {exc}")
+            continue
+        model_ids = sorted(set(iter_item_definition_model_ids(data)))
+        if not model_ids:
+            problems.append(f"{relative(path, root)}: missing item model id")
+            continue
+        for model_id in model_ids:
+            model_path = attuned_model_path(asset_dir, model_id)
+            if model_path is not None and not model_path.is_file():
+                problems.append(f"{relative(path, root)}: missing model {model_id}")
+
+    model_paths = sorted(model_dir.rglob("*.json")) if model_dir.is_dir() else []
+    for path in model_paths:
+        try:
+            data = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError) as exc:
+            problems.append(f"{relative(path, root)}: {exc}")
+            continue
+        for texture_id in sorted(set(iter_model_texture_values(data))):
+            texture_path = attuned_texture_path(asset_dir, texture_id)
+            if texture_path is not None and not texture_path.is_file():
+                problems.append(f"{relative(path, root)}: missing texture {texture_id}")
+    return problems
+
+
+def check_attuned_asset_references() -> str:
+    problems = attuned_asset_reference_problems()
+    if problems:
+        raise CheckFailed("Attuned asset references", problems)
+    asset_dir = ROOT / ATTUNED_ASSET_RELATIVE_DIR
+    item_defs = len(list((asset_dir / "items").glob("*.json")))
+    models = len(list((asset_dir / "models").rglob("*.json")))
+    return f"Attuned asset references: {item_defs} item definitions, {models} models"
 
 
 def scan_issue_markers(paths: Iterable[Path], root: Path = ROOT) -> list[str]:
@@ -652,6 +751,7 @@ def run_checks() -> int:
     checks = (
         check_src_json,
         check_png_resources,
+        check_attuned_asset_references,
         check_modrinth_gallery_pngs,
         check_public_focus_counts,
         check_modrinth_changelog,

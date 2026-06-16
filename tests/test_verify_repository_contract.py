@@ -262,6 +262,67 @@ class VerifyRepositoryContractTest(unittest.TestCase):
             self.assertIn("attuned-zephyr-foci.png", problems[0])
             self.assertIn("IDAT", problems[0])
 
+    def test_attuned_asset_references_report_missing_models_and_textures(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            asset_dir = root / "src" / "main" / "resources" / "assets" / "attuned"
+            items = asset_dir / "items"
+            models = asset_dir / "models" / "item"
+            textures = asset_dir / "textures" / "item"
+            items.mkdir(parents=True)
+            models.mkdir(parents=True)
+            textures.mkdir(parents=True)
+            (items / "missing_model.json").write_text(
+                '{"model": {"type": "minecraft:model", "model": "attuned:item/missing_model"}}',
+                encoding="utf-8",
+            )
+            (models / "missing_texture.json").write_text(
+                '{"parent": "minecraft:item/generated", "textures": {"layer0": "attuned:item/missing_texture"}}',
+                encoding="utf-8",
+            )
+            write_complete_png(textures / "unused_valid_texture.png", 16, 16)
+
+            problems = verify_repository.attuned_asset_reference_problems(root)
+
+            self.assertEqual(len(problems), 2)
+            self.assertTrue(any("missing model attuned:item/missing_model" in problem for problem in problems))
+            self.assertTrue(any("missing texture attuned:item/missing_texture" in problem for problem in problems))
+
+    def test_attuned_asset_references_walk_nested_item_definition_models(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            asset_dir = root / "src" / "main" / "resources" / "assets" / "attuned"
+            items = asset_dir / "items"
+            models = asset_dir / "models" / "item"
+            textures = asset_dir / "textures" / "item"
+            items.mkdir(parents=True)
+            models.mkdir(parents=True)
+            textures.mkdir(parents=True)
+            (items / "nested.json").write_text(
+                """{
+  "model": {
+    "type": "minecraft:select",
+    "cases": [{
+      "when": "gui",
+      "model": {"type": "minecraft:model", "model": "attuned:item/nested_inventory"}
+    }],
+    "fallback": {"type": "minecraft:model", "model": "attuned:item/nested_held"}
+  }
+}
+""",
+                encoding="utf-8",
+            )
+            for name in ("nested_inventory", "nested_held"):
+                (models / f"{name}.json").write_text(
+                    f'{{"parent": "minecraft:item/generated", "textures": {{"layer0": "attuned:item/{name}"}}}}',
+                    encoding="utf-8",
+                )
+                write_complete_png(textures / f"{name}.png", 16, 16)
+
+            problems = verify_repository.attuned_asset_reference_problems(root)
+
+            self.assertEqual([], problems)
+
 
 if __name__ == "__main__":
     unittest.main()
