@@ -206,6 +206,7 @@ class AttunementJournalUiContractTest {
 
 		assertEightfoldPactPages(screenSource, itemSource, lang);
 		assertEightfoldCapstonePages(screenSource, itemSource, lang);
+		assertPhase3SurfacingPages(screenSource, itemSource, lang);
 	}
 
 	/**
@@ -270,6 +271,42 @@ class AttunementJournalUiContractTest {
 				&& itemSource.indexOf("\"journal.attuned.page41\"")
 				< itemSource.indexOf("\"journal.attuned.page30\""),
 			"Written-book fallback should keep the capstone page beside the base Apex page.");
+	}
+
+	private static void assertPhase3SurfacingPages(String screenSource, String itemSource, String lang) {
+		assertTrue(lang.contains("\"journal.attuned.page_tempering\""),
+			"Journal copy should include the Tempering page.");
+		assertTrue(lang.contains("\"journal.attuned.pact_trials.title\""),
+			"Journal copy should include the Pact Trials page title.");
+		assertTrue(lang.contains("\"journal.attuned.trial.progress\""),
+			"Journal copy should include pact trial progress formatting.");
+		assertTrue(lang.contains("\"journal.attuned.trial.complete\""),
+			"Journal copy should include pact trial completion copy.");
+		assertTrue(screenSource.contains("journal.attuned.page_tempering"),
+			"Journal UI should route to the Tempering page.");
+		assertTrue(screenSource.contains("PACT_TRIALS_PAGE_KEY"),
+			"Journal UI should include the dynamic Pact Trials page.");
+		assertTrue(screenSource.contains("pactTrialPageText()"),
+			"Journal UI should build pact trial progress from the synced attachment.");
+		assertTrue(screenSource.contains("AttunedAttachments.getPactTrialProgress(player)"),
+			"Journal UI should read pact trial progress through AttunedAttachments.");
+		assertTrue(itemSource.contains("\"journal.attuned.page_tempering\""),
+			"Written-book fallback should include the Tempering page.");
+		assertTrue(screenSource.indexOf("journal.attuned.page13")
+				< screenSource.indexOf("journal.attuned.page_tempering"),
+			"Tempering page should follow the Builds adjusting page.");
+		assertTrue(screenSource.indexOf("page(\"journal.attuned.page18\"")
+				< screenSource.indexOf("dynamicPage(PACT_TRIALS_PAGE_KEY")
+				&& screenSource.indexOf("dynamicPage(PACT_TRIALS_PAGE_KEY")
+				< screenSource.indexOf("page(\"journal.attuned.page19\""),
+			"Pact Trials page should sit between Untethered and Discord in the Pacts chapter.");
+		String temperingPage = translationValue(lang, "journal.attuned.page_tempering").replace("\\n", "\n");
+		assertTrue(temperingPage.contains("Tempered"),
+			"Tempering journal copy should name the Tempered result.");
+		assertTrue(temperingPage.contains("+25%"),
+			"Tempering journal copy should mention the stat bonus.");
+		assertTrue(temperingPage.contains("+1"),
+			"Tempering journal copy should mention the extra attunement cost.");
 	}
 
 	@Test

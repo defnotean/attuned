@@ -5,12 +5,14 @@ import dev.attuned.AttunedRegistries;
 import dev.attuned.api.focus.Affinity;
 import dev.attuned.api.focus.FocusDefinition;
 import dev.attuned.api.focus.ModifierEntry;
+import dev.attuned.api.synergy.SynergyDefinition;
 import dev.attuned.attunement.AttunedAttachments;
 import dev.attuned.attunement.AttunedInv;
 import dev.attuned.attunement.Attunement;
 import dev.attuned.attunement.BudgetResolver;
 import dev.attuned.attunement.FocusLookup;
 import dev.attuned.content.AttunedComponents;
+import dev.attuned.synergy.SynergyResolver;
 import net.fabricmc.fabric.api.client.item.v1.ItemTooltipCallback;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
@@ -20,9 +22,14 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 
 /**
  * Appends Attuned flavour and stats to item tooltips: two lines of lore and a
@@ -105,9 +112,14 @@ public final class AttunedTooltips {
 							.withStyle(ChatFormatting.GRAY)));
 				}
 
+				Player player = Minecraft.getInstance().player;
+				if (player != null && nearUndiscoveredConfluence(player, stack)) {
+					lines.add(Component.translatable("tooltip.attuned.confluence.near")
+						.withStyle(ChatFormatting.GRAY));
+				}
+
 				// Equipped status: AttunedInv returns defensive stack copies, so compare
 				// item/components instead of relying on the mutable stack identity.
-				var player = Minecraft.getInstance().player;
 				if (player != null) {
 					AttunedInv inv = AttunedAttachments.getInventory(player);
 					for (int slot = 0; slot < AttunedInv.SIZE; slot++) {
@@ -142,6 +154,77 @@ public final class AttunedTooltips {
 		Registry<FocusDefinition> registry =
 			minecraft.level.registryAccess().lookupOrThrow(AttunedRegistries.FOCUS_DEFINITIONS);
 		return FocusLookup.forItem(registry, stack.getItem()).orElse(null);
+	}
+
+	/**
+	 * True when this Focus belongs to an undiscovered Confluence and the player has
+	 * every member but one already equipped — a client-only scan mirroring
+	 * {@link SynergyResolver#previewOf} but for undiscovered sets so the hint teases
+	 * without naming the Confluence.
+	 */
+	private static boolean nearUndiscoveredConfluence(Player player, ItemStack stack) {
+		Minecraft minecraft = Minecraft.getInstance();
+		if (minecraft.level == null) {
+			return false;
+		}
+		Registry<FocusDefinition> focusRegistry =
+			minecraft.level.registryAccess().lookupOrThrow(AttunedRegistries.FOCUS_DEFINITIONS);
+		FocusDefinition focus = FocusLookup.forItem(focusRegistry, stack.getItem()).orElse(null);
+		if (focus == null) {
+			return false;
+		}
+		String focusId = BuiltInRegistries.ITEM.getKey(focus.item().value()).toString();
+
+		Set<String> activeFocusIds = equippedFocusIds(player, focusRegistry);
+		Set<String> discovered = new HashSet<>(AttunedAttachments.getDiscoveredConfluences(player));
+
+		Registry<SynergyDefinition> synergyRegistry =
+			minecraft.level.registryAccess().lookupOrThrow(AttunedRegistries.SYNERGY_DEFINITIONS);
+		List<SynergyResolver.SynergyDef> defs = new ArrayList<>();
+		synergyRegistry.listElements().forEach(holder -> {
+			SynergyDefinition def = holder.value();
+			String id = synergyRegistry.getKey(def).toString();
+			List<String> members = def.members().stream().map(Identifier::toString).toList();
+			defs.add(new SynergyResolver.SynergyDef(id, members));
+		});
+
+		String candidate = null;
+		for (SynergyResolver.SynergyDef def : defs) {
+			if (def.members().isEmpty() || discovered.contains(def.id())) {
+				continue;
+			}
+			if (!def.members().contains(focusId)) {
+				continue;
+			}
+			int activeMembers = 0;
+			for (String member : def.members()) {
+				if (activeFocusIds.contains(member)) {
+					activeMembers++;
+				}
+			}
+			if (activeMembers != def.members().size() - 1) {
+				continue;
+			}
+			if (candidate != null) {
+				return false;
+			}
+			candidate = def.id();
+		}
+		return candidate != null;
+	}
+
+	private static Set<String> equippedFocusIds(Player player, Registry<FocusDefinition> focusRegistry) {
+		Set<String> activeFocusIds = new HashSet<>();
+		AttunedInv inv = AttunedAttachments.getInventory(player);
+		for (int slot = 0; slot < AttunedInv.SIZE; slot++) {
+			ItemStack equipped = inv.get(slot);
+			if (equipped.isEmpty()) {
+				continue;
+			}
+			FocusLookup.forItem(focusRegistry, equipped.getItem()).ifPresent(def ->
+				activeFocusIds.add(BuiltInRegistries.ITEM.getKey(def.item().value()).toString()));
+		}
+		return activeFocusIds;
 	}
 
 	private static String affinityName(Affinity affinity) {

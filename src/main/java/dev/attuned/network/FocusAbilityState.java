@@ -7,9 +7,11 @@ import dev.attuned.AttunedServerCleanup;
 import dev.attuned.api.focus.FocusBehavior;
 import dev.attuned.api.focus.FocusDefinition;
 import dev.attuned.combat.Apex;
+import dev.attuned.pacts.PactTacticals;
 import dev.attuned.attunement.AttunedAttachments;
 import dev.attuned.attunement.AttunedInv;
 import dev.attuned.attunement.Attunement;
+import dev.attuned.onboarding.Onboarding;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -50,7 +52,10 @@ public final class FocusAbilityState {
 	public static void trigger(ServerPlayer player) {
 		AbilitySelection selection = firstActiveAbility(player);
 		if (selection == null) {
-			// No active ability Focus: an armed Apex capstone may fire its identity ability.
+			// No active ability Focus: pact tactical, then an armed Apex capstone identity ability.
+			if (PactTacticals.tryTrigger(player)) {
+				return;
+			}
 			if (Apex.tryIdentityAbility(player)) {
 				return;
 			}
@@ -74,6 +79,8 @@ public final class FocusAbilityState {
 			sync(player, selection.slot(), 0, abilityCooldownTicks(selection.behavior(), player, selection.stack()));
 			return;
 		}
+
+		Onboarding.tryAbilityHint(player);
 
 		int total = abilityCooldownTicks(selection.behavior(), player, selection.stack());
 		if (total > 0) {
@@ -120,7 +127,7 @@ public final class FocusAbilityState {
 		return remaining;
 	}
 
-	static int cooldownSecondsForMessage(int remainingTicks) {
+	public static int cooldownSecondsForMessage(int remainingTicks) {
 		if (remainingTicks <= 0) {
 			return 0;
 		}
@@ -135,7 +142,13 @@ public final class FocusAbilityState {
 		for (ServerPlayer player : server.getPlayerList().getPlayers()) {
 			AbilitySelection selection = firstActiveAbility(player);
 			if (selection == null) {
-				sync(player, FocusAbilityStatusPayload.NO_ABILITY_SLOT, 0, 0);
+				int pactRemaining = PactTacticals.remainingCooldown(player);
+				if (pactRemaining > 0) {
+					sync(player, FocusAbilityStatusPayload.PACT_TACTICAL_SLOT,
+						pactRemaining, PactTacticals.COOLDOWN_TICKS);
+				} else {
+					sync(player, FocusAbilityStatusPayload.NO_ABILITY_SLOT, 0, 0);
+				}
 				continue;
 			}
 			int remaining = cooldownRemaining(player, selection);
@@ -181,6 +194,10 @@ public final class FocusAbilityState {
 			ServerPlayer player, ItemStack stack, RuntimeException e) {
 		Attuned.LOGGER.warn("Attuned Focus ability {} failed for {} using {} ({})",
 			phase, player.getUUID(), stack.getItem(), behavior.getClass().getName(), e);
+	}
+
+	public static void syncStatus(ServerPlayer player, int slot, int remainingTicks, int totalTicks) {
+		sync(player, slot, remainingTicks, totalTicks);
 	}
 
 	private static void sync(ServerPlayer player, int slot, int remainingTicks, int totalTicks) {

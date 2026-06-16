@@ -11,9 +11,14 @@ import net.minecraft.resources.Identifier;
 /** Server-to-client state for the player's selected Focus Ability and cooldown. */
 public record FocusAbilityStatusPayload(int slot, int remainingTicks, int totalTicks) implements CustomPacketPayload {
 	public static final int NO_ABILITY_SLOT = -1;
+	public static final int PACT_TACTICAL_SLOT = -2;
 
 	public FocusAbilityStatusPayload {
-		if (slot < 0 || slot >= AttunedInv.SIZE) {
+		if (slot == PACT_TACTICAL_SLOT) {
+			totalTicks = Math.max(0, totalTicks);
+			remainingTicks = Math.min(Math.max(0, remainingTicks),
+				totalTicks > 0 ? totalTicks : Math.max(0, remainingTicks));
+		} else if (slot < 0 || slot >= AttunedInv.SIZE) {
 			slot = NO_ABILITY_SLOT;
 			remainingTicks = 0;
 			totalTicks = 0;

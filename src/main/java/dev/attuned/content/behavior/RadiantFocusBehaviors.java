@@ -5,6 +5,7 @@ import dev.attuned.AttunedPlayerCleanup;
 import dev.attuned.AttunedServerCleanup;
 import dev.attuned.api.focus.FocusBehavior;
 import dev.attuned.combat.AttunedCombat;
+import dev.attuned.combat.CombatFeedback;
 import dev.attuned.combat.CombatTargets;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -185,6 +186,10 @@ public final class RadiantFocusBehaviors {
 	public static final class Oathguard implements FocusBehavior {
 		private static final int COOLDOWN_TICKS = 240;
 		private static final int ABSORPTION_TICKS = 60;
+		private static final int WITNESS_COOLDOWN_TICKS = 360;
+		private static final int WITNESS_GLOW_TICKS = 60;
+		private static final int WITNESS_REGEN_TICKS = 60;
+		private static final double WITNESS_RADIUS = 8.0D;
 
 		private final Map<UUID, Integer> cooldowns = new HashMap<>();
 		private final Set<UUID> active = new HashSet<>();
@@ -222,6 +227,35 @@ public final class RadiantFocusBehaviors {
 		public void onDeactivate(ServerPlayer player, ItemStack focus) {
 			active.remove(player.getUUID());
 			cooldowns.remove(player.getUUID());
+		}
+
+		@Override
+		public boolean hasActiveAbility() {
+			return true;
+		}
+
+		@Override
+		public int abilityCooldownTicks() {
+			return WITNESS_COOLDOWN_TICKS;
+		}
+
+		@Override
+		public boolean onAbility(ServerPlayer player, ItemStack focus) {
+			ServerLevel level = (ServerLevel) player.level();
+			List<LivingEntity> targets = level.getEntitiesOfClass(LivingEntity.class,
+				player.getBoundingBox().inflate(WITNESS_RADIUS),
+				target -> target.isAlive()
+					&& CombatTargets.isHostileOrPvpOpponent(target, player)
+					&& !MaskBehavior.resistsReveal(target)
+					&& player.hasLineOfSight(target));
+			for (LivingEntity target : targets) {
+				target.addEffect(new MobEffectInstance(
+					MobEffects.GLOWING, WITNESS_GLOW_TICKS, 0, true, false, true));
+			}
+			player.addEffect(new MobEffectInstance(
+				MobEffects.REGENERATION, WITNESS_REGEN_TICKS, 0, true, false, true));
+			CombatFeedback.abilityCast(player, CombatFeedback.AbilityFlavor.HOLY);
+			return true;
 		}
 
 		private void afterDamage(LivingEntity defender, DamageSource source,

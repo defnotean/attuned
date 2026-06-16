@@ -292,6 +292,9 @@ public final class Apex {
 				float threshold = matchup == Matchup.EMPOWERED ? EXECUTE_EMPOWERED : EXECUTE_NORMAL;
 				if (defender.getHealth() / defender.getMaxHealth() <= threshold) {
 					amount = Math.max(amount, EXECUTE_DAMAGE);
+					if (attackerPlayer instanceof ServerPlayer serverPlayer) {
+						CombatFeedback.apexProc(serverPlayer, Capstone.EXECUTE);
+					}
 				}
 			}
 		}
@@ -305,6 +308,9 @@ public final class Apex {
 			if (matchup == Matchup.EMPOWERED
 					&& defender.getHealth() / defender.getMaxHealth() <= JUDGMENT_THRESHOLD) {
 				amount *= (1.0F + JUDGMENT_DAMAGE_BONUS);
+				if (attackerPlayer instanceof ServerPlayer serverPlayer) {
+					CombatFeedback.apexProc(serverPlayer, Capstone.JUDGMENT);
+				}
 			}
 		}
 
@@ -376,6 +382,9 @@ public final class Apex {
 			? RIPTIDE_SLOWNESS_TICKS_EMPOWERED
 			: RIPTIDE_SLOWNESS_TICKS;
 		defender.addEffect(new MobEffectInstance(MobEffects.SLOWNESS, ticks, 0, true, true, true));
+		if (attacker instanceof ServerPlayer serverPlayer) {
+			CombatFeedback.apexProc(serverPlayer, Apex.Capstone.RIPTIDE);
+		}
 	}
 
 	private static void procCrucible(LivingEntity defender, Player attacker, CombatContext context) {
@@ -387,6 +396,9 @@ public final class Apex {
 			? CRUCIBLE_FIRE_SECONDS_EMPOWERED
 			: CRUCIBLE_FIRE_SECONDS;
 		defender.igniteForSeconds(seconds);
+		if (attacker instanceof ServerPlayer serverPlayer) {
+			CombatFeedback.apexProc(serverPlayer, Capstone.CRUCIBLE);
+		}
 	}
 
 	private static void procBloomward(LivingEntity defender, Player attacker, CombatContext context) {
@@ -396,6 +408,9 @@ public final class Apex {
 		}
 		float heal = matchup == Matchup.EMPOWERED ? BLOOMWARD_HEAL_EMPOWERED : BLOOMWARD_HEAL;
 		attacker.heal(heal);
+		if (attacker instanceof ServerPlayer serverPlayer) {
+			CombatFeedback.apexProc(serverPlayer, Capstone.BLOOMWARD);
+		}
 	}
 
 	private static void procGloaming(LivingEntity defender, Player attacker, CombatContext context) {
@@ -407,6 +422,9 @@ public final class Apex {
 			? GLOAMING_WEAKNESS_TICKS_EMPOWERED
 			: GLOAMING_WEAKNESS_TICKS;
 		defender.addEffect(new MobEffectInstance(MobEffects.WEAKNESS, ticks, 0, true, true, true));
+		if (attacker instanceof ServerPlayer serverPlayer) {
+			CombatFeedback.apexProc(serverPlayer, Capstone.GLOAMING);
+		}
 	}
 
 	public static boolean suppressesIncomingAdvantage(Player defender, LivingEntity attacker) {

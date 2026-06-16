@@ -243,7 +243,16 @@ class AttunedLootCompatibilityTest {
 			AttunedConfig.DEFAULT.broadcastPactDeaths(),
 			AttunedConfig.DEFAULT.surgeIntervalTicks(),
 			AttunedConfig.DEFAULT.surgeDurationTicks(),
-			AttunedConfig.DEFAULT.surgeRadius());
+			AttunedConfig.DEFAULT.surgeRadius(),
+			AttunedConfig.DEFAULT.advantageMultiplier(),
+			AttunedConfig.DEFAULT.disadvantageMultiplier(),
+			AttunedConfig.DEFAULT.discordDamageMultiplier(),
+			AttunedConfig.DEFAULT.resonanceHitEmpoweredGainPerDamage(),
+			AttunedConfig.DEFAULT.resonanceHitNeutralizedLoss(),
+			AttunedConfig.DEFAULT.resonanceKillEmpoweredGain(),
+			AttunedConfig.DEFAULT.resonanceDecayPerTick(),
+			AttunedConfig.DEFAULT.affinityLoomBaseShardCost(),
+			AttunedConfig.DEFAULT.affinityLoomMaxShardCost());
 	}
 
 	private static boolean isSupportedVanillaLootPath(String path) {

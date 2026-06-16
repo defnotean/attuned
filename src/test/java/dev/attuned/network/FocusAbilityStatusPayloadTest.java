@@ -26,6 +26,16 @@ class FocusAbilityStatusPayloadTest {
 	}
 
 	@Test
+	void pactTacticalSlotPreservesCooldownState() {
+		FocusAbilityStatusPayload payload =
+			new FocusAbilityStatusPayload(FocusAbilityStatusPayload.PACT_TACTICAL_SLOT, 120, 600);
+
+		assertEquals(FocusAbilityStatusPayload.PACT_TACTICAL_SLOT, payload.slot());
+		assertEquals(120, payload.remainingTicks());
+		assertEquals(600, payload.totalTicks());
+	}
+
+	@Test
 	void remainingTicksCannotExceedTotalTicks() {
 		FocusAbilityStatusPayload payload = new FocusAbilityStatusPayload(0, 50, 20);
 

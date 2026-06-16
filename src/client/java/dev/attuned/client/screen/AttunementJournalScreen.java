@@ -6,9 +6,11 @@ import dev.attuned.api.focus.Affinity;
 import dev.attuned.api.synergy.SynergyDefinition;
 import dev.attuned.attunement.AttunedAttachments;
 import dev.attuned.network.OpenJournalPayload;
+import dev.attuned.pacts.Pact;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.ChatFormatting;
@@ -35,6 +37,7 @@ public final class AttunementJournalScreen extends Screen {
 	private static final Identifier BACKGROUND_TEXTURE =
 		Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "textures/gui/attunement_journal.png");
 	private static final String CONFLUENCE_PAGE_KEY = "journal.attuned.confluence.intro";
+	private static final String PACT_TRIALS_PAGE_KEY = "journal.attuned.pact_trials.intro";
 	private static boolean initialized;
 
 	private static final int PANEL_WIDTH = 336;
@@ -91,6 +94,7 @@ public final class AttunementJournalScreen extends Screen {
 			gemPage("journal.attuned.page39", 0xFF5FC23E, Affinity.VERDANT),
 			gemPage("journal.attuned.page40", 0xFF7A4FB5, Affinity.UMBRAL),
 			page("journal.attuned.page18", 0xFFFF6AA8),
+			dynamicPage(PACT_TRIALS_PAGE_KEY, 0xFFFF6AA8),
 			page("journal.attuned.page19", 0xFFFF6AA8)),
 		chapter("Apex",
 			page("journal.attuned.page7", 0xFFFFD37A),
@@ -108,7 +112,8 @@ public final class AttunementJournalScreen extends Screen {
 		chapter("Builds",
 			page("journal.attuned.page11", 0xFF95E6B3),
 			page("journal.attuned.page12", 0xFF95E6B3),
-			page("journal.attuned.page13", 0xFF95E6B3)),
+			page("journal.attuned.page13", 0xFF95E6B3),
+			page("journal.attuned.page_tempering", 0xFFFFD37A)),
 		chapter("Lore",
 			page("journal.attuned.page20", 0xFFAEEAFF),
 			page("journal.attuned.page21", 0xFFAEEAFF),
@@ -472,6 +477,9 @@ public final class AttunementJournalScreen extends Screen {
 		if (CONFLUENCE_PAGE_KEY.equals(page.translationKey())) {
 			return confluencePageText();
 		}
+		if (PACT_TRIALS_PAGE_KEY.equals(page.translationKey())) {
+			return pactTrialPageText();
+		}
 		return pageText(page.translationKey());
 	}
 
@@ -516,6 +524,33 @@ public final class AttunementJournalScreen extends Screen {
 	private static String pathOf(String id) {
 		int colon = id.indexOf(':');
 		return colon >= 0 ? id.substring(colon + 1) : id;
+	}
+
+	/**
+	 * The Pacts trial page is dynamic: one row per {@link Pact}, read from the
+	 * synced trial-progress attachment with a defensive empty fallback.
+	 */
+	private static PageText pactTrialPageText() {
+		String title = I18n.get("journal.attuned.pact_trials.title");
+		List<String> rows = new ArrayList<>();
+		rows.add(I18n.get(PACT_TRIALS_PAGE_KEY));
+		rows.add("");
+		LocalPlayer player = Minecraft.getInstance().player;
+		Map<Pact, AttunedAttachments.PactTrialState> progress = player == null
+			? Map.of()
+			: AttunedAttachments.getPactTrialProgress(player);
+		for (Pact pact : Pact.values()) {
+			rows.add(pact.displayName().getString());
+			AttunedAttachments.PactTrialState state = progress.get(pact);
+			if (state != null && state.tier4Complete()) {
+				rows.add(I18n.get("journal.attuned.trial.complete"));
+			} else {
+				int current = state == null ? 0 : state.progress();
+				int goal = state == null ? 0 : state.goal();
+				rows.add(I18n.get("journal.attuned.trial.progress", current, goal));
+			}
+		}
+		return new PageText(title, String.join("\n", rows));
 	}
 
 	private static Chapter chapter(String name, Page... pages) {

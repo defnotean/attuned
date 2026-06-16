@@ -3,6 +3,9 @@ package dev.attuned.attunement;
 import com.mojang.serialization.Codec;
 import dev.attuned.Attuned;
 import dev.attuned.AttunedConfig;
+import dev.attuned.pacts.Pact;
+import dev.attuned.pacts.PactTrialProgress;
+import dev.attuned.pacts.PactTrials;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentRegistry;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentSyncPredicate;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentType;
@@ -12,7 +15,9 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 
 import java.util.ArrayList;
+import java.util.EnumMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -85,6 +90,16 @@ public final class AttunedAttachments {
 			.copyOnDeath()
 	);
 
+	/** Per-pact trial counters and permanent Tier 4 completions. Synced for the journal. */
+	public static final AttachmentType<PactTrialProgress> PACT_TRIAL_PROGRESS = AttachmentRegistry.create(
+		Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "pact_trial_progress"),
+		builder -> builder
+			.initializer(() -> PactTrialProgress.EMPTY)
+			.persistent(PactTrialProgress.CODEC)
+			.syncWith(PactTrialProgress.STREAM_CODEC, AttachmentSyncPredicate.targetOnly())
+			.copyOnDeath()
+	);
+
 	/** Confluence ids this player has discovered (each first activation). Synced for the journal. */
 	public static final AttachmentType<List<String>> DISCOVERED_CONFLUENCES = AttachmentRegistry.create(
 		Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "discovered_confluences"),
@@ -95,8 +110,30 @@ public final class AttunedAttachments {
 			.copyOnDeath()
 	);
 
+	/** Per-pact trial progress surfaced in the journal; trials runtime fills this in. */
+	public record PactTrialState(int progress, int goal, boolean tier4Complete) {}
+
 	/** Forces this class to load so the attachment types register during mod init. */
 	public static void init() {}
+
+	/**
+	 * Synced trial progress per {@link Pact}. Returns an empty map when {@code player}
+	 * is null; otherwise reads the attachment with {@link PactTrialProgress#EMPTY} as
+	 * the defensive fallback.
+	 */
+	public static Map<Pact, PactTrialState> getPactTrialProgress(Player player) {
+		if (player == null) {
+			return Map.of();
+		}
+		Map<Pact, PactTrialState> out = new EnumMap<>(Pact.class);
+		for (Pact pact : Pact.values()) {
+			out.put(pact, new PactTrialState(
+				PactTrials.progress(player, pact),
+				PactTrials.goalOf(pact),
+				PactTrials.isTier4Complete(player, pact)));
+		}
+		return Map.copyOf(out);
+	}
 
 	public static int getCapacity(Player player) {
 		return clampCapacity(player.getAttachedOrElse(CAPACITY, 0));

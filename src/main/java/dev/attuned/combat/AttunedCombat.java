@@ -1,5 +1,6 @@
 package dev.attuned.combat;
 
+import dev.attuned.AttunedConfig;
 import dev.attuned.AttunedServerCleanup;
 import dev.attuned.AttunedPlayerCleanup;
 import dev.attuned.api.focus.Affinity;
@@ -54,11 +55,6 @@ public final class AttunedCombat {
 	private AttunedCombat() {}
 
 	/** Damage multiplier when the attacker counters the defender. */
-	private static final float ADVANTAGE_MULTIPLIER = 1.33F;
-	/** Damage multiplier when the defender counters the attacker. */
-	private static final float DISADVANTAGE_MULTIPLIER = 0.75F;
-
-	/** Fraction of incoming damage a Thornward defender reflects to the attacker. */
 	private static final float THORNWARD_REFLECT = 0.25F;
 	/** Fraction of damage dealt a Leech attacker recovers as health. */
 	private static final float LEECH_LIFESTEAL = 0.20F;
@@ -264,7 +260,7 @@ public final class AttunedCombat {
 		}
 		// Discord — clashing affinities — is a glass cannon on both ends.
 		if (context.isDiscord(attacker) || context.isDiscord(defender)) {
-			return ADVANTAGE_MULTIPLIER;
+			return AttunedConfig.get().discordDamageMultiplier();
 		}
 		Optional<Affinity> attackerAffinity = context.affinityOf(attacker);
 		Optional<Affinity> defenderAffinity = context.affinityOf(defender);
@@ -274,10 +270,10 @@ public final class AttunedCombat {
 		Affinity atk = attackerAffinity.get();
 		Affinity def = defenderAffinity.get();
 		if (atk.beats(def)) {
-			return ADVANTAGE_MULTIPLIER;
+			return AttunedConfig.get().advantageMultiplier();
 		}
 		if (def.beats(atk)) {
-			return DISADVANTAGE_MULTIPLIER;
+			return AttunedConfig.get().disadvantageMultiplier();
 		}
 		return 1.0F;
 	}

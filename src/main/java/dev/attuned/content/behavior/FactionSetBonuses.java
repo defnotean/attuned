@@ -54,6 +54,10 @@ public final class FactionSetBonuses {
 	private static final String FACTION_VERDANT_CHOIR = "attuned:verdant_choir";
 	private static final String FACTION_ASHEN_FORGE = "attuned:ashen_forge";
 	private static final String FACTION_REVENANT = "attuned:revenant";
+	private static final String FACTION_TIDEBORN = "attuned:tideborn";
+	private static final String FACTION_FORGEBOUND = "attuned:forgebound";
+	private static final String FACTION_WILDROOT = "attuned:wildroot";
+	private static final String FACTION_UMBRAL = "attuned:umbral";
 
 	/** Refreshed passive perks aim well above one throttle window so they never lapse. */
 	private static final int PASSIVE_DURATION = 100;
@@ -65,6 +69,8 @@ public final class FactionSetBonuses {
 	private static final long VERDANT_COOLDOWN_TICKS = 1200L;
 	private static final int REVENANT_SLOWNESS_TICKS = 60;
 	private static final double REVENANT_RADIUS = 5.0D;
+	/** Matches Nightsworn pact darkness threshold ({@link dev.attuned.pacts.Pacts}). */
+	private static final int UMBRAL_MAX_LIGHT = 7;
 
 	/** Per-player game-time of the last grant for each cooldown-gated faction. */
 	private static final Map<UUID, Long> RADIANT_COOLDOWNS = new HashMap<>();
@@ -153,6 +159,26 @@ public final class FactionSetBonuses {
 				}
 			}
 			case FACTION_REVENANT -> chillNearbyUndead(player);
+			case FACTION_TIDEBORN -> {
+				if (nearWater(player)) {
+					refresh(player, MobEffects.DOLPHINS_GRACE);
+				}
+			}
+			case FACTION_FORGEBOUND -> {
+				if (nearHeat(player)) {
+					refresh(player, MobEffects.HASTE);
+				}
+			}
+			case FACTION_WILDROOT -> {
+				if (onGrass(player)) {
+					refresh(player, MobEffects.SLOW_FALLING);
+				}
+			}
+			case FACTION_UMBRAL -> {
+				if (inDark(player)) {
+					refresh(player, MobEffects.SPEED);
+				}
+			}
 			default -> { /* Unknown faction: no perk. */ }
 		}
 	}
@@ -204,6 +230,10 @@ public final class FactionSetBonuses {
 
 	private static void refresh(ServerPlayer player, Holder<MobEffect> effect) {
 		PassiveEffectRefresher.refresh(player, effect, PASSIVE_DURATION, 0, true, false, false);
+	}
+
+	private static boolean inDark(ServerPlayer player) {
+		return player.level().getMaxLocalRawBrightness(player.blockPosition()) <= UMBRAL_MAX_LIGHT;
 	}
 
 	private static boolean nearWater(ServerPlayer player) {

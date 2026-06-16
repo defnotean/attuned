@@ -28,6 +28,7 @@ import dev.attuned.network.AttunedNetworking;
 import dev.attuned.network.JournalNetworking;
 import dev.attuned.onboarding.Onboarding;
 import dev.attuned.pacts.PactDeathMessages;
+import dev.attuned.pacts.PactTrials;
 import dev.attuned.pacts.Pacts;
 import dev.attuned.synergy.Synergies;
 import net.fabricmc.api.ModInitializer;
@@ -63,6 +64,7 @@ public class Attuned implements ModInitializer {
 		Resonance.init();
 		ResonantSurges.init();
 		Pacts.init();
+		PactTrials.init();
 		Synergies.init();
 		PactDeathMessages.init();
 		AttunedNetworking.init();

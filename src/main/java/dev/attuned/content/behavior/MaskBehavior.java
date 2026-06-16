@@ -2,6 +2,7 @@ package dev.attuned.content.behavior;
 
 import dev.attuned.AttunedPlayerCleanup;
 import dev.attuned.AttunedServerCleanup;
+import dev.attuned.combat.CombatFeedback;
 import dev.attuned.api.focus.FocusBehavior;
 import java.util.HashMap;
 import java.util.Map;
@@ -15,6 +16,7 @@ import net.minecraft.world.item.ItemStack;
 public final class MaskBehavior implements FocusBehavior {
 	private static final int CHARGE_TICKS = 40;
 	private static final int RESIST_TICKS = 100;
+	private static final int ABILITY_COOLDOWN_TICKS = 400;
 	private static final int MAX_LIGHT = 7;
 
 	private static final Map<UUID, State> STATES = new HashMap<>();
@@ -47,6 +49,26 @@ public final class MaskBehavior implements FocusBehavior {
 	@Override
 	public void onDeactivate(ServerPlayer player, ItemStack focus) {
 		STATES.remove(player.getUUID());
+	}
+
+	@Override
+	public boolean hasActiveAbility() {
+		return true;
+	}
+
+	@Override
+	public int abilityCooldownTicks() {
+		return ABILITY_COOLDOWN_TICKS;
+	}
+
+	@Override
+	public boolean onAbility(ServerPlayer player, ItemStack focus) {
+		State state = STATES.computeIfAbsent(player.getUUID(), ignored -> new State());
+		state.chargeTicks = 0;
+		state.resistTicks = RESIST_TICKS;
+		player.removeEffect(MobEffects.GLOWING);
+		CombatFeedback.abilityCast(player, CombatFeedback.AbilityFlavor.STEALTH);
+		return true;
 	}
 
 	public static boolean resistsReveal(LivingEntity target) {

@@ -27,14 +27,21 @@ add a Focus.
   readable book.
 - The **Focus Reliquary** is a craftable bag that stores spare Foci, shows your
   six equipped slots beside it, and saves named loadout **builds** you can
-  re-apply with one click.
+  re-apply with one click — or **Share**/**Import** via clipboard.
+- The **Altar of Reweaving** rerolls Foci: classic three-Focus reweave,
+  **Tempering**, and **Affinity Loom** (same-affinity reroll for escalating
+  Attunement Shards).
+- **Pact Trials** are long-term pact goals; finishing one permanently unlocks a
+  Tier 4 passive while that pact is awake again.
 - Creative inventory content is split into **Fury & Bastion**, **Zephyr &
   Holy**, **Tide & Forge**, **Verdant & Umbral**, and **Utility & Tools** tabs
   so the full roster is easy to scan.
-- Current release headline: **Attuned 1.5.0 — Eightfold Affinities** promotes
-  all eight affinities into first-class build identities, ships 94 Foci, expands
-  Pacts/Apex/Confluences, adds subtle Focus visual motifs, and keeps explicit
-  matchup details in the Attunement Journal.
+- Current release headline: **Attuned 1.6.0 — Echoes & Accords** adds Pact
+  Trials (Tier 4), Affinity Loom reweaving, build sharing, faction set bonuses
+  for Tideborn/Forgebound/Wildroot/Umbral, pact tacticals on the Focus Ability
+  key, combat config tuning (Discord damage, resonance in config), resonant surge
+  interactivity, onboarding hints, and HUD/journal surfacing — on top of the
+  eightfold roster from 1.5.0.
 
 That is the whole idea: a Focus is a trade-off, never a free bonus.
 

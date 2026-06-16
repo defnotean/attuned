@@ -1,5 +1,31 @@
 # Changelog
 
+## Attuned 1.6.0 - Resonant Engagement
+
+### Added
+- Pact Trials (Tier 4) - all 9 pacts, permanent unlocks, journal progress
+- Pact tacticals on Focus Ability key when resonance >= 50%
+- New active abilities: Veil, Mask, Pearlguard, Sparkweld, Oathguard
+- Affinity Loom at Altar of Reweaving (1 Focus + escalating shards → same-affinity reroll)
+- Build sharing via Reliquary clipboard (attuned:v1: codes)
+- Faction set bonuses: Tideborn, Forgebound, Wildroot, Umbral
+- Combat tuning in config (discord 1.20, resonance rates, advantage multipliers)
+- Resonant surge broadcasts, mob pressure, discord half-rate
+- Onboarding hints (resonance armed, ability, confluence, pact trial complete)
+- HUD: apex pulse, charged melee dot, trial pip, tempered tick, confluence pulse, pact tactical cooldown ring
+- Journal: pact trial page, tempering page
+- Combat feedback: resonance gain/drain, kill streaks, surge charge, ability casts, Apex procs (Execute/Judgment), pact tacticals
+- Pact tactical overcharge: crouch + 0.25 resonance spend for amplified tactical
+
+### Changed
+- Discord damage softened to 1.20× (configurable)
+- Resonance mid-fight fill slightly faster (0.012 per damage)
+- Pact trial goals tuned for solo pacing: Pyresworn 40 ignites, Stoneheart 400 absorbed damage, Windrunner 6,400 sprint blocks, Radiant Covenant 25 reveals, Tidesworn 40 slows, Forgebound 25 ignites, Wildroot 36,000 growth ticks (~30 minutes while awake), Nightsworn 150 absorbed damage, Untethered 20 apex kills
+- Pact trial engagement gates: Stoneheart while blocking; Forgebound/Untethered near hostiles (16 blocks); Wildroot Regen full / near-hostiles half / idle none; Windrunner near hostiles or at Apex
+
+### Internal
+- BuildShareCodec, PactTrials, PactTier4, PactTacticals, contract tests
+
 ## Attuned 1.5.0 - Eightfold Affinities
 
 ### Added

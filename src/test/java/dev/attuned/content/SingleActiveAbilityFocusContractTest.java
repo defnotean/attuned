@@ -67,6 +67,8 @@ class SingleActiveAbilityFocusContractTest {
 		assertTrue(state.contains("boolean fired = runAbility(selection.behavior(), player, selection.stack())")
 				&& state.contains("return new AbilitySelection"),
 			"The server should stop after firing the first active ability Focus.");
+		assertTrue(state.contains("PactTacticals.tryTrigger(player)"),
+			"When no ability Focus is equipped, pact tacticals should run before Apex.");
 		assertTrue(!networking.contains("triggers FocusBehavior#onAbility")
 				&& !networking.contains("every one of that player's active Foci"),
 			"Networking comments should not promise that every active Focus fires.");

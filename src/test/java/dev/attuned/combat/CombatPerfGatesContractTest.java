@@ -42,7 +42,7 @@ class CombatPerfGatesContractTest {
 
 		assertTrue(tick.contains("% 20"),
 			"Resonance decay should apply on a 20-tick cadence instead of writing the attachment every tick.");
-		assertTrue(tick.contains("DECAY_PER_TICK * 20"),
+		assertTrue(tick.contains("resonanceDecayPerTick() * 20"),
 			"Batched decay should drain 20x the per-tick rate to preserve the rest-decay curve.");
 	}
 

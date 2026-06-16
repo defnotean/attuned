@@ -1,17 +1,25 @@
 package dev.attuned.combat;
 
 import dev.attuned.AttunedAdvancements;
+import dev.attuned.AttunedConfig;
+import dev.attuned.AttunedPlayerCleanup;
+import dev.attuned.AttunedServerCleanup;
 import dev.attuned.api.focus.Affinity;
 import dev.attuned.api.focus.FocusDefinition;
 import dev.attuned.attunement.AttunedAttachments;
 import dev.attuned.attunement.AttunedInv;
 import dev.attuned.attunement.Attunement;
 import dev.attuned.attunement.BudgetResolver;
+import dev.attuned.onboarding.Onboarding;
+import dev.attuned.pacts.PactTier4;
 import java.util.ArrayList;
 import java.util.EnumSet;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.minecraft.server.MinecraftServer;
@@ -40,16 +48,15 @@ public final class Resonance {
 	public static final float MAX = 1.0F;
 	public static final float MIN = 0.0F;
 
-	/** Killing a matchup-empowered mob fills the gauge by this much. */
-	private static final float KILL_EMPOWERED_GAIN = 0.30F;
 	/** Killing a matchup-neutral mob fills the gauge a little. */
 	private static final float KILL_NEUTRAL_GAIN = 0.05F;
-	/** Each point of damage you deal on an empowered matchup gains this much. */
-	private static final float HIT_EMPOWERED_GAIN_PER_DAMAGE = 0.01F;
-	/** A single neutralized-matchup hit taken drains the gauge by this much. */
-	private static final float HIT_NEUTRALIZED_LOSS = 0.10F;
-	/** Per-tick idle decay — gauge falls to zero in about 200 seconds at rest. */
-	private static final float DECAY_PER_TICK = 0.00025F;
+	/** Rapid kills within this window extend the streak. */
+	private static final int KILL_STREAK_WINDOW_TICKS = 200;
+	private static final float KILL_STREAK_BONUS_PER = 0.015F;
+	private static final float KILL_STREAK_BONUS_CAP = 0.12F;
+
+	private static final Map<UUID, Long> LAST_KILL_TICK = new HashMap<>();
+	private static final Map<UUID, Integer> KILL_STREAK = new HashMap<>();
 	private static boolean initialized;
 
 	private record PlayerCombatState(Optional<Affinity> committed, boolean discord,
@@ -70,6 +77,15 @@ public final class Resonance {
 		}
 		initialized = true;
 
+		AttunedServerCleanup.onStop(() -> {
+			LAST_KILL_TICK.clear();
+			KILL_STREAK.clear();
+		});
+		AttunedPlayerCleanup.onForget(uuid -> {
+			LAST_KILL_TICK.remove(uuid);
+			KILL_STREAK.remove(uuid);
+		});
+
 		ServerLivingEntityEvents.AFTER_DAMAGE.register(Resonance::afterDamage);
 		ServerLivingEntityEvents.AFTER_DEATH.register(Resonance::afterDeath);
 		ServerTickEvents.END_SERVER_TICK.register(Resonance::tick);
@@ -87,7 +103,21 @@ public final class Resonance {
 
 	/** Sets the player's resonance, clamped to {@code [0, 1]}. */
 	public static void set(Player player, float value) {
-		AttunedAttachments.setResonance(player, Math.max(MIN, Math.min(MAX, value)));
+		float before = get(player);
+		float clamped = Math.max(MIN, Math.min(MAX, value));
+		AttunedAttachments.setResonance(player, clamped);
+		if (!(player instanceof ServerPlayer serverPlayer)) {
+			return;
+		}
+		float delta = clamped - before;
+		if (before < APEX_THRESHOLD && clamped >= APEX_THRESHOLD) {
+			Onboarding.tryResonanceArmedHint(serverPlayer);
+			CombatFeedback.resonanceArmed(serverPlayer);
+		} else if (delta >= CombatFeedback.gainThreshold()) {
+			CombatFeedback.resonanceGain(serverPlayer, delta, clamped);
+		} else if (delta <= -CombatFeedback.drainThreshold()) {
+			CombatFeedback.resonanceDrain(serverPlayer);
+		}
 	}
 
 	/** Adds (or subtracts) a delta to the player's resonance, clamping at the bounds. */
@@ -131,17 +161,18 @@ public final class Resonance {
 		// Attacker side — gain when the matchup empowers us. Maelstrom uses a
 		// generic combat path because Discord deliberately has no single lane.
 		if (attacker instanceof Player attackerPlayer) {
+			float hitEmpoweredGainPerDamage = AttunedConfig.get().resonanceHitEmpoweredGainPerDamage();
 			if (attackerState.isAt(Apex.Capstone.MAELSTROM)
 					&& hasAffinityPressure(defender, defenderState)) {
-				add(attackerPlayer, dealtDamage * HIT_EMPOWERED_GAIN_PER_DAMAGE);
+				add(attackerPlayer, dealtDamage * hitEmpoweredGainPerDamage);
 			} else if (matchup(attackerState, defender, defenderState) == Matchup.EMPOWERED) {
-				add(attackerPlayer, dealtDamage * HIT_EMPOWERED_GAIN_PER_DAMAGE);
+				add(attackerPlayer, dealtDamage * hitEmpoweredGainPerDamage);
 			}
 		}
 		// Defender side — drain when the matchup neutralizes us.
 		if (defender instanceof Player defenderPlayer && attacker != null
 				&& matchup(defenderState, attacker, attackerState) == Matchup.NEUTRALIZED) {
-			add(defenderPlayer, -HIT_NEUTRALIZED_LOSS);
+			add(defenderPlayer, -AttunedConfig.get().resonanceHitNeutralizedLoss());
 		}
 		if (defender instanceof Player defenderPlayer && attacker != null
 				&& defenderState.isAt(Apex.Capstone.STILLPOINT)
@@ -162,23 +193,49 @@ public final class Resonance {
 			: null;
 		switch (matchup(attackerState, entity, targetState)) {
 			case EMPOWERED -> {
-				add(player, KILL_EMPOWERED_GAIN);
+				add(player, AttunedConfig.get().resonanceKillEmpoweredGain() + streakBonus(player));
 				if (player instanceof ServerPlayer serverPlayer) {
 					AttunedAdvancements.award(serverPlayer, "attunement/favored_matchup");
+					recordKillStreak(serverPlayer);
 				}
 			}
 			case NORMAL -> {
 				if (attackerState.isAt(Apex.Capstone.MAELSTROM)
 						&& hasAffinityPressure(entity, targetState)) {
-					add(player, KILL_EMPOWERED_GAIN);
+					add(player, AttunedConfig.get().resonanceKillEmpoweredGain() + streakBonus(player));
 				} else {
 					add(player, KILL_NEUTRAL_GAIN);
 				}
+				if (player instanceof ServerPlayer serverPlayer) {
+					recordKillStreak(serverPlayer);
+				}
 			}
-			case NEUTRALIZED -> { /* No gain from a neutralized kill. */ }
+			case NEUTRALIZED -> resetKillStreak(player.getUUID());
 		}
 	}
 
+
+	private static float streakBonus(Player player) {
+		return Math.min(KILL_STREAK_BONUS_CAP,
+			KILL_STREAK.getOrDefault(player.getUUID(), 0) * KILL_STREAK_BONUS_PER);
+	}
+
+	private static void recordKillStreak(ServerPlayer player) {
+		UUID id = player.getUUID();
+		long now = player.level().getGameTime();
+		Long last = LAST_KILL_TICK.get(id);
+		int streak = last != null && now - last <= KILL_STREAK_WINDOW_TICKS
+			? KILL_STREAK.getOrDefault(id, 0) + 1
+			: 1;
+		LAST_KILL_TICK.put(id, now);
+		KILL_STREAK.put(id, streak);
+		CombatFeedback.resonanceKillStreak(player, streak);
+	}
+
+	private static void resetKillStreak(UUID id) {
+		LAST_KILL_TICK.remove(id);
+		KILL_STREAK.remove(id);
+	}
 	private static void tick(MinecraftServer server) {
 		for (ServerPlayer player : server.getPlayerList().getPlayers()) {
 			// Batch idle decay: apply 20x the per-tick rate once every 20 ticks
@@ -189,7 +246,9 @@ public final class Resonance {
 			}
 			float current = get(player);
 			if (current > 0.0F) {
-				set(player, current - DECAY_PER_TICK * 20);
+				float decay = AttunedConfig.get().resonanceDecayPerTick() * 20
+					* PactTier4.resonanceDecayMultiplier(player);
+				set(player, current - decay);
 			}
 		}
 	}

@@ -1,0 +1,23 @@
+{
+	"parent": "attuned:attunement/pact_stoneheart",
+	"display": {
+		"icon": {
+			"id": "attuned:bulwark_focus"
+		},
+		"title": {
+			"translate": "pact.attuned.stoneheart_trial.title"
+		},
+		"description": {
+			"translate": "pact.attuned.stoneheart_trial.description"
+		},
+		"frame": "challenge",
+		"show_toast": true,
+		"announce_to_chat": true,
+		"hidden": false
+	},
+	"criteria": {
+		"done": {
+			"trigger": "minecraft:impossible"
+		}
+	}
+}

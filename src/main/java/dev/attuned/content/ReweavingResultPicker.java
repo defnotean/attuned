@@ -30,6 +30,24 @@ public final class ReweavingResultPicker {
 		}
 	}
 
+	public static Optional<String> pickSameAffinity(
+		List<Candidate> pool,
+		String inputId,
+		Optional<String> inputAffinity,
+		RandomGenerator random
+	) {
+		Objects.requireNonNull(pool, "pool");
+		Objects.requireNonNull(inputId, "inputId");
+		Objects.requireNonNull(inputAffinity, "inputAffinity");
+		Objects.requireNonNull(random, "random");
+		List<WeightedCandidate> candidates = pool.stream()
+			.filter(candidate -> !candidate.id().equals(inputId))
+			.filter(candidate -> candidate.affinity().equals(inputAffinity))
+			.map(candidate -> new WeightedCandidate(candidate.id(), 1))
+			.toList();
+		return pickWeighted(candidates, random);
+	}
+
 	public static Optional<String> pick(
 		List<Candidate> pool,
 		Set<String> sacrificedIds,
@@ -42,6 +60,10 @@ public final class ReweavingResultPicker {
 			candidates = weightedCandidates(pool, Set.of(), committedAffinity);
 		}
 
+		return pickWeighted(candidates, random);
+	}
+
+	private static Optional<String> pickWeighted(List<WeightedCandidate> candidates, RandomGenerator random) {
 		int totalWeight = candidates.stream()
 			.mapToInt(WeightedCandidate::weight)
 			.sum();

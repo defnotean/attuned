@@ -13,6 +13,52 @@ import org.junit.jupiter.api.Test;
 
 class ReweavingResultPickerTest {
 	@Test
+	void pickSameAffinityExcludesInputId() {
+		List<ReweavingResultPicker.Candidate> pool = List.of(
+			new ReweavingResultPicker.Candidate("attuned:edge_focus", Optional.of("fury")),
+			new ReweavingResultPicker.Candidate("attuned:ember_focus", Optional.of("fury")),
+			new ReweavingResultPicker.Candidate("attuned:forager_focus", Optional.empty()));
+
+		Optional<String> result = ReweavingResultPicker.pickSameAffinity(
+			pool, "attuned:edge_focus", Optional.of("fury"), new FixedRandom(0));
+
+		assertEquals(Optional.of("attuned:ember_focus"), result);
+	}
+
+	@Test
+	void pickSameAffinityNeutralInputOnlyPicksNeutralCandidates() {
+		List<ReweavingResultPicker.Candidate> pool = List.of(
+			new ReweavingResultPicker.Candidate("attuned:forager_focus", Optional.empty()),
+			new ReweavingResultPicker.Candidate("attuned:linecast_focus", Optional.empty()),
+			new ReweavingResultPicker.Candidate("attuned:edge_focus", Optional.of("fury")));
+
+		Optional<String> first = ReweavingResultPicker.pickSameAffinity(
+			pool, "attuned:forager_focus", Optional.empty(), new FixedRandom(0));
+		Optional<String> second = ReweavingResultPicker.pickSameAffinity(
+			pool, "attuned:forager_focus", Optional.empty(), new FixedRandom(1));
+
+		assertEquals(Optional.of("attuned:linecast_focus"), first);
+		assertEquals(Optional.of("attuned:linecast_focus"), second);
+	}
+
+	@Test
+	void pickSameAffinityFuryInputOnlyPicksFuryCandidates() {
+		List<ReweavingResultPicker.Candidate> pool = List.of(
+			new ReweavingResultPicker.Candidate("attuned:edge_focus", Optional.of("fury")),
+			new ReweavingResultPicker.Candidate("attuned:ember_focus", Optional.of("fury")),
+			new ReweavingResultPicker.Candidate("attuned:forager_focus", Optional.empty()),
+			new ReweavingResultPicker.Candidate("attuned:swift_focus", Optional.of("zephyr")));
+
+		Optional<String> first = ReweavingResultPicker.pickSameAffinity(
+			pool, "attuned:edge_focus", Optional.of("fury"), new FixedRandom(0));
+		Optional<String> second = ReweavingResultPicker.pickSameAffinity(
+			pool, "attuned:edge_focus", Optional.of("fury"), new FixedRandom(1));
+
+		assertEquals(Optional.of("attuned:ember_focus"), first);
+		assertEquals(Optional.of("attuned:ember_focus"), second);
+	}
+
+	@Test
 	void avoidsSacrificedIdsWhenAlternativesExist() {
 		List<ReweavingResultPicker.Candidate> pool = List.of(
 			new ReweavingResultPicker.Candidate("attuned:edge_focus", Optional.of("fury")),

@@ -21,10 +21,17 @@ Equip **Foci** into six inventory slots, but mind your **attunement capacity**. 
 - Lootr-friendly survival loot: every Focus and shard fragment rolls through vanilla structures, fishing treasure, archaeology, and trial rewards; wandering traders can rarely offer the journal or a shard fragment
 - Combat HUD shows your gem, your target's gem, and resonance at a glance
 
-## Current release — Attuned 1.5.0
+## Current release — Attuned 1.6.0
 
-- The eightfold counter wheel is now first-class across Foci, Pacts, Discord, and Apex capstones.
-- The roster is organized around 94 Foci, readable creative tabs, new Confluences, custom Focus visual motifs, and fixed tooltip/readout polish.
+- **Combat config tuning** — Discord damage multiplier and resonance gain/decay are server-configurable (`config/attuned.json`).
+- **Pact tacticals** on the Focus Ability key (**R** by default), plus new ability Foci that claim the keybind.
+- **Pact Trials (Tier 4)** — long-term goals per pact; permanent completion unlocks a small passive while that pact is awake again.
+- **Faction set bonuses** for Tideborn, Forgebound, Wildroot, and Umbral (three+ active Foci sharing the faction).
+- **Resonant surge interactivity** — server-wide surge fields grant amplified resonance; tunable interval, duration, and radius.
+- **Onboarding hints** — one-shot toasts for first shard, dormant Focus, confluence, pact trial completion, and more.
+- **Affinity Loom** at the Altar of Reweaving — reroll one Focus within its affinity for escalating Attunement Shards.
+- **Build sharing** — Reliquary Share/Import copies `attuned:v1:` clipboard presets between players.
+- **HUD and journal surfacing** — pact trial progress, Affinity Loom hints, and expanded rules in the Attunement Journal.
 
 ## Foundation — Resonant Depths
 

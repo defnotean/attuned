@@ -6,6 +6,7 @@ Equip **Foci** into six inventory slots, manage your **attunement capacity**, an
 
 ## Highlights
 
+- **Attuned 1.6.0 - Resonant Engagement** adds Pact Trials, pact tacticals on **R** at 50%+ resonance, five new ability Foci, Affinity Loom rerolls, Reliquary build codes, and expanded faction set bonuses.
 - **Attuned 1.5.0 - Eightfold Affinities** expands the counter system into eight first-class Affinities: Fury, Bastion, Zephyr, Holy, Tide, Forge, Verdant, and Umbral.
 - **94 Foci** across mobility, defense, combat, stealth, holy, seafaring, shadow, utility, and the eightfold counter wheel.
 - **16 new pure-affinity modifier Foci** fill out the expanded roster with simple, readable stat identities and animated medallion art.

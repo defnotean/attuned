@@ -81,7 +81,8 @@ public class ReweavingScreen extends AbstractContainerScreen<ReweavingMenu> {
 	}
 
 	private boolean canCommit() {
-		return (this.menu.hasAllInputs() || this.menu.canTemper()) && this.menu.outputStack().isEmpty();
+		return (this.menu.hasAllInputs() || this.menu.canTemper() || this.menu.canAffinityLoom())
+			&& this.menu.outputStack().isEmpty();
 	}
 
 	private Component hint() {
@@ -90,6 +91,10 @@ public class ReweavingScreen extends AbstractContainerScreen<ReweavingMenu> {
 		}
 		if (this.menu.canTemper()) {
 			return Component.translatable("screen.attuned.reweaving_altar.hint.temper");
+		}
+		if (this.menu.affinityLoomLayout()) {
+			return Component.translatable(
+				"screen.attuned.reweaving_altar.hint.affinity_loom", this.menu.affinityLoomShardCost());
 		}
 		if (!this.menu.hasAllFocusInputs()) {
 			return Component.translatable("screen.attuned.reweaving_altar.hint.missing_foci");
