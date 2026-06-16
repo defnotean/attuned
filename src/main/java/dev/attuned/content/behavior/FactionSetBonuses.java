@@ -216,7 +216,7 @@ public final class FactionSetBonuses {
 		}
 		AABB area = player.getBoundingBox().inflate(REVENANT_RADIUS);
 		List<LivingEntity> undead = level.getEntitiesOfClass(LivingEntity.class, area, entity ->
-			entity != player && entity.isAlive() && entity.typeHolder().is(EntityTypeTags.UNDEAD));
+			entity != player && entity.isAlive() && entity.getType().is(EntityTypeTags.UNDEAD));
 		for (LivingEntity entity : undead) {
 			entity.addEffect(new MobEffectInstance(
 				MobEffects.SLOWNESS, REVENANT_SLOWNESS_TICKS, 0, true, false, true));

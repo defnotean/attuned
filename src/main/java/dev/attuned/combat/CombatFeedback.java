@@ -1,5 +1,6 @@
 package dev.attuned.combat;
 
+import dev.attuned.compat.PlayerMessages;
 import dev.attuned.api.focus.Affinity;
 import dev.attuned.api.focus.AffinityColors;
 import dev.attuned.pacts.Pact;
@@ -86,7 +87,7 @@ public final class CombatFeedback {
 		float pitch = 1.0F + Math.min(0.4F, (streak - 2) * 0.08F);
 		level.playSound(null, player.blockPosition(),
 			SoundEvents.PLAYER_LEVELUP, SoundSource.PLAYERS, 0.25F, pitch);
-		player.sendOverlayMessage(net.minecraft.network.chat.Component.translatable(
+		PlayerMessages.overlay(player, net.minecraft.network.chat.Component.translatable(
 			"resonance.attuned.kill_streak", streak));
 	}
 

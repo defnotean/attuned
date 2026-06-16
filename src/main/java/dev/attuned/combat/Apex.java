@@ -1,5 +1,6 @@
 package dev.attuned.combat;
 
+import dev.attuned.compat.PlayerMessages;
 import dev.attuned.AttunedAdvancements;
 import dev.attuned.AttunedPlayerCleanup;
 import dev.attuned.AttunedServerCleanup;
@@ -551,7 +552,7 @@ public final class Apex {
 		Long readyAt = identityCooldowns.get(player.getUUID());
 		if (readyAt != null && now < readyAt) {
 			int remaining = (int) (readyAt - now);
-			player.sendOverlayMessage(Component.translatable(
+			PlayerMessages.overlay(player, Component.translatable(
 				"apex.attuned.identity_cooldown", cooldownSeconds(remaining)));
 			return true;
 		}
@@ -608,7 +609,7 @@ public final class Apex {
 			player.getX(), player.getY() + 1.0, player.getZ(), 48, 1.6, 0.8, 1.6, 0.4);
 		level.playSound(null, player.blockPosition(),
 			SoundEvents.WARDEN_SONIC_BOOM, SoundSource.PLAYERS, 0.9F, 1.4F);
-		player.sendOverlayMessage(Component.translatable("apex.attuned.maelstrom_nova"));
+		PlayerMessages.overlay(player, Component.translatable("apex.attuned.maelstrom_nova"));
 	}
 
 	private static void fireStillpointField(ServerPlayer player, ServerLevel level) {
@@ -626,7 +627,7 @@ public final class Apex {
 			player.getX(), player.getY() + 1.0, player.getZ(), 16, 1.6, 0.8, 1.6, 0.0);
 		level.playSound(null, player.blockPosition(),
 			SoundEvents.BEACON_ACTIVATE, SoundSource.PLAYERS, 0.7F, 1.5F);
-		player.sendOverlayMessage(Component.translatable("apex.attuned.stillpoint_field"));
+		PlayerMessages.overlay(player, Component.translatable("apex.attuned.stillpoint_field"));
 	}
 
 	private static boolean isApexNovaTarget(LivingEntity entity, Player player) {
@@ -754,7 +755,7 @@ public final class Apex {
 	private static void announceGained(ServerPlayer player, Capstone capstone) {
 		((ServerLevel) player.level()).playSound(null, player.blockPosition(),
 			SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, SoundSource.PLAYERS, 0.7F, 1.0F);
-		player.sendSystemMessage(Component.literal("Apex active: ")
+		PlayerMessages.system(player, Component.literal("Apex active: ")
 			.withStyle(ChatFormatting.GRAY)
 			.append(Component.literal(capstone.displayName())
 				.withStyle(capstone.chatColor(), ChatFormatting.BOLD))
@@ -766,7 +767,7 @@ public final class Apex {
 	private static void announceGainedDormant(ServerPlayer player, Capstone capstone) {
 		((ServerLevel) player.level()).playSound(null, player.blockPosition(),
 			SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, SoundSource.PLAYERS, 0.6F, 0.8F);
-		player.sendSystemMessage(Component.translatable(
+		PlayerMessages.system(player, Component.translatable(
 				"apex.attuned.unlocked_dormant",
 				Component.literal(capstone.displayName())
 					.withStyle(capstone.chatColor(), ChatFormatting.BOLD))
@@ -776,7 +777,7 @@ public final class Apex {
 	private static void announceRearmed(ServerPlayer player, Capstone capstone) {
 		((ServerLevel) player.level()).playSound(null, player.blockPosition(),
 			SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, SoundSource.PLAYERS, 0.7F, 1.3F);
-		player.sendOverlayMessage(Component.translatable("apex.attuned.rearmed",
+		PlayerMessages.overlay(player, Component.translatable("apex.attuned.rearmed",
 			Component.literal(capstone.displayName()).withStyle(capstone.chatColor(), ChatFormatting.BOLD)));
 		AttunedAdvancements.award(player, "attunement/apex");
 	}
@@ -784,13 +785,13 @@ public final class Apex {
 	private static void announceDormant(ServerPlayer player) {
 		((ServerLevel) player.level()).playSound(null, player.blockPosition(),
 			SoundEvents.AMETHYST_BLOCK_HIT, SoundSource.PLAYERS, 0.6F, 0.6F);
-		player.sendOverlayMessage(Component.translatable("apex.attuned.dormant"));
+		PlayerMessages.overlay(player, Component.translatable("apex.attuned.dormant"));
 	}
 
 	private static void announceLost(ServerPlayer player) {
 		((ServerLevel) player.level()).playSound(null, player.blockPosition(),
 			SoundEvents.BEACON_DEACTIVATE, SoundSource.PLAYERS, 0.6F, 1.0F);
-		player.sendSystemMessage(Component.literal("Your Apex has faded.")
+		PlayerMessages.system(player, Component.literal("Your Apex has faded.")
 			.withStyle(ChatFormatting.GRAY));
 	}
 

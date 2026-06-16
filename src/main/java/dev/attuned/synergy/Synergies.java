@@ -1,5 +1,6 @@
 package dev.attuned.synergy;
 
+import dev.attuned.compat.PlayerMessages;
 import dev.attuned.Attuned;
 import dev.attuned.AttunedAdvancements;
 import dev.attuned.AttunedPlayerCleanup;
@@ -171,7 +172,7 @@ public final class Synergies {
 				behavior.onActivate(player, ItemStack.EMPTY); // a Confluence has no backing stack
 			}
 		});
-		player.sendSystemMessage(Component.translatable("confluence.attuned.gained", nameOf(confluenceId)));
+		PlayerMessages.system(player, Component.translatable("confluence.attuned.gained", nameOf(confluenceId)));
 		AttunedAdvancements.award(player, "attunement/confluence_" + pathOf(confluenceId));
 		maybeFanfare(player, confluenceId);
 	}
@@ -187,7 +188,7 @@ public final class Synergies {
 				behavior.onDeactivate(player, ItemStack.EMPTY);
 			}
 		});
-		player.sendSystemMessage(Component.translatable("confluence.attuned.faded", nameOf(confluenceId)));
+		PlayerMessages.system(player, Component.translatable("confluence.attuned.faded", nameOf(confluenceId)));
 	}
 
 	private static void applyModifiers(ServerPlayer player, String confluenceId, SynergyDefinition def) {
@@ -258,8 +259,8 @@ public final class Synergies {
 				player.getZ(),
 				16, 0.5, 0.7, 0.5, 0.4);
 		}
-		player.sendOverlayMessage(discovery);
-		player.sendSystemMessage(discovery);
+		PlayerMessages.overlay(player, discovery);
+		PlayerMessages.system(player, discovery);
 	}
 
 	/**

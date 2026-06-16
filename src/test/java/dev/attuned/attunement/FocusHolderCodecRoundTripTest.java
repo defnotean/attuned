@@ -3,9 +3,11 @@ package dev.attuned.attunement;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import dev.attuned.test.MinecraftTestBootstrap;
 import com.mojang.serialization.Codec;
 import net.minecraft.nbt.NbtOps;
 import net.minecraft.nbt.Tag;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -20,6 +22,11 @@ import org.junit.jupiter.api.Test;
  * components that the unit-test classpath does not provide.
  */
 class FocusHolderCodecRoundTripTest {
+	@BeforeAll
+	static void bootstrapMinecraft() {
+		MinecraftTestBootstrap.ensureBootstrapped();
+	}
+
 	@Test
 	void emptyHolderRoundTripsThroughItsRealCodecPreservingSize() {
 		Codec<FocusHolder> codec = FocusHolder.codec(27, 1);

@@ -37,7 +37,7 @@ public final class ReweavingNetworking {
 			return;
 		}
 		initialized = true;
-		PayloadTypeRegistry.serverboundPlay().register(ReweavePayload.TYPE, ReweavePayload.CODEC);
+		PayloadTypeRegistry.playC2S().register(ReweavePayload.TYPE, ReweavePayload.CODEC);
 		ServerPlayNetworking.registerGlobalReceiver(ReweavePayload.TYPE, (payload, context) -> {
 			ServerPlayer player = context.player();
 			player.level().getServer().execute(() -> tryReweave(player));

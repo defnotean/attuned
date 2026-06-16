@@ -141,7 +141,8 @@ class SynergiesRuntimeContractTest {
 		assertBefore(synergies, "sawOnboarding(player", "markOnboarding(player");
 		assertTrue(synergies.contains("AttunedAttachments.markConfluenceDiscovered("),
 			"First-discovery fanfare must record the discovery for the journal.");
-		assertTrue(synergies.contains("sendOverlayMessage(discovery)"),
+		assertTrue(synergies.contains("sendOverlayMessage(discovery)")
+				|| synergies.contains("PlayerMessages.overlay(player, discovery)"),
 			"First-discovery fanfare should surface an overlay in addition to chat.");
 		assertTrue(synergies.contains("ParticleTypes.ENCHANT"),
 			"First-discovery fanfare should add a lightweight particle burst.");

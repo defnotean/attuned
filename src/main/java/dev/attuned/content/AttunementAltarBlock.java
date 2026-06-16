@@ -1,5 +1,6 @@
 package dev.attuned.content;
 
+import dev.attuned.compat.PlayerMessages;
 import com.mojang.serialization.MapCodec;
 import dev.attuned.AttunedConfig;
 import dev.attuned.AttunedServerCleanup;
@@ -186,7 +187,7 @@ public class AttunementAltarBlock extends Block {
 		int cap = AttunedConfig.get().capacityCap();
 		int capacity = AttunedAttachments.getCapacity(player);
 		if (capacity >= cap) {
-			player.sendSystemMessage(Component.literal("Your attunement is already at its fullest.")
+			PlayerMessages.system(player, Component.literal("Your attunement is already at its fullest.")
 				.withStyle(ChatFormatting.GRAY));
 			return false;
 		}
@@ -211,7 +212,7 @@ public class AttunementAltarBlock extends Block {
 			AltarAnimations.begin(server, pos, serverPlayer, stanceRgb(affinity), flair);
 			applyBindingPerk(serverPlayer);
 		}
-		player.sendSystemMessage(Component.literal("The Altar binds the shard — capacity ")
+		PlayerMessages.system(player, Component.literal("The Altar binds the shard — capacity ")
 			.withStyle(ChatFormatting.GRAY)
 			.append(Component.literal(raised + " / " + cap).withStyle(ChatFormatting.AQUA)));
 		return true;

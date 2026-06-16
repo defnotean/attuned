@@ -15,7 +15,7 @@ import java.util.Set;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.input.MouseButtonEvent;
@@ -184,7 +184,7 @@ public final class AttunementJournalScreen extends Screen {
 	}
 
 	@Override
-	public void extractBackground(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
+	public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
 		drawFrame(graphics);
 		drawNavigation(graphics);
 		drawChapter(graphics);
@@ -266,7 +266,7 @@ public final class AttunementJournalScreen extends Screen {
 		return this.addRenderableWidget(button);
 	}
 
-	private void drawFrame(GuiGraphicsExtractor graphics) {
+	private void drawFrame(GuiGraphics graphics) {
 		int left = left();
 		int top = top();
 		graphics.fill(0, 0, this.width, this.height, BACKDROP);
@@ -275,12 +275,12 @@ public final class AttunementJournalScreen extends Screen {
 			0.0F, 0.0F, PANEL_WIDTH, PANEL_HEIGHT, PANEL_WIDTH, PANEL_HEIGHT);
 	}
 
-	private void drawNavigation(GuiGraphicsExtractor graphics) {
+	private void drawNavigation(GuiGraphics graphics) {
 		int left = left();
 		int top = top();
-		graphics.text(this.font, Component.translatable("journal.attuned.screen.title"),
+		graphics.drawString(this.font, Component.translatable("journal.attuned.screen.title"),
 			left + PADDING, top + 10, TEXT_TITLE, false);
-		graphics.text(this.font, Component.translatable("journal.attuned.screen.subtitle"),
+		graphics.drawString(this.font, Component.translatable("journal.attuned.screen.subtitle"),
 			left + PADDING, top + 22, TEXT_MUTED, false);
 
 		for (int i = 0; i < CHAPTERS.size(); i++) {
@@ -298,7 +298,7 @@ public final class AttunementJournalScreen extends Screen {
 		}
 	}
 
-	private void drawChapter(GuiGraphicsExtractor graphics) {
+	private void drawChapter(GuiGraphics graphics) {
 		Chapter chapter = CHAPTERS.get(this.chapterIndex);
 		int x = contentLeft() + 10;
 		int w = contentWidth() - 20;
@@ -325,7 +325,7 @@ public final class AttunementJournalScreen extends Screen {
 			y += HEADER_HEIGHT;
 			for (FormattedCharSequence line : section.lines()) {
 				if (y >= contentTop && y + 9 <= contentBottom) {
-					graphics.text(this.font, line, x, y, PAGE_BODY, false);
+					graphics.drawString(this.font, line, x, y, PAGE_BODY, false);
 				}
 				y += LINE_HEIGHT;
 			}
@@ -393,18 +393,18 @@ public final class AttunementJournalScreen extends Screen {
 		return contentTop + Math.round(travel * (this.scrollOffset / (float) this.maxScroll));
 	}
 
-	private void drawSectionHeader(GuiGraphicsExtractor graphics, Section section, int x, int y, int w,
+	private void drawSectionHeader(GuiGraphics graphics, Section section, int x, int y, int w,
 			int contentTop, int contentBottom) {
 		Page page = section.page();
 		int accent = page.accent();
 		if (y >= contentTop && y + 9 <= contentBottom) {
 			if (page.affinity() != null) {
 				drawMiniGem(graphics, x, y - 2, 14, page.affinity(), accent);
-				graphics.text(this.font, Component.literal(section.title()).withStyle(ChatFormatting.BOLD),
+				graphics.drawString(this.font, Component.literal(section.title()).withStyle(ChatFormatting.BOLD),
 					x + 20, y, PAGE_TITLE, false);
 			} else {
 				graphics.fill(x, y + 4, x + 12, y + 6, accent);
-				graphics.text(this.font, Component.literal(section.title()).withStyle(ChatFormatting.BOLD),
+				graphics.drawString(this.font, Component.literal(section.title()).withStyle(ChatFormatting.BOLD),
 					x + 18, y, PAGE_TITLE, false);
 			}
 		}
@@ -415,11 +415,11 @@ public final class AttunementJournalScreen extends Screen {
 		}
 	}
 
-	private void drawFooter(GuiGraphicsExtractor graphics, int x, int w) {
+	private void drawFooter(GuiGraphics graphics, int x, int w) {
 		String progress = (this.chapterIndex + 1) + " / " + CHAPTERS.size();
 		int progressX = x + PAGE_BUTTON_WIDTH + 10;
 		int progressWidth = w - (PAGE_BUTTON_WIDTH + 10) * 2;
-		graphics.text(this.font, Component.literal(progress),
+		graphics.drawString(this.font, Component.literal(progress),
 			progressX + (progressWidth - this.font.width(progress)) / 2,
 			top() + PANEL_HEIGHT - 45, PAGE_MUTED, false);
 		int progressY = top() + PANEL_HEIGHT - 34;
@@ -442,7 +442,7 @@ public final class AttunementJournalScreen extends Screen {
 		return out;
 	}
 
-	private static void drawDot(GuiGraphicsExtractor graphics, int cx, int cy, int color) {
+	private static void drawDot(GuiGraphics graphics, int cx, int cy, int color) {
 		int c = 0xFF000000 | (color & 0x00FFFFFF);
 		graphics.fill(cx - 1, cy, cx + 2, cy + 1, c);
 		graphics.fill(cx, cy - 1, cx + 1, cy + 2, c);
@@ -452,7 +452,7 @@ public final class AttunementJournalScreen extends Screen {
 		return CHAPTERS.get(chapterIndex).pages().get(0).accent();
 	}
 
-	private static void drawMiniGem(GuiGraphicsExtractor graphics, int x, int y, int size, Affinity affinity, int accent) {
+	private static void drawMiniGem(GuiGraphics graphics, int x, int y, int size, Affinity affinity, int accent) {
 		int face = switch (affinity) {
 			case FURY -> 0xFFE95E4D;
 			case BASTION -> 0xFFFFC857;
@@ -595,7 +595,7 @@ public final class AttunementJournalScreen extends Screen {
 		}
 
 		@Override
-		protected void extractContents(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
+		protected void renderContents(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
 			int x0 = getX();
 			int y0 = getY();
 			int x1 = x0 + getWidth();
@@ -604,7 +604,7 @@ public final class AttunementJournalScreen extends Screen {
 				if (isHoveredOrFocused()) {
 					graphics.fill(x0, y0, x1, y1, ROW_HOVER);
 				}
-				extractDefaultLabel(graphics.textRendererForWidget(this, GuiGraphicsExtractor.HoveredTextEffects.NONE));
+				renderDefaultLabel(graphics.textRendererForWidget(this, GuiGraphics.HoveredTextEffects.NONE));
 				return;
 			}
 			int face = this.active
@@ -616,7 +616,7 @@ public final class AttunementJournalScreen extends Screen {
 			graphics.fill(x0 + 2, y0 + 2, x1 - 2, y1 - 2, face);
 			graphics.fill(x0 + 3, y0 + 3, x1 - 3, y0 + 4, this.active ? 0xFFE0C6FF : 0xFF77707E);
 			graphics.fill(x0 + 3, y1 - 4, x1 - 3, y1 - 3, 0xFF17151D);
-			extractDefaultLabel(graphics.textRendererForWidget(this, GuiGraphicsExtractor.HoveredTextEffects.NONE));
+			renderDefaultLabel(graphics.textRendererForWidget(this, GuiGraphics.HoveredTextEffects.NONE));
 		}
 	}
 

@@ -170,7 +170,7 @@ public final class AttunedCombat {
 				SUNLANCE_CHARGED_SWING_THRESHOLD) || !context.hasActiveFocus(player, SUNLANCE_FOCUS)) {
 			return false;
 		}
-		return defender.typeHolder().is(EntityTypeTags.UNDEAD)
+		return defender.getType().is(EntityTypeTags.UNDEAD)
 			|| context.affinityOf(defender).filter(affinity -> affinity == Affinity.FURY).isPresent();
 	}
 

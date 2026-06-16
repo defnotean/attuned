@@ -76,8 +76,10 @@ class CombatPolishContractTest {
 		assertTrue(apex.contains("CombatFeedback.executeFinisher("));
 		assertTrue(apex.contains("CombatFeedback.unyieldingCap("));
 		assertTrue(apex.contains("CombatFeedback.stillpointPulse("));
-		assertTrue(apex.contains("sendOverlayMessage(Component.translatable(\"apex.attuned.rearmed\""));
-		assertTrue(apex.contains("sendOverlayMessage(Component.translatable(\"apex.attuned.dormant\""));
+		assertTrue(apex.contains("sendOverlayMessage(Component.translatable(\"apex.attuned.rearmed\"")
+				|| apex.contains("PlayerMessages.overlay(player, Component.translatable(\"apex.attuned.rearmed\""));
+		assertTrue(apex.contains("sendOverlayMessage(Component.translatable(\"apex.attuned.dormant\"")
+				|| apex.contains("PlayerMessages.overlay(player, Component.translatable(\"apex.attuned.dormant\""));
 	}
 
 	@Test

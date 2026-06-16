@@ -1,5 +1,6 @@
 package dev.attuned.pacts;
 
+import dev.attuned.compat.PlayerMessages;
 import dev.attuned.Milestones;
 import dev.attuned.AttunedAdvancements;
 import dev.attuned.AttunedPlayerCleanup;
@@ -123,7 +124,7 @@ public final class PactTrials {
 		PactTrialProgress progress = get(player).withTier4Completed(id);
 		player.setAttached(AttunedAttachments.PACT_TRIAL_PROGRESS, progress);
 		AttunedAdvancements.award(player, "attunement/pact_" + id + "_trial");
-		player.sendSystemMessage(Component.translatable("pact.attuned." + id + "_trial.title")
+		PlayerMessages.system(player, Component.translatable("pact.attuned." + id + "_trial.title")
 			.withStyle(pact.chatColor(), ChatFormatting.BOLD)
 			.append(Component.translatable("pact.attuned.trial.complete").withStyle(ChatFormatting.GRAY)));
 		ServerLevel level = (ServerLevel) player.level();
@@ -241,7 +242,7 @@ public final class PactTrials {
 			AttunedAttachments.markOnboarding(player, onboardId);
 			((ServerLevel) player.level()).playSound(null, player.blockPosition(),
 				SoundEvents.EXPERIENCE_ORB_PICKUP, SoundSource.PLAYERS, 0.35F, 1.25F);
-			player.sendOverlayMessage(
+			PlayerMessages.overlay(player,
 				Component.translatable("pact.attuned." + id + "_trial.title")
 					.withStyle(pact.chatColor())
 					.append(Component.translatable("pact.attuned.trial.progress", percent)

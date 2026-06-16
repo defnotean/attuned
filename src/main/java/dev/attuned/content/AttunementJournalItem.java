@@ -1,5 +1,6 @@
 package dev.attuned.content;
 
+import dev.attuned.compat.PlayerMessages;
 import dev.attuned.network.OpenJournalPayload;
 import java.util.List;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
@@ -86,10 +87,10 @@ public class AttunementJournalItem extends WrittenBookItem {
 	}
 
 	public static void showGuide(Player player) {
-		player.sendSystemMessage(Component.translatable("journal.attuned.title")
+		PlayerMessages.system(player, Component.translatable("journal.attuned.title")
 			.withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD));
 		for (int i = 1; i <= 8; i++) {
-			player.sendSystemMessage(Component.translatable("journal.attuned.line" + i)
+			PlayerMessages.system(player, Component.translatable("journal.attuned.line" + i)
 				.withStyle(ChatFormatting.GRAY));
 		}
 	}

@@ -66,7 +66,7 @@ class FociHudContractTest {
 			"The Foci HUD should use its dedicated frame art.");
 		assertTrue(hud.contains("AttunedAttachments.getInventory(player)"),
 			"The HUD should read the equipped Focus inventory.");
-		assertTrue(hud.contains("graphics.item("),
+		assertTrue(hud.contains("graphics.item(") || hud.contains("graphics.renderItem("),
 			"The HUD should render actual equipped item stacks.");
 		assertTrue(hud.contains("dormantReasons"),
 			"The HUD should distinguish active and dormant equipped Foci.");

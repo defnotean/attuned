@@ -47,7 +47,7 @@ public final class AltarNetworking {
 			return;
 		}
 		initialized = true;
-		PayloadTypeRegistry.serverboundPlay().register(BindShardPayload.TYPE, BindShardPayload.CODEC);
+		PayloadTypeRegistry.playC2S().register(BindShardPayload.TYPE, BindShardPayload.CODEC);
 		ServerPlayNetworking.registerGlobalReceiver(BindShardPayload.TYPE, (payload, context) -> {
 			ServerPlayer player = context.player();
 			player.level().getServer().execute(() -> tryBind(player));

@@ -1,5 +1,6 @@
 package dev.attuned.content;
 
+import dev.attuned.compat.PlayerMessages;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.InteractionHand;
@@ -34,7 +35,7 @@ public class AttunementShardFragmentItem extends Item {
 			? Component.translatable("item.attuned.attunement_shard_fragment.use.ready", count)
 			: Component.translatable("item.attuned.attunement_shard_fragment.use.progress",
 				count, FRAGMENTS_PER_SHARD);
-		player.sendSystemMessage(message.copy().withStyle(ChatFormatting.GRAY));
+		PlayerMessages.system(player, message.copy().withStyle(ChatFormatting.GRAY));
 	}
 
 	private static int countFragments(Player player) {

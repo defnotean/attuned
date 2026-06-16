@@ -11,7 +11,7 @@ import dev.attuned.client.hud.CombatHud;
 import dev.attuned.menu.FocusLayout;
 import dev.attuned.pacts.Pact;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.player.Player;
@@ -76,7 +76,7 @@ public final class FocusPanel {
 	 * threaded through helpers as locals, so the per-frame panel draw never walks
 	 * a player's Focus slots more than once or repeats a registry lookup.</p>
 	 */
-	public static void draw(GuiGraphicsExtractor graphics, int leftPos, int topPos,
+	public static void draw(GuiGraphics graphics, int leftPos, int topPos,
 			int slotX, int slotY, Player player) {
 		int x0 = leftPos + slotX - PAD_X;
 		int x1 = leftPos + slotX + FocusLayout.SLOT + PAD_X;
@@ -171,7 +171,7 @@ public final class FocusPanel {
 		}
 	}
 
-	private static void drawPriorityTick(GuiGraphicsExtractor graphics, int x, int y, int slot, int colorArgb) {
+	private static void drawPriorityTick(GuiGraphics graphics, int x, int y, int slot, int colorArgb) {
 		int ticks = slot + 1;
 		for (int i = 0; i < Math.min(ticks, 3); i++) {
 			int ty = y + 4 + i * 3;
@@ -245,7 +245,7 @@ public final class FocusPanel {
 	 * the existing pulse phase but caps alpha tightly so it reads as clarity, not
 	 * a second full-slot effect.
 	 */
-	private static void drawPactStabilityCue(GuiGraphicsExtractor graphics, int sx, int sy,
+	private static void drawPactStabilityCue(GuiGraphics graphics, int sx, int sy,
 			int baseColor, int pulseAlpha) {
 		int alpha = Math.min(PACT_STABILITY_ALPHA_MAX, pulseAlpha + PACT_STABILITY_ALPHA_BONUS);
 		int argb = (alpha << 24) | (baseColor & 0x00FFFFFF);
@@ -280,7 +280,7 @@ public final class FocusPanel {
 	 * (rx1-1, ry1-2), {@code bottom} writes (rx1-1, ry1-1) -> (rx0+1, ry1-1),
 	 * {@code left} writes (rx0, ry1-1) -> (rx0, ry0+1).</p>
 	 */
-	private static void drawResonanceRing(GuiGraphicsExtractor graphics, int gemX0, int gemY0,
+	private static void drawResonanceRing(GuiGraphics graphics, int gemX0, int gemY0,
 			int affinityColor, float resonance, boolean atApex) {
 		int rx0 = gemX0 - 1;
 		int ry0 = gemY0 - 1;
