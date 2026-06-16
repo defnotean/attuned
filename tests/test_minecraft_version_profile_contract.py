@@ -205,6 +205,11 @@ class MinecraftVersionProfileContractTest(unittest.TestCase):
             github_output = output.read_text(encoding="utf-8")
             self.assertIn("minecraft_version=26.1.2", github_output)
             self.assertIn("java_version=25", github_output)
+            self.assertIn("build_java_version=25", github_output)
+
+    def test_build_java_version_uses_minimum_loom_runtime(self) -> None:
+        self.assertEqual("25", minecraft_version_profile.build_java_version(CURRENT_PROFILE))
+        self.assertEqual("21", minecraft_version_profile.build_java_version(LEGACY_PROFILE))
 
 
 if __name__ == "__main__":

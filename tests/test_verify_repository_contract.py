@@ -79,7 +79,7 @@ def write_version_profile_fixture(root: Path, *, java_version: str = "25") -> No
     )
     (root / ".github" / "workflows" / "ci.yml").write_text(
         "run: python3 tools/minecraft_version_profile.py current --github-output \"$GITHUB_OUTPUT\"\n"
-        "java-version: ${{ steps.versions.outputs.java_version }}\n"
+        "java-version: ${{ steps.versions.outputs.build_java_version }}\n"
         "run: git diff --check\n"
         "run: python3 tools/verify_repository.py\n"
         "run: python3 -m unittest discover -s tests\n"
@@ -303,7 +303,7 @@ class VerifyRepositoryContractTest(unittest.TestCase):
             write_version_profile_fixture(root)
             (root / ".github" / "workflows" / "ci.yml").write_text(
                 "run: python3 tools/minecraft_version_profile.py current --github-output \"$GITHUB_OUTPUT\"\n"
-                "java-version: ${{ steps.versions.outputs.java_version }}\n"
+                "java-version: ${{ steps.versions.outputs.build_java_version }}\n"
                 "run: git diff --check\n"
                 "run: python3 tools/verify_repository.py\n"
                 "run: python3 -m unittest discover -s tests\n"
@@ -321,7 +321,7 @@ class VerifyRepositoryContractTest(unittest.TestCase):
             write_version_profile_fixture(root)
             (root / ".github" / "workflows" / "ci.yml").write_text(
                 "run: python3 tools/minecraft_version_profile.py current --github-output \"$GITHUB_OUTPUT\"\n"
-                "java-version: ${{ steps.versions.outputs.java_version }}\n"
+                "java-version: ${{ steps.versions.outputs.build_java_version }}\n"
                 "run: python3 tools/verify_repository.py\n"
                 "run: python3 -m unittest discover -s tests\n"
                 "run: ./gradlew test build --no-daemon\n"
