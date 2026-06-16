@@ -1,7 +1,17 @@
 {
-  "source": "docs/superpowers/assets/umbral-eclipse/umbral-eclipse-foci-concept-source.jpg",
-  "generated_by": "Hermes image_generate (xai grok-imagine-image)",
-  "purpose": "Concept source for the cleaned deterministic Umbral Eclipse focus sprite pass.",
+  "source": "docs/superpowers/assets/umbral-eclipse/umbral-eclipse-foci-source.png",
+  "generated_by": "OpenAI built-in image_gen",
+  "purpose": "Image-generated source sheet for the Umbral Eclipse Focus texture pass.",
+  "source_grid": [
+    5,
+    1
+  ],
+  "operations": [
+    "crop generated source grid cells",
+    "remove border-connected flat magenta key background",
+    "fit each item to 64x64",
+    "assemble eight brightness/color pulse frames"
+  ],
   "final_textures": [
     "src/main/resources/assets/attuned/textures/item/gloomstride_focus.png",
     "src/main/resources/assets/attuned/textures/item/duskward_focus.png",
@@ -9,5 +19,87 @@
     "src/main/resources/assets/attuned/textures/item/dreadfang_focus.png",
     "src/main/resources/assets/attuned/textures/item/eclipse_focus.png"
   ],
-  "format": "64x512 animated PNG sheets, eight 64x64 frames, frametime 2, interpolate true"
+  "format": "64x512 animated PNG sheets, eight 64x64 frames, frametime 2, interpolate true",
+  "outputs": [
+    {
+      "id": "gloomstride_focus",
+      "label": "Gloomstride",
+      "path": "src/main/resources/assets/attuned/textures/item/gloomstride_focus.png",
+      "size": [
+        64,
+        512
+      ],
+      "frames": 8,
+      "first_frame_bounds": [
+        3,
+        1,
+        61,
+        63
+      ]
+    },
+    {
+      "id": "duskward_focus",
+      "label": "Duskward",
+      "path": "src/main/resources/assets/attuned/textures/item/duskward_focus.png",
+      "size": [
+        64,
+        512
+      ],
+      "frames": 8,
+      "first_frame_bounds": [
+        5,
+        1,
+        59,
+        63
+      ]
+    },
+    {
+      "id": "shadowmeld_focus",
+      "label": "Shadowmeld",
+      "path": "src/main/resources/assets/attuned/textures/item/shadowmeld_focus.png",
+      "size": [
+        64,
+        512
+      ],
+      "frames": 8,
+      "first_frame_bounds": [
+        1,
+        1,
+        62,
+        63
+      ]
+    },
+    {
+      "id": "dreadfang_focus",
+      "label": "Dreadfang",
+      "path": "src/main/resources/assets/attuned/textures/item/dreadfang_focus.png",
+      "size": [
+        64,
+        512
+      ],
+      "frames": 8,
+      "first_frame_bounds": [
+        3,
+        1,
+        61,
+        63
+      ]
+    },
+    {
+      "id": "eclipse_focus",
+      "label": "Eclipse",
+      "path": "src/main/resources/assets/attuned/textures/item/eclipse_focus.png",
+      "size": [
+        64,
+        512
+      ],
+      "frames": 8,
+      "first_frame_bounds": [
+        2,
+        1,
+        61,
+        63
+      ]
+    }
+  ]
 }
