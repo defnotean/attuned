@@ -450,6 +450,7 @@
 	"item.attuned.updraft_focus.lore": "The sky answers a steady hand.",
 	"item.attuned.updraft_focus.lore2": "Hold jump to catch the wind; hold control to bleed it off.",
 	"item.attuned.updraft_focus.effect": "With an elytra equipped, hold jump while gliding to boost forward; hold sprint/control to brake hard.",
+	"item.attuned.updraft_focus.exhausted": "Updraft falters: PvP exhaustion.",
 	"item.attuned.emberward_focus.lore": "Flame finds nothing to hold.",
 	"item.attuned.emberward_focus.lore2": "You pass through; the fire stays behind.",
 	"item.attuned.emberward_focus.effect": "Grants immunity to fire and lava.",

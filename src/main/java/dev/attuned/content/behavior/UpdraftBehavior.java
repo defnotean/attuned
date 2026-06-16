@@ -10,8 +10,17 @@ import dev.attuned.attunement.Attunement;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.phys.Vec3;
@@ -39,18 +48,32 @@ public final class UpdraftBehavior implements FocusBehavior {
 	static final double MAX_BRAKE_HORIZONTAL_CHANGE = 0.18D;
 	/** Maximum vertical velocity change applied in one brake tick. */
 	static final double MAX_BRAKE_VERTICAL_CHANGE = 0.12D;
+	/** Five seconds at 20 TPS before PvP flight control exhaustion begins. */
+	static final int PVP_EXHAUSTION_TICKS = 100;
+	/** How long a PvP combat window remains active after the last player hit. */
+	static final int PVP_COMBAT_GRACE_TICKS = 120;
+	private static final int FLIGHT_EFFECT_INTERVAL = 3;
+	private static final int FLIGHT_SOUND_INTERVAL = 12;
+	private static final int EXHAUSTION_EFFECT_INTERVAL = 20;
+	private static final int EXHAUSTION_DEBUFF_TICKS = 40;
 
 	private static final Map<UUID, Controls> CONTROLS = new HashMap<>();
 	private static final Map<UUID, Integer> LAST_FLIGHT_TICK = new HashMap<>();
+	private static final Map<UUID, Long> PVP_STARTED = new HashMap<>();
+	private static final Map<UUID, Long> PVP_LAST = new HashMap<>();
 
 	static {
 		AttunedServerCleanup.onStop(() -> {
 			CONTROLS.clear();
 			LAST_FLIGHT_TICK.clear();
+			PVP_STARTED.clear();
+			PVP_LAST.clear();
 		});
 		AttunedPlayerCleanup.onForget(uuid -> {
 			CONTROLS.remove(uuid);
 			LAST_FLIGHT_TICK.remove(uuid);
+			PVP_STARTED.remove(uuid);
+			PVP_LAST.remove(uuid);
 		});
 	}
 
@@ -104,6 +127,10 @@ public final class UpdraftBehavior implements FocusBehavior {
 		if (!controls.active()) {
 			return;
 		}
+		if (isPvpExhausted(player)) {
+			applyPvpExhaustion(player);
+			return;
+		}
 
 		player.resetFallDistance();
 		player.fallDistance = 0.0F;
@@ -118,7 +145,19 @@ public final class UpdraftBehavior implements FocusBehavior {
 	}
 
 	public static boolean mitigatesFallDamage(ServerPlayer player) {
-		return isActive(player) && hasFunctionalElytra(player) && controlsFor(player).active();
+		return isActive(player) && hasFunctionalElytra(player)
+			&& controlsFor(player).active() && !isPvpExhausted(player);
+	}
+
+	public static void recordPvpDamage(LivingEntity defender, DamageSource source) {
+		if (!(defender instanceof ServerPlayer victim)
+				|| !(source.getEntity() instanceof ServerPlayer attacker)
+				|| attacker == victim) {
+			return;
+		}
+		long now = victim.level().getGameTime();
+		markPvpCombat(victim, now);
+		markPvpCombat(attacker, now);
 	}
 
 	static Controls controlsFor(ServerPlayer player) {
@@ -138,6 +177,7 @@ public final class UpdraftBehavior implements FocusBehavior {
 		player.resetFallDistance();
 		player.fallDistance = 0.0F;
 		player.hurtMarked = true;
+		spawnFlightEffects(player, controls);
 	}
 
 	public static Vec3 controlledMotion(Vec3 motion, Vec3 look, double yawDegrees,
@@ -197,6 +237,100 @@ public final class UpdraftBehavior implements FocusBehavior {
 			next = next.scale(MAX_SPEED / nextSpeed);
 		}
 		return next;
+	}
+
+	private static void spawnFlightEffects(ServerPlayer player, Controls controls) {
+		if (!(player.level() instanceof ServerLevel level)
+				|| player.tickCount % FLIGHT_EFFECT_INTERVAL != 0) {
+			return;
+		}
+		if (controls.braking()) {
+			spawnBrakeEffects(level, player);
+		} else if (controls.boosting()) {
+			spawnBoostEffects(level, player);
+		}
+	}
+
+	private static void spawnBoostEffects(ServerLevel level, ServerPlayer player) {
+		Vec3 look = player.getLookAngle();
+		Vec3 trail = player.position().subtract(look.scale(0.75D))
+			.add(0.0D, player.getBbHeight() * 0.45D, 0.0D);
+		level.sendParticles(ParticleTypes.GUST,
+			trail.x, trail.y, trail.z, 1, 0.08D, 0.05D, 0.08D, 0.01D);
+		level.sendParticles(ParticleTypes.CLOUD,
+			trail.x, trail.y, trail.z, 2, 0.12D, 0.06D, 0.12D, 0.02D);
+		if (player.tickCount % FLIGHT_SOUND_INTERVAL == 0) {
+			level.playSound(null, player.blockPosition(),
+				SoundEvents.WIND_CHARGE_THROW, SoundSource.PLAYERS, 0.22F, 1.65F);
+		}
+	}
+
+	private static void spawnBrakeEffects(ServerLevel level, ServerPlayer player) {
+		Vec3 look = player.getLookAngle();
+		Vec3 cushion = player.position().add(look.scale(0.55D))
+			.add(0.0D, player.getBbHeight() * 0.45D, 0.0D);
+		level.sendParticles(ParticleTypes.CLOUD,
+			cushion.x, cushion.y, cushion.z, 5, 0.22D, 0.10D, 0.22D, 0.02D);
+		level.sendParticles(ParticleTypes.POOF,
+			cushion.x, cushion.y, cushion.z, 2, 0.16D, 0.08D, 0.16D, 0.01D);
+		if (player.tickCount % FLIGHT_SOUND_INTERVAL == 0) {
+			level.playSound(null, player.blockPosition(),
+				SoundEvents.ELYTRA_FLYING, SoundSource.PLAYERS, 0.18F, 0.72F);
+		}
+	}
+
+	private static void markPvpCombat(ServerPlayer player, long now) {
+		UUID id = player.getUUID();
+		Long last = PVP_LAST.get(id);
+		if (last == null || now - last > PVP_COMBAT_GRACE_TICKS) {
+			PVP_STARTED.put(id, now);
+		}
+		PVP_LAST.put(id, now);
+	}
+
+	private static boolean isPvpExhausted(ServerPlayer player) {
+		UUID id = player.getUUID();
+		Long started = PVP_STARTED.get(id);
+		Long last = PVP_LAST.get(id);
+		if (started == null || last == null) {
+			return false;
+		}
+		long now = player.level().getGameTime();
+		if (now - last > PVP_COMBAT_GRACE_TICKS) {
+			PVP_STARTED.remove(id);
+			PVP_LAST.remove(id);
+			return false;
+		}
+		return exhaustedByDuration(started, now);
+	}
+
+	static boolean exhaustedByDuration(long startedTick, long nowTick) {
+		return nowTick - startedTick >= PVP_EXHAUSTION_TICKS;
+	}
+
+	private static void applyPvpExhaustion(ServerPlayer player) {
+		if (player.isFallFlying()) {
+			player.setDeltaMovement(brakedMotion(player.getDeltaMovement()));
+			player.hurtMarked = true;
+		}
+		if (player.tickCount % EXHAUSTION_EFFECT_INTERVAL != 0) {
+			return;
+		}
+		player.addEffect(new MobEffectInstance(MobEffects.WEAKNESS,
+			EXHAUSTION_DEBUFF_TICKS, 0, true, true, true));
+		player.addEffect(new MobEffectInstance(MobEffects.SLOWNESS,
+			EXHAUSTION_DEBUFF_TICKS, 0, true, true, true));
+		player.sendOverlayMessage(Component.translatable(
+			"item.attuned.updraft_focus.exhausted"));
+		if (player.level() instanceof ServerLevel level) {
+			Vec3 at = player.position().add(0.0D, player.getBbHeight() * 0.55D, 0.0D);
+			level.sendParticles(ParticleTypes.SMOKE,
+				at.x, at.y, at.z, 8, 0.25D, 0.20D, 0.25D, 0.015D);
+			level.sendParticles(ParticleTypes.POOF,
+				at.x, at.y, at.z, 4, 0.20D, 0.12D, 0.20D, 0.01D);
+			level.playSound(null, player.blockPosition(),
+				SoundEvents.WOOL_STEP, SoundSource.PLAYERS, 0.45F, 0.65F);
+		}
 	}
 
 	private static boolean canStartGlide(ServerPlayer player) {
