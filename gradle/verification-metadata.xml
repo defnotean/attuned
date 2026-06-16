@@ -7,6 +7,8 @@
          <trust group="loom" name="mappings" version="layered+hash.2198" reason="LoomGlobalMinecraft generates branch-local layered mappings jars."/>
          <trust group="net.minecraft" name="minecraft-clientOnly-52430b475d" version="26.1.2" reason="LoomLocalMinecraft remaps this Minecraft compile jar locally."/>
          <trust group="net.minecraft" name="minecraft-common-52430b475d" version="26.1.2" reason="LoomLocalMinecraft remaps this Minecraft compile jar locally."/>
+         <trust group="net.minecraft" name="minecraft-clientOnly-.*" version="26.1.2" regex="true" reason="LoomLocalMinecraft remaps Minecraft client artifacts locally for this branch."/>
+         <trust group="net.minecraft" name="minecraft-common-.*" version="26.1.2" regex="true" reason="LoomLocalMinecraft remaps Minecraft common artifacts locally for this branch."/>
          <trust group="remapped.net.fabricmc.fabric-api" reason="LoomLocalRemappedMods generates remapped Fabric API artifacts locally."/>
          <trust group="net.minecraft" name="minecraft-clientOnly-.*" version=".*-loom[.]mappings[.].*" regex="true" reason="LoomLocalMinecraft remaps Minecraft client artifacts locally."/>
          <trust group="net.minecraft" name="minecraft-clientonly" version=".*-loom[.]mappings[.].*" regex="true" reason="LoomLocalMinecraft remaps Minecraft client artifacts locally."/>
