@@ -42,6 +42,14 @@ class SatchelScreenContractTest {
 		assertTrue(screen.contains("new SavePresetPayload"), "Save button should send a SavePresetPayload.");
 		assertTrue(screen.contains("new ApplyPresetPayload"), "Apply button should send an ApplyPresetPayload.");
 		assertTrue(screen.contains("new DeletePresetPayload"), "Delete button should send a DeletePresetPayload.");
+		assertTrue(screen.contains("new ImportPresetPayload"), "Import button should send an ImportPresetPayload.");
+		assertTrue(screen.contains("BuildShareCodec.encode"), "Share should encode the selected build for clipboard export.");
+		assertTrue(screen.contains("BuildShareCodec.decode"), "Import should decode clipboard text before sending.");
+		assertTrue(screen.contains("keyboardHandler.setClipboard"), "Share should copy the encoded build to the clipboard.");
+		assertTrue(screen.contains("keyboardHandler.getClipboard"), "Import should read the clipboard.");
+		assertTrue(screen.contains("screen.attuned.preset.share"), "Share button label.");
+		assertTrue(screen.contains("screen.attuned.preset.import"), "Import button label.");
+		assertTrue(screen.contains("minecraft.gui.setOverlayMessage"), "Share/import feedback should use the action bar overlay.");
 		assertTrue(screen.contains("ClientPlayNetworking.send"), "Preset buttons should send over client networking.");
 		assertTrue(screen.contains("AttunedAttachments.getPresets"),
 			"The screen should read presets from the synced attachment each frame (no caching).");
@@ -134,6 +142,11 @@ class SatchelScreenContractTest {
 	void presetLangKeysExist() throws IOException {
 		JsonObject lang = JsonParser.parseString(read(LANG)).getAsJsonObject();
 		assertTrue(lang.has("screen.attuned.preset.save"), "Save label.");
+		assertTrue(lang.has("screen.attuned.preset.share"), "Share label.");
+		assertTrue(lang.has("screen.attuned.preset.import"), "Import label.");
+		assertTrue(lang.has("screen.attuned.preset.shared"), "Share success string.");
+		assertTrue(lang.has("screen.attuned.preset.imported"), "Import success string.");
+		assertTrue(lang.has("screen.attuned.preset.import_failed"), "Import failure string.");
 		assertTrue(lang.has("screen.attuned.preset.apply"), "Apply label.");
 		assertTrue(lang.has("screen.attuned.preset.delete"), "Delete label.");
 		assertTrue(lang.has("screen.attuned.preset.missing"), "Missing-focus feedback string.");

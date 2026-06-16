@@ -83,6 +83,19 @@ public final class ReweavingNetworking {
 				menu.broadcastChanges();
 				return;
 			}
+			if (menu.canAffinityLoom()) {
+				ItemStack result = rollAffinityLoom(serverLevel, container, registry);
+				if (result.isEmpty()) {
+					return;
+				}
+				int cost = menu.affinityLoomShardCost();
+				container.getItem(0).shrink(1);
+				container.getItem(ReweavingMenu.CATALYST_SLOT).shrink(cost);
+				menu.incrementAffinityLoomRerolls();
+				container.setItem(ReweavingMenu.OUTPUT_SLOT, result);
+				menu.broadcastChanges();
+				return;
+			}
 			if (!hasThreeFociAndFragment(container, registry)) {
 				return;
 			}
@@ -121,6 +134,30 @@ public final class ReweavingNetworking {
 			}
 		}
 		return container.getItem(ReweavingMenu.CATALYST_SLOT).is(AttunedContent.ATTUNEMENT_SHARD_FRAGMENT);
+	}
+
+	private static ItemStack rollAffinityLoom(ServerLevel level, Container container,
+			Registry<FocusDefinition> registry) {
+		ItemStack input = container.getItem(0);
+		Optional<FocusDefinition> inputDef = focusDefinitionFor(registry, input);
+		if (inputDef.isEmpty()) {
+			return ItemStack.EMPTY;
+		}
+		String inputId = BuiltInRegistries.ITEM.getKey(input.getItem()).toString();
+		Optional<String> inputAffinity =
+			inputDef.flatMap(def -> def.affinity().map(affinity -> affinity.getSerializedName()));
+		List<ReweavingResultPicker.Candidate> candidates = focusCandidates(registry);
+		Optional<String> picked = ReweavingResultPicker.pickSameAffinity(
+			candidates, inputId, inputAffinity, new java.util.Random(level.getRandom().nextLong()));
+		if (picked.isEmpty()) {
+			return ItemStack.EMPTY;
+		}
+		Item item = BuiltInRegistries.ITEM.getValue(identifier(picked.get()));
+		if (item == Items.AIR) {
+			Attuned.LOGGER.warn("Affinity Loom picked unknown Focus item id {}", picked.get());
+			return ItemStack.EMPTY;
+		}
+		return new ItemStack(item);
 	}
 
 	private static ItemStack rollResult(ServerPlayer player, ServerLevel level, Container container,

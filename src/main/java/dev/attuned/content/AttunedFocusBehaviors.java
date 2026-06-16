@@ -29,6 +29,7 @@ import dev.attuned.content.behavior.LodestoneBehavior;
 import dev.attuned.content.behavior.MaskBehavior;
 import dev.attuned.content.behavior.MossheartBehavior;
 import dev.attuned.content.behavior.NightgazeBehavior;
+import dev.attuned.content.behavior.PearlguardBehavior;
 import dev.attuned.content.behavior.RadiantFocusBehaviors;
 import dev.attuned.content.behavior.RainstepBehavior;
 import dev.attuned.content.behavior.RevenantFocusBehaviors;
@@ -37,6 +38,7 @@ import dev.attuned.content.behavior.RootstepBehavior;
 import dev.attuned.content.behavior.ShadowmeldBehavior;
 import dev.attuned.content.behavior.SmokeBehavior;
 import dev.attuned.content.behavior.SoftstepBehavior;
+import dev.attuned.content.behavior.SparkweldBehavior;
 import dev.attuned.content.behavior.StormcallBehavior;
 import dev.attuned.content.behavior.SunwardenBehavior;
 import dev.attuned.content.behavior.TemperBehavior;
@@ -62,6 +64,7 @@ final class AttunedFocusBehaviors {
 		initialized = true;
 
 		register("tide", new TideBehavior());
+		register("pearlguard", new PearlguardBehavior());
 		register("galespur", new GalespurBehavior());
 		register("rainstep", new RainstepBehavior());
 		register("emberward", new EmberwardBehavior());
@@ -100,6 +103,7 @@ final class AttunedFocusBehaviors {
 		register("mossheart", new MossheartBehavior());
 		register("rivet", new RivetBehavior());
 		register("kilnward", new KilnwardBehavior());
+		register("sparkweld", new SparkweldBehavior());
 		register("temper", new TemperBehavior());
 		register("epitaph", new RevenantFocusBehaviors.Epitaph());
 		register("hollowstep", new RevenantFocusBehaviors.Hollowstep());

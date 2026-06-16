@@ -10,6 +10,7 @@ import dev.attuned.api.focus.ModifierEntry;
 import dev.attuned.api.synergy.SynergyDefinition;
 import dev.attuned.attunement.AttunedAttachments;
 import dev.attuned.attunement.Attunement;
+import dev.attuned.onboarding.Onboarding;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -228,6 +229,7 @@ public final class Synergies {
 	}
 
 	private static void maybeFanfare(ServerPlayer player, String confluenceId) {
+		Onboarding.tryConfluenceHint(player);
 		String onboardId = "confluence_first_" + pathOf(confluenceId);
 		if (AttunedAttachments.sawOnboarding(player, onboardId)) {
 			return;

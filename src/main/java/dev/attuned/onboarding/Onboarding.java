@@ -2,6 +2,8 @@ package dev.attuned.onboarding;
 
 import dev.attuned.AttunedServerCleanup;
 import dev.attuned.attunement.AttunedAttachments;
+import dev.attuned.combat.Apex;
+import dev.attuned.combat.Resonance;
 import dev.attuned.content.AttunedContent;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.minecraft.ChatFormatting;
@@ -34,6 +36,10 @@ public final class Onboarding {
 	private static final String HINT_FIRST_ALTAR = "first_altar";
 	private static final String HINT_ALTAR_SIGHT = "altar_sight";
 	private static final String HINT_FIRST_DORMANT = "first_dormant";
+	private static final String HINT_FIRST_RESONANCE_ARMED = "first_resonance_armed";
+	private static final String HINT_FIRST_ABILITY = "first_ability";
+	private static final String HINT_FIRST_CONFLUENCE = "first_confluence";
+	private static final String HINT_PACT_TRIAL_COMPLETE = "pact_trial_complete";
 
 	/**
 	 * How often the shard-presence and altar-sight polls run, in server ticks.
@@ -74,6 +80,11 @@ public final class Onboarding {
 					&& !holdsShard(player)
 					&& looksAtAltar(player)) {
 					tryAltarSightHint(player);
+				}
+				if (!AttunedAttachments.sawOnboarding(player, HINT_FIRST_RESONANCE_ARMED)
+					&& Apex.capstoneOf(player).isPresent()
+					&& Resonance.atApex(player)) {
+					tryResonanceArmedHint(player);
 				}
 			}
 		});
@@ -136,6 +147,55 @@ public final class Onboarding {
 		fireHint(player, HINT_FIRST_DORMANT,
 			Component.translatable("onboarding.attuned.first_dormant.found").withStyle(ChatFormatting.AQUA)
 				.append(Component.translatable("onboarding.attuned.first_dormant.detail")
+					.withStyle(ChatFormatting.GRAY)));
+	}
+
+	/**
+	 * Fires the first-armed-Apex hint once. A no-op if the player has already seen it.
+	 *
+	 * @param player the player to nudge
+	 */
+	public static void tryResonanceArmedHint(ServerPlayer player) {
+		fireHint(player, HINT_FIRST_RESONANCE_ARMED,
+			Component.translatable("onboarding.attuned.first_resonance_armed").withStyle(ChatFormatting.AQUA)
+				.append(Component.translatable("onboarding.attuned.first_resonance_armed.detail")
+					.withStyle(ChatFormatting.GRAY)));
+	}
+
+	/**
+	 * Fires the first-Focus-Ability hint once. A no-op if the player has already seen it.
+	 *
+	 * @param player the player to nudge
+	 */
+	public static void tryAbilityHint(ServerPlayer player) {
+		fireHint(player, HINT_FIRST_ABILITY,
+			Component.translatable("onboarding.attuned.first_ability").withStyle(ChatFormatting.AQUA)
+				.append(Component.translatable("onboarding.attuned.first_ability.detail")
+					.withStyle(ChatFormatting.GRAY)));
+	}
+
+	/**
+	 * Fires the first-Confluence hint once. A no-op if the player has already seen it.
+	 *
+	 * @param player the player to nudge
+	 */
+	public static void tryConfluenceHint(ServerPlayer player) {
+		fireHint(player, HINT_FIRST_CONFLUENCE,
+			Component.translatable("onboarding.attuned.first_confluence").withStyle(ChatFormatting.AQUA)
+				.append(Component.translatable("onboarding.attuned.first_confluence.detail")
+					.withStyle(ChatFormatting.GRAY)));
+	}
+
+	/**
+	 * Fires the first pact-trial-completion hint once. A no-op if the player has
+	 * already seen it.
+	 *
+	 * @param player the player to nudge
+	 */
+	public static void tryPactTrialCompleteHint(ServerPlayer player) {
+		fireHint(player, HINT_PACT_TRIAL_COMPLETE,
+			Component.translatable("onboarding.attuned.pact_trial_complete").withStyle(ChatFormatting.AQUA)
+				.append(Component.translatable("onboarding.attuned.pact_trial_complete.detail")
 					.withStyle(ChatFormatting.GRAY)));
 	}
 

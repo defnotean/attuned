@@ -13,6 +13,7 @@ class PresetNetworkingContractTest {
 	private static final Path SAVE = Path.of("src/main/java/dev/attuned/menu/SavePresetPayload.java");
 	private static final Path APPLY = Path.of("src/main/java/dev/attuned/menu/ApplyPresetPayload.java");
 	private static final Path DELETE = Path.of("src/main/java/dev/attuned/menu/DeletePresetPayload.java");
+	private static final Path IMPORT = Path.of("src/main/java/dev/attuned/menu/ImportPresetPayload.java");
 	private static final Path NET = Path.of("src/main/java/dev/attuned/menu/PresetNetworking.java");
 	private static final Path BOOTSTRAP = Path.of("src/main/java/dev/attuned/Attuned.java");
 	private static final Path SATCHEL_SCREEN = Path.of("src/client/java/dev/attuned/client/screen/SatchelScreen.java");
@@ -27,6 +28,10 @@ class PresetNetworkingContractTest {
 			"Delete carries the selected name as an idempotency guard for duplicate clicks.");
 		assertTrue(read(DELETE).contains("ByteBufCodecs.STRING_UTF8"),
 			"Delete name serializes as UTF-8.");
+		assertTrue(read(IMPORT).contains("record ImportPresetPayload(String name, List<String> slots)"),
+			"Import carries the decoded preset name and slot ids.");
+		assertTrue(read(IMPORT).contains("ByteBufCodecs.STRING_UTF8"),
+			"Import serializes strings as UTF-8.");
 	}
 
 	@Test
@@ -37,6 +42,7 @@ class PresetNetworkingContractTest {
 		assertTrue(net.contains("ServerPlayNetworking.registerGlobalReceiver(SavePresetPayload.TYPE"), "Save receiver.");
 		assertTrue(net.contains("ServerPlayNetworking.registerGlobalReceiver(ApplyPresetPayload.TYPE"), "Apply receiver.");
 		assertTrue(net.contains("ServerPlayNetworking.registerGlobalReceiver(DeletePresetPayload.TYPE"), "Delete receiver.");
+		assertTrue(net.contains("ServerPlayNetworking.registerGlobalReceiver(ImportPresetPayload.TYPE"), "Import receiver.");
 		assertTrue(net.contains("player.level().getServer().execute("), "Server-thread hop.");
 		assertTrue(net.contains("PresetApplicationResolver."), "Apply must delegate to the pure resolver.");
 		assertTrue(read(BOOTSTRAP).contains("PresetNetworking.init()"), "Bootstrap wiring.");
@@ -55,8 +61,8 @@ class PresetNetworkingContractTest {
 			"Preset mutation packets should re-read the held reliquary from the menu hand before mutating.");
 		assertTrue(net.contains("stack.getItem() == AttunedContent.SATCHEL_OF_FOCI"),
 			"isReliquary should still recognize the small Focus Reliquary item.");
-		assertEquals(3, countOccurrences(net, "if (!hasOpenLiveSatchel(player))"),
-			"Save, apply, and delete should all reject spoofed/out-of-menu preset packets.");
+		assertEquals(4, countOccurrences(net, "if (!hasOpenLiveSatchel(player))"),
+			"Save, apply, delete, and import should all reject spoofed/out-of-menu preset packets.");
 	}
 
 	@Test

@@ -189,10 +189,12 @@ public final class Pacts {
 		AttunedPlayerCleanup.onForgetPlayer(player -> {
 			UUID id = player.getUUID();
 			removeWindrunnerStepHeight(player);
+			PactTier4.removeStoneheartToughness(player);
 			pactState.remove(id);
 			windrunnerRuns.remove(id);
 			pyreswornFireMarks.entrySet().removeIf(entry -> entry.getValue().playerId().equals(id));
 		});
+		PactTacticals.init();
 	}
 
 	/** The pact a player has woken, if any. */
@@ -323,14 +325,23 @@ public final class Pacts {
 			? activeOf(context.activeAffinityCounts(defenderPlayer)).orElse(null)
 			: null;
 		if (defenderPact == Pact.STONEHEART) {
+			float before = amount;
 			amount *= (1.0F - STONEHEART_DAMPEN);
+			if (defender instanceof ServerPlayer stoneheartPlayer) {
+				PactTrials.onStoneheartAbsorb(stoneheartPlayer, before - amount);
+			}
 		}
 		// Nightsworn: a defender-side dampen that only holds while the wearer stands
 		// in the dark — the shadow shelters them. Mirrors Stoneheart's shape but
 		// conditioned on light level rather than always-on.
 		if (defenderPact == Pact.NIGHTSWORN && defender instanceof Player darkPlayer
 				&& isInDark(darkPlayer)) {
-			amount *= (1.0F - NIGHTSWORN_DARK_DAMPEN);
+			float dampen = PactTier4.nightswornDarkDampen(darkPlayer);
+			float before = amount;
+			amount *= (1.0F - dampen);
+			if (darkPlayer instanceof ServerPlayer nightswornPlayer) {
+				PactTrials.onNightswornAbsorb(nightswornPlayer, before - amount);
+			}
 		}
 		// Untethered: an attacker-side amplifier against any affinity-bearing foe.
 		if (source.getEntity() instanceof Player attackerPlayer) {
@@ -346,7 +357,7 @@ public final class Pacts {
 					&& isHostile(defender)
 					&& defender.typeHolder().is(EntityTypeTags.UNDEAD)
 					&& AttunedCombat.isChargedDirectMelee(attackerPlayer, defender, source, RADIANT_COVENANT_SWING_THRESHOLD)) {
-				amount *= (1.0F + RADIANT_COVENANT_UNDEAD_BONUS);
+				amount *= (1.0F + PactTier4.radiantUndeadBonus(attackerPlayer));
 			}
 		}
 		return amount;
@@ -407,6 +418,9 @@ public final class Pacts {
 				defender.getX(), defender.getY() + defender.getBbHeight() * 0.65, defender.getZ(),
 				5, 0.25, 0.25, 0.25, 0.0);
 		}
+		if (attacker instanceof ServerPlayer serverPlayer) {
+			PactTrials.onRadiantReveal(serverPlayer);
+		}
 	}
 
 	private static boolean isOwnPet(LivingEntity defender, Player attacker) {
@@ -445,8 +459,11 @@ public final class Pacts {
 		} else if (defender instanceof AbstractVillager) {
 			return;
 		}
-		defender.igniteForSeconds(PYRESWORN_IGNITE_SECONDS);
+		defender.igniteForSeconds(PactTier4.pyreswornIgniteSeconds(attacker));
 		markPyreswornFire(attacker, defender);
+		if (attacker instanceof ServerPlayer serverPlayer) {
+			PactTrials.onPyreswornIgnite(serverPlayer);
+		}
 	}
 
 	/**
@@ -460,7 +477,10 @@ public final class Pacts {
 			return;
 		}
 		defender.addEffect(new MobEffectInstance(
-			MobEffects.SLOWNESS, TIDESWORN_SLOW_TICKS, 0, true, false, true));
+			MobEffects.SLOWNESS, PactTier4.tideswornSlowTicks(attacker), 0, true, false, true));
+		if (attacker instanceof ServerPlayer serverPlayer) {
+			PactTrials.onTideswornSlow(serverPlayer);
+		}
 	}
 
 	/**
@@ -473,7 +493,10 @@ public final class Pacts {
 		if (!isDirectMelee(attacker, source) || !canStrikePactTarget(attacker, defender)) {
 			return;
 		}
-		defender.igniteForSeconds(FORGEBOUND_IGNITE_SECONDS);
+		defender.igniteForSeconds(PactTier4.forgeboundIgniteSeconds(attacker));
+		if (attacker instanceof ServerPlayer serverPlayer) {
+			PactTrials.onForgeboundIgnite(serverPlayer);
+		}
 	}
 
 	/** Direct, non-projectile, non-explosion melee from this attacker. */
@@ -601,6 +624,9 @@ public final class Pacts {
 		}
 		if (isAt(player, Pact.UNTETHERED)) {
 			AttunedAdvancements.award(player, UNTETHERED_CHALLENGE);
+			if (Resonance.atApex(player)) {
+				PactTrials.onUntetheredKill(player);
+			}
 		}
 	}
 
@@ -631,8 +657,14 @@ public final class Pacts {
 					if (was == Pact.WINDRUNNER && now != Pact.WINDRUNNER) {
 						removeWindrunnerStepHeight(player);
 					}
+					if (was == Pact.STONEHEART) {
+						PactTier4.removeStoneheartToughness(player);
+					}
 					if (now == Pact.WINDRUNNER) {
 						applyWindrunnerStepHeight(player);
+					}
+					if (now == Pact.STONEHEART) {
+						PactTier4.reconcileStoneheartToughness(player, now);
 					}
 				} else if (now != null) {
 					pactState.put(player.getUUID(), now);
@@ -641,11 +673,17 @@ public final class Pacts {
 					if (now == Pact.WINDRUNNER) {
 						applyWindrunnerStepHeight(player);
 					}
+					if (now == Pact.STONEHEART) {
+						PactTier4.reconcileStoneheartToughness(player, now);
+					}
 				} else {
 					pactState.remove(player.getUUID());
 					announceLost(player, was, null);
 					if (was == Pact.WINDRUNNER) {
 						removeWindrunnerStepHeight(player);
+					}
+					if (was == Pact.STONEHEART) {
+						PactTier4.removeStoneheartToughness(player);
 					}
 				}
 			}
@@ -654,16 +692,16 @@ public final class Pacts {
 					paintAura(player, now);
 				}
 				if (now == Pact.WINDRUNNER && ticks % WINDRUNNER_TICK == 0) {
-					// SPEED 0 (Speed I) refreshed every WINDRUNNER_TICK ticks. Hidden particles,
-					// shown in HUD so the player knows the pact is sustaining the buff.
+					// SPEED refreshed every WINDRUNNER_TICK ticks. Tier 4 grants Speed II while sprinting.
 					player.addEffect(new MobEffectInstance(
-						MobEffects.SPEED, WINDRUNNER_TICK * 4, 0, true, false, true));
+						MobEffects.SPEED, WINDRUNNER_TICK * 4, PactTier4.windrunnerSpeedAmplifier(player),
+						true, false, true));
 				}
 				if (now == Pact.WILDROOT && ticks % WILDROOT_REGEN_TICK == 0) {
-					// REGENERATION 0 (Regen I) refreshed every WILDROOT_REGEN_TICK ticks — a
-					// slow passive knit while the pact holds. Hidden particles, shown in HUD.
+					// Regeneration refreshed every WILDROOT_REGEN_TICK ticks — Tier 4 upgrades to Regen II.
 					player.addEffect(new MobEffectInstance(
-						MobEffects.REGENERATION, WILDROOT_REGEN_TICK * 2, 0, true, false, true));
+						MobEffects.REGENERATION, WILDROOT_REGEN_TICK * 2, PactTier4.wildrootRegenAmplifier(player),
+						true, false, true));
 				}
 			}
 			trackWindrunnerChallenge(player, now);
@@ -895,4 +933,10 @@ public final class Pacts {
 			.withStyle(pact.chatColor(), ChatFormatting.BOLD, ChatFormatting.ITALIC));
 		AttunedAdvancements.award(player, "attunement/first_pact");
 	}
+
+	static int pyreswornIgniteSecondsBase() { return PYRESWORN_IGNITE_SECONDS; }
+	static int forgeboundIgniteSecondsBase() { return FORGEBOUND_IGNITE_SECONDS; }
+	static int tideswornSlowTicksBase() { return TIDESWORN_SLOW_TICKS; }
+	static float radiantUndeadBonusBase() { return RADIANT_COVENANT_UNDEAD_BONUS; }
+	static float nightswornDarkDampenBase() { return NIGHTSWORN_DARK_DAMPEN; }
 }

@@ -50,6 +50,37 @@ class AttunedConfigContractTest {
 	}
 
 	@Test
+	void combatDefaultsMatchTheDocumentedSchema() {
+		assertEquals(1.33F, AttunedConfig.DEFAULT.advantageMultiplier());
+		assertEquals(0.75F, AttunedConfig.DEFAULT.disadvantageMultiplier());
+		assertEquals(1.20F, AttunedConfig.DEFAULT.discordDamageMultiplier());
+		assertEquals(0.012F, AttunedConfig.DEFAULT.resonanceHitEmpoweredGainPerDamage());
+		assertEquals(0.10F, AttunedConfig.DEFAULT.resonanceHitNeutralizedLoss());
+		assertEquals(0.30F, AttunedConfig.DEFAULT.resonanceKillEmpoweredGain());
+		assertEquals(0.00025F, AttunedConfig.DEFAULT.resonanceDecayPerTick());
+	}
+
+	@Test
+	void combatKeysRoundTripThroughTheCodec() {
+		JsonObject json = new JsonObject();
+		json.addProperty("advantage_multiplier", 1.5F);
+		json.addProperty("disadvantage_multiplier", 0.6F);
+		json.addProperty("discord_damage_multiplier", 1.25F);
+		json.addProperty("resonance_hit_empowered_gain_per_damage", 0.02F);
+		json.addProperty("resonance_hit_neutralized_loss", 0.15F);
+		json.addProperty("resonance_kill_empowered_gain", 0.4F);
+		json.addProperty("resonance_decay_per_tick", 0.0005F);
+		AttunedConfig parsed = AttunedConfig.CODEC.parse(JsonOps.INSTANCE, json).getOrThrow();
+		assertEquals(1.5F, parsed.advantageMultiplier());
+		assertEquals(0.6F, parsed.disadvantageMultiplier());
+		assertEquals(1.25F, parsed.discordDamageMultiplier());
+		assertEquals(0.02F, parsed.resonanceHitEmpoweredGainPerDamage());
+		assertEquals(0.15F, parsed.resonanceHitNeutralizedLoss());
+		assertEquals(0.4F, parsed.resonanceKillEmpoweredGain());
+		assertEquals(0.0005F, parsed.resonanceDecayPerTick());
+	}
+
+	@Test
 	void resonantSurgeDefaultsMatchTheDocumentedSchema() {
 		assertEquals(12000, AttunedConfig.DEFAULT.surgeIntervalTicks(),
 			"Surge interval defaults to 10 minutes (12000 ticks).");
@@ -97,7 +128,67 @@ class AttunedConfigContractTest {
 			AttunedConfig.DEFAULT.broadcastPactDeaths(),
 			surgeIntervalTicks,
 			surgeDurationTicks,
-			surgeRadius);
+			surgeRadius,
+			AttunedConfig.DEFAULT.advantageMultiplier(),
+			AttunedConfig.DEFAULT.disadvantageMultiplier(),
+			AttunedConfig.DEFAULT.discordDamageMultiplier(),
+			AttunedConfig.DEFAULT.resonanceHitEmpoweredGainPerDamage(),
+			AttunedConfig.DEFAULT.resonanceHitNeutralizedLoss(),
+			AttunedConfig.DEFAULT.resonanceKillEmpoweredGain(),
+			AttunedConfig.DEFAULT.resonanceDecayPerTick(),
+			AttunedConfig.DEFAULT.affinityLoomBaseShardCost(),
+			AttunedConfig.DEFAULT.affinityLoomMaxShardCost());
+	}
+
+	@Test
+	void affinityLoomDefaultsMatchTheDocumentedSchema() {
+		assertEquals(1, AttunedConfig.DEFAULT.affinityLoomBaseShardCost(),
+			"First Affinity Loom reroll defaults to one Attunement Shard.");
+		assertEquals(3, AttunedConfig.DEFAULT.affinityLoomMaxShardCost(),
+			"Affinity Loom shard cost defaults to a cap of three.");
+	}
+
+	@Test
+	void affinityLoomKeysRoundTripThroughTheCodec() {
+		JsonObject json = new JsonObject();
+		json.addProperty("affinity_loom_base_shard_cost", 2);
+		json.addProperty("affinity_loom_max_shard_cost", 5);
+		AttunedConfig parsed = AttunedConfig.CODEC.parse(JsonOps.INSTANCE, json).getOrThrow();
+		assertEquals(2, parsed.affinityLoomBaseShardCost());
+		assertEquals(5, parsed.affinityLoomMaxShardCost());
+	}
+
+	@Test
+	void directConfigRejectsMaxAffinityLoomCostBelowBase() {
+		assertInvalid(() -> loomConfig(3, 2));
+	}
+
+	private static AttunedConfig loomConfig(int affinityLoomBaseShardCost, int affinityLoomMaxShardCost) {
+		return new AttunedConfig(
+			AttunedConfig.DEFAULT.startingCapacity(),
+			AttunedConfig.DEFAULT.capacityCap(),
+			AttunedConfig.DEFAULT.capacityPerShard(),
+			AttunedConfig.DEFAULT.focusLootChance(),
+			AttunedConfig.DEFAULT.lowLootMultiplier(),
+			AttunedConfig.DEFAULT.commonLootMultiplier(),
+			AttunedConfig.DEFAULT.richLootMultiplier(),
+			AttunedConfig.DEFAULT.treasureLootMultiplier(),
+			AttunedConfig.DEFAULT.shardFragmentLootMultiplier(),
+			AttunedConfig.DEFAULT.voidstepCooldownTicks(),
+			AttunedConfig.DEFAULT.gravebindCooldownTicks(),
+			AttunedConfig.DEFAULT.broadcastPactDeaths(),
+			AttunedConfig.DEFAULT.surgeIntervalTicks(),
+			AttunedConfig.DEFAULT.surgeDurationTicks(),
+			AttunedConfig.DEFAULT.surgeRadius(),
+			AttunedConfig.DEFAULT.advantageMultiplier(),
+			AttunedConfig.DEFAULT.disadvantageMultiplier(),
+			AttunedConfig.DEFAULT.discordDamageMultiplier(),
+			AttunedConfig.DEFAULT.resonanceHitEmpoweredGainPerDamage(),
+			AttunedConfig.DEFAULT.resonanceHitNeutralizedLoss(),
+			AttunedConfig.DEFAULT.resonanceKillEmpoweredGain(),
+			AttunedConfig.DEFAULT.resonanceDecayPerTick(),
+			affinityLoomBaseShardCost,
+			affinityLoomMaxShardCost);
 	}
 
 	private static AttunedConfig config(int startingCapacity, int capacityCap) {
@@ -142,7 +233,16 @@ class AttunedConfigContractTest {
 			AttunedConfig.DEFAULT.broadcastPactDeaths(),
 			AttunedConfig.DEFAULT.surgeIntervalTicks(),
 			AttunedConfig.DEFAULT.surgeDurationTicks(),
-			AttunedConfig.DEFAULT.surgeRadius());
+			AttunedConfig.DEFAULT.surgeRadius(),
+			AttunedConfig.DEFAULT.advantageMultiplier(),
+			AttunedConfig.DEFAULT.disadvantageMultiplier(),
+			AttunedConfig.DEFAULT.discordDamageMultiplier(),
+			AttunedConfig.DEFAULT.resonanceHitEmpoweredGainPerDamage(),
+			AttunedConfig.DEFAULT.resonanceHitNeutralizedLoss(),
+			AttunedConfig.DEFAULT.resonanceKillEmpoweredGain(),
+			AttunedConfig.DEFAULT.resonanceDecayPerTick(),
+			AttunedConfig.DEFAULT.affinityLoomBaseShardCost(),
+			AttunedConfig.DEFAULT.affinityLoomMaxShardCost());
 	}
 
 	private static void assertInvalid(Executable constructor) {

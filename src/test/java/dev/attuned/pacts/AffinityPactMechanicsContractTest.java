@@ -62,8 +62,8 @@ class AffinityPactMechanicsContractTest {
 			"Forgebound should dispatch from the shared AFTER_DAMAGE hook, like Pyresworn.");
 		assertTrue(afterDamage.contains("forgeboundSear(attacker, defender, source)"),
 			"Forgebound dispatch should call its sear helper.");
-		assertTrue(forgeboundSear.contains("igniteForSeconds(FORGEBOUND_IGNITE_SECONDS)"),
-			"Forgebound's ember is a short ignite, a milder Pyresworn burn.");
+		assertTrue(forgeboundSear.contains("PactTier4.forgeboundIgniteSeconds(attacker)"),
+			"Forgebound's ember is a short ignite, tier-aware via PactTier4.");
 		assertTrue(forgeboundSear.contains("isDirectMelee(attacker, source)"),
 			"Forgebound should only sear on a direct melee hit.");
 		assertTrue(forgeboundSear.contains("canStrikePactTarget(attacker, defender)"),
@@ -96,8 +96,8 @@ class AffinityPactMechanicsContractTest {
 		assertTrue(adjustDamage.contains("defenderPact == Pact.NIGHTSWORN"),
 			"Nightsworn should be a defender-side dampen, layered beside Stoneheart's.");
 		assertTrue(adjustDamage.contains("isInDark(")
-				&& adjustDamage.contains("(1.0F - NIGHTSWORN_DARK_DAMPEN)"),
-			"Nightsworn's dampen should apply only while the wearer stands in the dark.");
+				&& adjustDamage.contains("PactTier4.nightswornDarkDampen"),
+			"Nightsworn's dampen should apply only while the wearer stands in the dark, tier-aware via PactTier4.");
 		assertTrue(isInDark.contains("getMaxLocalRawBrightness")
 				&& isInDark.contains("NIGHTSWORN_MAX_LIGHT"),
 			"Nightsworn's darkness check should read the raw light level, matching the Umbral Foci.");

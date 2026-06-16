@@ -29,11 +29,15 @@ class FactionSetBonusContractTest {
 		"attuned:unseen",
 		"attuned:seafarers",
 		"attuned:offshore",
+		"attuned:tideborn",
+		"attuned:forgebound",
+		"attuned:wildroot",
 		"attuned:radiant",
 		"attuned:reliquary",
 		"attuned:verdant_choir",
 		"attuned:ashen_forge",
-		"attuned:revenant");
+		"attuned:revenant",
+		"attuned:umbral");
 
 	@Test
 	void initIsWiredDirectlyAfterAttunedEffects() throws IOException {

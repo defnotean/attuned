@@ -1,0 +1,23 @@
+{
+	"parent": "attuned:attunement/pact_radiant_covenant",
+	"display": {
+		"icon": {
+			"id": "attuned:votive_focus"
+		},
+		"title": {
+			"translate": "pact.attuned.radiant_covenant_trial.title"
+		},
+		"description": {
+			"translate": "pact.attuned.radiant_covenant_trial.description"
+		},
+		"frame": "challenge",
+		"show_toast": true,
+		"announce_to_chat": true,
+		"hidden": false
+	},
+	"criteria": {
+		"done": {
+			"trigger": "minecraft:impossible"
+		}
+	}
+}

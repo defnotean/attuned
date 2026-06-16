@@ -54,6 +54,7 @@ public class AttunementJournalItem extends WrittenBookItem {
 		"journal.attuned.page11",
 		"journal.attuned.page12",
 		"journal.attuned.page13",
+		"journal.attuned.page_tempering",
 		"journal.attuned.page20",
 		"journal.attuned.page21",
 		"journal.attuned.page22",

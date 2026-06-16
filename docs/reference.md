@@ -131,15 +131,15 @@ Attuned currently ships these factions:
 | `attuned:unseen` | Stealth, stillness, smoke, ambush openings | Rewards setup and positioning without replacing armor, speed, or raw damage builds. | Speed I while sneaking. |
 | `attuned:seafarers` | Fishing, shore travel, return points | Peaceful Luck and water utility without PvP pressure. | Luck I while in or near water. |
 | `attuned:offshore` | Salvage, storms, wreck maps, deep-water risk | Utility with danger: temporary tools, water pressure, and anti-drowned/guardian space without becoming a permanent weapon line. | Water Breathing while submerged. |
-| `attuned:tideborn` | Pull, rain, undertow, and pearl-like defense | Combat-facing Tide tools; their counter identity lives in their `affinity` on the eightfold wheel. | (No set bonus yet.) |
-| `attuned:forgebound` | Brands, anvils, welding sparks, and tempered pressure | Forge-affinity tools that avoid changing the older Ashen Forge set-bonus roster. | (No set bonus yet.) |
-| `attuned:wildroot` | Thorn, seed, bramble, and patient natural counterplay | Verdant-affinity tools that avoid changing the older Verdant Choir set-bonus roster. | (No set bonus yet.) |
+| `attuned:tideborn` | Pull, rain, undertow, and pearl-like defense | Combat-facing Tide tools; their counter identity lives in their `affinity` on the eightfold wheel. | Dolphin's Grace while in or near water. |
+| `attuned:forgebound` | Brands, anvils, welding sparks, and tempered pressure | Forge-affinity tools that avoid changing the older Ashen Forge set-bonus roster. | Haste I near a lit forge, magma, or lava. |
+| `attuned:wildroot` | Thorn, seed, bramble, and patient natural counterplay | Verdant-affinity tools that avoid changing the older Verdant Choir set-bonus roster. | Slow Falling I while standing on grass. |
 | `attuned:radiant` | Holy vows, light, witness, judgment | Reveals and protects in short windows rather than adding broad damage. | A brief Regeneration I in bright light (light level >= 12), on a 60s cooldown. |
 | `attuned:reliquary` | Names, relics, rites, thresholds | Utility-side Holy tools that reward preparation and place. | Luck I. |
 | `attuned:verdant_choir` | Roots, bloom, moss, patient growth | Broad natural utility with small travel and survival numbers. | A little hunger restored while standing on grass, on a 60s cooldown. |
 | `attuned:ashen_forge` | Heat, craft, rivets, tempering | Craft-flavoured Fury/Bastion tools with restrained stat bonuses. | Fire Resistance near a lit forge, magma, or lava. |
 | `attuned:revenant` | Unfinished endings, debts, rites, grave-cold reprisals | Utility and controlled combat pressure through short revenge windows, cleansing, slowness, and one active movement ability. | Nearby undead are slowed (Slowness I). |
-| `attuned:umbral` | Shadow, darkness, stealth that rewards committing to the dark | Stronger the deeper the dark — movement, armor, and damage that only wake in low light, so it never out-scales a lit build. | (No set bonus yet.) |
+| `attuned:umbral` | Shadow, darkness, stealth that rewards committing to the dark | Stronger the deeper the dark — movement, armor, and damage that only wake in low light, so it never out-scales a lit build. | Speed I in the dark (light level <= 7). |
 
 ## Attribute modifiers
 
@@ -385,6 +385,119 @@ A Tempered Focus is a stronger, costlier variant of the same Focus:
 Tempering is marked by the `attuned:tempered` data component. Only untempered
 copies can be tempered, and a Tempered Focus cannot be tempered again. Reweaving
 three different Foci (the standard roll) is unaffected.
+
+## Affinity Loom (Reweaving II)
+
+The **Altar of Reweaving** has a third mode — **Affinity Loom** — that rerolls
+one Focus into a *different* Focus while keeping the same affinity lane (or
+neutral → neutral).
+
+Layout:
+
+- **Focus slot 0:** the Focus to reroll.
+- **Focus slots 1–2:** empty.
+- **Catalyst:** Attunement **Shards** (not Shard Fragments).
+
+Output is rolled via `pickSameAffinity`: same `affinity` as the input, or both
+neutral when the input has no affinity.
+
+**Escalating cost per menu session:** the first loom roll costs **1** shard, the
+second costs **2**, and the third and later rolls cost **3** (cap). The counter
+resets when the altar menu closes and you open it again.
+
+**Mode priority** when you commit a reweave (checked in order):
+
+1. **Temper** — two identical untempered Foci + Shard Fragment.
+2. **Affinity Loom** — one Focus + enough Shards for the current session cost.
+3. **Classic reweave** — three different Foci + Shard Fragment.
+
+The reweaving screen shows an Affinity Loom hint with the current shard cost when
+the layout matches.
+
+## Pact Trials (Tier 4)
+
+Each **Pact** carries a long-term **trial** that accrues progress only while
+that pact is **awake** (three or more active Foci sharing its affinity, or the
+Untethered spread rule). Completing a trial is **permanent** for that player:
+re-awakening the same pact later unlocks a small **Tier 4** passive bonus for as
+long as the pact is active again. The Attunement Journal **Pacts** chapter lists
+every trial, its goal, and your current progress.
+
+| Pact | Affinity | Trial goal | What accrues |
+|------|----------|------------|--------------|
+| Pyresworn | Fury | 40 | Ignite hostiles while Pyresworn is awake. |
+| Stoneheart | Bastion | 400 | Absorb damage **while blocking** while Stoneheart is awake. |
+| Windrunner | Zephyr | 6,400 | Sprint blocks while Windrunner is awake **and** (near hostiles within 16 blocks **or** at Apex resonance). |
+| Radiant Covenant | Holy | 25 | Land charged reveals while Radiant Covenant is awake. |
+| Tidesworn | Tide | 40 | Slow foes while Tidesworn is awake. |
+| Forgebound | Forge | 25 | Sear (ignite) foes while Forgebound is awake **and** near hostiles within 16 blocks. |
+| Wildroot | Verdant | 36,000 | Time while Wildroot is awake: full rate with Regeneration; half rate near hostiles; idle safe zones accrue nothing (~30 minutes at full rate). |
+| Nightsworn | Umbral | 150 | Absorb damage in the dark while Nightsworn is awake. |
+| Untethered | Discord spread | 20 | Slay affinity-bearing hostiles at Apex resonance **and** near hostiles within 16 blocks while Untethered is awake. |
+
+**Tier 4 bonuses** (active only while the matching pact is awake *and* its trial
+is complete):
+
+| Pact | Tier 4 bonus |
+|------|--------------|
+| Pyresworn | Ignite duration +1 s. |
+| Stoneheart | +1 armor toughness. |
+| Windrunner | Speed II while sprinting. |
+| Radiant Covenant | +15% damage vs undead. |
+| Tidesworn | Slow duration +1 s (+20 ticks). |
+| Forgebound | Sear/ignite duration +1 s. |
+| Wildroot | Regeneration II. |
+| Nightsworn | 15% dark-damage reduction. |
+| Untethered | Resonance decays 10% slower. |
+
+Finishing a trial awards a hidden advancement, plays a completion fanfare, and
+can trigger a one-time onboarding hint about Tier 4 permanence.
+
+**Trial pressure radius.** Several trials only accrue when you are within **16
+blocks** of a hostile mob or PvP-valid opponent (`nearTrialPressure`). Windrunner
+also accepts Apex resonance in place of nearby pressure so you can finish long
+sprint trials in open terrain once you are fully armed.
+
+## Pact tacticals (1.6)
+
+When **resonance is at least 50%** and your awake Pact has no competing **Focus
+Ability** Focus equipped, the **Focus Ability** keybind fires that Pact's
+**tactical** instead of a Focus ability. At **Apex** resonance the tactical is
+stronger and the HUD apex pulse is prominent.
+
+**Tactical overcharge.** **Crouch** while firing to spend **0.25 resonance** for
+an amplified tactical: larger radius, longer durations, and higher effect
+potency. Overcharge drops most builds below Apex, so it is a deliberate burst
+trade. The action bar shows *Overcharged pact tactical — resonance spent.*
+
+Combat feedback (particles and sounds) also fires on resonance gain and drain,
+kill streaks, surge charge, ability casts, Apex capstone procs (including
+**Execute** and **Judgment**), and pact tactical use.
+
+## Build sharing
+
+The **Focus Reliquary** and **Grand Focus Reliquary** screens expose **Share**
+and **Import** buttons beside the saved-build controls.
+
+- **Share** copies the selected saved build to the system clipboard.
+- **Import** reads the clipboard, validates it, and saves it as a new preset on
+  the server (same path as typing a name and saving manually).
+
+**Clipboard format:** `attuned:v1:` followed by URL-safe Base64 of a small JSON
+object:
+
+```json
+{ "name": "My build", "slots": ["attuned:iron_focus", "", …] }
+```
+
+The `slots` array holds up to six Focus **item** ids (empty strings for unused
+slots), in equipped priority order.
+
+**Validation:** the client decodes through `BuildShareCodec` (prefix, Base64,
+JSON shape, name length ≤ 32, slot count ≤ 6). The server receives an
+`ImportPresetPayload`, re-normalizes name and slots through `FocusPreset`, and
+only accepts the packet while a live reliquary menu is open with the reliquary
+still held in the menu hand — spoofed or out-of-menu imports are ignored.
 
 ## Behavior palette (no Java)
 
@@ -637,6 +750,15 @@ Every key is optional and falls back to a built-in default:
 | `surge_interval_ticks` | 12000 | Minimum ticks between resonant surges (one surge live at a time, server-wide). |
 | `surge_duration_ticks` | 1200 | How long a resonant surge stays live, in ticks. |
 | `surge_radius` | 16 | Radius, in blocks, of the resonant surge field that grants 4x resonance. |
+| `advantage_multiplier` | 1.33 | Damage multiplier when the attacker's affinity counters the defender's. |
+| `disadvantage_multiplier` | 0.75 | Damage multiplier when the defender's affinity counters the attacker's. |
+| `discord_damage_multiplier` | 1.20 | Damage multiplier when either combatant is in Discord (softer than a full matchup advantage). |
+| `resonance_hit_empowered_gain_per_damage` | 0.012 | Resonance gained per point of damage dealt on an empowered matchup. |
+| `resonance_hit_neutralized_loss` | 0.10 | Resonance lost on a single hit taken from a neutralizing matchup. |
+| `resonance_kill_empowered_gain` | 0.30 | Resonance gained when finishing a kill on an empowered matchup. |
+| `resonance_decay_per_tick` | 0.00025 | Per-tick idle resonance drain (~200 seconds to zero at rest). |
+| `affinity_loom_base_shard_cost` | 1 | Attunement Shards spent on the first Affinity Loom reroll in a Reweaving session. |
+| `affinity_loom_max_shard_cost` | 3 | Highest shard cost a single Affinity Loom reroll can reach after escalation. |
 
 Loot chances are clamped between 0 and 1 after all scales are applied. With
 defaults, the appended Focus-pool roll chances stay unchanged: low 8.75%,
@@ -659,7 +781,8 @@ The `/attuned capacity` command reads or sets a player's capacity for testing.
 | Item | Recipe / source | Purpose |
 |------|-----------------|---------|
 | Attunement Altar | Amethyst block, diamond, polished deepslate | Opens the shard-binding GUI and binds shards into capacity. |
-| Attunement Shard | Diamond surrounded by amethyst shards, or four Attunement Shard Fragments | Raises capacity when bound at an Altar. |
+| Altar of Reweaving | Loom, amethyst, polished deepslate | Reroll Foci: classic three-Focus reweave (Shard Fragment catalyst), **Tempering** (two identical Foci + fragment), or **Affinity Loom** (one Focus + escalating Attunement Shard cost for a same-affinity reroll). |
+| Attunement Shard | Diamond surrounded by amethyst shards, or four Attunement Shard Fragments | Raises capacity when bound at an Altar; also the Affinity Loom catalyst at the Altar of Reweaving. |
 | Attunement Shard Fragment | Vanilla loot injected alongside Foci | Four craft into one Attunement Shard; using one tells the player their current fragment count. |
 | Attunement Journal | Book + amethyst shard | Opens as a readable book with the core Attuned rules. |
 | Focus Reliquary | Leather pouch around an amethyst shard | A stack-bound bag for 27 spare Foci. Move Foci between the reliquary grid, the equipped Focus column, and your inventory by dragging, by click-to-grab then click-to-drop, or by shift-click. Type a name and Save the current loadout as a **build**, then click a build to select it and Apply or Delete. Hovering a build name previews its six Foci as item icons, greying any you cannot currently source for an Apply. Builds 1-3 can also be applied anywhere with the unbound **Apply Build** keybinds (Options > Controls); the apply sources Foci from a reliquary in your inventory. |

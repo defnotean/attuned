@@ -10,11 +10,14 @@ import dev.attuned.attunement.AttunedAttachments;
 import dev.attuned.attunement.AttunedInv;
 import dev.attuned.attunement.Attunement;
 import dev.attuned.attunement.BudgetResolver;
+import dev.attuned.content.AttunedComponents;
 import dev.attuned.client.AttunedClientConfig;
 import dev.attuned.client.AttunementReadout;
+import dev.attuned.network.FocusAbilityStatusPayload;
 import dev.attuned.client.FocusAbilityClientState;
 import dev.attuned.combat.Resonance;
 import dev.attuned.menu.FocusLayout;
+import dev.attuned.pacts.Pact;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -63,6 +66,11 @@ public final class FociHud {
 	private static final int APEX_MARK = 0xD8F4D06A;
 	private static final int FRAME_GLOW = 0xB46D4FD8;
 	private static final int FRAME_EDGE = 0xD49FC8FF;
+	private static final int APEX_ARMED_RING = 0xFFFFE97A;
+	private static final int CHARGED_MELEE_DOT = 0xFFE8C840;
+	private static final float CHARGED_MELEE_THRESHOLD = 0.9F;
+	private static final float APEX_APPROACHING = 0.40F;
+	private static final double APEX_PULSE_PERIOD_TICKS = 20.0D;
 	// Confluence count chip: small pips in the top gap between the ability well and the Apex gem.
 	private static final int CONFLUENCE_CHIP_X = 28;
 	private static final int CONFLUENCE_CHIP_Y = 5;
@@ -71,6 +79,12 @@ public final class FociHud {
 	private static final int CONFLUENCE_CHIP_COLUMNS = 2;
 	private static final int CONFLUENCE_MAX_PIPS = 6;
 	private static final int CONFLUENCE_PIP_COLOR = 0xE0B9E8FF;
+	private static final int TEMPERED_TICK = 0xFFFFD37A;
+	private static final double CONFLUENCE_PULSE_PERIOD_TICKS = 24.0D;
+	// Pact trial pip: thin progress bar under the Apex resonance track.
+	private static final int TRIAL_PIP_W = 20;
+	private static final int TRIAL_PIP_H = 3;
+	private static final int TRIAL_PIP_TRACK = 0x90080810;
 	private static boolean initialized;
 
 	public static void init() {
@@ -120,14 +134,16 @@ public final class FociHud {
 		Map<Integer, BudgetResolver.DormantReason> dormantReasons = readout.dormantReasons();
 		FocusDefinition[] slotDefinitions = activeSlotDefinitions(player, inv, activeSlots);
 
-		drawAbilityWell(graphics, player, inv, activeSlots, slotDefinitions,
+		drawAbilityWell(graphics, player, inv, activeSlots, slotDefinitions, readout.stanceArgb(),
 			x + ABILITY_WELL_X, y + ABILITY_WELL_Y);
 		drawApexBar(graphics, readout,
 			x + APEX_GEM_X, y + APEX_GEM_Y, x + APEX_BAR_X, y + APEX_BAR_Y);
+		drawTrialPip(graphics, player, readout,
+			x + APEX_BAR_X + (APEX_BAR_W - TRIAL_PIP_W) / 2, y + APEX_BAR_Y + APEX_BAR_H + 2);
 		drawFocusGrid(graphics, inv, activeSlots, dormantReasons, slotDefinitions,
 			x + FOCUS_GRID_X, y + FOCUS_GRID_Y);
 		drawConfluenceChip(graphics, readout.activeConfluences().size(),
-			x + CONFLUENCE_CHIP_X, y + CONFLUENCE_CHIP_Y);
+			x + CONFLUENCE_CHIP_X, y + CONFLUENCE_CHIP_Y, apexPulseGameTime());
 
 		if (scaled) {
 			graphics.pose().popMatrix();
@@ -165,16 +181,27 @@ public final class FociHud {
 	}
 
 	private static void drawAbilityWell(GuiGraphicsExtractor graphics, Player player, AttunedInv inv,
-			List<Integer> activeSlots, FocusDefinition[] slotDefinitions, int x, int y) {
-		int slot = selectedAbilitySlot(player, inv, activeSlots, slotDefinitions);
-		if (slot >= 0) {
-			ItemStack stack = inv.get(slot);
-			graphics.item(stack, x + (ABILITY_WELL_SIZE - 16) / 2, y + (ABILITY_WELL_SIZE - 16) / 2);
+			List<Integer> activeSlots, FocusDefinition[] slotDefinitions, int stanceArgb, int x, int y) {
+		int syncedSlot = FocusAbilityClientState.slot();
+		if (syncedSlot == FocusAbilityStatusPayload.PACT_TACTICAL_SLOT) {
+			graphics.fill(x + 4, y + 4, x + ABILITY_WELL_SIZE - 4, y + ABILITY_WELL_SIZE - 4,
+				0x90000000 | (stanceArgb & 0x00FFFFFF));
+		} else {
+			int slot = selectedAbilitySlot(player, inv, activeSlots, slotDefinitions);
+			if (slot >= 0) {
+				ItemStack stack = inv.get(slot);
+				graphics.item(stack, x + (ABILITY_WELL_SIZE - 16) / 2, y + (ABILITY_WELL_SIZE - 16) / 2);
+			}
 		}
 		int remaining = FocusAbilityClientState.remainingTicks();
 		int total = FocusAbilityClientState.totalTicks();
 		if (remaining > 0 && total > 0) {
 			drawCooldownRing(graphics, x, y, ABILITY_WELL_SIZE, remaining, total);
+		}
+		if (player.getAttackStrengthScale(0.0F) >= CHARGED_MELEE_THRESHOLD) {
+			int dotX = x + ABILITY_WELL_SIZE - 4;
+			int dotY = y + 1;
+			graphics.fill(dotX, dotY, dotX + 3, dotY + 3, CHARGED_MELEE_DOT);
 		}
 	}
 
@@ -228,7 +255,17 @@ public final class FociHud {
 				drawDormantOverlay(graphics, sx, sy);
 			}
 			graphics.item(stack, sx + FocusLayout.SLOT_INSET, sy + FocusLayout.SLOT_INSET);
+			if (stack.has(AttunedComponents.TEMPERED)) {
+				drawTemperedTick(graphics, sx, sy);
+			}
 		}
+	}
+
+	private static void drawTemperedTick(GuiGraphicsExtractor graphics, int x, int y) {
+		int x1 = x + FocusLayout.SLOT - 1;
+		int y0 = y;
+		graphics.fill(x1 - 2, y0, x1, y0 + 1, TEMPERED_TICK);
+		graphics.fill(x1 - 1, y0, x1, y0 + 3, TEMPERED_TICK);
 	}
 
 	private static int focusColor(FocusDefinition definition) {
@@ -255,15 +292,45 @@ public final class FociHud {
 	 * Paints one pip per active Confluence (up to a small cap) in the HUD's top gap.
 	 * Fill-only to match the HUD idiom (no font batch); draws nothing when none are active.
 	 */
-	private static void drawConfluenceChip(GuiGraphicsExtractor graphics, int count, int x, int y) {
+	private static void drawConfluenceChip(GuiGraphicsExtractor graphics, int count, int x, int y, long gameTime) {
 		if (count <= 0) {
 			return;
 		}
+		float pulse = (float) (Math.sin((gameTime / CONFLUENCE_PULSE_PERIOD_TICKS) * Math.PI * 2.0) * 0.5 + 0.5);
+		int alpha = Math.round(0x90 + pulse * 0x50);
+		int pipColor = (alpha << 24) | (CONFLUENCE_PIP_COLOR & 0x00FFFFFF);
 		int pips = Math.min(count, CONFLUENCE_MAX_PIPS);
 		for (int i = 0; i < pips; i++) {
 			int px = x + (i % CONFLUENCE_CHIP_COLUMNS) * CONFLUENCE_PIP_STEP;
 			int py = y + (i / CONFLUENCE_CHIP_COLUMNS) * CONFLUENCE_PIP_STEP;
-			graphics.fill(px, py, px + CONFLUENCE_PIP, py + CONFLUENCE_PIP, CONFLUENCE_PIP_COLOR);
+			graphics.fill(px, py, px + CONFLUENCE_PIP, py + CONFLUENCE_PIP, pipColor);
+		}
+	}
+
+	/**
+	 * Thin pact-trial progress pip under the Apex bar. Skips when no pact is awake
+	 * or the active pact's Tier 4 trial is already complete.
+	 */
+	private static void drawTrialPip(GuiGraphicsExtractor graphics, Player player,
+			AttunementReadout.Snapshot readout, int x, int y) {
+		Optional<Pact> pact = readout.pact();
+		if (pact.isEmpty()) {
+			return;
+		}
+		AttunedAttachments.PactTrialState state = AttunedAttachments.getPactTrialProgress(player).get(pact.get());
+		if (state == null || state.tier4Complete()) {
+			return;
+		}
+		int goal = state.goal();
+		if (goal <= 0) {
+			return;
+		}
+		float fraction = Math.max(0.0F, Math.min(1.0F, state.progress() / (float) goal));
+		graphics.fill(x, y, x + TRIAL_PIP_W, y + TRIAL_PIP_H, TRIAL_PIP_TRACK);
+		int fill = Math.round(TRIAL_PIP_W * fraction);
+		if (fill > 0) {
+			int color = pact.get().argb();
+			graphics.fill(x, y, x + fill, y + TRIAL_PIP_H, 0xD0000000 | (color & 0x00FFFFFF));
 		}
 	}
 
@@ -279,12 +346,53 @@ public final class FociHud {
 		int fill = Math.round(APEX_BAR_W * resonance);
 		if (fill > 0) {
 			int color = readout.stanceArgb();
-			graphics.fill(barX, barY, barX + fill, barY + APEX_BAR_H, 0xD0000000 | (color & 0x00FFFFFF));
+			int alpha = 0xD0;
+			if (resonance >= APEX_APPROACHING && resonance < Resonance.APEX_THRESHOLD) {
+				float tension = (resonance - APEX_APPROACHING)
+					/ (Resonance.APEX_THRESHOLD - APEX_APPROACHING);
+				float pulse = (float) (Math.sin((apexPulseGameTime() / APEX_PULSE_PERIOD_TICKS) * Math.PI * 2.0) * 0.5 + 0.5);
+				alpha = Math.round(0xA0 + tension * 0x50 + pulse * 0x20);
+			}
+			graphics.fill(barX, barY, barX + fill, barY + APEX_BAR_H, (alpha << 24) | (color & 0x00FFFFFF));
 		}
 		// Clamp so a threshold at/near 1.0 stays on the bar track instead of
 		// painting one pixel past it into the border.
 		int thresholdX = barX + Math.min(APEX_BAR_W - 1, Math.round(APEX_BAR_W * Resonance.APEX_THRESHOLD));
-		graphics.fill(thresholdX, barY - 1, thresholdX + 1, barY + APEX_BAR_H + 1, APEX_MARK);
+		long gameTime = apexPulseGameTime();
+		boolean apexPulse = resonance >= Resonance.APEX_THRESHOLD;
+		int markColor = apexPulse ? pulseArgb(APEX_MARK, gameTime) : APEX_MARK;
+		graphics.fill(thresholdX, barY - 1, thresholdX + 1, barY + APEX_BAR_H + 1, markColor);
+		if (apexPulse) {
+			int glowColor = pulseArgb(FRAME_GLOW, gameTime);
+			graphics.fill(gemX - 1, gemY - 1, gemX + APEX_GEM_SIZE + 1, gemY, glowColor);
+			graphics.fill(gemX - 1, gemY + APEX_GEM_SIZE, gemX + APEX_GEM_SIZE + 1, gemY + APEX_GEM_SIZE + 1, glowColor);
+			graphics.fill(gemX - 1, gemY, gemX, gemY + APEX_GEM_SIZE, glowColor);
+			graphics.fill(gemX + APEX_GEM_SIZE, gemY, gemX + APEX_GEM_SIZE + 1, gemY + APEX_GEM_SIZE, glowColor);
+		}
+		if (readout.atApex()) {
+			drawApexArmedRing(graphics, gemX, gemY, APEX_GEM_SIZE, APEX_ARMED_RING);
+		}
+	}
+
+	private static long apexPulseGameTime() {
+		Minecraft minecraft = Minecraft.getInstance();
+		Player player = minecraft.player;
+		return player == null ? 0L : player.level().getGameTime();
+	}
+
+	private static int pulseArgb(int rgb, long gameTime) {
+		float pulse = (float) (Math.sin((gameTime / APEX_PULSE_PERIOD_TICKS) * Math.PI * 2.0) * 0.5 + 0.5);
+		int alpha = Math.round(0x38 + pulse * 0xC8);
+		return (alpha << 24) | (rgb & 0x00FFFFFF);
+	}
+
+	private static void drawApexArmedRing(GuiGraphicsExtractor graphics, int gemX, int gemY, int size, int color) {
+		int x1 = gemX + size;
+		int y1 = gemY + size;
+		graphics.fill(gemX, gemY, x1, gemY + 1, color);
+		graphics.fill(gemX, y1 - 1, x1, y1, color);
+		graphics.fill(gemX, gemY + 1, gemX + 1, y1 - 1, color);
+		graphics.fill(x1 - 1, gemY + 1, x1, y1 - 1, color);
 	}
 
 	private static void drawCooldownRing(GuiGraphicsExtractor graphics, int x, int y, int size,

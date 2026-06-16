@@ -1,5 +1,6 @@
 package dev.attuned.combat;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
@@ -86,6 +87,31 @@ class ResonantSurgeContractTest {
 	void surgeActionbarStringsAreLocalised() throws IOException {
 		String lang = read(LANG);
 		assertContains(lang, "\"surge.attuned.faded\"");
+		assertContains(lang, "\"surge.attuned.started.coords\"");
+		assertContains(lang, "\"surge.attuned.started.nearby\"");
+	}
+
+	@Test
+	void discordStanceHalvesSurgeResonanceGain() {
+		assertEquals(0.10F, ResonantSurges.surgeResonanceGain(0.10F, false), 0.0F,
+			"Committed players earn the full surge resonance rate.");
+		assertEquals(0.05F, ResonantSurges.surgeResonanceGain(0.10F, true), 0.0F,
+			"Discord players earn half the surge resonance rate.");
+	}
+
+	@Test
+	void surgeModuleBroadcastsStartAndLuresUntargetedMonsters() throws IOException {
+		String surges = read(SURGES);
+		assertContains(surges, "broadcastSurgeStart");
+		assertContains(surges, "SoundEvents.BEACON_ACTIVATE");
+		assertContains(surges, "surge.attuned.started.coords");
+		assertContains(surges, "surge.attuned.started.nearby");
+		assertContains(surges, "Attunement.isDiscord");
+		assertContains(surges, "surgeResonanceGain");
+		assertContains(surges, "getEntitiesOfClass(Monster.class");
+		assertContains(surges, "getTarget() == null");
+		assertContains(surges, "MobEffects.SPEED");
+		assertContains(surges, "tickCounter % MOB_LURE_INTERVAL_TICKS");
 	}
 
 	private static void assertContains(String source, String needle) {

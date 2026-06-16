@@ -1,0 +1,23 @@
+{
+	"parent": "attuned:attunement/pact_pyresworn",
+	"display": {
+		"icon": {
+			"id": "attuned:emberward_focus"
+		},
+		"title": {
+			"translate": "pact.attuned.pyresworn_trial.title"
+		},
+		"description": {
+			"translate": "pact.attuned.pyresworn_trial.description"
+		},
+		"frame": "challenge",
+		"show_toast": true,
+		"announce_to_chat": true,
+		"hidden": false
+	},
+	"criteria": {
+		"done": {
+			"trigger": "minecraft:impossible"
+		}
+	}
+}

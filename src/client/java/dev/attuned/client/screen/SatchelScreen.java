@@ -5,9 +5,11 @@ import dev.attuned.attunement.AttunedAttachments;
 import dev.attuned.attunement.AttunedInv;
 import dev.attuned.attunement.FocusPreset;
 import dev.attuned.menu.ApplyPresetPayload;
+import dev.attuned.menu.BuildShareCodec;
 import dev.attuned.menu.BuildPreviewResolver;
 import dev.attuned.menu.DeletePresetPayload;
 import dev.attuned.menu.FocusSlot;
+import dev.attuned.menu.ImportPresetPayload;
 import dev.attuned.menu.SatchelMenu;
 import dev.attuned.menu.SavePresetPayload;
 import java.util.ArrayList;
@@ -15,9 +17,11 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.BooleanSupplier;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
@@ -92,7 +96,8 @@ public class SatchelScreen extends AbstractContainerScreen<SatchelMenu> {
 	private static final int NAME_Y = 66;
 	private static final int FIELD_H = 12;
 	private static final int SAVE_Y = 82;
-	private static final int BUILDS_LIST_Y = 98;
+	private static final int SHARE_IMPORT_Y = 94;
+	private static final int BUILDS_LIST_Y = 106;
 	private static final int BUILD_ROW_H = 10;
 	private static final int BUILD_ROW_INNER_H = 9;
 	private static final int ACTION_ROW_Y = 189;
@@ -101,6 +106,8 @@ public class SatchelScreen extends AbstractContainerScreen<SatchelMenu> {
 
 	private EditBox nameField;
 	private Button saveButton;
+	private Button shareButton;
+	private Button importButton;
 	private Button applyButton;
 	private Button deleteButton;
 	private final List<Button> buildButtons = new ArrayList<>();
@@ -142,11 +149,17 @@ public class SatchelScreen extends AbstractContainerScreen<SatchelMenu> {
 
 		this.saveButton = new PresetButton(this.leftPos + BUILDS_X, this.topPos + SAVE_Y, BUILDS_W, FIELD_H,
 			Component.translatable("screen.attuned.preset.save"), button -> saveBuild());
+		this.shareButton = new PresetButton(this.leftPos + BUILDS_X, this.topPos + SHARE_IMPORT_Y, HALF_W, ACTION_H,
+			Component.translatable("screen.attuned.preset.share"), button -> shareBuild());
+		this.importButton = new PresetButton(this.leftPos + BUILDS_X + HALF_W + 2, this.topPos + SHARE_IMPORT_Y, HALF_W, ACTION_H,
+			Component.translatable("screen.attuned.preset.import"), button -> importBuild());
 		this.applyButton = new PresetButton(this.leftPos + BUILDS_X, this.topPos + ACTION_ROW_Y, HALF_W, ACTION_H,
 			Component.translatable("screen.attuned.preset.apply"), button -> applySelectedBuild());
 		this.deleteButton = new PresetButton(this.leftPos + BUILDS_X + HALF_W + 2, this.topPos + ACTION_ROW_Y, HALF_W, ACTION_H,
 			Component.translatable("screen.attuned.preset.delete"), button -> deleteSelectedBuild());
 		this.addRenderableWidget(this.saveButton);
+		this.addRenderableWidget(this.shareButton);
+		this.addRenderableWidget(this.importButton);
 		this.addRenderableWidget(this.applyButton);
 		this.addRenderableWidget(this.deleteButton);
 
@@ -176,6 +189,36 @@ public class SatchelScreen extends AbstractContainerScreen<SatchelMenu> {
 		String name = typed.isEmpty() ? nextPresetName() : typed;
 		ClientPlayNetworking.send(new SavePresetPayload(name));
 		this.nameField.setValue("");
+	}
+
+	private void shareBuild() {
+		List<FocusPreset> presets = presets();
+		if (selectedIndex < 0 || selectedIndex >= presets.size()) {
+			return;
+		}
+		FocusPreset preset = presets.get(selectedIndex);
+		Minecraft minecraft = this.minecraft;
+		if (minecraft == null) {
+			return;
+		}
+		minecraft.keyboardHandler.setClipboard(BuildShareCodec.encode(preset));
+		minecraft.gui.setOverlayMessage(Component.translatable("screen.attuned.preset.shared", preset.name()), false);
+	}
+
+	private void importBuild() {
+		Minecraft minecraft = this.minecraft;
+		if (minecraft == null) {
+			return;
+		}
+		Optional<FocusPreset> decoded = BuildShareCodec.decode(minecraft.keyboardHandler.getClipboard());
+		if (decoded.isEmpty()) {
+			minecraft.gui.setOverlayMessage(Component.translatable("screen.attuned.preset.import_failed"), false);
+			return;
+		}
+		FocusPreset preset = decoded.get();
+		this.nameField.setValue(preset.name());
+		ClientPlayNetworking.send(new ImportPresetPayload(preset.name(), preset.slots()));
+		minecraft.gui.setOverlayMessage(Component.translatable("screen.attuned.preset.imported", preset.name()), false);
 	}
 
 	@Override
@@ -235,6 +278,12 @@ public class SatchelScreen extends AbstractContainerScreen<SatchelMenu> {
 		boolean hasSelection = selectedIndex >= 0 && selectedIndex < presets.size();
 		if (this.saveButton != null) {
 			this.saveButton.active = presets.size() < AttunedAttachments.MAX_PRESETS;
+		}
+		if (this.shareButton != null) {
+			this.shareButton.active = hasSelection;
+		}
+		if (this.importButton != null) {
+			this.importButton.active = presets.size() < AttunedAttachments.MAX_PRESETS;
 		}
 		if (this.applyButton != null) {
 			this.applyButton.active = hasSelection;

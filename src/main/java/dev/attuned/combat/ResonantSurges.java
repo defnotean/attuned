@@ -2,6 +2,7 @@ package dev.attuned.combat;
 
 import dev.attuned.AttunedConfig;
 import dev.attuned.AttunedServerCleanup;
+import dev.attuned.attunement.Attunement;
 import java.util.ArrayList;
 import java.util.List;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
@@ -15,8 +16,14 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.RandomSource;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.entity.monster.Monster;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.levelgen.Heightmap;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
 
 /**
  * Resonant surges — periodic thunderstorm events. While a dimension is
@@ -30,18 +37,31 @@ import net.minecraft.world.level.levelgen.Heightmap;
  * live entirely on the server tick thread. Start eligibility is delegated to the
  * pure {@link ResonantSurgeResolver}; this module supplies the live world state,
  * picks the site, grants resonance through {@link Resonance#grantSurge}, and
- * emits the feedback. Per the 1.4 plan the mob-lure AI is intentionally skipped:
- * the risk-reward is carried by the noise, not pathfinding.</p>
+ * emits the feedback, and lightly lures untargeted monsters toward the site.</p>
  */
 public final class ResonantSurges {
 	private ResonantSurges() {}
 
 	/** Resonance granted per second to a player inside a surge, before the surge multiplier. */
 	private static final float BASE_RESONANCE_PER_SECOND = 0.05F;
+	/** Discord stance earns half the normal surge resonance rate. */
+	private static final float DISCORD_SURGE_GAIN_FACTOR = 0.5F;
 	/** A surge site sits this far horizontally from its anchor player, at minimum. */
 	private static final int MIN_OFFSET = 24;
 	/** A surge site sits at most this far horizontally from its anchor player. */
 	private static final int MAX_OFFSET = 48;
+	/** How often untargeted monsters are nudged toward the surge (4 s at 20 TPS). */
+	private static final int MOB_LURE_INTERVAL_TICKS = 80;
+	/** Horizontal search radius for the lightweight mob lure. */
+	private static final double MOB_LURE_RADIUS = 32.0;
+	/** Speed I duration applied while a monster is drawn toward the surge. */
+	private static final int MOB_LURE_SPEED_TICKS = 40;
+	/** Velocity nudge toward the surge when pathing is unavailable or slow. */
+	private static final double MOB_LURE_NUDGE = 0.3;
+	/** Within this horizontal distance, players see approximate surge coordinates. */
+	private static final double SURGE_COORD_HINT_RADIUS = 128.0;
+	/** Approximate coordinate grid for the surge start broadcast. */
+	private static final int SURGE_COORD_GRID = 8;
 
 	/** The single active surge, or {@code null} when none is live. Server-thread only. */
 	private static Surge active;
@@ -107,6 +127,16 @@ public final class ResonantSurges {
 		int y = level.getHeight(Heightmap.Types.WORLD_SURFACE, x, z);
 		BlockPos site = new BlockPos(x, y, z);
 		active = new Surge(level.dimension(), site, now + config.surgeDurationTicks());
+		broadcastSurgeStart(level, site);
+	}
+
+	/** Resonance gain for one surge tick; Discord stance earns half the normal rate. */
+	static float surgeResonanceGain(float baseGain, boolean discord) {
+		return discord ? baseGain * DISCORD_SURGE_GAIN_FACTOR : baseGain;
+	}
+
+	static float surgeResonanceGain(Player player, float baseGain) {
+		return surgeResonanceGain(baseGain, Attunement.isDiscord(player));
 	}
 
 	/** Grants resonance and emits feedback while a surge is live; ends it on expiry. */
@@ -131,7 +161,10 @@ public final class ResonantSurges {
 			if (expired) {
 				player.sendOverlayMessage(Component.translatable("surge.attuned.faded"));
 			} else {
-				Resonance.grantSurge(player, gain);
+				Resonance.grantSurge(player, surgeResonanceGain(player, gain));
+				if (player instanceof ServerPlayer serverPlayer) {
+					CombatFeedback.surgeCharge(serverPlayer);
+				}
 			}
 		}
 		if (expired) {
@@ -139,7 +172,50 @@ public final class ResonantSurges {
 			lastSurgeEnd = now;
 			return;
 		}
+		if (tickCounter % MOB_LURE_INTERVAL_TICKS == 0) {
+			lureMonsters(level, pos);
+		}
 		emitFeedback(level, pos);
+	}
+
+	/** Alerts every player in the dimension and marks the surge site audibly. */
+	private static void broadcastSurgeStart(ServerLevel level, BlockPos site) {
+		level.playSound(null, site, SoundEvents.BEACON_ACTIVATE, SoundSource.BLOCKS, 1.2F, 1.0F);
+		for (ServerPlayer player : level.players()) {
+			player.sendOverlayMessage(surgeStartedMessage(site, player));
+		}
+	}
+
+	private static Component surgeStartedMessage(BlockPos site, ServerPlayer player) {
+		double dx = player.getX() - (site.getX() + 0.5);
+		double dz = player.getZ() - (site.getZ() + 0.5);
+		if (dx * dx + dz * dz <= SURGE_COORD_HINT_RADIUS * SURGE_COORD_HINT_RADIUS) {
+			int approxX = Math.floorDiv(site.getX(), SURGE_COORD_GRID) * SURGE_COORD_GRID;
+			int approxZ = Math.floorDiv(site.getZ(), SURGE_COORD_GRID) * SURGE_COORD_GRID;
+			return Component.translatable("surge.attuned.started.coords", approxX, site.getY(), approxZ);
+		}
+		return Component.translatable("surge.attuned.started.nearby");
+	}
+
+	/** Draws untargeted monsters toward the surge with Speed I and a path/velocity nudge. */
+	private static void lureMonsters(ServerLevel level, BlockPos pos) {
+		double centerX = pos.getX() + 0.5;
+		double centerY = pos.getY();
+		double centerZ = pos.getZ() + 0.5;
+		AABB area = new AABB(
+			centerX - MOB_LURE_RADIUS, centerY - MOB_LURE_RADIUS, centerZ - MOB_LURE_RADIUS,
+			centerX + MOB_LURE_RADIUS, centerY + MOB_LURE_RADIUS, centerZ + MOB_LURE_RADIUS);
+		List<Monster> monsters = level.getEntitiesOfClass(Monster.class, area,
+			monster -> monster.isAlive() && monster.getTarget() == null);
+		for (Monster monster : monsters) {
+			monster.addEffect(new MobEffectInstance(
+				MobEffects.SPEED, MOB_LURE_SPEED_TICKS, 0, true, false, false));
+			monster.getNavigation().moveTo(centerX, centerY, centerZ, 1.0);
+			Vec3 delta = new Vec3(centerX - monster.getX(), 0.0, centerZ - monster.getZ());
+			if (delta.lengthSqr() > 1.0E-4) {
+				monster.setDeltaMovement(monster.getDeltaMovement().add(delta.normalize().scale(MOB_LURE_NUDGE)));
+			}
+		}
 	}
 
 	/** A loud, visible pulse at the surge site: a spark column plus an ambient boom. */

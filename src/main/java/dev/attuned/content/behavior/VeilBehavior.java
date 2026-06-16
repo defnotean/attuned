@@ -12,6 +12,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.item.ItemStack;
 
@@ -22,6 +23,8 @@ import net.minecraft.world.item.ItemStack;
 public final class VeilBehavior implements FocusBehavior {
 	private static final int CHARGE_TICKS = 40;
 	private static final int BREAK_COOLDOWN_TICKS = 60;
+	private static final int ABILITY_COOLDOWN_TICKS = 300;
+	private static final int ABILITY_VEIL_TICKS = 60;
 	private static final int MAX_LIGHT = 7;
 	private static final double MAX_STILL_SPEED_SQR = 0.003D;
 
@@ -59,6 +62,38 @@ public final class VeilBehavior implements FocusBehavior {
 		if (state != null) {
 			clear(player, state, false);
 		}
+	}
+
+	@Override
+	public boolean hasActiveAbility() {
+		return true;
+	}
+
+	@Override
+	public int abilityCooldownTicks() {
+		return ABILITY_COOLDOWN_TICKS;
+	}
+
+	@Override
+	public boolean onAbility(ServerPlayer player, ItemStack focus) {
+		long now = player.level().getGameTime();
+		if (!canCharge(player, now)) {
+			breakVeil(player);
+			return false;
+		}
+		State state = STATES.computeIfAbsent(player.getUUID(), ignored -> new State());
+		state.chargeTicks = CHARGE_TICKS;
+		if (!state.veiled) {
+			state.appliedInvisibility = !player.isInvisible();
+			state.veiled = true;
+			if (state.appliedInvisibility) {
+				player.setInvisible(true);
+			}
+			veilFeedback(player, 0.85F);
+		}
+		player.addEffect(new MobEffectInstance(
+			MobEffects.INVISIBILITY, ABILITY_VEIL_TICKS, 0, true, false, false));
+		return true;
 	}
 
 	public static void breakVeil(ServerPlayer player) {

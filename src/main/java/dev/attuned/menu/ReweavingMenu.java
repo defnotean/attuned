@@ -1,5 +1,6 @@
 package dev.attuned.menu;
 
+import dev.attuned.AttunedConfig;
 import dev.attuned.attunement.Attunement;
 import dev.attuned.content.AttunedComponents;
 import dev.attuned.content.AttunedContent;
@@ -58,6 +59,7 @@ public class ReweavingMenu extends AbstractContainerMenu {
 	private final Container container;
 	private final ContainerLevelAccess access;
 	private final Player player;
+	private int affinityLoomRerolls = 0;
 
 	public ReweavingMenu(int containerId, Inventory inventory) {
 		this(containerId, inventory, new SimpleContainer(CONTAINER_SIZE), ContainerLevelAccess.NULL);
@@ -82,7 +84,10 @@ public class ReweavingMenu extends AbstractContainerMenu {
 		this.addSlot(new Slot(container, CATALYST_SLOT, CATALYST_SLOT_X, CATALYST_SLOT_Y) {
 			@Override
 			public boolean mayPlace(ItemStack stack) {
-				return stack.is(AttunedContent.ATTUNEMENT_SHARD_FRAGMENT);
+				if (stack.is(AttunedContent.ATTUNEMENT_SHARD_FRAGMENT)) {
+					return true;
+				}
+				return stack.is(AttunedContent.ATTUNEMENT_SHARD) && ReweavingMenu.this.affinityLoomCatalystAllowed();
 			}
 		});
 		this.addSlot(new Slot(container, OUTPUT_SLOT, OUTPUT_SLOT_X, OUTPUT_SLOT_Y) {
@@ -139,6 +144,54 @@ public class ReweavingMenu extends AbstractContainerMenu {
 			focusId(first), focusId(second), isTempered(first), isTempered(second));
 	}
 
+	/** Escalating shard cost for Affinity Loom rerolls within one menu session. */
+	public int affinityLoomShardCost() {
+		AttunedConfig config = AttunedConfig.get();
+		return Math.min(
+			config.affinityLoomMaxShardCost(),
+			config.affinityLoomBaseShardCost() + this.affinityLoomRerolls);
+	}
+
+	/**
+	 * Whether the inputs describe a valid Affinity Loom roll: one Focus in slot 0,
+	 * empty slots 1-2, enough Attunement Shards in the catalyst slot, and not a
+	 * tempering layout.
+	 */
+	public boolean canAffinityLoom() {
+		if (this.canTemper()) {
+			return false;
+		}
+		if (!this.isFocusInput(this.container.getItem(0))) {
+			return false;
+		}
+		if (!this.container.getItem(1).isEmpty() || !this.container.getItem(2).isEmpty()) {
+			return false;
+		}
+		ItemStack catalyst = this.container.getItem(CATALYST_SLOT);
+		int cost = affinityLoomShardCost();
+		return catalyst.is(AttunedContent.ATTUNEMENT_SHARD) && catalyst.getCount() >= cost;
+	}
+
+	public boolean affinityLoomLayout() {
+		if (this.canTemper()) {
+			return false;
+		}
+		if (!this.isFocusInput(this.container.getItem(0))) {
+			return false;
+		}
+		return this.container.getItem(1).isEmpty() && this.container.getItem(2).isEmpty();
+	}
+
+	public void incrementAffinityLoomRerolls() {
+		this.affinityLoomRerolls++;
+	}
+
+	private boolean affinityLoomCatalystAllowed() {
+		return this.isFocusInput(this.container.getItem(0))
+			&& this.container.getItem(1).isEmpty()
+			&& this.container.getItem(2).isEmpty();
+	}
+
 	private static String focusId(ItemStack stack) {
 		return BuiltInRegistries.ITEM.getKey(stack.getItem()).toString();
 	}
@@ -177,7 +230,8 @@ public class ReweavingMenu extends AbstractContainerMenu {
 			if (!this.moveItemStackTo(stack, INPUT_START, FOCUS_INPUTS, false)) {
 				return ItemStack.EMPTY;
 			}
-		} else if (stack.is(AttunedContent.ATTUNEMENT_SHARD_FRAGMENT)) {
+		} else if (stack.is(AttunedContent.ATTUNEMENT_SHARD_FRAGMENT)
+				|| stack.is(AttunedContent.ATTUNEMENT_SHARD)) {
 			if (!this.moveItemStackTo(stack, CATALYST_SLOT, CATALYST_SLOT + 1, false)) {
 				return ItemStack.EMPTY;
 			}

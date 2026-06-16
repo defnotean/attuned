@@ -1,0 +1,23 @@
+{
+	"parent": "attuned:attunement/pact_tidesworn",
+	"display": {
+		"icon": {
+			"id": "attuned:riptide_heart_focus"
+		},
+		"title": {
+			"translate": "pact.attuned.tidesworn_trial.title"
+		},
+		"description": {
+			"translate": "pact.attuned.tidesworn_trial.description"
+		},
+		"frame": "challenge",
+		"show_toast": true,
+		"announce_to_chat": true,
+		"hidden": false
+	},
+	"criteria": {
+		"done": {
+			"trigger": "minecraft:impossible"
+		}
+	}
+}

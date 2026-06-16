@@ -48,6 +48,7 @@ public final class PresetNetworking {
 		PayloadTypeRegistry.serverboundPlay().register(ApplyPresetPayload.TYPE, ApplyPresetPayload.CODEC);
 		PayloadTypeRegistry.serverboundPlay().register(DeletePresetPayload.TYPE, DeletePresetPayload.CODEC);
 		PayloadTypeRegistry.serverboundPlay().register(QuickApplyPresetPayload.TYPE, QuickApplyPresetPayload.CODEC);
+		PayloadTypeRegistry.serverboundPlay().register(ImportPresetPayload.TYPE, ImportPresetPayload.CODEC);
 		ServerPlayNetworking.registerGlobalReceiver(SavePresetPayload.TYPE, (payload, context) -> {
 			ServerPlayer player = context.player();
 			player.level().getServer().execute(() -> savePreset(player, payload));
@@ -64,8 +65,19 @@ public final class PresetNetworking {
 			ServerPlayer player = context.player();
 			player.level().getServer().execute(() -> quickApplyPreset(player, payload));
 		});
+		ServerPlayNetworking.registerGlobalReceiver(ImportPresetPayload.TYPE, (payload, context) -> {
+			ServerPlayer player = context.player();
+			player.level().getServer().execute(() -> importPreset(player, payload));
+		});
 		AttunedPlayerCleanup.onForget(LAST_APPLY_TICK::remove);
 		AttunedServerCleanup.onStop(LAST_APPLY_TICK::clear);
+	}
+
+	private static void importPreset(ServerPlayer player, ImportPresetPayload payload) {
+		if (!hasOpenLiveSatchel(player)) {
+			return;
+		}
+		AttunedAttachments.savePreset(player, new FocusPreset(payload.name(), payload.slots()));
 	}
 
 	private static void savePreset(ServerPlayer player, SavePresetPayload payload) {
