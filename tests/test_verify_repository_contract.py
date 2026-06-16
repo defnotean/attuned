@@ -449,6 +449,39 @@ class VerifyRepositoryContractTest(unittest.TestCase):
             self.assertEqual(len(problems), 1)
             self.assertIn("missing lang item.attuned.missing", problems[0])
 
+    def test_load_attuned_lang_reports_non_string_values(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            lang_path = root / "src" / "main" / "resources" / "assets" / "attuned" / "lang" / "en_us.json"
+            lang_path.parent.mkdir(parents=True)
+            lang_path.write_text('{"item.attuned.bad": 3}\n', encoding="utf-8")
+
+            with self.assertRaises(ValueError) as failure:
+                verify_repository.load_attuned_lang(root)
+
+            self.assertIn("item.attuned.bad", str(failure.exception))
+            self.assertIn("must be a string", str(failure.exception))
+
+    def test_language_file_problems_report_example_pack_non_string_values(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            lang_path = root / "docs" / "example-pack" / "assets" / "example" / "lang" / "en_us.json"
+            lang_path.parent.mkdir(parents=True)
+            lang_path.write_text('{"item.example.bad": false}\n', encoding="utf-8")
+            original_root = verify_repository.ROOT
+            original_source_scan_roots = verify_repository.SOURCE_SCAN_ROOTS
+            verify_repository.ROOT = root
+            verify_repository.SOURCE_SCAN_ROOTS = (root / "src",)
+            try:
+                problems = verify_repository.language_file_problems(root)
+            finally:
+                verify_repository.ROOT = original_root
+                verify_repository.SOURCE_SCAN_ROOTS = original_source_scan_roots
+
+            self.assertEqual(len(problems), 1)
+            self.assertIn("docs/example-pack/assets/example/lang/en_us.json", problems[0])
+            self.assertIn("item.example.bad must be a string", problems[0])
+
 
 if __name__ == "__main__":
     unittest.main()
