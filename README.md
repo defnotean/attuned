@@ -38,7 +38,7 @@ Equip **Foci** into six inventory slots, but mind your **attunement capacity**. 
 
 ## Requirements
 
-Minecraft 26.1.2, Fabric Loader 0.19.2+, Fabric API
+Minecraft 26.1.2, Fabric Loader 0.19.3+, Fabric API
 
 Lootr is optional but suggested for modpacks. Attuned does not add custom
 loot containers; it injects Foci and shard fragments into vanilla loot tables,

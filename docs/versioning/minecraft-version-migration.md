@@ -35,11 +35,11 @@ Each profile key must equal its `minecraft_version`. Required fields:
 ```json
 {
   "minecraft_version": "26.1.2",
-  "loader_version": "0.19.2",
-  "loom_version": "1.16.3",
-  "fabric_api_version": "0.149.0+26.1.2",
+  "loader_version": "0.19.3",
+  "loom_version": "1.17.11",
+  "fabric_api_version": "0.152.1+26.1.2",
   "java_version": "25",
-  "fabric_loader_range": ">=0.19.2",
+  "fabric_loader_range": ">=0.19.3",
   "status": "current",
   "notes": ["Current released target."]
 }

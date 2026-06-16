@@ -1,22 +1,22 @@
 # Attuned Minecraft 26.1.2 Port Checklist
 
 Target profile: `26.1.2`
-Branch: `port/minecraft-26.1.2`
+Branch: `maintenance/minecraft-26.1.2`
 
 ## Version Profile
 
 - Minecraft: `26.1.2`
 - Java: `25`
-- Fabric Loader: `0.19.2`
-- Fabric API: `0.149.0+26.1.2`
-- Fabric Loom: `1.16.3`
-- Loader range for metadata/docs: `>=0.19.2`
+- Fabric Loader: `0.19.3`
+- Fabric API: `0.152.1+26.1.2`
+- Fabric Loom: `1.17.11`
+- Loader range for metadata/docs: `>=0.19.3`
 - Status: `current`
 
 ## 1. Branch and Mechanical Retarget
 
 - [ ] Start from green `latest`: `git checkout latest && git pull --ff-only origin latest`.
-- [ ] Create the port branch: `git checkout -b port/minecraft-26.1.2`.
+- [ ] Create the port branch: `git checkout -b maintenance/minecraft-26.1.2`.
 - [ ] Confirm or add the profile in `config/minecraft-version-profiles.json`.
 - [ ] Dry run profile application: `python tools/minecraft_version_profile.py apply 26.1.2 --dry-run`.
 - [ ] Apply the profile: `python tools/minecraft_version_profile.py apply 26.1.2`.
