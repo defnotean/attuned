@@ -10,9 +10,8 @@ import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
-import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
@@ -24,8 +23,8 @@ import net.minecraft.world.item.ItemStack;
  * stance, capacity, hover, and status details.
  */
 public class AltarScreen extends AbstractContainerScreen<AltarMenu> {
-	private static final Identifier BACKGROUND_TEXTURE =
-		Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "textures/gui/altar.png");
+	private static final ResourceLocation BACKGROUND_TEXTURE =
+		ResourceLocation.fromNamespaceAndPath(Attuned.MOD_ID, "textures/gui/altar.png");
 
 	// Window dimensions, in GUI pixels. Wider and taller than a vanilla chest row
 	// so the altar readout can breathe above the centered player inventory.
@@ -129,7 +128,7 @@ public class AltarScreen extends AbstractContainerScreen<AltarMenu> {
 		int y = this.topPos;
 
 		graphics.fill(0, 0, this.width, this.height, SCREEN_BACKDROP);
-		graphics.blit(RenderPipelines.GUI_TEXTURED, BACKGROUND_TEXTURE, x, y,
+		graphics.blit(BACKGROUND_TEXTURE, x, y,
 			0.0F, 0.0F, IMAGE_WIDTH, IMAGE_HEIGHT, IMAGE_WIDTH, IMAGE_HEIGHT);
 
 		int sx = x + SLOT_WELL_X;
@@ -293,7 +292,7 @@ public class AltarScreen extends AbstractContainerScreen<AltarMenu> {
 		}
 
 		@Override
-		protected void renderContents(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+		protected void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
 			int x0 = getX();
 			int y0 = getY();
 			int x1 = x0 + getWidth();
@@ -303,7 +302,8 @@ public class AltarScreen extends AbstractContainerScreen<AltarMenu> {
 			} else if (isHoveredOrFocused()) {
 				drawButtonOutline(graphics, x0, y0, x1, y1, BUTTON_HOVER_ARGB);
 			}
-			renderDefaultLabel(graphics.textRendererForWidget(this, GuiGraphics.HoveredTextEffects.NONE));
+			renderString(graphics, net.minecraft.client.Minecraft.getInstance().font,
+				this.active ? 0xFFFFFFFF : 0xFFA0A0A0);
 		}
 	}
 }

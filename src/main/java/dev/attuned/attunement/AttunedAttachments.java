@@ -10,7 +10,7 @@ import net.fabricmc.fabric.api.attachment.v1.AttachmentRegistry;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentSyncPredicate;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentType;
 import net.minecraft.network.codec.ByteBufCodecs;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 
@@ -30,7 +30,7 @@ public final class AttunedAttachments {
 	public static final int MAX_PRESETS = 9;
 
 	public static final AttachmentType<Integer> CAPACITY = AttachmentRegistry.create(
-		Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "capacity"),
+		ResourceLocation.fromNamespaceAndPath(Attuned.MOD_ID, "capacity"),
 		builder -> builder
 			.initializer(() -> AttunedConfig.get().startingCapacity())
 			.persistent(Codec.INT)
@@ -39,7 +39,7 @@ public final class AttunedAttachments {
 	);
 
 	public static final AttachmentType<AttunedInv> INVENTORY = AttachmentRegistry.create(
-		Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "inventory"),
+		ResourceLocation.fromNamespaceAndPath(Attuned.MOD_ID, "inventory"),
 		builder -> builder
 			.initializer(AttunedInv::empty)
 			.persistent(AttunedInv.CODEC)
@@ -49,7 +49,7 @@ public final class AttunedAttachments {
 
 	/** The first synced list attachment: named Focus loadouts for the owning client. */
 	public static final AttachmentType<List<FocusPreset>> PRESETS = AttachmentRegistry.create(
-		Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "presets"),
+		ResourceLocation.fromNamespaceAndPath(Attuned.MOD_ID, "presets"),
 		builder -> builder
 			.initializer(() -> List.of())
 			.persistent(FocusPreset.CODEC.listOf())
@@ -59,7 +59,7 @@ public final class AttunedAttachments {
 
 	/** Ids of the progression milestones a player has already claimed. */
 	public static final AttachmentType<List<String>> MILESTONES = AttachmentRegistry.create(
-		Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "milestones"),
+		ResourceLocation.fromNamespaceAndPath(Attuned.MOD_ID, "milestones"),
 		builder -> builder
 			.initializer(() -> List.of())
 			.persistent(Codec.STRING.listOf())
@@ -73,7 +73,7 @@ public final class AttunedAttachments {
 	 * fight would silently strip the capstone the player just earned.
 	 */
 	public static final AttachmentType<Float> RESONANCE = AttachmentRegistry.create(
-		Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "resonance"),
+		ResourceLocation.fromNamespaceAndPath(Attuned.MOD_ID, "resonance"),
 		builder -> builder
 			.initializer(() -> 0.0F)
 			.persistent(Codec.FLOAT)
@@ -83,7 +83,7 @@ public final class AttunedAttachments {
 
 	/** Ids of one-time onboarding toasts a player has already seen. */
 	public static final AttachmentType<List<String>> ONBOARDING = AttachmentRegistry.create(
-		Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "onboarding"),
+		ResourceLocation.fromNamespaceAndPath(Attuned.MOD_ID, "onboarding"),
 		builder -> builder
 			.initializer(() -> List.of())
 			.persistent(Codec.STRING.listOf())
@@ -92,7 +92,7 @@ public final class AttunedAttachments {
 
 	/** Per-pact trial counters and permanent Tier 4 completions. Synced for the journal. */
 	public static final AttachmentType<PactTrialProgress> PACT_TRIAL_PROGRESS = AttachmentRegistry.create(
-		Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "pact_trial_progress"),
+		ResourceLocation.fromNamespaceAndPath(Attuned.MOD_ID, "pact_trial_progress"),
 		builder -> builder
 			.initializer(() -> PactTrialProgress.EMPTY)
 			.persistent(PactTrialProgress.CODEC)
@@ -102,7 +102,7 @@ public final class AttunedAttachments {
 
 	/** Confluence ids this player has discovered (each first activation). Synced for the journal. */
 	public static final AttachmentType<List<String>> DISCOVERED_CONFLUENCES = AttachmentRegistry.create(
-		Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "discovered_confluences"),
+		ResourceLocation.fromNamespaceAndPath(Attuned.MOD_ID, "discovered_confluences"),
 		builder -> builder
 			.initializer(() -> List.of())
 			.persistent(Codec.STRING.listOf())

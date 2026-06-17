@@ -1,5 +1,7 @@
 package dev.attuned.effect;
 
+import dev.attuned.compat.DustParticles;
+
 import dev.attuned.compat.PlayerMessages;
 import dev.attuned.Attuned;
 import dev.attuned.AttunedAdvancements;
@@ -22,7 +24,7 @@ import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.minecraft.core.particles.DustParticleOptions;
 import net.minecraft.core.particles.ParticleOptions;
 import net.minecraft.core.particles.ParticleTypes;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -250,8 +252,8 @@ public final class AttunedEffects {
 	}
 
 	/** Stable, per-slot, per-modifier-index id so modifiers can be removed precisely. */
-	private static Identifier modifierId(int slot, int index) {
-		return Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "slot_" + slot + "_mod_" + index);
+	private static ResourceLocation modifierId(int slot, int index) {
+		return ResourceLocation.fromNamespaceAndPath(Attuned.MOD_ID, "slot_" + slot + "_mod_" + index);
 	}
 
 	private static AppliedFocus appliedFocusFor(ItemStack stack, FocusDefinition def) {
@@ -275,7 +277,7 @@ public final class AttunedEffects {
 			if (ai == null) {
 				continue;
 			}
-			Identifier id = modifierId(slot, i);
+			ResourceLocation id = modifierId(slot, i);
 			if (ai.getModifier(id) == null) {
 				double amount = tempered ? entry.amount() * TEMPERED_MODIFIER_MULTIPLIER : entry.amount();
 				ai.addTransientModifier(new AttributeModifier(id, amount, entry.operation()));
@@ -340,7 +342,7 @@ public final class AttunedEffects {
 			.ifPresent(behavior -> runBehaviorTick(behavior, player, focus.stack()));
 	}
 
-	private record AppliedFocus(ItemStack stack, List<ModifierEntry> modifiers, Optional<Identifier> behavior) {}
+	private record AppliedFocus(ItemStack stack, List<ModifierEntry> modifiers, Optional<ResourceLocation> behavior) {}
 
 	private static void runBehaviorActivate(FocusBehavior behavior, ServerPlayer player, ItemStack stack) {
 		try {
@@ -383,11 +385,11 @@ public final class AttunedEffects {
 	/** The aura particle for a player's stance: affinity-coloured, Discord magenta, or neutral. */
 	private static ParticleOptions auraParticle(Set<Affinity> activeAffinities) {
 		if (activeAffinities.size() >= 2) {
-			return new DustParticleOptions(AffinityColors.DISCORD_RGB, 1.0F);
+			return DustParticles.color(AffinityColors.DISCORD_RGB, 1.0F);
 		}
 		Optional<Affinity> affinity = committedAffinity(activeAffinities);
 		if (affinity.isPresent()) {
-			return new DustParticleOptions(affinity.get().argb() & 0x00FFFFFF, 1.0F);
+			return DustParticles.color(affinity.get().argb() & 0x00FFFFFF, 1.0F);
 		}
 		return ParticleTypes.WITCH;
 	}

@@ -71,25 +71,32 @@ class TremorFocusOutlineContractTest {
 		assertTrue(source.contains("ClientPlayNetworking.registerGlobalReceiver(TremorOreHintPayload.TYPE"),
 			"The client should receive Tremor ore hints.");
 		assertTrue(source.contains("LevelRenderEvents.END_MAIN.register")
-				|| source.contains("WorldRenderEvents.END_MAIN.register"),
+				|| source.contains("WorldRenderEvents.END_MAIN.register")
+				|| source.contains("WorldRenderEvents.END.register"),
 			"The outline should render in the world render pass.");
-		assertTrue(source.contains("ShapeRenderer.renderShape"),
+		assertTrue(source.contains("ShapeRenderer.renderShape")
+				|| source.contains("LevelRenderer.renderLineBox"),
 			"The outline should be drawn around the ore block bounds.");
 		assertTrue(source.contains("TremorOreRenderTypes.oreOutline()"),
 			"Tremor should use its custom ore-outline render type.");
 		assertTrue(renderTypes.contains("RenderPipelines.LINES_TRANSLUCENT")
-				|| renderTypes.contains("RenderTypes.linesTranslucent()"),
+				|| renderTypes.contains("RenderTypes.linesTranslucent()")
+				|| renderTypes.contains("RenderType.lines()"),
 			"Tremor's outline should keep vanilla line rendering behavior.");
 		assertTrue(renderTypes.contains("new DepthStencilState(CompareOp.ALWAYS_PASS, false)")
-				|| renderTypes.contains("RenderTypes.linesTranslucent()"),
+				|| renderTypes.contains("RenderTypes.linesTranslucent()")
+				|| renderTypes.contains("RenderType.lines()"),
 			"Tremor's outline should use the strongest supported line render path for this Minecraft branch.");
 		assertTrue(renderTypes.contains("RenderTypeInvoker.attuned$create")
-				|| renderTypes.contains("RenderTypes.linesTranslucent()"),
+				|| renderTypes.contains("RenderTypes.linesTranslucent()")
+				|| renderTypes.contains("RenderType.lines()"),
 			"The custom render type should be created through the available render-type API.");
 		assertTrue(mixins.contains("\"RenderTypeInvoker\"")
-				|| renderTypes.contains("RenderTypes.linesTranslucent()"),
+				|| renderTypes.contains("RenderTypes.linesTranslucent()")
+				|| renderTypes.contains("RenderType.lines()"),
 			"Client render type support should be wired for the active Minecraft branch.");
-		assertTrue(source.contains("context.gameRenderer().getMainCamera().position()"),
+		assertTrue(source.contains("context.gameRenderer().getMainCamera().position()")
+				|| source.contains("context.gameRenderer().getMainCamera().getPosition()"),
 			"The outline should be rendered relative to the active camera.");
 		assertTrue(source.contains("private static ClientLevel highlightedLevel"),
 			"Tremor should remember the client level that owns the current outline.");

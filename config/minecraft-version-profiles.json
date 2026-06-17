@@ -1,5 +1,5 @@
 {
-  "active_profile": "1.21.11",
+  "active_profile": "1.21.1",
   "profiles": {
     "26.1.2": {
       "minecraft_version": "26.1.2",
@@ -24,6 +24,20 @@
       "notes": [
         "Latest stable 1.21.x target before the 26.1.x release line.",
         "Requires compile, server smoke, and gameplay QA on maintenance/minecraft-1.21.11 before publishing."
+      ]
+    },
+    "1.21.1": {
+      "minecraft_version": "1.21.1",
+      "loader_version": "0.16.14",
+      "loom_version": "1.14.10",
+      "fabric_api_version": "0.116.5+1.21.1",
+      "java_version": "21",
+      "fabric_loader_range": ">=0.16.14",
+      "status": "maintenance",
+      "notes": [
+        "High-value 1.21.x modding target branched from maintenance/minecraft-1.21.11.",
+        "Uses an older Fabric API tuple with the earliest available fabric-loom-remap line that resolves from Fabric Maven.",
+        "Requires compile, server smoke, and gameplay QA on maintenance/minecraft-1.21.1 before publishing."
       ]
     },
     "1.20.6": {

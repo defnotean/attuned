@@ -1,13 +1,12 @@
 package dev.attuned.client;
 
-import net.minecraft.client.renderer.rendertype.RenderType;
-import net.minecraft.client.renderer.rendertype.RenderTypes;
+import net.minecraft.client.renderer.RenderType;
 
 /** Render types used by Tremor's ore reveal. */
 public final class TremorOreRenderTypes {
 	private TremorOreRenderTypes() {}
 
 	public static RenderType oreOutline() {
-		return RenderTypes.linesTranslucent();
+		return RenderType.lines();
 	}
 }

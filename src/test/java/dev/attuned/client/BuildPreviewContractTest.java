@@ -30,9 +30,10 @@ class BuildPreviewContractTest {
 		String screen = read(SCREEN);
 		assertTrue(screen.contains("graphics.item(") || screen.contains("graphics.renderItem("),
 			"The preview must draw the build's Foci as item icons via the active item-draw hook.");
-		assertTrue(screen.contains("BuiltInRegistries.ITEM.getValue"),
+		assertTrue(screen.contains("BuiltInRegistries.ITEM.getValue")
+				|| screen.contains("BuiltInRegistries.ITEM.get("),
 			"Each build slot id must be resolved to an item at runtime (client registry), not in unit tests.");
-		assertTrue(screen.contains("Identifier.parse("),
+		assertTrue(screen.contains("ResourceLocation.parse("),
 			"Build slot ids are parsed to Identifiers before registry lookup.");
 	}
 

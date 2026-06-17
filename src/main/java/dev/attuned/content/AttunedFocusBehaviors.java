@@ -50,7 +50,7 @@ import dev.attuned.content.behavior.VoidstepBehavior;
 import dev.attuned.content.behavior.WaystoneBehavior;
 import dev.attuned.content.behavior.WhisperBehavior;
 import dev.attuned.content.behavior.WildwardBehavior;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 
 /** Registers code-backed Focus behaviours referenced by datapack Focus definitions. */
 final class AttunedFocusBehaviors {
@@ -125,6 +125,6 @@ final class AttunedFocusBehaviors {
 
 	private static void register(String name, FocusBehavior behavior) {
 		AttunedRegistries.registerBehavior(
-			Identifier.fromNamespaceAndPath(Attuned.MOD_ID, name), behavior);
+			ResourceLocation.fromNamespaceAndPath(Attuned.MOD_ID, name), behavior);
 	}
 }

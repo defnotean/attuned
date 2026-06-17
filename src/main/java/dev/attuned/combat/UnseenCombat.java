@@ -11,7 +11,7 @@ import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
@@ -38,10 +38,10 @@ import java.util.UUID;
 public final class UnseenCombat {
 	private UnseenCombat() {}
 
-	private static final Identifier NEEDLE_FOCUS =
-		Identifier.fromNamespaceAndPath("attuned", "needle_focus");
-	private static final Identifier SOFTSTEP_FOCUS =
-		Identifier.fromNamespaceAndPath("attuned", "softstep_focus");
+	private static final ResourceLocation NEEDLE_FOCUS =
+		ResourceLocation.fromNamespaceAndPath("attuned", "needle_focus");
+	private static final ResourceLocation SOFTSTEP_FOCUS =
+		ResourceLocation.fromNamespaceAndPath("attuned", "softstep_focus");
 	private static final float NEEDLE_MULTIPLIER = 1.35F;
 	private static final int NEEDLE_COOLDOWN_TICKS = 120;
 	private static final int NEEDLE_SOFTSTEP_WEAKNESS_TICKS = 80;
@@ -172,7 +172,7 @@ public final class UnseenCombat {
 		PlayerMessages.overlay(attacker, Component.translatable("combo.attuned.softstep_needle"));
 	}
 
-	private static boolean hasActiveFocus(Player player, Identifier targetId) {
+	private static boolean hasActiveFocus(Player player, ResourceLocation targetId) {
 		AttunedInv inventory = AttunedAttachments.getInventory(player);
 		for (int slot : Attunement.activeSlots(player)) {
 			ItemStack stack = inventory.get(slot);
@@ -180,7 +180,7 @@ public final class UnseenCombat {
 				continue;
 			}
 			Item item = stack.getItem();
-			Identifier itemId = BuiltInRegistries.ITEM.getKey(item);
+			ResourceLocation itemId = BuiltInRegistries.ITEM.getKey(item);
 			if (targetId.equals(itemId)) {
 				return true;
 			}

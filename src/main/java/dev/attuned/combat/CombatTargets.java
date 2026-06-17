@@ -3,11 +3,10 @@ package dev.attuned.combat;
 import dev.attuned.api.focus.Affinity;
 import dev.attuned.attunement.Attunement;
 import java.util.Optional;
-import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.level.gamerules.GameRules;
 
 /** Shared target predicates for Attuned combat, PvP, and reveal effects. */
 public final class CombatTargets {
@@ -18,8 +17,7 @@ public final class CombatTargets {
 		return target != attacker
 			&& target.isAlive()
 			&& !target.isSpectator()
-			&& attacker.level() instanceof ServerLevel level
-			&& level.getGameRules().get(GameRules.PVP)
+			&& pvpAllowed(attacker)
 			&& attacker.canHarmPlayer(target);
 	}
 
@@ -45,6 +43,11 @@ public final class CombatTargets {
 	private static boolean isPvpOpponent(LivingEntity target, Player player) {
 		return target instanceof Player targetPlayer
 			&& canAffectPlayer(player, targetPlayer);
+	}
+
+	private static boolean pvpAllowed(Player player) {
+		MinecraftServer server = player.getServer();
+		return server != null && server.isPvpAllowed();
 	}
 
 	private static boolean isHostile(LivingEntity entity) {

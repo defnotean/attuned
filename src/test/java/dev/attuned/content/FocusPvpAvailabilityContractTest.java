@@ -36,8 +36,8 @@ class FocusPvpAvailabilityContractTest {
 	void pvpTargetHelperRespectsVanillaPlayerCombatRules() throws IOException {
 		String source = readSource(COMBAT_TARGETS_SOURCE);
 
-		assertTrue(source.contains("GameRules.PVP"),
-			"PvP Focus effects should respect the server PvP gamerule.");
+		assertTrue(source.contains("GameRules.PVP") || source.contains("isPvpAllowed()"),
+			"PvP Focus effects should respect the server PvP switch.");
 		assertTrue(source.contains("attacker.canHarmPlayer(target)"),
 			"PvP Focus effects should respect vanilla team/friendly-fire checks.");
 		assertTrue(source.contains("target != attacker"),

@@ -74,8 +74,8 @@ class InvisibilityEquipmentMixinContractTest {
 	void wornElytraLayerIsCancelledForInvisibleEntities() throws IOException {
 		assertEquipmentLayerMixin(
 			WINGS_MIXIN,
-			"WingsLayer.class",
-			"net.minecraft.client.renderer.entity.layers.WingsLayer",
+			"ElytraLayer.class",
+			"net.minecraft.client.renderer.entity.layers.ElytraLayer",
 			"Lnet/minecraft/client/renderer/entity/state/HumanoidRenderState;");
 	}
 
@@ -85,8 +85,9 @@ class InvisibilityEquipmentMixinContractTest {
 		// spectators still see the gear. Gating on the bare isInvisible flag would regress that.
 		for (Path mixin : new Path[] {ARMOR_MIXIN, ITEM_MIXIN, HEAD_MIXIN, WINGS_MIXIN}) {
 			String source = read(mixin);
-			assertTrue(source.contains("state.isInvisibleToPlayer"),
-				mixin + " should gate on the per-viewer isInvisibleToPlayer render-state flag.");
+			assertTrue(source.contains("state.isInvisibleToPlayer")
+					|| source.contains("entity.isInvisibleTo(Minecraft.getInstance().player)"),
+				mixin + " should gate on per-viewer invisibility.");
 			assertTrue(!source.contains("state.isInvisible)") && !source.contains("state.isInvisible "),
 				mixin + " should not gate on the raw isInvisible flag, which would hide gear from "
 					+ "teammates and spectators.");
@@ -106,10 +107,11 @@ class InvisibilityEquipmentMixinContractTest {
 			mixin + " should declare a cancellable inject.");
 		assertTrue(source.contains("ci.cancel()"),
 			mixin + " should cancel the submit pass when the entity is invisible.");
-		assertTrue(source.contains(stateDescriptor),
-			mixin + " should target the submit overload taking " + stateDescriptor + ".");
-		assertTrue(source.contains("\"submit("),
-			mixin + " should target the layer's submit method.");
+		assertTrue(source.contains(stateDescriptor)
+				|| source.contains("Lnet/minecraft/world/entity/LivingEntity;FFFFFF"),
+			mixin + " should target the branch's equipment-render overload.");
+		assertTrue(source.contains("\"submit(") || source.contains("\"render("),
+			mixin + " should target the layer's equipment render method.");
 	}
 
 	private static String read(Path file) throws IOException {

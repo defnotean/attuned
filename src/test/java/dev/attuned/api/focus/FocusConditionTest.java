@@ -6,14 +6,14 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.google.gson.JsonParser;
 import com.mojang.serialization.JsonOps;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import org.junit.jupiter.api.Test;
 
 /**
  * Truth tables for the pure {@link FocusCondition} decision helpers and round-trip coverage
  * for the registry-free condition variants through the REAL dispatch codec. The tag variants
  * carry a built-in-registry-backed {@code is(TagKey)} evaluation and are exercised in-game;
- * their codec only touches {@link Identifier} so they still decode here.
+ * their codec only touches {@link ResourceLocation} so they still decode here.
  */
 class FocusConditionTest {
 
@@ -62,11 +62,11 @@ class FocusConditionTest {
 	@Test
 	void tagConditionsCarryTheirIdentifiers() {
 		FocusCondition block = roundTrip("{\"condition\":\"on_block_tag\",\"tag\":\"minecraft:wool\"}");
-		assertEquals(Identifier.fromNamespaceAndPath("minecraft", "wool"),
+		assertEquals(ResourceLocation.fromNamespaceAndPath("minecraft", "wool"),
 			((FocusCondition.OnBlockTag) block).tag(), "on_block_tag must decode its tag id.");
 
 		FocusCondition biome = roundTrip("{\"condition\":\"in_biome_tag\",\"tag\":\"minecraft:is_ocean\"}");
-		assertEquals(Identifier.fromNamespaceAndPath("minecraft", "is_ocean"),
+		assertEquals(ResourceLocation.fromNamespaceAndPath("minecraft", "is_ocean"),
 			((FocusCondition.InBiomeTag) biome).tag(), "in_biome_tag must decode its tag id.");
 	}
 

@@ -16,11 +16,11 @@ import dev.attuned.synergy.SynergyResolver;
 import net.fabricmc.fabric.api.client.item.v1.ItemTooltipCallback;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
-import net.minecraft.core.Registry;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
@@ -48,7 +48,7 @@ public final class AttunedTooltips {
 		initialized = true;
 
 		ItemTooltipCallback.EVENT.register((stack, context, type, lines) -> {
-			Identifier id = BuiltInRegistries.ITEM.getKey(stack.getItem());
+			ResourceLocation id = BuiltInRegistries.ITEM.getKey(stack.getItem());
 			if (id == null || !id.getNamespace().equals(Attuned.MOD_ID)) {
 				return;
 			}
@@ -151,7 +151,7 @@ public final class AttunedTooltips {
 		if (minecraft.level == null) {
 			return null;
 		}
-		Registry<FocusDefinition> registry =
+		HolderLookup.RegistryLookup<FocusDefinition> registry =
 			minecraft.level.registryAccess().lookupOrThrow(AttunedRegistries.FOCUS_DEFINITIONS);
 		return FocusLookup.forItem(registry, stack.getItem()).orElse(null);
 	}
@@ -167,7 +167,7 @@ public final class AttunedTooltips {
 		if (minecraft.level == null) {
 			return false;
 		}
-		Registry<FocusDefinition> focusRegistry =
+		HolderLookup.RegistryLookup<FocusDefinition> focusRegistry =
 			minecraft.level.registryAccess().lookupOrThrow(AttunedRegistries.FOCUS_DEFINITIONS);
 		FocusDefinition focus = FocusLookup.forItem(focusRegistry, stack.getItem()).orElse(null);
 		if (focus == null) {
@@ -178,13 +178,13 @@ public final class AttunedTooltips {
 		Set<String> activeFocusIds = equippedFocusIds(player, focusRegistry);
 		Set<String> discovered = new HashSet<>(AttunedAttachments.getDiscoveredConfluences(player));
 
-		Registry<SynergyDefinition> synergyRegistry =
+		HolderLookup.RegistryLookup<SynergyDefinition> synergyRegistry =
 			minecraft.level.registryAccess().lookupOrThrow(AttunedRegistries.SYNERGY_DEFINITIONS);
 		List<SynergyResolver.SynergyDef> defs = new ArrayList<>();
 		synergyRegistry.listElements().forEach(holder -> {
 			SynergyDefinition def = holder.value();
-			String id = synergyRegistry.getKey(def).toString();
-			List<String> members = def.members().stream().map(Identifier::toString).toList();
+			String id = holder.key().location().toString();
+			List<String> members = def.members().stream().map(ResourceLocation::toString).toList();
 			defs.add(new SynergyResolver.SynergyDef(id, members));
 		});
 
@@ -213,7 +213,7 @@ public final class AttunedTooltips {
 		return candidate != null;
 	}
 
-	private static Set<String> equippedFocusIds(Player player, Registry<FocusDefinition> focusRegistry) {
+	private static Set<String> equippedFocusIds(Player player, HolderLookup.RegistryLookup<FocusDefinition> focusRegistry) {
 		Set<String> activeFocusIds = new HashSet<>();
 		AttunedInv inv = AttunedAttachments.getInventory(player);
 		for (int slot = 0; slot < AttunedInv.SIZE; slot++) {
@@ -252,8 +252,8 @@ public final class AttunedTooltips {
 	}
 
 	private static MutableComponent modifierSummary(ModifierEntry modifier) {
-		Identifier attributeId = modifier.attribute().unwrapKey()
-			.map(key -> key.identifier())
+		ResourceLocation attributeId = modifier.attribute().unwrapKey()
+			.map(key -> key.location())
 			.orElseGet(() -> BuiltInRegistries.ATTRIBUTE.getKey(modifier.attribute().value()));
 		String attributePath = attributeId.getPath();
 		MutableComponent attributeName = Component.translatableWithFallback(

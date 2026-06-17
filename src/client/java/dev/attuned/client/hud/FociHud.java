@@ -22,13 +22,11 @@ import dev.attuned.pacts.PactTacticals;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry;
-import net.fabricmc.fabric.api.client.rendering.v1.hud.VanillaHudElements;
+import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.renderer.RenderPipelines;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 
@@ -36,8 +34,8 @@ import net.minecraft.world.item.ItemStack;
 public final class FociHud {
 	private FociHud() {}
 
-	private static final Identifier FRAME_TEXTURE =
-		Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "textures/gui/foci_hud.png");
+	private static final ResourceLocation FRAME_TEXTURE =
+		ResourceLocation.fromNamespaceAndPath(Attuned.MOD_ID, "textures/gui/foci_hud.png");
 
 	static final int HUD_W = 64;
 	static final int HUD_H = 96;
@@ -95,8 +93,7 @@ public final class FociHud {
 		}
 		initialized = true;
 
-		Identifier id = Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "foci_hud");
-		HudElementRegistry.attachElementAfter(VanillaHudElements.HOTBAR, id, FociHud::renderLayer);
+		HudRenderCallback.EVENT.register(FociHud::renderLayer);
 	}
 
 	public static boolean isVisible(Player player) {
@@ -122,11 +119,11 @@ public final class FociHud {
 		int x = primarySidecarX(screenW, HUD_W);
 		int y = primarySidecarY(screenW, screenH, HUD_W);
 		if (scaled) {
-			graphics.pose().pushMatrix();
-			graphics.pose().scale(scale, scale);
+			graphics.pose().pushPose();
+			graphics.pose().scale(scale, scale, 1.0F);
 		}
 
-		graphics.blit(RenderPipelines.GUI_TEXTURED, FRAME_TEXTURE, x, y,
+		graphics.blit(FRAME_TEXTURE, x, y,
 			0.0F, 0.0F, HUD_W, HUD_H, HUD_W, HUD_H);
 		drawFrameGlow(graphics, x, y);
 
@@ -148,7 +145,7 @@ public final class FociHud {
 			x + CONFLUENCE_CHIP_X, y + CONFLUENCE_CHIP_Y, apexPulseGameTime());
 
 		if (scaled) {
-			graphics.pose().popMatrix();
+			graphics.pose().popPose();
 		}
 	}
 

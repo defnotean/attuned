@@ -24,11 +24,11 @@ import java.util.UUID;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.minecraft.ChatFormatting;
-import net.minecraft.core.Registry;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -101,15 +101,15 @@ public final class Synergies {
 				activeFocusIds.add(BuiltInRegistries.ITEM.getKey(def.item().value()).toString()));
 		}
 
-		Registry<SynergyDefinition> registry =
+		HolderLookup.RegistryLookup<SynergyDefinition> registry =
 			player.level().registryAccess().lookupOrThrow(AttunedRegistries.SYNERGY_DEFINITIONS);
 		List<SynergyResolver.SynergyDef> defs = new ArrayList<>();
 		Map<String, SynergyDefinition> byId = new HashMap<>();
 		registry.listElements().forEach(holder -> {
 			SynergyDefinition def = holder.value();
-			String id = registry.getKey(def).toString();
+			String id = holder.key().location().toString();
 			byId.put(id, def);
-			List<String> members = def.members().stream().map(Identifier::toString).toList();
+			List<String> members = def.members().stream().map(ResourceLocation::toString).toList();
 			defs.add(new SynergyResolver.SynergyDef(id, members));
 		});
 
@@ -198,7 +198,7 @@ public final class Synergies {
 			if (ai == null) {
 				continue;
 			}
-			Identifier id = modifierId(confluenceId, i);
+			ResourceLocation id = modifierId(confluenceId, i);
 			if (ai.getModifier(id) == null) {
 				ai.addTransientModifier(new AttributeModifier(id, entry.amount(), entry.operation()));
 			}
@@ -223,11 +223,11 @@ public final class Synergies {
 	 * gain and re-applies it deterministically.
 	 */
 	private static void reconcileOnJoin(ServerPlayer player) {
-		Registry<SynergyDefinition> registry =
+		HolderLookup.RegistryLookup<SynergyDefinition> registry =
 			player.level().registryAccess().lookupOrThrow(AttunedRegistries.SYNERGY_DEFINITIONS);
 		registry.listElements().forEach(holder -> {
 			SynergyDefinition def = holder.value();
-			removeModifiers(player, registry.getKey(def).toString(), def);
+			removeModifiers(player, holder.key().location().toString(), def);
 		});
 		synergyState.remove(player.getUUID());
 		activeBehaviors.remove(player.getUUID());
@@ -312,21 +312,21 @@ public final class Synergies {
 	 * compute active Confluences and the "one away" preview without touching the budget core.
 	 */
 	public static List<SynergyResolver.SynergyDef> definitions(Player player) {
-		Registry<SynergyDefinition> registry =
+		HolderLookup.RegistryLookup<SynergyDefinition> registry =
 			player.level().registryAccess().lookupOrThrow(AttunedRegistries.SYNERGY_DEFINITIONS);
 		List<SynergyResolver.SynergyDef> defs = new ArrayList<>();
 		registry.listElements().forEach(holder -> {
 			SynergyDefinition def = holder.value();
 			defs.add(new SynergyResolver.SynergyDef(
-				registry.getKey(def).toString(),
-				def.members().stream().map(Identifier::toString).toList()));
+				holder.key().location().toString(),
+				def.members().stream().map(ResourceLocation::toString).toList()));
 		});
 		return defs;
 	}
 
 	/** Stable per-Confluence, per-modifier-index id, distinct from the slot-based Focus scheme. */
-	private static Identifier modifierId(String confluenceId, int index) {
-		return Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "confluence_"
+	private static ResourceLocation modifierId(String confluenceId, int index) {
+		return ResourceLocation.fromNamespaceAndPath(Attuned.MOD_ID, "confluence_"
 			+ confluenceId.replace(':', '_') + "_mod_" + index);
 	}
 

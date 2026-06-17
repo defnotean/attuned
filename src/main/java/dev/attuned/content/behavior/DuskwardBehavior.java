@@ -3,7 +3,7 @@ package dev.attuned.content.behavior;
 import dev.attuned.Attuned;
 import dev.attuned.api.focus.FocusCondition;
 import dev.attuned.api.focus.FocusBehavior;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
@@ -17,8 +17,8 @@ import net.minecraft.world.item.ItemStack;
  * id so the toggle is idempotent.
  */
 public final class DuskwardBehavior implements FocusBehavior {
-	private static final Identifier DUSK_ARMOR_ID =
-		Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "duskward_focus_dark_armor");
+	private static final ResourceLocation DUSK_ARMOR_ID =
+		ResourceLocation.fromNamespaceAndPath(Attuned.MOD_ID, "duskward_focus_dark_armor");
 	private static final double DUSK_ARMOR = 3.0;
 	/** Light level at or below which the dusk-ward hardens. */
 	private static final int MAX_LIGHT = 7;

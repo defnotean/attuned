@@ -79,7 +79,7 @@ public final class RevenantFocusBehaviors {
 			player.connection.teleport(destination.x, destination.y, destination.z,
 				player.getYRot(), player.getXRot());
 			player.resetFallDistance();
-			player.addEffect(new MobEffectInstance(MobEffects.SPEED, 35, 0, true, false, true));
+			player.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, 35, 0, true, false, true));
 			spectralTrail(level, destination);
 			level.playSound(null, player.blockPosition(),
 				SoundEvents.AMETHYST_BLOCK_CHIME, SoundSource.PLAYERS, 0.75F, 0.65F);

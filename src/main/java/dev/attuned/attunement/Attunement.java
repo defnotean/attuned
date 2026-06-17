@@ -7,7 +7,7 @@ import dev.attuned.api.focus.Affinity;
 import dev.attuned.api.focus.FocusDefinition;
 import dev.attuned.content.AttunedComponents;
 import dev.attuned.content.TemperingResolver;
-import net.minecraft.core.Registry;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -56,7 +56,7 @@ public final class Attunement {
 		if (stack.isEmpty()) {
 			return Optional.empty();
 		}
-		Registry<FocusDefinition> registry =
+		HolderLookup.RegistryLookup<FocusDefinition> registry =
 			player.level().registryAccess().lookupOrThrow(AttunedRegistries.FOCUS_DEFINITIONS);
 		return FocusLookup.forItem(registry, stack.getItem());
 	}

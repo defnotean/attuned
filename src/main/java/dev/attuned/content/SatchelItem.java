@@ -5,9 +5,10 @@ import dev.attuned.menu.SatchelMenuType;
 import net.minecraft.core.component.DataComponentType;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
-import net.minecraft.world.InteractionResult;
+import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 
 /**
@@ -55,10 +56,10 @@ public class SatchelItem extends Item {
 	}
 
 	@Override
-	public InteractionResult use(Level level, Player player, InteractionHand hand) {
+	public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
 		if (!level.isClientSide() && player instanceof ServerPlayer serverPlayer) {
 			serverPlayer.openMenu(SatchelMenuType.provider(serverPlayer, hand, grand));
 		}
-		return InteractionResult.SUCCESS;
+		return InteractionResultHolder.sidedSuccess(player.getItemInHand(hand), level.isClientSide());
 	}
 }

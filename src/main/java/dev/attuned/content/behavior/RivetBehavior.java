@@ -2,7 +2,7 @@ package dev.attuned.content.behavior;
 
 import dev.attuned.Attuned;
 import dev.attuned.api.focus.FocusBehavior;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
@@ -13,8 +13,8 @@ import net.minecraft.world.level.block.state.BlockState;
 
 /** Rivet Focus: grounded knockback resistance while braced or standing on metal. */
 public final class RivetBehavior implements FocusBehavior {
-	private static final Identifier BRACED_ID =
-		Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "rivet_focus_braced");
+	private static final ResourceLocation BRACED_ID =
+		ResourceLocation.fromNamespaceAndPath(Attuned.MOD_ID, "rivet_focus_braced");
 	private static final double KNOCKBACK_RESISTANCE = 0.15D;
 
 	@Override

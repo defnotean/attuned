@@ -19,9 +19,9 @@ public final class EclipseBehavior implements FocusBehavior {
 
 	@Override
 	public void onTick(ServerPlayer player, ItemStack focus) {
-		if (UmbralLight.inLowLight(player, MAX_LIGHT) && !player.hasEffect(MobEffects.STRENGTH)) {
+		if (UmbralLight.inLowLight(player, MAX_LIGHT) && !player.hasEffect(MobEffects.DAMAGE_BOOST)) {
 			player.addEffect(new MobEffectInstance(
-				MobEffects.STRENGTH, STRENGTH_TICKS, 0, true, false, true));
+				MobEffects.DAMAGE_BOOST, STRENGTH_TICKS, 0, true, false, true));
 		}
 	}
 }

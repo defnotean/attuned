@@ -24,7 +24,7 @@ import java.util.UUID;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.ChatFormatting;
-import net.minecraft.core.Registry;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.core.component.DataComponentType;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
@@ -127,7 +127,7 @@ public final class PresetNetworking {
 			return;
 		}
 
-		Registry<FocusDefinition> registry =
+		HolderLookup.RegistryLookup<FocusDefinition> registry =
 			player.level().registryAccess().lookupOrThrow(AttunedRegistries.FOCUS_DEFINITIONS);
 		Set<String> registeredFocusIds = registeredFocusIds(registry);
 		Map<String, Integer> inventoryCounts = inventoryFocusCounts(player, registeredFocusIds);
@@ -214,10 +214,10 @@ public final class PresetNetworking {
 			: AttunedComponents.SATCHEL_SIZE;
 	}
 
-	private static Set<String> registeredFocusIds(Registry<FocusDefinition> registry) {
+	private static Set<String> registeredFocusIds(HolderLookup.RegistryLookup<FocusDefinition> registry) {
 		Set<String> ids = new HashSet<>();
-		registry.stream()
-			.map(def -> BuiltInRegistries.ITEM.getKey(def.item().value()).toString())
+		registry.listElements()
+			.map(holder -> BuiltInRegistries.ITEM.getKey(holder.value().item().value()).toString())
 			.forEach(ids::add);
 		return ids;
 	}

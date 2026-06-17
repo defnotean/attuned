@@ -110,7 +110,8 @@ class ResonantSurgeContractTest {
 		assertContains(surges, "surgeResonanceGain");
 		assertContains(surges, "getEntitiesOfClass(Monster.class");
 		assertContains(surges, "getTarget() == null");
-		assertContains(surges, "MobEffects.SPEED");
+		assertTrue(surges.contains("MobEffects.SPEED") || surges.contains("MobEffects.MOVEMENT_SPEED"),
+			"Surge lure should grant the branch's vanilla Speed effect constant.");
 		assertContains(surges, "tickCounter % MOB_LURE_INTERVAL_TICKS");
 	}
 

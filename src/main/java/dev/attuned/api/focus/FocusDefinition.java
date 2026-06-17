@@ -4,7 +4,7 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.core.Holder;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
 
 import java.util.List;
@@ -23,9 +23,9 @@ public record FocusDefinition(
 		int cost,
 		boolean unique,
 		Optional<Affinity> affinity,
-		Optional<Identifier> faction,
+		Optional<ResourceLocation> faction,
 		List<ModifierEntry> modifiers,
-		Optional<Identifier> behavior) {
+		Optional<ResourceLocation> behavior) {
 
 	private static final int MIN_COST = 0;
 	private static final int MAX_COST = 64;
@@ -46,8 +46,8 @@ public record FocusDefinition(
 		Codec.intRange(MIN_COST, MAX_COST).optionalFieldOf("cost", 1).forGetter(FocusDefinition::cost),
 		Codec.BOOL.optionalFieldOf("unique", false).forGetter(FocusDefinition::unique),
 		Affinity.CODEC.optionalFieldOf("affinity").forGetter(FocusDefinition::affinity),
-		Identifier.CODEC.optionalFieldOf("faction").forGetter(FocusDefinition::faction),
+		ResourceLocation.CODEC.optionalFieldOf("faction").forGetter(FocusDefinition::faction),
 		ModifierEntry.CODEC.listOf().optionalFieldOf("modifiers", List.of()).forGetter(FocusDefinition::modifiers),
-		Identifier.CODEC.optionalFieldOf("behavior").forGetter(FocusDefinition::behavior)
+		ResourceLocation.CODEC.optionalFieldOf("behavior").forGetter(FocusDefinition::behavior)
 	).apply(instance, FocusDefinition::new));
 }

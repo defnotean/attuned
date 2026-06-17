@@ -124,7 +124,7 @@ public final class ResonantSurges {
 			return;
 		}
 		ServerPlayer anchor = candidates.get(anchor(candidates).nextInt(candidates.size()));
-		ServerLevel level = anchor.level();
+		ServerLevel level = anchor.serverLevel();
 		RandomSource random = anchor.getRandom();
 		int offsetX = signedOffset(random);
 		int offsetZ = signedOffset(random);
@@ -247,7 +247,7 @@ public final class ResonantSurges {
 			monster -> monster.isAlive() && monster.getTarget() == null);
 		for (Monster monster : monsters) {
 			monster.addEffect(new MobEffectInstance(
-				MobEffects.SPEED, MOB_LURE_SPEED_TICKS, 0, true, false, false));
+				MobEffects.MOVEMENT_SPEED, MOB_LURE_SPEED_TICKS, 0, true, false, false));
 			monster.getNavigation().moveTo(centerX, centerY, centerZ, 1.0);
 			Vec3 delta = new Vec3(centerX - monster.getX(), 0.0, centerZ - monster.getZ());
 			if (delta.lengthSqr() > 1.0E-4) {

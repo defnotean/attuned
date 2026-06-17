@@ -1,6 +1,6 @@
 package dev.attuned.pacts;
 
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
@@ -19,8 +19,8 @@ public final class PactTier4 {
 	private static final int FORGEBOUND_EXTRA_IGNITE_SECONDS = 1;
 	private static final int TIDESWORN_EXTRA_SLOW_TICKS = 20;
 
-	private static final Identifier STONEHEART_TOUGHNESS_MODIFIER_ID =
-		Identifier.fromNamespaceAndPath("attuned", "stoneheart_tier4_toughness");
+	private static final ResourceLocation STONEHEART_TOUGHNESS_MODIFIER_ID =
+		ResourceLocation.fromNamespaceAndPath("attuned", "stoneheart_tier4_toughness");
 
 	public static int pyreswornIgniteSeconds(Player player) {
 		return activeTier4(player, Pact.PYRESWORN)

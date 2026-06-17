@@ -12,8 +12,7 @@ import dev.attuned.menu.FocusLayout;
 import dev.attuned.pacts.Pact;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.renderer.RenderPipelines;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Player;
 
 import java.util.List;
@@ -28,8 +27,8 @@ import java.util.Optional;
 public final class FocusPanel {
 	private FocusPanel() {}
 
-	private static final Identifier PANEL_TEXTURE =
-		Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "textures/gui/focus_panel.png");
+	private static final ResourceLocation PANEL_TEXTURE =
+		ResourceLocation.fromNamespaceAndPath(Attuned.MOD_ID, "textures/gui/focus_panel.png");
 
 	// Padding between the slot column and the panel edge, in GUI pixels.
 	private static final int PAD_X = 5;
@@ -83,7 +82,7 @@ public final class FocusPanel {
 		int y0 = topPos + slotY - PAD_Y;
 		int y1 = topPos + slotY + AttunedInv.SIZE * FocusLayout.SLOT + PAD_Y;
 
-		graphics.blit(RenderPipelines.GUI_TEXTURED, PANEL_TEXTURE, x0, y0,
+		graphics.blit(PANEL_TEXTURE, x0, y0,
 			0.0F, 0.0F, PANEL_WIDTH, PANEL_HEIGHT, PANEL_WIDTH, PANEL_HEIGHT);
 
 		// Cache the breathing-pulse alpha once per draw — every active slot shares

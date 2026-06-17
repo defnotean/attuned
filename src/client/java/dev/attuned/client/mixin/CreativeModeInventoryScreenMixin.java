@@ -18,8 +18,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import org.spongepowered.asm.mixin.injection.invoke.arg.Args;
 
-import java.util.Optional;
-
 /**
  * Brings the six Focus slots into the creative inventory's Survival Inventory
  * tab.
@@ -79,8 +77,7 @@ public abstract class CreativeModeInventoryScreenMixin
 			FocusLayout.CREATIVE_X, FocusLayout.CREATIVE_Y, player);
 		if (FocusPanel.overReadout(FocusLayout.CREATIVE_X, FocusLayout.CREATIVE_Y,
 				mouseX - this.leftPos, mouseY - this.topPos)) {
-			graphics.setTooltipForNextFrame(this.font, AttunementReadout.tooltip(player),
-				Optional.empty(), mouseX, mouseY);
+			graphics.renderComponentTooltip(this.font, AttunementReadout.tooltip(player), mouseX, mouseY);
 		}
 	}
 

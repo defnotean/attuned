@@ -63,7 +63,8 @@ class AttunementJournalUiContractTest {
 		assertTrue(screenSource.contains("private static final class JournalButton extends Button"),
 			"Journal UI should render chapter/page controls with codex-style custom buttons");
 		assertTrue(screenSource.contains("extractContents(GuiGraphicsExtractor")
-				|| screenSource.contains("renderContents(GuiGraphics"),
+				|| screenSource.contains("renderContents(GuiGraphics")
+				|| screenSource.contains("renderWidget(GuiGraphics"),
 			"Journal buttons should draw their own face through the active render API");
 		assertTrue(screenSource.contains("private static final int NAV_X_OFFSET = 34"),
 			"Chapter buttons should align to the painted journal navigation rail");

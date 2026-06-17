@@ -1,5 +1,7 @@
 package dev.attuned.combat;
 
+import dev.attuned.compat.DustParticles;
+
 import dev.attuned.AttunedConfig;
 import dev.attuned.AttunedServerCleanup;
 import dev.attuned.AttunedPlayerCleanup;
@@ -14,7 +16,7 @@ import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.minecraft.core.particles.DustParticleOptions;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
@@ -49,7 +51,7 @@ import java.util.UUID;
  * the Fabric API in use exposes only {@code ALLOW_DAMAGE} (a veto) and
  * {@code AFTER_DAMAGE} (post-application) — neither can rescale the incoming
  * amount. The Mixin modifies the {@code float} amount argument of
- * {@code LivingEntity.hurtServer} before armour and absorption are applied.
+ * {@code LivingEntity.hurt} before armour and absorption are applied.
  */
 public final class AttunedCombat {
 	private AttunedCombat() {}
@@ -73,16 +75,16 @@ public final class AttunedCombat {
 	/** Maximum age for cached mob feedback throttles. */
 	private static final long AFFINITY_SPARK_CACHE_TTL_TICKS = 20L * 60L;
 
-	private static final Identifier THORNWARD_FOCUS =
-		Identifier.fromNamespaceAndPath("attuned", "thornward_focus");
-	private static final Identifier LEECH_FOCUS =
-		Identifier.fromNamespaceAndPath("attuned", "leech_focus");
-	private static final Identifier CINDER_FOCUS =
-		Identifier.fromNamespaceAndPath("attuned", "cinder_focus");
-	private static final Identifier SUNLANCE_FOCUS =
-		Identifier.fromNamespaceAndPath("attuned", "sunlance_focus");
-	private static final Identifier DREADFANG_FOCUS =
-		Identifier.fromNamespaceAndPath("attuned", "dreadfang_focus");
+	private static final ResourceLocation THORNWARD_FOCUS =
+		ResourceLocation.fromNamespaceAndPath("attuned", "thornward_focus");
+	private static final ResourceLocation LEECH_FOCUS =
+		ResourceLocation.fromNamespaceAndPath("attuned", "leech_focus");
+	private static final ResourceLocation CINDER_FOCUS =
+		ResourceLocation.fromNamespaceAndPath("attuned", "cinder_focus");
+	private static final ResourceLocation SUNLANCE_FOCUS =
+		ResourceLocation.fromNamespaceAndPath("attuned", "sunlance_focus");
+	private static final ResourceLocation DREADFANG_FOCUS =
+		ResourceLocation.fromNamespaceAndPath("attuned", "dreadfang_focus");
 
 	/** Re-entrancy guard so a reflected hit cannot trigger another reflection. */
 	private static final ThreadLocal<Boolean> REFLECTING = ThreadLocal.withInitial(() -> false);
@@ -223,7 +225,7 @@ public final class AttunedCombat {
 			return;
 		}
 		LAST_AFFINITY_SPARK.put(id, now);
-		level.sendParticles(new DustParticleOptions(affinity.get().argb() & 0x00FFFFFF, 0.8F),
+		level.sendParticles(DustParticles.color(affinity.get().argb() & 0x00FFFFFF, 0.8F),
 			entity.getX(), entity.getY() + entity.getBbHeight() * 0.7, entity.getZ(),
 			4, 0.2, 0.25, 0.2, 0.0);
 	}
@@ -296,7 +298,7 @@ public final class AttunedCombat {
 		if (multiplier > 1.0F) {
 			LivingEntity attacker = context.attacker();
 			int color = attacker != null ? matchupColor(attacker, context) : 0xFFFFFF;
-			level.sendParticles(new DustParticleOptions(color, 1.0F), x, y, z, 10, 0.3, 0.3, 0.3, 0.0);
+			level.sendParticles(DustParticles.color(color, 1.0F), x, y, z, 10, 0.3, 0.3, 0.3, 0.0);
 			level.playSound(null, defender.blockPosition(),
 				SoundEvents.PLAYER_ATTACK_CRIT, SoundSource.PLAYERS, 0.7F, 1.2F);
 		} else {
@@ -346,14 +348,10 @@ public final class AttunedCombat {
 				&& isDirectMelee(attacker, source)
 				&& attacker.isAlive()) {
 			float reflected = pooledDamage * THORNWARD_REFLECT;
-			if (reflected > 0.0F && attacker.level() instanceof net.minecraft.server.level.ServerLevel serverLevel) {
+			if (reflected > 0.0F) {
 				REFLECTING.set(true);
 				try {
-					attacker.hurtServer(
-						serverLevel,
-						defender.damageSources().thorns(defenderPlayer),
-						reflected
-					);
+					attacker.hurt(defender.damageSources().thorns(defenderPlayer), reflected);
 				} finally {
 					REFLECTING.set(false);
 				}
@@ -408,7 +406,7 @@ public final class AttunedCombat {
 	 * Whether the player has an active (in-budget, on-affinity) Focus whose item
 	 * is registered under {@code targetId}.
 	 */
-	private static boolean hasActiveFocus(Player player, Identifier targetId) {
+	private static boolean hasActiveFocus(Player player, ResourceLocation targetId) {
 		AttunedInv inventory = AttunedAttachments.getInventory(player);
 		for (int slot : Attunement.activeSlots(player)) {
 			ItemStack stack = inventory.get(slot);
@@ -416,7 +414,7 @@ public final class AttunedCombat {
 				continue;
 			}
 			Item item = stack.getItem();
-			Identifier itemId = BuiltInRegistries.ITEM.getKey(item);
+			ResourceLocation itemId = BuiltInRegistries.ITEM.getKey(item);
 			if (targetId.equals(itemId)) {
 				return true;
 			}

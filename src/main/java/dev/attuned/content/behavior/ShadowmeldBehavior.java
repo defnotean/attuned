@@ -19,9 +19,9 @@ public final class ShadowmeldBehavior implements FocusBehavior {
 
 	@Override
 	public void onTick(ServerPlayer player, ItemStack focus) {
-		if (melded(player) && !player.hasEffect(MobEffects.RESISTANCE)) {
+		if (melded(player) && !player.hasEffect(MobEffects.DAMAGE_RESISTANCE)) {
 			player.addEffect(new MobEffectInstance(
-				MobEffects.RESISTANCE, RESISTANCE_TICKS, 0, true, false, true));
+				MobEffects.DAMAGE_RESISTANCE, RESISTANCE_TICKS, 0, true, false, true));
 		}
 	}
 

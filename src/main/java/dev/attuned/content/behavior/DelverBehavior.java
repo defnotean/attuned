@@ -20,6 +20,6 @@ public final class DelverBehavior implements FocusBehavior {
 
 	@Override
 	public void onTick(ServerPlayer player, ItemStack focus) {
-		PassiveEffectRefresher.refresh(player, MobEffects.HASTE, DURATION, 0, true, false, false);
+		PassiveEffectRefresher.refresh(player, MobEffects.DIG_SPEED, DURATION, 0, true, false, false);
 	}
 }

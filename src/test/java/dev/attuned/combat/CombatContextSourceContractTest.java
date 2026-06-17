@@ -26,10 +26,12 @@ class CombatContextSourceContractTest {
 	void hurtMixinBuildsOneContextAndPassesItThroughDamageStages() throws IOException {
 		String source = read(MIXIN_SOURCE);
 		String adjustDamage = methodBody(source,
-			"private float attuned$adjustDamage(float amount, ServerLevel level, DamageSource source)");
+			"private float attuned$adjustDamage(float amount, DamageSource source)");
 
 		assertEquals(1, countOccurrences(adjustDamage, "CombatContext.of(self, source)"),
 			"One hurt event should build one shared combat context.");
+		assertTrue(adjustDamage.contains("self.level() instanceof ServerLevel level"),
+			"The 1.21.1 hurt hook should recover the server level before server-only damage systems run.");
 		assertTrue(adjustDamage.contains("AttunedCombat.applyAffinity(level, self, source, amount, context)"),
 			"Affinity scaling should consume the shared context.");
 		assertTrue(adjustDamage.contains("Apex.adjustDamage(self, source, scaled, context)"),
@@ -53,7 +55,7 @@ class CombatContextSourceContractTest {
 			"Player state should reuse active slots from the shared resolution.");
 		assertTrue(playerState.contains("EnumMap<Affinity, Integer> activeAffinityCounts"),
 			"Player state should expose active affinity counts for Pact resolution.");
-		assertTrue(playerState.contains("Set<Identifier> activeFocusIds"),
+		assertTrue(playerState.contains("Set<ResourceLocation> activeFocusIds"),
 			"Player state should expose active Focus item ids for active-Focus checks.");
 		assertEquals(0, countOccurrences(playerState, "Attunement.activeSlots(player)"),
 			"Player state should not use active-slot convenience helpers.");

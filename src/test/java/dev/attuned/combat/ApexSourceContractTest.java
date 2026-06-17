@@ -88,7 +88,8 @@ class ApexSourceContractTest {
 				&& proc.contains("case BLOOMWARD") && proc.contains("case GLOAMING"),
 			"The affinity-capstone proc dispatch must branch on all four new capstones.");
 
-		assertTrue(methodBody(apex, "private static void procRiptide(").contains("MobEffects.SLOWNESS"),
+		String riptideProc = methodBody(apex, "private static void procRiptide(");
+		assertTrue(riptideProc.contains("MobEffects.SLOWNESS") || riptideProc.contains("MobEffects.MOVEMENT_SLOWDOWN"),
 			"Riptide should apply Slowness to the target.");
 		assertTrue(methodBody(apex, "private static void procCrucible(").contains("igniteForSeconds"),
 			"Crucible should set the target on fire.");

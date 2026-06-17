@@ -48,12 +48,12 @@ class SynergyDefinitionCodecContractTest {
 			"SynergyDefinition should reuse the real ModifierEntry codec for its modifiers.");
 		assertTrue(source.contains("RecordCodecBuilder.create"),
 			"SynergyDefinition should build its codec with RecordCodecBuilder, like FocusDefinition.");
-		assertTrue(source.contains("Identifier.CODEC.listOf().fieldOf(\"members\")"),
+		assertTrue(source.contains("ResourceLocation.CODEC.listOf().fieldOf(\"members\")"),
 			"members must be a required list of Identifiers (the Focus item ids that must all be active).");
 		assertTrue(source.contains("ModifierEntry.CODEC.listOf().optionalFieldOf(\"modifiers\", List.of())"),
 			"modifiers must default to the empty list when omitted, mirroring FocusDefinition.");
-		assertTrue(source.contains("Identifier.CODEC.optionalFieldOf(\"behavior\")"),
-			"behavior must be an optional Identifier into the FocusBehavior registry.");
+		assertTrue(source.contains("ResourceLocation.CODEC.optionalFieldOf(\"behavior\")"),
+			"behavior must be an optional ResourceLocation into the FocusBehavior registry.");
 	}
 
 	private static String read(Path path) throws IOException {

@@ -3,7 +3,7 @@ package dev.attuned.api.synergy;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import dev.attuned.api.focus.ModifierEntry;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 
 import java.util.List;
 import java.util.Objects;
@@ -17,9 +17,9 @@ import java.util.Optional;
  * already-paid-for build (see the Focus Confluences design).
  */
 public record SynergyDefinition(
-        List<Identifier> members,
+        List<ResourceLocation> members,
         List<ModifierEntry> modifiers,
-        Optional<Identifier> behavior) {
+        Optional<ResourceLocation> behavior) {
 
     public SynergyDefinition {
         members = List.copyOf(Objects.requireNonNull(members, "members"));
@@ -28,8 +28,8 @@ public record SynergyDefinition(
     }
 
     public static final Codec<SynergyDefinition> CODEC = RecordCodecBuilder.create(instance -> instance.group(
-        Identifier.CODEC.listOf().fieldOf("members").forGetter(SynergyDefinition::members),
+        ResourceLocation.CODEC.listOf().fieldOf("members").forGetter(SynergyDefinition::members),
         ModifierEntry.CODEC.listOf().optionalFieldOf("modifiers", List.of()).forGetter(SynergyDefinition::modifiers),
-        Identifier.CODEC.optionalFieldOf("behavior").forGetter(SynergyDefinition::behavior)
+        ResourceLocation.CODEC.optionalFieldOf("behavior").forGetter(SynergyDefinition::behavior)
     ).apply(instance, SynergyDefinition::new));
 }
