@@ -4,7 +4,7 @@
 	"affinity": "zephyr",
 	"modifiers": [
 		{
-			"attribute": "minecraft:movement_speed",
+			"attribute": "minecraft:generic.movement_speed",
 			"amount": 0.15,
 			"operation": "add_multiplied_base"
 		}

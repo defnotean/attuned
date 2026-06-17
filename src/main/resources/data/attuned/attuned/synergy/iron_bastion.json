@@ -5,7 +5,7 @@
 	],
 	"modifiers": [
 		{
-			"attribute": "minecraft:armor_toughness",
+			"attribute": "minecraft:generic.armor_toughness",
 			"amount": 1.0,
 			"operation": "add_value"
 		}

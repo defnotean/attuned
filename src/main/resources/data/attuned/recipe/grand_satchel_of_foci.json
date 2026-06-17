@@ -2,9 +2,9 @@
   "type": "minecraft:crafting_shaped",
   "category": "misc",
   "key": {
-    "S": "attuned:satchel_of_foci",
-    "A": "minecraft:amethyst_block",
-    "L": "minecraft:leather"
+    "S": { "item": "attuned:satchel_of_foci" },
+    "A": { "item": "minecraft:amethyst_block" },
+    "L": { "item": "minecraft:leather" }
   },
   "pattern": [
     "LAL",

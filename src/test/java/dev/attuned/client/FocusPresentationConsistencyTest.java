@@ -62,6 +62,8 @@ class FocusPresentationConsistencyTest {
 			"Tooltip should render every modifier declared by the FocusDefinition.");
 		assertTrue(source.contains("modifierSummary(modifier)"),
 			"Modifier display should be generated from data instead of copied by hand.");
+		assertTrue(source.contains("displayAttributePath(attributePath)"),
+			"Tooltip labels should normalize 1.21.1 generic/player registry prefixes for existing lang keys.");
 	}
 
 	@Test
@@ -121,11 +123,22 @@ class FocusPresentationConsistencyTest {
 				}
 				for (JsonElement modifier : modifiers.getAsJsonArray()) {
 					String attributeId = modifier.getAsJsonObject().get("attribute").getAsString();
-					attributes.add(attributeId.substring(attributeId.indexOf(':') + 1));
+					attributes.add(displayAttributePath(attributeId.substring(attributeId.indexOf(':') + 1)));
 				}
 			}
 		}
 		return attributes;
+	}
+
+	private static String displayAttributePath(String attributePath) {
+		int separator = attributePath.indexOf('.');
+		if (separator > 0) {
+			String category = attributePath.substring(0, separator);
+			if ("generic".equals(category) || "player".equals(category)) {
+				return attributePath.substring(separator + 1);
+			}
+		}
+		return attributePath;
 	}
 
 	private static JsonObject languageRoot() throws IOException {

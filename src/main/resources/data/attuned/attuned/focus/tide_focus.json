@@ -5,7 +5,7 @@
 	"affinity": "zephyr",
 	"modifiers": [
 		{
-			"attribute": "minecraft:water_movement_efficiency",
+			"attribute": "minecraft:generic.water_movement_efficiency",
 			"amount": 1.0,
 			"operation": "add_value"
 		}

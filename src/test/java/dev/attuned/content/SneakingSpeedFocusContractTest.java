@@ -31,14 +31,14 @@ class SneakingSpeedFocusContractTest {
 
 		JsonObject modifier = modifiers.asList().stream()
 			.map(element -> element.getAsJsonObject())
-			.filter(entry -> "minecraft:sneaking_speed".equals(entry.get("attribute").getAsString()))
+			.filter(entry -> "minecraft:player.sneaking_speed".equals(entry.get("attribute").getAsString()))
 			.findFirst()
-			.orElseThrow(() -> new AssertionError(fileName + " should affect minecraft:sneaking_speed"));
+			.orElseThrow(() -> new AssertionError(fileName + " should affect minecraft:player.sneaking_speed"));
 
 		assertEquals(amount, modifier.get("amount").getAsDouble(), 0.0001,
 			fileName + " should keep its advertised shift-speed magnitude");
 		assertEquals("add_value", modifier.get("operation").getAsString(),
-			"minecraft:sneaking_speed is itself the crouch-speed multiplier (vanilla base 0.3), "
+			"minecraft:player.sneaking_speed is itself the crouch-speed multiplier (vanilla base 0.3), "
 				+ "so shift-speed Foci must add multiplier points instead of a small percent of 0.3.");
 	}
 }

@@ -4,12 +4,12 @@
 	"affinity": "tide",
 	"modifiers": [
 		{
-			"attribute": "minecraft:armor",
+			"attribute": "minecraft:generic.armor",
 			"amount": 3.0,
 			"operation": "add_value"
 		},
 		{
-			"attribute": "minecraft:knockback_resistance",
+			"attribute": "minecraft:generic.knockback_resistance",
 			"amount": 0.3,
 			"operation": "add_value"
 		}

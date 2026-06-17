@@ -4,12 +4,12 @@
 	"affinity": "fury",
 	"modifiers": [
 		{
-			"attribute": "minecraft:attack_speed",
+			"attribute": "minecraft:generic.attack_speed",
 			"amount": 0.35,
 			"operation": "add_value"
 		},
 		{
-			"attribute": "minecraft:movement_speed",
+			"attribute": "minecraft:generic.movement_speed",
 			"amount": 0.1,
 			"operation": "add_multiplied_base"
 		}

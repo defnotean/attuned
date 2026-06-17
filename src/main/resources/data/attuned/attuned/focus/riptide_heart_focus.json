@@ -6,12 +6,12 @@
 	"faction": "attuned:tideborn",
 	"modifiers": [
 		{
-			"attribute": "minecraft:movement_speed",
+			"attribute": "minecraft:generic.movement_speed",
 			"amount": 0.08,
 			"operation": "add_multiplied_base"
 		},
 		{
-			"attribute": "minecraft:water_movement_efficiency",
+			"attribute": "minecraft:generic.water_movement_efficiency",
 			"amount": 0.5,
 			"operation": "add_value"
 		}

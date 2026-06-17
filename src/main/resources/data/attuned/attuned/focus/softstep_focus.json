@@ -6,7 +6,7 @@
 	"faction": "attuned:unseen",
 	"modifiers": [
 		{
-			"attribute": "minecraft:sneaking_speed",
+			"attribute": "minecraft:player.sneaking_speed",
 			"amount": 0.35,
 			"operation": "add_value"
 		}

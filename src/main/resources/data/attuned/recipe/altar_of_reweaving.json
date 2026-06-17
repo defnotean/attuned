@@ -6,10 +6,10 @@
 		"SFS"
 	],
 	"key": {
-		"S": "minecraft:string",
-		"D": "minecraft:polished_deepslate",
-		"L": "minecraft:loom",
-		"F": "attuned:attunement_shard_fragment"
+		"S": { "item": "minecraft:string" },
+		"D": { "item": "minecraft:polished_deepslate" },
+		"L": { "item": "minecraft:loom" },
+		"F": { "item": "attuned:attunement_shard_fragment" }
 	},
 	"result": {
 		"id": "attuned:altar_of_reweaving"

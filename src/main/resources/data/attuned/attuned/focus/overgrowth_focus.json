@@ -5,12 +5,12 @@
 	"affinity": "verdant",
 	"modifiers": [
 		{
-			"attribute": "minecraft:max_health",
+			"attribute": "minecraft:generic.max_health",
 			"amount": 6.0,
 			"operation": "add_value"
 		},
 		{
-			"attribute": "minecraft:armor",
+			"attribute": "minecraft:generic.armor",
 			"amount": 3.0,
 			"operation": "add_value"
 		}

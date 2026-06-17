@@ -137,9 +137,9 @@ class UmbralEclipseContractTest {
 				"Total Eclipse modifiers should add flat values");
 			byAttribute.put(object.get("attribute").getAsString(), object.get("amount").getAsDouble());
 		}
-		assertEquals(4.0D, byAttribute.get("minecraft:max_health"), 0.0001D,
+		assertEquals(4.0D, byAttribute.get("minecraft:generic.max_health"), 0.0001D,
 			"Total Eclipse should grant +4 max health");
-		assertEquals(1.0D, byAttribute.get("minecraft:attack_damage"), 0.0001D,
+		assertEquals(1.0D, byAttribute.get("minecraft:generic.attack_damage"), 0.0001D,
 			"Total Eclipse should grant +1 attack damage");
 	}
 
