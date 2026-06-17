@@ -77,7 +77,7 @@ public final class TremorBehavior implements dev.attuned.api.focus.FocusBehavior
 		if (ore.isPresent()) {
 			BlockPos orePos = ore.get();
 			java.util.List<BlockPos> vein = collectVein(server, orePos);
-			ServerPlayNetworking.send(serverPlayer, new TremorOreHintPayload(vein));
+			dev.attuned.compat.NetworkPackets.send(serverPlayer, new TremorOreHintPayload(vein));
 			server.sendParticles(ParticleTypes.NOTE,
 				pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5,
 				2, 0.25, 0.25, 0.25, 0.0);

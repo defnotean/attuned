@@ -51,7 +51,7 @@ public final class AttunedKeybinds {
 			while (abilityKey.consumeClick()) {
 				// Buffered clicks can drain after a disconnect; only send with a live player.
 				if (client.player != null) {
-					ClientPlayNetworking.send(new AbilityPayload());
+					dev.attuned.client.ClientNetworkPackets.send(new AbilityPayload());
 				}
 			}
 			while (toggleOwnAffinityHudKey.consumeClick()) {
@@ -67,7 +67,7 @@ public final class AttunedKeybinds {
 				while (applyBuildKeys[i].consumeClick()) {
 					// Server validates index range, apply cooldown, and sourcing.
 					if (client.player != null) {
-						ClientPlayNetworking.send(new QuickApplyPresetPayload(i));
+						dev.attuned.client.ClientNetworkPackets.send(new QuickApplyPresetPayload(i));
 					}
 				}
 			}

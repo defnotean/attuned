@@ -15,6 +15,7 @@ import java.nio.file.Path;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.StreamSupport;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -120,7 +121,9 @@ class UmbralEclipseContractTest {
 	void totalEclipseConfluenceBindsTheThreeUmbralFociAndPureModifiers() throws IOException {
 		JsonObject root = focusDefinitionRoot(SYNERGY_DIR.resolve("total_eclipse.json"));
 		JsonArray members = root.getAsJsonArray("members");
-		List<String> memberIds = members.asList().stream().map(JsonElement::getAsString).toList();
+		List<String> memberIds = StreamSupport.stream(members.spliterator(), false)
+			.map(JsonElement::getAsString)
+			.toList();
 		assertEquals(List.of(
 				"attuned:eclipse_focus", "attuned:gloomstride_focus", "attuned:duskward_focus"),
 			memberIds, "Total Eclipse must bind exactly its three Umbral members");

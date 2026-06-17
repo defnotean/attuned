@@ -101,7 +101,8 @@ class SatchelMenuContractTest {
 		assertTrue(type.contains("initialized = true;"),
 			"MenuType registration should set its guard before registering.");
 		assertBefore(type, "initialized = true;", "Registry.register(BuiltInRegistries.MENU");
-		assertTrue(type.contains("new MenuType<>(SatchelMenu::new, FeatureFlags.VANILLA_SET)"),
+		assertTrue(type.contains("new MenuType<>(SatchelMenu::new, FeatureFlags.VANILLA_SET)")
+				|| type.contains("new MenuType<>(SatchelMenu::new)"),
 			"SatchelMenuType should use the plain MenuType ctor like AltarMenuType.");
 		assertTrue(type.contains("public static MenuProvider provider(Player player, InteractionHand hand)"),
 			"Provider should close over the player's hand, not a BlockPos.");

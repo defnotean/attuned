@@ -1,7 +1,7 @@
 package dev.attuned.compat;
 
 import net.minecraft.core.particles.DustParticleOptions;
-import org.joml.Vector3f;
+import com.mojang.math.Vector3f;
 
 public final class ParticleCompat {
 	private ParticleCompat() {}

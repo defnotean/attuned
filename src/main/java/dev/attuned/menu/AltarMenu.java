@@ -223,7 +223,7 @@ public class AltarMenu extends AbstractContainerMenu {
 				return ItemStack.EMPTY;
 			}
 			if (stack.isEmpty()) {
-				slot.setByPlayer(ItemStack.EMPTY);
+				slot.set(ItemStack.EMPTY);
 			} else {
 				slot.setChanged();
 			}

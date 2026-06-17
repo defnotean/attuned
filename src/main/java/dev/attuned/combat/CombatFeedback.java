@@ -62,7 +62,7 @@ public final class CombatFeedback {
 		double z = player.getZ();
 		level.sendParticles(ParticleTypes.SMOKE, x, y, z, 4, 0.2, 0.2, 0.2, 0.01);
 		level.playSound(null, player.blockPosition(),
-			SoundEvents.NOTE_BLOCK_BASS.value(), SoundSource.PLAYERS, 0.45F, 0.65F);
+			SoundEvents.NOTE_BLOCK_BASS, SoundSource.PLAYERS, 0.45F, 0.65F);
 		markFeedback(player);
 	}
 

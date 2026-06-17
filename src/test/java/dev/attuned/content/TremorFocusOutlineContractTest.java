@@ -35,7 +35,8 @@ class TremorFocusOutlineContractTest {
 			"Tremor should select the nearest matching ore block.");
 		assertTrue(source.contains("collectVein(server, orePos)"),
 			"Tremor should expand the nearest ore into its whole connected vein.");
-		assertTrue(source.contains("ServerPlayNetworking.send(serverPlayer, new TremorOreHintPayload(vein))"),
+		assertTrue(source.contains("ServerPlayNetworking.send(serverPlayer, new TremorOreHintPayload(vein))")
+				|| source.contains("NetworkPackets.send(serverPlayer, new TremorOreHintPayload(vein))"),
 			"Tremor should send every vein position to the mining player.");
 		assertTrue(source.contains("MAX_VEIN_BLOCKS"),
 			"The vein flood fill must be capped so a giant deposit cannot flood the packet.");

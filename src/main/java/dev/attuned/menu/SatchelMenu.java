@@ -202,7 +202,7 @@ public class SatchelMenu extends AbstractContainerMenu {
 		}
 
 		if (stack.isEmpty()) {
-			slot.setByPlayer(ItemStack.EMPTY);
+			slot.set(ItemStack.EMPTY);
 		} else {
 			slot.setChanged();
 		}

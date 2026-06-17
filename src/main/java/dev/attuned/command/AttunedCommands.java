@@ -143,12 +143,11 @@ public final class AttunedCommands {
 		List<String> problems = new ArrayList<>();
 		List<String> warnings = new ArrayList<>();
 		var registries = source.getServer().registryAccess();
-		var registry = registries.lookupOrThrow(AttunedRegistries.FOCUS_DEFINITIONS);
+		var registry = registries.registryOrThrow(AttunedRegistries.FOCUS_DEFINITIONS);
 		Map<net.minecraft.world.item.Item, FocusDefinition> byItem = new IdentityHashMap<>();
 		// Walk every focus/<name>.json file by file: each problem and each warning
 		// is qualified with the Focus's item key so an author can find the source file.
-		registry.listElements().forEach(holder -> {
-			FocusDefinition def = holder.value();
+		registry.stream().forEach(def -> {
 			var itemKey = BuiltInRegistries.ITEM.getKey(def.item().value());
 			// An item that failed to resolve to a real registered item.
 			if (!def.item().isBound()) {
@@ -181,8 +180,8 @@ public final class AttunedCommands {
 		// Walk the focus_behavior palette registry too, so a palette file that an
 		// author shipped is reported alongside their focus files. A palette entry that
 		// failed to decode never reaches the registry, so reaching here means it built.
-		var behaviorRegistry = registries.lookupOrThrow(AttunedRegistries.FOCUS_BEHAVIORS);
-		int paletteCount = (int) behaviorRegistry.listElements().count();
+		var behaviorRegistry = registries.registryOrThrow(AttunedRegistries.FOCUS_BEHAVIORS);
+		int paletteCount = (int) behaviorRegistry.stream().count();
 
 		if (problems.isEmpty()) {
 			source.sendSuccess(Component.literal("Attuned validation passed: "

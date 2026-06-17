@@ -41,8 +41,10 @@ public final class TremorOreOutlines {
 		}
 		initialized = true;
 
-		ClientPlayNetworking.registerGlobalReceiver(TremorOreHintPayload.TYPE, (payload, player, sender) ->
-			Minecraft.getInstance().execute(() -> highlight(payload.orePositions())));
+		ClientPlayNetworking.registerGlobalReceiver(TremorOreHintPayload.TYPE, (client, handler, buf, sender) -> {
+			TremorOreHintPayload payload = TremorOreHintPayload.TYPE.read(buf);
+			client.execute(() -> highlight(payload.orePositions()));
+		});
 		WorldRenderEvents.END.register(TremorOreOutlines::render);
 		// Drop the highlighted-level reference on disconnect; render() does not run
 		// on the title screen, so without this the old ClientLevel would stay pinned.

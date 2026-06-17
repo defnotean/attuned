@@ -43,20 +43,25 @@ public final class PresetNetworking {
 			return;
 		}
 		initialized = true;
-		ServerPlayNetworking.registerGlobalReceiver(SavePresetPayload.TYPE, (payload, player, sender) -> {
-			player.getLevel().getServer().execute(() -> savePreset(player, payload));
+		ServerPlayNetworking.registerGlobalReceiver(SavePresetPayload.TYPE, (server, player, handler, buf, sender) -> {
+			SavePresetPayload payload = SavePresetPayload.TYPE.read(buf);
+			server.execute(() -> savePreset(player, payload));
 		});
-		ServerPlayNetworking.registerGlobalReceiver(ApplyPresetPayload.TYPE, (payload, player, sender) -> {
-			player.getLevel().getServer().execute(() -> applyPreset(player, payload));
+		ServerPlayNetworking.registerGlobalReceiver(ApplyPresetPayload.TYPE, (server, player, handler, buf, sender) -> {
+			ApplyPresetPayload payload = ApplyPresetPayload.TYPE.read(buf);
+			server.execute(() -> applyPreset(player, payload));
 		});
-		ServerPlayNetworking.registerGlobalReceiver(DeletePresetPayload.TYPE, (payload, player, sender) -> {
-			player.getLevel().getServer().execute(() -> deletePreset(player, payload));
+		ServerPlayNetworking.registerGlobalReceiver(DeletePresetPayload.TYPE, (server, player, handler, buf, sender) -> {
+			DeletePresetPayload payload = DeletePresetPayload.TYPE.read(buf);
+			server.execute(() -> deletePreset(player, payload));
 		});
-		ServerPlayNetworking.registerGlobalReceiver(QuickApplyPresetPayload.TYPE, (payload, player, sender) -> {
-			player.getLevel().getServer().execute(() -> quickApplyPreset(player, payload));
+		ServerPlayNetworking.registerGlobalReceiver(QuickApplyPresetPayload.TYPE, (server, player, handler, buf, sender) -> {
+			QuickApplyPresetPayload payload = QuickApplyPresetPayload.TYPE.read(buf);
+			server.execute(() -> quickApplyPreset(player, payload));
 		});
-		ServerPlayNetworking.registerGlobalReceiver(ImportPresetPayload.TYPE, (payload, player, sender) -> {
-			player.getLevel().getServer().execute(() -> importPreset(player, payload));
+		ServerPlayNetworking.registerGlobalReceiver(ImportPresetPayload.TYPE, (server, player, handler, buf, sender) -> {
+			ImportPresetPayload payload = ImportPresetPayload.TYPE.read(buf);
+			server.execute(() -> importPreset(player, payload));
 		});
 		AttunedPlayerCleanup.onForget(LAST_APPLY_TICK::remove);
 		AttunedServerCleanup.onStop(LAST_APPLY_TICK::clear);

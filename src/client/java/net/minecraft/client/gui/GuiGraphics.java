@@ -75,6 +75,6 @@ public final class GuiGraphics {
 	}
 
 	public void renderItem(ItemStack stack, int x, int y) {
-		this.minecraft.getItemRenderer().renderAndDecorateItem(this.pose, stack, x, y);
+		this.minecraft.getItemRenderer().renderAndDecorateItem(stack, x, y);
 	}
 }

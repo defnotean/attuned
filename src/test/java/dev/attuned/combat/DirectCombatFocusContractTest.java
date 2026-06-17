@@ -32,8 +32,10 @@ class DirectCombatFocusContractTest {
 			"Shared direct-melee detection should live beside the other direct-combat helpers.");
 		assertTrue(combat.contains("source.getDirectEntity() != attacker"),
 			"Direct melee should require the direct damage entity to be the attacker.");
-		assertTrue(combat.contains("DamageTypeTags.IS_PROJECTILE")
-				&& combat.contains("DamageTypeTags.IS_EXPLOSION"),
+		assertTrue((combat.contains("DamageTypeTags.IS_PROJECTILE")
+					&& combat.contains("DamageTypeTags.IS_EXPLOSION"))
+				|| (combat.contains("source.isProjectile()")
+					&& combat.contains("source.isExplosion()")),
 			"Direct melee should reject projectile and explosion damage sources.");
 		assertEquals(2, countOccurrences(afterDamage, "&& isDirectMelee(attacker, source)"),
 			"Both Thornward reflection and Leech lifesteal should be gated to direct melee hits.");
@@ -48,14 +50,17 @@ class DirectCombatFocusContractTest {
 
 		assertTrue(lang.contains("\"item.attuned.needle_focus.effect\": \"Your first hit from behind or from a veil deals 35% more damage, then cools down.\""),
 			"Needle's player-facing text describes a hit opener, not projectile or explosion splash.");
-		assertTrue(combat.contains("import net.minecraft.tags.DamageTypeTags;"),
+		assertTrue(combat.contains("import net.minecraft.tags.DamageTypeTags;")
+				|| (combat.contains("source.isProjectile()") && combat.contains("source.isExplosion()")),
 			"Needle's direct-hit helper should be able to reject projectile and explosion damage tags.");
 		assertTrue(combat.contains("private static boolean isDirectHit(ServerPlayer attacker, DamageSource source)"),
 			"Needle's direct-hit detection should live beside the opener logic.");
 		assertTrue(combat.contains("source.getDirectEntity() != attacker"),
 			"Needle should require the player to be the direct damage entity.");
-		assertTrue(combat.contains("DamageTypeTags.IS_PROJECTILE")
-				&& combat.contains("DamageTypeTags.IS_EXPLOSION"),
+		assertTrue((combat.contains("DamageTypeTags.IS_PROJECTILE")
+					&& combat.contains("DamageTypeTags.IS_EXPLOSION"))
+				|| (combat.contains("source.isProjectile()")
+					&& combat.contains("source.isExplosion()")),
 			"Needle should reject projectile and explosion damage sources even if another mod marks the player as direct.");
 		assertTrue(adjustDamage.contains("!isDirectHit(attacker, source)"),
 			"Needle should return before breaking veil or applying its multiplier when the source is not a direct hit.");

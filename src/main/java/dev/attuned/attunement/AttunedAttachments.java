@@ -82,7 +82,7 @@ public final class AttunedAttachments {
 
 	public static void sync(Player player) {
 		if (player instanceof ServerPlayer serverPlayer) {
-			ServerPlayNetworking.send(serverPlayer, new AttunedStatePayload(state(serverPlayer).toTag()));
+			dev.attuned.compat.NetworkPackets.send(serverPlayer, new AttunedStatePayload(state(serverPlayer).toTag()));
 		}
 	}
 

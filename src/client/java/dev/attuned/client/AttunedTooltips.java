@@ -96,7 +96,7 @@ public final class AttunedTooltips {
 						.withStyle(affinityColor(affinity), ChatFormatting.BOLD)));
 				definition.faction().ifPresent(faction -> lines.add(Component.literal("Faction: ")
 					.withStyle(ChatFormatting.GRAY)
-					.append(Component.translatableWithFallback(
+					.append(translatableWithFallback(
 						"faction." + faction.getNamespace() + "." + faction.getPath(), faction.toString())
 						.withStyle(ChatFormatting.DARK_PURPLE, ChatFormatting.BOLD))));
 				// Show the effective budget cost this stack consumes, so a Tempered
@@ -255,10 +255,16 @@ public final class AttunedTooltips {
 			.map(key -> key.location())
 			.orElseGet(() -> BuiltInRegistries.ATTRIBUTE.getKey(modifier.attribute().value()));
 		String attributePath = tooltipAttributePath(attributeId.getPath());
-		MutableComponent attributeName = Component.translatableWithFallback(
+		MutableComponent attributeName = translatableWithFallback(
 			"tooltip.attuned.modifier.attribute." + attributePath, humanize(attributePath));
 		return Component.translatable("tooltip.attuned.modifier.line",
 			modifierAmount(attributePath, modifier.amount(), modifier.operation()), attributeName);
+	}
+
+	private static MutableComponent translatableWithFallback(String key, String fallback) {
+		return net.minecraft.locale.Language.getInstance().has(key)
+			? Component.translatable(key)
+			: Component.literal(fallback);
 	}
 
 	private static String tooltipAttributePath(String path) {

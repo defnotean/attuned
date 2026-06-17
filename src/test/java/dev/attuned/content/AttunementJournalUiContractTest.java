@@ -33,7 +33,8 @@ class AttunementJournalUiContractTest {
 	void journalItemOpensCustomScreenPayloadInsteadOfVanillaBookScreen() throws IOException {
 		String itemSource = read(JOURNAL_ITEM_SOURCE);
 
-		assertTrue(itemSource.contains("ServerPlayNetworking.send(serverPlayer, new OpenJournalPayload())"),
+		assertTrue(itemSource.contains("ServerPlayNetworking.send(serverPlayer, new OpenJournalPayload())")
+				|| itemSource.contains("NetworkPackets.send(serverPlayer, new OpenJournalPayload())"),
 			"Journal right-click should ask the client to open Attuned's custom screen");
 		assertFalse(itemSource.contains("super.use("),
 			"Journal right-click should not fall through to the vanilla written-book screen");
@@ -66,7 +67,8 @@ class AttunementJournalUiContractTest {
 		assertTrue(screenSource.contains("extractContents(GuiGraphicsExtractor")
 				|| screenSource.contains("renderContents(GuiGraphics")
 				|| screenSource.contains("renderWidget(GuiGraphics")
-				|| screenSource.contains("renderWidget(PoseStack"),
+				|| screenSource.contains("renderWidget(PoseStack")
+				|| screenSource.contains("renderButton(PoseStack"),
 			"Journal buttons should draw their own face through the active render API");
 		assertTrue(screenSource.contains("private static final int NAV_X_OFFSET = 34"),
 			"Chapter buttons should align to the painted journal navigation rail");
@@ -88,9 +90,11 @@ class AttunementJournalUiContractTest {
 			"Chapter buttons should use the painted tab width and height");
 		assertTrue(screenSource.contains("return PAGE_CONTENT_WIDTH;"),
 			"Page navigation and text should use the painted 216px page region, not derived padding math");
-		assertTrue(screenSource.contains("Component.translatable(\"screen.attuned.journal.previous\")"),
+		assertTrue(screenSource.contains("Component.translatable(\"screen.attuned.journal.previous\")")
+				|| screenSource.contains("new net.minecraft.network.chat.TranslatableComponent(\"screen.attuned.journal.previous\")"),
 			"Previous page button should use translatable screen copy");
-		assertTrue(screenSource.contains("Component.translatable(\"screen.attuned.journal.next\")"),
+		assertTrue(screenSource.contains("Component.translatable(\"screen.attuned.journal.next\")")
+				|| screenSource.contains("new net.minecraft.network.chat.TranslatableComponent(\"screen.attuned.journal.next\")"),
 			"Next page button should use translatable screen copy");
 		assertFalse(screenSource.contains("BookViewScreen"),
 			"Journal UI should not reuse the vanilla book screen");

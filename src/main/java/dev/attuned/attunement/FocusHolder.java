@@ -40,7 +40,7 @@ public record FocusHolder(int size, int maxPerSlot, List<ItemStack> items) {
 		if (tag instanceof CompoundTag compound) {
 			return DataResult.success(fromTag(compound, size, maxPerSlot));
 		}
-		return DataResult.error(() -> "FocusHolder must be encoded as a compound tag");
+		return DataResult.error("FocusHolder must be encoded as a compound tag");
 	}
 
 	public List<ItemStack> items() {

@@ -71,7 +71,7 @@ public sealed interface FocusCondition {
 				return com.mojang.serialization.DataResult.success(type);
 			}
 		}
-		return com.mojang.serialization.DataResult.error(() -> "Unknown Focus condition: " + name);
+		return com.mojang.serialization.DataResult.error("Unknown Focus condition: " + name);
 	}
 
 	// ---- Variants ---------------------------------------------------------

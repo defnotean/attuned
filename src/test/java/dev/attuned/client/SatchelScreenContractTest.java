@@ -54,7 +54,8 @@ class SatchelScreenContractTest {
 		assertTrue(screen.contains("screen.attuned.preset.share"), "Share button label.");
 		assertTrue(screen.contains("screen.attuned.preset.import"), "Import button label.");
 		assertTrue(screen.contains("minecraft.gui.setOverlayMessage"), "Share/import feedback should use the action bar overlay.");
-		assertTrue(screen.contains("ClientPlayNetworking.send"), "Preset buttons should send over client networking.");
+		assertTrue(screen.contains("ClientPlayNetworking.send") || screen.contains("ClientNetworkPackets.send"),
+			"Preset buttons should send over client networking.");
 		assertTrue(screen.contains("AttunedAttachments.getPresets"),
 			"The screen should read presets from the synced attachment each frame (no caching).");
 	}

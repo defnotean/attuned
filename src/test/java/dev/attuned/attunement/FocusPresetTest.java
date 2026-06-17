@@ -49,7 +49,8 @@ class FocusPresetTest {
 			"Presets should sync to the owning client through the active branch sync path.");
 		assertTrue(attachments.contains("AttachmentSyncPredicate.targetOnly()")
 				|| attachments.contains("AttachmentRegistry.<List<FocusPreset>>builder()")
-				|| attachments.contains("ServerPlayNetworking.send(serverPlayer"),
+				|| attachments.contains("ServerPlayNetworking.send(serverPlayer")
+				|| attachments.contains("NetworkPackets.send(serverPlayer"),
 			"Presets should sync only to the owning client when sync is available.");
 		assertTrue(attachments.contains(".copyOnDeath()")
 				|| attachments.contains("STATES.put(to.getUUID(), state(from).copy());"),

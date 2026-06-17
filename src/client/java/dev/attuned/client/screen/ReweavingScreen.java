@@ -51,7 +51,7 @@ public class ReweavingScreen extends AbstractContainerScreen<ReweavingMenu> {
 			this.leftPos + BUTTON_X,
 			this.topPos + BUTTON_Y,
 			Component.translatable("screen.attuned.reweaving_altar.reweave"),
-			button -> ClientPlayNetworking.send(new ReweavePayload()));
+			button -> dev.attuned.client.ClientNetworkPackets.send(new ReweavePayload()));
 		this.addRenderableWidget(this.reweaveButton);
 		refreshButtonState();
 	}
@@ -131,14 +131,14 @@ public class ReweavingScreen extends AbstractContainerScreen<ReweavingMenu> {
 
 	private static final class ReweaveButton extends Button {
 		private ReweaveButton(int x, int y, Component message, OnPress onPress) {
-			super(x, y, BUTTON_W, BUTTON_H, message, onPress, DEFAULT_NARRATION);
+			super(x, y, BUTTON_W, BUTTON_H, message, onPress);
 		}
 
 		@Override
-		public void renderWidget(PoseStack poseStack, int mouseX, int mouseY, float partialTick) {
+		public void renderButton(PoseStack poseStack, int mouseX, int mouseY, float partialTick) {
 			GuiGraphics graphics = new GuiGraphics(Minecraft.getInstance(), poseStack);
-			int x0 = getX();
-			int y0 = getY();
+			int x0 = this.x;
+			int y0 = this.y;
 			int x1 = x0 + getWidth();
 			int y1 = y0 + getHeight();
 			if (!this.active) {
@@ -146,7 +146,7 @@ public class ReweavingScreen extends AbstractContainerScreen<ReweavingMenu> {
 			} else if (isHoveredOrFocused()) {
 				drawButtonOutline(graphics, x0, y0, x1, y1, BUTTON_HOVER_ARGB);
 			}
-			renderString(poseStack, Minecraft.getInstance().font, BODY_TEXT);
+			net.minecraft.client.gui.GuiComponent.drawCenteredString(poseStack, Minecraft.getInstance().font, getMessage(), x0 + getWidth() / 2, y0 + (getHeight() - 8) / 2, BODY_TEXT);
 		}
 	}
 }

@@ -77,7 +77,8 @@ class ResonantComboContractTest {
 		assertTrue(feedback.contains("playSound(null, defender.blockPosition()"),
 			"The combo should have sound feedback on the target.");
 		assertTrue(feedback.contains("attacker.sendOverlayMessage(Component.translatable(\"combo.attuned.softstep_needle\"))")
-				|| feedback.contains("PlayerMessages.overlay(attacker, Component.translatable(\"combo.attuned.softstep_needle\"))"),
+				|| feedback.contains("PlayerMessages.overlay(attacker, Component.translatable(\"combo.attuned.softstep_needle\"))")
+				|| feedback.contains("PlayerMessages.overlay(attacker, new net.minecraft.network.chat.TranslatableComponent(\"combo.attuned.softstep_needle\"))"),
 			"The attacker should get a compact action-bar confirmation when the combo lands.");
 	}
 

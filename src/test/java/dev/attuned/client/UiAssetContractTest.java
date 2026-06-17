@@ -75,7 +75,9 @@ class UiAssetContractTest {
 	@Test
 	void generatedAltarScreensKeepInteractiveControlsInsidePaintedWells() throws IOException {
 		assertSourceContains(ALTAR_SCREEN_SOURCE, "DETAIL_MAX_WIDTH = STATUS_MAX_WIDTH");
-		assertSourceContains(ALTAR_SCREEN_SOURCE, "Component.literal(readout.dormant() + \" dormant\")");
+		assertSourceContainsAny(ALTAR_SCREEN_SOURCE,
+			"Component.literal(readout.dormant() + \" dormant\")",
+			"new net.minecraft.network.chat.TextComponent(readout.dormant() + \" dormant\")");
 		assertSourceContains(ALTAR_SCREEN_SOURCE, "private static final int READOUT_X = 24");
 		assertSourceContains(ALTAR_SCREEN_SOURCE, "private static final int TEXT_BOX_X = 18");
 		assertSourceContains(ALTAR_SCREEN_SOURCE, "private static final int HINT_Y = 88");
@@ -174,5 +176,15 @@ class UiAssetContractTest {
 	private static void assertSourceContains(Path file, String needle) throws IOException {
 		String source = Files.readString(file, StandardCharsets.UTF_8);
 		assertTrue(source.contains(needle), file + " should reference " + needle);
+	}
+
+	private static void assertSourceContainsAny(Path file, String... needles) throws IOException {
+		String source = Files.readString(file, StandardCharsets.UTF_8);
+		for (String needle : needles) {
+			if (source.contains(needle)) {
+				return;
+			}
+		}
+		assertTrue(false, file + " should reference one of " + java.util.Arrays.toString(needles));
 	}
 }

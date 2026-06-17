@@ -101,7 +101,8 @@ class CompassFocusBehaviorContractTest {
 		assertTrue(source.contains("player.getRespawnConfig() != null")
 				|| source.contains("player.getRespawnPosition() != null"),
 			"Driftglass should defer to Beacon only when Beacon has a respawn target");
-		assertTrue(source.contains("player.getLastDeathLocation().isPresent()"),
+		assertTrue(source.contains("player.getLastDeathLocation().isPresent()")
+				|| source.contains("LastDeathPositions.get(player).isPresent()"),
 			"Driftglass should defer to Waystone only when Waystone has a death target");
 	}
 
