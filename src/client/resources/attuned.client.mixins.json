@@ -11,6 +11,7 @@
 		"InventoryScreenMixin",
 		"ItemInHandLayerInvisibilityMixin",
 		"RenderTypeInvoker",
+		"SpecialModelRenderersAccessor",
 		"ThrownTridentRendererMixin",
 		"ThrownTridentRenderStateMixin",
 		"WingsLayerInvisibilityMixin"

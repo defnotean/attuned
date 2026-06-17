@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import java.awt.image.BufferedImage;
@@ -80,25 +81,48 @@ class HarpoonBehaviorContractTest {
 
 	@Test
 	void offshoreHarpoonShipsTemporaryItemAssets() throws IOException {
+		Path focusDefinition = Path.of("src/main/resources/assets/attuned/items/harpoon_focus.json");
 		Path itemDefinition = Path.of("src/main/resources/assets/attuned/items/ocean_relic_trident.json");
+		Path projectileDefinition = Path.of("src/main/resources/assets/attuned/items/ocean_relic_trident_projectile.json");
 		Path itemModel = Path.of("src/main/resources/assets/attuned/models/item/ocean_relic_trident.json");
 		Path throwingModel = Path.of("src/main/resources/assets/attuned/models/item/ocean_relic_trident_throwing.json");
+		Path blockbenchModel = Path.of("src/main/resources/assets/attuned/blockbench/ocean_relic_trident.bbmodel");
+		Path gltfModel = Path.of("src/main/resources/assets/attuned/gltf/ocean_relic_trident.glb");
+		Path blockbenchTexture = Path.of("src/main/resources/assets/attuned/textures/item/ocean_relic_trident_blockbench.png");
+		Path blockbenchTextureMeta = Path.of("src/main/resources/assets/attuned/textures/item/ocean_relic_trident_blockbench.png.mcmeta");
 		Path itemTexture = Path.of("src/main/resources/assets/attuned/textures/item/ocean_relic_trident.png");
 		Path itemPalette = Path.of("src/main/resources/assets/attuned/textures/item/ocean_relic_trident_voxel_palette.png");
 
+		assertTrue(Files.isRegularFile(focusDefinition),
+			"Harpoon Focus should keep its own item definition separate from the temporary harpoon");
 		assertTrue(Files.isRegularFile(itemDefinition),
 			"Temporary harpoon should have an item definition selected by DataComponents.ITEM_MODEL");
 		assertTrue(Files.isRegularFile(itemModel),
-			"Temporary harpoon should have a custom item model");
+			"Temporary harpoon should keep a base item model for display transforms");
 		assertTrue(Files.isRegularFile(throwingModel),
-			"Temporary harpoon should have a custom throwing/wind-up model");
+			"Temporary harpoon should keep a base throwing/wind-up model for display transforms");
+		assertTrue(Files.isRegularFile(blockbenchModel),
+			"Temporary harpoon should keep the editable Blockbench source mesh");
+		assertTrue(Files.isRegularFile(gltfModel),
+			"Temporary harpoon should ship the compact GLB mesh used by the actual held/thrown harpoon");
+		assertTrue(Files.isRegularFile(blockbenchTexture),
+			"Temporary harpoon should ship the texture used by the actual held/thrown harpoon");
+		assertTrue(Files.isRegularFile(blockbenchTextureMeta),
+			"Temporary harpoon should clamp the texture used by the custom mesh renderer");
 		assertTrue(Files.isRegularFile(itemTexture),
-			"Temporary harpoon should have a custom texture");
+			"Temporary harpoon should keep a custom flat inventory texture");
 		assertTrue(Files.isRegularFile(itemPalette),
-			"Temporary harpoon should have a voxel palette texture");
+			"Temporary harpoon should keep the old palette texture for source/preview compatibility");
 
+		JsonObject focus = json(focusDefinition).getAsJsonObject("model");
 		JsonObject definition = json(itemDefinition);
 		JsonObject model = json(itemModel);
+		JsonObject projectile = json(projectileDefinition).getAsJsonObject("model");
+		JsonObject blockbench = json(blockbenchModel);
+		assertEquals("minecraft:model", focus.get("type").getAsString(),
+			"Harpoon Focus itself should stay on its normal focus item model");
+		assertEquals("attuned:item/harpoon_focus", focus.get("model").getAsString(),
+			"Harpoon Focus should not be replaced by the trident GLB mesh");
 		JsonObject definitionModel = definition.getAsJsonObject("model");
 		assertEquals("minecraft:select", definitionModel.get("type").getAsString(),
 			"Item definition should split GUI/held contexts like a vanilla trident");
@@ -109,42 +133,31 @@ class HarpoonBehaviorContractTest {
 			"Held temporary trident should switch models while the player is using it");
 		assertEquals("minecraft:using_item", fallback.get("property").getAsString(),
 			"Throw wind-up should use the actual vanilla item-use state");
-		assertEquals("attuned:item/ocean_relic_trident",
-			fallback.getAsJsonObject("on_false").get("model").getAsString(),
-			"Relaxed held state should use the Attuned trident model");
-		assertEquals("attuned:item/ocean_relic_trident_throwing",
-			fallback.getAsJsonObject("on_true").get("model").getAsString(),
-			"Throw wind-up should point the prongs forward with a dedicated model");
-		assertTrue(!model.has("parent"),
-			"Temporary harpoon should render as a real cuboid voxel model, not a flat generated sprite");
-		assertEquals("attuned:item/ocean_relic_trident_voxel_palette",
-			model.getAsJsonObject("textures").get("palette").getAsString(),
-			"Harpoon model should use the Ocean Relic voxel palette");
-		assertEquals("attuned:item/ocean_relic_trident_voxel_palette",
-			model.getAsJsonObject("textures").get("particle").getAsString(),
-			"Harpoon model should define a particle texture to avoid missing-texture warnings");
-		JsonObject report = json(Path.of("docs/superpowers/assets/ocean-relic-trident/ocean_relic_trident_voxel_report.json"));
-		assertTrue(model.getAsJsonArray("elements").size() >= 36,
-			"Harpoon model should contain a real cuboid trident silhouette");
-		assertTrue(report.getAsJsonArray("bbox_size").get(1).getAsDouble() >= 40.0D,
-			"Harpoon model should be long enough to read as a trident when held");
-		assertTrue(report.getAsJsonArray("bbox_size").get(0).getAsDouble() >= 10.0D,
-			"Harpoon model should keep the side prongs visibly separated");
+		assertGltfSpecial(fallback.getAsJsonObject("on_false"), "attuned:item/ocean_relic_trident");
+		assertGltfSpecial(fallback.getAsJsonObject("on_true"), "attuned:item/ocean_relic_trident_throwing");
+		assertGltfSpecial(projectile, "attuned:item/ocean_relic_trident_throwing");
 		assertTrue(model.has("display"),
-			"Harpoon model should define held/inventory transforms");
+			"Harpoon base model should define held/inventory transforms for the glTF special renderer");
 		JsonObject display = model.getAsJsonObject("display");
 		assertTrue(display.has("gui"),
-			"Harpoon model should define an inventory transform");
+			"Harpoon base model should define an inventory transform");
 		assertTrue(display.has("firstperson_righthand"),
-			"Harpoon model should define a first-person right-hand transform");
+			"Harpoon base model should define a first-person right-hand transform");
 		assertTrue(display.has("thirdperson_righthand"),
-			"Harpoon model should define a third-person right-hand transform");
-		JsonObject throwing = json(throwingModel);
-		JsonObject throwingRightHand = throwing.getAsJsonObject("display").getAsJsonObject("thirdperson_righthand");
-		assertEquals(90, throwingRightHand.getAsJsonArray("rotation").get(1).getAsInt(),
-			"Throw wind-up should turn the cuboid trident edge-on so it points out from the hand");
-		assertEquals(180, throwingRightHand.getAsJsonArray("rotation").get(2).getAsInt(),
-			"Throw wind-up should flip the cuboid trident so the prongs face forward from the hand");
+			"Harpoon base model should define a third-person right-hand transform");
+		assertEquals("free", blockbench.getAsJsonObject("meta").get("model_format").getAsString(),
+			"Actual temporary harpoon mesh should stay in Blockbench free-model format");
+		JsonObject mesh = blockbench.getAsJsonArray("elements").get(0).getAsJsonObject();
+		assertEquals("mesh", mesh.get("type").getAsString(),
+			"Editable source should stay a real mesh, not a wrapped cuboid approximation");
+		assertTrue(mesh.getAsJsonObject("vertices").size() >= 9000,
+			"Blockbench harpoon mesh should preserve the detailed model vertices");
+		assertTrue(mesh.getAsJsonObject("faces").size() >= 6000,
+			"Blockbench harpoon mesh should preserve the detailed model faces");
+		for (JsonElement texture : blockbench.getAsJsonArray("textures")) {
+			assertFalse(texture.getAsJsonObject().has("source"),
+				"Shipped Blockbench model should not embed the massive base64 texture source");
+		}
 
 		BufferedImage image = ImageIO.read(itemTexture.toFile());
 		assertNotNull(image, "Harpoon texture should decode as a PNG");
@@ -153,6 +166,14 @@ class HarpoonBehaviorContractTest {
 		assertTrue(hasVisiblePixels(image), "Harpoon texture should have non-transparent pixels");
 		assertTransparentCorners(image, "Harpoon texture should be isolated on transparency");
 		assertNoVisibleChromaKey(image, "Harpoon texture should not keep visible chroma-key pixels");
+		BufferedImage blockbenchImage = ImageIO.read(blockbenchTexture.toFile());
+		assertNotNull(blockbenchImage, "Blockbench harpoon texture should decode as a PNG");
+		assertEquals(1024, blockbenchImage.getWidth(),
+			"Blockbench harpoon texture should be downsampled to a game-scale atlas size");
+		assertEquals(1024, blockbenchImage.getHeight(),
+			"Blockbench harpoon texture should be downsampled to a game-scale atlas size");
+		assertTrue((blockbenchImage.getRGB(0, 0) & 0x00FFFFFF) != 0,
+			"Blockbench harpoon texture should pad unused UV space so atlas filtering does not bleed black into the mesh");
 	}
 
 	@Test
@@ -267,6 +288,20 @@ class HarpoonBehaviorContractTest {
 
 	private static JsonObject json(Path file) throws IOException {
 		return JsonParser.parseString(read(file)).getAsJsonObject();
+	}
+
+	private static void assertGltfSpecial(JsonObject model, String base) {
+		assertEquals("minecraft:special", model.get("type").getAsString(),
+			"Actual temporary harpoon render path should use a special glTF renderer");
+		assertEquals(base, model.get("base").getAsString(),
+			"Special renderer should keep the expected base model for transforms");
+		JsonObject special = model.getAsJsonObject("model");
+		assertEquals("attuned:gltf_mesh", special.get("type").getAsString(),
+			"Special renderer should be Attuned's glTF mesh renderer");
+		assertEquals("attuned:gltf/ocean_relic_trident.glb", special.get("model").getAsString(),
+			"Special renderer should load the compact GLB model");
+		assertEquals("attuned:textures/item/ocean_relic_trident_blockbench.png", special.get("texture").getAsString(),
+			"Special renderer should use the exported game-scale texture");
 	}
 
 	private static boolean hasVisiblePixels(BufferedImage image) {

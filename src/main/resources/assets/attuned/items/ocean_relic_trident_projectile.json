@@ -1,6 +1,11 @@
 {
 	"model": {
-		"type": "minecraft:model",
-		"model": "attuned:item/ocean_relic_trident_throwing"
+		"type": "minecraft:special",
+		"base": "attuned:item/ocean_relic_trident_throwing",
+		"model": {
+			"type": "attuned:gltf_mesh",
+			"model": "attuned:gltf/ocean_relic_trident.glb",
+			"texture": "attuned:textures/item/ocean_relic_trident_blockbench.png"
+		}
 	}
 }
