@@ -75,6 +75,7 @@ SOURCE_SKIP_DIRS = {
     "node_modules",
     "out",
     "run",
+    "vendor",
     "__pycache__",
 }
 TRANSIENT_SKIP_DIRS = {
@@ -340,6 +341,10 @@ def png_mcmeta_problems(path: Path) -> list[str]:
     if not isinstance(data, dict):
         return problems + [f"{relative(path)}: metadata must be a JSON object"]
     animation = data.get("animation")
+    if animation is None:
+        # Texture-only metadata (for example a clamp/blur `texture` section) is a
+        # valid mcmeta and carries no animation block to validate.
+        return problems
     if not isinstance(animation, dict):
         return problems + [f"{relative(path)}: animation must be a JSON object"]
     frametime = animation.get("frametime")
@@ -458,6 +463,11 @@ def attuned_model_path(asset_dir: Path, model_id: str) -> Path | None:
         path = model_id
     if namespace != "attuned":
         return None
+    if path.endswith((".glb", ".bbmodel")):
+        # Owned special-model mesh assets (attuned:gltf_mesh / attuned:blockbench_mesh)
+        # reference their source file directly, e.g. attuned:gltf/ocean_relic_trident.glb
+        # lives at assets/attuned/gltf/ocean_relic_trident.glb rather than under models/.
+        return asset_dir / path
     return asset_dir / "models" / f"{path}.json"
 
 
