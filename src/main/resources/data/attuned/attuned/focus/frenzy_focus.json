@@ -4,7 +4,7 @@
 	"affinity": "fury",
 	"modifiers": [
 		{
-			"attribute": "minecraft:attack_speed",
+			"attribute": "minecraft:generic.attack_speed",
 			"amount": 0.5,
 			"operation": "add_value"
 		}

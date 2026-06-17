@@ -2,12 +2,12 @@
 	"members": ["attuned:eclipse_focus", "attuned:gloomstride_focus", "attuned:duskward_focus"],
 	"modifiers": [
 		{
-			"attribute": "minecraft:max_health",
+			"attribute": "minecraft:generic.max_health",
 			"amount": 4.0,
 			"operation": "add_value"
 		},
 		{
-			"attribute": "minecraft:attack_damage",
+			"attribute": "minecraft:generic.attack_damage",
 			"amount": 1.0,
 			"operation": "add_value"
 		}

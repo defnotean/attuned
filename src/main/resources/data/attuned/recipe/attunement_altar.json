@@ -2,9 +2,9 @@
   "type": "minecraft:crafting_shaped",
   "category": "building",
   "key": {
-    "A": "minecraft:amethyst_block",
-    "P": "minecraft:polished_deepslate",
-    "D": "minecraft:diamond"
+    "A": { "item": "minecraft:amethyst_block" },
+    "P": { "item": "minecraft:polished_deepslate" },
+    "D": { "item": "minecraft:diamond" }
   },
   "pattern": [
     " A ",

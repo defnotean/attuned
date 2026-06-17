@@ -53,6 +53,8 @@ class FocusDataConsistencyTest {
 		Path.of("src/main/resources/data/attuned/attuned/focus");
 	private static final Path FOCUS_BEHAVIOR_DIR =
 		Path.of("src/main/resources/data/attuned/attuned/focus_behavior");
+	private static final Path SYNERGY_DATA_DIR =
+		Path.of("src/main/resources/data/attuned/attuned/synergy");
 	private static final Path ITEM_DEFINITION_DIR =
 		Path.of("src/main/resources/assets/attuned/items");
 	private static final Path ITEM_MODEL_DIR =
@@ -87,6 +89,20 @@ class FocusDataConsistencyTest {
 		"attuned:netmender_focus");
 	private static final Set<String> OFFSHORE_FOCUS_ITEMS = Set.of(
 		"attuned:harpoon_focus");
+	private static final Set<String> MINECRAFT_121_BARE_ATTRIBUTE_IDS = Set.of(
+		"minecraft:armor",
+		"minecraft:armor_toughness",
+		"minecraft:attack_damage",
+		"minecraft:attack_speed",
+		"minecraft:fall_damage_multiplier",
+		"minecraft:jump_strength",
+		"minecraft:knockback_resistance",
+		"minecraft:luck",
+		"minecraft:max_health",
+		"minecraft:movement_speed",
+		"minecraft:safe_fall_distance",
+		"minecraft:sneaking_speed",
+		"minecraft:water_movement_efficiency");
 	private static final Set<String> REVENANT_FOCUS_ITEMS = Set.of(
 		"attuned:ashen_debt_focus",
 		"attuned:bonechill_focus",
@@ -253,6 +269,16 @@ class FocusDataConsistencyTest {
 	}
 
 	@Test
+	void minecraft1211FocusAndSynergyModifiersUseDottedAttributeRegistryIds() throws IOException {
+		Set<String> invalidAttributes = new TreeSet<>();
+		collectBareMinecraft121Attributes(FOCUS_DATA_DIR, invalidAttributes);
+		collectBareMinecraft121Attributes(SYNERGY_DATA_DIR, invalidAttributes);
+
+		assertEquals(Set.of(), invalidAttributes,
+			"Minecraft 1.21.1 registers vanilla attributes as dotted ids such as minecraft:generic.attack_damage");
+	}
+
+	@Test
 	void blackoutFocusStaysAWeakerSmokeAbility() throws IOException {
 		JsonObject root = focusDefinitionRoot(FOCUS_DATA_DIR.resolve("blackout_focus.json"));
 		String registrations = Files.readString(BEHAVIOR_REGISTRATION_SOURCE, StandardCharsets.UTF_8);
@@ -317,8 +343,8 @@ class FocusDataConsistencyTest {
 	@Test
 	void bloodrushTooltipSeparatesFlatAttackSpeedFromPercentMovementSpeed() throws IOException {
 		JsonObject root = focusDefinitionRoot(FOCUS_DATA_DIR.resolve("bloodrush_focus.json"));
-		JsonObject attackSpeed = modifierFor(root, "minecraft:attack_speed");
-		JsonObject movementSpeed = modifierFor(root, "minecraft:movement_speed");
+		JsonObject attackSpeed = modifierFor(root, "minecraft:generic.attack_speed");
+		JsonObject movementSpeed = modifierFor(root, "minecraft:generic.movement_speed");
 		String effect = languageRoot().get("item.attuned.bloodrush_focus.effect").getAsString();
 
 		assertEquals("add_value", attackSpeed.get("operation").getAsString(),
@@ -589,7 +615,7 @@ class FocusDataConsistencyTest {
 			"Seafarers should only carry their non-combat Luck modifier: " + file);
 
 		JsonObject modifier = modifiers.getAsJsonArray().get(0).getAsJsonObject();
-		assertEquals("minecraft:luck", modifier.get("attribute").getAsString(),
+		assertEquals("minecraft:generic.luck", modifier.get("attribute").getAsString(),
 			"Seafarers modifier should affect vanilla player Luck: " + file);
 		assertEquals(SEAFARERS_LUCK_AMOUNTS.get(itemId), modifier.get("amount").getAsDouble(), 0.0001D,
 			"Seafarers Luck amount should stay significant but vanilla-friendly: " + file);
@@ -750,6 +776,30 @@ class FocusDataConsistencyTest {
 
 	private static JsonObject focusDefinitionRoot(Path file) throws IOException {
 		return JsonParser.parseString(Files.readString(file, StandardCharsets.UTF_8)).getAsJsonObject();
+	}
+
+	private static void collectBareMinecraft121Attributes(Path directory, Set<String> invalidAttributes)
+			throws IOException {
+		assertTrue(Files.isDirectory(directory), "Could not find data directory: " + directory);
+		try (Stream<Path> paths = Files.list(directory)) {
+			for (Path file : paths
+					.filter(path -> path.getFileName().toString().endsWith(".json"))
+					.sorted()
+					.toList()) {
+				JsonObject root = JsonParser.parseString(Files.readString(file, StandardCharsets.UTF_8))
+					.getAsJsonObject();
+				if (!hasNonEmptyArray(root, "modifiers")) {
+					continue;
+				}
+				for (JsonElement element : root.getAsJsonArray("modifiers")) {
+					JsonObject modifier = element.getAsJsonObject();
+					String attribute = modifier.get("attribute").getAsString();
+					if (MINECRAFT_121_BARE_ATTRIBUTE_IDS.contains(attribute)) {
+						invalidAttributes.add(file + " -> " + attribute);
+					}
+				}
+			}
+		}
 	}
 
 	private static Set<String> translatedFactionIds() throws IOException {

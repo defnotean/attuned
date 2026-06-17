@@ -6,7 +6,7 @@
 	"faction": "attuned:umbral",
 	"modifiers": [
 		{
-			"attribute": "minecraft:sneaking_speed",
+			"attribute": "minecraft:player.sneaking_speed",
 			"amount": 0.2,
 			"operation": "add_value"
 		}

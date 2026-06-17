@@ -4,12 +4,12 @@
 	"affinity": "verdant",
 	"modifiers": [
 		{
-			"attribute": "minecraft:knockback_resistance",
+			"attribute": "minecraft:generic.knockback_resistance",
 			"amount": 0.2,
 			"operation": "add_value"
 		},
 		{
-			"attribute": "minecraft:armor_toughness",
+			"attribute": "minecraft:generic.armor_toughness",
 			"amount": 2.0,
 			"operation": "add_value"
 		}

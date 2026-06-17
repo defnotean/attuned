@@ -2,8 +2,8 @@
 	"type": "minecraft:crafting_shapeless",
 	"category": "misc",
 	"ingredients": [
-		"minecraft:book",
-		"minecraft:amethyst_shard"
+		{ "item": "minecraft:book" },
+		{ "item": "minecraft:amethyst_shard" }
 	],
 	"result": {
 		"id": "attuned:attunement_journal"

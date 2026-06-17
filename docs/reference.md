@@ -146,7 +146,7 @@ Attuned currently ships these factions:
 Each entry in the `modifiers` list is three fields:
 
 ```json
-{ "attribute": "minecraft:armor", "amount": 2, "operation": "add_value" }
+{ "attribute": "minecraft:generic.armor", "amount": 2, "operation": "add_value" }
 ```
 
 The framework applies these when the Focus becomes active and removes them when
@@ -167,23 +167,23 @@ of the unmodified stat (this is what most percentage Foci want).
 
 | Attribute                          | Controls | Note |
 |------------------------------------|----------|------|
-| `minecraft:max_health`             | Maximum health | `2` = one heart |
-| `minecraft:armor`                  | Armor points | |
-| `minecraft:armor_toughness`        | Armor toughness | |
-| `minecraft:knockback_resistance`   | Knockback resistance | `0`–`1`, where `1` is immune |
-| `minecraft:movement_speed`         | Walking speed | percentage works best |
-| `minecraft:sneaking_speed`         | Sneaking speed | this is the crouch-speed multiplier (`0.3` vanilla base); use `add_value` for visible multiplier points |
-| `minecraft:attack_damage`          | Melee damage | |
-| `minecraft:attack_speed`           | Attack cooldown speed | |
-| `minecraft:jump_strength`          | Jump height | percentage works best |
-| `minecraft:safe_fall_distance`     | Blocks you can fall unhurt | |
-| `minecraft:fall_damage_multiplier` | Fall-damage scale | `-1` cancels all fall damage |
-| `minecraft:block_break_speed`      | Mining speed | |
-| `minecraft:step_height`            | Auto-step height | |
-| `minecraft:luck`                   | Loot luck | |
-| `minecraft:scale`                  | Body size | |
-| `minecraft:water_movement_efficiency` | Movement speed underwater | |
-| `minecraft:oxygen_bonus`           | Underwater breath | |
+| `minecraft:generic.max_health`             | Maximum health | `2` = one heart |
+| `minecraft:generic.armor`                  | Armor points | |
+| `minecraft:generic.armor_toughness`        | Armor toughness | |
+| `minecraft:generic.knockback_resistance`   | Knockback resistance | `0`–`1`, where `1` is immune |
+| `minecraft:generic.movement_speed`         | Walking speed | percentage works best |
+| `minecraft:player.sneaking_speed`         | Sneaking speed | this is the crouch-speed multiplier (`0.3` vanilla base); use `add_value` for visible multiplier points |
+| `minecraft:generic.attack_damage`          | Melee damage | |
+| `minecraft:generic.attack_speed`           | Attack cooldown speed | |
+| `minecraft:generic.jump_strength`          | Jump height | percentage works best |
+| `minecraft:generic.safe_fall_distance`     | Blocks you can fall unhurt | |
+| `minecraft:generic.fall_damage_multiplier` | Fall-damage scale | `-1` cancels all fall damage |
+| `minecraft:player.block_break_speed`      | Mining speed | |
+| `minecraft:generic.step_height`            | Auto-step height | |
+| `minecraft:generic.luck`                   | Loot luck | |
+| `minecraft:generic.scale`                  | Body size | |
+| `minecraft:generic.water_movement_efficiency` | Movement speed underwater | |
+| `minecraft:generic.oxygen_bonus`           | Underwater breath | |
 
 Any vanilla player attribute works — these are just the common ones.
 
@@ -683,7 +683,7 @@ A Focus that grants +2 armor only while the wearer is sneaking.
 {
   "type": "attuned:attribute_while",
   "modifier": {
-    "attribute": "minecraft:armor",
+    "attribute": "minecraft:generic.armor",
     "amount": 2,
     "operation": "add_value"
   },

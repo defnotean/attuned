@@ -6,7 +6,7 @@
 	"faction": "attuned:tideborn",
 	"modifiers": [
 		{
-			"attribute": "minecraft:water_movement_efficiency",
+			"attribute": "minecraft:generic.water_movement_efficiency",
 			"amount": 0.5,
 			"operation": "add_value"
 		}

@@ -2,7 +2,7 @@
 	"type": "minecraft:crafting_shaped",
 	"category": "misc",
 	"key": {
-		"F": "attuned:attunement_shard_fragment"
+		"F": { "item": "attuned:attunement_shard_fragment" }
 	},
 	"pattern": [
 		"FF",

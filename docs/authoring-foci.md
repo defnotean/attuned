@@ -62,7 +62,7 @@ The simplest Focus. Reuse an item and grant stat modifiers.
   "cost": 4,
   "affinity": "bastion",
   "modifiers": [
-    { "attribute": "minecraft:armor", "amount": 2, "operation": "add_value" }
+    { "attribute": "minecraft:generic.armor", "amount": 2, "operation": "add_value" }
   ]
 }
 ```

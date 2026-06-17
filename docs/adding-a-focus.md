@@ -67,7 +67,7 @@ This file sets the cost, the affinity, and the stats. It is the heart of a Focus
 	"affinity": "bastion",
 	"modifiers": [
 		{
-			"attribute": "minecraft:armor",
+			"attribute": "minecraft:generic.armor",
 			"amount": 2,
 			"operation": "add_value"
 		}

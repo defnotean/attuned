@@ -4,7 +4,7 @@
 	"affinity": "bastion",
 	"modifiers": [
 		{
-			"attribute": "minecraft:armor",
+			"attribute": "minecraft:generic.armor",
 			"amount": 2,
 			"operation": "add_value"
 		}

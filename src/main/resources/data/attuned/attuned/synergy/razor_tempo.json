@@ -5,7 +5,7 @@
 	],
 	"modifiers": [
 		{
-			"attribute": "minecraft:attack_speed",
+			"attribute": "minecraft:generic.attack_speed",
 			"amount": 0.25,
 			"operation": "add_value"
 		}

@@ -2,8 +2,8 @@
   "type": "minecraft:crafting_shaped",
   "category": "misc",
   "key": {
-    "A": "minecraft:amethyst_shard",
-    "L": "minecraft:leather"
+    "A": { "item": "minecraft:amethyst_shard" },
+    "L": { "item": "minecraft:leather" }
   },
   "pattern": [
     "LAL",

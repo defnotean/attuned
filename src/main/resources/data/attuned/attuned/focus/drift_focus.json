@@ -4,7 +4,7 @@
 	"affinity": "zephyr",
 	"modifiers": [
 		{
-			"attribute": "minecraft:fall_damage_multiplier",
+			"attribute": "minecraft:generic.fall_damage_multiplier",
 			"amount": -1.0,
 			"operation": "add_multiplied_total"
 		}

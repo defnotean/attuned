@@ -256,10 +256,22 @@ public final class AttunedTooltips {
 			.map(key -> key.location())
 			.orElseGet(() -> BuiltInRegistries.ATTRIBUTE.getKey(modifier.attribute().value()));
 		String attributePath = attributeId.getPath();
+		String displayPath = displayAttributePath(attributePath);
 		MutableComponent attributeName = Component.translatableWithFallback(
-			"tooltip.attuned.modifier.attribute." + attributePath, humanize(attributePath));
+			"tooltip.attuned.modifier.attribute." + displayPath, humanize(displayPath));
 		return Component.translatable("tooltip.attuned.modifier.line",
-			modifierAmount(attributePath, modifier.amount(), modifier.operation()), attributeName);
+			modifierAmount(displayPath, modifier.amount(), modifier.operation()), attributeName);
+	}
+
+	private static String displayAttributePath(String attributePath) {
+		int separator = attributePath.indexOf('.');
+		if (separator > 0) {
+			String category = attributePath.substring(0, separator);
+			if ("generic".equals(category) || "player".equals(category)) {
+				return attributePath.substring(separator + 1);
+			}
+		}
+		return attributePath;
 	}
 
 	private static String modifierAmount(String attributePath, double amount, AttributeModifier.Operation operation) {

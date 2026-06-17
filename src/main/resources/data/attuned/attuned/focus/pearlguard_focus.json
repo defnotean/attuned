@@ -6,7 +6,7 @@
 	"faction": "attuned:tideborn",
 	"modifiers": [
 		{
-			"attribute": "minecraft:armor",
+			"attribute": "minecraft:generic.armor",
 			"amount": 2.0,
 			"operation": "add_value"
 		}

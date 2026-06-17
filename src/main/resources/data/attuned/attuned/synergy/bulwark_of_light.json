@@ -2,7 +2,7 @@
 	"members": ["attuned:votive_focus", "attuned:oathguard_focus"],
 	"modifiers": [
 		{
-			"attribute": "minecraft:armor",
+			"attribute": "minecraft:generic.armor",
 			"amount": 1.0,
 			"operation": "add_value"
 		}

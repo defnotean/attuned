@@ -4,12 +4,12 @@
 	"affinity": "verdant",
 	"modifiers": [
 		{
-			"attribute": "minecraft:attack_damage",
+			"attribute": "minecraft:generic.attack_damage",
 			"amount": 2.0,
 			"operation": "add_value"
 		},
 		{
-			"attribute": "minecraft:attack_speed",
+			"attribute": "minecraft:generic.attack_speed",
 			"amount": 0.3,
 			"operation": "add_value"
 		}

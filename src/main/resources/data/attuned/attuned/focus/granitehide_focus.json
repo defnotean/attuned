@@ -4,12 +4,12 @@
 	"affinity": "bastion",
 	"modifiers": [
 		{
-			"attribute": "minecraft:armor",
+			"attribute": "minecraft:generic.armor",
 			"amount": 3.0,
 			"operation": "add_value"
 		},
 		{
-			"attribute": "minecraft:armor_toughness",
+			"attribute": "minecraft:generic.armor_toughness",
 			"amount": 3.0,
 			"operation": "add_value"
 		}

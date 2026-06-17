@@ -4,7 +4,7 @@
 	"affinity": "zephyr",
 	"modifiers": [
 		{
-			"attribute": "minecraft:jump_strength",
+			"attribute": "minecraft:generic.jump_strength",
 			"amount": 0.3,
 			"operation": "add_multiplied_base"
 		}
