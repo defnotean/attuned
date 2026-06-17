@@ -18,9 +18,11 @@ class ClientRegistrationContractTest {
 		"ClientPlayNetworking.registerGlobalReceiver",
 		"ClientTickEvents.END_CLIENT_TICK.register",
 		"HudElementRegistry.attachElementAfter",
+		"HudRenderCallback.EVENT.register",
 		"ItemTooltipCallback.EVENT.register",
 		"KeyMappingHelper.registerKeyMapping",
 		"LevelRenderEvents.END_MAIN.register",
+		"WorldRenderEvents.END.register",
 		"MenuScreens.register"
 	);
 

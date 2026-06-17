@@ -7,7 +7,7 @@ import dev.attuned.attunement.Attunement;
 import net.fabricmc.fabric.api.event.player.PlayerBlockBreakEvents;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.tags.BlockTags;
@@ -24,8 +24,8 @@ import net.minecraft.util.RandomSource;
  * Forager Focus: small bonus food/seed finds from vanilla gathering blocks.
  */
 public final class ForagerBehavior implements dev.attuned.api.focus.FocusBehavior {
-	private static final Identifier FOCUS_ID =
-		Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "forager_focus");
+	private static final ResourceLocation FOCUS_ID =
+		ResourceLocation.fromNamespaceAndPath(Attuned.MOD_ID, "forager_focus");
 	private static boolean initialized;
 
 	public ForagerBehavior() {
@@ -92,7 +92,7 @@ public final class ForagerBehavior implements dev.attuned.api.focus.FocusBehavio
 	private static boolean hasActiveForager(ServerPlayer player) {
 		AttunedInv inv = AttunedAttachments.getInventory(player);
 		for (int slot : Attunement.activeSlots(player)) {
-			Identifier id = BuiltInRegistries.ITEM.getKey(inv.get(slot).getItem());
+			ResourceLocation id = BuiltInRegistries.ITEM.getKey(inv.get(slot).getItem());
 			if (FOCUS_ID.equals(id)) {
 				return true;
 			}

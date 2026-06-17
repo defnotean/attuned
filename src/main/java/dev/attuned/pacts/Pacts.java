@@ -1,5 +1,7 @@
 package dev.attuned.pacts;
 
+import dev.attuned.compat.DustParticles;
+
 import dev.attuned.compat.PlayerMessages;
 import dev.attuned.AttunedPlayerCleanup;
 import dev.attuned.AttunedAdvancements;
@@ -32,7 +34,7 @@ import net.minecraft.core.particles.DustParticleOptions;
 import net.minecraft.core.particles.ParticleOptions;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
@@ -50,7 +52,7 @@ import net.minecraft.world.entity.TamableAnimal;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
-import net.minecraft.world.entity.npc.villager.AbstractVillager;
+import net.minecraft.world.entity.npc.AbstractVillager;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 
@@ -140,8 +142,8 @@ public final class Pacts {
 	 * Windrunner step a full block — the tops of stairs, slabs and single-block
 	 * rises — without ever leaving the ground.
 	 */
-	private static final Identifier WINDRUNNER_STEP_MODIFIER_ID =
-		Identifier.fromNamespaceAndPath("attuned", "windrunner_step");
+	private static final ResourceLocation WINDRUNNER_STEP_MODIFIER_ID =
+		ResourceLocation.fromNamespaceAndPath("attuned", "windrunner_step");
 	/** Step-height bonus added on top of the vanilla 0.6 baseline (0.6 + 0.5 = 1.1). */
 	private static final double WINDRUNNER_STEP_BONUS = 0.5;
 
@@ -311,7 +313,7 @@ public final class Pacts {
 	private static int cheapestFocusCost(Player player, Affinity affinity) {
 		int cheapest = Integer.MAX_VALUE;
 		var registry = player.level().registryAccess().lookupOrThrow(AttunedRegistries.FOCUS_DEFINITIONS);
-		for (FocusDefinition definition : registry) {
+		for (FocusDefinition definition : registry.listElements().map(holder -> holder.value()).toList()) {
 			if (definition.affinity().filter(a -> a == affinity).isPresent()) {
 				cheapest = Math.min(cheapest, definition.cost());
 			}
@@ -435,7 +437,7 @@ public final class Pacts {
 		defender.addEffect(new MobEffectInstance(
 			MobEffects.GLOWING, RADIANT_COVENANT_REVEAL_TICKS, 0, true, false, true));
 		if (defender.level() instanceof ServerLevel level) {
-			level.sendParticles(new DustParticleOptions(Affinity.HOLY.argb() & 0x00FFFFFF, 0.9F),
+			level.sendParticles(DustParticles.color(Affinity.HOLY.argb() & 0x00FFFFFF, 0.9F),
 				defender.getX(), defender.getY() + defender.getBbHeight() * 0.65, defender.getZ(),
 				5, 0.25, 0.25, 0.25, 0.0);
 		}
@@ -448,8 +450,8 @@ public final class Pacts {
 		if (!(defender instanceof TamableAnimal pet)) {
 			return false;
 		}
-		var ownerRef = pet.getOwnerReference();
-		return ownerRef != null && attacker.getUUID().equals(ownerRef.getUUID());
+		var ownerId = pet.getOwnerUUID();
+		return ownerId != null && attacker.getUUID().equals(ownerId);
 	}
 
 	/** Pyresworn's fire-on-strike, gated to direct melee and to at-least-half-charged swings. */
@@ -473,8 +475,8 @@ public final class Pacts {
 				return;
 			}
 		} else if (defender instanceof TamableAnimal pet) {
-			var ownerRef = pet.getOwnerReference();
-			if (ownerRef != null && attacker.getUUID().equals(ownerRef.getUUID())) {
+			var ownerId = pet.getOwnerUUID();
+			if (ownerId != null && attacker.getUUID().equals(ownerId)) {
 				return;
 			}
 		} else if (defender instanceof AbstractVillager) {
@@ -498,7 +500,7 @@ public final class Pacts {
 			return;
 		}
 		defender.addEffect(new MobEffectInstance(
-			MobEffects.SLOWNESS, PactTier4.tideswornSlowTicks(attacker), 0, true, false, true));
+			MobEffects.MOVEMENT_SLOWDOWN, PactTier4.tideswornSlowTicks(attacker), 0, true, false, true));
 		if (attacker instanceof ServerPlayer serverPlayer) {
 			PactTrials.onTideswornSlow(serverPlayer);
 		}
@@ -546,8 +548,8 @@ public final class Pacts {
 			return CombatTargets.canAffectPlayer(attacker, targetPlayer);
 		}
 		if (defender instanceof TamableAnimal pet) {
-			var ownerRef = pet.getOwnerReference();
-			return ownerRef == null || !attacker.getUUID().equals(ownerRef.getUUID());
+			var ownerId = pet.getOwnerUUID();
+			return ownerId == null || !attacker.getUUID().equals(ownerId);
 		}
 		return !(defender instanceof AbstractVillager);
 	}
@@ -576,7 +578,7 @@ public final class Pacts {
 		}
 		// DustParticleOptions takes an opaque RGB, not an ARGB — strip the alpha byte.
 		level.sendParticles(
-			new DustParticleOptions(color.get(), 0.9F),
+			DustParticles.color(color.get(), 0.9F),
 			defender.getX(),
 			defender.getY() + defender.getBbHeight() * 0.6,
 			defender.getZ(),
@@ -715,7 +717,7 @@ public final class Pacts {
 				if (now == Pact.WINDRUNNER && ticks % WINDRUNNER_TICK == 0) {
 					// SPEED refreshed every WINDRUNNER_TICK ticks. Tier 4 grants Speed II while sprinting.
 					player.addEffect(new MobEffectInstance(
-						MobEffects.SPEED, WINDRUNNER_TICK * 4, PactTier4.windrunnerSpeedAmplifier(player),
+						MobEffects.MOVEMENT_SPEED, WINDRUNNER_TICK * 4, PactTier4.windrunnerSpeedAmplifier(player),
 						true, false, true));
 				}
 				if (now == Pact.WILDROOT && ticks % WILDROOT_REGEN_TICK == 0) {
@@ -817,16 +819,16 @@ public final class Pacts {
 	private static ParticleOptions auraParticle(Pact pact) {
 		return switch (pact) {
 			case PYRESWORN -> ParticleTypes.SMALL_FLAME;
-			case STONEHEART -> new DustParticleOptions(0xC8A05A, 0.8F);
+			case STONEHEART -> DustParticles.color(0xC8A05A, 0.8F);
 			case WINDRUNNER -> ParticleTypes.CLOUD;
-			case RADIANT_COVENANT -> new DustParticleOptions(Affinity.HOLY.argb() & 0x00FFFFFF, 0.9F);
+			case RADIANT_COVENANT -> DustParticles.color(Affinity.HOLY.argb() & 0x00FFFFFF, 0.9F);
 			// The promoted single-affinity pacts mirror Radiant Covenant's shape: a
 			// modest dust wisp tinted by the bound affinity's colour.
-			case TIDESWORN -> new DustParticleOptions(Affinity.TIDE.argb() & 0x00FFFFFF, 0.9F);
-			case FORGEBOUND -> new DustParticleOptions(Affinity.FORGE.argb() & 0x00FFFFFF, 0.9F);
-			case WILDROOT -> new DustParticleOptions(Affinity.VERDANT.argb() & 0x00FFFFFF, 0.9F);
-			case NIGHTSWORN -> new DustParticleOptions(Affinity.UMBRAL.argb() & 0x00FFFFFF, 0.9F);
-			case UNTETHERED -> new DustParticleOptions(AffinityColors.DISCORD_RGB, 0.9F);
+			case TIDESWORN -> DustParticles.color(Affinity.TIDE.argb() & 0x00FFFFFF, 0.9F);
+			case FORGEBOUND -> DustParticles.color(Affinity.FORGE.argb() & 0x00FFFFFF, 0.9F);
+			case WILDROOT -> DustParticles.color(Affinity.VERDANT.argb() & 0x00FFFFFF, 0.9F);
+			case NIGHTSWORN -> DustParticles.color(Affinity.UMBRAL.argb() & 0x00FFFFFF, 0.9F);
+			case UNTETHERED -> DustParticles.color(AffinityColors.DISCORD_RGB, 0.9F);
 		};
 	}
 

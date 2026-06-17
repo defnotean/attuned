@@ -12,7 +12,7 @@ import java.util.Map;
 import java.util.UUID;
 import net.fabricmc.fabric.api.event.player.UseBlockCallback;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
@@ -26,8 +26,8 @@ import net.minecraft.world.phys.BlockHitResult;
 
 /** Temper Focus: forge work briefly improves fully charged direct melee hits. */
 public final class TemperBehavior implements FocusBehavior {
-	private static final Identifier FOCUS_ID =
-		Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "temper_focus");
+	private static final ResourceLocation FOCUS_ID =
+		ResourceLocation.fromNamespaceAndPath(Attuned.MOD_ID, "temper_focus");
 	private static final int WINDOW_TICKS = 200;
 	private static final Map<UUID, Integer> TEMPERED = new HashMap<>();
 	private static boolean initialized;
@@ -90,7 +90,7 @@ public final class TemperBehavior implements FocusBehavior {
 	private static boolean hasActiveTemper(Player player) {
 		AttunedInv inv = AttunedAttachments.getInventory(player);
 		for (int slot : Attunement.activeSlots(player)) {
-			Identifier id = BuiltInRegistries.ITEM.getKey(inv.get(slot).getItem());
+			ResourceLocation id = BuiltInRegistries.ITEM.getKey(inv.get(slot).getItem());
 			if (FOCUS_ID.equals(id)) {
 				return true;
 			}

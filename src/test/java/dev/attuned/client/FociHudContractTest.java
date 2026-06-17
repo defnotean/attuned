@@ -58,10 +58,12 @@ class FociHudContractTest {
 	void fociHudDrawsActualEquippedFocusStacksAndDormantState() throws IOException {
 		String hud = read(FOCI_HUD);
 
-		assertTrue(hud.contains("HudElementRegistry.attachElementAfter"),
-			"The Foci HUD should register as its own HUD layer.");
-		assertTrue(hud.contains("VanillaHudElements.HOTBAR"),
-			"The Foci HUD should anchor near the hotbar.");
+		assertTrue(hud.contains("HudElementRegistry.attachElementAfter")
+				|| hud.contains("HudRenderCallback.EVENT.register(FociHud::renderLayer)"),
+			"The Foci HUD should register through the active Fabric HUD API.");
+		assertTrue(hud.contains("VanillaHudElements.HOTBAR")
+				|| hud.contains("primarySidecarX"),
+			"The Foci HUD should anchor through the branch's supported hotbar/sidecar path.");
 		assertTrue(hud.contains("textures/gui/foci_hud.png"),
 			"The Foci HUD should use its dedicated frame art.");
 		assertTrue(hud.contains("AttunedAttachments.getInventory(player)"),

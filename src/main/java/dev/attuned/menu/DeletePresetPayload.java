@@ -5,7 +5,7 @@ import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 
 public record DeletePresetPayload(int index, String name) implements CustomPacketPayload {
 	public DeletePresetPayload {
@@ -19,7 +19,7 @@ public record DeletePresetPayload(int index, String name) implements CustomPacke
 	}
 
 	public static final Type<DeletePresetPayload> TYPE =
-		new Type<>(Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "delete_preset"));
+		new Type<>(ResourceLocation.fromNamespaceAndPath(Attuned.MOD_ID, "delete_preset"));
 
 	public static final StreamCodec<RegistryFriendlyByteBuf, DeletePresetPayload> CODEC =
 		StreamCodec.composite(

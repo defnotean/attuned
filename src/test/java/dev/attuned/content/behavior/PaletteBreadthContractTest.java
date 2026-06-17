@@ -76,13 +76,13 @@ class PaletteBreadthContractTest {
 		// The modifier id is derived from the behaviour's registry id, not one shared constant, so
 		// two different attribute_while Foci on the same attribute install independent transient
 		// modifiers and stack instead of one silently dropping the other.
-		assertTrue(source.contains("Identifier attributeWhileModifierId(Identifier behaviorId)"),
+		assertTrue(source.contains("ResourceLocation attributeWhileModifierId(ResourceLocation behaviorId)"),
 			"attribute_while modifier ids must be derived from the behaviour id.");
 		assertTrue(source.contains("behaviorId.getNamespace()") && source.contains("behaviorId.getPath()"),
 			"the per-behaviour modifier id must incorporate the behaviour's registry id so two "
 				+ "distinct attribute_while behaviours never share one id.");
 		assertTrue(source.contains(
-				"AttributeWhileBehavior(Identifier behaviorId, FocusBehaviorDef.AttributeWhile def)"),
+				"AttributeWhileBehavior(ResourceLocation behaviorId, FocusBehaviorDef.AttributeWhile def)"),
 			"AttributeWhileBehavior must receive the behaviour id to qualify its modifier id.");
 		assertTrue(source.contains("this.modifierId = attributeWhileModifierId(behaviorId)"),
 			"AttributeWhileBehavior must hold a per-instance modifier id.");

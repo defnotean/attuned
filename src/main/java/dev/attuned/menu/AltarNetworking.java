@@ -11,6 +11,7 @@ import java.util.Map;
 import java.util.UUID;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
+import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.Container;
@@ -79,7 +80,7 @@ public final class AltarNetworking {
 			if (!state.is(AttunedContent.ATTUNEMENT_ALTAR)) {
 				return;
 			}
-			if (!player.isWithinBlockInteractionRange(pos, 4.0)) {
+			if (!withinInteractionRange(player, pos, 4.0)) {
 				return;
 			}
 			Container input = menu.inputContainer();
@@ -116,5 +117,12 @@ public final class AltarNetworking {
 			}
 			menu.broadcastChanges();
 		});
+	}
+
+	private static boolean withinInteractionRange(ServerPlayer player, BlockPos pos, double range) {
+		double x = pos.getX() + 0.5D;
+		double y = pos.getY() + 0.5D;
+		double z = pos.getZ() + 0.5D;
+		return player.distanceToSqr(x, y, z) <= range * range;
 	}
 }

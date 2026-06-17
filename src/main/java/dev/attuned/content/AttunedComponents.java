@@ -5,7 +5,8 @@ import dev.attuned.attunement.FocusHolder;
 import net.minecraft.core.Registry;
 import net.minecraft.core.component.DataComponentType;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.Identifier;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Unit;
 
 /** Registers custom item data components used by Attuned items. */
@@ -40,22 +41,22 @@ public final class AttunedComponents {
 		}
 		initialized = true;
 		SATCHEL_CONTENTS = Registry.register(BuiltInRegistries.DATA_COMPONENT_TYPE,
-			Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "satchel_contents"),
+			ResourceLocation.fromNamespaceAndPath(Attuned.MOD_ID, "satchel_contents"),
 			DataComponentType.<FocusHolder>builder()
 				.persistent(FocusHolder.codec(SATCHEL_SIZE, 1))
 				.networkSynchronized(FocusHolder.streamCodec(SATCHEL_SIZE, 1))
 				.build());
 		GRAND_SATCHEL_CONTENTS = Registry.register(BuiltInRegistries.DATA_COMPONENT_TYPE,
-			Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "grand_satchel_contents"),
+			ResourceLocation.fromNamespaceAndPath(Attuned.MOD_ID, "grand_satchel_contents"),
 			DataComponentType.<FocusHolder>builder()
 				.persistent(FocusHolder.codec(GRAND_SATCHEL_SIZE, 1))
 				.networkSynchronized(FocusHolder.streamCodec(GRAND_SATCHEL_SIZE, 1))
 				.build());
 		TEMPERED = Registry.register(BuiltInRegistries.DATA_COMPONENT_TYPE,
-			Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "tempered"),
+			ResourceLocation.fromNamespaceAndPath(Attuned.MOD_ID, "tempered"),
 			DataComponentType.<Unit>builder()
 				.persistent(Unit.CODEC)
-				.networkSynchronized(Unit.STREAM_CODEC)
+				.networkSynchronized(StreamCodec.unit(Unit.INSTANCE))
 				.build());
 	}
 }

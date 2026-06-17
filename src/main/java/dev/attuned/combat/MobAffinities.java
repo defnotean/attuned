@@ -4,7 +4,7 @@ import dev.attuned.Attuned;
 import dev.attuned.api.focus.Affinity;
 import java.util.Optional;
 import net.minecraft.core.registries.Registries;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
@@ -42,7 +42,7 @@ public final class MobAffinities {
 	private static final TagKey<EntityType<?>> UMBRAL_MOBS = tag("umbral_mobs");
 
 	private static TagKey<EntityType<?>> tag(String name) {
-		return TagKey.create(Registries.ENTITY_TYPE, Identifier.fromNamespaceAndPath(Attuned.MOD_ID, name));
+		return TagKey.create(Registries.ENTITY_TYPE, ResourceLocation.fromNamespaceAndPath(Attuned.MOD_ID, name));
 	}
 
 	/** The combat affinity of a living entity by its entity-type tag, if any. */

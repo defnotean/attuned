@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.GlobalPos;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.chat.Component;
@@ -41,12 +42,12 @@ public final class BeaconBehavior implements FocusBehavior {
 
 	@Override
 	public void onTick(ServerPlayer player, ItemStack focus) {
-		ServerPlayer.RespawnConfig respawn = player.getRespawnConfig();
-		if (respawn == null) {
+		BlockPos respawnPos = player.getRespawnPosition();
+		if (respawnPos == null) {
 			restorePlayer(player);
 			return;
 		}
-		GlobalPos home = respawn.respawnData().globalPos();
+		GlobalPos home = GlobalPos.of(player.getRespawnDimension(), respawnPos);
 		LodestoneTracker tracker = new LodestoneTracker(Optional.of(home), false);
 		restoreCompassesNoLongerHeld(player);
 		for (InteractionHand hand : InteractionHand.values()) {

@@ -5,7 +5,7 @@ import dev.attuned.api.focus.FocusBehavior;
 import dev.attuned.api.focus.FocusBehaviorDef;
 import dev.attuned.api.focus.FocusCondition;
 import dev.attuned.api.focus.ModifierEntry;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.LivingEntity;
@@ -36,15 +36,15 @@ public final class DataFocusBehaviors {
 
 	/** The transient-modifier id a given {@code attribute_while} behaviour owns: the shared prefix
 	 * qualified by the behaviour's registry id, so distinct behaviours never share a modifier id. */
-	static Identifier attributeWhileModifierId(Identifier behaviorId) {
-		return Identifier.fromNamespaceAndPath(Attuned.MOD_ID,
+	static ResourceLocation attributeWhileModifierId(ResourceLocation behaviorId) {
+		return ResourceLocation.fromNamespaceAndPath(Attuned.MOD_ID,
 			ATTRIBUTE_WHILE_MODIFIER_PREFIX + "/" + behaviorId.getNamespace() + "/" + behaviorId.getPath());
 	}
 
 	/** Builds a passive {@link FocusBehavior} for the given palette definition. The behaviour's
 	 * registry {@code behaviorId} qualifies any per-instance state (e.g. the {@code attribute_while}
 	 * modifier id) so two distinct palette behaviours never collide on the same attribute. */
-	public static FocusBehavior build(Identifier behaviorId, FocusBehaviorDef definition) {
+	public static FocusBehavior build(ResourceLocation behaviorId, FocusBehaviorDef definition) {
 		return switch (definition) {
 			case FocusBehaviorDef.ConditionalMobEffect effect -> new ConditionalMobEffectBehavior(effect);
 			case FocusBehaviorDef.OnHitEffect onHit -> new OnHitEffectBehavior(onHit);
@@ -151,9 +151,9 @@ public final class DataFocusBehaviors {
 	 */
 	static final class AttributeWhileBehavior implements FocusBehavior {
 		private final FocusBehaviorDef.AttributeWhile def;
-		private final Identifier modifierId;
+		private final ResourceLocation modifierId;
 
-		AttributeWhileBehavior(Identifier behaviorId, FocusBehaviorDef.AttributeWhile def) {
+		AttributeWhileBehavior(ResourceLocation behaviorId, FocusBehaviorDef.AttributeWhile def) {
 			this.def = def;
 			this.modifierId = attributeWhileModifierId(behaviorId);
 		}

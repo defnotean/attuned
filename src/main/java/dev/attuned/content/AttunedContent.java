@@ -8,7 +8,7 @@ import java.util.function.Function;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
@@ -213,17 +213,16 @@ public final class AttunedContent {
 	 */
 	private static Item register(String name, Function<Item.Properties, Item> factory) {
 		ResourceKey<Item> key = ResourceKey.create(
-			Registries.ITEM, Identifier.fromNamespaceAndPath(Attuned.MOD_ID, name));
-		Item item = factory.apply(new Item.Properties().setId(key));
+			Registries.ITEM, ResourceLocation.fromNamespaceAndPath(Attuned.MOD_ID, name));
+		Item item = factory.apply(new Item.Properties());
 		return Registry.register(BuiltInRegistries.ITEM, key, item);
 	}
 
 	/** Registers the Attunement Altar block and its matching block item. */
 	private static Block registerAltar() {
-		Identifier id = Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "attunement_altar");
+		ResourceLocation id = ResourceLocation.fromNamespaceAndPath(Attuned.MOD_ID, "attunement_altar");
 		ResourceKey<Block> blockKey = ResourceKey.create(Registries.BLOCK, id);
 		Block block = new AttunementAltarBlock(BlockBehaviour.Properties.of()
-			.setId(blockKey)
 			.strength(3.5F, 6.0F)
 			.sound(SoundType.DEEPSLATE)
 			.lightLevel(state -> 7)
@@ -232,16 +231,15 @@ public final class AttunedContent {
 
 		ResourceKey<Item> itemKey = ResourceKey.create(Registries.ITEM, id);
 		Registry.register(BuiltInRegistries.ITEM, itemKey,
-			new BlockItem(block, new Item.Properties().setId(itemKey)));
+			new BlockItem(block, new Item.Properties()));
 		return block;
 	}
 
 	/** Registers the Altar of Reweaving block and its matching block item. */
 	private static Block registerReweavingAltar() {
-		Identifier id = Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "altar_of_reweaving");
+		ResourceLocation id = ResourceLocation.fromNamespaceAndPath(Attuned.MOD_ID, "altar_of_reweaving");
 		ResourceKey<Block> blockKey = ResourceKey.create(Registries.BLOCK, id);
 		Block block = new AltarOfReweavingBlock(BlockBehaviour.Properties.of()
-			.setId(blockKey)
 			.strength(3.5F, 6.0F)
 			.sound(SoundType.DEEPSLATE)
 			.lightLevel(state -> 6)
@@ -250,7 +248,7 @@ public final class AttunedContent {
 
 		ResourceKey<Item> itemKey = ResourceKey.create(Registries.ITEM, id);
 		Registry.register(BuiltInRegistries.ITEM, itemKey,
-			new BlockItem(block, new Item.Properties().setId(itemKey)));
+			new BlockItem(block, new Item.Properties()));
 		return block;
 	}
 

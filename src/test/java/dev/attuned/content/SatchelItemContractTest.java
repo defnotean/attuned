@@ -33,7 +33,8 @@ class SatchelItemContractTest {
 			"The small satchel should attach the empty SATCHEL_CONTENTS component by default.");
 		assertTrue(item.contains(".component(contentsType, emptyContents)"),
 			"The satchel should attach an empty contents component by default, inside its constructor.");
-		assertTrue(item.contains("public InteractionResult use(Level level, Player player, InteractionHand hand)"),
+		assertTrue(item.contains("public InteractionResult use(Level level, Player player, InteractionHand hand)")
+				|| item.contains("public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand)"),
 			"The satchel should open its screen on use.");
 	}
 

@@ -65,7 +65,7 @@ public final class PactDeathMessages {
 		Component pactName = pact.displayName()
 			.withStyle(s -> s
 				.applyFormats(pact.chatColor(), ChatFormatting.BOLD)
-				.withHoverEvent(new HoverEvent.ShowText(attacker.getDisplayName())));
+				.withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, attacker.getDisplayName())));
 		Component message = Component.translatable(
 			"pact.attuned.death." + pact.name().toLowerCase(Locale.ROOT),
 			victim.getDisplayName(),

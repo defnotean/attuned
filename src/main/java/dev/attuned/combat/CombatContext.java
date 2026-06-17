@@ -15,7 +15,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
@@ -68,7 +68,7 @@ public final class CombatContext {
 			: MobAffinities.of(entity).isPresent();
 	}
 
-	public boolean hasActiveFocus(Player player, Identifier targetId) {
+	public boolean hasActiveFocus(Player player, ResourceLocation targetId) {
 		return stateOf(player).hasActiveFocus(targetId);
 	}
 
@@ -100,7 +100,7 @@ public final class CombatContext {
 
 	public record PlayerState(Optional<Affinity> committed, boolean discord,
 			Optional<Apex.Capstone> capstone, float resonance,
-			Map<Affinity, Integer> activeAffinityCounts, Set<Identifier> activeFocusIds) {
+			Map<Affinity, Integer> activeAffinityCounts, Set<ResourceLocation> activeFocusIds) {
 		public boolean atApex() {
 			return resonance >= Resonance.APEX_THRESHOLD;
 		}
@@ -113,7 +113,7 @@ public final class CombatContext {
 			return committed.isPresent() || discord;
 		}
 
-		public boolean hasActiveFocus(Identifier targetId) {
+		public boolean hasActiveFocus(ResourceLocation targetId) {
 			return activeFocusIds.contains(targetId);
 		}
 	}
@@ -123,7 +123,7 @@ public final class CombatContext {
 		List<Integer> activeSlots = resolution.activeSlots();
 		List<Optional<Affinity>> orderedActiveAffinities = new ArrayList<>(activeSlots.size());
 		EnumMap<Affinity, Integer> activeAffinityCounts = new EnumMap<>(Affinity.class);
-		Set<Identifier> activeFocusIds = new HashSet<>();
+		Set<ResourceLocation> activeFocusIds = new HashSet<>();
 		Set<Affinity> activeAffinities = EnumSet.noneOf(Affinity.class);
 		AttunedInv inv = AttunedAttachments.getInventory(player);
 		int used = 0;

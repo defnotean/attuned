@@ -76,7 +76,7 @@ class ApexAbilityContractTest {
 			"Stillpoint's field should gather nearby hostile monsters.");
 		assertTrue(apex.contains("monster.setTarget(null)") || apex.contains("setTarget(null)"),
 			"Stillpoint's field should pacify nearby monsters by dropping their target.");
-		assertTrue(apex.contains("MobEffects.SLOWNESS"),
+		assertTrue(apex.contains("MobEffects.SLOWNESS") || apex.contains("MobEffects.MOVEMENT_SLOWDOWN"),
 			"Stillpoint's field should apply brief Slowness to nearby monsters.");
 	}
 

@@ -61,9 +61,11 @@ class FocusVisualEffectsContractTest {
 
 		assertTrue(source.contains("ParticleTypes.SCULK_SOUL"),
 			"Softstep should use low smoky/sculk soul particles from the concept sheet.");
-		assertTrue(source.contains("new DustParticleOptions(SOFTSTEP_PURPLE"),
+		assertTrue(source.contains("new DustParticleOptions(SOFTSTEP_PURPLE")
+				|| source.contains("DustParticles.color(SOFTSTEP_PURPLE"),
 			"Softstep should include a purple dust wisp color.");
-		assertTrue(source.contains("new DustParticleOptions(AEGIS_GOLD"),
+		assertTrue(source.contains("new DustParticleOptions(AEGIS_GOLD")
+				|| source.contains("DustParticles.color(AEGIS_GOLD"),
 			"Aegis should use a gold dust shield ring.");
 		assertTrue(source.contains("ParticleTypes.BUBBLE"),
 			"Tide should use bubble particles.");

@@ -18,13 +18,11 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.player.LocalPlayer;
-import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.resources.language.I18n;
-import net.minecraft.core.Registry;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.FormattedCharSequence;
 
 /**
@@ -34,8 +32,8 @@ import net.minecraft.util.FormattedCharSequence;
  * between chapters. No content is ever truncated.
  */
 public final class AttunementJournalScreen extends Screen {
-	private static final Identifier BACKGROUND_TEXTURE =
-		Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "textures/gui/attunement_journal.png");
+	private static final ResourceLocation BACKGROUND_TEXTURE =
+		ResourceLocation.fromNamespaceAndPath(Attuned.MOD_ID, "textures/gui/attunement_journal.png");
 	private static final String CONFLUENCE_PAGE_KEY = "journal.attuned.confluence.intro";
 	private static final String PACT_TRIALS_PAGE_KEY = "journal.attuned.pact_trials.intro";
 	private static boolean initialized;
@@ -201,10 +199,8 @@ public final class AttunementJournalScreen extends Screen {
 	}
 
 	@Override
-	public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
-		double mouseX = event.x();
-		double mouseY = event.y();
-		if (event.button() == 0 && isMouseOverScrollbar(mouseX, mouseY)) {
+	public boolean mouseClicked(double mouseX, double mouseY, int button) {
+		if (button == 0 && isMouseOverScrollbar(mouseX, mouseY)) {
 			this.scrollbarDragging = true;
 			int thumbY = scrollbarThumbY();
 			int thumbHeight = scrollbarThumbHeight();
@@ -216,26 +212,25 @@ public final class AttunementJournalScreen extends Screen {
 			updateScrollFromMouse(mouseY);
 			return true;
 		}
-		return super.mouseClicked(event, doubleClick);
+		return super.mouseClicked(mouseX, mouseY, button);
 	}
 
 	@Override
-	public boolean mouseDragged(MouseButtonEvent event, double dragX, double dragY) {
-		if (this.scrollbarDragging && event.button() == 0 && this.maxScroll > 0) {
-			double mouseY = event.y();
+	public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
+		if (this.scrollbarDragging && button == 0 && this.maxScroll > 0) {
 			updateScrollFromMouse(mouseY);
 			return true;
 		}
-		return super.mouseDragged(event, dragX, dragY);
+		return super.mouseDragged(mouseX, mouseY, button, dragX, dragY);
 	}
 
 	@Override
-	public boolean mouseReleased(MouseButtonEvent event) {
-		if (event.button() == 0 && this.scrollbarDragging) {
+	public boolean mouseReleased(double mouseX, double mouseY, int button) {
+		if (button == 0 && this.scrollbarDragging) {
 			this.scrollbarDragging = false;
 			return true;
 		}
-		return super.mouseReleased(event);
+		return super.mouseReleased(mouseX, mouseY, button);
 	}
 
 	@Override
@@ -271,7 +266,7 @@ public final class AttunementJournalScreen extends Screen {
 		int top = top();
 		graphics.fill(0, 0, this.width, this.height, BACKDROP);
 		graphics.fill(left + 4, top + 4, left + PANEL_WIDTH + 4, top + PANEL_HEIGHT + 4, PANEL_SHADOW);
-		graphics.blit(RenderPipelines.GUI_TEXTURED, BACKGROUND_TEXTURE, left, top,
+		graphics.blit(BACKGROUND_TEXTURE, left, top,
 			0.0F, 0.0F, PANEL_WIDTH, PANEL_HEIGHT, PANEL_WIDTH, PANEL_HEIGHT);
 	}
 
@@ -505,11 +500,11 @@ public final class AttunementJournalScreen extends Screen {
 		LocalPlayer player = Minecraft.getInstance().player;
 		if (player != null) {
 			Set<String> discovered = new HashSet<>(AttunedAttachments.getDiscoveredConfluences(player));
-			Registry<SynergyDefinition> registry =
+			HolderLookup.RegistryLookup<SynergyDefinition> registry =
 				player.level().registryAccess().lookupOrThrow(AttunedRegistries.SYNERGY_DEFINITIONS);
 			registry.listElements().forEach(holder -> {
 				SynergyDefinition def = holder.value();
-				String id = registry.getKey(def).toString();
+				String id = holder.key().location().toString();
 				if (discovered.contains(id)) {
 					rows.add(I18n.get("confluence.attuned." + pathOf(id) + ".name"));
 				} else {
@@ -595,7 +590,7 @@ public final class AttunementJournalScreen extends Screen {
 		}
 
 		@Override
-		protected void renderContents(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+		protected void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
 			int x0 = getX();
 			int y0 = getY();
 			int x1 = x0 + getWidth();
@@ -604,7 +599,7 @@ public final class AttunementJournalScreen extends Screen {
 				if (isHoveredOrFocused()) {
 					graphics.fill(x0, y0, x1, y1, ROW_HOVER);
 				}
-				renderDefaultLabel(graphics.textRendererForWidget(this, GuiGraphics.HoveredTextEffects.NONE));
+				renderString(graphics, Minecraft.getInstance().font, this.active ? 0xFFFFFFFF : 0xFFA0A0A0);
 				return;
 			}
 			int face = this.active
@@ -616,7 +611,7 @@ public final class AttunementJournalScreen extends Screen {
 			graphics.fill(x0 + 2, y0 + 2, x1 - 2, y1 - 2, face);
 			graphics.fill(x0 + 3, y0 + 3, x1 - 3, y0 + 4, this.active ? 0xFFE0C6FF : 0xFF77707E);
 			graphics.fill(x0 + 3, y1 - 4, x1 - 3, y1 - 3, 0xFF17151D);
-			renderDefaultLabel(graphics.textRendererForWidget(this, GuiGraphics.HoveredTextEffects.NONE));
+			renderString(graphics, Minecraft.getInstance().font, this.active ? 0xFFFFFFFF : 0xFFA0A0A0);
 		}
 	}
 

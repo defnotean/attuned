@@ -2,7 +2,7 @@ package dev.attuned.content.behavior;
 
 import dev.attuned.Attuned;
 import dev.attuned.api.focus.FocusBehavior;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
@@ -20,8 +20,8 @@ import net.minecraft.world.item.ItemStack;
  */
 public final class BloodfuryBehavior implements FocusBehavior {
 
-	private static final Identifier MODIFIER_ID =
-		Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "bloodfury");
+	private static final ResourceLocation MODIFIER_ID =
+		ResourceLocation.fromNamespaceAndPath(Attuned.MOD_ID, "bloodfury");
 	/** Attack-speed bonus at the brink of death (+40%). */
 	private static final double MAX_BONUS = 0.40;
 

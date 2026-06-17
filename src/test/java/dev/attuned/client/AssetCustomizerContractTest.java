@@ -535,22 +535,30 @@ class AssetCustomizerContractTest {
 	@Test
 	void temporaryHarpoonProjectileUsesCustomThrownModelRenderer() throws IOException {
 		String clientMixins = read(CLIENT_MIXIN_CONFIG);
-		String rendererMixin = read(Path.of("src/client/java/dev/attuned/client/mixin/ThrownTridentRendererMixin.java"));
-		String stateMixin = read(Path.of("src/client/java/dev/attuned/client/mixin/ThrownTridentRenderStateMixin.java"));
-		assertTrue(clientMixins.contains("ThrownTridentRendererMixin"),
-			"Client mixins should replace vanilla thrown-trident rendering for temporary harpoons");
-		assertTrue(clientMixins.contains("ThrownTridentRenderStateMixin"),
-			"Client mixins should attach custom item render state to thrown trident render states");
-		assertTrue(rendererMixin.contains("HarpoonBehavior.isTemporaryHarpoon"),
-			"Renderer should only override Attuned temporary harpoons, not every vanilla trident");
-		assertTrue(rendererMixin.contains("ocean_relic_trident_projectile"),
-			"Thrown harpoon should resolve Attuned's projectile item definition");
-		assertTrue(rendererMixin.contains("ci.cancel()"),
-			"Custom projectile renderer should cancel vanilla trident model submission");
-		assertTrue(rendererMixin.contains("ItemDisplayContext.NONE"),
-			"Projectile renderer should render the custom cuboid spear directly instead of GUI/ground inventory transforms");
-		assertTrue(stateMixin.contains("ItemStackRenderState"),
-			"Thrown trident render state should carry an item render state for the custom cuboid spear");
+		Path rendererMixinPath = Path.of("src/client/java/dev/attuned/client/mixin/ThrownTridentRendererMixin.java");
+		Path stateMixinPath = Path.of("src/client/java/dev/attuned/client/mixin/ThrownTridentRenderStateMixin.java");
+		if (clientMixins.contains("ThrownTridentRendererMixin")) {
+			String rendererMixin = read(rendererMixinPath);
+			String stateMixin = read(stateMixinPath);
+			assertTrue(clientMixins.contains("ThrownTridentRenderStateMixin"),
+				"Client mixins should attach custom item render state to thrown trident render states");
+			assertTrue(rendererMixin.contains("HarpoonBehavior.isTemporaryHarpoon"),
+				"Renderer should only override Attuned temporary harpoons, not every vanilla trident");
+			assertTrue(rendererMixin.contains("ocean_relic_trident_projectile"),
+				"Thrown harpoon should resolve Attuned's projectile item definition");
+			assertTrue(rendererMixin.contains("ci.cancel()"),
+				"Custom projectile renderer should cancel vanilla trident model submission");
+			assertTrue(rendererMixin.contains("ItemDisplayContext.NONE"),
+				"Projectile renderer should render the custom cuboid spear directly instead of GUI/ground inventory transforms");
+			assertTrue(stateMixin.contains("ItemStackRenderState"),
+				"Thrown trident render state should carry an item render state for the custom cuboid spear");
+			return;
+		}
+
+		assertTrue(!Files.exists(rendererMixinPath) && !Files.exists(stateMixinPath),
+			"Minecraft 1.21.1 should omit the 1.21.11 render-state trident mixins and use vanilla projectile rendering.");
+		assertTrue(Files.isRegularFile(OCEAN_RELIC_TRIDENT_PROJECTILE_DEFINITION),
+			"The custom projectile item definition should still ship for branches with the newer renderer path.");
 	}
 
 	@Test

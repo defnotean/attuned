@@ -41,7 +41,7 @@ class FocusBehaviorResolutionContractTest {
 		String source = read(REGISTRIES);
 
 		// The data overload exists and is the funnel.
-		assertTrue(source.contains("public static FocusBehavior getBehavior(Identifier id, RegistryAccess registries)"),
+		assertTrue(source.contains("public static FocusBehavior getBehavior(ResourceLocation id, RegistryAccess registries)"),
 			"There should be a single registry-aware resolution funnel.");
 		// Code is consulted first.
 		assertTrue(source.contains("FocusBehavior code = BEHAVIORS.get(id);")
@@ -51,7 +51,10 @@ class FocusBehaviorResolutionContractTest {
 		// Then data is built from the palette registry.
 		assertTrue(source.contains("return dataBehavior(id, registries);"),
 			"The funnel must fall back to a data behaviour when no code behaviour exists.");
-		assertTrue(source.contains("registries.lookupOrThrow(FOCUS_BEHAVIORS).getValue(id)"),
+		assertTrue(source.contains("registries.lookupOrThrow(FOCUS_BEHAVIORS).getValue(id)")
+				|| (source.contains("ResourceKey.create(FOCUS_BEHAVIORS, id)")
+					&& source.contains("registries.lookupOrThrow(FOCUS_BEHAVIORS)")
+					&& source.contains(".get(key)")),
 			"The data path must read the definition from the focus_behavior registry by id.");
 		assertTrue(source.contains("DataFocusBehaviors.build(id, def)"),
 			"The data path must build a runtime FocusBehavior from the palette definition, passing "

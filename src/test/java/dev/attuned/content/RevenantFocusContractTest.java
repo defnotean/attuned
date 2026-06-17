@@ -74,7 +74,7 @@ class RevenantFocusContractTest {
 			"Ashen Debt should keep its revenge window short");
 		assertTrue(combat.contains("DEBT_MULTIPLIER = 1.25F"),
 			"Ashen Debt should keep the revenge hit controlled");
-		assertTrue(combat.contains("MobEffects.SLOWNESS"),
+		assertTrue(combat.contains("MobEffects.SLOWNESS") || combat.contains("MobEffects.MOVEMENT_SLOWDOWN"),
 			"Bonechill should apply a real vanilla slow effect");
 		assertTrue(combat.contains("CombatTargets.isHostileOrPvpOpponent(attacker, player)"),
 			"Bonechill should respect PvP and hostile target rules");
@@ -82,7 +82,8 @@ class RevenantFocusContractTest {
 			"Last Rites should respect PvP and hostile target rules");
 		assertTrue(combat.contains("removeEffect(MobEffects.POISON)")
 				&& combat.contains("removeEffect(MobEffects.WITHER)")
-				&& combat.contains("removeEffect(MobEffects.SLOWNESS)")
+				&& (combat.contains("removeEffect(MobEffects.SLOWNESS)")
+					|| combat.contains("removeEffect(MobEffects.MOVEMENT_SLOWDOWN)"))
 				&& combat.contains("player.clearFire()"),
 			"Last Rites should cleanse the intended harmful states");
 	}

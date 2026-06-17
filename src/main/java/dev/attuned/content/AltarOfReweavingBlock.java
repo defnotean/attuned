@@ -48,6 +48,6 @@ public class AltarOfReweavingBlock extends Block {
 			return InteractionResult.SUCCESS;
 		}
 		player.openMenu(ReweavingMenuType.provider(level, pos));
-		return InteractionResult.SUCCESS_SERVER;
+		return InteractionResult.sidedSuccess(level.isClientSide());
 	}
 }

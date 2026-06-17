@@ -52,7 +52,7 @@ class UpdraftFocusContractTest {
 		assertTrue(behavior.contains("isPvpExhausted("));
 		assertTrue(behavior.contains("applyPvpExhaustion("));
 		assertTrue(behavior.contains("MobEffects.WEAKNESS"));
-		assertTrue(behavior.contains("MobEffects.SLOWNESS"));
+		assertTrue(behavior.contains("MobEffects.SLOWNESS") || behavior.contains("MobEffects.MOVEMENT_SLOWDOWN"));
 		assertTrue(behavior.contains("item.attuned.updraft_focus.exhausted"));
 
 		String networking = read(NETWORKING);

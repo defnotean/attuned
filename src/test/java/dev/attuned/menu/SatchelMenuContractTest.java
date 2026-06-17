@@ -56,7 +56,7 @@ class SatchelMenuContractTest {
 			"SatchelMenu should be a real container menu.");
 		assertTrue(menu.contains("public SatchelMenu(int containerId, Inventory inventory)"),
 			"A client (int, Inventory) constructor is required by the MenuType factory.");
-		assertTrue(menu.contains("addStandardInventorySlots"),
+		assertTrue(menu.contains("addStandardInventorySlots") || menu.contains("addPlayerInventorySlots"),
 			"SatchelMenu should expose the player inventory for transfers.");
 		assertTrue(menu.contains("public boolean stillValid(Player player)"),
 			"SatchelMenu must validate the satchel is still in hand.");

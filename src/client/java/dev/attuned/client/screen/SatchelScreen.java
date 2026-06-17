@@ -26,11 +26,9 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
-import net.minecraft.client.input.KeyEvent;
-import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
@@ -45,8 +43,8 @@ import org.lwjgl.glfw.GLFW;
  * to select and Apply it.
  */
 public class SatchelScreen extends AbstractContainerScreen<SatchelMenu> {
-	private static final Identifier BACKGROUND_TEXTURE =
-		Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "textures/gui/satchel.png");
+	private static final ResourceLocation BACKGROUND_TEXTURE =
+		ResourceLocation.fromNamespaceAndPath(Attuned.MOD_ID, "textures/gui/satchel.png");
 	// Logical window encloses the leather texture (left) plus the equipped/builds panel (right),
 	// so the whole UI is centred and on-screen and no slot sits outside the click bounds. The
 	// height grows with the reliquary's grid rows so the larger Grand tier stays inside bounds.
@@ -224,18 +222,18 @@ public class SatchelScreen extends AbstractContainerScreen<SatchelMenu> {
 	}
 
 	@Override
-	public boolean keyPressed(KeyEvent event) {
+	public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
 		// ESC must always close the screen, even while the name field is focused.
-		if (event.key() == GLFW.GLFW_KEY_ESCAPE) {
-			return super.keyPressed(event);
+		if (keyCode == GLFW.GLFW_KEY_ESCAPE) {
+			return super.keyPressed(keyCode, scanCode, modifiers);
 		}
 		// Give the name field keyboard priority so typing (e.g. the inventory key 'e'
 		// or a number) edits the build name instead of closing the screen or swapping hotbar.
 		if (this.nameField != null
-				&& (this.nameField.keyPressed(event) || this.nameField.canConsumeInput())) {
+				&& (this.nameField.keyPressed(keyCode, scanCode, modifiers) || this.nameField.canConsumeInput())) {
 			return true;
 		}
-		return super.keyPressed(event);
+		return super.keyPressed(keyCode, scanCode, modifiers);
 	}
 
 	@Override
@@ -310,12 +308,12 @@ public class SatchelScreen extends AbstractContainerScreen<SatchelMenu> {
 			// y=84. For the taller Grand grid those baked wells would ghost through, so blit
 			// just the header + first 3 grid rows and panel-fill the rest, drawing every well
 			// below the strip programmatically at the real (relocated) slot positions.
-			graphics.blit(RenderPipelines.GUI_TEXTURED, BACKGROUND_TEXTURE, this.leftPos, this.topPos,
+			graphics.blit(BACKGROUND_TEXTURE, this.leftPos, this.topPos,
 				0.0F, 0.0F, TEX_W, TEX_GRID_BOTTOM, TEX_W, TEX_H);
 			graphics.fill(this.leftPos, this.topPos + TEX_GRID_BOTTOM,
 				this.leftPos + TEX_W, this.topPos + this.imageHeight, WINDOW_FILL);
 		} else {
-			graphics.blit(RenderPipelines.GUI_TEXTURED, BACKGROUND_TEXTURE, this.leftPos, this.topPos,
+			graphics.blit(BACKGROUND_TEXTURE, this.leftPos, this.topPos,
 				0.0F, 0.0F, TEX_W, TEX_H, TEX_W, TEX_H);
 		}
 
@@ -429,7 +427,7 @@ public class SatchelScreen extends AbstractContainerScreen<SatchelMenu> {
 
 	/** Resolves a saved Focus id to its item stack for the preview (client registry). */
 	private static ItemStack stackFor(String id) {
-		return BuiltInRegistries.ITEM.getValue(Identifier.parse(id)).getDefaultInstance();
+		return BuiltInRegistries.ITEM.get(ResourceLocation.parse(id)).getDefaultInstance();
 	}
 
 	private void drawWell(GuiGraphics graphics, int x, int y) {
@@ -548,7 +546,7 @@ public class SatchelScreen extends AbstractContainerScreen<SatchelMenu> {
 		}
 
 		@Override
-		protected void renderContents(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+		protected void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
 			int x0 = getX();
 			int y0 = getY();
 			int x1 = x0 + getWidth();
@@ -561,7 +559,7 @@ public class SatchelScreen extends AbstractContainerScreen<SatchelMenu> {
 			} else if (isHoveredOrFocused()) {
 				drawButtonOutline(graphics, x0, y0, x1, y1, BUTTON_HOVER_ARGB);
 			}
-			renderDefaultLabel(graphics.textRendererForWidget(this, GuiGraphics.HoveredTextEffects.NONE));
+			renderString(graphics, Minecraft.getInstance().font, this.active ? 0xFFFFFFFF : 0xFFA0A0A0);
 		}
 	}
 }

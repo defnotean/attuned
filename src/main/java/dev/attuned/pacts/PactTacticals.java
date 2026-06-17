@@ -133,9 +133,9 @@ public final class PactTacticals {
 		switch (pact) {
 			case PYRESWORN -> firePyresworn(player, level, overcharge, radiusScale);
 			case STONEHEART -> player.addEffect(new MobEffectInstance(
-				MobEffects.RESISTANCE, overcharge ? 80 : 40, overcharge ? 2 : 1, true, false, true));
+				MobEffects.DAMAGE_RESISTANCE, overcharge ? 80 : 40, overcharge ? 2 : 1, true, false, true));
 			case WINDRUNNER -> player.addEffect(new MobEffectInstance(
-				MobEffects.SPEED, overcharge ? 60 : 40, overcharge ? 2 : 1, true, false, true));
+				MobEffects.MOVEMENT_SPEED, overcharge ? 60 : 40, overcharge ? 2 : 1, true, false, true));
 			case RADIANT_COVENANT -> glowHostiles(player, level, 6.0D * radiusScale, overcharge ? 90 : 60);
 			case TIDESWORN -> slowHostiles(player, level, 5.0D * radiusScale, overcharge ? 60 : 40);
 			case FORGEBOUND -> igniteHostiles(player, level, 4.0D * radiusScale, overcharge ? 3 : 2);
@@ -157,7 +157,7 @@ public final class PactTacticals {
 			return;
 		}
 		player.addEffect(new MobEffectInstance(MobEffects.FIRE_RESISTANCE, 40, 0, true, false, true));
-		player.addEffect(new MobEffectInstance(MobEffects.SPEED, overcharge ? 30 : 20, 0, true, false, true));
+		player.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, overcharge ? 30 : 20, 0, true, false, true));
 	}
 
 	private static void glowHostiles(ServerPlayer player, ServerLevel level, double radius, int ticks) {
@@ -168,7 +168,7 @@ public final class PactTacticals {
 
 	private static void slowHostiles(ServerPlayer player, ServerLevel level, double radius, int ticks) {
 		for (LivingEntity target : nearbyHostiles(player, level, radius)) {
-			target.addEffect(new MobEffectInstance(MobEffects.SLOWNESS, ticks, 0, true, false, true));
+			target.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, ticks, 0, true, false, true));
 		}
 	}
 

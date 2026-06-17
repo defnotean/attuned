@@ -371,7 +371,7 @@ class RadiantExpansionContractTest {
 			"Mossheart should react to actual hostile hits");
 		assertTrue(behavior.contains("CombatTargets.isHostileOrPvpOpponent"),
 			"Mossheart should only trigger from hostile mobs or valid PvP opponents");
-		assertTrue(behavior.contains("MobEffects.RESISTANCE")
+		assertTrue((behavior.contains("MobEffects.RESISTANCE") || behavior.contains("MobEffects.DAMAGE_RESISTANCE"))
 				&& behavior.contains("RESISTANCE_TICKS = 60")
 				&& behavior.contains("COOLDOWN_TICKS = 240"),
 			"Mossheart should grant Resistance I for 60 ticks on a 240-tick cooldown");
@@ -450,7 +450,7 @@ class RadiantExpansionContractTest {
 			"Kilnward should react to actual hostile hits");
 		assertTrue(behavior.contains("CombatTargets.isHostileOrPvpOpponent"),
 			"Kilnward should only trigger from hostile mobs or valid PvP opponents");
-		assertTrue(behavior.contains("MobEffects.RESISTANCE")
+		assertTrue((behavior.contains("MobEffects.RESISTANCE") || behavior.contains("MobEffects.DAMAGE_RESISTANCE"))
 				&& behavior.contains("RESISTANCE_TICKS = 60")
 				&& behavior.contains("COOLDOWN_TICKS = 240"),
 			"Kilnward should grant Resistance I for 60 ticks on a 240-tick cooldown");

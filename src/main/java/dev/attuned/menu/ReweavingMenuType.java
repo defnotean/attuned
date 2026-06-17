@@ -5,7 +5,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.MenuProvider;
 import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.SimpleMenuProvider;
@@ -29,7 +29,7 @@ public final class ReweavingMenuType {
 			return;
 		}
 		initialized = true;
-		Identifier id = Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "altar_of_reweaving");
+		ResourceLocation id = ResourceLocation.fromNamespaceAndPath(Attuned.MOD_ID, "altar_of_reweaving");
 		TYPE = Registry.register(BuiltInRegistries.MENU, id,
 			new MenuType<>(ReweavingMenu::new, FeatureFlags.VANILLA_SET));
 	}

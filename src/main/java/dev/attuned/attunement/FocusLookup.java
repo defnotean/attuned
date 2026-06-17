@@ -6,7 +6,7 @@ import java.util.IdentityHashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.WeakHashMap;
-import net.minecraft.core.Registry;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.world.item.Item;
 
 /**
@@ -24,24 +24,25 @@ import net.minecraft.world.item.Item;
 public final class FocusLookup {
 	private FocusLookup() {}
 
-	private static final Map<Registry<FocusDefinition>, Map<Item, FocusDefinition>> INDEX =
+	private static final Map<HolderLookup.RegistryLookup<FocusDefinition>, Map<Item, FocusDefinition>> INDEX =
 		Collections.synchronizedMap(new WeakHashMap<>());
 
 	/** The definition registered for {@code item} in {@code registry}, if any. */
-	public static Optional<FocusDefinition> forItem(Registry<FocusDefinition> registry, Item item) {
+	public static Optional<FocusDefinition> forItem(HolderLookup.RegistryLookup<FocusDefinition> registry, Item item) {
 		Map<Item, FocusDefinition> byItem = INDEX.computeIfAbsent(registry, FocusLookup::index);
 		return Optional.ofNullable(byItem.get(item));
 	}
 
-	private static Map<Item, FocusDefinition> index(Registry<FocusDefinition> registry) {
+	private static Map<Item, FocusDefinition> index(HolderLookup.RegistryLookup<FocusDefinition> registry) {
 		Map<Item, FocusDefinition> byItem = new IdentityHashMap<>();
-		for (FocusDefinition def : registry) {
+		registry.listElements().forEach(holder -> {
+			FocusDefinition def = holder.value();
 			Item item = def.item().value();
 			FocusDefinition previous = byItem.putIfAbsent(item, def);
 			if (previous != null) {
 				throw new IllegalStateException("Duplicate FocusDefinition item: " + item);
 			}
-		}
+		});
 		return byItem;
 	}
 }

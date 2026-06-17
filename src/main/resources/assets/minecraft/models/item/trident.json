@@ -1,0 +1,14 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "minecraft:item/trident"
+  },
+  "overrides": [
+    {
+      "predicate": {
+        "custom_model_data": 7123001
+      },
+      "model": "attuned:item/ocean_relic_trident_inventory"
+    }
+  ]
+}

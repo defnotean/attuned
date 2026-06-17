@@ -33,7 +33,7 @@ import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.TamableAnimal;
 import net.minecraft.world.entity.monster.Monster;
-import net.minecraft.world.entity.npc.villager.AbstractVillager;
+import net.minecraft.world.entity.npc.AbstractVillager;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.AABB;
 
@@ -388,7 +388,7 @@ public final class Apex {
 		int ticks = matchup == Matchup.EMPOWERED
 			? RIPTIDE_SLOWNESS_TICKS_EMPOWERED
 			: RIPTIDE_SLOWNESS_TICKS;
-		defender.addEffect(new MobEffectInstance(MobEffects.SLOWNESS, ticks, 0, true, true, true));
+		defender.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, ticks, 0, true, true, true));
 		if (attacker instanceof ServerPlayer serverPlayer) {
 			CombatFeedback.riptideDrag(serverPlayer, defender);
 		}
@@ -491,8 +491,8 @@ public final class Apex {
 		if (!(defender instanceof TamableAnimal pet)) {
 			return false;
 		}
-		var ownerRef = pet.getOwnerReference();
-		return ownerRef != null && attacker.getUUID().equals(ownerRef.getUUID());
+		var ownerId = pet.getOwnerUUID();
+		return ownerId != null && attacker.getUUID().equals(ownerId);
 	}
 
 	private static void markScrambled(Player player, LivingEntity target) {
@@ -618,7 +618,7 @@ public final class Apex {
 			monster.isAlive());
 		for (Monster monster : monsters) {
 			monster.setTarget(null);
-			monster.addEffect(new MobEffectInstance(MobEffects.SLOWNESS,
+			monster.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN,
 				STILLPOINT_FIELD_SLOWNESS_TICKS, 0, true, true, true));
 		}
 		level.sendParticles(ParticleTypes.END_ROD,
@@ -796,7 +796,7 @@ public final class Apex {
 	}
 
 	private static void onDodge(ServerPlayer player) {
-		player.addEffect(new MobEffectInstance(MobEffects.SPEED, 40, 1, true, false, true));
+		player.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, 40, 1, true, false, true));
 		ServerLevel level = (ServerLevel) player.level();
 		level.sendParticles(ParticleTypes.CLOUD,
 			player.getX(), player.getY() + 1.0, player.getZ(), 12, 0.3, 0.5, 0.3, 0.02);

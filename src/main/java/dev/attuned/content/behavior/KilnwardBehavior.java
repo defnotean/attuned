@@ -15,7 +15,7 @@ import java.util.UUID;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.tags.FluidTags;
 import net.minecraft.world.damagesource.DamageSource;
@@ -29,8 +29,8 @@ import net.minecraft.world.level.block.state.BlockState;
 
 /** Kilnward Focus: hostile hits near heat grant brief Resistance, not fire immunity. */
 public final class KilnwardBehavior implements FocusBehavior {
-	private static final Identifier FOCUS_ID =
-		Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "kilnward_focus");
+	private static final ResourceLocation FOCUS_ID =
+		ResourceLocation.fromNamespaceAndPath(Attuned.MOD_ID, "kilnward_focus");
 	private static final int RESISTANCE_TICKS = 60;
 	private static final int COOLDOWN_TICKS = 240;
 	private static final int HEAT_RADIUS_XZ = 4;
@@ -77,7 +77,7 @@ public final class KilnwardBehavior implements FocusBehavior {
 			return;
 		}
 		player.addEffect(new MobEffectInstance(
-			MobEffects.RESISTANCE, RESISTANCE_TICKS, 0, true, false, true));
+			MobEffects.DAMAGE_RESISTANCE, RESISTANCE_TICKS, 0, true, false, true));
 		COOLDOWNS.put(player.getUUID(), COOLDOWN_TICKS);
 	}
 
@@ -108,7 +108,7 @@ public final class KilnwardBehavior implements FocusBehavior {
 	private static boolean hasActiveKilnward(ServerPlayer player) {
 		AttunedInv inv = AttunedAttachments.getInventory(player);
 		for (int slot : Attunement.activeSlots(player)) {
-			Identifier id = BuiltInRegistries.ITEM.getKey(inv.get(slot).getItem());
+			ResourceLocation id = BuiltInRegistries.ITEM.getKey(inv.get(slot).getItem());
 			if (FOCUS_ID.equals(id)) {
 				return true;
 			}

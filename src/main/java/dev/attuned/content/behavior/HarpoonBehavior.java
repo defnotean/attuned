@@ -1,7 +1,6 @@
 package dev.attuned.content.behavior;
 
 import dev.attuned.compat.PlayerMessages;
-import dev.attuned.Attuned;
 import dev.attuned.AttunedPlayerCleanup;
 import dev.attuned.AttunedServerCleanup;
 import dev.attuned.api.focus.FocusBehavior;
@@ -14,7 +13,6 @@ import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.Identifier;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -25,10 +23,11 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Inventory;
-import net.minecraft.world.entity.projectile.arrow.ThrownTrident;
+import net.minecraft.world.entity.projectile.ThrownTrident;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.component.CustomData;
+import net.minecraft.world.item.component.CustomModelData;
 
 /** Offshore Harpoon Focus: summons one temporary custom trident on the ability key. */
 public final class HarpoonBehavior implements FocusBehavior {
@@ -39,8 +38,7 @@ public final class HarpoonBehavior implements FocusBehavior {
 	private static final String MARKER_KEY = "marker";
 	private static final String OWNER_KEY = "owner";
 	private static final String EXPIRES_AT_KEY = "expires_at";
-	private static final Identifier HARPOON_MODEL =
-		Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "ocean_relic_trident");
+	private static final int CUSTOM_MODEL_DATA = 7123001;
 	private static final Component HARPOON_NAME =
 		Component.translatable("item.attuned.ocean_relic_trident");
 	private static final Map<UUID, Long> ACTIVE_HARPOONS = new HashMap<>();
@@ -117,7 +115,7 @@ public final class HarpoonBehavior implements FocusBehavior {
 		tag.putString(OWNER_KEY, player.getUUID().toString());
 		tag.putLong(EXPIRES_AT_KEY, now + DURATION_TICKS);
 		harpoon.set(DataComponents.CUSTOM_DATA, CustomData.of(tag));
-		harpoon.set(DataComponents.ITEM_MODEL, HARPOON_MODEL);
+		harpoon.set(DataComponents.CUSTOM_MODEL_DATA, new CustomModelData(CUSTOM_MODEL_DATA));
 		harpoon.set(DataComponents.CUSTOM_NAME, HARPOON_NAME);
 		harpoon.set(DataComponents.INTANGIBLE_PROJECTILE, Unit.INSTANCE);
 		return harpoon;
@@ -288,11 +286,11 @@ public final class HarpoonBehavior implements FocusBehavior {
 			return null;
 		}
 		CompoundTag tag = data.copyTag();
-		return MARKER_ID.equals(tag.getStringOr(MARKER_KEY, "")) ? tag : null;
+		return tag.contains(MARKER_KEY) && MARKER_ID.equals(tag.getString(MARKER_KEY)) ? tag : null;
 	}
 
 	private static UUID ownerOf(CompoundTag tag) {
-		String value = tag.getStringOr(OWNER_KEY, "");
+		String value = tag.contains(OWNER_KEY) ? tag.getString(OWNER_KEY) : "";
 		try {
 			return value.isBlank() ? null : UUID.fromString(value);
 		} catch (IllegalArgumentException ignored) {
@@ -301,6 +299,6 @@ public final class HarpoonBehavior implements FocusBehavior {
 	}
 
 	private static long expiresAt(CompoundTag tag) {
-		return tag.getLongOr(EXPIRES_AT_KEY, -1L);
+		return tag.contains(EXPIRES_AT_KEY) ? tag.getLong(EXPIRES_AT_KEY) : -1L;
 	}
 }

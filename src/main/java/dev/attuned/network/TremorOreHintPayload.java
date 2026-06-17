@@ -7,12 +7,12 @@ import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 
 /** Server-to-client signal telling Tremor which ore vein blocks to outline. */
 public record TremorOreHintPayload(List<BlockPos> orePositions) implements CustomPacketPayload {
 	public static final Type<TremorOreHintPayload> TYPE =
-		new Type<>(Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "tremor_ore_hint"));
+		new Type<>(ResourceLocation.fromNamespaceAndPath(Attuned.MOD_ID, "tremor_ore_hint"));
 
 	public static final StreamCodec<RegistryFriendlyByteBuf, TremorOreHintPayload> CODEC =
 		BlockPos.STREAM_CODEC.apply(ByteBufCodecs.list())

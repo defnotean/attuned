@@ -96,7 +96,18 @@ public class ReweavingMenu extends AbstractContainerMenu {
 				return false;
 			}
 		});
-		this.addStandardInventorySlots(inventory, INVENTORY_X, INVENTORY_Y);
+		addPlayerInventorySlots(inventory, INVENTORY_X, INVENTORY_Y);
+	}
+
+	private void addPlayerInventorySlots(Inventory inventory, int x, int y) {
+		for (int row = 0; row < 3; row++) {
+			for (int column = 0; column < 9; column++) {
+				addSlot(new Slot(inventory, column + row * 9 + 9, x + column * 18, y + row * 18));
+			}
+		}
+		for (int column = 0; column < 9; column++) {
+			addSlot(new Slot(inventory, column, x + column * 18, y + 58));
+		}
 	}
 
 	public Container container() {

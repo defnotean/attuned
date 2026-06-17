@@ -2,7 +2,7 @@ package dev.attuned.content.behavior;
 
 import dev.attuned.Attuned;
 import dev.attuned.api.focus.FocusBehavior;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
@@ -14,10 +14,10 @@ import net.minecraft.world.level.block.state.BlockState;
 
 /** Rootstep Focus: modest movement and safer footing while standing on natural blocks. */
 public final class RootstepBehavior implements FocusBehavior {
-	private static final Identifier SPEED_ID =
-		Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "rootstep_focus_speed");
-	private static final Identifier FALL_ID =
-		Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "rootstep_focus_fall");
+	private static final ResourceLocation SPEED_ID =
+		ResourceLocation.fromNamespaceAndPath(Attuned.MOD_ID, "rootstep_focus_speed");
+	private static final ResourceLocation FALL_ID =
+		ResourceLocation.fromNamespaceAndPath(Attuned.MOD_ID, "rootstep_focus_fall");
 	private static final double MOVEMENT_SPEED = 0.05D;
 	private static final double FALL_DAMAGE_REDUCTION = -0.15D;
 
@@ -54,7 +54,7 @@ public final class RootstepBehavior implements FocusBehavior {
 			FALL_ID, FALL_DAMAGE_REDUCTION, AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL);
 	}
 
-	private static void applyModifier(AttributeInstance attribute, Identifier id, double amount,
+	private static void applyModifier(AttributeInstance attribute, ResourceLocation id, double amount,
 			AttributeModifier.Operation operation) {
 		if (attribute == null || attribute.getModifier(id) != null) {
 			return;
@@ -67,7 +67,7 @@ public final class RootstepBehavior implements FocusBehavior {
 		removeModifier(player.getAttribute(Attributes.FALL_DAMAGE_MULTIPLIER), FALL_ID);
 	}
 
-	private static void removeModifier(AttributeInstance attribute, Identifier id) {
+	private static void removeModifier(AttributeInstance attribute, ResourceLocation id) {
 		if (attribute != null) {
 			attribute.removeModifier(id);
 		}

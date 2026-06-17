@@ -126,7 +126,7 @@ class AttunementSourceContractTest {
 			"Active Focus state should store the effect payload that was actually applied");
 		assertTrue(source.contains("new AppliedFocus(stack.copy(), List.copyOf(def.modifiers()), def.behavior())"),
 			"Applied Focus snapshots should defensively copy the stack and modifier payload");
-		assertTrue(source.contains("private record AppliedFocus(ItemStack stack, List<ModifierEntry> modifiers, Optional<Identifier> behavior)"),
+		assertTrue(source.contains("private record AppliedFocus(ItemStack stack, List<ModifierEntry> modifiers, Optional<ResourceLocation> behavior)"),
 			"Applied Focus snapshots should remember stack, modifiers, and behavior id");
 		assertTrue(source.contains("sameAppliedFocus(previous, now)"),
 			"Effect diffing should notice definition payload changes, not only stack changes");

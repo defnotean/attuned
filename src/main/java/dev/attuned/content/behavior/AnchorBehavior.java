@@ -2,7 +2,7 @@ package dev.attuned.content.behavior;
 
 import dev.attuned.Attuned;
 import dev.attuned.api.focus.FocusBehavior;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
@@ -13,8 +13,8 @@ import net.minecraft.world.item.ItemStack;
  * Anchor Focus: grants knockback resistance only while the wearer is bracing.
  */
 public final class AnchorBehavior implements FocusBehavior {
-	private static final Identifier BRACED_ID =
-		Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "anchor_focus_braced");
+	private static final ResourceLocation BRACED_ID =
+		ResourceLocation.fromNamespaceAndPath(Attuned.MOD_ID, "anchor_focus_braced");
 	private static final double KNOCKBACK_RESISTANCE = 0.45;
 
 	@Override

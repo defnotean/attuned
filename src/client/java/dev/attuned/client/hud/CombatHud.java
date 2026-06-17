@@ -7,12 +7,11 @@ import dev.attuned.client.AttunementReadout;
 import dev.attuned.combat.Apex;
 import dev.attuned.combat.MobAffinities;
 import dev.attuned.combat.Resonance;
-import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry;
-import net.fabricmc.fabric.api.client.rendering.v1.hud.VanillaHudElements;
+import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
@@ -63,35 +62,35 @@ public final class CombatHud {
 	// the sprite atlas (same path vanilla heart/hunger icons use) gets us proper
 	// filtering and mipmapping at any HUD render size, so the gem face and the
 	// centred icon stay readable when the gem is downscaled to 16-20 px.
-	private static final Identifier FURY_SPRITE = Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "hud/affinity_fury");
-	private static final Identifier BASTION_SPRITE = Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "hud/affinity_bastion");
-	private static final Identifier ZEPHYR_SPRITE = Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "hud/affinity_zephyr");
-	private static final Identifier HOLY_SPRITE = Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "hud/affinity_holy");
-	private static final Identifier TIDE_SPRITE = Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "hud/affinity_tide");
-	private static final Identifier FORGE_SPRITE = Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "hud/affinity_forge");
-	private static final Identifier VERDANT_SPRITE = Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "hud/affinity_verdant");
-	private static final Identifier UMBRAL_SPRITE = Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "hud/affinity_umbral");
-	private static final Identifier DISCORD_SPRITE = Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "hud/affinity_discord");
-	private static final Identifier NEUTRAL_SPRITE = Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "hud/affinity_neutral");
-	private static final Identifier TARGET_RING_SPRITE = Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "hud/hud_target_ring");
-	private static final Identifier EMPOWERED_RING_SPRITE =
-		Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "hud/hud_empowered_ring");
-	private static final Identifier NEUTRALIZED_OVERLAY_SPRITE =
-		Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "hud/hud_neutralized_overlay");
-	private static final Identifier LINK_NEUTRAL_SPRITE = Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "hud/hud_link_neutral");
-	private static final Identifier LINK_EMPOWERED_SPRITE =
-		Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "hud/hud_link_empowered");
-	private static final Identifier LINK_NEUTRALIZED_SPRITE =
-		Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "hud/hud_link_neutralized");
-	private static final Identifier HUD_BACKPLATE_TEXTURE =
-		Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "textures/gui/hud_backplate.png");
+	private static final ResourceLocation FURY_SPRITE = ResourceLocation.fromNamespaceAndPath(Attuned.MOD_ID, "hud/affinity_fury");
+	private static final ResourceLocation BASTION_SPRITE = ResourceLocation.fromNamespaceAndPath(Attuned.MOD_ID, "hud/affinity_bastion");
+	private static final ResourceLocation ZEPHYR_SPRITE = ResourceLocation.fromNamespaceAndPath(Attuned.MOD_ID, "hud/affinity_zephyr");
+	private static final ResourceLocation HOLY_SPRITE = ResourceLocation.fromNamespaceAndPath(Attuned.MOD_ID, "hud/affinity_holy");
+	private static final ResourceLocation TIDE_SPRITE = ResourceLocation.fromNamespaceAndPath(Attuned.MOD_ID, "hud/affinity_tide");
+	private static final ResourceLocation FORGE_SPRITE = ResourceLocation.fromNamespaceAndPath(Attuned.MOD_ID, "hud/affinity_forge");
+	private static final ResourceLocation VERDANT_SPRITE = ResourceLocation.fromNamespaceAndPath(Attuned.MOD_ID, "hud/affinity_verdant");
+	private static final ResourceLocation UMBRAL_SPRITE = ResourceLocation.fromNamespaceAndPath(Attuned.MOD_ID, "hud/affinity_umbral");
+	private static final ResourceLocation DISCORD_SPRITE = ResourceLocation.fromNamespaceAndPath(Attuned.MOD_ID, "hud/affinity_discord");
+	private static final ResourceLocation NEUTRAL_SPRITE = ResourceLocation.fromNamespaceAndPath(Attuned.MOD_ID, "hud/affinity_neutral");
+	private static final ResourceLocation TARGET_RING_SPRITE = ResourceLocation.fromNamespaceAndPath(Attuned.MOD_ID, "hud/hud_target_ring");
+	private static final ResourceLocation EMPOWERED_RING_SPRITE =
+		ResourceLocation.fromNamespaceAndPath(Attuned.MOD_ID, "hud/hud_empowered_ring");
+	private static final ResourceLocation NEUTRALIZED_OVERLAY_SPRITE =
+		ResourceLocation.fromNamespaceAndPath(Attuned.MOD_ID, "hud/hud_neutralized_overlay");
+	private static final ResourceLocation LINK_NEUTRAL_SPRITE = ResourceLocation.fromNamespaceAndPath(Attuned.MOD_ID, "hud/hud_link_neutral");
+	private static final ResourceLocation LINK_EMPOWERED_SPRITE =
+		ResourceLocation.fromNamespaceAndPath(Attuned.MOD_ID, "hud/hud_link_empowered");
+	private static final ResourceLocation LINK_NEUTRALIZED_SPRITE =
+		ResourceLocation.fromNamespaceAndPath(Attuned.MOD_ID, "hud/hud_link_neutralized");
+	private static final ResourceLocation HUD_BACKPLATE_TEXTURE =
+		ResourceLocation.fromNamespaceAndPath(Attuned.MOD_ID, "textures/gui/hud_backplate.png");
 	// Capstone gem sprites, precomputed so the per-frame draw path never builds
-	// identifier strings. Keys resolve to hud/<capstone> in the GUI sprite atlas.
-	private static final Map<Apex.Capstone, Identifier> CAPSTONE_SPRITES = buildCapstoneSprites();
-	private static final Identifier RESONANCE_TRACK_TEXTURE =
-		Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "textures/gui/sprites/hud/hud_resonance_track.png");
-	private static final Identifier RESONANCE_FILL_TEXTURE =
-		Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "textures/gui/sprites/hud/hud_resonance_fill.png");
+	// ResourceLocation strings. Keys resolve to hud/<capstone> in the GUI sprite atlas.
+	private static final Map<Apex.Capstone, ResourceLocation> CAPSTONE_SPRITES = buildCapstoneSprites();
+	private static final ResourceLocation RESONANCE_TRACK_TEXTURE =
+		ResourceLocation.fromNamespaceAndPath(Attuned.MOD_ID, "textures/gui/sprites/hud/hud_resonance_track.png");
+	private static final ResourceLocation RESONANCE_FILL_TEXTURE =
+		ResourceLocation.fromNamespaceAndPath(Attuned.MOD_ID, "textures/gui/sprites/hud/hud_resonance_fill.png");
 
 	// The matchup of the player's affinity against the targeted entity's.
 	private enum Matchup { EMPOWERED, NEUTRAL, NEUTRALIZED, NONE }
@@ -130,8 +129,7 @@ public final class CombatHud {
 		}
 		initialized = true;
 
-		Identifier id = Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "combat_hud");
-		HudElementRegistry.attachElementAfter(VanillaHudElements.HOTBAR, id, CombatHud::renderLayer);
+		HudRenderCallback.EVENT.register(CombatHud::renderLayer);
 	}
 
 	// The HudElement render entry point. Pulled out as a method reference so the
@@ -192,8 +190,7 @@ public final class CombatHud {
 		int backplateY = fociHudVisible ? secondarySidecarY(screenW, screenH, backplateW) : sidecarY(screenW, screenH, backplateW);
 		int rowX = backplateX + (backplateW - rowWidth) / 2;
 		int rowY = backplateY + (showOwn ? 2 : (HUD_BACKPLATE_H - TARGET_GEM_SIZE) / 2);
-		graphics.blit(net.minecraft.client.renderer.RenderPipelines.GUI_TEXTURED,
-			HUD_BACKPLATE_TEXTURE, backplateX, backplateY,
+		graphics.blit(HUD_BACKPLATE_TEXTURE, backplateX, backplateY,
 			0.0F, 0.0F, backplateW, HUD_BACKPLATE_H, HUD_BACKPLATE_W, HUD_BACKPLATE_H);
 
 		// Resonance bar first, just above the gem row, so the gem itself sits on
@@ -307,18 +304,17 @@ public final class CombatHud {
 	}
 
 	private static void drawMatchupLink(GuiGraphics graphics, int x, int y, Matchup matchup) {
-		Identifier sprite = switch (matchup) {
+		ResourceLocation sprite = switch (matchup) {
 			case EMPOWERED -> LINK_EMPOWERED_SPRITE;
 			case NEUTRALIZED -> LINK_NEUTRALIZED_SPRITE;
 			case NEUTRAL, NONE -> LINK_NEUTRAL_SPRITE;
 		};
-		graphics.blitSprite(net.minecraft.client.renderer.RenderPipelines.GUI_TEXTURED,
-			sprite, x, y, MATCHUP_LINK_W, MATCHUP_LINK_H);
+		graphics.blitSprite(sprite, x, y, MATCHUP_LINK_W, MATCHUP_LINK_H);
 	}
 
 	public static void drawPlayerGem(GuiGraphics graphics, int x, int y, int size,
 			@Nullable Affinity affinity, boolean discord, @Nullable Apex.Capstone capstone, boolean atApex) {
-		Identifier sprite = atApex && capstone != null
+		ResourceLocation sprite = atApex && capstone != null
 			? capstoneSpriteFor(capstone)
 			: affinitySpriteFor(affinity, discord);
 		drawGemSprite(graphics, x, y, size, false, sprite);
@@ -331,15 +327,14 @@ public final class CombatHud {
 	}
 
 	private static void drawGemSprite(GuiGraphics graphics, int x, int y, int size,
-			boolean targeted, Identifier sprite) {
-		graphics.blitSprite(net.minecraft.client.renderer.RenderPipelines.GUI_TEXTURED,
-			sprite, x, y, size, size);
+			boolean targeted, ResourceLocation sprite) {
+		graphics.blitSprite(sprite, x, y, size, size);
 		if (targeted) {
 			drawOverlaySprite(graphics, TARGET_RING_SPRITE, x, y, size);
 		}
 	}
 
-	private static Identifier affinitySpriteFor(@Nullable Affinity affinity, boolean discord) {
+	private static ResourceLocation affinitySpriteFor(@Nullable Affinity affinity, boolean discord) {
 		if (discord) {
 			return DISCORD_SPRITE;
 		}
@@ -358,12 +353,12 @@ public final class CombatHud {
 		};
 	}
 
-	private static Identifier capstoneSpriteFor(Apex.Capstone capstone) {
+	private static ResourceLocation capstoneSpriteFor(Apex.Capstone capstone) {
 		return CAPSTONE_SPRITES.get(capstone);
 	}
 
-	private static Map<Apex.Capstone, Identifier> buildCapstoneSprites() {
-		Map<Apex.Capstone, Identifier> sprites = new EnumMap<>(Apex.Capstone.class);
+	private static Map<Apex.Capstone, ResourceLocation> buildCapstoneSprites() {
+		Map<Apex.Capstone, ResourceLocation> sprites = new EnumMap<>(Apex.Capstone.class);
 		for (Apex.Capstone capstone : Apex.Capstone.values()) {
 			sprites.put(capstone, capstoneGemSprite(capstone));
 		}
@@ -373,28 +368,25 @@ public final class CombatHud {
 	// The gem sprite for a capstone: every capstone owns a bespoke hud/<capstone>
 	// face, including the four promoted-affinity capstones (Riptide, Crucible,
 	// Bloomward, Gloaming).
-	private static Identifier capstoneGemSprite(Apex.Capstone capstone) {
-		return Identifier.fromNamespaceAndPath(Attuned.MOD_ID,
+	private static ResourceLocation capstoneGemSprite(Apex.Capstone capstone) {
+		return ResourceLocation.fromNamespaceAndPath(Attuned.MOD_ID,
 			"hud/" + capstone.name().toLowerCase(Locale.ROOT));
 	}
 
-	private static void drawOverlaySprite(GuiGraphics graphics, Identifier sprite, int gemX, int gemY, int size) {
-		graphics.blitSprite(net.minecraft.client.renderer.RenderPipelines.GUI_TEXTURED,
-			sprite, gemX - 2, gemY - 2, size + 4, size + 4);
+	private static void drawOverlaySprite(GuiGraphics graphics, ResourceLocation sprite, int gemX, int gemY, int size) {
+		graphics.blitSprite(sprite, gemX - 2, gemY - 2, size + 4, size + 4);
 	}
 
 	private static void drawResonanceBar(GuiGraphics graphics, int barX0, int barY, int barWidth,
 			float resonance) {
-		graphics.blit(net.minecraft.client.renderer.RenderPipelines.GUI_TEXTURED,
-			RESONANCE_TRACK_TEXTURE, barX0, barY,
+		graphics.blit(RESONANCE_TRACK_TEXTURE, barX0, barY,
 			0.0F, 0.0F, barWidth, RESONANCE_BAR_H, RESONANCE_BAR_W, RESONANCE_BAR_H);
 		float clamped = Math.max(0.0F, Math.min(1.0F, resonance));
 		if (clamped <= 0.0F) {
 			return;
 		}
 		int fill = Math.max(1, Math.round(barWidth * clamped));
-		graphics.blit(net.minecraft.client.renderer.RenderPipelines.GUI_TEXTURED,
-			RESONANCE_FILL_TEXTURE, barX0, barY,
+		graphics.blit(RESONANCE_FILL_TEXTURE, barX0, barY,
 			0.0F, 0.0F, fill, RESONANCE_BAR_H, RESONANCE_BAR_W, RESONANCE_BAR_H);
 	}
 

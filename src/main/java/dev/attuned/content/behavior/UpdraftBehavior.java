@@ -166,7 +166,7 @@ public final class UpdraftBehavior implements FocusBehavior {
 		if (controls != null) {
 			return controls;
 		}
-		return new Controls(player.getLastClientInput().jump(), false);
+		return new Controls(false, false);
 	}
 
 	public static void applyFlightControls(ServerPlayer player, Controls controls) {
@@ -319,7 +319,7 @@ public final class UpdraftBehavior implements FocusBehavior {
 		}
 		player.addEffect(new MobEffectInstance(MobEffects.WEAKNESS,
 			EXHAUSTION_DEBUFF_TICKS, 0, true, true, true));
-		player.addEffect(new MobEffectInstance(MobEffects.SLOWNESS,
+		player.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN,
 			EXHAUSTION_DEBUFF_TICKS, 0, true, true, true));
 		PlayerMessages.overlay(player, Component.translatable(
 			"item.attuned.updraft_focus.exhausted"));

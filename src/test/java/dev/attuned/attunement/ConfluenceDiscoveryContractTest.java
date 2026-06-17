@@ -30,7 +30,7 @@ class ConfluenceDiscoveryContractTest {
 				"public static final AttachmentType<List<String>> DISCOVERED_CONFLUENCES = AttachmentRegistry.create("),
 			"Discoveries must be a synced list attachment.");
 		assertTrue(attachments.contains(
-				"Identifier.fromNamespaceAndPath(Attuned.MOD_ID, \"discovered_confluences\")"),
+				"ResourceLocation.fromNamespaceAndPath(Attuned.MOD_ID, \"discovered_confluences\")"),
 			"Discovery attachment must use the discovered_confluences id.");
 		assertTrue(attachments.contains(".persistent(Codec.STRING.listOf())"),
 			"Discovered confluences must persist across restart.");

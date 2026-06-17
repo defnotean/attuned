@@ -26,9 +26,9 @@ class ResonantComboContractTest {
 
 		assertTrue(unseen.contains("Resonant Combo: Softstep + Needle"),
 			"The first Resonant Combo should be documented where the proc is implemented.");
-		assertTrue(unseen.contains("private static final Identifier SOFTSTEP_FOCUS"),
+		assertTrue(unseen.contains("private static final ResourceLocation SOFTSTEP_FOCUS"),
 			"Silent Opening should require Softstep as its second active Focus.");
-		assertTrue(unseen.contains("Identifier.fromNamespaceAndPath(\"attuned\", \"softstep_focus\")"),
+		assertTrue(unseen.contains("ResourceLocation.fromNamespaceAndPath(\"attuned\", \"softstep_focus\")"),
 			"The Softstep member id should be explicit and stable.");
 		assertTrue(unseen.contains("private static final int NEEDLE_SOFTSTEP_WEAKNESS_TICKS = 80"),
 			"The opener should create a noticeable but short 4-second Weakness window.");

@@ -59,7 +59,7 @@ class SynergiesRuntimeContractTest {
 		assertTrue(tickPlayer.contains("BuiltInRegistries.ITEM.getKey("),
 			"tickPlayer must key Foci by item id.");
 		assertTrue(tickPlayer.contains(".value()).toString()"),
-			"The Identifier->String bridge is load-bearing: members compare as Strings.");
+			"The ResourceLocation->String bridge is load-bearing: members compare as Strings.");
 		assertTrue(tickPlayer.contains("SynergyResolver.activeConfluences("),
 			"tickPlayer must delegate activation to the pure resolver.");
 	}
@@ -75,8 +75,8 @@ class SynergiesRuntimeContractTest {
 	@Test
 	void modifierIdIsStablePerConfluence() throws IOException {
 		String synergies = read(SYNERGIES);
-		String modifierId = methodBody(synergies, "private static Identifier modifierId(");
-		assertTrue(modifierId.contains("Identifier.fromNamespaceAndPath(Attuned.MOD_ID, \"confluence_\""),
+		String modifierId = methodBody(synergies, "private static ResourceLocation modifierId(");
+		assertTrue(modifierId.contains("ResourceLocation.fromNamespaceAndPath(Attuned.MOD_ID, \"confluence_\""),
 			"Confluence modifier ids use a stable confluence_ prefixed namespace path.");
 	}
 

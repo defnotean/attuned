@@ -3,7 +3,7 @@ package dev.attuned.content.behavior;
 import dev.attuned.Attuned;
 import dev.attuned.api.focus.FocusCondition;
 import dev.attuned.api.focus.FocusBehavior;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
@@ -18,8 +18,8 @@ import net.minecraft.world.item.ItemStack;
  * so unequipping in darkness never strands the bonus.
  */
 public final class GloomstrideBehavior implements FocusBehavior {
-	private static final Identifier GLOOM_SPEED_ID =
-		Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "gloomstride_focus_dark_speed");
+	private static final ResourceLocation GLOOM_SPEED_ID =
+		ResourceLocation.fromNamespaceAndPath(Attuned.MOD_ID, "gloomstride_focus_dark_speed");
 	private static final double GLOOM_SPEED = 0.15;
 	/** Light level at or below which the gloom takes hold. */
 	private static final int MAX_LIGHT = 7;

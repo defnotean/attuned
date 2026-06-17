@@ -20,8 +20,8 @@ import org.spongepowered.asm.mixin.injection.ModifyVariable;
  * the Pacts set bonuses (Stoneheart's dampen, Untethered's amplifier), and
  * The Unseen's direct-melee opener.
  *
- * <p>{@code LivingEntity.hurtServer(ServerLevel, DamageSource, float)} is the
- * single server-side entry point for all damage. We rescale its {@code float}
+ * <p>{@code LivingEntity.hurt(DamageSource, float)} is the 1.21.1 damage entry
+ * point. We rescale its {@code float}
  * amount argument at HEAD, before armour, absorption and resistance, so every
  * system compounds correctly with the rest of the damage pipeline. The matchup
  * logic lives in {@link AttunedCombat}; the capstones in {@link Apex}; the set
@@ -30,12 +30,15 @@ import org.spongepowered.asm.mixin.injection.ModifyVariable;
 @Mixin(LivingEntity.class)
 public abstract class LivingEntityHurtMixin {
 
-	@ModifyVariable(method = "hurtServer", at = @At("HEAD"), argsOnly = true)
-	private float attuned$adjustDamage(float amount, ServerLevel level, DamageSource source) {
+	@ModifyVariable(method = "hurt", at = @At("HEAD"), argsOnly = true)
+	private float attuned$adjustDamage(float amount, DamageSource source) {
 		if (amount <= 0.0F) {
 			return amount;
 		}
 		LivingEntity self = (LivingEntity) (Object) this;
+		if (!(self.level() instanceof ServerLevel level)) {
+			return amount;
+		}
 		UpdraftBehavior.recordPvpDamage(self, source);
 		CombatContext context = CombatContext.of(self, source);
 		float scaled = AttunedCombat.applyAffinity(level, self, source, amount, context);

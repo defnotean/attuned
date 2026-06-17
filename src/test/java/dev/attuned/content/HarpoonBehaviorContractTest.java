@@ -53,15 +53,17 @@ class HarpoonBehaviorContractTest {
 	}
 
 	@Test
-	void temporaryHarpoonUsesVanillaTridentStackWithAttunedMarkerAndModel() throws IOException {
+	void temporaryHarpoonUsesVanillaTridentStackWithAttunedMarkerAndBranchRenderer() throws IOException {
 		String behavior = read(HARPOON_BEHAVIOR);
 
 		assertTrue(behavior.contains("new ItemStack(Items.TRIDENT)"),
 			"Temporary harpoon should be a vanilla trident stack");
 		assertTrue(behavior.contains("DataComponents.CUSTOM_DATA"),
 			"Temporary harpoon should carry an Attuned marker");
-		assertTrue(behavior.contains("DataComponents.ITEM_MODEL"),
-			"Temporary harpoon should point at the Attuned item model");
+		assertTrue(behavior.contains("DataComponents.ITEM_MODEL")
+				|| (behavior.contains("DataComponents.CUSTOM_MODEL_DATA")
+					&& behavior.contains("new CustomModelData(CUSTOM_MODEL_DATA)")),
+			"Temporary harpoon should point at the branch-supported Attuned item model selector.");
 		assertTrue(behavior.contains("DataComponents.CUSTOM_NAME"),
 			"Temporary harpoon should have custom display text");
 		assertTrue(behavior.contains("DataComponents.INTANGIBLE_PROJECTILE"),
@@ -79,6 +81,25 @@ class HarpoonBehaviorContractTest {
 	}
 
 	@Test
+	void temporaryHarpoonUsesCustomModelDataOverridesOnMinecraft121Dot1() throws IOException {
+		String behavior = read(HARPOON_BEHAVIOR);
+		Path tridentInventoryOverride = Path.of("src/main/resources/assets/minecraft/models/item/trident.json");
+		Path tridentHandOverride = Path.of("src/main/resources/assets/minecraft/models/item/trident_in_hand.json");
+		String inventoryOverride = read(tridentInventoryOverride);
+		String handOverride = read(tridentHandOverride);
+
+		assertTrue(behavior.contains("CUSTOM_MODEL_DATA = 7123001"),
+			"Temporary harpoon should use one stable CustomModelData value.");
+		assertTrue(inventoryOverride.contains("\"custom_model_data\": 7123001")
+				&& inventoryOverride.contains("\"model\": \"attuned:item/ocean_relic_trident_inventory\""),
+			"The vanilla trident inventory model should route the temporary harpoon to Attuned art.");
+		assertTrue(handOverride.contains("\"custom_model_data\": 7123001")
+				&& handOverride.contains("\"model\": \"attuned:item/ocean_relic_trident\"")
+				&& handOverride.contains("\"model\": \"attuned:item/ocean_relic_trident_throwing\""),
+			"The vanilla trident hand model should route relaxed and wind-up temporary harpoons to Attuned art.");
+	}
+
+	@Test
 	void offshoreHarpoonShipsTemporaryItemAssets() throws IOException {
 		Path itemDefinition = Path.of("src/main/resources/assets/attuned/items/ocean_relic_trident.json");
 		Path itemModel = Path.of("src/main/resources/assets/attuned/models/item/ocean_relic_trident.json");
@@ -87,7 +108,7 @@ class HarpoonBehaviorContractTest {
 		Path itemPalette = Path.of("src/main/resources/assets/attuned/textures/item/ocean_relic_trident_voxel_palette.png");
 
 		assertTrue(Files.isRegularFile(itemDefinition),
-			"Temporary harpoon should have an item definition selected by DataComponents.ITEM_MODEL");
+			"Temporary harpoon assets should remain available for branches with item-model projectile rendering.");
 		assertTrue(Files.isRegularFile(itemModel),
 			"Temporary harpoon should have a custom item model");
 		assertTrue(Files.isRegularFile(throwingModel),
@@ -244,7 +265,8 @@ class HarpoonBehaviorContractTest {
 			"Mixin should target vanilla thrown tridents");
 		assertFalse(mixin.contains("@Shadow"),
 			"ThrownTrident mixin should not shadow inherited AbstractArrow methods");
-		assertTrue(mixin.contains("import net.minecraft.world.entity.projectile.arrow.AbstractArrow;"),
+		assertTrue(mixin.contains("import net.minecraft.world.entity.projectile.arrow.AbstractArrow;")
+				|| mixin.contains("import net.minecraft.world.entity.projectile.AbstractArrow;"),
 			"Mixin should access inherited pickup state through AbstractArrow");
 		assertTrue(mixin.contains("private ItemStack attuned$pickupStack()"),
 			"Mixin should centralize pickup stack access in a helper");

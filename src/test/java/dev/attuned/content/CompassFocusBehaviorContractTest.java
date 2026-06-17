@@ -88,7 +88,9 @@ class CompassFocusBehaviorContractTest {
 			"Beacon should have priority over Driftglass for compass control");
 		assertTrue(source.contains("WAYSTONE_FOCUS.equals(id)"),
 			"Waystone should have priority over Driftglass for compass control");
-		assertTrue(source.contains("player.getRespawnConfig() != null"),
+		assertTrue(source.contains("player.getRespawnConfig() != null")
+				|| source.contains("player.getRespawnPosition().isPresent()")
+				|| source.contains("player.getRespawnPosition() != null"),
 			"Driftglass should defer to Beacon only when Beacon has a respawn target");
 		assertTrue(source.contains("player.getLastDeathLocation().isPresent()"),
 			"Driftglass should defer to Waystone only when Waystone has a death target");
@@ -130,7 +132,9 @@ class CompassFocusBehaviorContractTest {
 
 		assertTrue(source.contains("hasActiveBeaconTarget(player)"),
 			"Waystone should defer to Beacon only when Beacon can actually point home");
-		assertTrue(source.contains("player.getRespawnConfig() == null"),
+		assertTrue(source.contains("player.getRespawnConfig() == null")
+				|| source.contains("player.getRespawnPosition().isEmpty()")
+				|| source.contains("player.getRespawnPosition() == null"),
 			"Waystone should not let a targetless Beacon block last-death tracking");
 		assertTrue(source.contains("BEACON_FOCUS.equals(id)"),
 			"Waystone should still give Beacon priority when Beacon has a respawn target");

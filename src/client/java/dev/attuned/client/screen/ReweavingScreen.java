@@ -7,15 +7,14 @@ import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
-import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
 
 /** Screen for the Altar of Reweaving. */
 public class ReweavingScreen extends AbstractContainerScreen<ReweavingMenu> {
-	private static final Identifier BACKGROUND_TEXTURE =
-		Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "textures/gui/altar_of_reweaving.png");
+	private static final ResourceLocation BACKGROUND_TEXTURE =
+		ResourceLocation.fromNamespaceAndPath(Attuned.MOD_ID, "textures/gui/altar_of_reweaving.png");
 	private static final int IMAGE_WIDTH = 216;
 	private static final int IMAGE_HEIGHT = 190;
 	private static final int TITLE_TEXT = 0xFFEDE6FF;
@@ -64,7 +63,7 @@ public class ReweavingScreen extends AbstractContainerScreen<ReweavingMenu> {
 	@Override
 	protected void renderBg(GuiGraphics graphics, float partialTick, int mouseX, int mouseY) {
 		graphics.fill(0, 0, this.width, this.height, SCREEN_BACKDROP);
-		graphics.blit(RenderPipelines.GUI_TEXTURED, BACKGROUND_TEXTURE, this.leftPos, this.topPos,
+		graphics.blit(BACKGROUND_TEXTURE, this.leftPos, this.topPos,
 			0.0F, 0.0F, IMAGE_WIDTH, IMAGE_HEIGHT, IMAGE_WIDTH, IMAGE_HEIGHT);
 	}
 
@@ -132,7 +131,7 @@ public class ReweavingScreen extends AbstractContainerScreen<ReweavingMenu> {
 		}
 
 		@Override
-		protected void renderContents(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+		protected void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
 			int x0 = getX();
 			int y0 = getY();
 			int x1 = x0 + getWidth();
@@ -142,7 +141,8 @@ public class ReweavingScreen extends AbstractContainerScreen<ReweavingMenu> {
 			} else if (isHoveredOrFocused()) {
 				drawButtonOutline(graphics, x0, y0, x1, y1, BUTTON_HOVER_ARGB);
 			}
-			renderDefaultLabel(graphics.textRendererForWidget(this, GuiGraphics.HoveredTextEffects.NONE));
+			renderString(graphics, net.minecraft.client.Minecraft.getInstance().font,
+				this.active ? 0xFFFFFFFF : 0xFFA0A0A0);
 		}
 	}
 }

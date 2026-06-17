@@ -7,7 +7,7 @@ import dev.attuned.api.focus.FocusBehavior;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
@@ -21,10 +21,10 @@ import net.minecraft.world.item.ItemStack;
  * is currently riding, then restores the mount when the ride or Focus ends.
  */
 public final class GalespurBehavior implements FocusBehavior {
-	private static final Identifier MOVEMENT_SPEED_ID =
-		Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "galespur_mount_speed");
-	private static final Identifier FLYING_SPEED_ID =
-		Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "galespur_mount_flying_speed");
+	private static final ResourceLocation MOVEMENT_SPEED_ID =
+		ResourceLocation.fromNamespaceAndPath(Attuned.MOD_ID, "galespur_mount_speed");
+	private static final ResourceLocation FLYING_SPEED_ID =
+		ResourceLocation.fromNamespaceAndPath(Attuned.MOD_ID, "galespur_mount_flying_speed");
 	private static final double MOVEMENT_SPEED_BONUS = 1.0;
 	private static final double FLYING_SPEED_BONUS = Math.sqrt(2.0) - 1.0;
 
@@ -105,7 +105,7 @@ public final class GalespurBehavior implements FocusBehavior {
 		applyModifier(mount.getAttribute(Attributes.FLYING_SPEED), FLYING_SPEED_ID, FLYING_SPEED_BONUS);
 	}
 
-	private static void applyModifier(AttributeInstance attribute, Identifier id, double amount) {
+	private static void applyModifier(AttributeInstance attribute, ResourceLocation id, double amount) {
 		if (attribute == null || attribute.getModifier(id) != null) {
 			return;
 		}
@@ -118,7 +118,7 @@ public final class GalespurBehavior implements FocusBehavior {
 		removeModifier(mount.getAttribute(Attributes.FLYING_SPEED), FLYING_SPEED_ID);
 	}
 
-	private static void removeModifier(AttributeInstance attribute, Identifier id) {
+	private static void removeModifier(AttributeInstance attribute, ResourceLocation id) {
 		if (attribute != null) {
 			attribute.removeModifier(id);
 		}
