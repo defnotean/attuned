@@ -13,6 +13,31 @@ to `latest` unless the change is also intended for the newest target.
 | `maintenance/minecraft-1.19.4` | `1.19.4` | maintenance |
 | `maintenance/minecraft-1.18.2` | `1.18.2` | maintenance |
 
+## Famous Version Target Audit - 2026-06-17
+
+The next support targets were selected from current Modrinth project search
+counts plus the long-running Minecraft modding community version split. Counts
+are a prioritization signal only; a branch is not treated as supported until it
+has branch-local compile, repository verification, Gradle build, server smoke,
+client smoke, and CI evidence.
+
+| Minecraft | Modrinth mod hits | Fabric mod hits | Port track | Starting point |
+| --- | ---: | ---: | --- | --- |
+| `1.20.1` | 31,375 | 16,157 | candidate Fabric maintenance branch | `maintenance/minecraft-1.20.6` |
+| `1.21.1` | 26,144 | 16,574 | candidate Fabric maintenance branch | `maintenance/minecraft-1.21.11` |
+| `1.19.2` | 11,747 | 7,154 | candidate Fabric maintenance branch | `maintenance/minecraft-1.19.4` |
+| `1.16.5` | 5,509 | 2,802 | high-effort Fabric backport | requires Java 8 bytecode/build-script support and older Fabric API surface |
+| `1.17.1` | 3,772 | 2,898 | high-effort Fabric backport | requires Java 16 bytecode/build-script support and older Fabric API surface |
+| `1.12.2` | 2,540 | 142 | legacy rewrite track | Forge/legacy architecture, not a branch-local Fabric profile |
+| `1.7.10` | 870 | 83 | legacy rewrite track | Forge/legacy architecture, not a branch-local Fabric profile |
+| `1.8.9` | 742 | 124 | legacy rewrite track | Forge/PvP legacy architecture, not a branch-local Fabric profile |
+
+Candidate Fabric profiles are kept in `config/minecraft-version-profiles.json`
+with `status: "candidate"` until their branches are created and verified. The
+legacy rewrite track should become a separate project plan because this Fabric
+mod's loader metadata, resource pack layout, Fabric API dependency, and modern
+Minecraft APIs do not map to those versions as a small profile change.
+
 ## Verification Results - 2026-06-16
 
 All branches below were pushed to `origin` after their branch-local version
