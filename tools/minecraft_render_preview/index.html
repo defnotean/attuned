@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<title>Attuned Minecraft Render Preview</title>
+		<link rel="icon" href="data:,">
+		<link rel="stylesheet" href="styles.css">
+		<script type="importmap">
+			{
+				"imports": {
+					"three": "./vendor/three.module.js",
+					"three/addons/": "./vendor/"
+				}
+			}
+		</script>
+	</head>
+	<body>
+		<main class="app">
+			<aside class="sidebar" aria-label="Renderer controls">
+				<header>
+					<h1>Minecraft Render Preview</h1>
+					<p id="status">Loading Blockbench mesh...</p>
+				</header>
+
+				<section class="panel">
+					<h2>Scene</h2>
+					<label>
+						<span>View</span>
+						<select id="viewMode">
+							<option value="thirdperson">Third-person held</option>
+							<option value="firstperson">First-person held</option>
+							<option value="throwing">Throwing pose</option>
+							<option value="raw">Raw mesh</option>
+							<option value="blockbench">Blockbench-style orbit</option>
+						</select>
+					</label>
+					<label>
+						<span>Display transform</span>
+						<select id="displayPreset"></select>
+					</label>
+					<div class="toggle-grid">
+						<label><input id="showPlayer" type="checkbox" checked> Player</label>
+						<label><input id="showWire" type="checkbox"> Wire</label>
+						<label><input id="showGrid" type="checkbox" checked> Grid</label>
+						<label><input id="autoRotate" type="checkbox"> Spin</label>
+					</div>
+				</section>
+
+				<section class="panel">
+					<h2>Texture Path</h2>
+					<label>
+						<span>UV Y mode</span>
+						<select id="uvMode">
+							<option value="minecraft">Minecraft raw V</option>
+							<option value="three">Three.js 1 - V</option>
+						</select>
+					</label>
+					<label>
+						<span>Texture upload</span>
+						<select id="textureFlip">
+							<option value="false">flipY false</option>
+							<option value="true">flipY true</option>
+						</select>
+					</label>
+					<label>
+						<span>Filtering</span>
+						<select id="filterMode">
+							<option value="nearest">Nearest, no mipmaps</option>
+							<option value="linear">Linear, no mipmaps</option>
+							<option value="mipmap">Linear mipmaps</option>
+						</select>
+					</label>
+					<label>
+						<span>Wrap</span>
+						<select id="wrapMode">
+							<option value="clamp">Clamp</option>
+							<option value="repeat">Repeat</option>
+						</select>
+					</label>
+					<label>
+						<span>Normal mode</span>
+						<select id="normalMode">
+							<option value="smooth">Blockbench smooth</option>
+							<option value="flat">Flat triangles</option>
+						</select>
+					</label>
+				</section>
+
+				<section class="panel">
+					<h2>Manual Offset</h2>
+					<div class="range-grid">
+						<label><span>Rot X</span><input id="rotX" type="range" min="-180" max="180" value="0"><output id="rotXValue">0</output></label>
+						<label><span>Rot Y</span><input id="rotY" type="range" min="-180" max="180" value="0"><output id="rotYValue">0</output></label>
+						<label><span>Rot Z</span><input id="rotZ" type="range" min="-180" max="180" value="0"><output id="rotZValue">0</output></label>
+						<label><span>Scale</span><input id="scale" type="range" min="20" max="220" value="100"><output id="scaleValue">100</output></label>
+						<label><span>Pos X</span><input id="posX" type="range" min="-160" max="160" value="0"><output id="posXValue">0</output></label>
+						<label><span>Pos Y</span><input id="posY" type="range" min="-160" max="160" value="0"><output id="posYValue">0</output></label>
+						<label><span>Pos Z</span><input id="posZ" type="range" min="-160" max="160" value="0"><output id="posZValue">0</output></label>
+					</div>
+					<div class="button-row">
+						<button id="resetManual" type="button">Reset offset</button>
+						<button id="reloadAssets" type="button">Reload assets</button>
+					</div>
+				</section>
+
+				<section class="panel stats">
+					<h2>Mesh Stats</h2>
+					<dl id="stats"></dl>
+				</section>
+			</aside>
+
+			<section class="stage" aria-label="3D render preview">
+				<canvas id="renderCanvas"></canvas>
+				<div class="overlay">
+					<div>
+						<strong id="overlayTitle">Ocean Relic Trident</strong>
+						<span id="overlayMode">Minecraft raw V / nearest</span>
+					</div>
+					<div id="assetPaths"></div>
+				</div>
+			</section>
+		</main>
+		<script type="module" src="minecraft-render-preview.js"></script>
+	</body>
+</html>
