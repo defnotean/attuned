@@ -66,7 +66,10 @@ class SanctumDataContractTest {
 
 	@Test
 	void templatePoolResolvesTheSanctumTemplate() throws IOException {
-		JsonArray elements = json(TEMPLATE_POOL).getAsJsonArray("elements");
+		JsonObject root = json(TEMPLATE_POOL);
+		assertEquals("attuned:sanctum/main", root.get("name").getAsString(),
+			"Minecraft 1.19.2 template pools still require a top-level registry name");
+		JsonArray elements = root.getAsJsonArray("elements");
 		assertEquals(1, elements.size(), "The pool has exactly one element");
 		JsonObject element = elements.get(0).getAsJsonObject().getAsJsonObject("element");
 		assertEquals("minecraft:single_pool_element", element.get("element_type").getAsString());

@@ -22,7 +22,6 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
-import net.minecraft.tags.DamageTypeTags;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
@@ -210,8 +209,8 @@ public final class AttunedCombat {
 		if (source.getDirectEntity() != attacker) {
 			return false;
 		}
-		return !source.is(DamageTypeTags.IS_PROJECTILE)
-			&& !source.is(DamageTypeTags.IS_EXPLOSION);
+		return !source.isProjectile()
+			&& !source.isExplosion();
 	}
 
 	private static void mobAffinitySpark(ServerLevel level, LivingEntity entity) {
@@ -353,7 +352,7 @@ public final class AttunedCombat {
 			if (reflected > 0.0F && attacker.getLevel() instanceof net.minecraft.server.level.ServerLevel serverLevel) {
 				REFLECTING.set(true);
 				try {
-					attacker.hurt(defender.damageSources().thorns(defenderPlayer), reflected);
+					attacker.hurt(DamageSource.thorns(defenderPlayer), reflected);
 				} finally {
 					REFLECTING.set(false);
 				}

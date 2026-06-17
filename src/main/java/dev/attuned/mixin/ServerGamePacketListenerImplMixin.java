@@ -61,7 +61,7 @@ public abstract class ServerGamePacketListenerImplMixin {
 		if (stack.isEmpty() || stack.getCount() <= slot.getMaxStackSize()) {
 			// Mirrors vanilla's own slot-1-to-45 path: write the slot, keep the
 			// remote-slot mirror in step, and flush.
-			slot.setByPlayer(stack);
+			slot.set(stack);
 			menu.setRemoteSlot(slotNum, stack);
 			menu.broadcastChanges();
 		}

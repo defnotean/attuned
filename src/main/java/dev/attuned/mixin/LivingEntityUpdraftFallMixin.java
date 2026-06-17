@@ -3,7 +3,6 @@ package dev.attuned.mixin;
 import dev.attuned.content.behavior.UpdraftBehavior;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.damagesource.DamageSource;
-import net.minecraft.world.damagesource.DamageTypes;
 import net.minecraft.world.entity.LivingEntity;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -15,7 +14,7 @@ public abstract class LivingEntityUpdraftFallMixin {
 
 	@ModifyVariable(method = "hurt", at = @At("HEAD"), argsOnly = true, ordinal = 0)
 	private float attuned$mitigateUpdraftFall(float amount, DamageSource source) {
-		if (amount <= 0.0F || !source.is(DamageTypes.FALL)) {
+		if (amount <= 0.0F || !source.isFall()) {
 			return amount;
 		}
 		LivingEntity self = (LivingEntity) (Object) this;

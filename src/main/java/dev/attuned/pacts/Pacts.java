@@ -532,8 +532,8 @@ public final class Pacts {
 		}
 		// Defense in depth: even if a modded weapon sets the player as the direct entity
 		// for a projectile or explosion, the damage type tag still flags it correctly.
-		return !source.is(net.minecraft.tags.DamageTypeTags.IS_PROJECTILE)
-			&& !source.is(net.minecraft.tags.DamageTypeTags.IS_EXPLOSION);
+		return !source.isProjectile()
+			&& !source.isExplosion();
 	}
 
 	/**
@@ -621,7 +621,7 @@ public final class Pacts {
 		if (killer != null && !mark.playerId().equals(killer.getUUID())) {
 			return;
 		}
-		if (killer == null && !source.is(net.minecraft.tags.DamageTypeTags.IS_FIRE)) {
+		if (killer == null && !source.isFire()) {
 			return;
 		}
 		ServerPlayer player = level.getServer().getPlayerList().getPlayer(mark.playerId());

@@ -65,7 +65,7 @@ public final class AffinityInspectClient {
 		// Send exactly once when the accumulator first reaches the threshold; the
 		// equality (not >=) guarantees one packet per sustained hover, no spam.
 		if (hoverTicks == INSPECT_HOLD_TICKS) {
-			ClientPlayNetworking.send(new InspectRequestPayload(targetId));
+			dev.attuned.client.ClientNetworkPackets.send(new InspectRequestPayload(targetId));
 		}
 	}
 

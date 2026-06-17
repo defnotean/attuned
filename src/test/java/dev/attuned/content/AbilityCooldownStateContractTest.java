@@ -56,7 +56,8 @@ class AbilityCooldownStateContractTest {
 			"The helper should select the first active ability-capable Focus.");
 		assertTrue(state.contains("cooldownRemaining"),
 			"The helper should expose cooldown remaining for HUD sync.");
-		assertTrue(state.contains("ServerPlayNetworking.send(player, new FocusAbilityStatusPayload"),
+		assertTrue(state.contains("ServerPlayNetworking.send(player, new FocusAbilityStatusPayload")
+				|| state.contains("NetworkPackets.send(player, new FocusAbilityStatusPayload"),
 			"The server should sync ability status to the owning client.");
 		assertTrue(state.contains("item.attuned.focus_ability.none"),
 			"The ability key should explain when no active ability Focus can fire.");

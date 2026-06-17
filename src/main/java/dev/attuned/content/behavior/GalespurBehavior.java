@@ -61,7 +61,7 @@ public final class GalespurBehavior implements FocusBehavior {
 	}
 
 	private static LivingEntity currentMount(ServerPlayer player) {
-		Entity vehicle = player.getControlledVehicle();
+		Entity vehicle = player.getVehicle();
 		if (!(vehicle instanceof LivingEntity living) || !vehicle.hasPassenger(player)) {
 			return null;
 		}

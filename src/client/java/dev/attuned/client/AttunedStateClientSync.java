@@ -17,12 +17,14 @@ public final class AttunedStateClientSync {
 			return;
 		}
 		initialized = true;
-		ClientPlayNetworking.registerGlobalReceiver(AttunedStatePayload.TYPE, (payload, player, sender) ->
-			Minecraft.getInstance().execute(() -> {
-				LocalPlayer local = Minecraft.getInstance().player;
+		ClientPlayNetworking.registerGlobalReceiver(AttunedStatePayload.TYPE, (client, handler, buf, sender) -> {
+			AttunedStatePayload payload = AttunedStatePayload.TYPE.read(buf);
+			client.execute(() -> {
+				LocalPlayer local = client.player;
 				if (local != null) {
 					AttunedAttachments.applySync(local, payload.tag());
 				}
-			}));
+			});
+		});
 	}
 }

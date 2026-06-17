@@ -50,7 +50,8 @@ class InspectContractTest {
 		assertTrue(net.contains("ServerPlayNetworking.registerGlobalReceiver(InspectRequestPayload.TYPE"),
 			"Inspect request has a server-side receiver.");
 		assertTrue(net.contains("player.level().getServer().execute(")
-				|| net.contains("player.getLevel().getServer().execute("),
+				|| net.contains("player.getLevel().getServer().execute(")
+				|| net.contains("server.execute("),
 			"Inspect handling hops to the server thread before touching world state.");
 	}
 
@@ -106,7 +107,8 @@ class InspectContractTest {
 			"The hover threshold is 30 ticks (~1.5s).");
 		assertTrue(client.contains("hoverTicks == INSPECT_HOLD_TICKS"),
 			"Exactly one request fires when the accumulator hits the hold threshold, never on repeat frames.");
-		assertTrue(client.contains("ClientPlayNetworking.send(new InspectRequestPayload("),
+		assertTrue(client.contains("ClientPlayNetworking.send(new InspectRequestPayload(")
+				|| client.contains("ClientNetworkPackets.send(new InspectRequestPayload("),
 			"The client sends the inspect request payload.");
 		assertTrue(read(CLIENT_INIT).contains("AffinityInspectClient.init()"),
 			"The inspect watcher is wired into the client initializer.");

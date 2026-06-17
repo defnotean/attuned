@@ -31,7 +31,7 @@ public record ModifierEntry(Holder<Attribute> attribute, double amount, Attribut
 
 	private static DataResult<Double> validateAmount(double amount) {
 		if (!Double.isFinite(amount)) {
-			return DataResult.error(() -> "Modifier amount must be finite");
+			return DataResult.error("Modifier amount must be finite");
 		}
 		return DataResult.success(amount);
 	}
@@ -41,7 +41,7 @@ public record ModifierEntry(Holder<Attribute> attribute, double amount, Attribut
 			case "add_value", "addition" -> DataResult.success(AttributeModifier.Operation.ADDITION);
 			case "add_multiplied_base", "multiply_base" -> DataResult.success(AttributeModifier.Operation.MULTIPLY_BASE);
 			case "add_multiplied_total", "multiply_total" -> DataResult.success(AttributeModifier.Operation.MULTIPLY_TOTAL);
-			default -> DataResult.error(() -> "Unknown attribute modifier operation: " + name);
+			default -> DataResult.error("Unknown attribute modifier operation: " + name);
 		};
 	}
 

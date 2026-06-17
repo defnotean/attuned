@@ -151,9 +151,10 @@ public final class AttunementJournalScreen extends Screen {
 		}
 		initialized = true;
 
-		ClientPlayNetworking.registerGlobalReceiver(OpenJournalPayload.TYPE, (payload, player, sender) ->
-			Minecraft.getInstance().execute(() ->
-				Minecraft.getInstance().setScreen(new AttunementJournalScreen())));
+		ClientPlayNetworking.registerGlobalReceiver(OpenJournalPayload.TYPE, (client, handler, buf, sender) -> {
+			OpenJournalPayload.TYPE.read(buf);
+			client.execute(() -> client.setScreen(new AttunementJournalScreen()));
+		});
 	}
 
 	@Override
@@ -283,8 +284,8 @@ public final class AttunementJournalScreen extends Screen {
 
 		for (int i = 0; i < CHAPTERS.size(); i++) {
 			Button button = this.chapterButtons.get(i);
-			int bx = button.getX();
-			int by = button.getY();
+			int bx = button.x;
+			int by = button.y;
 			int bw = button.getWidth();
 			int bh = button.getHeight();
 			int dot = chapterColor(i);
@@ -587,22 +588,22 @@ public final class AttunementJournalScreen extends Screen {
 
 		private JournalButton(int x, int y, int width, int height, Component message,
 				boolean chapterButton, OnPress onPress) {
-			super(x, y, width, height, message, onPress, DEFAULT_NARRATION);
+			super(x, y, width, height, message, onPress);
 			this.chapterButton = chapterButton;
 		}
 
 		@Override
-		public void renderWidget(PoseStack poseStack, int mouseX, int mouseY, float partialTick) {
+		public void renderButton(PoseStack poseStack, int mouseX, int mouseY, float partialTick) {
 			GuiGraphics graphics = new GuiGraphics(Minecraft.getInstance(), poseStack);
-			int x0 = getX();
-			int y0 = getY();
+			int x0 = this.x;
+			int y0 = this.y;
 			int x1 = x0 + getWidth();
 			int y1 = y0 + getHeight();
 			if (this.chapterButton) {
 				if (isHoveredOrFocused()) {
 					graphics.fill(x0, y0, x1, y1, ROW_HOVER);
 				}
-				renderString(poseStack, Minecraft.getInstance().font, LABEL_LIGHT);
+				net.minecraft.client.gui.GuiComponent.drawCenteredString(poseStack, Minecraft.getInstance().font, getMessage(), x0 + getWidth() / 2, y0 + (getHeight() - 8) / 2, LABEL_LIGHT);
 				return;
 			}
 			int face = this.active
@@ -614,7 +615,7 @@ public final class AttunementJournalScreen extends Screen {
 			graphics.fill(x0 + 2, y0 + 2, x1 - 2, y1 - 2, face);
 			graphics.fill(x0 + 3, y0 + 3, x1 - 3, y0 + 4, this.active ? 0xFFE0C6FF : 0xFF77707E);
 			graphics.fill(x0 + 3, y1 - 4, x1 - 3, y1 - 3, 0xFF17151D);
-			renderString(poseStack, Minecraft.getInstance().font, LABEL_LIGHT);
+			net.minecraft.client.gui.GuiComponent.drawCenteredString(poseStack, Minecraft.getInstance().font, getMessage(), x0 + getWidth() / 2, y0 + (getHeight() - 8) / 2, LABEL_LIGHT);
 		}
 	}
 

@@ -34,7 +34,8 @@ class FocusBehaviorDefContractTest {
 			"The palette should register the attuned:periodic_effect type.");
 		assertTrue(source.contains("ATTRIBUTE_WHILE(\"attuned:attribute_while\", AttributeWhile.MAP_CODEC)"),
 			"The palette should register the attuned:attribute_while type.");
-		assertTrue(source.contains("return DataResult.error(() -> \"Unknown Focus behavior type: \" + name"),
+		assertTrue(source.contains("return DataResult.error(() -> \"Unknown Focus behavior type: \" + name")
+				|| source.contains("return DataResult.error(\"Unknown Focus behavior type: \" + name"),
 			"An unknown palette type id should produce a structured decode error.");
 		assertTrue(source.contains("attuned:on_hit_effect")
 				&& source.contains("attuned:periodic_effect")

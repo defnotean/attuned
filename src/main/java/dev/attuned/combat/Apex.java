@@ -485,8 +485,8 @@ public final class Apex {
 		if (source.getDirectEntity() != player) {
 			return false;
 		}
-		return !source.is(net.minecraft.tags.DamageTypeTags.IS_PROJECTILE)
-			&& !source.is(net.minecraft.tags.DamageTypeTags.IS_EXPLOSION);
+		return !source.isProjectile()
+			&& !source.isExplosion();
 	}
 
 	private static boolean isOwnPet(LivingEntity defender, Player attacker) {

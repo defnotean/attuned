@@ -26,7 +26,8 @@ class ValidateCommandContractTest {
 	void validateReportsEachFocusProblemAgainstItsItemKey() throws IOException {
 		String body = validateBody();
 
-		assertTrue(body.contains("registry.listElements().forEach("),
+		assertTrue(body.contains("registry.listElements().forEach(")
+				|| body.contains("registry.stream().forEach("),
 			"validate must walk every FocusDefinition so author packs are checked file by file.");
 		assertTrue(body.contains("BuiltInRegistries.ITEM.getKey(def.item().value())"),
 			"validate must report each Focus problem against its item key so authors can locate the failing file.");

@@ -84,7 +84,7 @@ public class AttunementJournalItem extends WrittenBookItem {
 		ItemStack stack = player.getItemInHand(hand);
 		ensureGuideContent(stack);
 		if (!level.isClientSide() && player instanceof ServerPlayer serverPlayer) {
-			ServerPlayNetworking.send(serverPlayer, new OpenJournalPayload());
+			dev.attuned.compat.NetworkPackets.send(serverPlayer, new OpenJournalPayload());
 		}
 		return InteractionResultHolder.sidedSuccess(stack, level.isClientSide());
 	}

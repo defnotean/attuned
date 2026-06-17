@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.stream.StreamSupport;
 import org.junit.jupiter.api.Test;
 
 /** Contract coverage for Foci whose promise is faster shift/crouch movement. */
@@ -32,7 +33,7 @@ class SneakingSpeedFocusContractTest {
 		assumeTrue(modifiers.size() > 0,
 			"Minecraft 1.20.6 maintenance builds remove minecraft:sneaking_speed because the attribute is unavailable.");
 
-		JsonObject modifier = modifiers.asList().stream()
+		JsonObject modifier = StreamSupport.stream(modifiers.spliterator(), false)
 			.map(element -> element.getAsJsonObject())
 			.filter(entry -> "minecraft:sneaking_speed".equals(entry.get("attribute").getAsString()))
 			.findFirst()

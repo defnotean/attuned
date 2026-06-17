@@ -46,8 +46,10 @@ class SatchelItemContractTest {
 		assertTrue(content.contains("public static final Item SATCHEL_OF_FOCI = register(\"satchel_of_foci\", SatchelItem::new);"),
 			"Satchel should be a public field using the plain register helper, never registerFocus.");
 		String tabs = read(TABS);
-		int journal = tabs.indexOf("output.accept(AttunedContent.ATTUNEMENT_JOURNAL)");
-		int satchel = tabs.indexOf("output.accept(AttunedContent.SATCHEL_OF_FOCI)");
+		int journal = Math.max(tabs.indexOf("output.accept(AttunedContent.ATTUNEMENT_JOURNAL)"),
+			tabs.indexOf("new ItemStack(AttunedContent.ATTUNEMENT_JOURNAL)"));
+		int satchel = Math.max(tabs.indexOf("output.accept(AttunedContent.SATCHEL_OF_FOCI)"),
+			tabs.indexOf("new ItemStack(AttunedContent.SATCHEL_OF_FOCI)"));
 		assertTrue(journal >= 0 && satchel >= 0 && Math.abs(journal - satchel) < 400,
 			"Satchel should appear in the utility tab's includeCoreItems block, near the journal.");
 	}

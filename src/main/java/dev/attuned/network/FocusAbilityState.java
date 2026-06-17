@@ -208,7 +208,7 @@ public final class FocusAbilityState {
 			return;
 		}
 		LAST_SENT.put(player.getUUID(), payload);
-		ServerPlayNetworking.send(player, new FocusAbilityStatusPayload(payload.slot(),
+		dev.attuned.compat.NetworkPackets.send(player, new FocusAbilityStatusPayload(payload.slot(),
 			payload.remainingTicks(), payload.totalTicks()));
 	}
 

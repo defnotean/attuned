@@ -53,20 +53,23 @@ public final class AttunedNetworking {
 			return;
 		}
 		initialized = true;
-		ServerPlayNetworking.registerGlobalReceiver(AbilityPayload.TYPE, (payload, player, sender) -> {
-			player.getLevel().getServer().execute(() -> FocusAbilityState.trigger(player));
+		ServerPlayNetworking.registerGlobalReceiver(AbilityPayload.TYPE, (server, player, handler, buf, sender) -> {
+			AbilityPayload.TYPE.read(buf);
+			server.execute(() -> FocusAbilityState.trigger(player));
 		});
 
-		ServerPlayNetworking.registerGlobalReceiver(InspectRequestPayload.TYPE, (payload, player, sender) -> {
+		ServerPlayNetworking.registerGlobalReceiver(InspectRequestPayload.TYPE, (server, player, handler, buf, sender) -> {
+			InspectRequestPayload payload = InspectRequestPayload.TYPE.read(buf);
 			int targetId = payload.targetEntityId();
-			player.getLevel().getServer().execute(() -> handleInspect(player, targetId));
+			server.execute(() -> handleInspect(player, targetId));
 		});
 
 		AttunedServerCleanup.onStop(LAST_INSPECT::clear);
 		AttunedPlayerCleanup.onForget(LAST_INSPECT::remove);
 
-		ServerPlayNetworking.registerGlobalReceiver(UpdraftLiftPayload.TYPE, (payload, player, sender) -> {
-			player.getLevel().getServer().execute(() -> {
+		ServerPlayNetworking.registerGlobalReceiver(UpdraftLiftPayload.TYPE, (server, player, handler, buf, sender) -> {
+			UpdraftLiftPayload payload = UpdraftLiftPayload.TYPE.read(buf);
+			server.execute(() -> {
 				if (!UpdraftBehavior.isActive(player) || !UpdraftBehavior.hasFunctionalElytra(player)) {
 					UpdraftBehavior.setControls(player.getUUID(), false, false);
 					return;

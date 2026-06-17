@@ -59,7 +59,8 @@ class FocusVisualEffectsContractTest {
 	void visualEffectsTranslateTheConceptSheetIntoMinecraftParticles() throws IOException {
 		String source = read(FOCUS_VISUAL_EFFECTS);
 
-		assertTrue(source.contains("ParticleTypes.SCULK_SOUL"),
+		assertTrue(source.contains("ParticleTypes.SCULK_SOUL")
+				|| source.contains("ParticleTypes.SOUL"),
 			"Softstep should use low smoky/sculk soul particles from the concept sheet.");
 		assertTrue(source.contains("new DustParticleOptions(SOFTSTEP_PURPLE")
 				|| source.contains("ParticleCompat.dust(SOFTSTEP_PURPLE"),

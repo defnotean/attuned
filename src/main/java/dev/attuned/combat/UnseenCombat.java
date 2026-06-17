@@ -18,7 +18,6 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
-import net.minecraft.tags.DamageTypeTags;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
@@ -103,8 +102,8 @@ public final class UnseenCombat {
 		if (source.getDirectEntity() != attacker) {
 			return false;
 		}
-		return !source.is(DamageTypeTags.IS_PROJECTILE)
-			&& !source.is(DamageTypeTags.IS_EXPLOSION);
+		return !source.isProjectile()
+			&& !source.isExplosion();
 	}
 
 	private static boolean canNeedle(ServerPlayer attacker, LivingEntity defender, boolean wasVeiled) {
