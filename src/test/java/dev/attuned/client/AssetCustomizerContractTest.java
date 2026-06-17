@@ -51,6 +51,22 @@ class AssetCustomizerContractTest {
 		Path.of("docs/superpowers/assets/ocean-relic-trident/ocean_relic_trident_source_model/ocean_relic_trident_source_model.obj");
 	private static final Path OCEAN_RELIC_VOXEL_REPORT =
 		Path.of("docs/superpowers/assets/ocean-relic-trident/ocean_relic_trident_voxel_report.json");
+	private static final Path OCEAN_RELIC_TRIDENT_BLOCKBENCH_MODEL =
+		Path.of("src/main/resources/assets/attuned/blockbench/ocean_relic_trident.bbmodel");
+	private static final Path OCEAN_RELIC_TRIDENT_GLTF_MODEL =
+		Path.of("src/main/resources/assets/attuned/gltf/ocean_relic_trident.glb");
+	private static final Path OCEAN_RELIC_TRIDENT_BLOCKBENCH_TEXTURE =
+		Path.of("src/main/resources/assets/attuned/textures/item/ocean_relic_trident_blockbench.png");
+	private static final Path OCEAN_RELIC_TRIDENT_BLOCKBENCH_TEXTURE_META =
+		Path.of("src/main/resources/assets/attuned/textures/item/ocean_relic_trident_blockbench.png.mcmeta");
+	private static final Path BLOCKBENCH_SPECIAL_RENDERER =
+		Path.of("src/client/java/dev/attuned/client/render/BlockbenchMeshSpecialRenderer.java");
+	private static final Path GLTF_SPECIAL_RENDERER =
+		Path.of("src/client/java/dev/attuned/client/render/GltfMeshSpecialRenderer.java");
+	private static final Path GLTF_MODEL_MANAGER =
+		Path.of("src/client/java/dev/attuned/client/render/AttunedGltfModels.java");
+	private static final Path GLTF_MODEL_RECEIVER =
+		Path.of("src/client/java/dev/attuned/client/render/GltfModelReceiver.java");
 	private static final Path FROSTBOUND_TEXTURE =
 		Path.of("src/main/resources/assets/attuned/textures/item/frostbound_trident.png");
 	private static final Path FROSTBOUND_REPORT =
@@ -445,7 +461,7 @@ class AssetCustomizerContractTest {
 	}
 
 	@Test
-	void oceanRelicTridentUsesVoxelCuboidModel() throws IOException {
+	void oceanRelicTridentUsesGltfMeshForTemporaryHarpoon() throws IOException {
 		Path modelPath = Path.of("src/main/resources/assets/attuned/models/item/ocean_relic_trident.json");
 		Path throwingModelPath = Path.of("src/main/resources/assets/attuned/models/item/ocean_relic_trident_throwing.json");
 		JsonObject model = JsonParser.parseString(read(modelPath)).getAsJsonObject();
@@ -453,83 +469,140 @@ class AssetCustomizerContractTest {
 		JsonObject inventoryModel = JsonParser.parseString(read(OCEAN_RELIC_TRIDENT_INVENTORY_MODEL)).getAsJsonObject();
 		JsonObject itemDefinition = JsonParser.parseString(read(OCEAN_RELIC_TRIDENT_ITEM_DEFINITION)).getAsJsonObject();
 		JsonObject projectileDefinition = JsonParser.parseString(read(OCEAN_RELIC_TRIDENT_PROJECTILE_DEFINITION)).getAsJsonObject();
-		JsonObject report = JsonParser.parseString(read(OCEAN_RELIC_VOXEL_REPORT)).getAsJsonObject();
+		JsonObject blockbench = JsonParser.parseString(read(OCEAN_RELIC_TRIDENT_BLOCKBENCH_MODEL)).getAsJsonObject();
+		JsonObject manifest = manifestAsset("ocean_relic_trident");
+		JsonObject throwingManifest = manifestAsset("ocean_relic_trident_throwing");
 
-		assertTrue(!model.has("parent"), "Voxel item model should not inherit flat generated rendering");
-		assertEquals("attuned:item/ocean_relic_trident_voxel_palette",
-			model.getAsJsonObject("textures").get("palette").getAsString(),
-			"Voxel model should use the generated palette texture");
+		// The asset customizer now edits the editable Blockbench source mesh that backs the
+		// owned glTF/Blockbench special renderer instead of the old voxel cuboid model.
+		assertEquals("blockbench", manifest.get("kind").getAsString(),
+			"Customizer should keep the editable Ocean Relic harpoon source as a Blockbench model");
+		assertEquals("../../src/main/resources/assets/attuned/blockbench/ocean_relic_trident.bbmodel",
+			manifest.get("model").getAsString(),
+			"Customizer should edit the Blockbench source mesh for the held harpoon");
+		assertEquals("blockbench", throwingManifest.get("kind").getAsString(),
+			"Customizer throwing preview should use the same editable Blockbench source");
 		assertEquals("minecraft:item/generated", inventoryModel.get("parent").getAsString(),
-			"Inventory model should use a flat item sprite instead of the bulky cuboid model");
+			"Inventory model should use a flat item sprite instead of the bulky held mesh");
 		assertEquals("attuned:item/ocean_relic_trident",
 			inventoryModel.getAsJsonObject("textures").get("layer0").getAsString(),
 			"Inventory model should reuse the richer existing flat trident sprite instead of the separate inventory icon");
+
+		// Minecraft 1.21.1 has no minecraft:special SPI, so the held trident keeps its legacy
+		// minecraft:model item definition; the owned mesh is drawn through Fabric's
+		// BuiltinItemRendererRegistry instead.
 		String itemDefinitionText = itemDefinition.toString();
 		assertTrue(itemDefinitionText.contains("minecraft:display_context"),
 			"Item definition should select a separate GUI model by display context");
 		assertTrue(itemDefinitionText.contains("ocean_relic_trident_inventory"),
 			"GUI display context should use the flat inventory icon");
 		assertTrue(itemDefinitionText.contains("ground") && itemDefinitionText.contains("fixed"),
-			"Inventory-style display contexts should use the flat icon instead of the bulky held cuboid model");
+			"Inventory-style display contexts should use the flat icon instead of the bulky held mesh");
+		JsonObject fallback = itemDefinition.getAsJsonObject("model").getAsJsonObject("fallback");
+		assertEquals("attuned:item/ocean_relic_trident",
+			fallback.getAsJsonObject("on_false").get("model").getAsString(),
+			"Relaxed held state should keep its legacy item model on this generation");
+		assertEquals("attuned:item/ocean_relic_trident_throwing",
+			fallback.getAsJsonObject("on_true").get("model").getAsString(),
+			"Throw wind-up should keep its legacy item model on this generation");
 		assertEquals("attuned:item/ocean_relic_trident_throwing",
 			projectileDefinition.getAsJsonObject("model").get("model").getAsString(),
 			"Thrown harpoon renderer should resolve a custom projectile model instead of vanilla trident art");
-		JsonArray elements = model.getAsJsonArray("elements");
-		assertCuboidCoordinatesInMinecraftBounds(modelPath, elements);
-		assertCuboidCoordinatesInMinecraftBounds(throwingModelPath, throwingModel.getAsJsonArray("elements"));
-		assertTrue(elements.size() >= 36 && elements.size() <= 96,
-			"Voxel trident should use a readable Minecraft-style silhouette without exceeding the compact cuboid budget");
-		assertEquals(elements.size(), report.get("cuboids").getAsInt(),
-			"Voxel report should match the shipped cuboid count");
-		assertEquals(elements.size(), throwingModel.getAsJsonArray("elements").size(),
-			"Throwing model should reuse the same readable trident geometry");
-		JsonObject display = model.getAsJsonObject("display");
-		JsonObject heldDisplay = display.getAsJsonObject("thirdperson_righthand");
-		assertEquals(60, heldDisplay.getAsJsonArray("rotation").get(1).getAsInt(),
-			"Held third-person pose should keep the vanilla trident hand angle");
-		assertTranslationBetween(heldDisplay, 0, -0.75D, 0.25D,
-			"Held third-person X should tuck the grip inward to the player's visible hand instead of sitting outside the arm");
-		assertTranslationBetween(heldDisplay, 1, 0.75D, 2.25D,
-			"Held third-person Y should sit at the player's gripped hand instead of riding up by the shoulder/head");
-		assertTranslationBetween(heldDisplay, 2, -3.25D, -1.75D,
-			"Held third-person Z should pull the grip out to the hand plane instead of clipping through the torso");
-		assertTranslationBetween(display.getAsJsonObject("firstperson_righthand"), 1, 5.0D, 7.0D,
-			"Held first-person Y should pull the long cuboid grip down into the hand");
+
+		// The held/throwing base models keep their hand-tuned display transforms; the mesh renderer
+		// follows the vanilla trident coordinate frame so those transforms keep placing it in the hand.
+		assertTrue(model.has("display") && throwingModel.has("display"),
+			"Special renderer base models should keep the hand-tuned display transforms");
+		JsonObject heldDisplay = model.getAsJsonObject("display").getAsJsonObject("thirdperson_righthand");
 		assertScaleBetween(heldDisplay, 0.5D, 0.6D,
-			"Held third-person scale should resize the cuboid trident to a player-hand readable size");
+			"Held third-person scale should resize the trident to a player-hand readable size");
 		JsonObject throwingDisplay = throwingModel.getAsJsonObject("display")
 			.getAsJsonObject("thirdperson_righthand");
 		assertEquals(90, throwingDisplay.getAsJsonArray("rotation").get(1).getAsInt(),
 			"Throwing pose should rotate the trident so the prongs point forward during wind-up");
 		assertEquals(180, throwingDisplay.getAsJsonArray("rotation").get(2).getAsInt(),
-			"Throwing pose should flip the cuboid trident so the prongs face forward during wind-up");
-		assertTranslationBetween(throwingDisplay, 0, 8.5D, 10.5D,
-			"Throwing third-person X should extend the wind-up grip out to the player's hand instead of stopping at the elbow");
-		assertTranslationBetween(throwingDisplay, 1, -6.25D, -4.25D,
-			"Throwing third-person Y should place the wind-up grip on the lowered hand plane instead of the elbow bend");
-		assertTranslationBetween(throwingDisplay, 2, 0.0D, 1.5D,
-			"Throwing third-person Z should pull the wind-up grip forward from the elbow/backline to the hand");
-		assertScaleBetween(throwingDisplay, 0.5D, 0.6D,
-			"Throwing pose should stay compact enough to avoid clipping through the camera");
-		assertEquals("curated_trident_silhouette_from_concept_palette",
-			report.get("strategy").getAsString(),
-			"Voxel report should document why the held model is curated from the concept palette");
-		JsonArray bbox = report.getAsJsonArray("bbox_size");
-		assertTrue(bbox.get(0).getAsDouble() >= 10.0D,
-			"Held trident should have visibly separated side prongs");
-		assertTrue(bbox.get(1).getAsDouble() >= 40.0D,
-			"Held trident should be long enough to read as a trident in third person");
-		assertTrue(bbox.get(2).getAsDouble() >= 3.0D,
-			"Voxel trident should have enough depth to avoid looking like a flat sprite");
-		assertTrue(bbox.get(2).getAsDouble() <= 6.0D,
-			"Voxel trident should stay slim enough for hand-held item rendering");
-		String generator = read(Path.of("tools/build_ocean_relic_trident_model.py"));
-		assertTrue(generator.contains("build_elements"),
-			"Voxel item pipeline should be reusable instead of hand-edited JSON only");
-		assertTrue(!generator.contains("write_inventory_sprite"),
-			"Pipeline should not redraw a lower-quality inventory icon when the richer existing trident sprite is available");
-		assertTrue(generator.contains("build_projectile_item_definition"),
-			"Generator should emit a projectile item definition for the custom thrown harpoon renderer");
+			"Throwing pose should flip the trident so the prongs face forward during wind-up");
+
+		// The shipped runtime mesh assets.
+		assertTrue(Files.isRegularFile(OCEAN_RELIC_TRIDENT_GLTF_MODEL),
+			"Actual temporary harpoon should ship a compact GLB runtime mesh");
+		byte[] glb = Files.readAllBytes(OCEAN_RELIC_TRIDENT_GLTF_MODEL);
+		assertTrue(glb.length > 300_000 && glb.length < 500_000,
+			"Runtime GLB should keep mesh buffers without the original embedded 54 MB textures");
+		assertEquals(0x46546C67, littleEndianInt(glb, 0),
+			"Runtime GLB should keep the glTF binary magic");
+		assertEquals(2, littleEndianInt(glb, 4),
+			"Runtime GLB should be a glTF 2.0 binary");
+
+		assertEquals("free", blockbench.getAsJsonObject("meta").get("model_format").getAsString(),
+			"Blockbench source should stay available as the editable source mesh");
+		JsonArray bbElements = blockbench.getAsJsonArray("elements");
+		assertEquals(1, bbElements.size(), "Blockbench export should preserve the single trident mesh");
+		JsonObject mesh = bbElements.get(0).getAsJsonObject();
+		assertEquals("mesh", mesh.get("type").getAsString(),
+			"Actual temporary harpoon should not be converted back into cuboid wrapper geometry");
+		assertTrue(mesh.getAsJsonObject("vertices").size() >= 9000,
+			"Blockbench harpoon should preserve the detailed model vertices");
+		assertTrue(mesh.getAsJsonObject("faces").size() >= 6000,
+			"Blockbench harpoon should preserve the detailed model faces");
+		assertTrue(Files.isRegularFile(OCEAN_RELIC_TRIDENT_BLOCKBENCH_TEXTURE),
+			"Blockbench harpoon texture should ship beside the item textures");
+		String textureMeta = read(OCEAN_RELIC_TRIDENT_BLOCKBENCH_TEXTURE_META);
+		assertTrue(textureMeta.contains("\"clamp\": true") && textureMeta.contains("\"blur\": false"),
+			"Harpoon texture should clamp and avoid blur while sampled through custom mesh UVs");
+
+		// The owned renderer wiring, ported to the 1.21.1 client API.
+		String renderer = read(GLTF_SPECIAL_RENDERER);
+		String modelManager = read(GLTF_MODEL_MANAGER);
+		String modelReceiver = read(GLTF_MODEL_RECEIVER);
+		String blockbenchRenderer = read(BLOCKBENCH_SPECIAL_RENDERER);
+		String client = read(Path.of("src/client/java/dev/attuned/client/AttunedClient.java"));
+		assertTrue(renderer.contains("gltf/ocean_relic_trident.glb"),
+			"Client should register an Attuned glTF mesh renderer for the Ocean Relic harpoon");
+		assertTrue(renderer.contains("implements GltfModelReceiver")
+				&& renderer.contains("getModelLocation()")
+				&& renderer.contains("onReceiveSharedModel"),
+			"Renderer should follow MCglTF's model receiver pattern");
+		assertTrue(renderer.contains("BuiltinItemRendererRegistry.INSTANCE.register"),
+			"Older-gen renderer should draw through Fabric's BuiltinItemRendererRegistry");
+		assertTrue(renderer.contains("RenderType.entityCutout"),
+			"Renderer should submit the mesh through an entity cutout buffer");
+		assertTrue(renderer.contains("isTemporaryHarpoon"),
+			"Renderer should only override Attuned temporary harpoons, not every vanilla trident");
+		assertTrue(renderer.contains("TridentModel"),
+			"Renderer should fall back to the vanilla trident model for unmarked tridents");
+		assertTrue(modelReceiver.contains("ResourceLocation getModelLocation()")
+				&& modelReceiver.contains("onReceiveSharedModel")
+				&& modelReceiver.contains("isReceiveSharedModel"),
+			"Attuned should keep an MCglTF-style receiver contract");
+		assertTrue(modelManager.contains("SimpleSynchronousResourceReloadListener")
+				&& modelManager.contains("ResourceManagerHelper.get(PackType.CLIENT_RESOURCES)")
+				&& modelManager.contains("registerReloadListener(this)"),
+			"Attuned should load shared glTF models through a client resource reload listener");
+		assertTrue(modelManager.contains("GLB_MAGIC") && modelManager.contains("JSON_CHUNK")
+				&& modelManager.contains("BIN_CHUNK"),
+			"Model manager should parse GLB chunks directly");
+		assertTrue(modelManager.contains("\"POSITION\"") && modelManager.contains("\"NORMAL\"")
+				&& modelManager.contains("\"TEXCOORD_0\"") && modelManager.contains("MODE_TRIANGLES"),
+			"Model manager should load the glTF mesh attributes used by the Ocean Relic export");
+		assertTrue(modelManager.contains("baseColorTexture")
+				&& modelManager.contains("NativeImage.read")
+				&& modelManager.contains("DynamicTexture")
+				&& modelManager.contains("data:"),
+			"Model manager should support glTF material base-color textures, including embedded images");
+		assertTrue(modelManager.contains("translation") && modelManager.contains("rotation")
+				&& modelManager.contains("scale"),
+			"Model manager should process scene-node transforms instead of requiring one hard-coded asset orientation");
+		assertTrue(renderer.contains("Repeating C") && renderer.contains("triangle.c(), light, overlay);"),
+			"Renderer should convert glTF triangles into degenerate quads for Minecraft's cutout buffers");
+		assertTrue(!renderer.contains("GL11") && !renderer.contains("GL20") && !renderer.contains("glDraw"),
+			"Attuned's custom version should not copy MCglTF's old raw OpenGL rendering path");
+		assertTrue(blockbenchRenderer.contains("Repeating C"),
+			"Legacy Blockbench renderer should keep the same triangle-to-quad safety fix");
+		assertTrue(!renderer.contains("OCEAN_RELIC_TARGET") && !renderer.contains("mapAxis"),
+			"Renderer should not remap the GLB mesh into the old cuboid wrapper bounds");
+		assertTrue(client.contains("GltfMeshSpecialRenderer.init()"),
+			"Client initializer should register the glTF special renderer before item models load");
 	}
 
 	@Test
@@ -797,6 +870,13 @@ class AssetCustomizerContractTest {
 
 	private static int alpha(BufferedImage image, int x, int y) {
 		return (image.getRGB(x, y) >>> 24) & 0xFF;
+	}
+
+	private static int littleEndianInt(byte[] bytes, int offset) {
+		return (bytes[offset] & 0xFF)
+			| ((bytes[offset + 1] & 0xFF) << 8)
+			| ((bytes[offset + 2] & 0xFF) << 16)
+			| ((bytes[offset + 3] & 0xFF) << 24);
 	}
 
 	private static String read(Path file) throws IOException {
