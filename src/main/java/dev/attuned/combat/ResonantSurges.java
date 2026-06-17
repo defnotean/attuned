@@ -200,9 +200,7 @@ public final class ResonantSurges {
 				PlayerMessages.overlay(player, Component.translatable("surge.attuned.faded"));
 			} else {
 				Resonance.grantSurge(player, surgeResonanceGain(player, gain));
-				if (player instanceof ServerPlayer serverPlayer) {
-					CombatFeedback.surgeCharge(serverPlayer);
-				}
+				CombatFeedback.surgeCharge(player);
 			}
 		}
 		if (expired) {

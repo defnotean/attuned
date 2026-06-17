@@ -273,7 +273,7 @@ public final class FociHud {
 				drawDormantOverlay(graphics, sx, sy);
 			}
 			graphics.renderItem(stack, sx + FocusLayout.SLOT_INSET, sy + FocusLayout.SLOT_INSET);
-			if (stack.has(AttunedComponents.TEMPERED)) {
+			if (AttunedComponents.isTempered(stack)) {
 				drawTemperedTick(graphics, sx, sy);
 			}
 		}

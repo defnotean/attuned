@@ -2,14 +2,13 @@ package dev.attuned.network;
 
 import dev.attuned.Attuned;
 import dev.attuned.attunement.AttunedInv;
-import net.minecraft.network.RegistryFriendlyByteBuf;
-import net.minecraft.network.codec.ByteBufCodecs;
-import net.minecraft.network.codec.StreamCodec;
-import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.fabricmc.fabric.api.networking.v1.FabricPacket;
+import net.fabricmc.fabric.api.networking.v1.PacketType;
+import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
 
 /** Server-to-client state for the player's selected Focus Ability and cooldown. */
-public record FocusAbilityStatusPayload(int slot, int remainingTicks, int totalTicks) implements CustomPacketPayload {
+public record FocusAbilityStatusPayload(int slot, int remainingTicks, int totalTicks) implements FabricPacket {
 	public static final int NO_ABILITY_SLOT = -1;
 	public static final int PACT_TACTICAL_SLOT = -2;
 
@@ -28,18 +27,23 @@ public record FocusAbilityStatusPayload(int slot, int remainingTicks, int totalT
 		}
 	}
 
-	public static final Type<FocusAbilityStatusPayload> TYPE =
-		new Type<>(new ResourceLocation(Attuned.MOD_ID, "focus_ability_status"));
+	public static final PacketType<FocusAbilityStatusPayload> TYPE =
+		PacketType.create(new ResourceLocation(Attuned.MOD_ID, "focus_ability_status"),
+			FocusAbilityStatusPayload::new);
 
-	public static final StreamCodec<RegistryFriendlyByteBuf, FocusAbilityStatusPayload> CODEC =
-		StreamCodec.composite(
-			ByteBufCodecs.VAR_INT, FocusAbilityStatusPayload::slot,
-			ByteBufCodecs.VAR_INT, FocusAbilityStatusPayload::remainingTicks,
-			ByteBufCodecs.VAR_INT, FocusAbilityStatusPayload::totalTicks,
-			FocusAbilityStatusPayload::new).cast();
+	public FocusAbilityStatusPayload(FriendlyByteBuf buf) {
+		this(buf.readVarInt(), buf.readVarInt(), buf.readVarInt());
+	}
 
 	@Override
-	public Type<FocusAbilityStatusPayload> type() {
+	public void write(FriendlyByteBuf buf) {
+		buf.writeVarInt(slot);
+		buf.writeVarInt(remainingTicks);
+		buf.writeVarInt(totalTicks);
+	}
+
+	@Override
+	public PacketType<?> getType() {
 		return TYPE;
 	}
 }

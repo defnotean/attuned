@@ -2,11 +2,11 @@ package dev.attuned.mixin;
 
 import dev.attuned.content.behavior.HarpoonBehavior;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.entity.projectile.AbstractArrow;
 import net.minecraft.world.entity.projectile.ThrownTrident;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.EntityHitResult;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -15,6 +15,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 /** Prevents temporary Offshore Harpoons from becoming permanent thrown tridents. */
 @Mixin(ThrownTrident.class)
 public abstract class ThrownTridentMixin {
+	@Shadow
+	protected abstract ItemStack getPickupItem();
+
 	@Inject(method = "tick", at = @At("HEAD"), cancellable = true)
 	private void attuned$discardExpiredHarpoon(CallbackInfo ci) {
 		ThrownTrident trident = (ThrownTrident) (Object) this;
@@ -47,6 +50,6 @@ public abstract class ThrownTridentMixin {
 	}
 
 	private ItemStack attuned$pickupStack() {
-		return ((AbstractArrow) (Object) this).getPickupItemStackOrigin();
+		return this.getPickupItem();
 	}
 }

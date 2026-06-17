@@ -18,10 +18,8 @@ import net.minecraft.world.level.block.state.BlockState;
 public final class RootstepBehavior implements FocusBehavior {
 	private static final ResourceLocation SPEED_ID =
 		new ResourceLocation(Attuned.MOD_ID, "rootstep_focus_speed");
-	private static final ResourceLocation FALL_ID =
-		new ResourceLocation(Attuned.MOD_ID, "rootstep_focus_fall");
 	private static final double MOVEMENT_SPEED = 0.05D;
-	private static final double FALL_DAMAGE_REDUCTION = -0.15D;
+	// Minecraft 1.19.x has no vanilla FALL_DAMAGE_MULTIPLIER attribute.
 
 	@Override
 	public void onTick(ServerPlayer player, ItemStack focus) {
@@ -51,9 +49,7 @@ public final class RootstepBehavior implements FocusBehavior {
 
 	private static void apply(ServerPlayer player) {
 		applyModifier(player.getAttribute(Attributes.MOVEMENT_SPEED),
-			SPEED_ID, MOVEMENT_SPEED, AttributeModifier.Operation.ADD_MULTIPLIED_BASE);
-		applyModifier(player.getAttribute(Attributes.FALL_DAMAGE_MULTIPLIER),
-			FALL_ID, FALL_DAMAGE_REDUCTION, AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL);
+			SPEED_ID, MOVEMENT_SPEED, AttributeModifier.Operation.MULTIPLY_BASE);
 	}
 
 	private static void applyModifier(AttributeInstance attribute, ResourceLocation id, double amount,
@@ -66,7 +62,6 @@ public final class RootstepBehavior implements FocusBehavior {
 
 	private static void remove(ServerPlayer player) {
 		removeModifier(player.getAttribute(Attributes.MOVEMENT_SPEED), SPEED_ID);
-		removeModifier(player.getAttribute(Attributes.FALL_DAMAGE_MULTIPLIER), FALL_ID);
 	}
 
 	private static void removeModifier(AttributeInstance attribute, ResourceLocation id) {

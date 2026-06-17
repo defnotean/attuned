@@ -121,7 +121,7 @@ public final class Attunement {
 	 */
 	public static int effectiveCost(FocusDefinition definition, ItemStack stack) {
 		int base = definition.cost();
-		return stack.has(AttunedComponents.TEMPERED) ? TemperingResolver.temperedCost(base) : base;
+		return AttunedComponents.isTempered(stack) ? TemperingResolver.temperedCost(base) : base;
 	}
 
 	/** Dormant reasons keyed by slot for occupied Focus slots that are not active. */

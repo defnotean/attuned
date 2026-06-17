@@ -73,7 +73,7 @@ public final class PactTier4 {
 		boolean shouldHave = active == Pact.STONEHEART && isTier4Complete(player, Pact.STONEHEART);
 		boolean has = attr.getModifier(AttributeModifierIds.uuid(STONEHEART_TOUGHNESS_MODIFIER_ID)) != null;
 		if (shouldHave && !has) {
-			attr.addTransientModifier(new AttributeModifier(AttributeModifierIds.uuid(STONEHEART_TOUGHNESS_MODIFIER_ID), AttributeModifierIds.name(STONEHEART_TOUGHNESS_MODIFIER_ID), 1.0, AttributeModifier.Operation.ADD_VALUE));
+			attr.addTransientModifier(new AttributeModifier(AttributeModifierIds.uuid(STONEHEART_TOUGHNESS_MODIFIER_ID), AttributeModifierIds.name(STONEHEART_TOUGHNESS_MODIFIER_ID), 1.0, AttributeModifier.Operation.ADDITION));
 		} else if (!shouldHave && has) {
 			attr.removeModifier(AttributeModifierIds.uuid(STONEHEART_TOUGHNESS_MODIFIER_ID));
 		}

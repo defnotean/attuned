@@ -21,11 +21,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
-import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.Registry;
-import net.minecraft.core.component.DataComponentType;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
@@ -45,29 +43,19 @@ public final class PresetNetworking {
 			return;
 		}
 		initialized = true;
-		PayloadTypeRegistry.playC2S().register(SavePresetPayload.TYPE, SavePresetPayload.CODEC);
-		PayloadTypeRegistry.playC2S().register(ApplyPresetPayload.TYPE, ApplyPresetPayload.CODEC);
-		PayloadTypeRegistry.playC2S().register(DeletePresetPayload.TYPE, DeletePresetPayload.CODEC);
-		PayloadTypeRegistry.playC2S().register(QuickApplyPresetPayload.TYPE, QuickApplyPresetPayload.CODEC);
-		PayloadTypeRegistry.playC2S().register(ImportPresetPayload.TYPE, ImportPresetPayload.CODEC);
-		ServerPlayNetworking.registerGlobalReceiver(SavePresetPayload.TYPE, (payload, context) -> {
-			ServerPlayer player = context.player();
+		ServerPlayNetworking.registerGlobalReceiver(SavePresetPayload.TYPE, (payload, player, sender) -> {
 			player.level().getServer().execute(() -> savePreset(player, payload));
 		});
-		ServerPlayNetworking.registerGlobalReceiver(ApplyPresetPayload.TYPE, (payload, context) -> {
-			ServerPlayer player = context.player();
+		ServerPlayNetworking.registerGlobalReceiver(ApplyPresetPayload.TYPE, (payload, player, sender) -> {
 			player.level().getServer().execute(() -> applyPreset(player, payload));
 		});
-		ServerPlayNetworking.registerGlobalReceiver(DeletePresetPayload.TYPE, (payload, context) -> {
-			ServerPlayer player = context.player();
+		ServerPlayNetworking.registerGlobalReceiver(DeletePresetPayload.TYPE, (payload, player, sender) -> {
 			player.level().getServer().execute(() -> deletePreset(player, payload));
 		});
-		ServerPlayNetworking.registerGlobalReceiver(QuickApplyPresetPayload.TYPE, (payload, context) -> {
-			ServerPlayer player = context.player();
+		ServerPlayNetworking.registerGlobalReceiver(QuickApplyPresetPayload.TYPE, (payload, player, sender) -> {
 			player.level().getServer().execute(() -> quickApplyPreset(player, payload));
 		});
-		ServerPlayNetworking.registerGlobalReceiver(ImportPresetPayload.TYPE, (payload, context) -> {
-			ServerPlayer player = context.player();
+		ServerPlayNetworking.registerGlobalReceiver(ImportPresetPayload.TYPE, (payload, player, sender) -> {
 			player.level().getServer().execute(() -> importPreset(player, payload));
 		});
 		AttunedPlayerCleanup.onForget(LAST_APPLY_TICK::remove);
@@ -156,7 +144,7 @@ public final class PresetNetworking {
 		}
 		if (!satchel.stack().isEmpty()) {
 			ItemStack satchelStack = satchel.stack();
-			satchelStack.set(contentsTypeOf(satchelStack),
+			AttunedComponents.setContents(satchelStack, isGrandReliquary(satchelStack),
 				new FocusHolder(sizeOf(satchelStack), 1, residualSatchel));
 		}
 		removeConsumedInventory(player, consumedInventory);
@@ -198,13 +186,6 @@ public final class PresetNetworking {
 	private static boolean isReliquary(ItemStack stack) {
 		return stack.getItem() == AttunedContent.SATCHEL_OF_FOCI
 			|| stack.getItem() == AttunedContent.GRAND_SATCHEL_OF_FOCI;
-	}
-
-	/** Contents component type for the reliquary tier of this stack. */
-	private static DataComponentType<FocusHolder> contentsTypeOf(ItemStack stack) {
-		return stack.getItem() == AttunedContent.GRAND_SATCHEL_OF_FOCI
-			? AttunedComponents.GRAND_SATCHEL_CONTENTS
-			: AttunedComponents.SATCHEL_CONTENTS;
 	}
 
 	/** Grid size for the reliquary tier of this stack. */
@@ -263,10 +244,7 @@ public final class PresetNetworking {
 
 	private static SatchelState satchelStateOf(ItemStack satchel) {
 		int size = sizeOf(satchel);
-		FocusHolder holder = satchel.get(contentsTypeOf(satchel));
-		if (holder == null) {
-			holder = FocusHolder.empty(size, 1);
-		}
+		FocusHolder holder = AttunedComponents.getContents(satchel, isGrandReliquary(satchel));
 		List<String> ids = new ArrayList<>(size);
 		List<ItemStack> stacks = new ArrayList<>(size);
 		for (int i = 0; i < size; i++) {
@@ -276,6 +254,10 @@ public final class PresetNetworking {
 			stacks.add(stack);
 		}
 		return new SatchelState(satchel, ids, stacks);
+	}
+
+	private static boolean isGrandReliquary(ItemStack stack) {
+		return stack.getItem() == AttunedContent.GRAND_SATCHEL_OF_FOCI;
 	}
 
 	private static Map<String, Integer> inventoryFocusCounts(ServerPlayer player, Set<String> registeredFocusIds) {

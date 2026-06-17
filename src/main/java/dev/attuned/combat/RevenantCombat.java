@@ -23,11 +23,11 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.tags.DamageTypeTags;
-import net.minecraft.tags.EntityTypeTags;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.MobType;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -133,7 +133,7 @@ public final class RevenantCombat {
 			chill(attacker);
 		}
 		if (attacker instanceof ServerPlayer player && hasActiveFocus(player, BONECHILL_FOCUS)
-				&& defender.getType().is(EntityTypeTags.UNDEAD)) {
+				&& defender.getMobType() == MobType.UNDEAD) {
 			chill(defender);
 		}
 	}
@@ -172,7 +172,7 @@ public final class RevenantCombat {
 	}
 
 	private static boolean canChillAttacker(ServerPlayer player, LivingEntity attacker) {
-		return attacker.getType().is(EntityTypeTags.UNDEAD)
+		return attacker.getMobType() == MobType.UNDEAD
 			|| CombatTargets.isHostileOrPvpOpponent(attacker, player);
 	}
 

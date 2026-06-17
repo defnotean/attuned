@@ -272,10 +272,10 @@ public final class AttunedEffects {
 		// A Tempered Focus amplifies every declarative attribute modifier. Removal
 		// keys off the slot/index id, never the amount, so the boosted modifier is
 		// still torn down exactly when the slot goes dormant.
-		boolean tempered = focus.stack().has(AttunedComponents.TEMPERED);
+		boolean tempered = AttunedComponents.isTempered(focus.stack());
 		for (int i = 0; i < focus.modifiers().size(); i++) {
 			ModifierEntry entry = focus.modifiers().get(i);
-			AttributeInstance ai = player.getAttribute(entry.attribute());
+			AttributeInstance ai = player.getAttribute(entry.attribute().value());
 			if (ai == null) {
 				continue;
 			}
@@ -287,7 +287,7 @@ public final class AttunedEffects {
 		}
 
 		focus.behavior().ifPresent(behaviorId -> {
-			FocusBehavior behavior = AttunedRegistries.getBehavior(behaviorId, player.registryAccess());
+			FocusBehavior behavior = AttunedRegistries.getBehavior(behaviorId, player.level().registryAccess());
 			if (behavior != null) {
 				runBehaviorActivate(behavior, player, focus.stack());
 			}
@@ -297,7 +297,7 @@ public final class AttunedEffects {
 	private static void removeFocus(ServerPlayer player, int slot, AppliedFocus focus) {
 		for (int i = 0; i < focus.modifiers().size(); i++) {
 			ModifierEntry entry = focus.modifiers().get(i);
-			AttributeInstance ai = player.getAttribute(entry.attribute());
+			AttributeInstance ai = player.getAttribute(entry.attribute().value());
 			if (ai == null) {
 				continue;
 			}
@@ -305,7 +305,7 @@ public final class AttunedEffects {
 		}
 
 		focus.behavior().ifPresent(behaviorId -> {
-			FocusBehavior behavior = AttunedRegistries.getBehavior(behaviorId, player.registryAccess());
+			FocusBehavior behavior = AttunedRegistries.getBehavior(behaviorId, player.level().registryAccess());
 			if (behavior != null) {
 				runBehaviorDeactivate(behavior, player, focus.stack());
 			}
@@ -340,7 +340,7 @@ public final class AttunedEffects {
 
 	private static void tickFocus(ServerPlayer player, AppliedFocus focus) {
 		focus.behavior()
-			.map(behaviorId -> AttunedRegistries.getBehavior(behaviorId, player.registryAccess()))
+			.map(behaviorId -> AttunedRegistries.getBehavior(behaviorId, player.level().registryAccess()))
 			.ifPresent(behavior -> runBehaviorTick(behavior, player, focus.stack()));
 	}
 

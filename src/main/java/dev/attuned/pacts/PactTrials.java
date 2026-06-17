@@ -253,7 +253,7 @@ public final class PactTrials {
 	}
 
 	private static PactTrialProgress get(Player player) {
-		return player.getAttachedOrElse(AttunedAttachments.PACT_TRIAL_PROGRESS, PactTrialProgress.EMPTY);
+		return AttunedAttachments.pactTrialProgress(player);
 	}
 
 	static String pactId(Pact pact) {

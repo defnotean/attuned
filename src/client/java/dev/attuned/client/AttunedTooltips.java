@@ -47,7 +47,7 @@ public final class AttunedTooltips {
 		}
 		initialized = true;
 
-		ItemTooltipCallback.EVENT.register((stack, context, type, lines) -> {
+		ItemTooltipCallback.EVENT.register((stack, context, lines) -> {
 			ResourceLocation id = BuiltInRegistries.ITEM.getKey(stack.getItem());
 			if (id == null || !id.getNamespace().equals(Attuned.MOD_ID)) {
 				return;
@@ -69,7 +69,7 @@ public final class AttunedTooltips {
 			FocusDefinition definition = definitionFor(stack);
 			if (definition != null) {
 				// A Tempered Focus reads as a gold-named, stronger, costlier variant.
-				if (stack.has(AttunedComponents.TEMPERED)) {
+				if (AttunedComponents.isTempered(stack)) {
 					if (!lines.isEmpty()) {
 						// Recolor the name line (index 0) gold to mark the Tempered variant.
 						lines.set(0, lines.get(0).copy().withStyle(ChatFormatting.GOLD));
@@ -267,8 +267,8 @@ public final class AttunedTooltips {
 	}
 
 	private static String modifierAmount(String attributePath, double amount, AttributeModifier.Operation operation) {
-		boolean percent = operation == AttributeModifier.Operation.ADD_MULTIPLIED_BASE
-			|| operation == AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL
+		boolean percent = operation == AttributeModifier.Operation.MULTIPLY_BASE
+			|| operation == AttributeModifier.Operation.MULTIPLY_TOTAL
 			|| "knockback_resistance".equals(attributePath);
 		double display = percent ? amount * 100.0D : amount;
 		return signedNumber(display) + (percent ? "%" : "");

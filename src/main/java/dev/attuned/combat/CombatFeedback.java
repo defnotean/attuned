@@ -159,9 +159,9 @@ public final class CombatFeedback {
 					SoundEvents.WARDEN_HEARTBEAT, SoundSource.PLAYERS, 0.35F, 1.6F);
 			}
 			case UNTETHERED -> {
-				level.sendParticles(ParticleTypes.GUST, x, y, z, 8, 0.45, 0.25, 0.45, 0.05);
+				level.sendParticles(ParticleTypes.CLOUD, x, y, z, 8, 0.45, 0.25, 0.45, 0.05);
 				level.playSound(null, player.blockPosition(),
-					SoundEvents.WIND_CHARGE_THROW, SoundSource.PLAYERS, 0.55F, 1.15F);
+					SoundEvents.PHANTOM_FLAP, SoundSource.PLAYERS, 0.55F, 1.15F);
 			}
 		}
 		level.sendParticles(ParticleCompat.dust(color, overcharge ? 1.1F : 0.85F),

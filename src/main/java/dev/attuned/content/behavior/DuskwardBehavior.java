@@ -44,7 +44,7 @@ public final class DuskwardBehavior implements FocusBehavior {
 		if (attribute == null || attribute.getModifier(AttributeModifierIds.uuid(DUSK_ARMOR_ID)) != null) {
 			return;
 		}
-		attribute.addTransientModifier(new AttributeModifier(AttributeModifierIds.uuid(DUSK_ARMOR_ID), AttributeModifierIds.name(DUSK_ARMOR_ID), DUSK_ARMOR, AttributeModifier.Operation.ADD_VALUE));
+		attribute.addTransientModifier(new AttributeModifier(AttributeModifierIds.uuid(DUSK_ARMOR_ID), AttributeModifierIds.name(DUSK_ARMOR_ID), DUSK_ARMOR, AttributeModifier.Operation.ADDITION));
 	}
 
 	private static void remove(ServerPlayer player) {

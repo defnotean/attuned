@@ -46,15 +46,13 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
-import net.minecraft.tags.EntityTypeTags;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.MobType;
 import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.entity.TamableAnimal;
-import net.minecraft.world.entity.ai.attributes.AttributeInstance;
-import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.npc.AbstractVillager;
 import net.minecraft.world.entity.player.Player;
@@ -382,7 +380,7 @@ public final class Pacts {
 			if (attackerPact == Pact.RADIANT_COVENANT
 					&& !(defender instanceof Player)
 					&& isHostile(defender)
-					&& defender.getType().is(EntityTypeTags.UNDEAD)
+					&& defender.getMobType() == MobType.UNDEAD
 					&& AttunedCombat.isChargedDirectMelee(attackerPlayer, defender, source, RADIANT_COVENANT_SWING_THRESHOLD)) {
 				amount *= (1.0F + PactTier4.radiantUndeadBonus(attackerPlayer));
 			}
@@ -486,7 +484,7 @@ public final class Pacts {
 		} else if (defender instanceof AbstractVillager) {
 			return;
 		}
-		defender.igniteForSeconds(PactTier4.pyreswornIgniteSeconds(attacker));
+		defender.setSecondsOnFire(PactTier4.pyreswornIgniteSeconds(attacker));
 		markPyreswornFire(attacker, defender);
 		if (attacker instanceof ServerPlayer serverPlayer) {
 			PactTrials.onPyreswornIgnite(serverPlayer);
@@ -520,7 +518,7 @@ public final class Pacts {
 		if (!isDirectMelee(attacker, source) || !canStrikePactTarget(attacker, defender)) {
 			return;
 		}
-		defender.igniteForSeconds(PactTier4.forgeboundIgniteSeconds(attacker));
+		defender.setSecondsOnFire(PactTier4.forgeboundIgniteSeconds(attacker));
 		if (attacker instanceof ServerPlayer serverPlayer) {
 			PactTrials.onForgeboundIgnite(serverPlayer);
 		}
@@ -776,25 +774,13 @@ public final class Pacts {
 	 * carries the modifier is left untouched.
 	 */
 	private static void applyWindrunnerStepHeight(ServerPlayer player) {
-		AttributeInstance attr = player.getAttribute(Attributes.STEP_HEIGHT);
-		if (attr == null) {
-			return;
-		}
-		if (attr.getModifier(AttributeModifierIds.uuid(WINDRUNNER_STEP_MODIFIER_ID)) != null) {
-			return;
-		}
-		attr.addPermanentModifier(new AttributeModifier(AttributeModifierIds.uuid(WINDRUNNER_STEP_MODIFIER_ID), AttributeModifierIds.name(WINDRUNNER_STEP_MODIFIER_ID),
-			WINDRUNNER_STEP_BONUS,
-			AttributeModifier.Operation.ADD_VALUE));
+		// Minecraft 1.19.4 has no step-height attribute; Windrunner keeps its
+		// speed/aura/challenge behavior on this branch.
 	}
 
 	/** Drops the Windrunner step-height modifier if present. */
 	private static void removeWindrunnerStepHeight(ServerPlayer player) {
-		AttributeInstance attr = player.getAttribute(Attributes.STEP_HEIGHT);
-		if (attr == null) {
-			return;
-		}
-		attr.removeModifier(AttributeModifierIds.uuid(WINDRUNNER_STEP_MODIFIER_ID));
+		// No step-height attribute exists to clean up before Minecraft 1.20.5.
 	}
 
 	private static void paintAura(ServerPlayer player, Pact pact) {
@@ -894,7 +880,7 @@ public final class Pacts {
 		return switch (pact) {
 			case PYRESWORN -> new PactSound(SoundEvents.FLINTANDSTEEL_USE, 0.45F, 1.25F);
 			case STONEHEART -> new PactSound(SoundEvents.TUFF_PLACE, 0.45F, 0.85F);
-			case WINDRUNNER -> new PactSound(SoundEvents.WIND_CHARGE_THROW, 0.35F, 1.55F);
+			case WINDRUNNER -> new PactSound(SoundEvents.PHANTOM_FLAP, 0.35F, 1.55F);
 			case RADIANT_COVENANT -> new PactSound(SoundEvents.AMETHYST_BLOCK_CHIME, 0.45F, 1.45F);
 			case TIDESWORN -> new PactSound(SoundEvents.BUBBLE_COLUMN_UPWARDS_AMBIENT, 0.55F, 1.2F);
 			case FORGEBOUND -> new PactSound(SoundEvents.ANVIL_LAND, 0.35F, 1.35F);
@@ -909,7 +895,7 @@ public final class Pacts {
 			case PYRESWORN -> new PactSound(SoundEvents.FIRE_EXTINGUISH, 0.35F, 1.35F);
 			case STONEHEART -> new PactSound(SoundEvents.TUFF_HIT, 0.4F, 0.7F);
 			case WINDRUNNER -> new PactSound(SoundEvents.WOOL_STEP, 0.35F, 1.6F);
-			case RADIANT_COVENANT -> new PactSound(SoundEvents.AMETHYST_BLOCK_RESONATE, 0.35F, 0.9F);
+			case RADIANT_COVENANT -> new PactSound(SoundEvents.AMETHYST_BLOCK_CHIME, 0.35F, 0.9F);
 			case TIDESWORN -> new PactSound(SoundEvents.AMBIENT_UNDERWATER_EXIT, 0.4F, 0.9F);
 			case FORGEBOUND -> new PactSound(SoundEvents.ANVIL_HIT, 0.35F, 0.8F);
 			case WILDROOT -> new PactSound(SoundEvents.GRASS_HIT, 0.4F, 0.85F);

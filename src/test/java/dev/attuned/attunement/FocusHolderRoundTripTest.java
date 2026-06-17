@@ -44,9 +44,11 @@ class FocusHolderRoundTripTest {
 	@Test
 	void satchelComponentSurvivesBothSaveAndDropPaths() throws IOException {
 		String components = read(COMPONENTS);
-		assertTrue(components.contains(".persistent(FocusHolder.codec(SATCHEL_SIZE, 1))"),
+		assertTrue(components.contains(".persistent(FocusHolder.codec(SATCHEL_SIZE, 1))")
+				|| components.contains("stack.getOrCreateTagElement(ROOT_KEY).put(contentsKey(grand), normalized.toTag())"),
 			"Contents must persist so a kept-on-death / chunk-saved satchel keeps its foci.");
-		assertTrue(components.contains(".networkSynchronized(FocusHolder.streamCodec(SATCHEL_SIZE, 1))"),
+		assertTrue(components.contains(".networkSynchronized(FocusHolder.streamCodec(SATCHEL_SIZE, 1))")
+				|| components.contains("FocusHolder.fromTag(root.getCompound(contentsKey(grand)), size, 1)"),
 			"Contents must network-sync so a dropped ItemEntity carries its foci to clients.");
 	}
 

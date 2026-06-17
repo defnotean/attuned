@@ -1,8 +1,8 @@
 package dev.attuned.content;
 
-import com.mojang.serialization.MapCodec;
 import dev.attuned.menu.ReweavingMenuType;
 import net.minecraft.core.BlockPos;
+import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.BlockGetter;
@@ -19,8 +19,6 @@ import net.minecraft.world.phys.shapes.VoxelShape;
  * Focus patterns and one shard fragment into a new Focus.
  */
 public class AltarOfReweavingBlock extends Block {
-	public static final MapCodec<AltarOfReweavingBlock> CODEC = simpleCodec(AltarOfReweavingBlock::new);
-
 	private static final VoxelShape SHAPE = Shapes.or(
 		Block.box(0.0, 0.0, 0.0, 16.0, 2.0, 16.0),
 		Block.box(1.0, 2.0, 1.0, 15.0, 4.0, 15.0),
@@ -32,18 +30,16 @@ public class AltarOfReweavingBlock extends Block {
 	}
 
 	@Override
-	protected MapCodec<? extends Block> codec() {
-		return CODEC;
-	}
-
-	@Override
-	protected VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
+	public VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
 		return SHAPE;
 	}
 
 	@Override
-	protected InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos,
-			Player player, BlockHitResult hitResult) {
+	public InteractionResult use(BlockState state, Level level, BlockPos pos,
+			Player player, InteractionHand hand, BlockHitResult hitResult) {
+		if (!player.getItemInHand(hand).isEmpty()) {
+			return InteractionResult.PASS;
+		}
 		if (level.isClientSide()) {
 			return InteractionResult.SUCCESS;
 		}

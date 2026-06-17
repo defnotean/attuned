@@ -41,7 +41,7 @@ public final class PaletteCombat {
 			}
 			FocusBehavior behavior = Attunement.definitionFor(player, stack)
 				.flatMap(FocusDefinition::behavior)
-				.map(behaviorId -> AttunedRegistries.getBehavior(behaviorId, player.registryAccess()))
+				.map(behaviorId -> AttunedRegistries.getBehavior(behaviorId, player.level().registryAccess()))
 				.orElse(null);
 			if (!(behavior instanceof OnHitEffectBehavior onHit)) {
 				continue;

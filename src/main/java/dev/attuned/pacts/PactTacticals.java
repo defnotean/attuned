@@ -152,7 +152,7 @@ public final class PactTacticals {
 		List<LivingEntity> hostiles = nearbyHostiles(player, level, 4.0D * radiusScale);
 		if (!hostiles.isEmpty()) {
 			for (LivingEntity target : hostiles) {
-				target.igniteForSeconds(seconds);
+				target.setSecondsOnFire(seconds);
 			}
 			return;
 		}
@@ -174,7 +174,7 @@ public final class PactTacticals {
 
 	private static void igniteHostiles(ServerPlayer player, ServerLevel level, double radius, int seconds) {
 		for (LivingEntity target : nearbyHostiles(player, level, radius)) {
-			target.igniteForSeconds(seconds);
+			target.setSecondsOnFire(seconds);
 		}
 	}
 

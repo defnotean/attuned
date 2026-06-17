@@ -404,7 +404,7 @@ public final class Apex {
 		int seconds = matchup == Matchup.EMPOWERED
 			? CRUCIBLE_FIRE_SECONDS_EMPOWERED
 			: CRUCIBLE_FIRE_SECONDS;
-		defender.igniteForSeconds(seconds);
+		defender.setSecondsOnFire(seconds);
 		if (attacker instanceof ServerPlayer serverPlayer) {
 			CombatFeedback.crucibleIgnite(serverPlayer, defender);
 		}

@@ -308,7 +308,7 @@ public final class CombatHud {
 			case NEUTRALIZED -> LINK_NEUTRALIZED_SPRITE;
 			case NEUTRAL, NONE -> LINK_NEUTRAL_SPRITE;
 		};
-		graphics.blitSprite(sprite, x, y, MATCHUP_LINK_W, MATCHUP_LINK_H);
+		blitHudSprite(graphics, sprite, x, y, MATCHUP_LINK_W, MATCHUP_LINK_H);
 	}
 
 	public static void drawPlayerGem(GuiGraphics graphics, int x, int y, int size,
@@ -327,7 +327,7 @@ public final class CombatHud {
 
 	private static void drawGemSprite(GuiGraphics graphics, int x, int y, int size,
 			boolean targeted, ResourceLocation sprite) {
-		graphics.blitSprite(sprite, x, y, size, size);
+		blitHudSprite(graphics, sprite, x, y, size, size);
 		if (targeted) {
 			drawOverlaySprite(graphics, TARGET_RING_SPRITE, x, y, size);
 		}
@@ -373,7 +373,13 @@ public final class CombatHud {
 	}
 
 	private static void drawOverlaySprite(GuiGraphics graphics, ResourceLocation sprite, int gemX, int gemY, int size) {
-		graphics.blitSprite(sprite, gemX - 2, gemY - 2, size + 4, size + 4);
+		blitHudSprite(graphics, sprite, gemX - 2, gemY - 2, size + 4, size + 4);
+	}
+
+	private static void blitHudSprite(GuiGraphics graphics, ResourceLocation sprite, int x, int y, int width, int height) {
+		ResourceLocation texture = new ResourceLocation(sprite.getNamespace(),
+			"textures/gui/sprites/" + sprite.getPath() + ".png");
+		graphics.blit(texture, x, y, 0.0F, 0.0F, width, height, width, height);
 	}
 
 	private static void drawResonanceBar(GuiGraphics graphics, int barX0, int barY, int barWidth,

@@ -19,9 +19,13 @@ class PactTrialContractTest {
 			List.of("stoneheart", "wildroot"));
 
 		var encoded = PactTrialProgress.CODEC.encodeStart(JsonOps.INSTANCE, original)
-			.getOrThrow(msg -> new AssertionError("encode failed: " + msg));
+			.getOrThrow(false, msg -> {
+				throw new AssertionError("encode failed: " + msg);
+			});
 		PactTrialProgress decoded = PactTrialProgress.CODEC.parse(JsonOps.INSTANCE, encoded)
-			.getOrThrow(msg -> new AssertionError("decode failed: " + msg));
+			.getOrThrow(false, msg -> {
+				throw new AssertionError("decode failed: " + msg);
+			});
 
 		assertEquals(original, decoded);
 	}

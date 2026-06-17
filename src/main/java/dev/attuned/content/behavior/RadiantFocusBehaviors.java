@@ -17,11 +17,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
-import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.fabricmc.fabric.api.event.player.UseBlockCallback;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.component.DataComponents;
-import net.minecraft.core.Holder;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -316,7 +313,7 @@ public final class RadiantFocusBehaviors {
 			ticks.remove(player.getUUID());
 		}
 
-		private static void trim(ServerPlayer player, Holder<MobEffect> effect) {
+		private static void trim(ServerPlayer player, MobEffect effect) {
 			MobEffectInstance current = player.getEffect(effect);
 			if (current == null) {
 				return;
@@ -366,7 +363,7 @@ public final class RadiantFocusBehaviors {
 		}
 
 		private static boolean hasCustomName(ItemStack stack) {
-			return !stack.isEmpty() && stack.has(DataComponents.CUSTOM_NAME);
+			return !stack.isEmpty() && stack.hasCustomHoverName();
 		}
 
 		private static boolean nearNamedNonPlayer(ServerPlayer player) {
@@ -383,7 +380,7 @@ public final class RadiantFocusBehaviors {
 			if (luck == null || luck.getModifier(AttributeModifierIds.uuid(LUCK_ID)) != null) {
 				return;
 			}
-			luck.addTransientModifier(new AttributeModifier(AttributeModifierIds.uuid(LUCK_ID), AttributeModifierIds.name(LUCK_ID), LUCK_BONUS, AttributeModifier.Operation.ADD_VALUE));
+			luck.addTransientModifier(new AttributeModifier(AttributeModifierIds.uuid(LUCK_ID), AttributeModifierIds.name(LUCK_ID), LUCK_BONUS, AttributeModifier.Operation.ADDITION));
 		}
 
 		private static void removeLuck(ServerPlayer player) {

@@ -29,10 +29,12 @@ class SatchelItemContractTest {
 		// The small-satchel public constructor delegates to the parameterized constructor with
 		// the SATCHEL_CONTENTS component and its empty default, so both tiers share one class.
 		assertTrue(item.contains("AttunedComponents.SATCHEL_CONTENTS")
-				&& item.contains("AttunedComponents.emptyContents()"),
-			"The small satchel should attach the empty SATCHEL_CONTENTS component by default.");
-		assertTrue(item.contains(".component(contentsType, emptyContents)"),
-			"The satchel should attach an empty contents component by default, inside its constructor.");
+				&& item.contains("AttunedComponents.emptyContents()")
+				|| item.contains("this(properties, AttunedComponents.emptyContents(), AttunedComponents.SATCHEL_SIZE, false)"),
+			"The small satchel should attach or default to empty satchel contents.");
+		assertTrue(item.contains(".component(contentsType, emptyContents)")
+				|| item.contains("private final FocusHolder emptyContents"),
+			"The satchel should carry an empty contents default for its tier.");
 		assertTrue(item.contains("public InteractionResult use(Level level, Player player, InteractionHand hand)")
 				|| item.contains("public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand)"),
 			"The satchel should open its screen on use.");

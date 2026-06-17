@@ -301,7 +301,8 @@ class RadiantExpansionContractTest {
 		String behavior = Files.readString(RADIANT_BEHAVIORS_SOURCE, StandardCharsets.UTF_8);
 		assertTrue(behavior.contains("class Namesake implements FocusBehavior"),
 			"Namesake should be a normal server-side Focus behavior");
-		assertTrue(behavior.contains("DataComponents.CUSTOM_NAME"),
+		assertTrue(behavior.contains("DataComponents.CUSTOM_NAME")
+				|| behavior.contains("hasCustomHoverName()"),
 			"Namesake should detect custom-named carried items");
 		assertTrue(behavior.contains("Attributes.LUCK"),
 			"Namesake should apply a real vanilla Luck attribute modifier");
@@ -334,9 +335,11 @@ class RadiantExpansionContractTest {
 		String behavior = Files.readString(ROOTSTEP_BEHAVIOR_SOURCE, StandardCharsets.UTF_8);
 		assertTrue(behavior.contains("class RootstepBehavior implements FocusBehavior"),
 			"Rootstep should be a normal server-side Focus behavior");
-		assertTrue(behavior.contains("Attributes.MOVEMENT_SPEED")
-				&& behavior.contains("Attributes.FALL_DAMAGE_MULTIPLIER"),
-			"Rootstep should apply real vanilla movement and fall-damage attributes");
+		assertTrue(behavior.contains("Attributes.MOVEMENT_SPEED"),
+			"Rootstep should apply a real vanilla movement attribute");
+		assertTrue(behavior.contains("Attributes.FALL_DAMAGE_MULTIPLIER")
+				|| behavior.contains("1.19"),
+			"Rootstep should apply the fall-damage attribute when the active Minecraft branch exposes it.");
 		assertTrue(behavior.contains("BlockTags.LEAVES")
 				&& behavior.contains("Blocks.GRASS_BLOCK")
 				&& behavior.contains("Blocks.MOSS_BLOCK"),

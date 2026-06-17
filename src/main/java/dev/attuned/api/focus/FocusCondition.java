@@ -41,18 +41,18 @@ public sealed interface FocusCondition {
 		IN_BIOME_TAG("in_biome_tag", InBiomeTag.MAP_CODEC);
 
 		private final String id;
-		private final MapCodec<? extends FocusCondition> codec;
+		private final Codec<? extends FocusCondition> codec;
 
 		Type(String id, MapCodec<? extends FocusCondition> codec) {
 			this.id = id;
-			this.codec = codec;
+			this.codec = codec.codec();
 		}
 
 		public String id() {
 			return id;
 		}
 
-		public MapCodec<? extends FocusCondition> codec() {
+		public Codec<? extends FocusCondition> codec() {
 			return codec;
 		}
 	}

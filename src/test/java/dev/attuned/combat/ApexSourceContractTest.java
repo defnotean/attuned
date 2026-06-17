@@ -90,7 +90,8 @@ class ApexSourceContractTest {
 
 		assertTrue(methodBody(apex, "private static void procRiptide(").contains("MobEffects.MOVEMENT_SLOWDOWN"),
 			"Riptide should apply Slowness to the target.");
-		assertTrue(methodBody(apex, "private static void procCrucible(").contains("igniteForSeconds"),
+		assertTrue(methodBody(apex, "private static void procCrucible(").contains("igniteForSeconds")
+				|| methodBody(apex, "private static void procCrucible(").contains("setSecondsOnFire"),
 			"Crucible should set the target on fire.");
 		assertTrue(methodBody(apex, "private static void procBloomward(").contains("attacker.heal("),
 			"Bloomward should heal the attacker.");

@@ -9,7 +9,6 @@ import dev.attuned.content.AttunementAltarBlock;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
-import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -47,9 +46,7 @@ public final class AltarNetworking {
 			return;
 		}
 		initialized = true;
-		PayloadTypeRegistry.playC2S().register(BindShardPayload.TYPE, BindShardPayload.CODEC);
-		ServerPlayNetworking.registerGlobalReceiver(BindShardPayload.TYPE, (payload, context) -> {
-			ServerPlayer player = context.player();
+		ServerPlayNetworking.registerGlobalReceiver(BindShardPayload.TYPE, (payload, player, sender) -> {
 			player.level().getServer().execute(() -> tryBind(player));
 		});
 		AttunedPlayerCleanup.onForget(LAST_BIND_TICK::remove);

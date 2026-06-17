@@ -5,17 +5,17 @@ import dev.attuned.network.OpenJournalPayload;
 import java.util.List;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.ChatFormatting;
-import net.minecraft.core.component.DataComponents;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.StringTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.server.network.Filterable;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
-import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.InteractionResultHolder;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.WrittenBookItem;
-import net.minecraft.world.item.component.WrittenBookContent;
 import net.minecraft.world.level.Level;
 
 /**
@@ -68,19 +68,21 @@ public class AttunementJournalItem extends WrittenBookItem {
 		"journal.attuned.page32",
 		"journal.attuned.page28"
 	);
-	private static final WrittenBookContent GUIDE_CONTENT = createGuideContent();
-
 	public AttunementJournalItem(Properties properties) {
-		super(properties.stacksTo(1)
-			.component(DataComponents.WRITTEN_BOOK_CONTENT, GUIDE_CONTENT));
+		super(properties.stacksTo(1));
+	}
+
+	@Override
+	public ItemStack getDefaultInstance() {
+		ItemStack stack = super.getDefaultInstance();
+		ensureGuideContent(stack);
+		return stack;
 	}
 
 	@Override
 	public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
 		ItemStack stack = player.getItemInHand(hand);
-		if (!stack.has(DataComponents.WRITTEN_BOOK_CONTENT)) {
-			stack.set(DataComponents.WRITTEN_BOOK_CONTENT, GUIDE_CONTENT);
-		}
+		ensureGuideContent(stack);
 		if (!level.isClientSide() && player instanceof ServerPlayer serverPlayer) {
 			ServerPlayNetworking.send(serverPlayer, new OpenJournalPayload());
 		}
@@ -96,18 +98,16 @@ public class AttunementJournalItem extends WrittenBookItem {
 		}
 	}
 
-	private static WrittenBookContent createGuideContent() {
-		List<Filterable<Component>> pages = GUIDE_PAGE_KEYS.stream()
-			.map(key -> {
-				Component page = Component.translatable(key);
-				return Filterable.passThrough(page);
-			})
-			.toList();
-		return new WrittenBookContent(
-			Filterable.passThrough("Attunement Journal"),
-			"Attuned",
-			0,
-			pages,
-			false);
+	private static void ensureGuideContent(ItemStack stack) {
+		CompoundTag tag = stack.getOrCreateTag();
+		tag.putString(WrittenBookItem.TAG_TITLE, "Attunement Journal");
+		tag.putString(WrittenBookItem.TAG_AUTHOR, "Attuned");
+		tag.putInt(WrittenBookItem.TAG_GENERATION, 0);
+		tag.putBoolean(WrittenBookItem.TAG_RESOLVED, true);
+		ListTag pages = new ListTag();
+		for (String key : GUIDE_PAGE_KEYS) {
+			pages.add(StringTag.valueOf(Component.Serializer.toJson(Component.translatable(key))));
+		}
+		tag.put(WrittenBookItem.TAG_PAGES, pages);
 	}
 }

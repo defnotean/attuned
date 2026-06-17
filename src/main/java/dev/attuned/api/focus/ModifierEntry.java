@@ -15,7 +15,11 @@ import net.minecraft.world.entity.ai.attributes.AttributeModifier;
  */
 public record ModifierEntry(Holder<Attribute> attribute, double amount, AttributeModifier.Operation operation) {
 
-	private static final Codec<Double> FINITE_AMOUNT_CODEC = Codec.DOUBLE.validate(ModifierEntry::validateAmount);
+	private static final Codec<Double> FINITE_AMOUNT_CODEC =
+		Codec.DOUBLE.flatXmap(ModifierEntry::validateAmount, ModifierEntry::validateAmount);
+	private static final Codec<AttributeModifier.Operation> OPERATION_CODEC =
+		Codec.STRING.flatXmap(ModifierEntry::operationByName,
+			operation -> DataResult.success(operationName(operation)));
 
 	public ModifierEntry {
 		attribute = Objects.requireNonNull(attribute, "attribute");
@@ -32,9 +36,26 @@ public record ModifierEntry(Holder<Attribute> attribute, double amount, Attribut
 		return DataResult.success(amount);
 	}
 
+	private static DataResult<AttributeModifier.Operation> operationByName(String name) {
+		return switch (name) {
+			case "add_value", "addition" -> DataResult.success(AttributeModifier.Operation.ADDITION);
+			case "add_multiplied_base", "multiply_base" -> DataResult.success(AttributeModifier.Operation.MULTIPLY_BASE);
+			case "add_multiplied_total", "multiply_total" -> DataResult.success(AttributeModifier.Operation.MULTIPLY_TOTAL);
+			default -> DataResult.error(() -> "Unknown attribute modifier operation: " + name);
+		};
+	}
+
+	private static String operationName(AttributeModifier.Operation operation) {
+		return switch (operation) {
+			case ADDITION -> "add_value";
+			case MULTIPLY_BASE -> "add_multiplied_base";
+			case MULTIPLY_TOTAL -> "add_multiplied_total";
+		};
+	}
+
 	public static final Codec<ModifierEntry> CODEC = RecordCodecBuilder.create(instance -> instance.group(
 		BuiltInRegistries.ATTRIBUTE.holderByNameCodec().fieldOf("attribute").forGetter(ModifierEntry::attribute),
 		FINITE_AMOUNT_CODEC.fieldOf("amount").forGetter(ModifierEntry::amount),
-		AttributeModifier.Operation.CODEC.fieldOf("operation").forGetter(ModifierEntry::operation)
+		OPERATION_CODEC.fieldOf("operation").forGetter(ModifierEntry::operation)
 	).apply(instance, ModifierEntry::new));
 }

@@ -17,16 +17,15 @@ import java.util.Set;
 import java.util.UUID;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.Holder;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.tags.EntityTypeTags;
 import net.minecraft.tags.FluidTags;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.MobType;
 import net.minecraft.world.level.block.AbstractFurnaceBlock;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
@@ -211,12 +210,10 @@ public final class FactionSetBonuses {
 
 	/** Revenant: nearby undead are chilled with Slowness, reusing Bonechill's shape. */
 	private static void chillNearbyUndead(ServerPlayer player) {
-		if (!(player.level() instanceof ServerLevel level)) {
-			return;
-		}
+		ServerLevel level = (ServerLevel) player.level();
 		AABB area = player.getBoundingBox().inflate(REVENANT_RADIUS);
 		List<LivingEntity> undead = level.getEntitiesOfClass(LivingEntity.class, area, entity ->
-			entity != player && entity.isAlive() && entity.getType().is(EntityTypeTags.UNDEAD));
+			entity != player && entity.isAlive() && entity.getMobType() == MobType.UNDEAD);
 		for (LivingEntity entity : undead) {
 			entity.addEffect(new MobEffectInstance(
 				MobEffects.MOVEMENT_SLOWDOWN, REVENANT_SLOWNESS_TICKS, 0, true, false, true));
@@ -228,7 +225,7 @@ public final class FactionSetBonuses {
 		return last != null && player.level().getGameTime() - last < cooldownTicks;
 	}
 
-	private static void refresh(ServerPlayer player, Holder<MobEffect> effect) {
+	private static void refresh(ServerPlayer player, MobEffect effect) {
 		PassiveEffectRefresher.refresh(player, effect, PASSIVE_DURATION, 0, true, false, false);
 	}
 
@@ -254,7 +251,7 @@ public final class FactionSetBonuses {
 
 	private static boolean isGrass(BlockState state) {
 		return state.is(Blocks.GRASS_BLOCK)
-			|| state.is(Blocks.SHORT_GRASS)
+			|| state.is(Blocks.GRASS)
 			|| state.is(Blocks.TALL_GRASS);
 	}
 

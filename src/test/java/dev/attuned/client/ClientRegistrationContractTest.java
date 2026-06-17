@@ -14,6 +14,12 @@ import org.junit.jupiter.api.Test;
 class ClientRegistrationContractTest {
 	private static final Path CLIENT_SOURCE_ROOT =
 		Path.of("src/client/java/dev/attuned");
+	private static final Path GRADLE_PROPERTIES =
+		Path.of("gradle.properties");
+	private static final Path MAIN_MIXIN_CONFIG =
+		Path.of("src/main/resources/attuned.mixins.json");
+	private static final Path CLIENT_MIXIN_CONFIG =
+		Path.of("src/client/resources/attuned.client.mixins.json");
 	private static final List<String> CLIENT_REGISTRATION_MARKERS = List.of(
 		"ClientPlayNetworking.registerGlobalReceiver",
 		"ClientTickEvents.END_CLIENT_TICK.register",
@@ -55,6 +61,17 @@ class ClientRegistrationContractTest {
 			"Direct client registrations should be idempotent: " + violations);
 	}
 
+	@Test
+	void mixinCompatibilityLevelsMatchBranchJavaTarget() throws IOException {
+		String gradle = read(GRADLE_PROPERTIES);
+		String expected = "JAVA_" + gradleProperty(gradle, "java_version");
+
+		assertTrue(read(MAIN_MIXIN_CONFIG).contains("\"compatibilityLevel\": \"" + expected + "\""),
+			"Main mixin compatibility level should match gradle.properties java_version.");
+		assertTrue(read(CLIENT_MIXIN_CONFIG).contains("\"compatibilityLevel\": \"" + expected + "\""),
+			"Client mixin compatibility level should match gradle.properties java_version.");
+	}
+
 	private static List<Path> directClientRegistrationFiles() throws IOException {
 		List<Path> files = new ArrayList<>();
 		try (var paths = Files.walk(CLIENT_SOURCE_ROOT)) {
@@ -82,5 +99,14 @@ class ClientRegistrationContractTest {
 	private static String read(Path file) throws IOException {
 		assertTrue(Files.isRegularFile(file), "Expected file to exist: " + file);
 		return Files.readString(file, StandardCharsets.UTF_8);
+	}
+
+	private static String gradleProperty(String source, String key) {
+		for (String line : source.split("\\R")) {
+			if (line.startsWith(key + "=")) {
+				return line.substring(key.length() + 1).trim();
+			}
+		}
+		throw new AssertionError("Missing gradle property " + key);
 	}
 }

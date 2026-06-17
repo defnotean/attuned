@@ -4,9 +4,11 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import java.util.ArrayList;
 import java.util.List;
-import net.minecraft.network.RegistryFriendlyByteBuf;
-import net.minecraft.network.codec.ByteBufCodecs;
-import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.StringTag;
+import net.minecraft.nbt.Tag;
+import net.minecraft.network.FriendlyByteBuf;
 
 /** Registry-id snapshot of the six equipped Focus slots. */
 public record FocusPreset(String name, List<String> slots) {
@@ -22,12 +24,6 @@ public record FocusPreset(String name, List<String> slots) {
 		Codec.STRING.fieldOf("name").forGetter(FocusPreset::name),
 		Codec.STRING.listOf().fieldOf("slots").forGetter(FocusPreset::slots)
 	).apply(instance, FocusPreset::new));
-
-	public static final StreamCodec<RegistryFriendlyByteBuf, FocusPreset> STREAM_CODEC =
-		StreamCodec.composite(
-			ByteBufCodecs.STRING_UTF8, FocusPreset::name,
-			ByteBufCodecs.STRING_UTF8.apply(ByteBufCodecs.list()), FocusPreset::slots,
-			FocusPreset::new).cast();
 
 	private static String normalizeName(String raw) {
 		String normalized = raw == null ? "" : raw.trim();
@@ -45,5 +41,36 @@ public record FocusPreset(String name, List<String> slots) {
 			normalized.add(id == null ? "" : id.trim());
 		}
 		return List.copyOf(normalized);
+	}
+
+	public void write(FriendlyByteBuf buf) {
+		buf.writeUtf(name);
+		buf.writeCollection(slots, FriendlyByteBuf::writeUtf);
+	}
+
+	public static FocusPreset read(FriendlyByteBuf buf) {
+		return new FocusPreset(buf.readUtf(MAX_NAME_LENGTH), buf.readList(FriendlyByteBuf::readUtf));
+	}
+
+	public CompoundTag toTag() {
+		CompoundTag tag = new CompoundTag();
+		tag.putString("Name", name);
+		ListTag list = new ListTag();
+		for (String slot : slots) {
+			list.add(StringTag.valueOf(slot));
+		}
+		tag.put("Slots", list);
+		return tag;
+	}
+
+	public static FocusPreset fromTag(CompoundTag tag) {
+		List<String> decoded = new ArrayList<>(AttunedInv.SIZE);
+		if (tag != null) {
+			ListTag list = tag.getList("Slots", Tag.TAG_STRING);
+			for (int i = 0; i < list.size(); i++) {
+				decoded.add(list.getString(i));
+			}
+		}
+		return new FocusPreset(tag == null ? DEFAULT_NAME : tag.getString("Name"), decoded);
 	}
 }

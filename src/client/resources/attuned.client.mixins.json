@@ -1,11 +1,8 @@
 {
 	"required": true,
 	"package": "dev.attuned.client.mixin",
-	"compatibilityLevel": "JAVA_21",
-	"client": [
-		"CreativeModeInventoryScreenMixin",
-		"InventoryScreenMixin"
-	],
+	"compatibilityLevel": "JAVA_17",
+	"client": [],
 	"injectors": {
 		"defaultRequire": 1
 	},

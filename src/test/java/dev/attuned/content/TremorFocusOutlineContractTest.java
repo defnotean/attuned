@@ -54,10 +54,13 @@ class TremorFocusOutlineContractTest {
 
 		assertTrue(payload.contains("record TremorOreHintPayload(List<BlockPos> orePositions)"),
 			"The clientbound payload should carry every vein block position.");
-		assertTrue(payload.contains("BlockPos.STREAM_CODEC.apply(ByteBufCodecs.list())"),
+		assertTrue(payload.contains("BlockPos.STREAM_CODEC.apply(ByteBufCodecs.list())")
+				|| (payload.contains("buf.readList(FriendlyByteBuf::readBlockPos)")
+					&& payload.contains("buf.writeCollection(orePositions, FriendlyByteBuf::writeBlockPos)")),
 			"The payload should use the vanilla BlockPos stream codec in list form.");
 		assertTrue(networking.contains("PayloadTypeRegistry.clientboundPlay().register(TremorOreHintPayload.TYPE")
-				|| networking.contains("PayloadTypeRegistry.playS2C().register(TremorOreHintPayload.TYPE"),
+				|| networking.contains("PayloadTypeRegistry.playS2C().register(TremorOreHintPayload.TYPE")
+				|| payload.contains("PacketType.create(new ResourceLocation(Attuned.MOD_ID, \"tremor_ore_hint\")"),
 			"Common networking should register Tremor's clientbound payload type.");
 	}
 

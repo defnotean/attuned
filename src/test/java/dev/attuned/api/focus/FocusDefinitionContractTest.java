@@ -77,7 +77,8 @@ class FocusDefinitionContractTest {
 			"ModifierEntry should use DataResult so codec failures stay structured.");
 		assertTrue(source.contains("private static final Codec<Double> FINITE_AMOUNT_CODEC"),
 			"ModifierEntry should name the finite-only amount codec.");
-		assertTrue(source.contains("Codec.DOUBLE.validate(ModifierEntry::validateAmount)"),
+		assertTrue(source.contains("Codec.DOUBLE.validate(ModifierEntry::validateAmount)")
+				|| source.contains("Codec.DOUBLE.flatXmap(ModifierEntry::validateAmount, ModifierEntry::validateAmount)"),
 			"ModifierEntry should validate datapack amount values before construction.");
 		assertTrue(source.contains("FINITE_AMOUNT_CODEC.fieldOf(\"amount\")"),
 			"ModifierEntry should use the finite-only amount codec for FocusDefinition JSON.");

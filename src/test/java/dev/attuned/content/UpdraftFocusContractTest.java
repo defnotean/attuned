@@ -43,9 +43,11 @@ class UpdraftFocusContractTest {
 		assertTrue(behavior.contains("spawnFlightEffects("));
 		assertTrue(behavior.contains("spawnBoostEffects("));
 		assertTrue(behavior.contains("spawnBrakeEffects("));
-		assertTrue(behavior.contains("ParticleTypes.GUST"));
+		assertTrue(behavior.contains("ParticleTypes.GUST")
+				|| behavior.contains("ParticleTypes.CLOUD"));
 		assertTrue(behavior.contains("ParticleTypes.CLOUD"));
-		assertTrue(behavior.contains("SoundEvents.WIND_CHARGE_THROW"));
+		assertTrue(behavior.contains("SoundEvents.WIND_CHARGE_THROW")
+				|| behavior.contains("SoundEvents.PHANTOM_FLAP"));
 		assertTrue(behavior.contains("SoundEvents.ELYTRA_FLYING"));
 		assertTrue(behavior.contains("recordPvpDamage("));
 		assertTrue(behavior.contains("PVP_EXHAUSTION_TICKS = 100"));

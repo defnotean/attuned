@@ -150,9 +150,9 @@ public final class AttunementJournalScreen extends Screen {
 		}
 		initialized = true;
 
-		ClientPlayNetworking.registerGlobalReceiver(OpenJournalPayload.TYPE, (payload, context) ->
-			context.client().execute(() ->
-				context.client().setScreen(new AttunementJournalScreen())));
+		ClientPlayNetworking.registerGlobalReceiver(OpenJournalPayload.TYPE, (payload, player, sender) ->
+			Minecraft.getInstance().execute(() ->
+				Minecraft.getInstance().setScreen(new AttunementJournalScreen())));
 	}
 
 	@Override
@@ -189,13 +189,13 @@ public final class AttunementJournalScreen extends Screen {
 	}
 
 	@Override
-	public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
+	public boolean mouseScrolled(double mouseX, double mouseY, double scrollY) {
 		if (this.maxScroll > 0) {
 			int next = this.scrollOffset - (int) Math.round(scrollY) * SCROLL_STEP;
 			this.scrollOffset = Math.max(0, Math.min(this.maxScroll, next));
 			return true;
 		}
-		return super.mouseScrolled(mouseX, mouseY, scrollX, scrollY);
+		return super.mouseScrolled(mouseX, mouseY, scrollY);
 	}
 
 	@Override

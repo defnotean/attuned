@@ -1,23 +1,25 @@
 package dev.attuned.network;
 
 import dev.attuned.Attuned;
-import net.minecraft.network.RegistryFriendlyByteBuf;
-import net.minecraft.network.codec.StreamCodec;
-import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.fabricmc.fabric.api.networking.v1.FabricPacket;
+import net.fabricmc.fabric.api.networking.v1.PacketType;
+import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
 
-/**
- * Server-to-client signal that opens Attuned's custom journal screen.
- */
-public record OpenJournalPayload() implements CustomPacketPayload {
-	public static final Type<OpenJournalPayload> TYPE =
-		new Type<>(new ResourceLocation(Attuned.MOD_ID, "open_journal"));
+/** Server-to-client signal that opens Attuned's custom journal screen. */
+public record OpenJournalPayload() implements FabricPacket {
+	public static final PacketType<OpenJournalPayload> TYPE =
+		PacketType.create(new ResourceLocation(Attuned.MOD_ID, "open_journal"), OpenJournalPayload::new);
 
-	public static final StreamCodec<RegistryFriendlyByteBuf, OpenJournalPayload> CODEC =
-		StreamCodec.unit(new OpenJournalPayload());
+	public OpenJournalPayload(FriendlyByteBuf buf) {
+		this();
+	}
 
 	@Override
-	public Type<OpenJournalPayload> type() {
+	public void write(FriendlyByteBuf buf) {}
+
+	@Override
+	public PacketType<?> getType() {
 		return TYPE;
 	}
 }

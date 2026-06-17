@@ -13,7 +13,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
-import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
@@ -54,15 +53,11 @@ public final class AttunedNetworking {
 			return;
 		}
 		initialized = true;
-		PayloadTypeRegistry.playC2S().register(AbilityPayload.TYPE, AbilityPayload.CODEC);
-		ServerPlayNetworking.registerGlobalReceiver(AbilityPayload.TYPE, (payload, context) -> {
-			ServerPlayer player = context.player();
+		ServerPlayNetworking.registerGlobalReceiver(AbilityPayload.TYPE, (payload, player, sender) -> {
 			player.level().getServer().execute(() -> FocusAbilityState.trigger(player));
 		});
 
-		PayloadTypeRegistry.playC2S().register(InspectRequestPayload.TYPE, InspectRequestPayload.CODEC);
-		ServerPlayNetworking.registerGlobalReceiver(InspectRequestPayload.TYPE, (payload, context) -> {
-			ServerPlayer player = context.player();
+		ServerPlayNetworking.registerGlobalReceiver(InspectRequestPayload.TYPE, (payload, player, sender) -> {
 			int targetId = payload.targetEntityId();
 			player.level().getServer().execute(() -> handleInspect(player, targetId));
 		});
@@ -70,9 +65,7 @@ public final class AttunedNetworking {
 		AttunedServerCleanup.onStop(LAST_INSPECT::clear);
 		AttunedPlayerCleanup.onForget(LAST_INSPECT::remove);
 
-		PayloadTypeRegistry.playC2S().register(UpdraftLiftPayload.TYPE, UpdraftLiftPayload.CODEC);
-		ServerPlayNetworking.registerGlobalReceiver(UpdraftLiftPayload.TYPE, (payload, context) -> {
-			ServerPlayer player = context.player();
+		ServerPlayNetworking.registerGlobalReceiver(UpdraftLiftPayload.TYPE, (payload, player, sender) -> {
 			player.level().getServer().execute(() -> {
 				if (!UpdraftBehavior.isActive(player) || !UpdraftBehavior.hasFunctionalElytra(player)) {
 					UpdraftBehavior.setControls(player.getUUID(), false, false);
@@ -88,9 +81,7 @@ public final class AttunedNetworking {
 	// Resolves the inspected target on the server thread, validates range + line of
 	// sight + rate limit, then reports the target's public stance to the requester.
 	private static void handleInspect(ServerPlayer player, int targetEntityId) {
-		if (!(player.level() instanceof ServerLevel level)) {
-			return;
-		}
+		ServerLevel level = (ServerLevel) player.level();
 		long now = level.getGameTime();
 		Long last = LAST_INSPECT.get(player.getUUID());
 		if (last != null && now - last < INSPECT_COOLDOWN_TICKS) {

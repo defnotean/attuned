@@ -51,7 +51,7 @@ public final class RainstepBehavior implements FocusBehavior {
 		if (attribute == null || attribute.getModifier(AttributeModifierIds.uuid(WET_SPEED_ID)) != null) {
 			return;
 		}
-		attribute.addTransientModifier(new AttributeModifier(AttributeModifierIds.uuid(WET_SPEED_ID), AttributeModifierIds.name(WET_SPEED_ID), WET_SPEED, AttributeModifier.Operation.ADD_MULTIPLIED_BASE));
+		attribute.addTransientModifier(new AttributeModifier(AttributeModifierIds.uuid(WET_SPEED_ID), AttributeModifierIds.name(WET_SPEED_ID), WET_SPEED, AttributeModifier.Operation.MULTIPLY_BASE));
 	}
 
 	private static void remove(ServerPlayer player) {
