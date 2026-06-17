@@ -164,6 +164,59 @@ class HarpoonBehaviorContractTest {
 	}
 
 	@Test
+	void temporaryHarpoonShipsOwnedMeshRenderAssets() throws IOException {
+		// Older-generation (Minecraft 1.19.4) render path: the owned glTF/Blockbench mesh is drawn
+		// through Fabric's BuiltinItemRendererRegistry because the modern special-model SPI is
+		// absent. The item definition JSON stays legacy minecraft:model.
+		Path gltfModel = Path.of("src/main/resources/assets/attuned/gltf/ocean_relic_trident.glb");
+		Path blockbenchModel = Path.of("src/main/resources/assets/attuned/blockbench/ocean_relic_trident.bbmodel");
+		Path blockbenchTexture = Path.of("src/main/resources/assets/attuned/textures/item/ocean_relic_trident_blockbench.png");
+		Path blockbenchTextureMeta = Path.of("src/main/resources/assets/attuned/textures/item/ocean_relic_trident_blockbench.png.mcmeta");
+		Path projectileDefinition = Path.of("src/main/resources/assets/attuned/items/ocean_relic_trident_projectile.json");
+		Path modelManager = Path.of("src/client/java/dev/attuned/client/render/AttunedGltfModels.java");
+		Path renderer = Path.of("src/client/java/dev/attuned/client/render/GltfMeshSpecialRenderer.java");
+
+		assertTrue(Files.isRegularFile(gltfModel),
+			"Temporary harpoon should ship a compact GLB runtime mesh");
+		assertTrue(Files.isRegularFile(blockbenchModel),
+			"Temporary harpoon should ship its editable Blockbench source mesh");
+		assertTrue(Files.isRegularFile(blockbenchTexture),
+			"Owned mesh should ship its dedicated texture");
+		assertTrue(Files.isRegularFile(blockbenchTextureMeta),
+			"Owned mesh texture should ship a clamp/blur mcmeta for UV sampling");
+
+		BufferedImage blockbenchImage = ImageIO.read(blockbenchTexture.toFile());
+		assertNotNull(blockbenchImage, "Blockbench harpoon texture should decode as a PNG");
+
+		JsonObject blockbench = json(blockbenchModel);
+		assertEquals("free", blockbench.getAsJsonObject("meta").get("model_format").getAsString(),
+			"Blockbench source should stay available as the editable source mesh");
+		JsonObject mesh = blockbench.getAsJsonArray("elements").get(0).getAsJsonObject();
+		assertEquals("mesh", mesh.get("type").getAsString(),
+			"Owned harpoon should stay a detailed mesh, not cuboid wrapper geometry");
+
+		// The projectile item definition stays legacy minecraft:model on this branch.
+		JsonObject projectileModel = json(projectileDefinition).getAsJsonObject("model");
+		assertEquals("minecraft:model", projectileModel.get("type").getAsString(),
+			"Older-gen projectile definition should stay legacy minecraft:model (no minecraft:special)");
+		assertEquals("attuned:item/ocean_relic_trident_throwing",
+			projectileModel.get("model").getAsString(),
+			"Projectile item definition should resolve the throwing model directly");
+
+		String managerSource = read(modelManager);
+		String rendererSource = read(renderer);
+		assertTrue(managerSource.contains("GLB_MAGIC") && managerSource.contains("BIN_CHUNK"),
+			"Model manager should keep the owned GLB parser");
+		assertTrue(managerSource.contains("SimpleSynchronousResourceReloadListener"),
+			"Model manager should reload through the older-gen synchronous resource listener");
+		assertTrue(rendererSource.contains("BuiltinItemRendererRegistry.INSTANCE.register(Items.TRIDENT")
+				&& rendererSource.contains("RenderType.entityCutout"),
+			"Renderer should bind through Fabric's BuiltinItemRendererRegistry and an entity cutout type");
+		assertTrue(rendererSource.contains("HarpoonBehavior.isTemporaryHarpoon"),
+			"Renderer should only override Attuned temporary harpoons, not every vanilla trident");
+	}
+
+	@Test
 	void temporaryHarpoonCleansInventoryDroppedItemsAndProjectiles() throws IOException {
 		String behavior = read(HARPOON_BEHAVIOR);
 		String mixin = read(TRIDENT_MIXIN);
