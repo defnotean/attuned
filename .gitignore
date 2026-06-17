@@ -63,6 +63,7 @@ output/
 
 # local tooling scratch dirs
 /tmp/
+/.worktrees/
 /.codex-remote-attachments/
 /.superpowers/
 
