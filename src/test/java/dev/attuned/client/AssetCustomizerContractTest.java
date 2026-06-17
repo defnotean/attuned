@@ -48,6 +48,26 @@ class AssetCustomizerContractTest {
 	private static final Path OCEAN_RELIC_TRIDENT_PROJECTILE_DEFINITION =
 		Path.of("src/main/resources/assets/attuned/items/ocean_relic_trident_projectile.json");
 	private static final Path CLIENT_MIXIN_CONFIG = Path.of("src/client/resources/attuned.client.mixins.json");
+	private static final Path OCEAN_RELIC_TRIDENT_GLTF_MODEL =
+		Path.of("src/main/resources/assets/attuned/gltf/ocean_relic_trident.glb");
+	private static final Path OCEAN_RELIC_TRIDENT_BLOCKBENCH_MODEL =
+		Path.of("src/main/resources/assets/attuned/blockbench/ocean_relic_trident.bbmodel");
+	private static final Path OCEAN_RELIC_TRIDENT_BLOCKBENCH_TEXTURE =
+		Path.of("src/main/resources/assets/attuned/textures/item/ocean_relic_trident_blockbench.png");
+	private static final Path OCEAN_RELIC_TRIDENT_BLOCKBENCH_TEXTURE_META =
+		Path.of("src/main/resources/assets/attuned/textures/item/ocean_relic_trident_blockbench.png.mcmeta");
+	private static final Path GLTF_MODEL_MANAGER =
+		Path.of("src/client/java/dev/attuned/client/render/AttunedGltfModels.java");
+	private static final Path GLTF_MODEL_RECEIVER =
+		Path.of("src/client/java/dev/attuned/client/render/GltfModelReceiver.java");
+	private static final Path GLTF_SPECIAL_RENDERER =
+		Path.of("src/client/java/dev/attuned/client/render/GltfMeshSpecialRenderer.java");
+	private static final Path BLOCKBENCH_SPECIAL_RENDERER =
+		Path.of("src/client/java/dev/attuned/client/render/BlockbenchMeshSpecialRenderer.java");
+	private static final Path ITEM_RENDERER_ACCESSOR =
+		Path.of("src/client/java/dev/attuned/client/mixin/ItemRendererBlockEntityAccessor.java");
+	private static final Path RENDER_PORT_DOC =
+		Path.of("docs/rendering/mcgltf-port.md");
 	private static final Path OCEAN_RELIC_SOURCE =
 		Path.of("docs/superpowers/assets/ocean-relic-trident/ocean_relic_trident_source_model/ocean_relic_trident_source_model.obj");
 	private static final Path OCEAN_RELIC_VOXEL_REPORT =
@@ -534,10 +554,87 @@ class AssetCustomizerContractTest {
 	}
 
 	@Test
+	void oceanRelicTridentUsesOwnedMeshRendererForTemporaryHarpoon() throws IOException {
+		// Older-generation (Minecraft 1.19.2) render path. The special-model SPI
+		// (minecraft:special / NoDataSpecialModelRenderer) does not exist on this branch, so the
+		// owned glTF mesh is drawn through Fabric's BuiltinItemRendererRegistry and the item
+		// definition JSON stays legacy minecraft:model. The GLB/bbmodel parser and shared-model
+		// reload pipeline are kept verbatim from the modern build.
+		assertTrue(Files.isRegularFile(OCEAN_RELIC_TRIDENT_GLTF_MODEL),
+			"Temporary harpoon should ship a compact GLB runtime mesh");
+		assertTrue(Files.isRegularFile(OCEAN_RELIC_TRIDENT_BLOCKBENCH_MODEL),
+			"Temporary harpoon should ship its editable Blockbench source mesh");
+		assertTrue(Files.isRegularFile(OCEAN_RELIC_TRIDENT_BLOCKBENCH_TEXTURE),
+			"Owned mesh should ship its dedicated texture beside the item textures");
+		byte[] glb = Files.readAllBytes(OCEAN_RELIC_TRIDENT_GLTF_MODEL);
+		assertEquals(0x46546C67, littleEndianInt(glb, 0),
+			"Runtime GLB should keep the glTF binary magic");
+		assertEquals(2, littleEndianInt(glb, 4),
+			"Runtime GLB should be a glTF 2.0 binary");
+		String textureMeta = read(OCEAN_RELIC_TRIDENT_BLOCKBENCH_TEXTURE_META);
+		assertTrue(textureMeta.contains("\"clamp\": true") && textureMeta.contains("\"blur\": false"),
+			"Harpoon texture should clamp and avoid blur while sampled through custom mesh UVs");
+
+		String modelManager = read(GLTF_MODEL_MANAGER);
+		String modelReceiver = read(GLTF_MODEL_RECEIVER);
+		String renderer = read(GLTF_SPECIAL_RENDERER);
+		String blockbenchRenderer = read(BLOCKBENCH_SPECIAL_RENDERER);
+		String accessor = read(ITEM_RENDERER_ACCESSOR);
+		String client = read(Path.of("src/client/java/dev/attuned/client/AttunedClient.java"));
+		String doc = read(RENDER_PORT_DOC);
+
+		assertTrue(modelManager.contains("SimpleSynchronousResourceReloadListener")
+				&& modelManager.contains("ResourceManagerHelper.get(PackType.CLIENT_RESOURCES)")
+				&& modelManager.contains("registerReloadListener(this)"),
+			"Model manager should load shared glTF models through a client resource reload listener");
+		assertTrue(modelManager.contains("GLB_MAGIC") && modelManager.contains("JSON_CHUNK")
+				&& modelManager.contains("BIN_CHUNK"),
+			"Model manager should parse GLB chunks directly");
+		assertTrue(modelManager.contains("\"POSITION\"") && modelManager.contains("\"NORMAL\"")
+				&& modelManager.contains("\"TEXCOORD_0\"") && modelManager.contains("MODE_TRIANGLES"),
+			"Model manager should load the glTF mesh attributes used by the Ocean Relic export");
+		assertTrue(modelManager.contains("baseColorTexture")
+				&& modelManager.contains("NativeImage.read")
+				&& modelManager.contains("DynamicTexture")
+				&& modelManager.contains("data:"),
+			"Model manager should support glTF material base-color textures, including embedded images");
+		assertTrue(modelManager.contains("translation") && modelManager.contains("rotation")
+				&& modelManager.contains("scale") && modelManager.contains("Mat4"),
+			"Model manager should process scene-node transforms instead of one hard-coded orientation");
+		assertTrue(modelReceiver.contains("ResourceLocation getModelLocation()")
+				&& modelReceiver.contains("onReceiveSharedModel")
+				&& modelReceiver.contains("isReceiveSharedModel"),
+			"Attuned should keep an MCglTF-style receiver contract");
+		assertTrue(renderer.contains("implements BuiltinItemRendererRegistry.DynamicItemRenderer, GltfModelReceiver")
+				&& renderer.contains("getModelLocation()")
+				&& renderer.contains("onReceiveSharedModel"),
+			"Renderer should follow MCglTF's model receiver pattern via the Fabric builtin renderer");
+		assertTrue(renderer.contains("BuiltinItemRendererRegistry.INSTANCE.register(Items.TRIDENT"),
+			"Older-gen render path should register through Fabric's BuiltinItemRendererRegistry");
+		assertTrue(renderer.contains("RenderType.entityCutout"),
+			"Renderer should draw through an entity cutout render type");
+		assertTrue(renderer.contains("HarpoonBehavior.isTemporaryHarpoon"),
+			"Renderer should only override Attuned temporary harpoons, not every vanilla trident");
+		assertTrue(renderer.contains("Repeating C") && renderer.contains("triangle.c(), light, overlay);"),
+			"Renderer should convert glTF triangles into degenerate quads for Minecraft's cutout buffers");
+		assertTrue(!renderer.contains("import net.minecraft.client.renderer.special")
+				&& !renderer.contains("SubmitNodeCollector"),
+			"Older-gen renderer should not depend on the modern special-model SPI");
+		assertTrue(blockbenchRenderer.contains("Repeating C"),
+			"Legacy Blockbench renderer should keep the same triangle-to-quad safety fix");
+		assertTrue(accessor.contains("blockEntityRenderer"),
+			"Ordinary tridents should delegate to the vanilla built-in renderer via an accessor mixin");
+		assertTrue(client.contains("GltfMeshSpecialRenderer.init()"),
+			"Client initializer should register the glTF renderer before item models load");
+		assertTrue(doc.contains("Minecraft 1.19.2 Maintenance Port"),
+			"The render port doc should document the older-generation wiring and projectile limitation");
+	}
+
+	@Test
 	void temporaryHarpoonProjectileUsesCustomThrownModelRenderer() throws IOException {
 		String clientMixins = read(CLIENT_MIXIN_CONFIG);
 		assumeTrue(clientMixins.contains("ThrownTridentRendererMixin"),
-			"Minecraft 1.20.6 maintenance builds use the vanilla thrown-trident renderer.");
+			"Minecraft 1.19.2 maintenance builds use the vanilla thrown-trident renderer.");
 		String rendererMixin = read(Path.of("src/client/java/dev/attuned/client/mixin/ThrownTridentRendererMixin.java"));
 		String stateMixin = read(Path.of("src/client/java/dev/attuned/client/mixin/ThrownTridentRenderStateMixin.java"));
 		assertTrue(clientMixins.contains("ThrownTridentRendererMixin"),
@@ -580,6 +677,13 @@ class AssetCustomizerContractTest {
 		JsonArray bboxSize = analysis.getAsJsonArray("bbox_size");
 		assertTrue(bboxSize.get(1).getAsInt() > bboxSize.get(0).getAsInt(),
 			"Wrapped art should preserve a tall diagonal trident silhouette");
+	}
+
+	private static int littleEndianInt(byte[] bytes, int offset) {
+		return (bytes[offset] & 0xFF)
+			| ((bytes[offset + 1] & 0xFF) << 8)
+			| ((bytes[offset + 2] & 0xFF) << 16)
+			| ((bytes[offset + 3] & 0xFF) << 24);
 	}
 
 	private static void assertRelativeAssetExists(JsonObject asset, String key) {
