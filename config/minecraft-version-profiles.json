@@ -32,7 +32,7 @@
       "loom_version": "1.14.10",
       "fabric_api_version": "0.116.5+1.21.1",
       "java_version": "21",
-      "fabric_loader_range": ">=0.16.14",
+      "fabric_loader_range": ">=0.16.0",
       "status": "maintenance",
       "notes": [
         "High-value 1.21.x modding target branched from maintenance/minecraft-1.21.11.",
