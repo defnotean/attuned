@@ -1,5 +1,13 @@
 # Changelog
 
+## Attuned 1.5.4+mc26.1.2 - Compatibility Fixes
+
+### Fixed
+- Widened Fabric Loader and Fabric API dependency metadata to the compatibility floor for Minecraft 26.1.2 so older valid Fabric installs are not rejected unnecessarily.
+
+### Internal
+- Updated the Fabric dependency metadata contract for the widened runtime range.
+
 ## Attuned 1.5.1 - Updraft Flight Polish
 
 ### Added
