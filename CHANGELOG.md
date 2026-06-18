@@ -1,5 +1,13 @@
 # Changelog
 
+## Attuned 1.5.3+mc1.20.6 - Fabric Compatibility Hotfix
+
+### Fixed
+- Lowered the Fabric Loader dependency metadata to the verified 0.18.4 runtime floor so common Fabric installs are not rejected by an unnecessary 0.19.3 requirement.
+
+### Internal
+- Added a Fabric dependency metadata contract test so future maintenance builds keep published Loader/Fabric API floors aligned with verified runtime compatibility.
+
 ## Attuned 1.5.2+mc1.20.6 - Minecraft 1.20.6 Maintenance Build
 
 ### Changed
