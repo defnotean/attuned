@@ -15,11 +15,11 @@
     },
     "1.21.11": {
       "minecraft_version": "1.21.11",
-      "loader_version": "0.19.3",
+      "loader_version": "0.18.4",
       "loom_version": "1.17.11",
       "fabric_api_version": "0.141.4+1.21.11",
       "java_version": "21",
-      "fabric_loader_range": ">=0.19.3",
+      "fabric_loader_range": ">=0.18.4",
       "status": "maintenance",
       "notes": [
         "Latest stable 1.21.x target before the 26.1.x release line.",
