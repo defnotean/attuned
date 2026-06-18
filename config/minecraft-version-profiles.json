@@ -58,7 +58,7 @@
       "loom_version": "1.17.11",
       "fabric_api_version": "0.77.0+1.18.2",
       "java_version": "17",
-      "fabric_loader_range": ">=0.18.4",
+      "fabric_loader_range": ">=0.13.3",
       "status": "maintenance",
       "notes": [
         "Latest stable 1.18.x target before the 1.19.x release line.",

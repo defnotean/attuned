@@ -9,8 +9,8 @@ ROOT = Path(__file__).resolve().parents[1]
 
 EXPECTED_DEPENDENCY_RANGES = {
     "1.18.2": {
-        "fabricloader": ">=0.18.4",
-        "fabric-api": "*",
+        "fabricloader": ">=0.13.3",
+        "fabric-api": ">=0.51.0+1.18.2",
     },
     "1.19.2": {
         "fabricloader": ">=0.18.4",

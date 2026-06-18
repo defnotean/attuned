@@ -1,5 +1,14 @@
 # Changelog
 
+## Attuned 1.5.4+mc1.18.2 - Compatibility Fixes
+
+### Fixed
+- Restored the inventory Focus panel on survival and creative inventory screens for Minecraft 1.18.2.
+- Widened Fabric Loader and Fabric API dependency metadata to the compatibility floor for this Minecraft line so older valid Fabric installs are not rejected unnecessarily.
+
+### Internal
+- Updated the Fabric dependency metadata contract for the widened runtime range.
+
 ## Attuned 1.5.3+mc1.18.2 - Fabric Compatibility Hotfix
 
 ### Fixed
