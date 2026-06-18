@@ -1,5 +1,13 @@
 # Changelog
 
+## Attuned 1.5.4+mc1.20.6 - Compatibility Fixes
+
+### Fixed
+- Widened Fabric Loader and Fabric API dependency metadata to the compatibility floor for Minecraft 1.20.6 so older valid Fabric installs are not rejected unnecessarily.
+
+### Internal
+- Updated the Fabric dependency metadata contract for the widened runtime range.
+
 ## Attuned 1.5.3+mc1.20.6 - Fabric Compatibility Hotfix
 
 ### Fixed
