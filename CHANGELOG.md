@@ -1,5 +1,13 @@
 # Changelog
 
+## Attuned 1.5.3+mc1.21.1 - Fabric Compatibility Hotfix
+
+### Fixed
+- Reissued the Minecraft 1.21.1 maintenance artifact with the dependency metadata contract in place. This branch already advertises Fabric Loader 0.16.14+, which accepts Fabric Loader 0.18.4 installs.
+
+### Internal
+- Added a Fabric dependency metadata contract test so future maintenance builds keep published Loader/Fabric API floors aligned with verified runtime compatibility.
+
 ## Attuned 1.5.2+mc1.21.1 - Minecraft 1.21.1 Maintenance Build
 
 ### Changed
