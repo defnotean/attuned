@@ -33,8 +33,8 @@ EXPECTED_DEPENDENCY_RANGES = {
         "fabric-api": ">=0.116.5+1.21.1",
     },
     "1.21.11": {
-        "fabricloader": ">=0.18.4",
-        "fabric-api": "*",
+        "fabricloader": ">=0.18.0",
+        "fabric-api": ">=0.140.0+1.21.11",
     },
 }
 
