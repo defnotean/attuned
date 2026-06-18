@@ -3,7 +3,13 @@
 	"package": "dev.attuned.client.mixin",
 	"compatibilityLevel": "JAVA_17",
 	"client": [
-		"ItemRendererBlockEntityAccessor"
+		"CreativeModeInventoryScreenMixin",
+		"CustomHeadLayerInvisibilityMixin",
+		"HumanoidArmorLayerInvisibilityMixin",
+		"InventoryScreenMixin",
+		"ItemInHandLayerInvisibilityMixin",
+		"ItemRendererBlockEntityAccessor",
+		"WingsLayerInvisibilityMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1

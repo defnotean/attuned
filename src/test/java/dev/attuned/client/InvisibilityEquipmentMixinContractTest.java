@@ -13,11 +13,12 @@ import org.junit.jupiter.api.Test;
  * Contract coverage for the "complete invisibility" client render mixins. Two Foci grant
  * invisibility (Veil sets the synced entity flag, Nullveil applies a particle-less
  * Invisibility effect), but vanilla still draws worn armor and held items on an invisible
- * entity. The mixins below cancel each equipment render layer's submit pass when the render
- * state reports the entity is invisible to the viewing player, so an invisible player shows
- * no gear at all. Render itself cannot be unit-tested without a client Bootstrap, so this is
- * a source-grep contract: it pins the targeted layer classes, the cancellable HEAD inject
- * shape, and the per-viewer invisibility gate.
+ * entity. The mixins below cancel each equipment render layer's render pass when the entity
+ * is invisible to the viewing player, so an invisible player shows no gear at all.
+ *
+ * <p>Minecraft 1.20.1 predates the render-state API used by 1.21+, so these mixins target
+ * the legacy {@code render(PoseStack, MultiBufferSource, int, LivingEntity, ...)} overload
+ * and gate on {@link net.minecraft.world.entity.LivingEntity#isInvisibleTo}.</p>
  */
 class InvisibilityEquipmentMixinContractTest {
 	private static final Path MIXIN_DIR = Path.of("src/client/java/dev/attuned/client/mixin");
@@ -50,19 +51,17 @@ class InvisibilityEquipmentMixinContractTest {
 			ARMOR_MIXIN,
 			"HumanoidArmorLayer.class",
 			"net.minecraft.client.renderer.entity.layers.HumanoidArmorLayer",
-			"Lnet/minecraft/client/renderer/entity/state/HumanoidRenderState;");
+			"Lnet/minecraft/world/entity/LivingEntity;");
 	}
 
 	@Test
 	void heldItemLayerIsCancelledForInvisibleEntities() throws IOException {
 		assumeInvisibilityMixinsEnabled();
-		// PlayerItemInHandLayer extends ItemInHandLayer and only overrides submitArmWithItem,
-		// so targeting the base layer's submit covers players, mobs, and armor stands alike.
 		assertEquipmentLayerMixin(
 			ITEM_MIXIN,
 			"ItemInHandLayer.class",
 			"net.minecraft.client.renderer.entity.layers.ItemInHandLayer",
-			"Lnet/minecraft/client/renderer/entity/state/ArmedEntityRenderState;");
+			"Lnet/minecraft/world/entity/LivingEntity;");
 	}
 
 	@Test
@@ -72,7 +71,7 @@ class InvisibilityEquipmentMixinContractTest {
 			HEAD_MIXIN,
 			"CustomHeadLayer.class",
 			"net.minecraft.client.renderer.entity.layers.CustomHeadLayer",
-			"Lnet/minecraft/client/renderer/entity/state/LivingEntityRenderState;");
+			"Lnet/minecraft/world/entity/LivingEntity;");
 	}
 
 	@Test
@@ -80,28 +79,26 @@ class InvisibilityEquipmentMixinContractTest {
 		assumeInvisibilityMixinsEnabled();
 		assertEquipmentLayerMixin(
 			WINGS_MIXIN,
-			"WingsLayer.class",
-			"net.minecraft.client.renderer.entity.layers.WingsLayer",
-			"Lnet/minecraft/client/renderer/entity/state/HumanoidRenderState;");
+			"ElytraLayer.class",
+			"net.minecraft.client.renderer.entity.layers.ElytraLayer",
+			"Lnet/minecraft/world/entity/LivingEntity;");
 	}
 
 	@Test
-	void invisibilityGateUsesThePerViewerRenderStateFlagNotTheRawEntityFlag() throws IOException {
+	void invisibilityGateUsesThePerViewerEntityFlagNotTheRawEntityFlag() throws IOException {
 		assumeInvisibilityMixinsEnabled();
-		// isInvisibleToPlayer = isInvisible && entity.isInvisibleTo(viewer), so teammates and
-		// spectators still see the gear. Gating on the bare isInvisible flag would regress that.
 		for (Path mixin : new Path[] {ARMOR_MIXIN, ITEM_MIXIN, HEAD_MIXIN, WINGS_MIXIN}) {
 			String source = read(mixin);
-			assertTrue(source.contains("state.isInvisibleToPlayer"),
-				mixin + " should gate on the per-viewer isInvisibleToPlayer render-state flag.");
-			assertTrue(!source.contains("state.isInvisible)") && !source.contains("state.isInvisible "),
+			assertTrue(source.contains("isInvisibleTo"),
+				mixin + " should gate on the per-viewer isInvisibleTo check.");
+			assertTrue(!source.contains("entity.isInvisible())") && !source.contains("entity.isInvisible() "),
 				mixin + " should not gate on the raw isInvisible flag, which would hide gear from "
 					+ "teammates and spectators.");
 		}
 	}
 
 	private static void assertEquipmentLayerMixin(
-			Path mixin, String mixinTarget, String layerImport, String stateDescriptor) throws IOException {
+			Path mixin, String mixinTarget, String layerImport, String entityDescriptor) throws IOException {
 		String source = read(mixin);
 		assertTrue(source.contains("@Mixin(" + mixinTarget + ")"),
 			mixin + " should target " + mixinTarget + ".");
@@ -112,16 +109,16 @@ class InvisibilityEquipmentMixinContractTest {
 		assertTrue(source.contains("cancellable = true"),
 			mixin + " should declare a cancellable inject.");
 		assertTrue(source.contains("ci.cancel()"),
-			mixin + " should cancel the submit pass when the entity is invisible.");
-		assertTrue(source.contains(stateDescriptor),
-			mixin + " should target the submit overload taking " + stateDescriptor + ".");
-		assertTrue(source.contains("\"submit("),
-			mixin + " should target the layer's submit method.");
+			mixin + " should cancel the render pass when the entity is invisible.");
+		assertTrue(source.contains(entityDescriptor),
+			mixin + " should target the render overload taking " + entityDescriptor + ".");
+		assertTrue(source.contains("MultiBufferSource"),
+			mixin + " should target the legacy render method using MultiBufferSource.");
 	}
 
 	private static void assumeInvisibilityMixinsEnabled() throws IOException {
 		assumeTrue(read(CLIENT_MIXINS).contains("HumanoidArmorLayerInvisibilityMixin"),
-			"Minecraft 1.20.6 maintenance builds disable these 1.21 render-state layer mixins.");
+			"Invisibility equipment mixins are not enabled for this maintenance target.");
 	}
 
 	private static String read(Path file) throws IOException {

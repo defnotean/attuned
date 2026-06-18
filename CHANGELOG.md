@@ -1,5 +1,15 @@
 # Changelog
 
+## Attuned 1.5.4+mc1.20.1 - Compatibility Fixes
+
+### Fixed
+- Restored the inventory Focus panel on survival and creative inventory screens for Minecraft 1.20.1.
+- Restored complete invisibility handling for worn armor, held items, heads, and elytra on the legacy Minecraft 1.20.1 render layers.
+- Widened Fabric Loader and Fabric API dependency metadata to the compatibility floor for this Minecraft line so older valid Fabric installs are not rejected unnecessarily.
+
+### Internal
+- Updated the legacy invisibility equipment mixin contract and Fabric dependency metadata contract for this maintenance line.
+
 ## Attuned 1.5.3+mc1.20.1 - Fabric Compatibility Hotfix
 
 ### Fixed
