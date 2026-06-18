@@ -58,7 +58,7 @@
       "loom_version": "1.17.11",
       "fabric_api_version": "0.77.0+1.19.2",
       "java_version": "17",
-      "fabric_loader_range": ">=0.18.4",
+      "fabric_loader_range": ">=0.14.9",
       "status": "maintenance",
       "notes": [
         "High-value 1.19.x modding target branched from maintenance/minecraft-1.19.4.",

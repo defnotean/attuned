@@ -3,6 +3,8 @@
 	"package": "dev.attuned.client.mixin",
 	"compatibilityLevel": "JAVA_17",
 	"client": [
+		"CreativeModeInventoryScreenMixin",
+		"InventoryScreenMixin",
 		"ItemRendererBlockEntityAccessor"
 	],
 	"injectors": {
