@@ -1,6 +1,7 @@
 package dev.attuned.menu;
 
 import dev.attuned.Attuned;
+import dev.attuned.attunement.FocusPreset;
 import net.fabricmc.fabric.api.networking.v1.FabricPacket;
 import net.fabricmc.fabric.api.networking.v1.PacketType;
 import net.minecraft.network.FriendlyByteBuf;
@@ -11,10 +12,7 @@ public record DeletePresetPayload(int index, String name) implements FabricPacke
 		if (index < 0) {
 			index = -1;
 		}
-		name = name == null ? "" : name.trim();
-		if (name.length() > 32) {
-			name = name.substring(0, 32);
-		}
+		name = FocusPreset.sanitizeName(name);
 	}
 
 	public static final PacketType<DeletePresetPayload> TYPE =

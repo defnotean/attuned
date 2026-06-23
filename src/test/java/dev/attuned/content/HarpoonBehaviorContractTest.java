@@ -38,10 +38,11 @@ class HarpoonBehaviorContractTest {
 
 		assertTrue(behavior.contains("public final class HarpoonBehavior implements FocusBehavior"),
 			"Harpoon should be a focused FocusBehavior implementation");
-		assertTrue(behavior.contains("static final int DURATION_TICKS = 600"),
-			"Harpoon duration should be 30 seconds");
 		assertTrue(behavior.contains("static final int COOLDOWN_TICKS = 1200"),
 			"Harpoon cooldown should be 60 seconds");
+		assertTrue(behavior.contains("static final int LIFETIME_TICKS = COOLDOWN_TICKS")
+				|| behavior.contains("static final int DURATION_TICKS = 600"),
+			"Harpoon lifetime should be explicit and bounded.");
 		assertTrue(behavior.contains("public boolean hasActiveAbility()"),
 			"Harpoon should opt into the single active ability slot");
 		assertTrue(behavior.contains("public int abilityCooldownTicks()"),

@@ -1,6 +1,7 @@
 package dev.attuned.menu;
 
 import dev.attuned.Attuned;
+import dev.attuned.attunement.FocusPreset;
 import net.fabricmc.fabric.api.networking.v1.FabricPacket;
 import net.fabricmc.fabric.api.networking.v1.PacketType;
 import net.minecraft.network.FriendlyByteBuf;
@@ -8,10 +9,7 @@ import net.minecraft.resources.ResourceLocation;
 
 public record SavePresetPayload(String name) implements FabricPacket {
 	public SavePresetPayload {
-		name = name == null ? "" : name.trim();
-		if (name.length() > 32) {
-			name = name.substring(0, 32);
-		}
+		name = FocusPreset.sanitizeName(name);
 	}
 
 	public static final PacketType<SavePresetPayload> TYPE =

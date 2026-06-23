@@ -738,7 +738,7 @@ def _umbral_focus_frame(name, accent, phase):
 
     The first pass used one shared eclipse medallion for all five Foci. The current pass
     keeps the shared shadow-violet family palette, but gives each Focus a silhouette
-    matched to the private source silhouettes: boot, shield, crouched hood,
+    matched to the local source silhouettes: boot, shield, crouched hood,
     fang, and total eclipse. Geometry remains deterministic so `generate_ui_art.py`
     can rebuild the shipped 64x512 animated sheets at any time.
     """
@@ -763,7 +763,7 @@ def _umbral_focus_frame(name, accent, phase):
 
 
 def generate_umbral_focus_textures():
-    """Regenerate Umbral Eclipse Foci from the private source sheet."""
+    """Regenerate Umbral Eclipse Foci from the local source sheet."""
     from generate_umbral_eclipse_focus_assets import generate_assets
 
     generate_assets()
@@ -1076,7 +1076,7 @@ def generate_aspect_focus_preview_textures(output_dir=None):
 
     Historical deterministic preview generator only. Do not use this as the final
     art source for the new Aspect Foci. Final shipped Aspect textures should be
-    imported from the ignored private source directory instead.
+    imported from the ignored local source directory instead.
     """
 
     output = Path(output_dir) if output_dir is not None else ASPECT_PREVIEW_TEXTURES
@@ -1094,16 +1094,16 @@ def generate_aspect_focus_preview_textures(output_dir=None):
 
 
 def generate_aspect_focus_textures():
-    """Deprecated: Aspect Foci are private source imports, not code-drawn."""
+    """Deprecated: Aspect Foci use local source assets, not code-drawn art."""
     raise RuntimeError(
-        "Aspect Focus textures are private source imports. Use .attuned-art-sources "
+        "Aspect Focus textures use local source assets. Use .attuned-art-sources "
         "and the import workflow instead of regenerating code-drawn art."
     )
 
 
 
 def generate_custom_focus_textures():
-    """Regenerate the custom Focus pool from the private source sheet."""
+    """Regenerate the custom Focus pool from the local source sheet."""
     from generate_custom_focus_assets import generate_assets
 
     generate_assets()

@@ -1,20 +1,23 @@
 package dev.attuned.pacts;
 
-import dev.attuned.compat.PlayerMessages;
-import dev.attuned.AttunedPlayerCleanup;
 import dev.attuned.AttunedServerCleanup;
 import dev.attuned.combat.CombatTargets;
 import dev.attuned.combat.CombatFeedback;
 import dev.attuned.combat.CombatMomentum;
 import dev.attuned.combat.Resonance;
+import dev.attuned.content.behavior.MaskBehavior;
+import dev.attuned.network.ActionBarMessages;
 import dev.attuned.network.FocusAbilityState;
 import dev.attuned.network.FocusAbilityStatusPayload;
+import dev.attuned.party.CircleContributions;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.minecraft.network.chat.Component;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.effect.MobEffectInstance;
@@ -42,8 +45,8 @@ public final class PactTacticals {
 			return;
 		}
 		initialized = true;
+		ServerTickEvents.END_SERVER_TICK.register(PactTacticals::tick);
 		AttunedServerCleanup.onStop(COOLDOWN_ENDS::clear);
-		AttunedPlayerCleanup.onForget(COOLDOWN_ENDS::remove);
 	}
 
 	/**
@@ -63,9 +66,10 @@ public final class PactTacticals {
 		Long endsAt = COOLDOWN_ENDS.get(player.getUUID());
 		if (endsAt != null && now < endsAt) {
 			int remaining = (int) (endsAt - now);
-			PlayerMessages.overlay(player, new net.minecraft.network.chat.TranslatableComponent(
-				"pact.attuned.tactical.cooldown",
-				FocusAbilityState.cooldownSecondsForMessage(remaining)));
+			ActionBarMessages.send(player, ActionBarMessages.Priority.WARNING,
+				new net.minecraft.network.chat.TranslatableComponent(
+					"pact.attuned.tactical.cooldown",
+					FocusAbilityState.cooldownSecondsForMessage(remaining)));
 			FocusAbilityState.syncStatus(player,
 				FocusAbilityStatusPayload.PACT_TACTICAL_SLOT, remaining, COOLDOWN_TICKS);
 			return true;
@@ -75,7 +79,8 @@ public final class PactTacticals {
 		fireTactical(player, pact.get(), overcharge);
 		if (overcharge) {
 			Resonance.add(player, -OVERCHARGE_SPEND);
-			PlayerMessages.overlay(player, new net.minecraft.network.chat.TranslatableComponent("pact.attuned.tactical.overcharge"));
+			ActionBarMessages.send(player, ActionBarMessages.Priority.ABILITY,
+				new net.minecraft.network.chat.TranslatableComponent("pact.attuned.tactical.overcharge"));
 		}
 		CombatFeedback.pactTactical(player, pact.get(), overcharge);
 		int cooldown = CombatMomentum.effectiveCooldown(
@@ -83,7 +88,8 @@ public final class PactTacticals {
 		COOLDOWN_ENDS.put(player.getUUID(), now + cooldown);
 		FocusAbilityState.syncStatus(player,
 			FocusAbilityStatusPayload.PACT_TACTICAL_SLOT, cooldown, cooldown);
-		PlayerMessages.overlay(player, new net.minecraft.network.chat.TranslatableComponent(tacticalMessageKey(pact.get())));
+		ActionBarMessages.send(player, ActionBarMessages.Priority.ABILITY,
+			new net.minecraft.network.chat.TranslatableComponent(tacticalMessageKey(pact.get())));
 		return true;
 	}
 
@@ -127,6 +133,14 @@ public final class PactTacticals {
 		return remaining;
 	}
 
+	private static void tick(MinecraftServer server) {
+		pruneExpiredCooldowns(server.overworld().getGameTime());
+	}
+
+	private static void pruneExpiredCooldowns(long now) {
+		COOLDOWN_ENDS.entrySet().removeIf(entry -> entry.getValue() <= now);
+	}
+
 	private static void fireTactical(ServerPlayer player, Pact pact, boolean overcharge) {
 		ServerLevel level = (ServerLevel) player.getLevel();
 		double radiusScale = overcharge ? 1.5D : 1.0D;
@@ -151,6 +165,7 @@ public final class PactTacticals {
 		int seconds = overcharge ? 4 : 2;
 		List<LivingEntity> hostiles = nearbyHostiles(player, level, 4.0D * radiusScale);
 		if (!hostiles.isEmpty()) {
+			recordTacticalContribution(player, hostiles);
 			for (LivingEntity target : hostiles) {
 				target.setSecondsOnFire(seconds);
 			}
@@ -161,19 +176,25 @@ public final class PactTacticals {
 	}
 
 	private static void glowHostiles(ServerPlayer player, ServerLevel level, double radius, int ticks) {
-		for (LivingEntity target : nearbyHostiles(player, level, radius)) {
+		List<LivingEntity> targets = visibleRevealTargets(player, level, radius);
+		recordTacticalContribution(player, targets);
+		for (LivingEntity target : targets) {
 			target.addEffect(new MobEffectInstance(MobEffects.GLOWING, ticks, 0, true, false, true));
 		}
 	}
 
 	private static void slowHostiles(ServerPlayer player, ServerLevel level, double radius, int ticks) {
-		for (LivingEntity target : nearbyHostiles(player, level, radius)) {
+		List<LivingEntity> targets = nearbyHostiles(player, level, radius);
+		recordTacticalContribution(player, targets);
+		for (LivingEntity target : targets) {
 			target.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, ticks, 0, true, false, true));
 		}
 	}
 
 	private static void igniteHostiles(ServerPlayer player, ServerLevel level, double radius, int seconds) {
-		for (LivingEntity target : nearbyHostiles(player, level, radius)) {
+		List<LivingEntity> targets = nearbyHostiles(player, level, radius);
+		recordTacticalContribution(player, targets);
+		for (LivingEntity target : targets) {
 			target.setSecondsOnFire(seconds);
 		}
 	}
@@ -182,14 +203,18 @@ public final class PactTacticals {
 		if (level.getMaxLocalRawBrightness(player.blockPosition()) > MAX_LIGHT) {
 			return;
 		}
-		for (LivingEntity target : nearbyHostiles(player, level, radius)) {
+		List<LivingEntity> targets = nearbyHostiles(player, level, radius);
+		recordTacticalContribution(player, targets);
+		for (LivingEntity target : targets) {
 			target.addEffect(new MobEffectInstance(MobEffects.BLINDNESS, ticks, 0, true, false, true));
 		}
 	}
 
 	private static void knockbackHostiles(ServerPlayer player, ServerLevel level, double radius, double strength) {
 		Vec3 origin = player.position();
-		for (LivingEntity target : nearbyHostiles(player, level, radius)) {
+		List<LivingEntity> targets = nearbyHostiles(player, level, radius);
+		recordTacticalContribution(player, targets);
+		for (LivingEntity target : targets) {
 			Vec3 away = target.position().subtract(origin);
 			double dx = away.x;
 			double dz = away.z;
@@ -201,12 +226,28 @@ public final class PactTacticals {
 		}
 	}
 
+	private static void recordTacticalContribution(ServerPlayer player, List<LivingEntity> targets) {
+		if (!targets.isEmpty()) {
+			CircleContributions.recordContribution(player);
+		}
+	}
+
 	private static List<LivingEntity> nearbyHostiles(ServerPlayer player, ServerLevel level, double radius) {
 		AABB area = player.getBoundingBox().inflate(radius);
 		return level.getEntitiesOfClass(LivingEntity.class, area, target ->
 			target != player
 				&& target.isAlive()
 				&& CombatTargets.isHostileOrPvpOpponent(target, player));
+	}
+
+	private static List<LivingEntity> visibleRevealTargets(ServerPlayer player, ServerLevel level, double radius) {
+		AABB area = player.getBoundingBox().inflate(radius);
+		return level.getEntitiesOfClass(LivingEntity.class, area, target ->
+			target != player
+				&& target.isAlive()
+				&& CombatTargets.isHostileOrPvpOpponent(target, player)
+				&& !MaskBehavior.resistsReveal(target)
+				&& player.hasLineOfSight(target));
 	}
 
 	private static String tacticalMessageKey(Pact pact) {

@@ -83,7 +83,7 @@ def generate_assets() -> dict[str, object]:
 	report = {
 		"source": relative(SOURCE_PATH),
 		"preview": relative(PREVIEW_PATH),
-		"workflow": "private local source image normalized into the Updraft Focus texture",
+		"workflow": "local source image normalized into the Updraft Focus texture",
 		"output": {
 			"id": ITEM_ID,
 			"path": relative(output_path),

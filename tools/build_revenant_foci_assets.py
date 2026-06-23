@@ -6,9 +6,9 @@ from pathlib import Path
 
 from PIL import Image, ImageEnhance, ImageFilter
 
-SOURCE = Path(".attuned-art-sources/revenant-foci/revenant-foci-concept-source.png")
+SOURCE = Path(".attuned-art-sources/revenant-foci/revenant-foci-source.png")
 TEXTURE_DIR = Path("src/main/resources/assets/attuned/textures/item")
-REPORT = Path(".attuned-art-sources/revenant-foci/revenant-foci-report.json")
+REPORT = Path("build/asset-previews/revenant-foci/revenant-foci-report.json")
 
 FOCI = [
 	("epitaph_focus", (48, 160, 415, 615), (126, 250, 255)),
@@ -26,7 +26,7 @@ def main() -> None:
 
 	report = {
 		"source": str(SOURCE).replace("\\", "/"),
-		"strategy": "concept_source_chroma_key_crops_with_pulsed_revenant_glow",
+		"strategy": "local_source_crops_with_pulsed_revenant_glow",
 		"frames": 8,
 		"textures": [],
 	}

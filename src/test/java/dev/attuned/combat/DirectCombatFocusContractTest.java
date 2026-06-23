@@ -42,6 +42,30 @@ class DirectCombatFocusContractTest {
 	}
 
 	@Test
+	void directCombatFociOnlyProcAgainstHostileOrValidPvpTargets() throws IOException {
+		String combat = read(ATTUNED_COMBAT);
+		String cinder = methodBody(combat,
+			"private static boolean cinderApplies(LivingEntity defender, DamageSource source,");
+		String sunlance = methodBody(combat,
+			"private static boolean sunlanceApplies(LivingEntity defender, DamageSource source,");
+		String temper = methodBody(combat,
+			"private static boolean temperApplies(LivingEntity defender, DamageSource source,");
+		String afterDamage = methodBody(combat,
+			"private static void afterDamage(LivingEntity defender, DamageSource source,");
+
+		assertTrue(cinder.contains("CombatTargets.isHostileOrPvpOpponent(defender, player)"),
+			"Cinder should not grant bonus damage by farming burning passive animals or friendly players.");
+		assertTrue(sunlance.contains("CombatTargets.isHostileOrPvpOpponent(defender, player)"),
+			"Sunlance should not amplify hits against passive undead, pets, allies, or friendly players.");
+		assertTrue(temper.contains("CombatTargets.isHostileOrPvpOpponent(defender, player)"),
+			"Temper should not spend its forge-work hit bonus on passive animals or friendly players.");
+		assertTrue(afterDamage.contains("CombatTargets.isHostileOrPvpOpponent(attacker, defenderPlayer)"),
+			"Thornward should not reflect training hits from pets, allies, or friendly players.");
+		assertTrue(afterDamage.contains("CombatTargets.isHostileOrPvpOpponent(defender, attackerPlayer)"),
+			"Leech should not heal from livestock, pets, allies, or friendly-fire-blocked players.");
+	}
+
+	@Test
 	void needleOnlyAmplifiesDirectNonProjectileNonExplosionHits() throws IOException {
 		String combat = read(UNSEEN_COMBAT);
 		String adjustDamage = methodBody(combat,
@@ -64,6 +88,19 @@ class DirectCombatFocusContractTest {
 			"Needle should reject projectile and explosion damage sources even if another mod marks the player as direct.");
 		assertTrue(adjustDamage.contains("!isDirectHit(attacker, source)"),
 			"Needle should return before breaking veil or applying its multiplier when the source is not a direct hit.");
+	}
+
+	@Test
+	void needleOnlyAmplifiesHostileOrValidPvpTargets() throws IOException {
+		String combat = read(UNSEEN_COMBAT);
+		String adjustDamage = methodBody(combat,
+			"public static float adjustDamage(LivingEntity defender, DamageSource source, float amount)");
+
+		assertTrue(adjustDamage.contains("CombatTargets.isHostileOrPvpOpponent(defender, attacker)"),
+			"Needle should not amplify passive animals, pets, allies, or friendly-fire-blocked players.");
+		assertBefore(adjustDamage,
+			"CombatTargets.isHostileOrPvpOpponent(defender, attacker)",
+			"NEEDLE_MULTIPLIER");
 	}
 
 	private static String read(Path path) throws IOException {
@@ -99,5 +136,14 @@ class DirectCombatFocusContractTest {
 			index += needle.length();
 		}
 		return count;
+	}
+
+	private static void assertBefore(String source, String earlier, String later) {
+		int earlierIndex = source.indexOf(earlier);
+		int laterIndex = source.indexOf(later);
+		assertTrue(earlierIndex >= 0, "Missing expected source fragment: " + earlier);
+		assertTrue(laterIndex >= 0, "Missing expected source fragment: " + later);
+		assertTrue(earlierIndex < laterIndex,
+			"Expected `" + earlier + "` to appear before `" + later + "`.");
 	}
 }

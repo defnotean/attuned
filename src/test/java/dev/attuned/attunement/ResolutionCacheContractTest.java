@@ -39,7 +39,7 @@ class ResolutionCacheContractTest {
 		assertTrue(source.contains("new ConcurrentHashMap<>()"),
 			"In singleplayer the client render thread and server thread share this static map, "
 				+ "so it must be a ConcurrentHashMap, never a plain HashMap.");
-		assertTrue(source.contains("if (player.level().isClientSide()) {")
+		assertTrue(source.contains("if (player.getLevel().isClientSide()) {")
 				|| source.contains("if (player.getLevel().isClientSide()) {"),
 			"Client-side lookups must bypass the cache: the client sees different AttunedInv "
 				+ "instances for the same player UUID, which would thrash the server's entries.");

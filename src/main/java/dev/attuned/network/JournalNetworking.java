@@ -11,5 +11,6 @@ public final class JournalNetworking {
 			return;
 		}
 		initialized = true;
+		CircleSnapshotSync.init();
 	}
 }

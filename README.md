@@ -8,7 +8,7 @@ Equip **Foci** into six inventory slots, but mind your **attunement capacity**. 
 
 ## At a glance
 
-- 95 Foci across mobility, defense, combat, stealth, holy, seafaring, shadow, utility, and the eightfold counter wheel
+- 99 Foci across mobility, defense, combat, stealth, holy, seafaring, shadow, rescue, utility, and the eightfold counter wheel
 - **Eightfold Affinities** — Tide, Forge, Verdant, and Umbral now stand beside Fury, Bastion, Zephyr, and Holy as first-class lanes
 - **Refreshed original Focus art** for the new affinity Foci, processed into animated Minecraft item sheets so they sit with the existing medallion/talisman theme
 - **The Unseen**: a stealth faction built around quiet movement, low-light veils, smoke misdirection, and ambush openings
@@ -21,24 +21,25 @@ Equip **Foci** into six inventory slots, but mind your **attunement capacity**. 
 - Lootr-friendly survival loot: every Focus and shard fragment rolls through vanilla structures, fishing treasure, archaeology, and trial rewards; wandering traders can rarely offer the journal or a shard fragment
 - Combat HUD shows your gem, your target's gem, and resonance at a glance
 
-## Current release — Attuned 1.5.1
+## Current release - Attuned 1.5.5+mc1.18.2
 
-- **Updraft Focus** — a new elytra utility Focus that boosts forward while holding jump and brakes hard while holding sprint/control.
-- **Smoother flight control** — Updraft thrust and braking ease velocity instead of snapping it, so long glides are calmer and easier to steer.
-- **Flight feedback** — boost, brake, and exhaustion states use restrained vanilla particles, sounds, and action-bar messages.
-- **PvP exhaustion safeguard** — sustained PvP pressure for more than five seconds makes Updraft falter briefly, applying a hard brake plus short Weakness and Slowness.
-- **1.5.0 foundation** — Eightfold Affinities, Pact Trials, pact tacticals, Affinity Loom, build sharing, faction set bonuses, Resonant Surges, and expanded HUD/journal surfacing remain the core release base.
+- **Gameplay-polish backport** - Circles, Deep Lanterns, shared contribution rules, expanded build metadata, action-bar priority routing, and Updraft flight polish are now available on the Minecraft 1.18.2 maintenance line.
+- **Circles** - temporary expedition parties support invites, pings, public party HUD rows, shared contribution windows, and party-aware Pact Trial support while keeping solo play complete.
+- **Deep Lanterns** - Cavewick, Glowline, Rescueflame, and Depthglass add cave-route, rescue, and navigation support Foci, bringing the shipped roster to 99 Foci.
+- **Safer build sharing** - imported Reliquary builds can include role, note, party-size, warning, requirement, and version metadata, with server-side validation before saving.
+- **Large patch by design** - this release includes the code, assets, docs, gallery updates, example datapack entries, compatibility shims, and regression tests needed to ship the new systems cleanly on 1.18.2.
+- **1.5.0/1.5.1 foundation** - Eightfold Affinities, Pact Trials, pact tacticals, Affinity Loom, build sharing, faction set bonuses, Resonant Surges, expanded HUD/journal surfacing, and Updraft boost/brake controls remain the core release base.
 
 ## Foundation — Resonant Depths
 
 - The promoted **Tide, Forge, Verdant, and Umbral** affinities expand the counter wheel from four to eight while the original four-affinity Pact/Discord cycle survives as a subset.
-- The eightfold roster includes 95 Foci across all affinity, faction, and utility lanes. Tooltips show each Focus's affinity; the Attunement Journal carries the matchup reference.
+- The eightfold roster includes 99 Foci across all affinity, faction, and utility lanes. Tooltips show each Focus's affinity; the Attunement Journal carries the matchup reference.
 - The new affinity Focus textures ship as crisp animated item sheets with bold medallion silhouettes, disciplined affinity palettes, and inventory-scale readability checks.
 - **Focus Confluences**, **Tempering**, **Grand Focus Reliquary**, **Attunement Sanctums**, **Resonant Surges**, datapack-defined Focus behavior palettes, and expanded journal/tooltips round out the release.
 
 ## Requirements
 
-Minecraft 1.18.2, Fabric Loader 0.19.3+, Fabric API
+Minecraft 1.18.2, Fabric Loader 0.18.4+, Fabric API 0.77.0+1.18.2
 
 Lootr is optional but suggested for modpacks. Attuned does not add custom
 loot containers; it injects Foci and shard fragments into vanilla loot tables,

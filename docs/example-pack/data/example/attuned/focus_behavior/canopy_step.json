@@ -1,0 +1,10 @@
+{
+	"type": "attuned:block_context_effect",
+	"block_tag": "minecraft:leaves",
+	"radius": 2,
+	"requires_lit": false,
+	"effect": "minecraft:slow_falling",
+	"amplifier": 0,
+	"duration_ticks": 80,
+	"refresh_ticks": 20
+}

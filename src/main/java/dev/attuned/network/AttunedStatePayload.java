@@ -7,7 +7,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
 
-/** Branch-local replacement for Fabric attachment sync on Minecraft 1.19.4. */
+/** Branch-local replacement for Fabric attachment sync on Minecraft 1.18.2. */
 public record AttunedStatePayload(CompoundTag tag) implements FabricPacket {
 	public AttunedStatePayload {
 		tag = tag == null ? new CompoundTag() : tag.copy();

@@ -69,4 +69,28 @@ class ResonantSurgeResolverTest {
 		assertEquals(4.0F, ResonantSurgeResolver.resonanceGainMultiplier(), 0.0F,
 			"Players inside a surge gain resonance at four times the base rate.");
 	}
+
+	@Test
+	void idlePlayerInsideSurgeDoesNotReceiveCredit() {
+		assertFalse(ResonantSurgeResolver.shouldGrantCredit(true, false, false, false, false),
+			"Standing still inside the beacon should not farm surge credit.");
+	}
+
+	@Test
+	void movementOrRecentContributionAllowsCreditInsideSurge() {
+		assertTrue(ResonantSurgeResolver.shouldGrantCredit(true, true, false, false, false),
+			"Movement is enough activity to earn surge resonance.");
+		assertTrue(ResonantSurgeResolver.shouldGrantCredit(true, false, true, false, false),
+			"Recent valid combat is enough activity to earn surge resonance.");
+		assertTrue(ResonantSurgeResolver.shouldGrantCredit(true, false, false, true, false),
+			"Future mining hooks can feed the same activity gate.");
+		assertTrue(ResonantSurgeResolver.shouldGrantCredit(true, false, false, false, true),
+			"Future contextual hooks can feed the same activity gate.");
+	}
+
+	@Test
+	void activityOutsideSurgeDoesNotReceiveCredit() {
+		assertFalse(ResonantSurgeResolver.shouldGrantCredit(false, true, true, true, true),
+			"Activity away from the active surge should not grant surge credit.");
+	}
 }

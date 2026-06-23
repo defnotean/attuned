@@ -209,6 +209,8 @@ public final class AttunementReadout {
 				.append(new net.minecraft.network.chat.TextComponent("Discord").withStyle(ChatFormatting.LIGHT_PURPLE)));
 			lines.add(new net.minecraft.network.chat.TextComponent("Clashing affinities — you deal and take extra damage.")
 				.withStyle(ChatFormatting.GRAY));
+			lines.add(new net.minecraft.network.chat.TextComponent("Discord: half Resonance from surge fields.")
+				.withStyle(ChatFormatting.DARK_GRAY));
 		} else {
 			Optional<Affinity> affinity = snapshot.committed();
 			lines.add(new net.minecraft.network.chat.TextComponent("Affinity: ").withStyle(ChatFormatting.GRAY)

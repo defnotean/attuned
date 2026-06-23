@@ -18,6 +18,7 @@ import dev.attuned.content.AttunedContent;
 import dev.attuned.content.AttunedLoot;
 import dev.attuned.content.behavior.FactionSetBonuses;
 import dev.attuned.compat.LastDeathPositions;
+import dev.attuned.content.behavior.PaletteItemUse;
 import dev.attuned.effect.AttunedEffects;
 import dev.attuned.menu.AltarMenuType;
 import dev.attuned.menu.AltarNetworking;
@@ -28,6 +29,7 @@ import dev.attuned.menu.SatchelMenuType;
 import dev.attuned.network.AttunedNetworking;
 import dev.attuned.network.JournalNetworking;
 import dev.attuned.onboarding.Onboarding;
+import dev.attuned.party.CircleRuntime;
 import dev.attuned.pacts.PactDeathMessages;
 import dev.attuned.pacts.PactTrials;
 import dev.attuned.pacts.Pacts;
@@ -51,6 +53,7 @@ public class Attuned implements ModInitializer {
 		AttunedPlayerCleanup.init();
 		AttunedServerCleanup.init();
 		LastDeathPositions.init();
+		CircleRuntime.init();
 		// Register generic Focus teardown before Focus behaviors add fallback cleanup callbacks.
 		AttunedEffects.init();
 		FactionSetBonuses.init();
@@ -60,6 +63,7 @@ public class Attuned implements ModInitializer {
 		AttunedLoot.init();
 		AttunedCommands.init();
 		AttunedCombat.init();
+		PaletteItemUse.init();
 		UnseenCombat.init();
 		RevenantCombat.init();
 		Apex.init();

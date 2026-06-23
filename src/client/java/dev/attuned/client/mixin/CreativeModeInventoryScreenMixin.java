@@ -78,7 +78,7 @@ public abstract class CreativeModeInventoryScreenMixin
 		Player player = Minecraft.getInstance().player;
 		if (player != null) {
 			List<FormattedCharSequence> lines = new ArrayList<>();
-			for (var c : AttunementReadout.tooltip(player)) {
+			for (var c : AttunementReadout.tooltip(AttunementReadout.cached(player))) {
 				lines.add(c.getVisualOrderText());
 			}
 			this.renderTooltip(poseStack, lines, mouseX, mouseY);

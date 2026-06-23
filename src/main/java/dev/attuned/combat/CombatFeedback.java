@@ -1,15 +1,13 @@
 package dev.attuned.combat;
 
 import dev.attuned.compat.ParticleCompat;
-
-import dev.attuned.compat.PlayerMessages;
 import dev.attuned.api.focus.Affinity;
 import dev.attuned.api.focus.AffinityColors;
+import dev.attuned.network.ActionBarMessages;
 import dev.attuned.pacts.Pact;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
-import net.minecraft.core.particles.DustParticleOptions;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -89,8 +87,9 @@ public final class CombatFeedback {
 		float pitch = 1.0F + Math.min(0.4F, (streak - 2) * 0.08F);
 		level.playSound(null, player.blockPosition(),
 			SoundEvents.PLAYER_LEVELUP, SoundSource.PLAYERS, 0.25F, pitch);
-		PlayerMessages.overlay(player, new net.minecraft.network.chat.TranslatableComponent(
-			"resonance.attuned.kill_streak", streak));
+		ActionBarMessages.send(player, ActionBarMessages.Priority.PROGRESS,
+			new net.minecraft.network.chat.TranslatableComponent(
+				"resonance.attuned.kill_streak", streak));
 	}
 
 	public static void surgeCharge(ServerPlayer player) {
@@ -326,7 +325,7 @@ public final class CombatFeedback {
 			case TIDE -> {
 				level.sendParticles(ParticleTypes.BUBBLE, x, y, z, 10, 0.35, 0.3, 0.35, 0.04);
 				level.playSound(null, player.blockPosition(),
-					SoundEvents.BUBBLE_COLUMN_BUBBLE_POP, SoundSource.PLAYERS, 0.5F, 0.9F);
+					SoundEvents.BUBBLE_COLUMN_UPWARDS_AMBIENT, SoundSource.PLAYERS, 0.5F, 0.9F);
 			}
 			case STEALTH -> {
 				level.sendParticles(ParticleTypes.SMOKE, x, y, z, 8, 0.25, 0.4, 0.25, 0.02);

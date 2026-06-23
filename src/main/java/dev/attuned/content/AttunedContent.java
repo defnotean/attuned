@@ -155,6 +155,12 @@ public final class AttunedContent {
 	public static final Item GRANITEHIDE_FOCUS = registerFocus("granitehide_focus");
 	public static final Item HAMMERWARD_FOCUS = registerFocus("hammerward_focus");
 
+	// Deep Lanterns - cave rescue, route marking, and quiet expedition support.
+	public static final Item CAVEWICK_FOCUS = registerFocus("cavewick_focus");
+	public static final Item GLOWLINE_FOCUS = registerFocus("glowline_focus");
+	public static final Item RESCUEFLAME_FOCUS = registerFocus("rescueflame_focus");
+	public static final Item DEPTHGLASS_FOCUS = registerFocus("depthglass_focus");
+
 	/**
 	 * Blank, resource-pack-skinnable Focus items for datapack authors. Each one is a
 	 * real registered Focus item with a neutral default name/model/texture, but ships

@@ -29,6 +29,16 @@ class AssetCustomizerContractTest {
 	private static final Path STYLES = CUSTOMIZER.resolve("styles.css");
 	private static final Path SERVER = CUSTOMIZER.resolve("serve.py");
 	private static final Path GUI_PREVIEW_RENDERER = Path.of("tools/render_gui_previews.py");
+	private static final Path MINECRAFT_RENDER_PREVIEW = Path.of("tools/minecraft_render_preview");
+	private static final Path MINECRAFT_RENDER_PREVIEW_INDEX = MINECRAFT_RENDER_PREVIEW.resolve("index.html");
+	private static final Path MINECRAFT_RENDER_PREVIEW_SCRIPT =
+		MINECRAFT_RENDER_PREVIEW.resolve("minecraft-render-preview.js");
+	private static final Path MINECRAFT_RENDER_PREVIEW_STYLES = MINECRAFT_RENDER_PREVIEW.resolve("styles.css");
+	private static final Path MINECRAFT_RENDER_PREVIEW_SERVER = MINECRAFT_RENDER_PREVIEW.resolve("serve.py");
+	private static final Path MINECRAFT_RENDER_PREVIEW_THREE =
+		MINECRAFT_RENDER_PREVIEW.resolve("vendor/three.module.js");
+	private static final Path MINECRAFT_RENDER_PREVIEW_ORBIT =
+		MINECRAFT_RENDER_PREVIEW.resolve("vendor/controls/OrbitControls.js");
 	private static final Path HARPOON_FOCUS_TEXTURE =
 		Path.of("src/main/resources/assets/attuned/textures/item/harpoon_focus.png");
 	private static final Path OFFSHORE_HARPOON_TEXTURE =
@@ -39,13 +49,6 @@ class AssetCustomizerContractTest {
 		Path.of("src/main/resources/assets/attuned/textures/item/ocean_relic_trident_inventory.png");
 	private static final Path OCEAN_RELIC_TRIDENT_PALETTE =
 		Path.of("src/main/resources/assets/attuned/textures/item/ocean_relic_trident_voxel_palette.png");
-	private static final Path OCEAN_RELIC_TRIDENT_INVENTORY_MODEL =
-		Path.of("src/main/resources/assets/attuned/models/item/ocean_relic_trident_inventory.json");
-	private static final Path OCEAN_RELIC_TRIDENT_ITEM_DEFINITION =
-		Path.of("src/main/resources/assets/attuned/items/ocean_relic_trident.json");
-	private static final Path OCEAN_RELIC_TRIDENT_PROJECTILE_DEFINITION =
-		Path.of("src/main/resources/assets/attuned/items/ocean_relic_trident_projectile.json");
-	private static final Path CLIENT_MIXIN_CONFIG = Path.of("src/client/resources/attuned.client.mixins.json");
 	private static final Path OCEAN_RELIC_TRIDENT_BLOCKBENCH_MODEL =
 		Path.of("src/main/resources/assets/attuned/blockbench/ocean_relic_trident.bbmodel");
 	private static final Path OCEAN_RELIC_TRIDENT_GLTF_MODEL =
@@ -54,6 +57,13 @@ class AssetCustomizerContractTest {
 		Path.of("src/main/resources/assets/attuned/textures/item/ocean_relic_trident_blockbench.png");
 	private static final Path OCEAN_RELIC_TRIDENT_BLOCKBENCH_TEXTURE_META =
 		Path.of("src/main/resources/assets/attuned/textures/item/ocean_relic_trident_blockbench.png.mcmeta");
+	private static final Path OCEAN_RELIC_TRIDENT_INVENTORY_MODEL =
+		Path.of("src/main/resources/assets/attuned/models/item/ocean_relic_trident_inventory.json");
+	private static final Path OCEAN_RELIC_TRIDENT_ITEM_DEFINITION =
+		Path.of("src/main/resources/assets/attuned/items/ocean_relic_trident.json");
+	private static final Path OCEAN_RELIC_TRIDENT_PROJECTILE_DEFINITION =
+		Path.of("src/main/resources/assets/attuned/items/ocean_relic_trident_projectile.json");
+	private static final Path CLIENT_MIXIN_CONFIG = Path.of("src/client/resources/attuned.client.mixins.json");
 	private static final Path BLOCKBENCH_SPECIAL_RENDERER =
 		Path.of("src/client/java/dev/attuned/client/render/BlockbenchMeshSpecialRenderer.java");
 	private static final Path GLTF_SPECIAL_RENDERER =
@@ -153,9 +163,44 @@ class AssetCustomizerContractTest {
 	}
 
 	@Test
+	void minecraftRenderPreviewLoadsActualGltfHarpoonAssets() throws IOException {
+		assertTrue(Files.isRegularFile(MINECRAFT_RENDER_PREVIEW_INDEX),
+			"Minecraft render preview should have an HTML entry point");
+		assertTrue(Files.isRegularFile(MINECRAFT_RENDER_PREVIEW_SCRIPT),
+			"Minecraft render preview should have a WebGL renderer script");
+		assertTrue(Files.isRegularFile(MINECRAFT_RENDER_PREVIEW_STYLES),
+			"Minecraft render preview should have local styles");
+		assertTrue(Files.isRegularFile(MINECRAFT_RENDER_PREVIEW_SERVER),
+			"Minecraft render preview should have a localhost launcher");
+		assertTrue(Files.isRegularFile(MINECRAFT_RENDER_PREVIEW_THREE)
+				&& Files.isRegularFile(MINECRAFT_RENDER_PREVIEW_ORBIT),
+			"Minecraft render preview should vendor its WebGL runtime for offline localhost debugging");
+
+		String html = read(MINECRAFT_RENDER_PREVIEW_INDEX);
+		String script = read(MINECRAFT_RENDER_PREVIEW_SCRIPT);
+		String server = read(MINECRAFT_RENDER_PREVIEW_SERVER);
+		assertTrue(html.contains("renderCanvas"),
+			"Minecraft render preview should render to a WebGL canvas");
+		assertTrue(html.contains("./vendor/three.module.js") && html.contains("./vendor/"),
+			"Minecraft render preview should use local Three.js modules instead of a CDN");
+		assertTrue(html.contains("UV Y mode") && html.contains("Filtering") && html.contains("Normal mode"),
+			"Minecraft render preview should expose the render-path controls needed to debug mesh artifacts");
+		assertTrue(script.contains("ocean_relic_trident.glb")
+				&& script.contains("ocean_relic_trident_blockbench.png"),
+			"Minecraft render preview should load the actual shipped GLB model and texture");
+		assertTrue(script.contains("BufferGeometry") && script.contains("MeshLambertMaterial"),
+			"Minecraft render preview should render the real triangle mesh through WebGL");
+		assertTrue(script.contains("parseGlbModel") && script.contains("readIndexAccessor")
+				&& script.contains("uvMode"),
+			"Minecraft render preview should let us compare GLB mesh buffers and UV conventions");
+		assertTrue(server.contains("ThreadingHTTPServer") && server.contains("tools/minecraft_render_preview"),
+			"Minecraft render preview should launch on localhost from the repo root");
+	}
+
+	@Test
 	void manifestPointsAtRealAttunedAssets() throws IOException {
 		JsonArray assets = JsonParser.parseString(read(MANIFEST)).getAsJsonArray();
-		assertEquals(5, assets.size(), "Customizer should include Offshore assets, throw preview, and the Meshy conversion samples");
+		assertEquals(5, assets.size(), "Customizer should include Offshore assets, throw preview, and model conversion samples");
 
 		boolean sawFocus = false;
 		boolean sawHarpoon = false;
@@ -176,18 +221,15 @@ class AssetCustomizerContractTest {
 			if (asset.has("data")) {
 				assertRelativeAssetExists(asset, "data");
 			}
-			if (asset.has("source")) {
-				assertRelativeAssetExists(asset, "source");
-			}
 			if (asset.has("sprite")) {
 				assertRelativeAssetExists(asset, "sprite");
 			}
 		}
 		assertTrue(sawFocus, "Customizer manifest should include Harpoon Focus");
 		assertTrue(sawHarpoon, "Customizer manifest should include Offshore Harpoon");
-		assertTrue(sawOceanRelic, "Customizer manifest should include the Ocean Relic Trident source model");
+		assertTrue(sawOceanRelic, "Customizer manifest should include the Ocean Relic Trident model");
 		assertTrue(sawOceanRelicThrowing, "Customizer manifest should include the Ocean Relic Trident throwing pose");
-		assertTrue(sawFrostbound, "Customizer manifest should include the Meshy Frostbound Trident conversion");
+		assertTrue(sawFrostbound, "Customizer manifest should include the Frostbound Trident conversion");
 	}
 
 	@Test
@@ -331,9 +373,8 @@ class AssetCustomizerContractTest {
 
 		assertEquals(OCEAN_RELIC_TRIDENT_PROJECTILE_DEFINITION.normalize(), definition,
 			"Throwing preview should edit the projectile item definition, not the held trident definition");
-		assertEquals("attuned:item/ocean_relic_trident_throwing",
-			definitionRoot.getAsJsonObject("model").get("model").getAsString(),
-			"Projectile item definition should resolve the throwing model directly");
+		assertGltfSpecial(definitionRoot.getAsJsonObject("model"),
+			"attuned:item/ocean_relic_trident_throwing");
 	}
 
 	@Test
@@ -364,7 +405,7 @@ class AssetCustomizerContractTest {
 	}
 
 	@Test
-	void meshyFbxConversionProducesMinecraftItemSpriteAndReusableReport() throws IOException {
+	void meshConversionProducesMinecraftItemSpriteAndReusableReport() throws IOException {
 		Path converter = Path.of("tools/mesh_to_minecraft_item.py");
 		assertTrue(Files.isRegularFile(converter), "Mesh conversion pipeline should be reusable");
 		String source = read(converter);
@@ -396,7 +437,6 @@ class AssetCustomizerContractTest {
 		assertTransparentCorners(oceanRelic);
 		assertVisibleFootprint(texture, 52, 32);
 		assertVisibleFootprint(oceanRelic, 52, 32);
-
 	}
 
 	@Test
@@ -595,9 +635,9 @@ class AssetCustomizerContractTest {
 		assertTrue(rendererMixin.contains("ci.cancel()"),
 			"Custom projectile renderer should cancel vanilla trident model submission");
 		assertTrue(rendererMixin.contains("ItemDisplayContext.NONE"),
-			"Projectile renderer should render the custom cuboid spear directly instead of GUI/ground inventory transforms");
+			"Projectile renderer should render the Blockbench harpoon directly instead of GUI/ground inventory transforms");
 		assertTrue(stateMixin.contains("ItemStackRenderState"),
-			"Thrown trident render state should carry an item render state for the custom cuboid spear");
+			"Thrown trident render state should carry an item render state for the custom Blockbench harpoon");
 	}
 
 	private static void assertRelativeAssetExists(JsonObject asset, String key) {
@@ -606,6 +646,26 @@ class AssetCustomizerContractTest {
 			"Customizer asset path should stay inside the repo: " + path);
 		assertTrue(Files.isRegularFile(path),
 			"Customizer manifest should point at an existing " + key + ": " + path);
+	}
+
+	private static void assertGltfSpecial(JsonObject model, String base) {
+		String type = model.get("type").getAsString();
+		if ("minecraft:special".equals(type)) {
+			assertEquals(base, model.get("base").getAsString(),
+				"Special renderer should preserve the expected base model for transforms");
+			JsonObject special = model.getAsJsonObject("model");
+			assertEquals("attuned:gltf_mesh", special.get("type").getAsString(),
+				"Special renderer should use Attuned's glTF mesh renderer");
+			assertEquals("attuned:gltf/ocean_relic_trident.glb", special.get("model").getAsString(),
+				"Special renderer should load the compact GLB runtime model");
+			assertEquals("attuned:textures/item/ocean_relic_trident_blockbench.png", special.get("texture").getAsString(),
+				"Special renderer should use the exported game-scale texture");
+			return;
+		}
+		assertEquals("minecraft:model", type,
+			"Legacy 1.18.2 item definitions should keep normal model entries while the trident item renderer supplies the GLB mesh.");
+		assertEquals(base, model.get("model").getAsString(),
+			"Legacy model definition should preserve the expected transform model.");
 	}
 
 	private static Path assertRelativeCustomizerFileExists(String relativePath) {
@@ -787,6 +847,27 @@ class AssetCustomizerContractTest {
 			double value = scale.get(index).getAsDouble();
 			assertTrue(value >= min && value <= max, message + " axis " + index + ": " + value);
 		}
+	}
+
+	private static double[] elementSpan(JsonArray elements) {
+		double minX = Double.POSITIVE_INFINITY;
+		double minY = Double.POSITIVE_INFINITY;
+		double minZ = Double.POSITIVE_INFINITY;
+		double maxX = Double.NEGATIVE_INFINITY;
+		double maxY = Double.NEGATIVE_INFINITY;
+		double maxZ = Double.NEGATIVE_INFINITY;
+		for (JsonElement element : elements) {
+			JsonObject cuboid = element.getAsJsonObject();
+			JsonArray from = cuboid.getAsJsonArray("from");
+			JsonArray to = cuboid.getAsJsonArray("to");
+			minX = Math.min(minX, Math.min(from.get(0).getAsDouble(), to.get(0).getAsDouble()));
+			minY = Math.min(minY, Math.min(from.get(1).getAsDouble(), to.get(1).getAsDouble()));
+			minZ = Math.min(minZ, Math.min(from.get(2).getAsDouble(), to.get(2).getAsDouble()));
+			maxX = Math.max(maxX, Math.max(from.get(0).getAsDouble(), to.get(0).getAsDouble()));
+			maxY = Math.max(maxY, Math.max(from.get(1).getAsDouble(), to.get(1).getAsDouble()));
+			maxZ = Math.max(maxZ, Math.max(from.get(2).getAsDouble(), to.get(2).getAsDouble()));
+		}
+		return new double[] { maxX - minX, maxY - minY, maxZ - minZ };
 	}
 
 	private static void assertCuboidCoordinatesInMinecraftBounds(Path modelPath, JsonArray elements) {

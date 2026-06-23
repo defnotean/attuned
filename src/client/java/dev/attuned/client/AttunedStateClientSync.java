@@ -6,7 +6,7 @@ import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 
-/** Client receiver for the 1.19.4 branch-local player state sync packet. */
+/** Client receiver for the 1.18.2 branch-local player state sync packet. */
 public final class AttunedStateClientSync {
 	private static boolean initialized;
 

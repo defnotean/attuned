@@ -1,0 +1,9 @@
+{
+  "type": "attuned:conditional_mob_effect",
+  "effect": "minecraft:dolphins_grace",
+  "duration_ticks": 60,
+  "refresh_ticks": 20,
+  "condition": {
+    "condition": "underwater"
+  }
+}

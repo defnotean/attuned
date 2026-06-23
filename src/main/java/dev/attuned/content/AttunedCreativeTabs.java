@@ -13,14 +13,6 @@ final class AttunedCreativeTabs {
 
 	private AttunedCreativeTabs() {}
 
-	/**
-	 * Registers the Attuned creative-inventory tabs so Foci and altar tools are
-	 * reachable without {@code /give}.
-	 *
-	 * <p>The 1.5.0 Focus roster is large enough that one affinity tab becomes a
-	 * wall of icons. Split the eight lanes into readable pairs, then keep neutral
-	 * utility Foci, author placeholders, and core tools on the utility tab.
-	 */
 	static void init() {
 		if (initialized) {
 			return;
@@ -30,6 +22,7 @@ final class AttunedCreativeTabs {
 			"attuned",
 			new net.minecraft.network.chat.TranslatableComponent("itemGroup.attuned.fury_bastion_foci"),
 			AttunedContent.BLOODFURY_FOCUS,
+			false,
 			AttunedContent.CINDER_FOCUS,
 			AttunedContent.EDGE_FOCUS,
 			AttunedContent.FRENZY_FOCUS,
@@ -45,12 +38,12 @@ final class AttunedCreativeTabs {
 			AttunedContent.GRANITEHIDE_FOCUS,
 			AttunedContent.VITAL_FOCUS,
 			AttunedContent.HAMMERWARD_FOCUS,
-			AttunedContent.AEGIS_FOCUS,
-			false);
+			AttunedContent.AEGIS_FOCUS);
 		registerFocusCreativeTab(
 			"attuned_zephyr_holy",
 			new net.minecraft.network.chat.TranslatableComponent("itemGroup.attuned.zephyr_holy_foci"),
 			AttunedContent.GALESPUR_FOCUS,
+			false,
 			AttunedContent.DRIFT_FOCUS,
 			AttunedContent.LEAP_FOCUS,
 			AttunedContent.RAINSTEP_FOCUS,
@@ -67,11 +60,12 @@ final class AttunedCreativeTabs {
 			AttunedContent.NAMESAKE_FOCUS,
 			AttunedContent.CENSER_FOCUS,
 			AttunedContent.THRESHOLD_FOCUS,
-			false);
+			AttunedContent.RESCUEFLAME_FOCUS);
 		registerFocusCreativeTab(
 			"attuned_tide_forge",
 			new net.minecraft.network.chat.TranslatableComponent("itemGroup.attuned.tide_forge_foci"),
 			AttunedContent.TIDEWARDEN_FOCUS,
+			false,
 			AttunedContent.CURRENT_RUNNER_FOCUS,
 			AttunedContent.EBBSTRIDE_FOCUS,
 			AttunedContent.TIDEWARDEN_FOCUS,
@@ -87,12 +81,12 @@ final class AttunedCreativeTabs {
 			AttunedContent.TEMPER_FOCUS,
 			AttunedContent.SPARKWELD_FOCUS,
 			AttunedContent.SLAGBRAND_FOCUS,
-			AttunedContent.ANVILHEART_FOCUS,
-			false);
+			AttunedContent.ANVILHEART_FOCUS);
 		registerFocusCreativeTab(
 			"attuned_verdant_umbral",
 			new net.minecraft.network.chat.TranslatableComponent("itemGroup.attuned.verdant_umbral_foci"),
 			AttunedContent.OVERGROWTH_FOCUS,
+			false,
 			AttunedContent.FERNSTRIDE_FOCUS,
 			AttunedContent.BRIARCOAT_FOCUS,
 			AttunedContent.DEEPROOT_FOCUS,
@@ -120,12 +114,12 @@ final class AttunedCreativeTabs {
 			AttunedContent.SHADOWMELD_FOCUS,
 			AttunedContent.SNAREMOON_FOCUS,
 			AttunedContent.DREADFANG_FOCUS,
-			AttunedContent.ECLIPSE_FOCUS,
-			false);
+			AttunedContent.ECLIPSE_FOCUS);
 		registerFocusCreativeTab(
 			"attuned_utility",
 			new net.minecraft.network.chat.TranslatableComponent("itemGroup.attuned.utility_foci"),
 			AttunedContent.LINECAST_FOCUS,
+			true,
 			AttunedContent.BEACON_FOCUS,
 			AttunedContent.FORAGER_FOCUS,
 			AttunedContent.HARVEST_FOCUS,
@@ -145,39 +139,9 @@ final class AttunedCreativeTabs {
 			AttunedContent.DRIFTGLASS_FOCUS,
 			AttunedContent.BLOOM_FOCUS,
 			AttunedContent.MOSSHEART_FOCUS,
-			true);
-	}
-
-	private static void registerFocusCreativeTab(String id, Component title, Item icon,
-			Item item1, Item item2, Item item3, Item item4, Item item5, Item item6, Item item7,
-			Item item8, Item item9, Item item10, Item item11, Item item12, Item item13, Item item14,
-			Item item15, Item item16, boolean includeCoreItems) {
-		registerFocusCreativeTab(id, title, icon, includeCoreItems,
-			item1, item2, item3, item4, item5, item6, item7, item8,
-			item9, item10, item11, item12, item13, item14, item15, item16);
-	}
-
-	private static void registerFocusCreativeTab(String id, Component title, Item icon,
-			Item item1, Item item2, Item item3, Item item4, Item item5, Item item6, Item item7,
-			Item item8, Item item9, Item item10, Item item11, Item item12, Item item13, Item item14,
-			Item item15, Item item16, Item item17, Item item18, Item item19, boolean includeCoreItems) {
-		registerFocusCreativeTab(id, title, icon, includeCoreItems,
-			item1, item2, item3, item4, item5, item6, item7, item8,
-			item9, item10, item11, item12, item13, item14, item15, item16,
-			item17, item18, item19);
-	}
-
-	private static void registerFocusCreativeTab(String id, Component title, Item icon,
-			Item item1, Item item2, Item item3, Item item4, Item item5, Item item6, Item item7,
-			Item item8, Item item9, Item item10, Item item11, Item item12, Item item13, Item item14,
-			Item item15, Item item16, Item item17, Item item18, Item item19, Item item20, Item item21,
-			Item item22, Item item23, Item item24, Item item25, Item item26, Item item27, Item item28,
-			boolean includeCoreItems) {
-		registerFocusCreativeTab(id, title, icon, includeCoreItems,
-			item1, item2, item3, item4, item5, item6, item7, item8,
-			item9, item10, item11, item12, item13, item14, item15, item16,
-			item17, item18, item19, item20, item21, item22, item23, item24,
-			item25, item26, item27, item28);
+			AttunedContent.CAVEWICK_FOCUS,
+			AttunedContent.GLOWLINE_FOCUS,
+			AttunedContent.DEPTHGLASS_FOCUS);
 	}
 
 	private static void registerFocusCreativeTab(String id, Component title, Item icon,
@@ -185,19 +149,19 @@ final class AttunedCreativeTabs {
 		FabricItemGroupBuilder.create(new ResourceLocation(Attuned.MOD_ID, id))
 			.icon(() -> new ItemStack(icon))
 			.appendItems(stacks -> {
+				if (includeCoreItems) {
+					stacks.add(new ItemStack(AttunedContent.ATTUNEMENT_JOURNAL));
+					stacks.add(new ItemStack(AttunedContent.ATTUNEMENT_SHARD));
+					stacks.add(new ItemStack(AttunedContent.ATTUNEMENT_SHARD_FRAGMENT));
+					stacks.add(new ItemStack(AttunedContent.ATTUNEMENT_ALTAR));
+					stacks.add(new ItemStack(AttunedContent.ALTAR_OF_REWEAVING));
+					stacks.add(new ItemStack(AttunedContent.SATCHEL_OF_FOCI));
+					stacks.add(new ItemStack(AttunedContent.GRAND_SATCHEL_OF_FOCI));
+				}
 				for (Item focus : focusItems) {
 					stacks.add(new ItemStack(focus));
 				}
 				if (includeCoreItems) {
-					stacks.add(new ItemStack(AttunedContent.ATTUNEMENT_SHARD));
-					stacks.add(new ItemStack(AttunedContent.ATTUNEMENT_SHARD_FRAGMENT));
-					stacks.add(new ItemStack(AttunedContent.ATTUNEMENT_JOURNAL));
-					stacks.add(new ItemStack(AttunedContent.SATCHEL_OF_FOCI));
-					stacks.add(new ItemStack(AttunedContent.GRAND_SATCHEL_OF_FOCI));
-					stacks.add(new ItemStack(AttunedContent.ATTUNEMENT_ALTAR));
-					stacks.add(new ItemStack(AttunedContent.ALTAR_OF_REWEAVING));
-					// The blank, author-skinnable Focus pool carries no FocusDefinition,
-					// so fociInDisplayOrder never surfaces it — accept it explicitly.
 					for (Item customFocus : AttunedContent.CUSTOM_FOCI) {
 						stacks.add(new ItemStack(customFocus));
 					}

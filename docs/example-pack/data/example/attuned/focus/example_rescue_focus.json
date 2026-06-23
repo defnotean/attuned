@@ -1,0 +1,6 @@
+{
+	"item": "minecraft:heart_of_the_sea",
+	"cost": 4,
+	"affinity": "holy",
+	"behavior": "example:rescue_assist"
+}
