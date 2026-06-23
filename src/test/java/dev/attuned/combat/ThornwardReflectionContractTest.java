@@ -17,6 +17,12 @@ class ThornwardReflectionContractTest {
 	private static final Path RESONANCE = Path.of("src/main/java/dev/attuned/combat/Resonance.java");
 	private static final Path UNSEEN = Path.of("src/main/java/dev/attuned/combat/UnseenCombat.java");
 	private static final Path REVENANT = Path.of("src/main/java/dev/attuned/combat/RevenantCombat.java");
+	private static final Path MOSSHEART =
+		Path.of("src/main/java/dev/attuned/content/behavior/MossheartBehavior.java");
+	private static final Path KILNWARD =
+		Path.of("src/main/java/dev/attuned/content/behavior/KilnwardBehavior.java");
+	private static final Path RADIANT =
+		Path.of("src/main/java/dev/attuned/content/behavior/RadiantFocusBehaviors.java");
 
 	@Test
 	void reflectedThornwardDamageCannotReenterPlayerAttackProcPipelines() throws IOException {
@@ -38,6 +44,10 @@ class ThornwardReflectionContractTest {
 				+ "\t\t\tCombatContext context)")
 				.contains("AttunedCombat.isReflecting()"),
 			"Reflected damage should not trigger Apex execute or other attacker capstones.");
+		assertTrue(methodBody(apex,
+			"private static void afterDamage(LivingEntity defender, DamageSource source,")
+				.contains("AttunedCombat.isReflecting()"),
+			"Reflected damage should not trigger Apex after-damage capstones or Stillpoint pulses.");
 		assertTrue(methodBody(pacts,
 			"public static float adjustDamage(LivingEntity defender, DamageSource source, float amount,\n"
 				+ "\t\t\tCombatContext context)")
@@ -55,6 +65,10 @@ class ThornwardReflectionContractTest {
 			"public static float adjustDamage(LivingEntity defender, DamageSource source, float amount)")
 				.contains("AttunedCombat.isReflecting()"),
 			"Reflected damage should not spend Needle opener resources.");
+		assertTrue(methodBody(unseen,
+			"private static void afterDamage(LivingEntity defender, DamageSource source,")
+				.contains("AttunedCombat.isReflecting()"),
+			"Reflected damage should not confirm deferred Needle/Veil opener state.");
 
 		String revenant = read(REVENANT);
 		assertTrue(methodBody(revenant,
@@ -65,6 +79,30 @@ class ThornwardReflectionContractTest {
 			"private static void afterDamage(LivingEntity defender, DamageSource source,")
 				.contains("AttunedCombat.isReflecting()"),
 			"Reflected damage should not register Ashen Debts or proc Bonechill.");
+	}
+
+	@Test
+	void reflectedThornwardDamageCannotSpendReactiveDefenderFocusCooldowns() throws IOException {
+		String mossheart = read(MOSSHEART);
+		String kilnward = read(KILNWARD);
+		String radiant = read(RADIANT);
+
+		assertTrue(methodBody(mossheart,
+			"private static void afterDamage(LivingEntity defender, DamageSource source,")
+				.contains("AttunedCombat.isReflecting()"),
+			"Reflected damage should not spend Mossheart's hostile-hit Resistance cooldown.");
+		assertTrue(methodBody(kilnward,
+			"private static void afterDamage(LivingEntity defender, DamageSource source,")
+				.contains("AttunedCombat.isReflecting()"),
+			"Reflected damage should not spend Kilnward's hostile-hit Resistance cooldown.");
+		assertTrue(methodBody(radiant,
+			"private static void afterDamage(LivingEntity defender, DamageSource source,")
+				.contains("AttunedCombat.isReflecting()"),
+			"Reflected damage should not spend Votive's hostile-hit shield cooldown.");
+		assertTrue(methodBody(radiant,
+			"private void afterDamage(LivingEntity defender, DamageSource source,")
+				.contains("AttunedCombat.isReflecting()"),
+			"Reflected damage should not spend Bellwether's hostile-hit shield cooldown.");
 	}
 
 	private static String read(Path path) throws IOException {

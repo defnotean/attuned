@@ -207,6 +207,7 @@ class AttunementJournalUiContractTest {
 		assertEightfoldPactPages(screenSource, itemSource, lang);
 		assertEightfoldCapstonePages(screenSource, itemSource, lang);
 		assertPhase3SurfacingPages(screenSource, itemSource, lang);
+		assertCircleJournalPages(screenSource, itemSource, lang);
 	}
 
 	/**
@@ -307,6 +308,52 @@ class AttunementJournalUiContractTest {
 			"Tempering journal copy should mention the stat bonus.");
 		assertTrue(temperingPage.contains("+1"),
 			"Tempering journal copy should mention the extra attunement cost.");
+	}
+
+	private static void assertCircleJournalPages(String screenSource, String itemSource, String lang) {
+		assertTrue(screenSource.contains("chapter(\"Circles\""),
+			"Journal UI should expose Circles as its own chapter.");
+		for (String circlePage : new String[] {
+				"journal.attuned.page46", "journal.attuned.page47", "journal.attuned.page48",
+				"journal.attuned.page49", "journal.attuned.page50", "journal.attuned.page51" }) {
+			assertTrue(lang.contains("\"" + circlePage + "\""),
+				"Journal copy should include the Circle foundation page " + circlePage);
+			assertTrue(screenSource.contains(circlePage),
+				"Journal UI should route to the Circle foundation page " + circlePage);
+			assertTrue(itemSource.contains("\"" + circlePage + "\""),
+				"Written-book fallback should include the Circle foundation page " + circlePage);
+		}
+		assertTrue(screenSource.indexOf("journal.attuned.page45") < screenSource.indexOf("journal.attuned.page46")
+				&& screenSource.indexOf("journal.attuned.page51") < screenSource.indexOf("dynamicPage(CONFLUENCE_PAGE_KEY"),
+			"Circles chapter should follow HUD guidance and precede dynamic Confluences.");
+		assertTrue(itemSource.indexOf("\"journal.attuned.page45\"") < itemSource.indexOf("\"journal.attuned.page46\""),
+			"Written-book fallback should keep Circles after HUD guidance.");
+
+		String combinedCircleCopy = String.join("\n",
+			translationValue(lang, "journal.attuned.page46"),
+			translationValue(lang, "journal.attuned.page47"),
+			translationValue(lang, "journal.attuned.page48"),
+			translationValue(lang, "journal.attuned.page49"),
+			translationValue(lang, "journal.attuned.page50"),
+			translationValue(lang, "journal.attuned.page51"))
+			.replace("\\n", "\n")
+			.toLowerCase();
+		assertTrue(combinedCircleCopy.contains("no item sharing"),
+			"Circle foundation docs should explicitly say there is no item sharing.");
+		assertTrue(combinedCircleCopy.contains("server-authoritative"),
+			"Circle foundation docs should explain that membership is server-authoritative.");
+		assertTrue(combinedCircleCopy.contains("public attunement state"),
+			"Circle foundation docs should explain what the party HUD may show.");
+		assertTrue(combinedCircleCopy.contains("nearby contributors"),
+			"Circle foundation docs should explain shared credit anti-AFK limits.");
+		assertTrue(combinedCircleCopy.contains("solo play remains complete"),
+			"Circle foundation docs should reassure players that parties are optional.");
+		assertFalse(combinedCircleCopy.contains("shared inventory"),
+			"Circle foundation docs must not imply shared inventories.");
+		assertFalse(combinedCircleCopy.contains("remote inventory"),
+			"Circle foundation docs must not imply remote inventory access.");
+		assertFalse(combinedCircleCopy.contains("lend foci"),
+			"Circle foundation docs must not promise remote Focus lending.");
 	}
 
 	@Test

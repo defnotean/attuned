@@ -1,16 +1,24 @@
 package dev.attuned.menu;
 
+import dev.attuned.Attuned;
+import dev.attuned.AttunedConfig;
 import dev.attuned.AttunedPlayerCleanup;
 import dev.attuned.AttunedRegistries;
 import dev.attuned.AttunedServerCleanup;
+import dev.attuned.api.focus.FocusBehavior;
 import dev.attuned.api.focus.FocusDefinition;
 import dev.attuned.attunement.AttunedAttachments;
 import dev.attuned.attunement.AttunedInv;
 import dev.attuned.attunement.Attunement;
+import dev.attuned.attunement.BudgetResolver;
 import dev.attuned.attunement.FocusHolder;
 import dev.attuned.attunement.FocusPreset;
 import dev.attuned.content.AttunedComponents;
 import dev.attuned.content.AttunedContent;
+import dev.attuned.menu.PartySetupSuggestions.MemberRole;
+import dev.attuned.menu.PresetMetadataResolver.ResolvedFocus;
+import dev.attuned.network.ActionBarMessages;
+import dev.attuned.party.CircleRuntime;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
@@ -18,8 +26,10 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import net.minecraft.resources.Identifier;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.ChatFormatting;
@@ -27,6 +37,7 @@ import net.minecraft.core.Registry;
 import net.minecraft.core.component.DataComponentType;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.item.ItemStack;
@@ -77,7 +88,21 @@ public final class PresetNetworking {
 		if (!hasOpenLiveSatchel(player)) {
 			return;
 		}
-		AttunedAttachments.savePreset(player, new FocusPreset(payload.name(), payload.slots()));
+		Registry<FocusDefinition> registry =
+			player.level().registryAccess().lookupOrThrow(AttunedRegistries.FOCUS_DEFINITIONS);
+		PresetImportValidator.Result validation =
+			PresetImportValidator.validate(payload.preset(), registeredFocusIds(registry));
+		if (!validation.missing().isEmpty()) {
+			player.sendSystemMessage(Component.translatable(
+				"screen.attuned.preset.import_missing", String.join(", ", validation.missing()))
+				.withStyle(ChatFormatting.RED));
+			return;
+		}
+		FocusPreset preset = PresetMetadataResolver.withWarningsEnabled(payload.preset(),
+			AttunedConfig.get().partySetupSuggestionsEnabled());
+		AttunedAttachments.savePreset(player, preset);
+		ActionBarMessages.send(player, ActionBarMessages.Priority.PROGRESS,
+			Component.translatable("screen.attuned.preset.imported", preset.name()));
 	}
 
 	private static void savePreset(ServerPlayer player, SavePresetPayload payload) {
@@ -85,16 +110,86 @@ public final class PresetNetworking {
 			return;
 		}
 		List<String> ids = new ArrayList<>(AttunedInv.SIZE);
+		List<ResolvedFocus> facts = new ArrayList<>(AttunedInv.SIZE);
 		AttunedInv inv = AttunedAttachments.getInventory(player);
+		BudgetResolver.Resolution resolution = Attunement.resolution(player);
 		for (int i = 0; i < AttunedInv.SIZE; i++) {
 			ItemStack stack = inv.get(i);
-			if (stack.isEmpty() || Attunement.definitionFor(player, stack).isEmpty()) {
+			Optional<FocusDefinition> definition = Attunement.definitionFor(player, stack);
+			if (stack.isEmpty() || definition.isEmpty()) {
 				ids.add("");
 			} else {
-				ids.add(BuiltInRegistries.ITEM.getKey(stack.getItem()).toString());
+				ids.add(keyFor(stack));
+				Optional<BudgetResolver.DormantReason> dormantReason =
+					Optional.ofNullable(resolution.dormantReasons().get(i));
+				boolean activeAbility = dormantReason.isEmpty()
+					&& hasActiveAbility(player, definition.get(), stack);
+				facts.add(new ResolvedFocus(
+					definition.get().affinity(),
+					definition.get().faction(),
+					activeAbility,
+					dormantReason));
 			}
 		}
-		AttunedAttachments.savePreset(player, new FocusPreset(payload.name(), ids));
+		FocusPreset.SetupMetadata metadata = PresetMetadataResolver.infer(facts,
+			AttunedConfig.get().partySetupSuggestionsEnabled());
+		metadata = withPartyWarnings(metadata, partySetupWarnings(player, metadata.role()));
+		AttunedAttachments.savePreset(player, new FocusPreset(payload.name(), ids, metadata));
+	}
+
+	private static FocusPreset.SetupMetadata withPartyWarnings(FocusPreset.SetupMetadata metadata,
+			List<String> warnings) {
+		if (warnings.isEmpty()) {
+			return metadata;
+		}
+		List<String> merged = new ArrayList<>(metadata.warnings());
+		merged.addAll(warnings);
+		return new FocusPreset.SetupMetadata(
+			metadata.role(),
+			metadata.note(),
+			metadata.preferredPartySize(),
+			merged,
+			metadata.requires(),
+			metadata.minecraftVersion(),
+			metadata.attunedVersion());
+	}
+
+	private static List<String> partySetupWarnings(ServerPlayer player, String candidateRole) {
+		if (!AttunedConfig.get().partySetupSuggestionsEnabled()) {
+			return List.of();
+		}
+		MinecraftServer server = player.level().getServer();
+		if (server == null) {
+			return List.of();
+		}
+		return CircleRuntime.manager().circleOf(player.getUUID())
+			.map(circle -> {
+				List<MemberRole> roles = new ArrayList<>(circle.members().size());
+				for (UUID member : circle.members()) {
+					ServerPlayer memberPlayer = server.getPlayerList().getPlayer(member);
+					if (memberPlayer != null) {
+						roles.add(new MemberRole(member,
+							member.equals(player.getUUID()) ? candidateRole : Attunement.publicRole(memberPlayer)));
+					}
+				}
+				return PartySetupSuggestions.warnings(player.getUUID(), candidateRole, roles);
+			})
+			.orElse(List.of());
+	}
+
+	private static boolean hasActiveAbility(ServerPlayer player, FocusDefinition definition, ItemStack stack) {
+		Identifier behaviorId = definition.behavior().orElse(null);
+		if (behaviorId == null) {
+			return false;
+		}
+		FocusBehavior behavior = AttunedRegistries.getBehavior(behaviorId, player.registryAccess());
+		try {
+			return behavior != null && behavior.hasActiveAbility();
+		} catch (RuntimeException e) {
+			Attuned.LOGGER.warn("Attuned setup metadata ability check failed for {} using {} ({})",
+				player.getUUID(), stack.getItem(), behavior.getClass().getName(), e);
+			return false;
+		}
 	}
 
 	private static void applyPreset(ServerPlayer player, ApplyPresetPayload payload) {
@@ -123,6 +218,8 @@ public final class PresetNetworking {
 		long now = player.level().getGameTime();
 		Long last = LAST_APPLY_TICK.get(id);
 		if (last != null && now - last < APPLY_COOLDOWN_TICKS) {
+			ActionBarMessages.send(player, ActionBarMessages.Priority.PROGRESS,
+				Component.translatable("screen.attuned.preset.cooldown"));
 			return;
 		}
 
@@ -130,12 +227,18 @@ public final class PresetNetworking {
 			player.level().registryAccess().lookupOrThrow(AttunedRegistries.FOCUS_DEFINITIONS);
 		Set<String> registeredFocusIds = registeredFocusIds(registry);
 		Map<String, Integer> inventoryCounts = inventoryFocusCounts(player, registeredFocusIds);
-		PresetApplicationResolver.Result result = PresetApplicationResolver.apply(
+		PresetApplicationResolver.Result result = PresetApplicationResolver.applyAllOrNothing(
 			presets.get(index).slots(),
 			equippedIds(player),
 			satchel.ids(),
 			inventoryCounts,
 			registeredFocusIds);
+		if (!result.missing().isEmpty()) {
+			player.sendSystemMessage(Component.translatable(
+				"screen.attuned.preset.missing", String.join(", ", result.missing()))
+				.withStyle(ChatFormatting.RED));
+			return;
+		}
 
 		List<ItemStack> currentEquippedStacks = equippedStacks(player);
 		Map<String, Deque<ItemStack>> satchelStacks =
@@ -149,6 +252,12 @@ public final class PresetNetworking {
 			currentEquippedStacks, satchelStacks, displacedEquippedStacks, inventoryStacks, consumedInventory);
 		List<ItemStack> residualSatchel = materializeResidualSatchel(result.satchel(),
 			satchelStacks, displacedEquippedStacks);
+		if (hasOverflow(satchelStacks) || hasOverflow(displacedEquippedStacks)) {
+			player.sendSystemMessage(Component.translatable(
+				"screen.attuned.preset.missing", String.join(", ", overflowIds(satchelStacks, displacedEquippedStacks)))
+				.withStyle(ChatFormatting.RED));
+			return;
+		}
 
 		for (int slot = 0; slot < AttunedInv.SIZE; slot++) {
 			AttunedAttachments.setSlot(player, slot, equippedStacks.get(slot));
@@ -159,19 +268,12 @@ public final class PresetNetworking {
 				new FocusHolder(sizeOf(satchelStack), 1, residualSatchel));
 		}
 		removeConsumedInventory(player, consumedInventory);
-		returnOverflowToInventory(player, satchelStacks);
-		returnOverflowToInventory(player, displacedEquippedStacks);
 		LAST_APPLY_TICK.put(id, now);
 		if (player.containerMenu instanceof SatchelMenu menu) {
 			menu.broadcastChanges();
 		}
-		player.sendOverlayMessage(Component.translatable(
-			"screen.attuned.preset.applied", presets.get(index).name()));
-		if (!result.missing().isEmpty()) {
-			player.sendSystemMessage(Component.translatable(
-				"screen.attuned.preset.missing", String.join(", ", result.missing()))
-				.withStyle(ChatFormatting.RED));
-		}
+		ActionBarMessages.send(player, ActionBarMessages.Priority.PROGRESS,
+			Component.translatable("screen.attuned.preset.applied", presets.get(index).name()));
 	}
 
 	private static void deletePreset(ServerPlayer player, DeletePresetPayload payload) {
@@ -226,9 +328,7 @@ public final class PresetNetworking {
 		AttunedInv inv = AttunedAttachments.getInventory(player);
 		for (int i = 0; i < AttunedInv.SIZE; i++) {
 			ItemStack stack = inv.get(i);
-			ids.add(stack.isEmpty() || Attunement.definitionFor(player, stack).isEmpty()
-				? ""
-				: BuiltInRegistries.ITEM.getKey(stack.getItem()).toString());
+			ids.add(keyFor(stack));
 		}
 		return ids;
 	}
@@ -270,7 +370,7 @@ public final class PresetNetworking {
 		List<ItemStack> stacks = new ArrayList<>(size);
 		for (int i = 0; i < size; i++) {
 			ItemStack stack = holder.get(i);
-			String id = idFor(stack);
+			String id = keyFor(stack);
 			ids.add(id);
 			stacks.add(stack);
 		}
@@ -282,8 +382,8 @@ public final class PresetNetworking {
 		Inventory inventory = player.getInventory();
 		for (int i = 0; i < inventory.getContainerSize(); i++) {
 			ItemStack stack = inventory.getItem(i);
-			String id = idFor(stack);
-			if (!id.isEmpty() && registeredFocusIds.contains(id)) {
+			String id = keyFor(stack);
+			if (!id.isEmpty() && registeredFocusIds.contains(FocusPreset.slotId(id))) {
 				counts.merge(id, stack.getCount(), Integer::sum);
 			}
 		}
@@ -322,7 +422,7 @@ public final class PresetNetworking {
 		for (int slot = 0; slot < currentEquippedStacks.size(); slot++) {
 			ItemStack stack = currentEquippedStacks.get(slot);
 			String targetId = slot < targetIds.size() ? targetIds.get(slot) : "";
-			if (idFor(stack).equals(targetId)) {
+			if (keyFor(stack).equals(targetId)) {
 				continue;
 			}
 			addStack(stacks, stack);
@@ -336,8 +436,8 @@ public final class PresetNetworking {
 		Inventory inventory = player.getInventory();
 		for (int slot = 0; slot < inventory.getContainerSize(); slot++) {
 			ItemStack stack = inventory.getItem(slot);
-			String id = idFor(stack);
-			if (!registeredFocusIds.contains(id)) {
+			String id = keyFor(stack);
+			if (!registeredFocusIds.contains(FocusPreset.slotId(id))) {
 				continue;
 			}
 			for (int count = 0; count < stack.getCount(); count++) {
@@ -397,15 +497,19 @@ public final class PresetNetworking {
 			return ItemStack.EMPTY;
 		}
 		ItemStack stack = currentEquippedStacks.get(slot);
-		return id.equals(idFor(stack)) ? stack.copy() : ItemStack.EMPTY;
+		return id.equals(keyFor(stack)) ? stack.copy() : ItemStack.EMPTY;
 	}
 
 	private static void addStack(Map<String, Deque<ItemStack>> stacks, ItemStack stack) {
-		String id = idFor(stack);
+		String id = keyFor(stack);
 		if (id.isEmpty()) {
 			return;
 		}
 		stacks.computeIfAbsent(id, ignored -> new ArrayDeque<>()).addLast(stack.copy());
+	}
+
+	private static String keyFor(ItemStack stack) {
+		return FocusPreset.slotKey(idFor(stack), stack.has(AttunedComponents.TEMPERED));
 	}
 
 	private static ItemStack takeStack(Map<String, Deque<ItemStack>> stacks, String id) {
@@ -442,10 +546,27 @@ public final class PresetNetworking {
 		}
 	}
 
-	private static void returnOverflowToInventory(ServerPlayer player, Map<String, Deque<ItemStack>> satchelStacks) {
-		for (Deque<ItemStack> stacks : satchelStacks.values()) {
-			while (!stacks.isEmpty()) {
-				player.getInventory().placeItemBackInInventory(stacks.removeFirst());
+	private static boolean hasOverflow(Map<String, Deque<ItemStack>> stacks) {
+		for (Deque<ItemStack> queue : stacks.values()) {
+			if (!queue.isEmpty()) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private static List<String> overflowIds(Map<String, Deque<ItemStack>> satchelStacks,
+			Map<String, Deque<ItemStack>> displacedEquippedStacks) {
+		List<String> ids = new ArrayList<>();
+		collectOverflowIds(ids, satchelStacks);
+		collectOverflowIds(ids, displacedEquippedStacks);
+		return ids;
+	}
+
+	private static void collectOverflowIds(List<String> ids, Map<String, Deque<ItemStack>> stacks) {
+		for (Map.Entry<String, Deque<ItemStack>> entry : stacks.entrySet()) {
+			for (int i = 0; i < entry.getValue().size(); i++) {
+				ids.add(entry.getKey());
 			}
 		}
 	}

@@ -64,6 +64,17 @@ class PactResourceContractTest {
 		}
 	}
 
+	@Test
+	void stoneheartChallengeDescriptionNamesFoePressure() throws IOException {
+		JsonObject root = JsonParser.parseString(Files.readString(
+			ADVANCEMENT_DIR.resolve("pact_stoneheart_challenge.json"), StandardCharsets.UTF_8))
+			.getAsJsonObject();
+		String description = root.getAsJsonObject("display").get("description").getAsString();
+
+		assertTrue(description.contains("foe"),
+			"Stoneheart challenge copy should not imply environmental or friendly damage can complete it.");
+	}
+
 	private static Set<String> pactIds() throws IOException {
 		String source = Files.readString(PACT_SOURCE, StandardCharsets.UTF_8);
 		Matcher matcher = PACT_DECL.matcher(source);

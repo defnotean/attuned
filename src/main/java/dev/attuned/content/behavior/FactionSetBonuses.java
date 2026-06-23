@@ -7,6 +7,7 @@ import dev.attuned.attunement.AttunedInv;
 import dev.attuned.attunement.Attunement;
 import dev.attuned.attunement.BudgetResolver;
 import dev.attuned.api.focus.FocusDefinition;
+import dev.attuned.combat.CombatTargets;
 import dev.attuned.content.FactionSetBonusResolver;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -58,6 +59,7 @@ public final class FactionSetBonuses {
 	private static final String FACTION_FORGEBOUND = "attuned:forgebound";
 	private static final String FACTION_WILDROOT = "attuned:wildroot";
 	private static final String FACTION_UMBRAL = "attuned:umbral";
+	private static final String FACTION_DEEP_LANTERNS = "attuned:deep_lanterns";
 
 	/** Refreshed passive perks aim well above one throttle window so they never lapse. */
 	private static final int PASSIVE_DURATION = 100;
@@ -179,6 +181,11 @@ public final class FactionSetBonuses {
 					refresh(player, MobEffects.SPEED);
 				}
 			}
+			case FACTION_DEEP_LANTERNS -> {
+				if (nearWater(player) || nearLantern(player)) {
+					refresh(player, MobEffects.NIGHT_VISION);
+				}
+			}
 			default -> { /* Unknown faction: no perk. */ }
 		}
 	}
@@ -216,7 +223,8 @@ public final class FactionSetBonuses {
 		}
 		AABB area = player.getBoundingBox().inflate(REVENANT_RADIUS);
 		List<LivingEntity> undead = level.getEntitiesOfClass(LivingEntity.class, area, entity ->
-			entity != player && entity.isAlive() && entity.typeHolder().is(EntityTypeTags.UNDEAD));
+			entity != player && entity.isAlive() && entity.typeHolder().is(EntityTypeTags.UNDEAD)
+				&& CombatTargets.isHostileOrPvpOpponent(entity, player));
 		for (LivingEntity entity : undead) {
 			entity.addEffect(new MobEffectInstance(
 				MobEffects.SLOWNESS, REVENANT_SLOWNESS_TICKS, 0, true, false, true));
@@ -279,5 +287,17 @@ public final class FactionSetBonuses {
 	private static boolean isLitFurnace(BlockState state) {
 		return (state.is(Blocks.FURNACE) || state.is(Blocks.BLAST_FURNACE) || state.is(Blocks.SMOKER))
 			&& state.getValue(AbstractFurnaceBlock.LIT);
+	}
+
+	private static boolean nearLantern(ServerPlayer player) {
+		BlockPos origin = player.blockPosition();
+		for (BlockPos pos : BlockPos.betweenClosed(
+				origin.offset(-4, -2, -4), origin.offset(4, 2, 4))) {
+			BlockState state = player.level().getBlockState(pos);
+			if (state.is(Blocks.LANTERN) || state.is(Blocks.SOUL_LANTERN)) {
+				return true;
+			}
+		}
+		return false;
 	}
 }

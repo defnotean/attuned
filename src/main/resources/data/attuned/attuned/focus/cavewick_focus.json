@@ -1,0 +1,7 @@
+{
+	"item": "attuned:cavewick_focus",
+	"cost": 2,
+	"unique": true,
+	"faction": "attuned:deep_lanterns",
+	"behavior": "attuned:cavewick"
+}

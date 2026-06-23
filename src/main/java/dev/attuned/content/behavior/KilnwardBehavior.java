@@ -49,9 +49,7 @@ public final class KilnwardBehavior implements FocusBehavior {
 	}
 
 	@Override
-	public void onDeactivate(ServerPlayer player, ItemStack focus) {
-		COOLDOWNS.remove(player.getUUID());
-	}
+	public void onDeactivate(ServerPlayer player, ItemStack focus) {}
 
 	private static void initLifecycle() {
 		if (initialized) {
@@ -65,7 +63,7 @@ public final class KilnwardBehavior implements FocusBehavior {
 
 	private static void afterDamage(LivingEntity defender, DamageSource source,
 			float originalDamage, float dealtDamage, boolean blocked) {
-		if (dealtDamage <= 0.0F || !(defender instanceof ServerPlayer player)
+		if (dealtDamage <= 0.0F || AttunedCombat.isReflecting() || !(defender instanceof ServerPlayer player)
 				|| COOLDOWNS.getOrDefault(player.getUUID(), 0) > 0
 				|| !hasActiveKilnward(player)
 				|| !nearHeat(player)) {

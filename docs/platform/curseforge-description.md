@@ -6,8 +6,8 @@ Equip Foci into six inventory slots, manage your attunement capacity, and build 
 
 ## Highlights
 
-- Attuned 1.5.1 - Updraft Flight Polish adds the Updraft Focus with smooth elytra boost/brake controls, in-flight feedback, and a five-second PvP exhaustion safeguard on top of the 1.5.0 eightfold affinity and Resonant Engagement foundation.
-- 95 Foci across mobility, defense, combat, stealth, holy, seafaring, shadow, utility, and the eightfold counter wheel.
+- Attuned 1.5.5+mc26.1.2 brings the gameplay-polish backport to Minecraft 26.1.2 with Circles, Deep Lanterns, shared contribution rules, expanded build metadata, and the 1.5.1 Updraft flight controls.
+- 99 Foci across mobility, defense, combat, stealth, holy, seafaring, shadow, rescue, utility, and the eightfold counter wheel.
 - 16 new pure-affinity modifier Foci fill out the expanded roster with simple, readable stat identities and animated medallion art.
 - Eight Affinity Pacts and expanded Apex capstones reward commitment to any single Affinity, while Discord and neutral builds keep their own endgame paths.
 - Readable creative inventory tabs split Foci into Fury & Bastion, Zephyr & Holy, Tide & Forge, Verdant & Umbral, and Utility & Tools.
@@ -31,4 +31,4 @@ Lootr is optional but recommended for modpacks. Attuned injects Foci and shard f
 ## Links
 
 - Documentation and authoring guides are included in the repository under `docs/`.
-- Current release notes are generated from the matching `CHANGELOG.md` section for the uploaded version.
+- Current release notes summarize the latest supported Minecraft version and gameplay changes.

@@ -1,5 +1,36 @@
 # Changelog
 
+## Attuned 1.5.5+mc26.1.2 - Gameplay Polish Backport
+
+### Added
+- **Deep Lanterns faction** - four exploration-support Foci bring the shipped roster to 99 Foci: Cavewick rewards placed lantern routes with gentle Night Vision, Glowline follows same-dimension Circle pings, Rescueflame helps drowning Circle members breathe, and Depthglass reads held lodestone compass targets for restrained navigation hints.
+- **Server-authoritative Circles** - temporary expedition parties now support create, invite, accept, leave, disband, kick, invite expiry, capacity checks, cooldowns, disconnect cleanup, and snapshot syncing.
+- **Party HUD and invite prompts** - clients receive Circle snapshots, invite prompts, and recent ping notices through dedicated payloads without exposing hidden inventory, private cooldowns, or item sharing.
+- **Shared contribution windows** - nearby same-dimension Circle members can receive eligible shared progress from combat, blocking, reveal, and helper actions without allowing passive proximity to farm progression.
+- **Expanded data-driven Focus behavior palette** - new passive behavior types cover block-context effects, navigation hints, party assists, item-use windows, and marked targets.
+- **Build setup metadata** - shared builds can carry sanitized role, note, party-size, required-Focus, and version-context metadata as advice only, without bypassing ownership or attunement rules.
+- **Gameplay polish QA checklist** - added a manual release checklist for combat feel, Pact loops, Confluences, Resonant Surges, Circles, Updraft flight, onboarding, and journal clarity.
+
+### Changed
+- **Minecraft 26.1.2 gameplay parity** - this maintenance line now carries the same gameplay-polish systems as `latest` while preserving the Minecraft 26.1.2 Fabric target and dependency range.
+- **Updraft release carried forward** - this line keeps the 1.5.1 Updraft Focus, smoother boost/brake controls, flight feedback, and PvP exhaustion safeguard.
+- **Deep Lanterns documentation and journal pages** - the Attunement Journal and reference docs now explain Circles, public attunement state, shared credit, party pings, the Deep Lanterns faction, and the new behavior-palette entries.
+- **Example datapack expanded** - the sample pack now covers build marks, canopy steps, rescue support, route windows, and navigation-hint patterns so datapack authors can copy working JSON.
+- **Gallery coverage refreshed** - Modrinth/CurseForge gallery sheets were updated so the current Focus roster, neutral sets, Holy/Forge/Umbral coverage, and shipped item art remain visible after the new Foci landed.
+- **Reliquary/build workflows hardened** - preset save, import, apply, delete, metadata inference, and quick-apply paths now share stricter validation so stale UI state or malformed imported data cannot silently mutate the wrong build.
+
+### Fixed
+- Circle membership changes now clean up contribution windows and sync updated snapshots so clients do not keep stale party rows after leaving, kicking, disbanding, or disconnecting.
+- Friendly or invalid targets are filtered out of party-assist, hostile-only Focus, Pact, Apex, and contribution checks so Circle members are not treated as enemies just because they are nearby.
+- Build-share imports reject malformed metadata, non-string slot ids, component-like names, and unknown required Focus ids before saving the preset.
+- Positive Luck modifiers are capped through shared logic, preventing stacked support effects from turning fishing and loot-adjacent bonuses into unbounded values.
+- Deep Lantern support effects use bounded cadences and same-dimension checks so navigation and rescue feedback remain readable and cannot become global trackers.
+
+### Internal
+- **Why this patch is large** - the large line increase is the combined cost of shipping a server-authoritative Circle runtime, client HUD state, network payloads, party contribution rules, new Focus behavior schema, four complete Foci with item/model/texture/data definitions, expanded authoring docs, gallery updates, example datapack coverage, and a broad regression-test net around each boundary.
+- Added contract tests for Circle policy, Circle manager behavior, pings, snapshots, invite prompts, party HUD geometry, shared contribution credit, party effects, action-bar routing, preset metadata/import validation, damage formula helpers, Luck stacking, Deep Lantern content, and block-context scans.
+- Expanded repository validation around generated and authored repository structure, source-marker hygiene, Focus definitions, behavior palettes, docs claims, platform gallery assets, release-facing feature counts, Python syntax, and transient-cache leaks.
+
 ## Attuned 1.5.4+mc26.1.2 - Compatibility Fixes
 
 ### Fixed

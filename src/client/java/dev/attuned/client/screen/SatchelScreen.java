@@ -1,9 +1,11 @@
 package dev.attuned.client.screen;
 
 import dev.attuned.Attuned;
+import dev.attuned.AttunedRegistries;
 import dev.attuned.attunement.AttunedAttachments;
 import dev.attuned.attunement.AttunedInv;
 import dev.attuned.attunement.FocusPreset;
+import dev.attuned.content.AttunedComponents;
 import dev.attuned.menu.ApplyPresetPayload;
 import dev.attuned.menu.BuildShareCodec;
 import dev.attuned.menu.BuildPreviewResolver;
@@ -21,10 +23,12 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.BooleanSupplier;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
+import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
+import net.minecraft.client.gui.components.toasts.SystemToast;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.renderer.RenderPipelines;
@@ -217,8 +221,15 @@ public class SatchelScreen extends AbstractContainerScreen<SatchelMenu> {
 		}
 		FocusPreset preset = decoded.get();
 		this.nameField.setValue(preset.name());
-		ClientPlayNetworking.send(new ImportPresetPayload(preset.name(), preset.slots()));
-		minecraft.gui.setOverlayMessage(Component.translatable("screen.attuned.preset.imported", preset.name()), false);
+		ClientPlayNetworking.send(new ImportPresetPayload(preset));
+	}
+
+	private static void showPresetToast(Minecraft minecraft, Component message) {
+		SystemToast.addOrUpdate(
+			minecraft.gui.toastManager(),
+			SystemToast.SystemToastId.PERIODIC_NOTIFICATION,
+			Component.literal("Attuned"),
+			message);
 	}
 
 	@Override
@@ -358,6 +369,7 @@ public class SatchelScreen extends AbstractContainerScreen<SatchelMenu> {
 				BUILDS_X, BUILDS_LIST_Y, LABEL_TEXT, false);
 		}
 		drawBuildPreview(graphics, mouseX, mouseY);
+		drawBuildMetadataTooltip(graphics, mouseX, mouseY);
 	}
 
 	/**
@@ -379,7 +391,7 @@ public class SatchelScreen extends AbstractContainerScreen<SatchelMenu> {
 		}
 		List<String> slots = presets.get(hovered).slots();
 		List<BuildPreviewResolver.Availability> availability = BuildPreviewResolver.availability(
-			slots, equippedIds(), satchelIds(), inventoryFocusCounts());
+			slots, equippedIds(), satchelIds(), inventoryFocusCounts(), registeredFocusIds());
 
 		int rowW = PREVIEW_W + PREVIEW_PAD * 2;
 		int rowH = PREVIEW_CELL + PREVIEW_PAD * 2;
@@ -414,6 +426,48 @@ public class SatchelScreen extends AbstractContainerScreen<SatchelMenu> {
 		}
 	}
 
+	private void drawBuildMetadataTooltip(GuiGraphicsExtractor graphics, int mouseX, int mouseY) {
+		int hovered = hoveredBuildIndex(mouseX, mouseY);
+		if (hovered < 0) {
+			return;
+		}
+		List<FocusPreset> presets = presets();
+		if (hovered >= presets.size()) {
+			return;
+		}
+		List<Component> lines = buildMetadataTooltip(presets.get(hovered));
+		if (!lines.isEmpty()) {
+			graphics.setTooltipForNextFrame(this.font, lines, Optional.empty(), mouseX, mouseY);
+		}
+	}
+
+	private static List<Component> buildMetadataTooltip(FocusPreset preset) {
+		List<Component> lines = new ArrayList<>();
+		if (!preset.role().isEmpty()) {
+			lines.add(Component.translatable("screen.attuned.preset.metadata.role", preset.role())
+				.withStyle(ChatFormatting.GRAY));
+		}
+		if (!preset.note().isEmpty()) {
+			lines.add(Component.translatable("screen.attuned.preset.metadata.note", preset.note())
+				.withStyle(ChatFormatting.GRAY));
+		}
+		if (preset.preferredPartySize() > 0) {
+			lines.add(Component.translatable("screen.attuned.preset.metadata.party_size", preset.preferredPartySize())
+				.withStyle(ChatFormatting.GRAY));
+		}
+		for (String warning : preset.warnings()) {
+			if (!warning.isEmpty()) {
+				lines.add(Component.translatable("screen.attuned.preset.metadata.warning", warning)
+					.withStyle(ChatFormatting.YELLOW));
+			}
+		}
+		if (!preset.requires().isEmpty()) {
+			lines.add(Component.translatable("screen.attuned.preset.metadata.requires", String.join(", ", preset.requires()))
+				.withStyle(ChatFormatting.DARK_AQUA));
+		}
+		return lines;
+	}
+
 	/** Index of the build button currently under the cursor, or -1. */
 	private int hoveredBuildIndex(int mouseX, int mouseY) {
 		for (int i = 0; i < buildButtons.size(); i++) {
@@ -427,7 +481,7 @@ public class SatchelScreen extends AbstractContainerScreen<SatchelMenu> {
 
 	/** Resolves a saved Focus id to its item stack for the preview (client registry). */
 	private static ItemStack stackFor(String id) {
-		return BuiltInRegistries.ITEM.getValue(Identifier.parse(id)).getDefaultInstance();
+		return BuiltInRegistries.ITEM.getValue(Identifier.parse(FocusPreset.slotId(id))).getDefaultInstance();
 	}
 
 	private void drawWell(GuiGraphicsExtractor graphics, int x, int y) {
@@ -492,11 +546,24 @@ public class SatchelScreen extends AbstractContainerScreen<SatchelMenu> {
 		return counts;
 	}
 
+	private Set<String> registeredFocusIds() {
+		if (this.minecraft == null || this.minecraft.player == null) {
+			return Set.of();
+		}
+		Set<String> ids = new HashSet<>();
+		this.minecraft.player.registryAccess()
+			.lookupOrThrow(AttunedRegistries.FOCUS_DEFINITIONS)
+			.stream()
+			.map(def -> BuiltInRegistries.ITEM.getKey(def.item().value()).toString())
+			.forEach(ids::add);
+		return ids;
+	}
+
 	private String slotId(int index) {
 		if (index < 0 || index >= this.menu.slots.size()) {
 			return "";
 		}
-		return idFor(this.menu.slots.get(index).getItem());
+		return keyFor(this.menu.slots.get(index).getItem());
 	}
 
 	private static String idFor(ItemStack stack) {
@@ -504,6 +571,10 @@ public class SatchelScreen extends AbstractContainerScreen<SatchelMenu> {
 			return "";
 		}
 		return BuiltInRegistries.ITEM.getKey(stack.getItem()).toString();
+	}
+
+	private static String keyFor(ItemStack stack) {
+		return FocusPreset.slotKey(idFor(stack), stack.has(AttunedComponents.TEMPERED));
 	}
 
 	private static String signatureOf(List<FocusPreset> presets) {

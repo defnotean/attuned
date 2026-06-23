@@ -47,6 +47,34 @@ class AttunementSourceContractTest {
 	}
 
 	@Test
+	void publicRoleUsesActiveDefinitionsForCoarsePartyLabels() throws IOException {
+		String source = Files.readString(SOURCE, StandardCharsets.UTF_8);
+		String publicRole = methodRegion(source, "public static String publicRole(Player player)",
+			"public static Set<Affinity> activeAffinities");
+
+		assertTrue(source.contains("import dev.attuned.menu.PresetMetadataResolver;"),
+			"Public party roles should reuse the saved-build role inference policy.");
+		assertTrue(publicRole.contains("AttunedInv inv = AttunedAttachments.getInventory(player);"),
+			"Public role extraction should read the player's Focus inventory once.");
+		assertTrue(publicRole.contains("for (int slot : activeSlots(player))"),
+			"Public role extraction should only consider active resolved Focus slots.");
+		assertTrue(publicRole.contains("definitionFor(player, inv.get(slot))"),
+			"Public role extraction should convert active slots to Focus metadata facts.");
+		assertTrue(publicRole.contains("new PresetMetadataResolver.ResolvedFocus("),
+			"Public role extraction should expose only coarse resolver facts.");
+		assertTrue(publicRole.contains("def.affinity()") && publicRole.contains("def.faction()"),
+			"Public role extraction should derive role labels from affinity and faction metadata.");
+		assertTrue(publicRole.contains("def.behavior().isPresent()"),
+			"Public role extraction should preserve active-ability facts for shared resolver semantics.");
+		assertTrue(publicRole.contains("Optional.empty()"),
+			"Public role extraction should mark every included Focus as active.");
+		assertTrue(publicRole.contains("return PresetMetadataResolver.inferRole(foci);"),
+			"The public role helper should return only the role label, not saved-build warnings or exact Foci.");
+		assertTrue(!publicRole.contains("def.item()"),
+			"Public role extraction should not expose exact Focus item identities.");
+	}
+
+	@Test
 	void effectsTickUsesOneResolutionForActiveAndDormantState() throws IOException {
 		String source = Files.readString(EFFECTS_SOURCE, StandardCharsets.UTF_8);
 

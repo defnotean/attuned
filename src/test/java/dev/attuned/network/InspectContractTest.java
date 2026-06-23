@@ -80,8 +80,10 @@ class InspectContractTest {
 			"Inspect derives committed affinity / Discord server-side from the target's attunement.");
 		assertTrue(net.contains("Apex.capstoneOf") && net.contains("Resonance.atApex"),
 			"Inspect reports the target's Apex capstone and whether it is armed.");
-		assertTrue(net.contains("sendOverlayMessage"),
-			"Inspect replies on the requester's action bar.");
+		assertTrue(net.contains("ActionBarMessages.send(player, ActionBarMessages.Priority.PROGRESS"),
+			"Inspect replies on the requester's action bar through the shared priority gate.");
+		assertTrue(!net.contains("sendOverlayMessage(inspectLine(target))"),
+			"Inspect should not bypass the action-bar priority gate.");
 	}
 
 	@Test

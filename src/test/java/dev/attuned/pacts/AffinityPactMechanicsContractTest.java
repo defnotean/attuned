@@ -106,6 +106,67 @@ class AffinityPactMechanicsContractTest {
 	}
 
 	@Test
+	void absorbedDamageTrialCreditRequiresRealCombatPressure() throws IOException {
+		String pacts = read(PACTS);
+		String adjustDamage = methodBody(pacts,
+			"public static float adjustDamage(LivingEntity defender, DamageSource source, float amount,\n"
+				+ "\t\t\tCombatContext context)");
+		String helper = methodBody(pacts,
+			"private static boolean isTrialCreditThreat(LivingEntity attacker, ServerPlayer player)");
+
+		assertTrue(adjustDamage.contains("isTrialCreditThreat(context.attacker(), stoneheartPlayer)"),
+			"Stoneheart trial progress should not accrue from environmental, passive, allied, or friendly-fire-blocked damage.");
+		assertBefore(adjustDamage,
+			"isTrialCreditThreat(context.attacker(), stoneheartPlayer)",
+			"PactTrials.onStoneheartAbsorb");
+		assertTrue(adjustDamage.contains("isTrialCreditThreat(context.attacker(), nightswornPlayer)"),
+			"Nightsworn trial progress should not accrue from environmental, passive, allied, or friendly-fire-blocked damage.");
+		assertBefore(adjustDamage,
+			"isTrialCreditThreat(context.attacker(), nightswornPlayer)",
+			"PactTrials.onNightswornAbsorb");
+
+		assertTrue(helper.contains("attacker != null"),
+			"Environmental damage should not qualify as trial combat pressure.");
+		assertTrue(helper.contains("CombatTargets.isHostileOrPvpOpponent(attacker, player)"),
+			"Absorbed-damage trial credit should use the same hostile/PvP predicate as other reward paths.");
+	}
+
+	@Test
+	void stoneheartChallengeRequiresRealCombatPressure() throws IOException {
+		String pacts = read(PACTS);
+		String challenge = methodBody(pacts,
+			"private static void maybeAwardStoneheartChallenge(LivingEntity defender,");
+
+		assertTrue(challenge.contains("!isTrialCreditThreat(attacker, player)"),
+			"Stoneheart's heavy-hit challenge should not award from environmental, passive, allied, or friendly-fire-blocked damage.");
+		assertBefore(challenge,
+			"!isTrialCreditThreat(attacker, player)",
+			"AttunedAdvancements.award(player, STONEHEART_CHALLENGE)");
+	}
+
+	@Test
+	void nonPlayerPactPayoffsUseTheSharedHostileAndSummonGate() throws IOException {
+		String pacts = read(PACTS);
+		String adjustDamage = methodBody(pacts,
+			"public static float adjustDamage(LivingEntity defender, DamageSource source, float amount,\n"
+				+ "\t\t\tCombatContext context)");
+		String untetheredChallenge = methodBody(pacts,
+			"private static void maybeAwardUntetheredChallenge(LivingEntity entity, DamageSource source)");
+
+		assertTrue(adjustDamage.contains("CombatTargets.isHostileOrPvpOpponent(defender, attackerPlayer)"),
+			"Radiant Covenant's undead bonus should use the shared hostile/PvP gate so allied or owned undead summons do not qualify.");
+		assertBefore(adjustDamage,
+			"CombatTargets.isHostileOrPvpOpponent(defender, attackerPlayer)",
+			"PactTier4.radiantUndeadBonus(attackerPlayer)");
+		assertTrue(untetheredChallenge.contains("!CombatTargets.isHostileOrPvpOpponent(entity, player)"),
+			"Untethered kill challenge credit should use the shared hostile/PvP gate so allied or owned affinity mobs do not qualify.");
+		assertBefore(untetheredChallenge,
+			"!CombatTargets.isHostileOrPvpOpponent(entity, player)",
+			"PactTrials.onUntetheredKill(player)");
+	}
+
+
+	@Test
 	void descriptionsAdvertiseTheRealMechanics() throws IOException {
 		JsonObject lang = languageRoot();
 		assertDescription(lang, "tidesworn", "slow");
@@ -180,5 +241,14 @@ class AffinityPactMechanicsContractTest {
 			index += needle.length();
 		}
 		return count;
+	}
+
+	private static void assertBefore(String source, String earlier, String later) {
+		int earlierIndex = source.indexOf(earlier);
+		int laterIndex = source.indexOf(later);
+		assertTrue(earlierIndex >= 0, "Missing expected source fragment: " + earlier);
+		assertTrue(laterIndex >= 0, "Missing expected source fragment: " + later);
+		assertTrue(earlierIndex < laterIndex,
+			"Expected `" + earlier + "` to appear before `" + later + "`.");
 	}
 }

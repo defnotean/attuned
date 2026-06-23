@@ -1,0 +1,7 @@
+{
+	"item": "attuned:depthglass_focus",
+	"cost": 3,
+	"unique": true,
+	"faction": "attuned:deep_lanterns",
+	"behavior": "attuned:depthglass"
+}

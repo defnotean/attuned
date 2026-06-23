@@ -20,6 +20,10 @@ class AttunementSnapshotCacheContractTest {
 		Path.of("src/client/java/dev/attuned/client/FocusPanel.java");
 	private static final Path ALTAR_SCREEN =
 		Path.of("src/client/java/dev/attuned/client/screen/AltarScreen.java");
+	private static final Path INVENTORY_MIXIN =
+		Path.of("src/client/java/dev/attuned/client/mixin/InventoryScreenMixin.java");
+	private static final Path CREATIVE_INVENTORY_MIXIN =
+		Path.of("src/client/java/dev/attuned/client/mixin/CreativeModeInventoryScreenMixin.java");
 
 	@Test
 	void attunementReadoutExposesPerTickLocalPlayerCache() throws IOException {
@@ -54,6 +58,21 @@ class AttunementSnapshotCacheContractTest {
 			"Targeted players should be resolved through one fresh snapshot rather than local-player cache.");
 		assertFalse(combatHud.contains("Set<Affinity> distinctAffinities = EnumSet.noneOf(Affinity.class);"),
 			"CombatHud should not keep its duplicate own-stance affinity aggregation.");
+	}
+
+	@Test
+	void inventoryPanelTooltipsReuseTheFrameReadoutCache() throws IOException {
+		String inventory = read(INVENTORY_MIXIN);
+		String creative = read(CREATIVE_INVENTORY_MIXIN);
+
+		assertTrue(inventory.contains("AttunementReadout.tooltip(AttunementReadout.cached(player))"),
+			"Survival inventory panel tooltips should format the already-cached frame readout.");
+		assertTrue(creative.contains("AttunementReadout.tooltip(AttunementReadout.cached(player))"),
+			"Creative inventory panel tooltips should format the already-cached frame readout.");
+		assertFalse(inventory.contains("AttunementReadout.tooltip(player)"),
+			"Survival inventory tooltips should not force a fresh attunement snapshot after drawing the panel.");
+		assertFalse(creative.contains("AttunementReadout.tooltip(player)"),
+			"Creative inventory tooltips should not force a fresh attunement snapshot after drawing the panel.");
 	}
 
 	private static String read(Path path) throws IOException {
