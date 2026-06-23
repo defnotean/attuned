@@ -1,5 +1,17 @@
 # Changelog
 
+## Attuned 1.5.6+mc1.19.4 - Fabric Artifact Size Patch
+
+### Changed
+- **Fabric release naming** - Modrinth and CurseForge uploads now use Fabric: Minecraft 1.19.4 - Attuned 1.5.6+mc1.19.4 as the public version display name so future Forge and NeoForge files can sit beside Fabric builds without ambiguity.
+- **Patch-only artifact refresh** - rebuilt the Minecraft 1.19.4 Fabric jar from the already-verified gameplay code with the release-size optimization applied; this patch does not add gameplay content or rebalance Foci.
+- **Smaller release jar** - packaged jars now exclude source-only Blockbench mesh files, use the compact Ocean Relic runtime mesh texture, and keep RGBA-safe optimized public textures so the build stays readable while sitting around 7.4 MB instead of the previous roughly 10.6 MB footprint.
+
+### Verification
+- python tools\verify_repository.py
+- python -m unittest discover -s tests
+- ./gradlew build
+- Jar content check confirmed the source Blockbench model/texture are absent and ocean_relic_trident_mesh.png is present.
 ## Attuned 1.5.5+mc1.19.4 - Gameplay Polish Backport
 
 ### Release scope and why the patch is large
