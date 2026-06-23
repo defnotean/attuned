@@ -42,7 +42,7 @@
 - Deep Lantern support effects use bounded cadences and same-dimension checks so navigation and rescue feedback remain readable and cannot become global trackers.
 
 ### Internal
-- **Why this patch is large** - the large line increase is the combined cost of shipping a server-authoritative Circle runtime, client HUD state, network payloads, party contribution rules, new Focus behavior schema, four complete Foci with item/model/texture/data definitions, expanded authoring docs, gallery updates, example datapack coverage, and a broad regression-test net around each boundary.
+- **Why this patch is large** - the roughly 14k-line increase is the combined cost of shipping a server-authoritative Circle runtime, client HUD state, network payloads, party contribution rules, new Focus behavior schema, four complete Foci with item/model/texture/data definitions, expanded authoring docs, gallery updates, example datapack coverage, and a broad regression-test net around each boundary.
 - Added contract tests for Circle policy, Circle manager behavior, pings, snapshots, invite prompts, party HUD geometry, shared contribution credit, party effects, action-bar routing, preset metadata/import validation, damage formula helpers, Luck stacking, Deep Lantern content, and block-context scans.
 - Expanded repository validation around generated and authored repository structure, source-marker hygiene, Focus definitions, behavior palettes, docs claims, platform gallery assets, release-facing feature counts, Python syntax, and transient-cache leaks.
 - CI now runs the broader repository and Python checks alongside Gradle build/test gates before release artifacts are accepted.

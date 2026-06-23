@@ -58,7 +58,7 @@ texture, provide an override:
 
 ## Ocean Relic Asset Pipeline
 
-The original Meshy GLB is about 54 MB because it embeds large PNG textures. The
+The original source GLB is about 54 MB because it embeds large PNG textures. The
 runtime asset is generated with:
 
 ```powershell
