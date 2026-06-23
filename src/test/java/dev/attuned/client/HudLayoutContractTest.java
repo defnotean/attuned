@@ -68,14 +68,18 @@ class HudLayoutContractTest {
 	@Test
 	void configToleratesMissingOrInvalidLayoutKeys() throws IOException {
 		String config = read(CONFIG);
-		assertTrue(config.contains("HudAnchor.fromKey(stringOr(json, \"hud_anchor\""),
-			"An unknown anchor key should fall back instead of crashing.");
+		assertTrue(config.contains("anchorOr(json, \"hud_anchor\", HudLayout.DEFAULT.anchor()"),
+			"An unknown Foci anchor key should fall back to the Foci HUD default instead of crashing.");
+		assertTrue(config.contains("anchorOr(json, \"party_hud_anchor\", HudLayout.PARTY_DEFAULT.anchor()"),
+			"An unknown party anchor key should fall back to the party HUD default instead of the Foci default.");
 		assertTrue(config.contains("intOr(json, \"hud_offset_x\"") && config.contains("intOr(json, \"hud_offset_y\""),
 			"Offsets should tolerate missing or non-numeric values.");
-		assertTrue(config.contains("floatOr(json, \"hud_scale\""),
+		assertTrue(config.contains("scaleOr(json, \"hud_scale\", HudLayout.DEFAULT.scale()")
+				&& config.contains("scaleOr(json, \"party_hud_scale\", HudLayout.PARTY_DEFAULT.scale()"),
 			"Scale should tolerate missing or non-numeric values.");
-		assertTrue(config.contains("return BOTTOM_RIGHT;"),
-			"Unknown anchor strings should resolve to the default corner.");
+		assertTrue(config.contains("static HudAnchor fromKey(String key, HudAnchor fallback)")
+				&& config.contains("return fallback;"),
+			"Unknown anchor strings should resolve to the caller's default corner.");
 	}
 
 	private static String read(Path file) throws IOException {

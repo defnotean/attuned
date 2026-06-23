@@ -43,14 +43,23 @@ jobs:
       - name: Check whitespace
         run: git diff --check
 
+      - name: Install Python tooling
+        run: python3 -m pip install -r requirements-dev.txt
+
       - name: Run repository checks
         run: python3 tools/verify_repository.py
 
       - name: Run Python tests
         run: python3 -m unittest discover -s tests
 
+      - name: Run Python image/tooling tests
+        run: python3 -m pytest tests/ -q
+
       - name: Run Gradle build
         run: ./gradlew test build --no-daemon
+
+      - name: Verify built release jar
+        run: python3 tools/verify_repository.py
 
       - name: Run Minecraft server smoke check
         run: python3 tools/minecraft_runtime_smoke.py --accept-eula --timeout 240 --stop-timeout 60

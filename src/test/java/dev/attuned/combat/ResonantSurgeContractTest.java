@@ -74,6 +74,25 @@ class ResonantSurgeContractTest {
 	}
 
 	@Test
+	void surgeCreditRequiresMovementOrRecentContributionBeforeGrantingResonance() throws IOException {
+		String source = read(SURGES);
+		String sustain = methodBody(source, "private static void sustain(MinecraftServer server, long now)");
+
+		assertContains(source, "LAST_SURGE_POSITIONS");
+		assertContains(source, "AttunedPlayerCleanup.onForget(LAST_SURGE_POSITIONS::remove)");
+		assertContains(source, "private static boolean hasSurgeMovement(ServerPlayer player)");
+		assertContains(source, "ResonantSurgeResolver.shouldGrantCredit(");
+		assertContains(sustain, "boolean moved = hasSurgeMovement(player);");
+		assertContains(sustain, "boolean recentCombat = Resonance.recentlyInCombat(player, now, SURGE_ACTIVITY_WINDOW_TICKS);");
+		assertContains(sustain, "ResonantSurgeResolver.shouldGrantCredit(true,\n"
+			+ "\t\t\t\t\tmoved, recentCombat, false, false)");
+		assertBefore(sustain, "boolean moved = hasSurgeMovement(player);", "ResonantSurgeResolver.shouldGrantCredit(");
+		assertBefore(sustain, "boolean recentCombat = Resonance.recentlyInCombat(player, now, SURGE_ACTIVITY_WINDOW_TICKS);",
+			"ResonantSurgeResolver.shouldGrantCredit(");
+		assertBefore(sustain, "ResonantSurgeResolver.shouldGrantCredit(", "Resonance.grantSurge");
+	}
+
+	@Test
 	void surgeModuleIsInitIdempotentAndClearsTheActiveSurgeOnStop() throws IOException {
 		String source = read(SURGES);
 		assertContains(source, "private static boolean initialized;");
@@ -125,6 +144,26 @@ class ResonantSurgeContractTest {
 		assertTrue(earlierIndex >= 0, "Expected source to contain: " + earlier);
 		assertTrue(laterIndex >= 0, "Expected source to contain: " + later);
 		assertTrue(earlierIndex < laterIndex, "Expected " + earlier + " before " + later);
+	}
+
+	private static String methodBody(String source, String signaturePrefix) {
+		int signatureStart = source.indexOf(signaturePrefix);
+		assertTrue(signatureStart >= 0, "Missing method signature: " + signaturePrefix);
+		int bodyStart = source.indexOf('{', signatureStart);
+		assertTrue(bodyStart >= 0, "Missing method body: " + signaturePrefix);
+		int depth = 0;
+		for (int index = bodyStart; index < source.length(); index++) {
+			char current = source.charAt(index);
+			if (current == '{') {
+				depth++;
+			} else if (current == '}') {
+				depth--;
+				if (depth == 0) {
+					return source.substring(bodyStart, index + 1);
+				}
+			}
+		}
+		throw new AssertionError("Unterminated method body: " + signaturePrefix);
 	}
 
 	private static String read(Path file) throws IOException {

@@ -18,8 +18,10 @@ class SatchelDefinitionlessStackContractTest {
 		String source = read(CONTAINER);
 		String focusStackAt = methodBody(source, "private ItemStack focusStackAt(int slot)");
 
-		assertTrue(focusStackAt.contains("return holder().get(slot);"),
-			"The satchel should expose stored stacks directly so definitionless Foci are visible and removable.");
+		assertTrue(focusStackAt.contains("ItemStack stack = holder().get(slot);"),
+			"The satchel should read the stored stack directly so definitionless Foci remain visible.");
+		assertTrue(focusStackAt.contains("isReliquary(stack) ? ItemStack.EMPTY : stack"),
+			"Only nested reliquary stacks should be hidden at the read boundary.");
 		assertFalse(focusStackAt.contains("Attunement.definitionFor(player, stack).isEmpty()"),
 			"Missing focus definitions must not make a stored satchel item look like an empty slot.");
 		assertTrue(source.contains("if (Attunement.definitionFor(player, stack).isEmpty())"),

@@ -45,19 +45,27 @@ class ExampleDatapackContractTest {
 	private static final Pattern REGISTERED_BEHAVIOR = Pattern.compile(
 		"register\\(\\s*\"([a-z0-9_/.-]+)\"\\s*,\\s*new\\s+", Pattern.DOTALL);
 	private static final Set<String> PALETTE_TYPES = Set.of(
-		"attuned:conditional_mob_effect");
+		"attuned:conditional_mob_effect",
+		"attuned:on_hit_effect",
+		"attuned:periodic_effect",
+		"attuned:attribute_while",
+		"attuned:block_context_effect",
+		"attuned:use_item_window",
+		"attuned:party_assist",
+		"attuned:marked_target",
+		"attuned:navigation_hint");
 	private static final Set<String> OPERATIONS = Set.of(
 		"add_value", "add_multiplied_base", "add_multiplied_total");
 
 	@Test
-	void examplePackExistsAndShipsTwoOrThreeFoci() throws IOException {
+	void examplePackExistsAndShipsEightFoci() throws IOException {
 		assertTrue(Files.isDirectory(EXAMPLE_FOCUS_DIR),
 			"The worked example pack must ship its focus directory: " + EXAMPLE_FOCUS_DIR);
 		assertTrue(Files.isRegularFile(EXAMPLE_README),
 			"The worked example pack must ship a README telling authors how to install it.");
 		int n = focusFiles().size();
-		assertTrue(n >= 2 && n <= 3,
-			"The worked example pack ships 2-3 foci so authors get a real but minimal template.");
+		assertEquals(8, n,
+			"The worked example pack ships eight foci so authors see attribute, shipped behavior, condition, block-context, item-use, party-assist, mark/consume, and navigation lanes.");
 	}
 
 	@Test
@@ -117,6 +125,28 @@ class ExampleDatapackContractTest {
 			assertTrue(PALETTE_TYPES.contains(type),
 				"Every example palette behavior must name a known palette type: " + type + " in " + file);
 		}
+	}
+
+	@Test
+	void examplePackValidatorRecognizesEveryShippedPaletteType() {
+		assertTrue(PALETTE_TYPES.contains("attuned:conditional_mob_effect"),
+			"The example-pack validator should recognize conditional_mob_effect palette files.");
+		assertTrue(PALETTE_TYPES.contains("attuned:on_hit_effect"),
+			"The example-pack validator should recognize on_hit_effect palette files.");
+		assertTrue(PALETTE_TYPES.contains("attuned:periodic_effect"),
+			"The example-pack validator should recognize periodic_effect palette files.");
+		assertTrue(PALETTE_TYPES.contains("attuned:attribute_while"),
+			"The example-pack validator should recognize attribute_while palette files.");
+		assertTrue(PALETTE_TYPES.contains("attuned:block_context_effect"),
+			"The example-pack validator should recognize block_context_effect palette files.");
+		assertTrue(PALETTE_TYPES.contains("attuned:use_item_window"),
+			"The example-pack validator should recognize use_item_window palette files.");
+		assertTrue(PALETTE_TYPES.contains("attuned:party_assist"),
+			"The example-pack validator should recognize party_assist palette files.");
+		assertTrue(PALETTE_TYPES.contains("attuned:marked_target"),
+			"The example-pack validator should recognize marked_target palette files.");
+		assertTrue(PALETTE_TYPES.contains("attuned:navigation_hint"),
+			"The example-pack validator should recognize navigation_hint palette files.");
 	}
 
 	@Test

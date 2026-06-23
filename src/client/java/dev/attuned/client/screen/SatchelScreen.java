@@ -1,9 +1,11 @@
 package dev.attuned.client.screen;
 
 import dev.attuned.Attuned;
+import dev.attuned.AttunedRegistries;
 import dev.attuned.attunement.AttunedAttachments;
 import dev.attuned.attunement.AttunedInv;
 import dev.attuned.attunement.FocusPreset;
+import dev.attuned.content.AttunedComponents;
 import dev.attuned.menu.ApplyPresetPayload;
 import dev.attuned.menu.BuildShareCodec;
 import dev.attuned.menu.BuildPreviewResolver;
@@ -21,14 +23,18 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.BooleanSupplier;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
+import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
+import net.minecraft.client.gui.components.toasts.SystemToast;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
+import net.minecraft.client.input.KeyEvent;
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
@@ -43,8 +49,8 @@ import org.lwjgl.glfw.GLFW;
  * to select and Apply it.
  */
 public class SatchelScreen extends AbstractContainerScreen<SatchelMenu> {
-	private static final ResourceLocation BACKGROUND_TEXTURE =
-		ResourceLocation.fromNamespaceAndPath(Attuned.MOD_ID, "textures/gui/satchel.png");
+	private static final Identifier BACKGROUND_TEXTURE =
+		Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "textures/gui/satchel.png");
 	// Logical window encloses the leather texture (left) plus the equipped/builds panel (right),
 	// so the whole UI is centred and on-screen and no slot sits outside the click bounds. The
 	// height grows with the reliquary's grid rows so the larger Grand tier stays inside bounds.
@@ -113,9 +119,7 @@ public class SatchelScreen extends AbstractContainerScreen<SatchelMenu> {
 	private int selectedIndex = -1;
 
 	public SatchelScreen(SatchelMenu menu, Inventory inventory, Component title) {
-		super(menu, inventory, title);
-		this.imageWidth = IMAGE_WIDTH;
-		this.imageHeight = logicalHeight(menu);
+		super(menu, inventory, title, IMAGE_WIDTH, logicalHeight(menu));
 		this.titleLabelX = 8;
 		this.titleLabelY = 6;
 		this.inventoryLabelY = menu.inventoryY() - 10;
@@ -202,7 +206,7 @@ public class SatchelScreen extends AbstractContainerScreen<SatchelMenu> {
 			return;
 		}
 		minecraft.keyboardHandler.setClipboard(BuildShareCodec.encode(preset));
-		minecraft.gui.setOverlayMessage(Component.translatable("screen.attuned.preset.shared", preset.name()), false);
+		showPresetToast(minecraft, Component.translatable("screen.attuned.preset.shared", preset.name()));
 	}
 
 	private void importBuild() {
@@ -212,28 +216,35 @@ public class SatchelScreen extends AbstractContainerScreen<SatchelMenu> {
 		}
 		Optional<FocusPreset> decoded = BuildShareCodec.decode(minecraft.keyboardHandler.getClipboard());
 		if (decoded.isEmpty()) {
-			minecraft.gui.setOverlayMessage(Component.translatable("screen.attuned.preset.import_failed"), false);
+			showPresetToast(minecraft, Component.translatable("screen.attuned.preset.import_failed"));
 			return;
 		}
 		FocusPreset preset = decoded.get();
 		this.nameField.setValue(preset.name());
-		ClientPlayNetworking.send(new ImportPresetPayload(preset.name(), preset.slots()));
-		minecraft.gui.setOverlayMessage(Component.translatable("screen.attuned.preset.imported", preset.name()), false);
+		ClientPlayNetworking.send(new ImportPresetPayload(preset));
+	}
+
+	private static void showPresetToast(Minecraft minecraft, Component message) {
+		SystemToast.addOrUpdate(
+			minecraft.gui.toastManager(),
+			SystemToast.SystemToastId.PERIODIC_NOTIFICATION,
+			Component.literal("Attuned"),
+			message);
 	}
 
 	@Override
-	public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+	public boolean keyPressed(KeyEvent event) {
 		// ESC must always close the screen, even while the name field is focused.
-		if (keyCode == GLFW.GLFW_KEY_ESCAPE) {
-			return super.keyPressed(keyCode, scanCode, modifiers);
+		if (event.key() == GLFW.GLFW_KEY_ESCAPE) {
+			return super.keyPressed(event);
 		}
 		// Give the name field keyboard priority so typing (e.g. the inventory key 'e'
 		// or a number) edits the build name instead of closing the screen or swapping hotbar.
 		if (this.nameField != null
-				&& (this.nameField.keyPressed(keyCode, scanCode, modifiers) || this.nameField.canConsumeInput())) {
+				&& (this.nameField.keyPressed(event) || this.nameField.canConsumeInput())) {
 			return true;
 		}
-		return super.keyPressed(keyCode, scanCode, modifiers);
+		return super.keyPressed(event);
 	}
 
 	@Override
@@ -294,7 +305,7 @@ public class SatchelScreen extends AbstractContainerScreen<SatchelMenu> {
 	}
 
 	@Override
-	protected void renderBg(GuiGraphics graphics, float partialTick, int mouseX, int mouseY) {
+	public void extractBackground(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
 		graphics.fill(0, 0, this.width, this.height, SCREEN_BACKDROP);
 		// Solid window base so the right-hand panel reads as part of the window, then the
 		// leather reliquary texture over the grid/inventory in the left half. The window
@@ -308,12 +319,12 @@ public class SatchelScreen extends AbstractContainerScreen<SatchelMenu> {
 			// y=84. For the taller Grand grid those baked wells would ghost through, so blit
 			// just the header + first 3 grid rows and panel-fill the rest, drawing every well
 			// below the strip programmatically at the real (relocated) slot positions.
-			graphics.blit(BACKGROUND_TEXTURE, this.leftPos, this.topPos,
+			graphics.blit(RenderPipelines.GUI_TEXTURED, BACKGROUND_TEXTURE, this.leftPos, this.topPos,
 				0.0F, 0.0F, TEX_W, TEX_GRID_BOTTOM, TEX_W, TEX_H);
 			graphics.fill(this.leftPos, this.topPos + TEX_GRID_BOTTOM,
 				this.leftPos + TEX_W, this.topPos + this.imageHeight, WINDOW_FILL);
 		} else {
-			graphics.blit(BACKGROUND_TEXTURE, this.leftPos, this.topPos,
+			graphics.blit(RenderPipelines.GUI_TEXTURED, BACKGROUND_TEXTURE, this.leftPos, this.topPos,
 				0.0F, 0.0F, TEX_W, TEX_H, TEX_W, TEX_H);
 		}
 
@@ -348,16 +359,17 @@ public class SatchelScreen extends AbstractContainerScreen<SatchelMenu> {
 	}
 
 	@Override
-	protected void renderLabels(GuiGraphics graphics, int mouseX, int mouseY) {
-		graphics.drawString(this.font, Component.translatable("screen.attuned.equipped"),
+	protected void extractLabels(GuiGraphicsExtractor graphics, int mouseX, int mouseY) {
+		graphics.text(this.font, Component.translatable("screen.attuned.equipped"),
 			EQUIPPED_X - 2, EQUIPPED_LABEL_Y, LABEL_TEXT, false);
-		graphics.drawString(this.font, Component.translatable("screen.attuned.builds"),
+		graphics.text(this.font, Component.translatable("screen.attuned.builds"),
 			BUILDS_X, BUILDS_LABEL_Y, LABEL_TEXT, false);
 		if (presets().isEmpty()) {
-			graphics.drawString(this.font, Component.translatable("screen.attuned.builds.empty"),
+			graphics.text(this.font, Component.translatable("screen.attuned.builds.empty"),
 				BUILDS_X, BUILDS_LIST_Y, LABEL_TEXT, false);
 		}
 		drawBuildPreview(graphics, mouseX, mouseY);
+		drawBuildMetadataTooltip(graphics, mouseX, mouseY);
 	}
 
 	/**
@@ -368,7 +380,7 @@ public class SatchelScreen extends AbstractContainerScreen<SatchelMenu> {
 	 * {@code leftPos/topPos}); the row is clamped to the logical window so it never
 	 * leaves the click/draw bounds.
 	 */
-	private void drawBuildPreview(GuiGraphics graphics, int mouseX, int mouseY) {
+	private void drawBuildPreview(GuiGraphicsExtractor graphics, int mouseX, int mouseY) {
 		int hovered = hoveredBuildIndex(mouseX, mouseY);
 		if (hovered < 0) {
 			return;
@@ -379,7 +391,7 @@ public class SatchelScreen extends AbstractContainerScreen<SatchelMenu> {
 		}
 		List<String> slots = presets.get(hovered).slots();
 		List<BuildPreviewResolver.Availability> availability = BuildPreviewResolver.availability(
-			slots, equippedIds(), satchelIds(), inventoryFocusCounts());
+			slots, equippedIds(), satchelIds(), inventoryFocusCounts(), registeredFocusIds());
 
 		int rowW = PREVIEW_W + PREVIEW_PAD * 2;
 		int rowH = PREVIEW_CELL + PREVIEW_PAD * 2;
@@ -406,12 +418,54 @@ public class SatchelScreen extends AbstractContainerScreen<SatchelMenu> {
 			if (stack.isEmpty()) {
 				continue;
 			}
-			graphics.renderItem(stack, cx + 1, cy + 1);
+			graphics.item(stack, cx + 1, cy + 1);
 			if (slot < availability.size()
 					&& availability.get(slot) == BuildPreviewResolver.Availability.MISSING) {
 				graphics.fill(cx + 1, cy + 1, cx + PREVIEW_CELL - 1, cy + PREVIEW_CELL - 1, PREVIEW_MISSING_OVERLAY);
 			}
 		}
+	}
+
+	private void drawBuildMetadataTooltip(GuiGraphicsExtractor graphics, int mouseX, int mouseY) {
+		int hovered = hoveredBuildIndex(mouseX, mouseY);
+		if (hovered < 0) {
+			return;
+		}
+		List<FocusPreset> presets = presets();
+		if (hovered >= presets.size()) {
+			return;
+		}
+		List<Component> lines = buildMetadataTooltip(presets.get(hovered));
+		if (!lines.isEmpty()) {
+			graphics.setTooltipForNextFrame(this.font, lines, Optional.empty(), mouseX, mouseY);
+		}
+	}
+
+	private static List<Component> buildMetadataTooltip(FocusPreset preset) {
+		List<Component> lines = new ArrayList<>();
+		if (!preset.role().isEmpty()) {
+			lines.add(Component.translatable("screen.attuned.preset.metadata.role", preset.role())
+				.withStyle(ChatFormatting.GRAY));
+		}
+		if (!preset.note().isEmpty()) {
+			lines.add(Component.translatable("screen.attuned.preset.metadata.note", preset.note())
+				.withStyle(ChatFormatting.GRAY));
+		}
+		if (preset.preferredPartySize() > 0) {
+			lines.add(Component.translatable("screen.attuned.preset.metadata.party_size", preset.preferredPartySize())
+				.withStyle(ChatFormatting.GRAY));
+		}
+		for (String warning : preset.warnings()) {
+			if (!warning.isEmpty()) {
+				lines.add(Component.translatable("screen.attuned.preset.metadata.warning", warning)
+					.withStyle(ChatFormatting.YELLOW));
+			}
+		}
+		if (!preset.requires().isEmpty()) {
+			lines.add(Component.translatable("screen.attuned.preset.metadata.requires", String.join(", ", preset.requires()))
+				.withStyle(ChatFormatting.DARK_AQUA));
+		}
+		return lines;
 	}
 
 	/** Index of the build button currently under the cursor, or -1. */
@@ -427,10 +481,10 @@ public class SatchelScreen extends AbstractContainerScreen<SatchelMenu> {
 
 	/** Resolves a saved Focus id to its item stack for the preview (client registry). */
 	private static ItemStack stackFor(String id) {
-		return BuiltInRegistries.ITEM.get(ResourceLocation.parse(id)).getDefaultInstance();
+		return BuiltInRegistries.ITEM.getValue(Identifier.parse(FocusPreset.slotId(id))).getDefaultInstance();
 	}
 
-	private void drawWell(GuiGraphics graphics, int x, int y) {
+	private void drawWell(GuiGraphicsExtractor graphics, int x, int y) {
 		graphics.fill(x, y, x + 18, y + 18, WELL_EDGE);
 		graphics.fill(x + 1, y + 1, x + 17, y + 17, WELL_FILL);
 	}
@@ -492,11 +546,24 @@ public class SatchelScreen extends AbstractContainerScreen<SatchelMenu> {
 		return counts;
 	}
 
+	private Set<String> registeredFocusIds() {
+		if (this.minecraft == null || this.minecraft.player == null) {
+			return Set.of();
+		}
+		Set<String> ids = new HashSet<>();
+		this.minecraft.player.registryAccess()
+			.lookupOrThrow(AttunedRegistries.FOCUS_DEFINITIONS)
+			.stream()
+			.map(def -> BuiltInRegistries.ITEM.getKey(def.item().value()).toString())
+			.forEach(ids::add);
+		return ids;
+	}
+
 	private String slotId(int index) {
 		if (index < 0 || index >= this.menu.slots.size()) {
 			return "";
 		}
-		return idFor(this.menu.slots.get(index).getItem());
+		return keyFor(this.menu.slots.get(index).getItem());
 	}
 
 	private static String idFor(ItemStack stack) {
@@ -504,6 +571,10 @@ public class SatchelScreen extends AbstractContainerScreen<SatchelMenu> {
 			return "";
 		}
 		return BuiltInRegistries.ITEM.getKey(stack.getItem()).toString();
+	}
+
+	private static String keyFor(ItemStack stack) {
+		return FocusPreset.slotKey(idFor(stack), stack.has(AttunedComponents.TEMPERED));
 	}
 
 	private static String signatureOf(List<FocusPreset> presets) {
@@ -525,7 +596,7 @@ public class SatchelScreen extends AbstractContainerScreen<SatchelMenu> {
 		return this.font.plainSubstrByWidth(text, Math.max(0, maxWidth - ellipsisWidth)) + ellipsis;
 	}
 
-	private static void drawButtonOutline(GuiGraphics graphics, int x0, int y0, int x1, int y1, int argb) {
+	private static void drawButtonOutline(GuiGraphicsExtractor graphics, int x0, int y0, int x1, int y1, int argb) {
 		graphics.fill(x0, y0, x1, y0 + 1, argb);
 		graphics.fill(x0, y1 - 1, x1, y1, argb);
 		graphics.fill(x0, y0 + 1, x0 + 1, y1 - 1, argb);
@@ -546,7 +617,7 @@ public class SatchelScreen extends AbstractContainerScreen<SatchelMenu> {
 		}
 
 		@Override
-		protected void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+		protected void extractContents(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
 			int x0 = getX();
 			int y0 = getY();
 			int x1 = x0 + getWidth();
@@ -559,7 +630,7 @@ public class SatchelScreen extends AbstractContainerScreen<SatchelMenu> {
 			} else if (isHoveredOrFocused()) {
 				drawButtonOutline(graphics, x0, y0, x1, y1, BUTTON_HOVER_ARGB);
 			}
-			renderString(graphics, Minecraft.getInstance().font, this.active ? 0xFFFFFFFF : 0xFFA0A0A0);
+			extractDefaultLabel(graphics.textRendererForWidget(this, GuiGraphicsExtractor.HoveredTextEffects.NONE));
 		}
 	}
 }

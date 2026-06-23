@@ -20,6 +20,7 @@ public final class AttunedKeybinds {
 	private static KeyMapping toggleOwnAffinityHudKey;
 	private static KeyMapping toggleEnemyAffinityHudKey;
 	private static KeyMapping toggleFociHudKey;
+	private static KeyMapping togglePartyHudKey;
 	private static KeyMapping[] applyBuildKeys;
 	private static boolean initialized;
 
@@ -31,21 +32,24 @@ public final class AttunedKeybinds {
 		initialized = true;
 
 		abilityKey = KeyBindingHelper.registerKeyBinding(new KeyMapping(
-			"key.attuned.ability", GLFW.GLFW_KEY_R, KeyMapping.CATEGORY_GAMEPLAY));
+			"key.attuned.ability", GLFW.GLFW_KEY_R, KeyMapping.Category.GAMEPLAY));
 		toggleOwnAffinityHudKey = KeyBindingHelper.registerKeyBinding(new KeyMapping(
 			"key.attuned.toggle_own_affinity_hud",
-			InputConstants.UNKNOWN.getType(), InputConstants.UNKNOWN.getValue(), KeyMapping.CATEGORY_GAMEPLAY));
+			InputConstants.UNKNOWN.getType(), InputConstants.UNKNOWN.getValue(), KeyMapping.Category.GAMEPLAY));
 		toggleEnemyAffinityHudKey = KeyBindingHelper.registerKeyBinding(new KeyMapping(
 			"key.attuned.toggle_enemy_affinity_hud",
-			InputConstants.UNKNOWN.getType(), InputConstants.UNKNOWN.getValue(), KeyMapping.CATEGORY_GAMEPLAY));
+			InputConstants.UNKNOWN.getType(), InputConstants.UNKNOWN.getValue(), KeyMapping.Category.GAMEPLAY));
 		toggleFociHudKey = KeyBindingHelper.registerKeyBinding(new KeyMapping(
 			"key.attuned.toggle_foci_hud",
-			InputConstants.UNKNOWN.getType(), InputConstants.UNKNOWN.getValue(), KeyMapping.CATEGORY_GAMEPLAY));
+			InputConstants.UNKNOWN.getType(), InputConstants.UNKNOWN.getValue(), KeyMapping.Category.GAMEPLAY));
+		togglePartyHudKey = KeyMappingHelper.registerKeyMapping(new KeyMapping(
+			"key.attuned.toggle_party_hud",
+			InputConstants.UNKNOWN.getType(), InputConstants.UNKNOWN.getValue(), KeyMapping.Category.GAMEPLAY));
 		applyBuildKeys = new KeyMapping[3];
 		for (int i = 0; i < applyBuildKeys.length; i++) {
 			applyBuildKeys[i] = KeyBindingHelper.registerKeyBinding(new KeyMapping(
 				"key.attuned.apply_build_" + (i + 1),
-				InputConstants.UNKNOWN.getType(), InputConstants.UNKNOWN.getValue(), KeyMapping.CATEGORY_GAMEPLAY));
+				InputConstants.UNKNOWN.getType(), InputConstants.UNKNOWN.getValue(), KeyMapping.Category.GAMEPLAY));
 		}
 		ClientTickEvents.END_CLIENT_TICK.register(client -> {
 			while (abilityKey.consumeClick()) {
@@ -62,6 +66,9 @@ public final class AttunedKeybinds {
 			}
 			while (toggleFociHudKey.consumeClick()) {
 				AttunedClientConfig.toggleFociHud();
+			}
+			while (togglePartyHudKey.consumeClick()) {
+				AttunedClientConfig.togglePartyHud();
 			}
 			for (int i = 0; i < applyBuildKeys.length; i++) {
 				while (applyBuildKeys[i].consumeClick()) {

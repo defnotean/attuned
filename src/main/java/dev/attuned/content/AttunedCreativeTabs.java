@@ -76,21 +76,24 @@ final class AttunedCreativeTabs {
 			.title(title)
 			.icon(() -> new ItemStack(icon))
 			.displayItems((parameters, output) -> {
+				if (includeCoreItems) {
+					output.accept(AttunedContent.ATTUNEMENT_JOURNAL);
+					output.accept(AttunedContent.ATTUNEMENT_SHARD);
+					output.accept(AttunedContent.ATTUNEMENT_SHARD_FRAGMENT);
+					output.accept(AttunedContent.ATTUNEMENT_ALTAR);
+					output.accept(AttunedContent.ALTAR_OF_REWEAVING);
+					output.accept(AttunedContent.SATCHEL_OF_FOCI);
+					output.accept(AttunedContent.GRAND_SATCHEL_OF_FOCI);
+				}
 				HolderLookup.RegistryLookup<FocusDefinition> lookup =
 					parameters.holders().lookupOrThrow(AttunedRegistries.FOCUS_DEFINITIONS);
 				for (Item focus : fociInDisplayOrder(lookup, include)) {
 					output.accept(focus);
 				}
 				if (includeCoreItems) {
-					output.accept(AttunedContent.ATTUNEMENT_SHARD);
-					output.accept(AttunedContent.ATTUNEMENT_SHARD_FRAGMENT);
-					output.accept(AttunedContent.ATTUNEMENT_JOURNAL);
-					output.accept(AttunedContent.SATCHEL_OF_FOCI);
-					output.accept(AttunedContent.GRAND_SATCHEL_OF_FOCI);
-					output.accept(AttunedContent.ATTUNEMENT_ALTAR);
-					output.accept(AttunedContent.ALTAR_OF_REWEAVING);
 					// The blank, author-skinnable Focus pool carries no FocusDefinition,
-					// so fociInDisplayOrder never surfaces it — accept it explicitly.
+					// so fociInDisplayOrder never surfaces it — accept it explicitly after
+					// real neutral Foci instead of ahead of player-facing build tools.
 					for (Item customFocus : AttunedContent.CUSTOM_FOCI) {
 						output.accept(customFocus);
 					}

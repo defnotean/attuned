@@ -7,7 +7,8 @@ import dev.attuned.api.focus.Affinity;
 import dev.attuned.api.focus.FocusDefinition;
 import dev.attuned.content.AttunedComponents;
 import dev.attuned.content.TemperingResolver;
-import net.minecraft.core.HolderLookup;
+import dev.attuned.menu.PresetMetadataResolver;
+import net.minecraft.core.Registry;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -56,7 +57,7 @@ public final class Attunement {
 		if (stack.isEmpty()) {
 			return Optional.empty();
 		}
-		HolderLookup.RegistryLookup<FocusDefinition> registry =
+		Registry<FocusDefinition> registry =
 			player.level().registryAccess().lookupOrThrow(AttunedRegistries.FOCUS_DEFINITIONS);
 		return FocusLookup.forItem(registry, stack.getItem());
 	}
@@ -148,6 +149,18 @@ public final class Attunement {
 			total += definitionFor(player, stack).map(def -> effectiveCost(def, stack)).orElse(0);
 		}
 		return total;
+	}
+
+	/** A coarse party role label derived from active Focus metadata, never exact Focus ids. */
+	public static String publicRole(Player player) {
+		AttunedInv inv = AttunedAttachments.getInventory(player);
+		List<PresetMetadataResolver.ResolvedFocus> foci = new ArrayList<>();
+		for (int slot : activeSlots(player)) {
+			definitionFor(player, inv.get(slot)).ifPresent(def -> foci.add(
+				new PresetMetadataResolver.ResolvedFocus(
+					def.affinity(), def.faction(), def.behavior().isPresent(), Optional.empty())));
+		}
+		return PresetMetadataResolver.inferRole(foci);
 	}
 
 	/** The distinct affinities carried by the player's active Foci. */

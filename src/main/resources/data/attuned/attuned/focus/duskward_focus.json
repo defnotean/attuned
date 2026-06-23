@@ -1,6 +1,7 @@
 {
 	"item": "attuned:duskward_focus",
 	"cost": 4,
+	"unique": true,
 	"affinity": "umbral",
 	"faction": "attuned:umbral",
 	"behavior": "attuned:duskward"

@@ -1,6 +1,7 @@
 package dev.attuned.menu;
 
 import dev.attuned.Attuned;
+import dev.attuned.attunement.FocusPreset;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
@@ -9,10 +10,7 @@ import net.minecraft.resources.ResourceLocation;
 
 public record SavePresetPayload(String name) implements CustomPacketPayload {
 	public SavePresetPayload {
-		name = name == null ? "" : name.trim();
-		if (name.length() > 32) {
-			name = name.substring(0, 32);
-		}
+		name = FocusPreset.sanitizeName(name);
 	}
 
 	public static final Type<SavePresetPayload> TYPE =

@@ -41,6 +41,8 @@ public abstract class LivingEntityHurtMixin {
 		}
 		UpdraftBehavior.recordPvpDamage(self, source);
 		CombatContext context = CombatContext.of(self, source);
+		// Confluence or party role damage hooks must join this ordered pipeline,
+		// consuming the previous stage's output so independent bonuses compound.
 		float scaled = AttunedCombat.applyAffinity(level, self, source, amount, context);
 		float capped = Apex.adjustDamage(self, source, scaled, context);
 		float adjusted = Pacts.adjustDamage(self, source, capped, context);

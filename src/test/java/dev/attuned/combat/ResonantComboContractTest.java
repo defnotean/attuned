@@ -75,9 +75,10 @@ class ResonantComboContractTest {
 		assertTrue(feedback.contains("sendParticles("), "The combo should have particle feedback.");
 		assertTrue(feedback.contains("playSound(null, defender.blockPosition()"),
 			"The combo should have sound feedback on the target.");
-		assertTrue(feedback.contains("attacker.sendOverlayMessage(Component.translatable(\"combo.attuned.softstep_needle\"))")
-				|| feedback.contains("PlayerMessages.overlay(attacker, Component.translatable(\"combo.attuned.softstep_needle\"))"),
-			"The attacker should get a compact action-bar confirmation when the combo lands.");
+		assertTrue(feedback.contains("ActionBarMessages.send(attacker, ActionBarMessages.Priority.ABILITY"),
+			"The attacker should get a compact gated action-bar confirmation when the combo lands.");
+		assertTrue(feedback.contains("Component.translatable(\"combo.attuned.softstep_needle\")"),
+			"The combo confirmation should keep the player-facing translation key.");
 	}
 
 	@Test
@@ -103,7 +104,6 @@ class ResonantComboContractTest {
 	}
 
 	private static String methodBody(String source, String signaturePrefix) {
-		source = source.replace("\r\n", "\n").replace('\r', '\n');
 		int signatureStart = source.indexOf(signaturePrefix);
 		assertTrue(signatureStart >= 0, "Missing method signature: " + signaturePrefix);
 		int bodyStart = source.indexOf('{', signatureStart);

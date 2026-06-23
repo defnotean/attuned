@@ -105,9 +105,9 @@ A Focus may carry both `modifiers` and a `behavior`.
 ## Lane 3 — define a palette behavior
 
 The **behavior palette** lets you author a *new* passive behavior from data, then
-reference it like any other behavior id. v1 ships one palette type,
-`attuned:conditional_mob_effect`: keep a mob effect refreshed while a
-[condition](reference.md#conditions) holds.
+reference it like any other behavior id. Attuned ships passive palette types for
+conditional mob effects, on-hit effects, periodic effects, conditional attributes,
+nearby block-context effects, item-use windows, and marked-target effects.
 
 `data/mypack/attuned/focus_behavior/warmth.json`:
 
@@ -205,5 +205,6 @@ This guide covers the no-Java lanes that work today. Attuned now ships the blank
 `attuned:custom_focus_1` through `attuned:custom_focus_8` item pool for packs that
 need bespoke resource-pack art without registering a new item, the passive
 behavior palette (`conditional_mob_effect`, `on_hit_effect`, `periodic_effect`,
-and `attribute_while`). Active-ability authoring (cooldowns and Focus Ability key handlers) is
+`attribute_while`, `block_context_effect`, `use_item_window`, `party_assist`,
+`marked_target`, and `navigation_hint`). Active-ability authoring (cooldowns and Focus Ability key handlers) is
 still code-only.

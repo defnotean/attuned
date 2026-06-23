@@ -1,16 +1,17 @@
 package dev.attuned.pacts;
 
-import dev.attuned.compat.DustParticles;
-
-import dev.attuned.compat.PlayerMessages;
 import dev.attuned.Milestones;
 import dev.attuned.AttunedAdvancements;
+import dev.attuned.AttunedConfig;
 import dev.attuned.AttunedPlayerCleanup;
 import dev.attuned.AttunedServerCleanup;
 import dev.attuned.attunement.AttunedAttachments;
+import dev.attuned.attunement.Attunement;
 import dev.attuned.combat.CombatTargets;
 import dev.attuned.combat.Resonance;
+import dev.attuned.network.ActionBarMessages;
 import dev.attuned.onboarding.Onboarding;
+import dev.attuned.party.CircleContributions;
 import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.Locale;
@@ -89,8 +90,12 @@ public final class PactTrials {
 	}
 
 	public static void accrue(ServerPlayer player, Pact pact, int amount) {
+		accrueDirect(player, pact, amount);
+	}
+
+	private static boolean accrueDirect(ServerPlayer player, Pact pact, int amount) {
 		if (amount <= 0 || !shouldAccrue(Pacts.activeOf(player), pact) || isTier4Complete(player, pact)) {
-			return;
+			return false;
 		}
 		String id = pactId(pact);
 		PactTrialProgress progress = get(player);
@@ -101,9 +106,50 @@ public final class PactTrials {
 		if (next >= goal) {
 			player.setAttached(AttunedAttachments.PACT_TRIAL_PROGRESS, progress.withCounter(id, goal));
 			onComplete(player, pact);
-			return;
+			return true;
 		}
 		player.setAttached(AttunedAttachments.PACT_TRIAL_PROGRESS, progress.withCounter(id, next));
+		return true;
+	}
+
+	private static void accrueWithCircleCredit(ServerPlayer player, Pact pact, int amount) {
+		if (!accrueDirect(player, pact, amount)) {
+			return;
+		}
+		if (!AttunedConfig.get().partyTrialAssistsEnabled()) {
+			return;
+		}
+		for (ServerPlayer contributor : CircleContributions.eligibleContributors(player)) {
+			if (contributor.getUUID().equals(player.getUUID())) {
+				continue;
+			}
+			Optional<Pact> maybeSharedPact = sharedTrialTargetFor(contributor, pact);
+			if (maybeSharedPact.isEmpty()) {
+				continue;
+			}
+			Pact sharedPact = maybeSharedPact.orElseThrow();
+			accrueDirect(contributor, sharedPact, sharedTrialAmount(sharedPact, pact, amount));
+		}
+	}
+
+	private static Optional<Pact> sharedTrialTargetFor(ServerPlayer contributor, Pact pact) {
+		if (Pacts.isAt(contributor, pact)) {
+			return Optional.of(pact);
+		}
+		return supportTrialAssistPact(contributor, pact);
+	}
+
+	private static Optional<Pact> supportTrialAssistPact(ServerPlayer contributor, Pact sourcePact) {
+		if (sourcePact == Pact.STONEHEART
+				&& Pacts.isAt(contributor, Pact.RADIANT_COVENANT)
+				&& Attunement.publicRole(contributor).equalsIgnoreCase("Witness")) {
+			return Optional.of(Pact.RADIANT_COVENANT);
+		}
+		return Optional.empty();
+	}
+
+	private static int sharedTrialAmount(Pact sharedPact, Pact sourcePact, int amount) {
+		return sharedPact == sourcePact ? amount : 1;
 	}
 
 	public static int progress(Player player, Pact pact) {
@@ -126,7 +172,7 @@ public final class PactTrials {
 		PactTrialProgress progress = get(player).withTier4Completed(id);
 		player.setAttached(AttunedAttachments.PACT_TRIAL_PROGRESS, progress);
 		AttunedAdvancements.award(player, "attunement/pact_" + id + "_trial");
-		PlayerMessages.system(player, Component.translatable("pact.attuned." + id + "_trial.title")
+		player.sendSystemMessage(Component.translatable("pact.attuned." + id + "_trial.title")
 			.withStyle(pact.chatColor(), ChatFormatting.BOLD)
 			.append(Component.translatable("pact.attuned.trial.complete").withStyle(ChatFormatting.GRAY)));
 		ServerLevel level = (ServerLevel) player.level();
@@ -138,7 +184,7 @@ public final class PactTrials {
 		double py = player.getY() + player.getBbHeight() * 0.65;
 		double pz = player.getZ();
 		level.sendParticles(ParticleTypes.END_ROD, px, py, pz, 14, 0.5, 0.4, 0.5, 0.02);
-		level.sendParticles(DustParticles.color(pact.argb() & 0x00FFFFFF, 0.9F),
+		level.sendParticles(new DustParticleOptions(pact.argb() & 0x00FFFFFF, 0.9F),
 			px, py, pz, 6, 0.4, 0.3, 0.4, 0.0);
 		Onboarding.tryPactTrialCompleteHint(player);
 		Milestones.onPactTrialComplete(player);
@@ -146,38 +192,38 @@ public final class PactTrials {
 	}
 
 	public static void onPyreswornIgnite(ServerPlayer player) {
-		accrue(player, Pact.PYRESWORN, 1);
+		accrueWithCircleCredit(player, Pact.PYRESWORN, 1);
 	}
 
 	public static void onStoneheartAbsorb(ServerPlayer player, float absorbed) {
 		if (absorbed > 0.0F && player.isBlocking()) {
-			accrue(player, Pact.STONEHEART, Math.max(1, Math.round(absorbed)));
+			accrueWithCircleCredit(player, Pact.STONEHEART, Math.max(1, Math.round(absorbed)));
 		}
 	}
 
 	public static void onRadiantReveal(ServerPlayer player) {
-		accrue(player, Pact.RADIANT_COVENANT, 1);
+		accrueWithCircleCredit(player, Pact.RADIANT_COVENANT, 1);
 	}
 
 	public static void onTideswornSlow(ServerPlayer player) {
-		accrue(player, Pact.TIDESWORN, 1);
+		accrueWithCircleCredit(player, Pact.TIDESWORN, 1);
 	}
 
 	public static void onForgeboundIgnite(ServerPlayer player) {
 		if (nearTrialPressure(player)) {
-			accrue(player, Pact.FORGEBOUND, 1);
+			accrueWithCircleCredit(player, Pact.FORGEBOUND, 1);
 		}
 	}
 
 	public static void onNightswornAbsorb(ServerPlayer player, float absorbed) {
 		if (absorbed > 0.0F) {
-			accrue(player, Pact.NIGHTSWORN, Math.max(1, Math.round(absorbed)));
+			accrueWithCircleCredit(player, Pact.NIGHTSWORN, Math.max(1, Math.round(absorbed)));
 		}
 	}
 
 	public static void onUntetheredKill(ServerPlayer player) {
 		if (Resonance.atApex(player) && nearTrialPressure(player)) {
-			accrue(player, Pact.UNTETHERED, 1);
+			accrueWithCircleCredit(player, Pact.UNTETHERED, 1);
 		}
 	}
 
@@ -244,7 +290,7 @@ public final class PactTrials {
 			AttunedAttachments.markOnboarding(player, onboardId);
 			((ServerLevel) player.level()).playSound(null, player.blockPosition(),
 				SoundEvents.EXPERIENCE_ORB_PICKUP, SoundSource.PLAYERS, 0.35F, 1.25F);
-			PlayerMessages.overlay(player,
+			ActionBarMessages.send(player, ActionBarMessages.Priority.PROGRESS,
 				Component.translatable("pact.attuned." + id + "_trial.title")
 					.withStyle(pact.chatColor())
 					.append(Component.translatable("pact.attuned.trial.progress", percent)

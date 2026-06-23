@@ -7,6 +7,8 @@ import dev.attuned.api.focus.FocusBehavior;
 import dev.attuned.combat.AttunedCombat;
 import dev.attuned.combat.CombatFeedback;
 import dev.attuned.combat.CombatTargets;
+import dev.attuned.effect.AttunedLuck;
+import dev.attuned.party.CircleContributions;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -18,7 +20,7 @@ import net.fabricmc.fabric.api.event.player.UseBlockCallback;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.Holder;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.tags.BlockTags;
@@ -57,6 +59,7 @@ public final class RadiantFocusBehaviors {
 		private static final int ABSORPTION_TICKS = 40;
 
 		private static final Map<UUID, Cooldown> STATE = new HashMap<>();
+		private static final Set<UUID> ACTIVE = new HashSet<>();
 		private static boolean initialized;
 
 		public Votive() {
@@ -65,11 +68,13 @@ public final class RadiantFocusBehaviors {
 
 		@Override
 		public void onActivate(ServerPlayer player, ItemStack focus) {
+			ACTIVE.add(player.getUUID());
 			STATE.computeIfAbsent(player.getUUID(), id -> new Cooldown());
 		}
 
 		@Override
 		public void onTick(ServerPlayer player, ItemStack focus) {
+			ACTIVE.add(player.getUUID());
 			Cooldown cooldown = STATE.computeIfAbsent(player.getUUID(), id -> new Cooldown());
 			if (cooldown.remaining > 0) {
 				cooldown.remaining--;
@@ -78,7 +83,7 @@ public final class RadiantFocusBehaviors {
 
 		@Override
 		public void onDeactivate(ServerPlayer player, ItemStack focus) {
-			STATE.remove(player.getUUID());
+			ACTIVE.remove(player.getUUID());
 		}
 
 		private static void initLifecycle() {
@@ -86,18 +91,22 @@ public final class RadiantFocusBehaviors {
 				return;
 			}
 			initialized = true;
-			AttunedPlayerCleanup.onForget(STATE::remove);
+			AttunedPlayerCleanup.onForget(uuid -> {
+				STATE.remove(uuid);
+				ACTIVE.remove(uuid);
+			});
 			AttunedServerCleanup.onStop(STATE::clear);
+			AttunedServerCleanup.onStop(ACTIVE::clear);
 			ServerLivingEntityEvents.AFTER_DAMAGE.register(Votive::afterDamage);
 		}
 
 		private static void afterDamage(LivingEntity defender, DamageSource source,
 				float originalDamage, float dealtDamage, boolean blocked) {
-			if (dealtDamage <= 0.0F || !(defender instanceof ServerPlayer player)) {
+			if (dealtDamage <= 0.0F || AttunedCombat.isReflecting() || !(defender instanceof ServerPlayer player)) {
 				return;
 			}
 			Cooldown cooldown = STATE.get(player.getUUID());
-			if (cooldown == null || cooldown.remaining > 0
+			if (!ACTIVE.contains(player.getUUID()) || cooldown == null || cooldown.remaining > 0
 					|| !isBrightOrNearCandle(player) || player.hasEffect(MobEffects.ABSORPTION)) {
 				return;
 			}
@@ -116,24 +125,30 @@ public final class RadiantFocusBehaviors {
 		private static final int CHECK_INTERVAL = 20;
 		private static final int COOLDOWN_TICKS = 200;
 		private static final int GLOW_TICKS = 80;
-		private static final int BELL_RADIUS = 8;
+		private static final int BELL_RADIUS_XZ = 8;
+		private static final int BELL_RADIUS_Y = 2;
 		private static final double TARGET_RADIUS = 10.0;
 
 		private final Map<UUID, Cooldown> state = new HashMap<>();
+		private final Set<UUID> active = new HashSet<>();
 
 		public Bellwether() {
 			AttunedPlayerCleanup.onForget(state::remove);
+			AttunedPlayerCleanup.onForget(active::remove);
 			AttunedServerCleanup.onStop(state::clear);
+			AttunedServerCleanup.onStop(active::clear);
 			UseBlockCallback.EVENT.register(this::useBlock);
 		}
 
 		@Override
 		public void onActivate(ServerPlayer player, ItemStack focus) {
+			active.add(player.getUUID());
 			state.computeIfAbsent(player.getUUID(), id -> new Cooldown());
 		}
 
 		@Override
 		public void onTick(ServerPlayer player, ItemStack focus) {
+			active.add(player.getUUID());
 			Cooldown cooldown = state.computeIfAbsent(player.getUUID(), id -> new Cooldown());
 			if (cooldown.remaining > 0) {
 				cooldown.remaining--;
@@ -142,7 +157,7 @@ public final class RadiantFocusBehaviors {
 				return;
 			}
 			cooldown.tick = 0;
-			if (cooldown.remaining > 0 || !nearBlock(player, Blocks.BELL, BELL_RADIUS)) {
+			if (cooldown.remaining > 0 || !nearBlock(player, Blocks.BELL, BELL_RADIUS_XZ, BELL_RADIUS_Y)) {
 				return;
 			}
 			revealVisibleThreats(player, cooldown);
@@ -150,12 +165,13 @@ public final class RadiantFocusBehaviors {
 
 		@Override
 		public void onDeactivate(ServerPlayer player, ItemStack focus) {
-			state.remove(player.getUUID());
+			active.remove(player.getUUID());
 		}
 
 		private InteractionResult useBlock(Player player, Level level,
 				InteractionHand hand, BlockHitResult hitResult) {
 			if (!(level instanceof ServerLevel) || !(player instanceof ServerPlayer serverPlayer)
+					|| !active.contains(serverPlayer.getUUID())
 					|| !level.getBlockState(hitResult.getBlockPos()).is(Blocks.BELL)) {
 				return InteractionResult.PASS;
 			}
@@ -178,6 +194,7 @@ public final class RadiantFocusBehaviors {
 				target.addEffect(new MobEffectInstance(MobEffects.GLOWING, GLOW_TICKS, 0, true, false, true));
 			}
 			if (!targets.isEmpty()) {
+				CircleContributions.recordContribution(player);
 				cooldown.remaining = COOLDOWN_TICKS;
 			}
 		}
@@ -226,7 +243,6 @@ public final class RadiantFocusBehaviors {
 		@Override
 		public void onDeactivate(ServerPlayer player, ItemStack focus) {
 			active.remove(player.getUUID());
-			cooldowns.remove(player.getUUID());
 		}
 
 		@Override
@@ -252,6 +268,9 @@ public final class RadiantFocusBehaviors {
 				target.addEffect(new MobEffectInstance(
 					MobEffects.GLOWING, WITNESS_GLOW_TICKS, 0, true, false, true));
 			}
+			if (!targets.isEmpty()) {
+				CircleContributions.recordContribution(player);
+			}
 			player.addEffect(new MobEffectInstance(
 				MobEffects.REGENERATION, WITNESS_REGEN_TICKS, 0, true, false, true));
 			CombatFeedback.abilityCast(player, CombatFeedback.AbilityFlavor.HOLY);
@@ -260,7 +279,7 @@ public final class RadiantFocusBehaviors {
 
 		private void afterDamage(LivingEntity defender, DamageSource source,
 				float originalDamage, float dealtDamage, boolean blocked) {
-			if (dealtDamage <= 0.0F || !(defender instanceof ServerPlayer player)
+			if (dealtDamage <= 0.0F || AttunedCombat.isReflecting() || !(defender instanceof ServerPlayer player)
 					|| !active.contains(player.getUUID()) || player.hasEffect(MobEffects.ABSORPTION)
 					|| cooldowns.getOrDefault(player.getUUID(), 0) > 0) {
 				return;
@@ -327,13 +346,28 @@ public final class RadiantFocusBehaviors {
 	}
 
 	public static final class Namesake implements FocusBehavior {
-		private static final ResourceLocation LUCK_ID =
-			ResourceLocation.fromNamespaceAndPath(Attuned.MOD_ID, "namesake_focus_luck");
+		private static final Identifier LUCK_ID =
+			Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "namesake_focus_luck");
+		private static final int CHECK_INTERVAL = 20;
 		private static final double LUCK_BONUS = 1.0D;
 		private static final double NAMED_ENTITY_RADIUS = 8.0D;
 
+		private final Map<UUID, Integer> ticks = new HashMap<>();
+
+		public Namesake() {
+			AttunedPlayerCleanup.onForget(ticks::remove);
+			AttunedServerCleanup.onStop(ticks::clear);
+		}
+
 		@Override
 		public void onTick(ServerPlayer player, ItemStack focus) {
+			UUID id = player.getUUID();
+			int tick = ticks.getOrDefault(id, 0) + 1;
+			if (tick < CHECK_INTERVAL) {
+				ticks.put(id, tick);
+				return;
+			}
+			ticks.put(id, 0);
 			if (carriesNamedItem(player) || nearNamedNonPlayer(player)) {
 				applyLuck(player);
 			} else {
@@ -343,6 +377,7 @@ public final class RadiantFocusBehaviors {
 
 		@Override
 		public void onDeactivate(ServerPlayer player, ItemStack focus) {
+			ticks.remove(player.getUUID());
 			removeLuck(player);
 		}
 
@@ -379,8 +414,12 @@ public final class RadiantFocusBehaviors {
 			if (luck == null || luck.getModifier(LUCK_ID) != null) {
 				return;
 			}
+			double amount = AttunedLuck.cappedPositiveAddLuck(luck, LUCK_BONUS);
+			if (amount <= 0.0D) {
+				return;
+			}
 			luck.addTransientModifier(new AttributeModifier(
-				LUCK_ID, LUCK_BONUS, AttributeModifier.Operation.ADD_VALUE));
+				LUCK_ID, amount, AttributeModifier.Operation.ADD_VALUE));
 		}
 
 		private static void removeLuck(ServerPlayer player) {
@@ -460,11 +499,12 @@ public final class RadiantFocusBehaviors {
 		return false;
 	}
 
-	private static boolean nearBlock(ServerPlayer player, net.minecraft.world.level.block.Block block, int radius) {
+	private static boolean nearBlock(ServerPlayer player, net.minecraft.world.level.block.Block block,
+			int radiusXz, int radiusY) {
 		BlockPos origin = player.blockPosition();
 		for (BlockPos pos : BlockPos.betweenClosed(
-				origin.offset(-radius, -radius, -radius),
-				origin.offset(radius, radius, radius))) {
+				origin.offset(-radiusXz, -radiusY, -radiusXz),
+				origin.offset(radiusXz, radiusY, radiusXz))) {
 			if (player.level().getBlockState(pos).is(block)) {
 				return true;
 			}

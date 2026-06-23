@@ -280,6 +280,12 @@ public final class AttunedEffects {
 			ResourceLocation id = modifierId(slot, i);
 			if (ai.getModifier(id) == null) {
 				double amount = tempered ? entry.amount() * TEMPERED_MODIFIER_MULTIPLIER : entry.amount();
+				if (AttunedLuck.isPositiveAddLuck(entry)) {
+					amount = AttunedLuck.cappedPositiveAddLuck(ai, amount);
+					if (amount <= 0.0D) {
+						continue;
+					}
+				}
 				ai.addTransientModifier(new AttributeModifier(id, amount, entry.operation()));
 			}
 		}

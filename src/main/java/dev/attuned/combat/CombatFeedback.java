@@ -1,10 +1,8 @@
 package dev.attuned.combat;
 
-import dev.attuned.compat.DustParticles;
-
-import dev.attuned.compat.PlayerMessages;
 import dev.attuned.api.focus.Affinity;
 import dev.attuned.api.focus.AffinityColors;
+import dev.attuned.network.ActionBarMessages;
 import dev.attuned.pacts.Pact;
 import java.util.HashMap;
 import java.util.Map;
@@ -89,8 +87,9 @@ public final class CombatFeedback {
 		float pitch = 1.0F + Math.min(0.4F, (streak - 2) * 0.08F);
 		level.playSound(null, player.blockPosition(),
 			SoundEvents.PLAYER_LEVELUP, SoundSource.PLAYERS, 0.25F, pitch);
-		PlayerMessages.overlay(player, net.minecraft.network.chat.Component.translatable(
-			"resonance.attuned.kill_streak", streak));
+		ActionBarMessages.send(player, ActionBarMessages.Priority.PROGRESS,
+			net.minecraft.network.chat.Component.translatable(
+				"resonance.attuned.kill_streak", streak));
 	}
 
 	public static void surgeCharge(ServerPlayer player) {
@@ -164,7 +163,7 @@ public final class CombatFeedback {
 					SoundEvents.WIND_CHARGE_THROW, SoundSource.PLAYERS, 0.55F, 1.15F);
 			}
 		}
-		level.sendParticles(DustParticles.color(color, overcharge ? 1.1F : 0.85F),
+		level.sendParticles(new DustParticleOptions(color, overcharge ? 1.1F : 0.85F),
 			x, y, z, 4 * particleScale, 0.25, 0.25, 0.25, 0.0);
 	}
 
@@ -177,7 +176,7 @@ public final class CombatFeedback {
 		double x = player.getX();
 		double y = player.getY() + player.getBbHeight() * 0.6;
 		double z = player.getZ();
-		level.sendParticles(DustParticles.color(capstoneColor(capstone), 1.0F),
+		level.sendParticles(new DustParticleOptions(capstoneColor(capstone), 1.0F),
 			x, y, z, 8, 0.35, 0.35, 0.35, 0.0);
 		level.playSound(null, player.blockPosition(),
 			SoundEvents.PLAYER_ATTACK_STRONG, SoundSource.PLAYERS, 0.55F, procPitch(capstone));
@@ -192,7 +191,7 @@ public final class CombatFeedback {
 		int color = Affinity.TIDE.argb() & 0x00FFFFFF;
 		level.sendParticles(ParticleTypes.SPLASH, x, y, z, 14, 0.4, 0.25, 0.4, 0.06);
 		level.sendParticles(ParticleTypes.BUBBLE, x, y + 0.2, z, 8, 0.3, 0.2, 0.3, 0.03);
-		level.sendParticles(DustParticles.color(color, 0.9F), x, y, z, 4, 0.2, 0.2, 0.2, 0.0);
+		level.sendParticles(new DustParticleOptions(color, 0.9F), x, y, z, 4, 0.2, 0.2, 0.2, 0.0);
 		level.playSound(null, victim.blockPosition(),
 			SoundEvents.BUBBLE_COLUMN_UPWARDS_AMBIENT, SoundSource.PLAYERS, 0.45F, 1.35F);
 	}
@@ -206,7 +205,7 @@ public final class CombatFeedback {
 		int color = Affinity.FORGE.argb() & 0x00FFFFFF;
 		level.sendParticles(ParticleTypes.FLAME, x, y, z, 12, 0.35, 0.3, 0.35, 0.03);
 		level.sendParticles(ParticleTypes.LAVA, x, y, z, 4, 0.25, 0.2, 0.25, 0.01);
-		level.sendParticles(DustParticles.color(color, 1.0F), x, y, z, 6, 0.25, 0.25, 0.25, 0.0);
+		level.sendParticles(new DustParticleOptions(color, 1.0F), x, y, z, 6, 0.25, 0.25, 0.25, 0.0);
 		level.playSound(null, victim.blockPosition(),
 			SoundEvents.FIRECHARGE_USE, SoundSource.PLAYERS, 0.55F, 0.9F);
 	}
@@ -219,7 +218,7 @@ public final class CombatFeedback {
 		double z = player.getZ();
 		int color = Affinity.VERDANT.argb() & 0x00FFFFFF;
 		level.sendParticles(ParticleTypes.HAPPY_VILLAGER, x, y, z, 8, 0.35, 0.35, 0.35, 0.02);
-		level.sendParticles(DustParticles.color(color, 0.85F), x, y, z, 5, 0.25, 0.25, 0.25, 0.0);
+		level.sendParticles(new DustParticleOptions(color, 0.85F), x, y, z, 5, 0.25, 0.25, 0.25, 0.0);
 		level.playSound(null, player.blockPosition(),
 			SoundEvents.GRASS_STEP, SoundSource.PLAYERS, 0.5F, 1.3F);
 	}
@@ -232,7 +231,7 @@ public final class CombatFeedback {
 		double z = victim.getZ();
 		int color = Affinity.UMBRAL.argb() & 0x00FFFFFF;
 		level.sendParticles(ParticleTypes.SQUID_INK, x, y, z, 10, 0.35, 0.3, 0.35, 0.02);
-		level.sendParticles(DustParticles.color(color, 0.95F), x, y, z, 6, 0.25, 0.25, 0.25, 0.0);
+		level.sendParticles(new DustParticleOptions(color, 0.95F), x, y, z, 6, 0.25, 0.25, 0.25, 0.0);
 		level.playSound(null, victim.blockPosition(),
 			SoundEvents.WARDEN_HEARTBEAT, SoundSource.PLAYERS, 0.35F, 1.2F);
 	}
@@ -246,7 +245,7 @@ public final class CombatFeedback {
 		int color = Affinity.HOLY.argb() & 0x00FFFFFF;
 		level.sendParticles(ParticleTypes.GLOW, x, y, z, 10, 0.35, 0.35, 0.35, 0.02);
 		level.sendParticles(ParticleTypes.CRIT, x, y, z, 8, 0.3, 0.3, 0.3, 0.1);
-		level.sendParticles(DustParticles.color(color, 1.1F), x, y, z, 8, 0.3, 0.3, 0.3, 0.0);
+		level.sendParticles(new DustParticleOptions(color, 1.1F), x, y, z, 8, 0.3, 0.3, 0.3, 0.0);
 		level.playSound(null, victim.blockPosition(),
 			SoundEvents.AMETHYST_BLOCK_CHIME, SoundSource.PLAYERS, 0.6F, 1.5F);
 	}
@@ -258,7 +257,7 @@ public final class CombatFeedback {
 		double y = victim.getY() + victim.getBbHeight() * 0.5;
 		double z = victim.getZ();
 		level.sendParticles(ParticleTypes.ELECTRIC_SPARK, x, y, z, 4, 0.25, 0.25, 0.25, 0.06);
-		level.sendParticles(DustParticles.color(AffinityColors.DISCORD_RGB, 0.75F),
+		level.sendParticles(new DustParticleOptions(AffinityColors.DISCORD_RGB, 0.75F),
 			x, y, z, 3, 0.2, 0.2, 0.2, 0.0);
 		level.playSound(null, victim.blockPosition(),
 			SoundEvents.LIGHTNING_BOLT_IMPACT, SoundSource.PLAYERS, 0.25F, 1.6F);
@@ -271,7 +270,7 @@ public final class CombatFeedback {
 		double y = victim.getY() + victim.getBbHeight() * 0.55;
 		double z = victim.getZ();
 		int color = Affinity.FURY.argb() & 0x00FFFFFF;
-		level.sendParticles(DustParticles.color(color, 1.4F), x, y, z, 24, 0.55, 0.45, 0.55, 0.0);
+		level.sendParticles(new DustParticleOptions(color, 1.4F), x, y, z, 24, 0.55, 0.45, 0.55, 0.0);
 		level.sendParticles(ParticleTypes.CRIT, x, y, z, 20, 0.5, 0.4, 0.5, 0.18);
 		level.sendParticles(ParticleTypes.SOUL_FIRE_FLAME, x, y, z, 10, 0.35, 0.35, 0.35, 0.04);
 		level.playSound(null, victim.blockPosition(),
@@ -290,10 +289,10 @@ public final class CombatFeedback {
 		double y = player.getY() + player.getBbHeight() * 0.55;
 		double z = player.getZ();
 		int color = Affinity.BASTION.argb() & 0x00FFFFFF;
-		level.sendParticles(DustParticles.color(color, 1.0F), x, y, z, 10, 0.35, 0.35, 0.35, 0.0);
+		level.sendParticles(new DustParticleOptions(color, 1.0F), x, y, z, 10, 0.35, 0.35, 0.35, 0.0);
 		level.sendParticles(ParticleTypes.CRIT, x, y, z, 6, 0.25, 0.25, 0.25, 0.08);
 		level.playSound(null, player.blockPosition(),
-			SoundEvents.SHIELD_BLOCK, SoundSource.PLAYERS, 0.7F, 0.95F);
+			SoundEvents.SHIELD_BLOCK.value(), SoundSource.PLAYERS, 0.7F, 0.95F);
 		markFeedback(player);
 	}
 
@@ -326,7 +325,7 @@ public final class CombatFeedback {
 			case TIDE -> {
 				level.sendParticles(ParticleTypes.BUBBLE, x, y, z, 10, 0.35, 0.3, 0.35, 0.04);
 				level.playSound(null, player.blockPosition(),
-					SoundEvents.BUBBLE_COLUMN_BUBBLE_POP, SoundSource.PLAYERS, 0.5F, 0.9F);
+					SoundEvents.BUBBLE_POP, SoundSource.PLAYERS, 0.5F, 0.9F);
 			}
 			case STEALTH -> {
 				level.sendParticles(ParticleTypes.SMOKE, x, y, z, 8, 0.25, 0.4, 0.25, 0.02);
