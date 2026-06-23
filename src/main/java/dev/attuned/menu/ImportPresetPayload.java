@@ -4,16 +4,18 @@ import dev.attuned.Attuned;
 import dev.attuned.attunement.FocusPreset;
 import java.util.List;
 import net.minecraft.network.RegistryFriendlyByteBuf;
-import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.Identifier;
 
-public record ImportPresetPayload(String name, List<String> slots) implements CustomPacketPayload {
+public record ImportPresetPayload(FocusPreset preset) implements CustomPacketPayload {
+	public ImportPresetPayload(String name, List<String> slots) {
+		this(new FocusPreset(name, slots));
+	}
+
 	public ImportPresetPayload {
-		FocusPreset normalized = new FocusPreset(name, slots);
-		name = normalized.name();
-		slots = normalized.slots();
+		preset = preset == null ? new FocusPreset("", List.of()) :
+			new FocusPreset(preset.name(), preset.slots(), preset.metadata());
 	}
 
 	public static final Type<ImportPresetPayload> TYPE =
@@ -21,9 +23,16 @@ public record ImportPresetPayload(String name, List<String> slots) implements Cu
 
 	public static final StreamCodec<RegistryFriendlyByteBuf, ImportPresetPayload> CODEC =
 		StreamCodec.composite(
-			ByteBufCodecs.STRING_UTF8, ImportPresetPayload::name,
-			ByteBufCodecs.STRING_UTF8.apply(ByteBufCodecs.list()), ImportPresetPayload::slots,
+			FocusPreset.STREAM_CODEC, ImportPresetPayload::preset,
 			ImportPresetPayload::new).cast();
+
+	public String name() {
+		return preset.name();
+	}
+
+	public List<String> slots() {
+		return preset.slots();
+	}
 
 	@Override
 	public Type<ImportPresetPayload> type() {

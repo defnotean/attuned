@@ -53,6 +53,7 @@ public final class AttunedNetworking {
 			return;
 		}
 		initialized = true;
+		CircleNetworking.init();
 		PayloadTypeRegistry.serverboundPlay().register(AbilityPayload.TYPE, AbilityPayload.CODEC);
 		ServerPlayNetworking.registerGlobalReceiver(AbilityPayload.TYPE, (payload, context) -> {
 			ServerPlayer player = context.player();
@@ -108,7 +109,8 @@ public final class AttunedNetworking {
 		}
 
 		LAST_INSPECT.put(player.getUUID(), now);
-		player.sendOverlayMessage(inspectLine(target));
+		ActionBarMessages.send(player, ActionBarMessages.Priority.PROGRESS,
+			inspectLine(target));
 	}
 
 	// Builds the action-bar line: "<name>: <stance>" with an Apex suffix when the

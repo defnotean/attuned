@@ -15,7 +15,7 @@ ROOT = Path(__file__).resolve().parents[1]
 TMP_DIR = ROOT / "tmp/mesh_to_minecraft_item"
 ASSET_ROOT = ROOT / "src/main/resources/assets"
 CUSTOMIZER_MANIFEST = ROOT / "tools/asset_customizer/asset-manifest.json"
-DOC_ASSET_ROOT = ROOT / ".attuned-art-sources"
+PRIVATE_ASSET_ROOT = ROOT / ".attuned-art-sources"
 
 
 def main() -> None:
@@ -29,7 +29,7 @@ def main() -> None:
 	title = args.name or pretty_name(asset_id)
 	blender = find_blender(args.blender)
 
-	work_dir = DOC_ASSET_ROOT / asset_id.replace("_", "-")
+	work_dir = PRIVATE_ASSET_ROOT / asset_id.replace("_", "-")
 	work_dir.mkdir(parents=True, exist_ok=True)
 	TMP_DIR.mkdir(parents=True, exist_ok=True)
 

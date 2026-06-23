@@ -8,7 +8,7 @@ Equip **Foci** into six inventory slots, but mind your **attunement capacity**. 
 
 ## At a glance
 
-- 95 Foci across mobility, defense, combat, stealth, holy, seafaring, shadow, utility, and the eightfold counter wheel
+- 99 Foci across mobility, defense, combat, stealth, holy, seafaring, shadow, rescue, utility, and the eightfold counter wheel
 - **Eightfold Affinities** — Tide, Forge, Verdant, and Umbral now stand beside Fury, Bastion, Zephyr, and Holy as first-class lanes
 - **Refreshed original Focus art** for the new affinity Foci, processed into animated Minecraft item sheets so they sit with the existing medallion/talisman theme
 - **The Unseen**: a stealth faction built around quiet movement, low-light veils, smoke misdirection, and ambush openings
@@ -32,7 +32,7 @@ Equip **Foci** into six inventory slots, but mind your **attunement capacity**. 
 ## Foundation — Resonant Depths
 
 - The promoted **Tide, Forge, Verdant, and Umbral** affinities expand the counter wheel from four to eight while the original four-affinity Pact/Discord cycle survives as a subset.
-- The eightfold roster includes 95 Foci across all affinity, faction, and utility lanes. Tooltips show each Focus's affinity; the Attunement Journal carries the matchup reference.
+- The eightfold roster includes 99 Foci across all affinity, faction, and utility lanes. Tooltips show each Focus's affinity; the Attunement Journal carries the matchup reference.
 - The new affinity Focus textures ship as crisp animated item sheets with bold medallion silhouettes, disciplined affinity palettes, and inventory-scale readability checks.
 - **Focus Confluences**, **Tempering**, **Grand Focus Reliquary**, **Attunement Sanctums**, **Resonant Surges**, datapack-defined Focus behavior palettes, and expanded journal/tooltips round out the release.
 

@@ -1,0 +1,8 @@
+{
+	"type": "attuned:use_item_window",
+	"item": "minecraft:filled_map",
+	"duration_ticks": 100,
+	"cooldown_ticks": 200,
+	"effect": "minecraft:speed",
+	"amplifier": 0
+}

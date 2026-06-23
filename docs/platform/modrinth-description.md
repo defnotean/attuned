@@ -7,7 +7,7 @@ Equip **Foci** into six inventory slots, manage your **attunement capacity**, an
 ## Highlights
 
 - **Attuned 1.5.2 - Minecraft 26.2 Chaos Cubed** moves the current release line to Minecraft 26.2 with Fabric Loader 0.19.3+, Fabric API 0.152.1+26.2, and the 1.5.1 Updraft Focus, smooth boost/brake controls, flight feedback, and PvP exhaustion safeguard.
-- **95 Foci** across mobility, defense, combat, stealth, holy, seafaring, shadow, utility, and the eightfold counter wheel.
+- **99 Foci** across mobility, defense, combat, stealth, holy, seafaring, shadow, rescue, utility, and the eightfold counter wheel.
 - **16 new pure-affinity modifier Foci** fill out the expanded roster with simple, readable stat identities and animated medallion art.
 - **Eight Affinity Pacts** and expanded Apex capstones reward commitment to any single Affinity, while Discord and neutral builds keep their own endgame paths.
 - **Readable creative inventory tabs** split Foci into Fury & Bastion, Zephyr & Holy, Tide & Forge, Verdant & Umbral, and Utility & Tools.
@@ -31,4 +31,4 @@ Lootr is optional but recommended for modpacks. Attuned injects Foci and shard f
 ## Links
 
 - Documentation and authoring guides are included in the repository under `docs/`.
-- Current release notes are generated from the matching `CHANGELOG.md` section for the uploaded version.
+- Current release notes summarize the latest supported Minecraft version and gameplay changes.

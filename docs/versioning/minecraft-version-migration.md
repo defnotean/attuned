@@ -135,9 +135,10 @@ python tools/minecraft_version_profile.py render-checklist <minecraft-version> -
 8. Run full verification.
 
    ```bash
+   python -m pip install -r requirements-dev.txt
    python tools/verify_repository.py
    python -m unittest discover -s tests
-   uv run --with pytest --with pillow -m pytest tests/ -q
+   python -m pytest tests/ -q
    ./gradlew build --no-daemon
    python tools/minecraft_runtime_smoke.py --accept-eula --timeout 240 --stop-timeout 60
    ```

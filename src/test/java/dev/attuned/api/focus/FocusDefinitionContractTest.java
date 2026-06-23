@@ -14,6 +14,8 @@ class FocusDefinitionContractTest {
 		Path.of("src/main/java/dev/attuned/api/focus/FocusDefinition.java");
 	private static final Path MODIFIER_ENTRY =
 		Path.of("src/main/java/dev/attuned/api/focus/ModifierEntry.java");
+	private static final Path REFERENCE =
+		Path.of("docs/reference.md");
 
 	@Test
 	void focusDefinitionDefensivelyCopiesAndRejectsNullFields() throws IOException {
@@ -63,28 +65,44 @@ class FocusDefinitionContractTest {
 			"ModifierEntry should reject a null attribute holder.");
 		assertTrue(source.contains("operation = Objects.requireNonNull(operation, \"operation\");"),
 			"ModifierEntry should reject a null attribute operation.");
+		assertTrue(source.contains("private static final double MIN_AMOUNT = -1024.0D;"),
+			"ModifierEntry should name the minimum valid modifier amount once.");
+		assertTrue(source.contains("private static final double MAX_AMOUNT = 1024.0D;"),
+			"ModifierEntry should name the maximum valid modifier amount once.");
 		assertTrue(source.contains("if (!Double.isFinite(amount))"),
 			"ModifierEntry should reject NaN and infinite modifier amounts.");
-		assertTrue(source.contains("throw new IllegalArgumentException(\"Modifier amount must be finite\")"),
-			"ModifierEntry should fail clearly when a programmatic modifier amount is invalid.");
+		assertTrue(source.contains("if (amount < MIN_AMOUNT || amount > MAX_AMOUNT)"),
+			"ModifierEntry should reject runaway but finite modifier amounts.");
+		assertTrue(source.contains("\"Modifier amount must be between \" + MIN_AMOUNT + \" and \" + MAX_AMOUNT"),
+			"Programmatic amount range failures should explain the valid ModifierEntry range.");
 	}
 
 	@Test
-	void modifierEntryCodecRejectsNonFiniteAmounts() throws IOException {
+	void modifierEntryCodecRejectsNonFiniteAndOutOfRangeAmounts() throws IOException {
 		String source = read(MODIFIER_ENTRY);
 
 		assertTrue(source.contains("import com.mojang.serialization.DataResult;"),
 			"ModifierEntry should use DataResult so codec failures stay structured.");
-		assertTrue(source.contains("private static final Codec<Double> FINITE_AMOUNT_CODEC"),
-			"ModifierEntry should name the finite-only amount codec.");
+		assertTrue(source.contains("private static final Codec<Double> BOUNDED_AMOUNT_CODEC"),
+			"ModifierEntry should name the bounded amount codec.");
 		assertTrue(source.contains("Codec.DOUBLE.validate(ModifierEntry::validateAmount)"),
 			"ModifierEntry should validate datapack amount values before construction.");
-		assertTrue(source.contains("FINITE_AMOUNT_CODEC.fieldOf(\"amount\")"),
-			"ModifierEntry should use the finite-only amount codec for FocusDefinition JSON.");
+		assertTrue(source.contains("BOUNDED_AMOUNT_CODEC.fieldOf(\"amount\")"),
+			"ModifierEntry should use the bounded amount codec for FocusDefinition JSON.");
 		assertTrue(source.contains("private static DataResult<Double> validateAmount(double amount)"),
 			"ModifierEntry should centralize codec amount validation.");
 		assertTrue(source.contains("DataResult.error(() -> \"Modifier amount must be finite\")"),
 			"ModifierEntry codec failures should explain invalid amount values.");
+		assertTrue(source.contains("DataResult.error(() -> \"Modifier amount must be between \" + MIN_AMOUNT + \" and \" + MAX_AMOUNT)"),
+			"ModifierEntry codec failures should explain out-of-range amount values.");
+	}
+
+	@Test
+	void modifierEntryReferenceDocumentsAmountBounds() throws IOException {
+		String reference = read(REFERENCE);
+
+		assertTrue(reference.contains("`amount` (a finite number from -1024.0 to 1024.0)"),
+			"Reference docs should tell datapack authors the safe modifier amount range.");
 	}
 
 	private static String read(Path path) throws IOException {
