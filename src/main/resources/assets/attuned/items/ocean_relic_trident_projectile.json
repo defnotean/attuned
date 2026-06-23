@@ -5,7 +5,7 @@
 		"model": {
 			"type": "attuned:gltf_mesh",
 			"model": "attuned:gltf/ocean_relic_trident.glb",
-			"texture": "attuned:textures/item/ocean_relic_trident_blockbench.png"
+			"texture": "attuned:textures/item/ocean_relic_trident_mesh.png"
 		}
 	}
 }
