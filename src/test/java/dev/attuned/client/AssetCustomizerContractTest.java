@@ -722,7 +722,7 @@ class AssetCustomizerContractTest {
 				"Special renderer should use Attuned's glTF mesh renderer");
 			assertEquals("attuned:gltf/ocean_relic_trident.glb", special.get("model").getAsString(),
 				"Special renderer should load the compact GLB runtime model");
-			assertEquals("attuned:textures/item/ocean_relic_trident_blockbench.png", special.get("texture").getAsString(),
+			assertEquals("attuned:textures/item/ocean_relic_trident_mesh.png", special.get("texture").getAsString(),
 				"Special renderer should use the exported game-scale texture");
 			return;
 		}
