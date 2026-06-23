@@ -7,6 +7,11 @@ Equip Foci into six inventory slots, manage your attunement capacity, and build 
 ## Highlights
 
 - Attuned 1.5.2 - Minecraft 26.2 Chaos Cubed moves the current release line to Minecraft 26.2 with Fabric Loader 0.19.3+, Fabric API 0.152.1+26.2, and the 1.5.1 Updraft Focus, smooth boost/brake controls, flight feedback, and PvP exhaustion safeguard.
+- Deep Lanterns add four exploration-support Foci: Cavewick for lantern-marked cave routes, Glowline for same-dimension Circle pings, Rescueflame for drowning party members, and Depthglass for lodestone-compass navigation hints.
+- Circles are temporary server-authoritative expedition parties with invite flows, party HUD state, pings, disconnect cleanup, and bounded shared contribution windows.
+- Shared progress stays controlled: Circle credit requires same-dimension, nearby, recent contribution, so coordinated play feels better without passive proximity farming Pact, Field, Circle, surge, or party progress.
+- Safer build sharing validates imported Reliquary build codes against the server Focus registry, slot data, names, setup metadata, warnings, and required Focus ids before saving or applying.
+- Expanded datapack behavior palettes cover block-context effects, navigation hints, party assists, item-use windows, and marked-target patterns for pack authors.
 - 99 Foci across mobility, defense, combat, stealth, holy, seafaring, shadow, rescue, utility, and the eightfold counter wheel.
 - 16 new pure-affinity modifier Foci fill out the expanded roster with simple, readable stat identities and animated medallion art.
 - Eight Affinity Pacts and expanded Apex capstones reward commitment to any single Affinity, while Discord and neutral builds keep their own endgame paths.
@@ -31,4 +36,4 @@ Lootr is optional but recommended for modpacks. Attuned injects Foci and shard f
 ## Links
 
 - Documentation and authoring guides are included in the repository under `docs/`.
-- Current release notes summarize the latest supported Minecraft version and gameplay changes.
+- Current release notes explain the larger gameplay-polish patch, including the roughly 14k-line increase from Circles, Deep Lanterns, networking, behavior data, docs, gallery assets, and regression coverage.

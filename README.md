@@ -9,6 +9,8 @@ Equip **Foci** into six inventory slots, but mind your **attunement capacity**. 
 ## At a glance
 
 - 99 Foci across mobility, defense, combat, stealth, holy, seafaring, shadow, rescue, utility, and the eightfold counter wheel
+- **Deep Lanterns** exploration support: Cavewick, Glowline, Rescueflame, and Depthglass add cave routes, party pings, rescue breathing, and lodestone-compass navigation
+- **Circles**: temporary expedition parties with invites, pings, party HUD state, and bounded shared contribution windows for coordinated play
 - **Eightfold Affinities** — Tide, Forge, Verdant, and Umbral now stand beside Fury, Bastion, Zephyr, and Holy as first-class lanes
 - **Refreshed original Focus art** for the new affinity Foci, processed into animated Minecraft item sheets so they sit with the existing medallion/talisman theme
 - **The Unseen**: a stealth faction built around quiet movement, low-light veils, smoke misdirection, and ambush openings
@@ -24,6 +26,10 @@ Equip **Foci** into six inventory slots, but mind your **attunement capacity**. 
 ## Current release — Attuned 1.5.2
 
 - **Minecraft 26.2 Chaos Cubed support** — the `latest` line now targets Minecraft 26.2 with Fabric Loader 0.19.3+, Fabric API 0.152.1+26.2, Loom 1.17.11, and Gradle 9.5.1.
+- **Deep Lanterns faction** — four complete exploration-support Foci bring the roster to 99 with shipped item art, models, behavior JSON, journal/reference docs, and gallery coverage.
+- **Server-authoritative Circles** — create, invite, accept, leave, disband, kick, ping, and share narrow contribution credit without exposing hidden inventory or turning passive proximity into progression.
+- **Safer build sharing** — imported Reliquary build codes now validate Focus ids, slot data, names, setup metadata, and warnings before saving or applying.
+- **Expanded behavior palette** — datapacks can use block-context effects, navigation hints, party assists, item-use windows, and marked-target patterns.
 - **26.2 runtime compatibility** — entity/knockback APIs, client render submit nodes, and screen/toast hooks have been updated so dedicated server and client runtimes launch cleanly.
 - **Preserved 26.1.2 line** — Minecraft 26.1.2 remains available on `maintenance/minecraft-26.1.2` while `latest` moves forward.
 - **Updraft Focus carried forward** — the 1.5.1 elytra utility Focus, smoother boost/brake controls, flight feedback, and PvP exhaustion safeguard are included.
