@@ -21,8 +21,3 @@
 # These are Windows script files and should use crlf
 *.bat           text eol=crlf
 
-# Large source/reference assets live in Git LFS. These docs-only patterns
-# deliberately exclude shipped game textures under src/main/resources.
-docs/superpowers/assets/**/*.glb filter=lfs diff=lfs merge=lfs -text
-docs/superpowers/assets/**/*.obj filter=lfs diff=lfs merge=lfs -text
-docs/superpowers/assets/**/*.png filter=lfs diff=lfs merge=lfs -text

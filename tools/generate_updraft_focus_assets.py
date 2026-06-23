@@ -10,10 +10,11 @@ from generate_umbral_eclipse_focus_assets import alpha_bounds, remove_key_backgr
 
 
 ROOT = Path(__file__).resolve().parents[1]
-DOCS_DIR = ROOT / "docs" / "superpowers" / "assets" / "updraft-focus"
-SOURCE_PATH = DOCS_DIR / "updraft-focus-source.png"
-PREVIEW_PATH = DOCS_DIR / "updraft-focus-preview.png"
-REPORT_PATH = DOCS_DIR / "asset-verification.json"
+SOURCE_DIR = ROOT / ".attuned-art-sources" / "updraft-focus"
+OUTPUT_DIR = ROOT / "build" / "asset-previews" / "updraft-focus"
+SOURCE_PATH = SOURCE_DIR / "updraft-focus-source.png"
+PREVIEW_PATH = OUTPUT_DIR / "updraft-focus-preview.png"
+REPORT_PATH = OUTPUT_DIR / "asset-verification.json"
 TEXTURE_DIR = ROOT / "src" / "main" / "resources" / "assets" / "attuned" / "textures" / "item"
 ITEM_ID = "updraft_focus"
 
@@ -76,14 +77,13 @@ def generate_assets() -> dict[str, object]:
 
 	preview = Image.new("RGBA", (ICON_SIZE + 16, ICON_SIZE + 16), (18, 18, 22, 255))
 	preview.alpha_composite(icon, (8, 8))
-	DOCS_DIR.mkdir(parents=True, exist_ok=True)
+	OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 	preview.save(PREVIEW_PATH, optimize=True)
 
 	report = {
 		"source": relative(SOURCE_PATH),
 		"preview": relative(PREVIEW_PATH),
-		"generated_by": "OpenAI built-in image_gen",
-		"purpose": "Image-generated art for the Updraft Focus elytra-lift utility Focus.",
+		"workflow": "private local source image normalized into the Updraft Focus texture",
 		"output": {
 			"id": ITEM_ID,
 			"path": relative(output_path),
