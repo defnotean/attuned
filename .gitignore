@@ -68,3 +68,6 @@ output/
 
 # stray root-level resource-pack experiments (real assets live in src/main/resources)
 /assets/
+/.codex-logs/
+/.attuned-art-sources/
+/docs/superpowers/

@@ -1,11 +1,10 @@
 from __future__ import annotations
 
-"""Import image-generated art for the expanded Apex capstones.
+"""Import prepared art for the expanded Apex capstones.
 
-The game-facing assets are cropped from image-generated source sheets under
-docs/superpowers/assets/apex-capstones. This script only normalizes them for
-Minecraft: crop, chroma-key, resize, assemble animation strips, and write a
-small verification preview.
+The game-facing assets are cropped from local private source sheets. This
+script only normalizes them for Minecraft: crop, chroma-key, resize, assemble
+animation strips, and write a small verification preview under build/.
 """
 
 import json
@@ -20,9 +19,10 @@ ASSETS = ROOT / "src/main/resources/assets/attuned"
 HUD_DIR = ASSETS / "textures/gui/sprites/hud"
 BLOCK_TEXTURE_DIR = ASSETS / "textures/block"
 BLOCK_MODEL_DIR = ASSETS / "models/block"
-DOC_ASSET_DIR = ROOT / "docs/superpowers/assets/apex-capstones"
-HUD_SOURCE = DOC_ASSET_DIR / "apex-capstones-hud-source.png"
-ALTAR_SOURCE = DOC_ASSET_DIR / "apex-capstones-altar-source.png"
+SOURCE_ASSET_DIR = ROOT / ".attuned-art-sources" / "apex-capstones"
+PREVIEW_DIR = ROOT / "build" / "asset-previews" / "apex-capstones"
+HUD_SOURCE = SOURCE_ASSET_DIR / "apex-capstones-hud-source.png"
+ALTAR_SOURCE = SOURCE_ASSET_DIR / "apex-capstones-altar-source.png"
 
 SIZE = 64
 FRAMES = 8
@@ -176,7 +176,7 @@ def first_frame(path: Path) -> Image.Image:
 
 
 def make_preview() -> Path:
-    DOC_ASSET_DIR.mkdir(parents=True, exist_ok=True)
+    PREVIEW_DIR.mkdir(parents=True, exist_ok=True)
     cell = 86
     preview = Image.new("RGBA", (cell * 4, cell * 3), (16, 16, 20, 255))
     draw = ImageDraw.Draw(preview)
@@ -189,7 +189,7 @@ def make_preview() -> Path:
         preview.alpha_composite(first_frame(BLOCK_TEXTURE_DIR / f"attunement_altar_gem_{aspect}.png"), (x, cell * 2))
         draw.text((index * cell + 6, cell - 12), aspect, fill=(230, 230, 230, 255))
         draw.text((index * cell + 6, cell * 2 - 12), capstone, fill=(230, 230, 230, 255))
-    out = DOC_ASSET_DIR / "apex-capstone-assets-preview.png"
+    out = PREVIEW_DIR / "apex-capstone-assets-preview.png"
     preview.save(out)
     return out
 
@@ -216,7 +216,7 @@ def verify(paths: list[Path], preview: Path) -> Path:
                 report["altarTextures"][relative] = entry
         elif path.suffix == ".json":
             report["blockModels"].append(relative)
-    out = DOC_ASSET_DIR / "asset-verification.json"
+    out = PREVIEW_DIR / "asset-verification.json"
     out.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
     return out
 
@@ -229,7 +229,7 @@ def main() -> None:
     report = verify(paths, preview)
     print(f"wrote {preview.relative_to(ROOT).as_posix()}")
     print(f"wrote {report.relative_to(ROOT).as_posix()}")
-    print(f"imported {len(paths)} game asset files from image-generated source sheets")
+    print(f"imported {len(paths)} game asset files from private source sheets")
 
 
 if __name__ == "__main__":

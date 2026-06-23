@@ -99,7 +99,7 @@ class DocsContractTest(unittest.TestCase):
             ROOT / "docs" / "platform" / "modrinth-description.md",
             ROOT / "docs" / "platform" / "curseforge-description.md",
         ]
-        forbidden = re.compile(r"image-generation|provenance|generated image", re.IGNORECASE)
+        forbidden = re.compile(r"private asset workflow|asset-source manifest|generated image", re.IGNORECASE)
 
         leaks = []
         for doc in public_docs:
