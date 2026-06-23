@@ -3,12 +3,25 @@
 ## Attuned 1.5.5+mc26.1.2 - Gameplay Polish Backport
 
 ### Added
-- **Deep Lanterns faction** - four exploration-support Foci bring the shipped roster to 99 Foci: Cavewick rewards placed lantern routes with gentle Night Vision, Glowline follows same-dimension Circle pings, Rescueflame helps drowning Circle members breathe, and Depthglass reads held lodestone compass targets for restrained navigation hints.
+- **Deep Lanterns faction** - four exploration-support Foci bring the shipped roster to 99 Foci and give cave expeditions a support identity that is not another raw damage lane.
+  - **Cavewick Focus** is a two-cost utility Focus that rewards player-built routes: placed lanterns and soul lanterns in a small radius keep gentle Night Vision refreshed, making caves readable without granting global tracking or structure search.
+  - **Glowline Focus** is a three-cost route-following Focus that points toward recent same-dimension Circle pings. It uses only server-accepted party markers, so it is a coordination aid rather than a live locator.
+  - **Rescueflame Focus** is a four-cost Holy support Focus that periodically assists a nearby drowning Circle member with Water Breathing. It deliberately excludes the wearer and uses Circle eligibility/cooldown rules so it behaves like rescue support, not a personal underwater buff.
+  - **Depthglass Focus** is a three-cost navigation Focus that reads a held lodestone compass target and gives restrained same-dimension hints. It works from an explicit vanilla target the player already owns.
 - **Server-authoritative Circles** - temporary expedition parties now support create, invite, accept, leave, disband, kick, invite expiry, capacity checks, cooldowns, disconnect cleanup, and snapshot syncing.
 - **Party HUD and invite prompts** - clients receive Circle snapshots, invite prompts, and recent ping notices through dedicated payloads without exposing hidden inventory, private cooldowns, or item sharing.
+- **Circle pings and navigation targets** - pings become server-accepted navigation targets with membership, dimension, visibility, loaded-target, range, and rate-limit checks. Glowline consumes those stored markers instead of scanning the world.
 - **Shared contribution windows** - nearby same-dimension Circle members can receive eligible shared progress from combat, blocking, reveal, and helper actions without allowing passive proximity to farm progression.
-- **Expanded data-driven Focus behavior palette** - new passive behavior types cover block-context effects, navigation hints, party assists, item-use windows, and marked targets.
+- **Party-aware Pact Trial support** - eligible Circle contributors can share narrow trial progress while solo play remains complete.
+- **Expanded data-driven Focus behavior palette** - new passive behavior types cover block-context effects, navigation hints, party assists, item-use windows, and marked targets:
+  - `attuned:block_context_effect` keeps an effect refreshed near tagged local blocks, used by Cavewick for lantern routes.
+  - `attuned:navigation_hint` gives restrained feedback toward accepted stored targets, used by Glowline and Depthglass.
+  - `attuned:party_assist` helps an eligible Circle member with a small effect on cooldown, used by Rescueflame.
+  - `attuned:use_item_window` grants a short effect or modifier after using a matching item or item tag.
+  - `attuned:marked_target` lets a charged hit prime a short-lived mark and a later charged hit consume it for an effect.
 - **Build setup metadata** - shared builds can carry sanitized role, note, party-size, required-Focus, and version-context metadata as advice only, without bypassing ownership or attunement rules.
+- **Import validation and setup suggestions** - imported build codes are checked against the server Focus registry before saving; malformed names, slots, and metadata are rejected or downgraded to warnings.
+- **Action-bar message priority gate** - repeated cooldown, apply, party, and combat feedback now route through shared action-bar helpers so important messages are less likely to be overwritten by low-priority spam.
 - **Gameplay polish QA checklist** - added a manual release checklist for combat feel, Pact loops, Confluences, Resonant Surges, Circles, Updraft flight, onboarding, and journal clarity.
 
 ### Changed
@@ -17,6 +30,8 @@
 - **Deep Lanterns documentation and journal pages** - the Attunement Journal and reference docs now explain Circles, public attunement state, shared credit, party pings, the Deep Lanterns faction, and the new behavior-palette entries.
 - **Example datapack expanded** - the sample pack now covers build marks, canopy steps, rescue support, route windows, and navigation-hint patterns so datapack authors can copy working JSON.
 - **Gallery coverage refreshed** - Modrinth/CurseForge gallery sheets were updated so the current Focus roster, neutral sets, Holy/Forge/Umbral coverage, and shipped item art remain visible after the new Foci landed.
+- **Combat and support math centralized** - repeated damage/support logic now flows through shared helpers, including clearer direct-combat target checks and capped positive Luck stacking.
+- **Pact and resonance feedback tightened** - Pact deaths, tactical feedback, trial progress messaging, combat polish hooks, and resonance/surge feedback now share more of the same routing and validation paths.
 - **Reliquary/build workflows hardened** - preset save, import, apply, delete, metadata inference, and quick-apply paths now share stricter validation so stale UI state or malformed imported data cannot silently mutate the wrong build.
 
 ### Fixed
@@ -30,6 +45,15 @@
 - **Why this patch is large** - the large line increase is the combined cost of shipping a server-authoritative Circle runtime, client HUD state, network payloads, party contribution rules, new Focus behavior schema, four complete Foci with item/model/texture/data definitions, expanded authoring docs, gallery updates, example datapack coverage, and a broad regression-test net around each boundary.
 - Added contract tests for Circle policy, Circle manager behavior, pings, snapshots, invite prompts, party HUD geometry, shared contribution credit, party effects, action-bar routing, preset metadata/import validation, damage formula helpers, Luck stacking, Deep Lantern content, and block-context scans.
 - Expanded repository validation around generated and authored repository structure, source-marker hygiene, Focus definitions, behavior palettes, docs claims, platform gallery assets, release-facing feature counts, Python syntax, and transient-cache leaks.
+- CI now runs the broader repository and Python checks alongside Gradle build/test gates before release artifacts are accepted.
+- Added Circle and party config knobs for max members, invite TTL/cooldowns, shared-credit radius/window, same-dimension behavior, party effects, party HUD, confluence hints, and setup suggestions.
+- Release-facing docs now keep private source archives out of tracked content while still documenting the shipped assets, public behavior contracts, and authoring workflows.
+
+### Compatibility and migration notes
+- Existing worlds do not need a data migration for Circles. Circle state is transient server runtime state, not permanent item ownership.
+- Solo play remains complete. Circle systems add coordination, public role hints, and eligible shared credit, but they do not replace solo Pact, Focus, or Confluence progression.
+- Author datapacks using older Focus behavior palette entries continue to work; the new behavior types are additive.
+- This maintenance release targets Minecraft 26.1.2; the `latest` release line targets newer Minecraft versions separately.
 
 ## Attuned 1.5.4+mc26.1.2 - Compatibility Fixes
 
