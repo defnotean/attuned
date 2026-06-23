@@ -65,7 +65,7 @@ def main() -> None:
 
 def parse_args() -> argparse.Namespace:
 	parser = argparse.ArgumentParser(
-		description="Convert a Meshy/Tripo-style 3D source asset into a Minecraft item sprite/model.")
+		description="Convert a 3D source asset into a Minecraft item sprite/model.")
 	parser.add_argument("source", type=Path, help="FBX, GLB, glTF, OBJ, or Blender-supported source file.")
 	parser.add_argument("--asset-id", required=True, help="Minecraft item asset id, for example frostbound_trident.")
 	parser.add_argument("--name", help="Display name for the asset customizer.")

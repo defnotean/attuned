@@ -200,7 +200,7 @@ class AssetCustomizerContractTest {
 	@Test
 	void manifestPointsAtRealAttunedAssets() throws IOException {
 		JsonArray assets = JsonParser.parseString(read(MANIFEST)).getAsJsonArray();
-		assertEquals(5, assets.size(), "Customizer should include Offshore assets, throw preview, and the Meshy conversion samples");
+		assertEquals(5, assets.size(), "Customizer should include Offshore assets, throw preview, and the source conversion samples");
 
 		boolean sawFocus = false;
 		boolean sawHarpoon = false;
@@ -229,7 +229,7 @@ class AssetCustomizerContractTest {
 		assertTrue(sawHarpoon, "Customizer manifest should include Offshore Harpoon");
 		assertTrue(sawOceanRelic, "Customizer manifest should include the Ocean Relic Trident model");
 		assertTrue(sawOceanRelicThrowing, "Customizer manifest should include the Ocean Relic Trident throwing pose");
-		assertTrue(sawFrostbound, "Customizer manifest should include the Meshy Frostbound Trident conversion");
+		assertTrue(sawFrostbound, "Customizer manifest should include the Frostbound Trident source conversion");
 	}
 
 	@Test
