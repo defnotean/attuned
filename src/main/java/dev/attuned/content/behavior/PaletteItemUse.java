@@ -11,7 +11,7 @@ import net.fabricmc.fabric.api.event.player.UseItemCallback;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
-import net.minecraft.world.InteractionResult;
+import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
@@ -30,13 +30,13 @@ public final class PaletteItemUse {
 		UseItemCallback.EVENT.register(PaletteItemUse::useItem);
 	}
 
-	static InteractionResult useItem(Player player, Level level, InteractionHand hand) {
-		if (!(level instanceof ServerLevel) || !(player instanceof ServerPlayer serverPlayer)) {
-			return InteractionResult.PASS;
-		}
+	static InteractionResultHolder<ItemStack> useItem(Player player, Level level, InteractionHand hand) {
 		ItemStack used = player.getItemInHand(hand);
+		if (!(level instanceof ServerLevel) || !(player instanceof ServerPlayer serverPlayer)) {
+			return InteractionResultHolder.pass(used);
+		}
 		if (used.isEmpty()) {
-			return InteractionResult.PASS;
+			return InteractionResultHolder.pass(used);
 		}
 		AttunedInv inventory = AttunedAttachments.getInventory(serverPlayer);
 		for (int slot : Attunement.activeSlots(serverPlayer)) {
@@ -53,6 +53,6 @@ public final class PaletteItemUse {
 					}
 				});
 		}
-		return InteractionResult.PASS;
+		return InteractionResultHolder.pass(used);
 	}
 }

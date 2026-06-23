@@ -27,7 +27,7 @@ import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
@@ -84,20 +84,20 @@ public final class DataFocusBehaviors {
 
 	/** The transient-modifier id a given {@code attribute_while} behaviour owns: the shared prefix
 	 * qualified by the behaviour's registry id, so distinct behaviours never share a modifier id. */
-	static Identifier attributeWhileModifierId(Identifier behaviorId) {
-		return Identifier.fromNamespaceAndPath(Attuned.MOD_ID,
+	static ResourceLocation attributeWhileModifierId(ResourceLocation behaviorId) {
+		return ResourceLocation.fromNamespaceAndPath(Attuned.MOD_ID,
 			ATTRIBUTE_WHILE_MODIFIER_PREFIX + "/" + behaviorId.getNamespace() + "/" + behaviorId.getPath());
 	}
 
-	static Identifier useItemWindowModifierId(Identifier behaviorId) {
-		return Identifier.fromNamespaceAndPath(Attuned.MOD_ID,
+	static ResourceLocation useItemWindowModifierId(ResourceLocation behaviorId) {
+		return ResourceLocation.fromNamespaceAndPath(Attuned.MOD_ID,
 			USE_ITEM_WINDOW_MODIFIER_PREFIX + "/" + behaviorId.getNamespace() + "/" + behaviorId.getPath());
 	}
 
 	/** Builds a passive {@link FocusBehavior} for the given palette definition. The behaviour's
 	 * registry {@code behaviorId} qualifies any per-instance state (e.g. the {@code attribute_while}
 	 * modifier id) so two distinct palette behaviours never collide on the same attribute. */
-	public static FocusBehavior build(Identifier behaviorId, FocusBehaviorDef definition) {
+	public static FocusBehavior build(ResourceLocation behaviorId, FocusBehaviorDef definition) {
 		return switch (definition) {
 			case FocusBehaviorDef.ConditionalMobEffect effect -> new ConditionalMobEffectBehavior(effect);
 			case FocusBehaviorDef.OnHitEffect onHit -> new OnHitEffectBehavior(onHit);
@@ -214,11 +214,11 @@ public final class DataFocusBehaviors {
 	}
 
 	static final class UseItemWindowBehavior implements FocusBehavior {
-		private final Identifier behaviorId;
+		private final ResourceLocation behaviorId;
 		private final FocusBehaviorDef.UseItemWindow def;
-		private final Identifier modifierId;
+		private final ResourceLocation modifierId;
 
-		UseItemWindowBehavior(Identifier behaviorId, FocusBehaviorDef.UseItemWindow def) {
+		UseItemWindowBehavior(ResourceLocation behaviorId, FocusBehaviorDef.UseItemWindow def) {
 			this.behaviorId = behaviorId;
 			this.def = def;
 			this.modifierId = useItemWindowModifierId(behaviorId);
@@ -328,7 +328,7 @@ public final class DataFocusBehaviors {
 		});
 	}
 
-	private record UseItemWindowKey(Identifier behaviorId, UUID playerId) {}
+	private record UseItemWindowKey(ResourceLocation behaviorId, UUID playerId) {}
 
 	private record ActiveModifier(ModifierEntry modifier, long expiresAt) {}
 
@@ -348,9 +348,9 @@ public final class DataFocusBehaviors {
 		});
 	}
 
-	private record MarkedTargetKey(Identifier behaviorId, UUID attackerId, UUID targetId) {}
+	private record MarkedTargetKey(ResourceLocation behaviorId, UUID attackerId, UUID targetId) {}
 
-	private record MarkedTargetCooldownKey(Identifier behaviorId, UUID attackerId) {}
+	private record MarkedTargetCooldownKey(ResourceLocation behaviorId, UUID attackerId) {}
 
 	private record MarkedTargetMark(long expiresAt) {}
 
@@ -364,7 +364,7 @@ public final class DataFocusBehaviors {
 		AttunedServerCleanup.onStop(navigationHintTargets::clear);
 	}
 
-	private record NavigationHintCacheKey(Identifier behaviorId, UUID playerId) {}
+	private record NavigationHintCacheKey(ResourceLocation behaviorId, UUID playerId) {}
 
 	private record NavigationHintTarget(ResourceKey<Level> dimension, BlockPos pos, long observedAtTick) {
 		private NavigationHintTarget {
@@ -422,10 +422,10 @@ public final class DataFocusBehaviors {
 	 * hidden, icon-less) match the rest of the passive behaviors.
 	 */
 	public static final class MarkedTargetBehavior implements FocusBehavior {
-		private final Identifier behaviorId;
+		private final ResourceLocation behaviorId;
 		private final FocusBehaviorDef.MarkedTarget def;
 
-		MarkedTargetBehavior(Identifier behaviorId, FocusBehaviorDef.MarkedTarget def) {
+		MarkedTargetBehavior(ResourceLocation behaviorId, FocusBehaviorDef.MarkedTarget def) {
 			this.behaviorId = behaviorId;
 			this.def = def;
 			initMarkedTargetLifecycle();
@@ -465,10 +465,10 @@ public final class DataFocusBehaviors {
 	}
 
 	static final class PartyAssistBehavior implements FocusBehavior {
-		private final Identifier behaviorId;
+		private final ResourceLocation behaviorId;
 		private final FocusBehaviorDef.PartyAssist def;
 
-		PartyAssistBehavior(Identifier behaviorId, FocusBehaviorDef.PartyAssist def) {
+		PartyAssistBehavior(ResourceLocation behaviorId, FocusBehaviorDef.PartyAssist def) {
 			this.behaviorId = behaviorId;
 			this.def = def;
 			initPartyAssistLifecycle();
@@ -547,10 +547,10 @@ public final class DataFocusBehaviors {
 	}
 
 	static final class NavigationHintBehavior implements FocusBehavior {
-		private final Identifier behaviorId;
+		private final ResourceLocation behaviorId;
 		private final FocusBehaviorDef.NavigationHint def;
 
-		NavigationHintBehavior(Identifier behaviorId, FocusBehaviorDef.NavigationHint def) {
+		NavigationHintBehavior(ResourceLocation behaviorId, FocusBehaviorDef.NavigationHint def) {
 			this.behaviorId = behaviorId;
 			this.def = def;
 			initNavigationHintLifecycle();
@@ -722,9 +722,9 @@ public final class DataFocusBehaviors {
 	 */
 	static final class AttributeWhileBehavior implements FocusBehavior {
 		private final FocusBehaviorDef.AttributeWhile def;
-		private final Identifier modifierId;
+		private final ResourceLocation modifierId;
 
-		AttributeWhileBehavior(Identifier behaviorId, FocusBehaviorDef.AttributeWhile def) {
+		AttributeWhileBehavior(ResourceLocation behaviorId, FocusBehaviorDef.AttributeWhile def) {
 			this.def = def;
 			this.modifierId = attributeWhileModifierId(behaviorId);
 		}

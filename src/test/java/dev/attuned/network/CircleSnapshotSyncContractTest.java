@@ -32,7 +32,7 @@ class CircleSnapshotSyncContractTest {
 			"Member rows should contain stable player id, public name, leader marker, and public stance/role/count summary.");
 		assertTrue(payload.contains("Member.STREAM_CODEC.apply(ByteBufCodecs.list())"),
 			"Snapshot payloads should serialize bounded member rows through a list codec.");
-		assertTrue(journal.contains("PayloadTypeRegistry.clientboundPlay().register(CircleSnapshotPayload.TYPE"),
+		assertTrue(journal.contains("PayloadTypeRegistry.playS2C().register(CircleSnapshotPayload.TYPE"),
 			"The common clientbound registration should include Circle snapshots.");
 	}
 

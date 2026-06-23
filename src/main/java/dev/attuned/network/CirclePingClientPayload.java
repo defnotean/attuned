@@ -9,7 +9,7 @@ import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 
 /** Server-to-client bounded location marker for Circle members. */
 public record CirclePingClientPayload(UUID source, String sourceName, double x, double y,
@@ -23,7 +23,7 @@ public record CirclePingClientPayload(UUID source, String sourceName, double x, 
 	}
 
 	public static final Type<CirclePingClientPayload> TYPE =
-		new Type<>(Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "circle_ping_marker"));
+		new Type<>(ResourceLocation.fromNamespaceAndPath(Attuned.MOD_ID, "circle_ping_marker"));
 
 	public static final StreamCodec<RegistryFriendlyByteBuf, CirclePingClientPayload> CODEC =
 		StreamCodec.composite(

@@ -50,7 +50,7 @@ class DamageFormulaTest {
 	@Test
 	void hurtMixinKeepsOneOrderedDamagePipelineForFutureRoles() throws IOException {
 		String adjustDamage = methodBody(read(MIXIN_SOURCE),
-			"private float attuned$adjustDamage(float amount, ServerLevel level, DamageSource source)");
+			"private float attuned$adjustDamage(float amount, DamageSource source)");
 
 		assertOrdered(adjustDamage,
 			"AttunedCombat.applyAffinity(level, self, source, amount, context)",

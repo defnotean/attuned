@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 
 /** Pure setup metadata inference for saved Focus builds. */
 public final class PresetMetadataResolver {
@@ -18,7 +18,7 @@ public final class PresetMetadataResolver {
 
 	public record ResolvedFocus(
 			Optional<Affinity> affinity,
-			Optional<Identifier> faction,
+			Optional<ResourceLocation> faction,
 			boolean activeAbility,
 			Optional<BudgetResolver.DormantReason> dormantReason) {
 		public ResolvedFocus {
@@ -131,7 +131,7 @@ public final class PresetMetadataResolver {
 		Map<String, Integer> counts = new HashMap<>();
 		for (ResolvedFocus focus : active) {
 			focus.faction()
-				.map(Identifier::toString)
+				.map(ResourceLocation::toString)
 				.ifPresent(id -> counts.merge(id, 1, Integer::sum));
 		}
 		return counts.entrySet().stream()

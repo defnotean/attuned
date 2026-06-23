@@ -10,7 +10,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import net.minecraft.core.Holder;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.effect.MobEffect;
 
 /**
@@ -287,7 +287,7 @@ public sealed interface FocusBehaviorDef {
 	 * turn into broad per-tick chunk pressure.
 	 */
 	record BlockContextEffect(
-			Identifier blockTag,
+			ResourceLocation blockTag,
 			int radius,
 			boolean requiresLit,
 			Holder<MobEffect> effect,
@@ -325,7 +325,7 @@ public sealed interface FocusBehaviorDef {
 		}
 
 		static final MapCodec<BlockContextEffect> MAP_CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(
-			Identifier.CODEC.fieldOf("block_tag").forGetter(BlockContextEffect::blockTag),
+			ResourceLocation.CODEC.fieldOf("block_tag").forGetter(BlockContextEffect::blockTag),
 			Codec.intRange(MIN_RADIUS, MAX_RADIUS).optionalFieldOf("radius", 2).forGetter(BlockContextEffect::radius),
 			Codec.BOOL.optionalFieldOf("requires_lit", false).forGetter(BlockContextEffect::requiresLit),
 			BuiltInRegistries.MOB_EFFECT.holderByNameCodec().fieldOf("effect").forGetter(BlockContextEffect::effect),
@@ -346,8 +346,8 @@ public sealed interface FocusBehaviorDef {
 	 * callback, never by scanning inventories every tick.
 	 */
 	record UseItemWindow(
-			Optional<Identifier> item,
-			Optional<Identifier> itemTag,
+			Optional<ResourceLocation> item,
+			Optional<ResourceLocation> itemTag,
 			int durationTicks,
 			int cooldownTicks,
 			Optional<Holder<MobEffect>> effect,
@@ -388,8 +388,8 @@ public sealed interface FocusBehaviorDef {
 		}
 
 		static final MapCodec<UseItemWindow> MAP_CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(
-			Identifier.CODEC.optionalFieldOf("item").forGetter(UseItemWindow::item),
-			Identifier.CODEC.optionalFieldOf("item_tag").forGetter(UseItemWindow::itemTag),
+			ResourceLocation.CODEC.optionalFieldOf("item").forGetter(UseItemWindow::item),
+			ResourceLocation.CODEC.optionalFieldOf("item_tag").forGetter(UseItemWindow::itemTag),
 			Codec.intRange(MIN_DURATION, MAX_DURATION).fieldOf("duration_ticks").forGetter(UseItemWindow::durationTicks),
 			Codec.intRange(MIN_COOLDOWN, MAX_DURATION).fieldOf("cooldown_ticks").forGetter(UseItemWindow::cooldownTicks),
 			BuiltInRegistries.MOB_EFFECT.holderByNameCodec().optionalFieldOf("effect").forGetter(UseItemWindow::effect),

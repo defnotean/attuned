@@ -20,7 +20,7 @@ import net.fabricmc.fabric.api.event.player.UseBlockCallback;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.Holder;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.tags.BlockTags;
@@ -346,8 +346,8 @@ public final class RadiantFocusBehaviors {
 	}
 
 	public static final class Namesake implements FocusBehavior {
-		private static final Identifier LUCK_ID =
-			Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "namesake_focus_luck");
+		private static final ResourceLocation LUCK_ID =
+			ResourceLocation.fromNamespaceAndPath(Attuned.MOD_ID, "namesake_focus_luck");
 		private static final int CHECK_INTERVAL = 20;
 		private static final double LUCK_BONUS = 1.0D;
 		private static final double NAMED_ENTITY_RADIUS = 8.0D;

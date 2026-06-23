@@ -25,7 +25,6 @@ public class AttunedClient implements ClientModInitializer {
 		AltarScreens.init();
 		AttunementJournalScreen.initNetworking();
 		TremorOreOutlines.init();
-		BlockbenchMeshSpecialRenderer.init();
 		GltfMeshSpecialRenderer.init();
 	}
 }

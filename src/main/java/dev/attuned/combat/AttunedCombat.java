@@ -180,7 +180,7 @@ public final class AttunedCombat {
 		if (!CombatTargets.isHostileOrPvpOpponent(defender, player)) {
 			return false;
 		}
-		return defender.typeHolder().is(EntityTypeTags.UNDEAD)
+		return defender.getType().is(EntityTypeTags.UNDEAD)
 			|| context.affinityOf(defender).filter(affinity -> affinity == Affinity.FURY).isPresent();
 	}
 

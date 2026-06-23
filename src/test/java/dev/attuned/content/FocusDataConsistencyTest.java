@@ -663,11 +663,26 @@ class FocusDataConsistencyTest {
 	private static JsonObject modifierFor(JsonObject root, String attribute) {
 		for (JsonElement element : root.get("modifiers").getAsJsonArray()) {
 			JsonObject modifier = element.getAsJsonObject();
-			if (attribute.equals(modifier.get("attribute").getAsString())) {
+			String actual = modifier.get("attribute").getAsString();
+			if (attribute.equals(actual) || legacyAttribute(attribute).equals(actual)) {
 				return modifier;
 			}
 		}
 		throw new AssertionError("Missing Focus modifier for " + attribute + ": " + root);
+	}
+
+	private static String legacyAttribute(String attribute) {
+		if (!attribute.startsWith("minecraft:")) {
+			return attribute;
+		}
+		String path = attribute.substring("minecraft:".length());
+		return switch (path) {
+			case "armor", "armor_toughness", "attack_damage", "attack_speed",
+				"knockback_resistance", "luck", "max_health", "movement_speed",
+				"jump_strength", "water_movement_efficiency", "fall_damage_multiplier" ->
+				"minecraft:generic." + path;
+			default -> attribute;
+		};
 	}
 
 	private static ExpectedModifier expected(String attribute, String operation, double amount, String tooltipToken) {
@@ -700,7 +715,8 @@ class FocusDataConsistencyTest {
 			"Seafarers should only carry their non-combat Luck modifier: " + file);
 
 		JsonObject modifier = modifiers.getAsJsonArray().get(0).getAsJsonObject();
-		assertEquals("minecraft:luck", modifier.get("attribute").getAsString(),
+		String attribute = modifier.get("attribute").getAsString();
+		assertTrue("minecraft:luck".equals(attribute) || "minecraft:generic.luck".equals(attribute),
 			"Seafarers modifier should affect vanilla player Luck: " + file);
 		assertEquals(SEAFARERS_LUCK_AMOUNTS.get(itemId), modifier.get("amount").getAsDouble(), 0.0001D,
 			"Seafarers Luck amount should stay significant but vanilla-friendly: " + file);

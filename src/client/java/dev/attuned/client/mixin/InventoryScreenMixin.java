@@ -16,8 +16,6 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import java.util.Optional;
-
 /**
  * Draws Attuned's six Focus slots as a side panel on the left of the survival
  * inventory screen — clear of the potion effects vanilla draws down the right
@@ -51,14 +49,13 @@ public abstract class InventoryScreenMixin extends AbstractContainerScreen<Inven
 			FocusLayout.INVENTORY_X, FocusLayout.INVENTORY_Y, player);
 		if (FocusPanel.overReadout(FocusLayout.INVENTORY_X, FocusLayout.INVENTORY_Y,
 				mouseX - this.leftPos, mouseY - this.topPos)) {
-			graphics.setTooltipForNextFrame(this.font, AttunementReadout.tooltip(AttunementReadout.cached(player)),
-				Optional.empty(), mouseX, mouseY);
+			graphics.renderComponentTooltip(this.font,
+				AttunementReadout.tooltip(AttunementReadout.cached(player)), mouseX, mouseY);
 		}
 	}
 
 	private boolean attuned$recipeBookOpen() {
-		RecipeBookComponent<?> book =
-			((AbstractRecipeBookScreenAccessor) (Object) this).attuned$recipeBookComponent();
+		RecipeBookComponent book = ((InventoryScreen) (Object) this).getRecipeBookComponent();
 		return book != null && book.isVisible();
 	}
 }

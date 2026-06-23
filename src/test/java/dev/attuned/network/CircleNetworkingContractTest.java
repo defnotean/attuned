@@ -27,14 +27,14 @@ class CircleNetworkingContractTest {
 
 		assertTrue(attunedNetworking.contains("CircleNetworking.init();"),
 			"Common networking init should install the Circle lifecycle receivers.");
-		assertTrue(journalNetworking.contains("PayloadTypeRegistry.clientboundPlay().register(CircleInvitePromptPayload.TYPE"),
+		assertTrue(journalNetworking.contains("PayloadTypeRegistry.playS2C().register(CircleInvitePromptPayload.TYPE"),
 			"Common networking init should register the clientbound Circle invite prompt payload.");
-		assertTrue(journalNetworking.contains("PayloadTypeRegistry.clientboundPlay().register(CirclePingClientPayload.TYPE"),
+		assertTrue(journalNetworking.contains("PayloadTypeRegistry.playS2C().register(CirclePingClientPayload.TYPE"),
 			"Common networking init should register the clientbound Circle ping payload.");
 		for (String payload : circlePayloads()) {
 			assertTrue(Files.isRegularFile(Path.of("src/main/java/dev/attuned/network/" + payload + ".java")),
 				payload + " should exist as a dedicated serverbound request payload.");
-			assertTrue(networking.contains("PayloadTypeRegistry.serverboundPlay().register("
+			assertTrue(networking.contains("PayloadTypeRegistry.playC2S().register("
 					+ payload + ".TYPE, " + payload + ".CODEC)"),
 				payload + " should be registered as a serverbound play payload.");
 			assertTrue(networking.contains("ServerPlayNetworking.registerGlobalReceiver("

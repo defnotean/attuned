@@ -7,7 +7,7 @@ import dev.attuned.attunement.BudgetResolver;
 import dev.attuned.attunement.FocusPreset;
 import java.util.List;
 import java.util.Optional;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import org.junit.jupiter.api.Test;
 
 class PresetMetadataResolverTest {
@@ -103,7 +103,7 @@ class PresetMetadataResolverTest {
 
 	private static PresetMetadataResolver.ResolvedFocus focus(Affinity affinity, String faction, boolean activeAbility) {
 		return new PresetMetadataResolver.ResolvedFocus(
-			Optional.of(affinity), identifier(faction), activeAbility, Optional.empty());
+			Optional.of(affinity), ResourceLocation(faction), activeAbility, Optional.empty());
 	}
 
 	private static PresetMetadataResolver.ResolvedFocus neutral(boolean activeAbility) {
@@ -117,7 +117,7 @@ class PresetMetadataResolverTest {
 			Optional.of(affinity), Optional.empty(), false, Optional.of(reason));
 	}
 
-	private static Optional<Identifier> identifier(String id) {
-		return id.isBlank() ? Optional.empty() : Optional.of(Identifier.parse(id));
+	private static Optional<ResourceLocation> ResourceLocation(String id) {
+		return id.isBlank() ? Optional.empty() : Optional.of(ResourceLocation.parse(id));
 	}
 }

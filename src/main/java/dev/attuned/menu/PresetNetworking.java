@@ -29,7 +29,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.ChatFormatting;
@@ -55,11 +55,11 @@ public final class PresetNetworking {
 			return;
 		}
 		initialized = true;
-		PayloadTypeRegistry.serverboundPlay().register(SavePresetPayload.TYPE, SavePresetPayload.CODEC);
-		PayloadTypeRegistry.serverboundPlay().register(ApplyPresetPayload.TYPE, ApplyPresetPayload.CODEC);
-		PayloadTypeRegistry.serverboundPlay().register(DeletePresetPayload.TYPE, DeletePresetPayload.CODEC);
-		PayloadTypeRegistry.serverboundPlay().register(QuickApplyPresetPayload.TYPE, QuickApplyPresetPayload.CODEC);
-		PayloadTypeRegistry.serverboundPlay().register(ImportPresetPayload.TYPE, ImportPresetPayload.CODEC);
+		PayloadTypeRegistry.playC2S().register(SavePresetPayload.TYPE, SavePresetPayload.CODEC);
+		PayloadTypeRegistry.playC2S().register(ApplyPresetPayload.TYPE, ApplyPresetPayload.CODEC);
+		PayloadTypeRegistry.playC2S().register(DeletePresetPayload.TYPE, DeletePresetPayload.CODEC);
+		PayloadTypeRegistry.playC2S().register(QuickApplyPresetPayload.TYPE, QuickApplyPresetPayload.CODEC);
+		PayloadTypeRegistry.playC2S().register(ImportPresetPayload.TYPE, ImportPresetPayload.CODEC);
 		ServerPlayNetworking.registerGlobalReceiver(SavePresetPayload.TYPE, (payload, context) -> {
 			ServerPlayer player = context.player();
 			player.level().getServer().execute(() -> savePreset(player, payload));
@@ -88,7 +88,7 @@ public final class PresetNetworking {
 		if (!hasOpenLiveSatchel(player)) {
 			return;
 		}
-		Registry<FocusDefinition> registry =
+		HolderLookup.RegistryLookup<FocusDefinition> registry =
 			player.level().registryAccess().lookupOrThrow(AttunedRegistries.FOCUS_DEFINITIONS);
 		PresetImportValidator.Result validation =
 			PresetImportValidator.validate(payload.preset(), registeredFocusIds(registry));
@@ -178,7 +178,7 @@ public final class PresetNetworking {
 	}
 
 	private static boolean hasActiveAbility(ServerPlayer player, FocusDefinition definition, ItemStack stack) {
-		Identifier behaviorId = definition.behavior().orElse(null);
+		ResourceLocation behaviorId = definition.behavior().orElse(null);
 		if (behaviorId == null) {
 			return false;
 		}

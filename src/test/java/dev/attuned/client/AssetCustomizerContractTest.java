@@ -547,21 +547,34 @@ class AssetCustomizerContractTest {
 		String modelReceiver = read(GLTF_MODEL_RECEIVER);
 		String blockbenchRenderer = read(BLOCKBENCH_SPECIAL_RENDERER);
 		String client = read(Path.of("src/client/java/dev/attuned/client/AttunedClient.java"));
-		String rendererMixin = read(Path.of("src/client/java/dev/attuned/client/mixin/ThrownTridentRendererMixin.java"));
-		String accessorMixin = read(Path.of("src/client/java/dev/attuned/client/mixin/SpecialModelRenderersAccessor.java"));
-		assertTrue(renderer.contains("gltf_mesh"),
-			"Client should register an Attuned special renderer type for glTF meshes");
-		assertTrue(renderer.contains("implements NoDataSpecialModelRenderer, GltfModelReceiver")
-				&& renderer.contains("getModelLocation()")
-				&& renderer.contains("onReceiveSharedModel"),
-			"Renderer should follow MCglTF's model receiver pattern");
-		assertTrue(renderer.contains("optionalFieldOf(\"texture\")"),
-			"Renderer should allow direct GLB drops that use embedded or material textures");
-		assertTrue(modelReceiver.contains("Identifier getModelLocation()")
+		Path rendererMixinPath = Path.of("src/client/java/dev/attuned/client/mixin/ThrownTridentRendererMixin.java");
+		Path accessorMixinPath = Path.of("src/client/java/dev/attuned/client/mixin/SpecialModelRenderersAccessor.java");
+		boolean modernSpecialRenderer = Files.isRegularFile(accessorMixinPath);
+		String rendererMixin = modernSpecialRenderer ? read(rendererMixinPath) : "";
+		String accessorMixin = modernSpecialRenderer ? read(accessorMixinPath) : "";
+		if (modernSpecialRenderer) {
+			assertTrue(renderer.contains("gltf_mesh"),
+				"Client should register an Attuned special renderer type for glTF meshes");
+			assertTrue(renderer.contains("implements NoDataSpecialModelRenderer, GltfModelReceiver")
+					&& renderer.contains("getModelLocation()")
+					&& renderer.contains("onReceiveSharedModel"),
+				"Renderer should follow MCglTF's model receiver pattern");
+			assertTrue(renderer.contains("optionalFieldOf(\"texture\")"),
+				"Renderer should allow direct GLB drops that use embedded or material textures");
+		} else {
+			assertTrue(renderer.contains("implements GltfModelReceiver")
+					&& renderer.contains("BuiltinItemRendererRegistry.INSTANCE.register(Items.TRIDENT"),
+				"1.21.1 should render temporary harpoons through the built-in trident item renderer.");
+			assertTrue(renderer.contains("HarpoonBehavior.isTemporaryHarpoon(stack)")
+					&& renderer.contains("renderVanillaTridentModel"),
+				"The 1.21.1 renderer should affect only marked temporary harpoons and preserve vanilla tridents.");
+		}
+		assertTrue(modelReceiver.contains("ResourceLocation getModelLocation()")
 				&& modelReceiver.contains("onReceiveSharedModel")
 				&& modelReceiver.contains("isReceiveSharedModel"),
 			"Attuned should keep an MCglTF-style receiver contract");
-		assertTrue(modelManager.contains("IdentifiableResourceReloadListener")
+		assertTrue((modelManager.contains("IdentifiableResourceReloadListener")
+					|| modelManager.contains("SimpleSynchronousResourceReloadListener"))
 				&& modelManager.contains("ResourceManagerHelper.get(PackType.CLIENT_RESOURCES)")
 				&& modelManager.contains("registerReloadListener(this)"),
 			"Attuned should load shared glTF models through a client resource reload listener");
@@ -579,7 +592,7 @@ class AssetCustomizerContractTest {
 		assertTrue(modelManager.contains("translation") && modelManager.contains("rotation")
 				&& modelManager.contains("scale") && modelManager.contains("Matrix4f"),
 			"Model manager should process scene-node transforms instead of requiring one hard-coded asset orientation");
-		assertTrue(renderer.contains("submitCustomGeometry"),
+		assertTrue(renderer.contains("submitCustomGeometry") || renderer.contains("renderTriangles(triangles"),
 			"Renderer should submit the full mesh instead of a wrapper item model");
 		assertTrue(renderer.contains("Repeating C") && renderer.contains("triangle.c(), light, overlay);"),
 			"Renderer should convert glTF triangles into degenerate quads for Minecraft's cutout buffers");
@@ -590,13 +603,15 @@ class AssetCustomizerContractTest {
 		assertTrue(!renderer.contains("OCEAN_RELIC_TARGET") && !renderer.contains("mapAxis"),
 			"Renderer should not remap the GLB mesh into the old cuboid wrapper bounds");
 		assertTrue(client.contains("GltfMeshSpecialRenderer.init()"),
-			"Client initializer should register the glTF special renderer before item models load");
-		assertTrue(accessorMixin.contains("ID_MAPPER"),
-			"Client mixin should expose Minecraft's special renderer mapper for Attuned registration");
-		assertTrue(!rendererMixin.contains("poseStack.scale(0.62F"),
-			"Thrown harpoon should render the GLB mesh directly instead of compacting the old cuboid item");
-		assertTrue(!rendererMixin.contains("poseStack.translate(-0.5D"),
-			"Thrown harpoon should not apply old cuboid-item centering to the direct GLB mesh");
+			"Client initializer should register the glTF renderer before item models load");
+		if (modernSpecialRenderer) {
+			assertTrue(accessorMixin.contains("ID_MAPPER"),
+				"Client mixin should expose Minecraft's special renderer mapper for Attuned registration");
+			assertTrue(!rendererMixin.contains("poseStack.scale(0.62F"),
+				"Thrown harpoon should render the GLB mesh directly instead of compacting the old cuboid item");
+			assertTrue(!rendererMixin.contains("poseStack.translate(-0.5D"),
+				"Thrown harpoon should not apply old cuboid-item centering to the direct GLB mesh");
+		}
 	}
 
 	@Test
@@ -630,7 +645,17 @@ class AssetCustomizerContractTest {
 			"Customizer manifest should point at an existing " + key + ": " + path);
 	}
 
-	private static void assertGltfSpecial(JsonObject model, String base) {
+	private static void assertGltfSpecial(JsonObject model, String base) throws IOException {
+		if ("minecraft:model".equals(model.get("type").getAsString())) {
+			assertEquals(base, model.get("model").getAsString(),
+				"1.21.1 item definitions should preserve the expected base model for transforms");
+			String renderer = read(Path.of("src/client/java/dev/attuned/client/render/GltfMeshSpecialRenderer.java"));
+			assertTrue(renderer.contains("BuiltinItemRendererRegistry.INSTANCE.register(Items.TRIDENT")
+					&& renderer.contains("AttunedGltfModels.getInstance().init()")
+					&& renderer.contains("HarpoonBehavior.isTemporaryHarpoon(stack)"),
+				"1.21.1 should route marked temporary tridents through the Fabric glTF item renderer.");
+			return;
+		}
 		assertEquals("minecraft:special", model.get("type").getAsString(),
 			"Actual temporary harpoon render path should use a glTF special renderer");
 		assertEquals(base, model.get("base").getAsString(),

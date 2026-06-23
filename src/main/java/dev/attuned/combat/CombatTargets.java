@@ -4,12 +4,11 @@ import dev.attuned.api.focus.Affinity;
 import dev.attuned.attunement.Attunement;
 import dev.attuned.party.CircleRuntime;
 import java.util.Optional;
-import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.entity.OwnableEntity;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.level.gamerules.GameRules;
 
 /** Shared target predicates for Attuned combat, PvP, and reveal effects. */
 public final class CombatTargets {
@@ -20,8 +19,7 @@ public final class CombatTargets {
 		return target != attacker
 			&& target.isAlive()
 			&& !target.isSpectator()
-			&& attacker.level() instanceof ServerLevel level
-			&& level.getGameRules().get(GameRules.PVP)
+			&& pvpAllowed(attacker)
 			&& !sameCircle(attacker, target)
 			&& attacker.canHarmPlayer(target);
 	}
@@ -30,8 +28,7 @@ public final class CombatTargets {
 	public static boolean canCreditPvpKill(Player attacker, Player target) {
 		return target != attacker
 			&& !target.isSpectator()
-			&& attacker.level() instanceof ServerLevel level
-			&& level.getGameRules().get(GameRules.PVP)
+			&& pvpAllowed(attacker)
 			&& !sameCircle(attacker, target)
 			&& attacker.canHarmPlayer(target);
 	}
@@ -60,6 +57,11 @@ public final class CombatTargets {
 			&& canAffectPlayer(player, targetPlayer);
 	}
 
+	private static boolean pvpAllowed(Player player) {
+		MinecraftServer server = player.getServer();
+		return server != null && server.isPvpAllowed();
+	}
+
 	private static boolean sameCircle(Player attacker, Player target) {
 		return CircleRuntime.manager().circleOf(attacker.getUUID())
 			.map(circle -> circle.members().contains(target.getUUID()))
@@ -75,6 +77,6 @@ public final class CombatTargets {
 			return true;
 		}
 		return target instanceof OwnableEntity ownable
-			&& ownable.getOwnerReference() != null;
+			&& ownable.getOwnerUUID() != null;
 	}
 }

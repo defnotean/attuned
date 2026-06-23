@@ -2,6 +2,7 @@ package dev.attuned.network;
 
 import dev.attuned.AttunedPlayerCleanup;
 import dev.attuned.AttunedServerCleanup;
+import dev.attuned.compat.PlayerMessages;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -58,6 +59,6 @@ public final class ActionBarMessages {
 			return;
 		}
 		LAST_SENT.put(id, new Decision(priority, now));
-		player.sendOverlayMessage(message);
+		PlayerMessages.overlay(player, message);
 	}
 }

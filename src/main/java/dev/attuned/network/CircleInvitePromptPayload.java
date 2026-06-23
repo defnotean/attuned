@@ -9,7 +9,7 @@ import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 
 /** Server-to-client prompt data for accepting a pending Circle invite. */
 public record CircleInvitePromptPayload(UUID inviter, String senderName, String circleName,
@@ -23,7 +23,7 @@ public record CircleInvitePromptPayload(UUID inviter, String senderName, String 
 	}
 
 	public static final Type<CircleInvitePromptPayload> TYPE =
-		new Type<>(Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "circle_invite_prompt"));
+		new Type<>(ResourceLocation.fromNamespaceAndPath(Attuned.MOD_ID, "circle_invite_prompt"));
 
 	public static final StreamCodec<RegistryFriendlyByteBuf, CircleInvitePromptPayload> CODEC =
 		StreamCodec.composite(

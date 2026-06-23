@@ -10,7 +10,7 @@ import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 
 /** Server-to-client public Circle roster snapshot for the party HUD. */
 public record CircleSnapshotPayload(String name, List<CircleSnapshotPayload.Member> members)
@@ -25,7 +25,7 @@ public record CircleSnapshotPayload(String name, List<CircleSnapshotPayload.Memb
 	}
 
 	public static final Type<CircleSnapshotPayload> TYPE =
-		new Type<>(Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "circle_snapshot"));
+		new Type<>(ResourceLocation.fromNamespaceAndPath(Attuned.MOD_ID, "circle_snapshot"));
 
 	public static final StreamCodec<RegistryFriendlyByteBuf, CircleSnapshotPayload> CODEC =
 		StreamCodec.composite(
@@ -56,15 +56,31 @@ public record CircleSnapshotPayload(String name, List<CircleSnapshotPayload.Memb
 		}
 
 		static final StreamCodec<RegistryFriendlyByteBuf, Member> STREAM_CODEC =
-			StreamCodec.composite(
-				UUIDUtil.STREAM_CODEC, Member::id,
-				ByteBufCodecs.STRING_UTF8, Member::name,
-				ByteBufCodecs.BOOL, Member::leader,
-				ByteBufCodecs.STRING_UTF8, Member::stance,
-				ByteBufCodecs.STRING_UTF8, Member::role,
-				ByteBufCodecs.VAR_INT, Member::activeCount,
-				ByteBufCodecs.VAR_INT, Member::dormantCount,
-				Member::new).cast();
+			new StreamCodec<>() {
+				@Override
+				public Member decode(RegistryFriendlyByteBuf buf) {
+					return new Member(
+						UUIDUtil.STREAM_CODEC.decode(buf),
+						ByteBufCodecs.STRING_UTF8.decode(buf),
+						ByteBufCodecs.BOOL.decode(buf),
+						ByteBufCodecs.STRING_UTF8.decode(buf),
+						ByteBufCodecs.STRING_UTF8.decode(buf),
+						ByteBufCodecs.VAR_INT.decode(buf),
+						ByteBufCodecs.VAR_INT.decode(buf));
+				}
+
+				@Override
+				public void encode(RegistryFriendlyByteBuf buf, Member member) {
+					Member normalized = Objects.requireNonNull(member, "member");
+					UUIDUtil.STREAM_CODEC.encode(buf, normalized.id());
+					ByteBufCodecs.STRING_UTF8.encode(buf, normalized.name());
+					ByteBufCodecs.BOOL.encode(buf, normalized.leader());
+					ByteBufCodecs.STRING_UTF8.encode(buf, normalized.stance());
+					ByteBufCodecs.STRING_UTF8.encode(buf, normalized.role());
+					ByteBufCodecs.VAR_INT.encode(buf, normalized.activeCount());
+					ByteBufCodecs.VAR_INT.encode(buf, normalized.dormantCount());
+				}
+			};
 	}
 
 	private static String sanitizeSummaryLabel(String raw) {

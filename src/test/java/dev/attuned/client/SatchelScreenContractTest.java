@@ -105,8 +105,8 @@ class SatchelScreenContractTest {
 			"Metadata tooltips should use the same row hit test as the build preview.");
 		assertTrue(screen.contains("buildMetadataTooltip(presets.get(hovered))"),
 			"The hover helper should render metadata for the actual hovered preset.");
-		assertTrue(screen.contains("graphics.setTooltipForNextFrame(this.font, lines, Optional.empty(), mouseX, mouseY)"),
-			"Saved-build metadata should use the fork tooltip API instead of drawing free-floating text.");
+		assertTrue(screen.contains("graphics.renderComponentTooltip(this.font, lines, mouseX, mouseY)"),
+			"Saved-build metadata should use the 1.21.1 tooltip API instead of drawing free-floating text.");
 		assertTrue(screen.contains("private static List<Component> buildMetadataTooltip(FocusPreset preset)"),
 			"Tooltip line construction should be isolated for role/note/warning coverage.");
 		assertTrue(screen.contains("preset.role()"),

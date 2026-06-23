@@ -186,9 +186,9 @@ class FocusBehaviorDefContractTest {
 	void blockContextEffectPinsItsBoundedFields() throws IOException {
 		String source = read(FOCUS_BEHAVIOR_DEF);
 
-		assertTrue(source.contains("Identifier blockTag"),
+		assertTrue(source.contains("ResourceLocation blockTag"),
 			"block_context_effect should carry the block tag id it scans for.");
-		assertTrue(source.contains("Identifier.CODEC.fieldOf(\"block_tag\").forGetter(BlockContextEffect::blockTag)"),
+		assertTrue(source.contains("ResourceLocation.CODEC.fieldOf(\"block_tag\").forGetter(BlockContextEffect::blockTag)"),
 			"block_context_effect should decode its block_tag as a resource id.");
 		assertTrue(source.contains("Codec.intRange(MIN_RADIUS, MAX_RADIUS).optionalFieldOf(\"radius\", 2).forGetter(BlockContextEffect::radius)"),
 			"block_context_effect should expose a bounded small radius with a conservative default.");
@@ -210,13 +210,13 @@ class FocusBehaviorDefContractTest {
 
 		assertTrue(source.contains("record UseItemWindow("),
 			"use_item_window should be a sealed palette record.");
-		assertTrue(source.contains("Optional<Identifier> item"),
+		assertTrue(source.contains("Optional<ResourceLocation> item"),
 			"use_item_window should optionally match one item id.");
-		assertTrue(source.contains("Optional<Identifier> itemTag"),
+		assertTrue(source.contains("Optional<ResourceLocation> itemTag"),
 			"use_item_window should optionally match one item tag id.");
-		assertTrue(source.contains("Identifier.CODEC.optionalFieldOf(\"item\").forGetter(UseItemWindow::item)"),
+		assertTrue(source.contains("ResourceLocation.CODEC.optionalFieldOf(\"item\").forGetter(UseItemWindow::item)"),
 			"use_item_window should decode its item selector as a resource id.");
-		assertTrue(source.contains("Identifier.CODEC.optionalFieldOf(\"item_tag\").forGetter(UseItemWindow::itemTag)"),
+		assertTrue(source.contains("ResourceLocation.CODEC.optionalFieldOf(\"item_tag\").forGetter(UseItemWindow::itemTag)"),
 			"use_item_window should decode its item_tag selector as a resource id.");
 		assertTrue(source.contains("BuiltInRegistries.MOB_EFFECT.holderByNameCodec().optionalFieldOf(\"effect\").forGetter(UseItemWindow::effect)"),
 			"use_item_window should optionally apply a mob effect.");

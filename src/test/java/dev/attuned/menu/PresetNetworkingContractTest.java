@@ -128,7 +128,7 @@ class PresetNetworkingContractTest {
 		assertTrue(net.contains("\"screen.attuned.preset.cooldown\""),
 			"The shared apply cooldown path should use a translatable action-bar message.");
 		assertBefore(applyCore, "ActionBarMessages.send(player, ActionBarMessages.Priority.PROGRESS",
-			"Registry<FocusDefinition> registry");
+			"HolderLookup.RegistryLookup<FocusDefinition> registry");
 		assertTrue(lang.contains("\"screen.attuned.preset.cooldown\""),
 			"The apply cooldown action-bar message should have English copy.");
 	}
@@ -344,7 +344,8 @@ class PresetNetworkingContractTest {
 			"Open-menu apply should delegate to the shared atomic apply core.");
 		assertTrue(quickApply.contains("applyPresetCore(player, payload.index(), inventorySatchelState(player))"),
 			"Hotkey apply should delegate to the same atomic apply core, with only the satchel lookup differing.");
-		assertBefore(applyCore, "Long last = LAST_APPLY_TICK.get(id)", "Registry<FocusDefinition> registry");
+		assertBefore(applyCore, "Long last = LAST_APPLY_TICK.get(id)",
+			"HolderLookup.RegistryLookup<FocusDefinition> registry");
 		assertBefore(applyCore, "Long last = LAST_APPLY_TICK.get(id)",
 			"PresetApplicationResolver.applyAllOrNothing(");
 		assertBefore(applyCore, "removeConsumedInventory(player, consumedInventory)", "LAST_APPLY_TICK.put(id, now)");

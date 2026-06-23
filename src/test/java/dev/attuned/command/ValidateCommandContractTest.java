@@ -98,7 +98,7 @@ class ValidateCommandContractTest {
 
 		assertTrue(source.contains("import dev.attuned.api.focus.FocusBehaviorDef;"),
 			"validate must inspect the loaded FocusBehaviorDef variants, not just count palette entries.");
-		assertTrue(source.contains("private static String focusBehaviorDefinitionPath(Identifier behaviorId)"),
+		assertTrue(source.contains("private static String focusBehaviorDefinitionPath(ResourceLocation behaviorId)"),
 			"validate diagnostics should format data/<ns>/attuned/focus_behavior/<id>.json paths.");
 		assertTrue(body.contains("focusBehaviorDefinitionPath(behaviorId)"),
 			"each palette behavior problem should be reported against its focus_behavior datapack file.");
@@ -143,7 +143,7 @@ class ValidateCommandContractTest {
 
 		assertTrue(body.contains("AttunedRegistries.SYNERGY_DEFINITIONS"),
 			"validate must walk the synergy registry so Confluence files are checked too.");
-		assertTrue(source.contains("private static String synergyDefinitionPath(Identifier synergyId)"),
+		assertTrue(source.contains("private static String synergyDefinitionPath(ResourceLocation synergyId)"),
 			"validate diagnostics should format synergy datapack paths beside focus paths.");
 		assertTrue(body.contains("synergyDefinitionPath(synergyId)"),
 			"each Confluence problem should be reported against data/<ns>/attuned/synergy/<id>.json.");

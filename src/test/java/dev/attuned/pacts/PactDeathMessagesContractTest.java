@@ -38,8 +38,8 @@ class PactDeathMessagesContractTest {
 		String helper = methodBody(combatTargets,
 			"public static boolean canCreditPvpKill(Player attacker, Player target)");
 
-		assertTrue(helper.contains("level.getGameRules().get(GameRules.PVP)"),
-			"Death-message PvP credit should still respect the PvP gamerule.");
+		assertTrue(helper.contains("pvpAllowed(attacker)"),
+			"Death-message PvP credit should still respect the shared server PvP setting helper.");
 		assertTrue(helper.contains("!sameCircle(attacker, target)"),
 			"Circle members should not create hostile pact death broadcasts.");
 		assertTrue(helper.contains("attacker.canHarmPlayer(target)"),

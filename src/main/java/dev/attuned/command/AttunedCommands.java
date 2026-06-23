@@ -41,7 +41,8 @@ import net.minecraft.core.Holder;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.item.Item;
@@ -95,11 +96,8 @@ public final class AttunedCommands {
 									return moveFocus(ctx.getSource(), player, from, to);
 								})))))
 				.then(circleCommands())
-				// Operator-only (permission level 2). In 26.1 the old
-				// CommandSourceStack#hasPermission(int) is gone; gating now uses
-				// Commands.hasPermission(PermissionCheck) with a LEVEL_* constant.
 				.then(Commands.literal("capacity")
-					.requires(Commands.hasPermission(Commands.LEVEL_GAMEMASTERS))
+					.requires(source -> source.hasPermission(Commands.LEVEL_GAMEMASTERS))
 					.executes(ctx -> {
 						ServerPlayer player = ctx.getSource().getPlayerOrException();
 						int capacity = AttunedAttachments.getCapacity(player);
@@ -118,14 +116,14 @@ public final class AttunedCommands {
 							return capacity;
 						})))
 				.then(Commands.literal("status")
-					.requires(Commands.hasPermission(Commands.LEVEL_GAMEMASTERS))
+					.requires(source -> source.hasPermission(Commands.LEVEL_GAMEMASTERS))
 					.executes(ctx -> {
 						ServerPlayer player = ctx.getSource().getPlayerOrException();
 						printStatus(ctx.getSource(), player);
 						return 1;
 					}))
 				.then(Commands.literal("validate")
-					.requires(Commands.hasPermission(Commands.LEVEL_GAMEMASTERS))
+					.requires(source -> source.hasPermission(Commands.LEVEL_GAMEMASTERS))
 					.executes(ctx -> validateContent(ctx.getSource())))));
 	}
 
@@ -283,15 +281,15 @@ public final class AttunedCommands {
 		var registries = source.getServer().registryAccess();
 		var registry = registries.lookupOrThrow(AttunedRegistries.FOCUS_DEFINITIONS);
 		Map<Item, FocusDefinition> byItem = new IdentityHashMap<>();
-		Set<Identifier> focusDefinitionIds = new HashSet<>();
+		Set<ResourceLocation> focusDefinitionIds = new HashSet<>();
 		// Walk every focus/<name>.json file by file: each problem and each warning
 		// is qualified with the Focus's item key so an author can find the source file.
 		registry.listElements().forEach(holder -> {
 			FocusDefinition def = holder.value();
-			Identifier focusId = holder.key().identifier();
+			ResourceLocation focusId = holder.key().location();
 			focusDefinitionIds.add(focusId);
 			String focusPath = focusDefinitionPath(focusId);
-			Identifier itemId = registryId(def.item(), BuiltInRegistries.ITEM::getKey);
+			ResourceLocation itemId = registryId(def.item(), BuiltInRegistries.ITEM::getKey);
 			// An item that failed to resolve to a real registered item.
 			if (!def.item().isBound()) {
 				problems.add(ValidationIssue.error(focusPath, "item", itemId.toString(),
@@ -314,7 +312,7 @@ public final class AttunedCommands {
 			for (int index = 0; index < def.modifiers().size(); index++) {
 				ModifierEntry modifier = def.modifiers().get(index);
 				if (!modifier.attribute().isBound()) {
-					Identifier attributeId = registryId(modifier.attribute(), BuiltInRegistries.ATTRIBUTE::getKey);
+					ResourceLocation attributeId = registryId(modifier.attribute(), BuiltInRegistries.ATTRIBUTE::getKey);
 					String fieldPath = "modifiers[" + index + "].attribute";
 					problems.add(ValidationIssue.error(focusPath, fieldPath, attributeId.toString(),
 						"Modifier attribute failed to resolve."));
@@ -336,7 +334,7 @@ public final class AttunedCommands {
 		var behaviorDefinitions = behaviorRegistry.listElements().toList();
 		int paletteCount = behaviorDefinitions.size();
 		behaviorDefinitions.forEach(holder -> {
-			Identifier behaviorId = holder.key().identifier();
+			ResourceLocation behaviorId = holder.key().location();
 			String behaviorPath = focusBehaviorDefinitionPath(behaviorId);
 			validateBehaviorDefinition(problems, behaviorPath, holder.value());
 		});
@@ -345,10 +343,10 @@ public final class AttunedCommands {
 		int synergyCount = synergies.size();
 		synergies.forEach(holder -> {
 			var def = holder.value();
-			Identifier synergyId = holder.key().identifier();
+			ResourceLocation synergyId = holder.key().location();
 			String synergyPath = synergyDefinitionPath(synergyId);
 			for (int index = 0; index < def.members().size(); index++) {
-				Identifier memberId = def.members().get(index);
+				ResourceLocation memberId = def.members().get(index);
 				if (!focusDefinitionIds.contains(memberId)) {
 					String fieldPath = "members[" + index + "]";
 					problems.add(ValidationIssue.error(synergyPath, fieldPath, memberId.toString(),
@@ -364,7 +362,7 @@ public final class AttunedCommands {
 			for (int index = 0; index < def.modifiers().size(); index++) {
 				ModifierEntry modifier = def.modifiers().get(index);
 				if (!modifier.attribute().isBound()) {
-					Identifier attributeId = registryId(modifier.attribute(), BuiltInRegistries.ATTRIBUTE::getKey);
+					ResourceLocation attributeId = registryId(modifier.attribute(), BuiltInRegistries.ATTRIBUTE::getKey);
 					String fieldPath = "modifiers[" + index + "].attribute";
 					problems.add(ValidationIssue.error(synergyPath, fieldPath, attributeId.toString(),
 						"Confluence modifier attribute failed to resolve."));
@@ -406,16 +404,16 @@ public final class AttunedCommands {
 		return 0;
 	}
 
-	private static String focusDefinitionPath(Identifier focusId) {
+	private static String focusDefinitionPath(ResourceLocation focusId) {
 		return "data/" + focusId.getNamespace() + "/" + Attuned.MOD_ID + "/focus/" + focusId.getPath() + ".json";
 	}
 
-	private static String focusBehaviorDefinitionPath(Identifier behaviorId) {
+	private static String focusBehaviorDefinitionPath(ResourceLocation behaviorId) {
 		return "data/" + behaviorId.getNamespace() + "/" + Attuned.MOD_ID
 			+ "/focus_behavior/" + behaviorId.getPath() + ".json";
 	}
 
-	private static String synergyDefinitionPath(Identifier synergyId) {
+	private static String synergyDefinitionPath(ResourceLocation synergyId) {
 		return "data/" + synergyId.getNamespace() + "/" + Attuned.MOD_ID + "/synergy/" + synergyId.getPath() + ".json";
 	}
 
@@ -449,7 +447,7 @@ public final class AttunedCommands {
 	private static void validatePaletteMobEffect(List<ValidationIssue> problems, String behaviorPath,
 			Holder<MobEffect> effect) {
 		if (!effect.isBound()) {
-			Identifier effectId = registryId(effect, BuiltInRegistries.MOB_EFFECT::getKey);
+			ResourceLocation effectId = registryId(effect, BuiltInRegistries.MOB_EFFECT::getKey);
 			problems.add(ValidationIssue.error(behaviorPath, "effect", effectId.toString(),
 				"Palette mob effect failed to resolve."));
 		}
@@ -458,18 +456,18 @@ public final class AttunedCommands {
 	private static void validatePaletteModifier(List<ValidationIssue> problems, String behaviorPath,
 			ModifierEntry modifier) {
 		if (!modifier.attribute().isBound()) {
-			Identifier attributeId = registryId(modifier.attribute(), BuiltInRegistries.ATTRIBUTE::getKey);
+			ResourceLocation attributeId = registryId(modifier.attribute(), BuiltInRegistries.ATTRIBUTE::getKey);
 			problems.add(ValidationIssue.error(behaviorPath, "modifier.attribute", attributeId.toString(),
 				"Palette modifier attribute failed to resolve."));
 		}
 	}
 
-	private static <T> Identifier registryId(Holder<T> holder, Function<T, Identifier> boundId) {
+	private static <T> ResourceLocation registryId(Holder<T> holder, Function<T, ResourceLocation> boundId) {
 		return holder.unwrapKey()
-			.map(key -> key.identifier())
+			.map(ResourceKey::location)
 			.orElseGet(() -> holder.isBound()
 				? boundId.apply(holder.value())
-				: Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "unknown_unbound_id"));
+				: ResourceLocation.fromNamespaceAndPath(Attuned.MOD_ID, "unknown_unbound_id"));
 	}
 
 	private record ValidationIssue(String filePath, String fieldPath, String badId, String message,

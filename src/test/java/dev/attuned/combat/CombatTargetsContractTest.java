@@ -20,8 +20,8 @@ class CombatTargetsContractTest {
 		assertTrue(source.contains("private static boolean isOwnedOrAllied"),
 			"The summon/pet reward suppression rule should be centralized in CombatTargets.");
 		assertTrue(source.contains("target instanceof OwnableEntity ownable")
-				&& source.contains("ownable.getOwnerReference()"),
-			"Owned hostile mobs should be detectable through OwnableEntity#getOwnerReference.");
+				&& source.contains("ownable.getOwnerUUID()"),
+			"Owned hostile mobs should be detectable through OwnableEntity#getOwnerUUID on 1.21.1.");
 		assertTrue(source.contains("target.isAlliedTo(player)"),
 			"Team-allied mobs should not qualify for hostile-only rewards.");
 

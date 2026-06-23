@@ -32,24 +32,24 @@ public final class AttunedKeybinds {
 		initialized = true;
 
 		abilityKey = KeyBindingHelper.registerKeyBinding(new KeyMapping(
-			"key.attuned.ability", GLFW.GLFW_KEY_R, KeyMapping.Category.GAMEPLAY));
+			"key.attuned.ability", GLFW.GLFW_KEY_R, KeyMapping.CATEGORY_GAMEPLAY));
 		toggleOwnAffinityHudKey = KeyBindingHelper.registerKeyBinding(new KeyMapping(
 			"key.attuned.toggle_own_affinity_hud",
-			InputConstants.UNKNOWN.getType(), InputConstants.UNKNOWN.getValue(), KeyMapping.Category.GAMEPLAY));
+			InputConstants.UNKNOWN.getType(), InputConstants.UNKNOWN.getValue(), KeyMapping.CATEGORY_GAMEPLAY));
 		toggleEnemyAffinityHudKey = KeyBindingHelper.registerKeyBinding(new KeyMapping(
 			"key.attuned.toggle_enemy_affinity_hud",
-			InputConstants.UNKNOWN.getType(), InputConstants.UNKNOWN.getValue(), KeyMapping.Category.GAMEPLAY));
+			InputConstants.UNKNOWN.getType(), InputConstants.UNKNOWN.getValue(), KeyMapping.CATEGORY_GAMEPLAY));
 		toggleFociHudKey = KeyBindingHelper.registerKeyBinding(new KeyMapping(
 			"key.attuned.toggle_foci_hud",
-			InputConstants.UNKNOWN.getType(), InputConstants.UNKNOWN.getValue(), KeyMapping.Category.GAMEPLAY));
-		togglePartyHudKey = KeyMappingHelper.registerKeyMapping(new KeyMapping(
+			InputConstants.UNKNOWN.getType(), InputConstants.UNKNOWN.getValue(), KeyMapping.CATEGORY_GAMEPLAY));
+		togglePartyHudKey = KeyBindingHelper.registerKeyBinding(new KeyMapping(
 			"key.attuned.toggle_party_hud",
-			InputConstants.UNKNOWN.getType(), InputConstants.UNKNOWN.getValue(), KeyMapping.Category.GAMEPLAY));
+			InputConstants.UNKNOWN.getType(), InputConstants.UNKNOWN.getValue(), KeyMapping.CATEGORY_GAMEPLAY));
 		applyBuildKeys = new KeyMapping[3];
 		for (int i = 0; i < applyBuildKeys.length; i++) {
 			applyBuildKeys[i] = KeyBindingHelper.registerKeyBinding(new KeyMapping(
 				"key.attuned.apply_build_" + (i + 1),
-				InputConstants.UNKNOWN.getType(), InputConstants.UNKNOWN.getValue(), KeyMapping.Category.GAMEPLAY));
+				InputConstants.UNKNOWN.getType(), InputConstants.UNKNOWN.getValue(), KeyMapping.CATEGORY_GAMEPLAY));
 		}
 		ClientTickEvents.END_CLIENT_TICK.register(client -> {
 			while (abilityKey.consumeClick()) {

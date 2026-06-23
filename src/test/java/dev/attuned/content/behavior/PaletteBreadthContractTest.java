@@ -188,7 +188,7 @@ class PaletteBreadthContractTest {
 
 		assertTrue(data.contains("static final class UseItemWindowBehavior implements FocusBehavior"),
 			"use_item_window should build a passive FocusBehavior runtime.");
-		assertTrue(data.contains("private final Identifier behaviorId"),
+		assertTrue(data.contains("private final ResourceLocation behaviorId"),
 			"use_item_window cooldowns/modifier ids should be qualified by behavior id.");
 		assertTrue(data.contains("useItemWindowModifierId(behaviorId)"),
 			"use_item_window transient modifiers should be keyed by behavior id.");
@@ -220,7 +220,7 @@ class PaletteBreadthContractTest {
 
 		assertTrue(data.contains("public static final class MarkedTargetBehavior implements FocusBehavior"),
 			"marked_target should build a combat-facing runtime behavior.");
-		assertTrue(data.contains("private final Identifier behaviorId"),
+		assertTrue(data.contains("private final ResourceLocation behaviorId"),
 			"marked_target mark/cooldown keys should include the behavior id.");
 		assertTrue(data.contains("Map<MarkedTargetKey, MarkedTargetMark> marks"),
 			"marked_target should store short-lived marks by behavior/attacker/target.");
@@ -267,7 +267,7 @@ class PaletteBreadthContractTest {
 
 		assertTrue(data.contains("static final class NavigationHintBehavior implements FocusBehavior"),
 			"navigation_hint should build a passive FocusBehavior runtime.");
-		assertTrue(data.contains("private final Identifier behaviorId"),
+		assertTrue(data.contains("private final ResourceLocation behaviorId"),
 			"navigation_hint cached targets should be qualified by behavior id.");
 		assertTrue(data.contains("Map<NavigationHintCacheKey, NavigationHintTarget> navigationHintTargets"),
 			"navigation_hint should cache explicit stored targets by behavior/player.");
