@@ -1,5 +1,6 @@
 package dev.attuned.synergy;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
@@ -141,15 +142,52 @@ class SynergiesRuntimeContractTest {
 		assertBefore(synergies, "sawOnboarding(player", "markOnboarding(player");
 		assertTrue(synergies.contains("AttunedAttachments.markConfluenceDiscovered("),
 			"First-discovery fanfare must record the discovery for the journal.");
-		assertTrue(synergies.contains("sendOverlayMessage(discovery)")
-				|| synergies.contains("PlayerMessages.overlay(player, discovery)"),
-			"First-discovery fanfare should surface an overlay in addition to chat.");
+		assertTrue(synergies.contains("ActionBarMessages.send(player, ActionBarMessages.Priority.PROGRESS, discovery)"),
+			"First-discovery fanfare should surface a gated overlay in addition to chat.");
 		assertTrue(synergies.contains("ParticleTypes.ENCHANT"),
 			"First-discovery fanfare should add a lightweight particle burst.");
 		assertTrue(synergies.contains("oneAwayConfluence("),
 			"Synergies should expose the one-away Confluence resolver for onboarding.");
 		assertTrue(synergies.contains("SynergyResolver.previewOf("),
 			"Synergies should delegate one-away policy to SynergyResolver.previewOf.");
+	}
+
+	@Test
+	void nearbyCircleMembersReceiveConfluenceDiscoveryWithoutActiveEffects() throws IOException {
+		String synergies = read(SYNERGIES);
+		String fanfare = methodBody(synergies, "private static void fanfare(ServerPlayer player, String confluenceId)");
+		String record = methodBody(synergies,
+			"private static void recordConfluenceDiscovery(ServerPlayer player, String confluenceId)");
+		String share = methodBody(synergies,
+			"private static void shareConfluenceDiscovery(ServerPlayer player, String confluenceId)");
+
+		assertTrue(synergies.contains("import dev.attuned.AttunedConfig;"),
+			"Confluence discovery sharing should use its own server config toggle.");
+		assertTrue(synergies.contains("import dev.attuned.party.CircleContributions;"),
+			"Confluence discovery sharing should use the server-owned Circle helper.");
+		assertTrue(fanfare.contains("recordConfluenceDiscovery(player, confluenceId)"),
+			"The direct discoverer should still record the Confluence for their Journal.");
+		assertTrue(fanfare.contains("shareConfluenceDiscovery(player, confluenceId)"),
+			"First discovery fanfare should share Journal discovery credit with nearby Circle members.");
+		assertBefore(fanfare, "recordConfluenceDiscovery(player, confluenceId)",
+			"shareConfluenceDiscovery(player, confluenceId)");
+		assertTrue(record.contains("AttunedAttachments.markConfluenceDiscovered(player, confluenceId)"),
+			"Discovery recording should flip the Journal row to discovered.");
+		assertTrue(record.contains("Milestones.onFirstConfluence(player)"),
+			"The first discovered Confluence milestone should be shared with valid witnesses.");
+		assertTrue(share.contains("if (!AttunedConfig.get().partyConfluenceHintsEnabled())"),
+			"Shared Confluence discovery should be disabled by its own hint toggle.");
+		assertBefore(share, "partyConfluenceHintsEnabled()", "CircleContributions.nearbyCircleMembers(player)");
+		assertTrue(share.contains("CircleContributions.nearbyCircleMembers(player)"),
+			"Shared discovery should fan out only to nearby online Circle members.");
+		assertTrue(share.contains("member.getUUID().equals(player.getUUID())"),
+			"Shared discovery should skip the direct discoverer.");
+		assertTrue(share.contains("recordConfluenceDiscovery(member, confluenceId)"),
+			"Witnesses should receive Journal/milestone discovery recording.");
+		assertFalse(share.contains("AttunedAdvancements.award"),
+			"Witnesses should not receive the active-build Confluence advancement.");
+		assertFalse(share.contains("applyModifiers(") || share.contains("behavior.onActivate("),
+			"Witnesses should not receive active Confluence effects from another player's build.");
 	}
 
 	@Test

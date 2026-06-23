@@ -11,7 +11,7 @@ THROWING_MODEL_PATH = Path("src/main/resources/assets/attuned/models/item/ocean_
 INVENTORY_MODEL_PATH = Path("src/main/resources/assets/attuned/models/item/ocean_relic_trident_inventory.json")
 ITEM_DEFINITION_PATH = Path("src/main/resources/assets/attuned/items/ocean_relic_trident.json")
 PROJECTILE_ITEM_DEFINITION_PATH = Path("src/main/resources/assets/attuned/items/ocean_relic_trident_projectile.json")
-REPORT_PATH = Path(".attuned-art-sources/ocean-relic-trident/ocean_relic_trident_voxel_report.json")
+REPORT_PATH = Path("build/asset-previews/ocean-relic-trident/ocean_relic_trident_voxel_report.json")
 SPRITE_PATH = Path("src/main/resources/assets/attuned/textures/item/ocean_relic_trident.png")
 OFFSHORE_SPRITE_PATH = Path("src/main/resources/assets/attuned/textures/item/offshore_harpoon.png")
 PALETTE_PATH = Path("src/main/resources/assets/attuned/textures/item/ocean_relic_trident_voxel_palette.png")
@@ -100,6 +100,7 @@ def main() -> None:
 	write_palette(PALETTE_PATH)
 	write_sprite(SPRITE_PATH)
 	write_sprite(OFFSHORE_SPRITE_PATH)
+	REPORT_PATH.parent.mkdir(parents=True, exist_ok=True)
 	REPORT_PATH.write_text(json.dumps(build_report(elements), indent=2) + "\n", encoding="utf-8")
 	print(json.dumps(build_report(elements), indent=2))
 

@@ -51,7 +51,7 @@ public abstract class InventoryScreenMixin extends AbstractContainerScreen<Inven
 			FocusLayout.INVENTORY_X, FocusLayout.INVENTORY_Y, player);
 		if (FocusPanel.overReadout(FocusLayout.INVENTORY_X, FocusLayout.INVENTORY_Y,
 				mouseX - this.leftPos, mouseY - this.topPos)) {
-			graphics.setTooltipForNextFrame(this.font, AttunementReadout.tooltip(player),
+			graphics.setTooltipForNextFrame(this.font, AttunementReadout.tooltip(AttunementReadout.cached(player)),
 				Optional.empty(), mouseX, mouseY);
 		}
 	}

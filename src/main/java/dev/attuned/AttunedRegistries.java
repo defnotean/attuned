@@ -1,5 +1,6 @@
 package dev.attuned;
 
+import dev.attuned.AttunedServerCleanup;
 import dev.attuned.api.focus.FocusBehavior;
 import dev.attuned.api.focus.FocusBehaviorDef;
 import dev.attuned.api.focus.FocusDefinition;
@@ -40,6 +41,10 @@ public final class AttunedRegistries {
 	/** Per-RegistryAccess cache of behaviours built from data palette entries, so ticking never rebuilds. */
 	private static final Map<RegistryAccess, Map<Identifier, FocusBehavior>> DATA_BEHAVIOR_CACHE =
 		new WeakHashMap<>();
+
+	static {
+		AttunedServerCleanup.onStop(AttunedRegistries::clearDataBehaviorCache);
+	}
 
 	/** Registers a code behaviour under an id that a {@link FocusDefinition} can reference. */
 	public static void registerBehavior(Identifier id, FocusBehavior behavior) {
@@ -83,8 +88,15 @@ public final class AttunedRegistries {
 			return perAccess.get(id);
 		}
 		FocusBehaviorDef def = registries.lookupOrThrow(FOCUS_BEHAVIORS).getValue(id);
-		FocusBehavior built = def == null ? null : DataFocusBehaviors.build(id, def);
+		if (def == null) {
+			return null;
+		}
+		FocusBehavior built = DataFocusBehaviors.build(id, def);
 		perAccess.put(id, built);
 		return built;
+	}
+
+	private static synchronized void clearDataBehaviorCache() {
+		DATA_BEHAVIOR_CACHE.clear();
 	}
 }

@@ -1,6 +1,7 @@
 package dev.attuned.menu;
 
 import dev.attuned.Attuned;
+import dev.attuned.attunement.FocusPreset;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
@@ -12,10 +13,7 @@ public record DeletePresetPayload(int index, String name) implements CustomPacke
 		if (index < 0) {
 			index = -1;
 		}
-		name = name == null ? "" : name.trim();
-		if (name.length() > 32) {
-			name = name.substring(0, 32);
-		}
+		name = FocusPreset.sanitizeName(name);
 	}
 
 	public static final Type<DeletePresetPayload> TYPE =

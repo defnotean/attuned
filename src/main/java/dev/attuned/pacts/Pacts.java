@@ -1,6 +1,5 @@
 package dev.attuned.pacts;
 
-import dev.attuned.compat.PlayerMessages;
 import dev.attuned.AttunedPlayerCleanup;
 import dev.attuned.AttunedAdvancements;
 import dev.attuned.AttunedRegistries;
@@ -15,6 +14,7 @@ import dev.attuned.combat.Apex;
 import dev.attuned.combat.AttunedCombat;
 import dev.attuned.combat.CombatContext;
 import dev.attuned.combat.CombatTargets;
+import dev.attuned.combat.DamageFormula;
 import dev.attuned.content.behavior.MaskBehavior;
 import dev.attuned.combat.MobAffinities;
 import dev.attuned.combat.Resonance;
@@ -347,8 +347,9 @@ public final class Pacts {
 			: null;
 		if (defenderPact == Pact.STONEHEART) {
 			float before = amount;
-			amount *= (1.0F - STONEHEART_DAMPEN);
-			if (defender instanceof ServerPlayer stoneheartPlayer) {
+			amount = DamageFormula.dampen(amount, STONEHEART_DAMPEN);
+			if (defender instanceof ServerPlayer stoneheartPlayer
+					&& isTrialCreditThreat(context.attacker(), stoneheartPlayer)) {
 				PactTrials.onStoneheartAbsorb(stoneheartPlayer, before - amount);
 			}
 		}
@@ -359,8 +360,9 @@ public final class Pacts {
 				&& isInDark(darkPlayer)) {
 			float dampen = PactTier4.nightswornDarkDampen(darkPlayer);
 			float before = amount;
-			amount *= (1.0F - dampen);
-			if (darkPlayer instanceof ServerPlayer nightswornPlayer) {
+			amount = DamageFormula.dampen(amount, dampen);
+			if (darkPlayer instanceof ServerPlayer nightswornPlayer
+					&& isTrialCreditThreat(context.attacker(), nightswornPlayer)) {
 				PactTrials.onNightswornAbsorb(nightswornPlayer, before - amount);
 			}
 		}
@@ -371,14 +373,14 @@ public final class Pacts {
 					&& !context.isAt(attackerPlayer, Apex.Capstone.MAELSTROM)
 					&& canAffectCombatTarget(attackerPlayer, defender)
 					&& context.hasAffinityPressure(defender)) {
-				amount *= (1.0F + UNTETHERED_AMPLIFY);
+				amount = DamageFormula.amplify(amount, UNTETHERED_AMPLIFY);
 			}
 			if (attackerPact == Pact.RADIANT_COVENANT
 					&& !(defender instanceof Player)
-					&& isHostile(defender)
-					&& defender.getType().is(EntityTypeTags.UNDEAD)
+					&& CombatTargets.isHostileOrPvpOpponent(defender, attackerPlayer)
+					&& defender.typeHolder().is(EntityTypeTags.UNDEAD)
 					&& AttunedCombat.isChargedDirectMelee(attackerPlayer, defender, source, RADIANT_COVENANT_SWING_THRESHOLD)) {
-				amount *= (1.0F + PactTier4.radiantUndeadBonus(attackerPlayer));
+				amount = DamageFormula.amplify(amount, PactTier4.radiantUndeadBonus(attackerPlayer));
 			}
 		}
 		return amount;
@@ -428,6 +430,7 @@ public final class Pacts {
 	private static void radiantCovenantReveal(Player attacker, LivingEntity defender, DamageSource source) {
 		if (!defender.isAlive() || !CombatTargets.isHostileOrPvpOpponent(defender, attacker)
 				|| !AttunedCombat.isChargedDirectMelee(attacker, defender, source, RADIANT_COVENANT_SWING_THRESHOLD)
+				|| !attacker.hasLineOfSight(defender)
 				|| MaskBehavior.resistsReveal(defender)
 				|| isOwnPet(defender, attacker) || defender instanceof AbstractVillager) {
 			return;
@@ -589,6 +592,12 @@ public final class Pacts {
 			|| CombatTargets.canAffectPlayer(attacker, targetPlayer);
 	}
 
+	private static boolean isTrialCreditThreat(LivingEntity attacker, ServerPlayer player) {
+		return attacker != null
+			&& attacker != player
+			&& CombatTargets.isHostileOrPvpOpponent(attacker, player);
+	}
+
 	private static boolean hasAffinityPressure(LivingEntity defender) {
 		return CombatTargets.affinityOf(defender).isPresent()
 			|| (defender instanceof Player player && Attunement.isDiscord(player));
@@ -629,7 +638,8 @@ public final class Pacts {
 	private static void maybeAwardStoneheartChallenge(LivingEntity defender,
 			LivingEntity attacker, float dealtDamage) {
 		if (!(defender instanceof ServerPlayer player) || attacker == null || attacker == defender
-				|| !defender.isAlive() || dealtDamage < STONEHEART_CHALLENGE_DAMAGE) {
+				|| !defender.isAlive() || dealtDamage < STONEHEART_CHALLENGE_DAMAGE
+				|| !isTrialCreditThreat(attacker, player)) {
 			return;
 		}
 		if (isAt(player, Pact.STONEHEART)) {
@@ -640,7 +650,8 @@ public final class Pacts {
 	private static void maybeAwardUntetheredChallenge(LivingEntity entity, DamageSource source) {
 		LivingEntity killer = AttunedCombat.attackerOf(source);
 		if (!(killer instanceof ServerPlayer player) || entity == player || entity instanceof Player
-				|| MobAffinities.of(entity).isEmpty() || !isHostile(entity)) {
+				|| MobAffinities.of(entity).isEmpty()
+				|| !CombatTargets.isHostileOrPvpOpponent(entity, player)) {
 			return;
 		}
 		if (isAt(player, Pact.UNTETHERED)) {
@@ -832,7 +843,7 @@ public final class Pacts {
 
 	private static void announceGained(ServerPlayer player, Pact pact) {
 		playPactSound(player, pact, true);
-		PlayerMessages.system(player, Component.translatable("pact.attuned.awakened")
+		player.sendSystemMessage(Component.translatable("pact.attuned.awakened")
 			.withStyle(ChatFormatting.GRAY)
 			.append(pact.displayName().withStyle(pact.chatColor(), ChatFormatting.BOLD))
 			.append(Component.literal(". ").withStyle(ChatFormatting.GRAY))
@@ -847,7 +858,7 @@ public final class Pacts {
 		Component name = pact == null
 			? Component.translatable("pact.attuned.fades.generic")
 			: pact.displayName().withStyle(pact.chatColor(), ChatFormatting.BOLD);
-		PlayerMessages.system(player, fadeMessage(player, pact, replacement, name).copy()
+		player.sendSystemMessage(fadeMessage(player, pact, replacement, name).copy()
 			.withStyle(ChatFormatting.GRAY));
 	}
 
@@ -950,7 +961,7 @@ public final class Pacts {
 			player.getZ(),
 			20, 0.6, 0.8, 0.6, 0.5
 		);
-		PlayerMessages.system(player, Component.translatable("pact.attuned.first_pact")
+		player.sendSystemMessage(Component.translatable("pact.attuned.first_pact")
 			.withStyle(pact.chatColor(), ChatFormatting.BOLD, ChatFormatting.ITALIC));
 		AttunedAdvancements.award(player, "attunement/first_pact");
 	}

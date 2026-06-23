@@ -1,8 +1,8 @@
 package dev.attuned.synergy;
 
-import dev.attuned.compat.PlayerMessages;
 import dev.attuned.Attuned;
 import dev.attuned.AttunedAdvancements;
+import dev.attuned.AttunedConfig;
 import dev.attuned.AttunedPlayerCleanup;
 import dev.attuned.AttunedRegistries;
 import dev.attuned.AttunedServerCleanup;
@@ -12,7 +12,9 @@ import dev.attuned.api.synergy.SynergyDefinition;
 import dev.attuned.Milestones;
 import dev.attuned.attunement.AttunedAttachments;
 import dev.attuned.attunement.Attunement;
+import dev.attuned.network.ActionBarMessages;
 import dev.attuned.onboarding.Onboarding;
+import dev.attuned.party.CircleContributions;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -172,7 +174,7 @@ public final class Synergies {
 				behavior.onActivate(player, ItemStack.EMPTY); // a Confluence has no backing stack
 			}
 		});
-		PlayerMessages.system(player, Component.translatable("confluence.attuned.gained", nameOf(confluenceId)));
+		player.sendSystemMessage(Component.translatable("confluence.attuned.gained", nameOf(confluenceId)));
 		AttunedAdvancements.award(player, "attunement/confluence_" + pathOf(confluenceId));
 		maybeFanfare(player, confluenceId);
 	}
@@ -188,7 +190,7 @@ public final class Synergies {
 				behavior.onDeactivate(player, ItemStack.EMPTY);
 			}
 		});
-		PlayerMessages.system(player, Component.translatable("confluence.attuned.faded", nameOf(confluenceId)));
+		player.sendSystemMessage(Component.translatable("confluence.attuned.faded", nameOf(confluenceId)));
 	}
 
 	private static void applyModifiers(ServerPlayer player, String confluenceId, SynergyDefinition def) {
@@ -244,10 +246,8 @@ public final class Synergies {
 	}
 
 	private static void fanfare(ServerPlayer player, String confluenceId) {
-		AttunedAttachments.markConfluenceDiscovered(player, confluenceId); // flips the journal row to discovered
-		if (AttunedAttachments.getDiscoveredConfluences(player).size() == 1) {
-			Milestones.onFirstConfluence(player);
-		}
+		recordConfluenceDiscovery(player, confluenceId);
+		shareConfluenceDiscovery(player, confluenceId);
 		Component discovery = Component.translatable("confluence.attuned.first_discovery", nameOf(confluenceId))
 			.withStyle(ChatFormatting.LIGHT_PURPLE, ChatFormatting.BOLD);
 		if (player.level() instanceof ServerLevel level) {
@@ -259,8 +259,27 @@ public final class Synergies {
 				player.getZ(),
 				16, 0.5, 0.7, 0.5, 0.4);
 		}
-		PlayerMessages.overlay(player, discovery);
-		PlayerMessages.system(player, discovery);
+		ActionBarMessages.send(player, ActionBarMessages.Priority.PROGRESS, discovery);
+		player.sendSystemMessage(discovery);
+	}
+
+	private static void recordConfluenceDiscovery(ServerPlayer player, String confluenceId) {
+		AttunedAttachments.markConfluenceDiscovered(player, confluenceId); // flips the journal row to discovered
+		if (AttunedAttachments.getDiscoveredConfluences(player).size() == 1) {
+			Milestones.onFirstConfluence(player);
+		}
+	}
+
+	private static void shareConfluenceDiscovery(ServerPlayer player, String confluenceId) {
+		if (!AttunedConfig.get().partyConfluenceHintsEnabled()) {
+			return;
+		}
+		for (ServerPlayer member : CircleContributions.nearbyCircleMembers(player)) {
+			if (member.getUUID().equals(player.getUUID())) {
+				continue;
+			}
+			recordConfluenceDiscovery(member, confluenceId);
+		}
 	}
 
 	/**

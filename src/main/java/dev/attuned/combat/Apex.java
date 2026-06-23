@@ -1,6 +1,5 @@
 package dev.attuned.combat;
 
-import dev.attuned.compat.PlayerMessages;
 import dev.attuned.AttunedAdvancements;
 import dev.attuned.AttunedPlayerCleanup;
 import dev.attuned.AttunedServerCleanup;
@@ -11,6 +10,7 @@ import dev.attuned.attunement.AttunedAttachments;
 import dev.attuned.attunement.AttunedInv;
 import dev.attuned.attunement.Attunement;
 import dev.attuned.attunement.BudgetResolver;
+import dev.attuned.network.ActionBarMessages;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -278,7 +278,7 @@ public final class Apex {
 				float fraction = matchup == Matchup.EMPOWERED ? CAP_EMPOWERED : CAP_NORMAL;
 				float cap = defenderPlayer.getMaxHealth() * fraction;
 				if (amount > cap) {
-					amount = cap;
+					amount = DamageFormula.cap(amount, cap);
 					if (defenderPlayer instanceof ServerPlayer serverPlayer) {
 						CombatFeedback.unyieldingCap(serverPlayer);
 					}
@@ -295,7 +295,7 @@ public final class Apex {
 			if (matchup != Matchup.NEUTRALIZED) {
 				float threshold = matchup == Matchup.EMPOWERED ? EXECUTE_EMPOWERED : EXECUTE_NORMAL;
 				if (defender.getHealth() / defender.getMaxHealth() <= threshold) {
-					amount = Math.max(amount, EXECUTE_DAMAGE);
+					amount = DamageFormula.floor(amount, EXECUTE_DAMAGE);
 					if (attackerPlayer instanceof ServerPlayer serverPlayer) {
 						CombatFeedback.executeFinisher(serverPlayer, defender);
 					}
@@ -311,7 +311,7 @@ public final class Apex {
 			Matchup matchup = matchupAgainst(Affinity.HOLY, defender, context);
 			if (matchup == Matchup.EMPOWERED
 					&& defender.getHealth() / defender.getMaxHealth() <= JUDGMENT_THRESHOLD) {
-				amount *= (1.0F + JUDGMENT_DAMAGE_BONUS);
+				amount = DamageFormula.amplify(amount, JUDGMENT_DAMAGE_BONUS);
 				if (attackerPlayer instanceof ServerPlayer serverPlayer) {
 					CombatFeedback.judgmentStrike(serverPlayer, defender);
 				}
@@ -324,7 +324,7 @@ public final class Apex {
 				&& attackerAtApex
 				&& isApexMeleeTarget(defender, attackerPlayer, source)
 				&& context.hasAffinityPressure(defender)) {
-			amount *= (1.0F + MAELSTROM_DAMAGE_BONUS);
+			amount = DamageFormula.amplify(amount, MAELSTROM_DAMAGE_BONUS);
 			markScrambled(attackerPlayer, defender);
 			if (attackerPlayer instanceof ServerPlayer serverPlayer) {
 				CombatFeedback.maelstromHit(serverPlayer, defender);
@@ -335,7 +335,7 @@ public final class Apex {
 
 	private static void afterDamage(LivingEntity defender, DamageSource source,
 			float originalDamage, float dealtDamage, boolean blocked) {
-		if (dealtDamage <= 0.0F) {
+		if (dealtDamage <= 0.0F || AttunedCombat.isReflecting()) {
 			return;
 		}
 		LivingEntity attacker = AttunedCombat.attackerOf(source);
@@ -346,12 +346,13 @@ public final class Apex {
 				&& attacker != null
 				&& isAt(defenderPlayer, Capstone.STILLPOINT)
 				&& Resonance.atApex(defenderPlayer)
+				&& CombatTargets.isHostileOrPvpOpponent(attacker, defenderPlayer)
 				&& hasAffinityPressure(attacker)) {
 			pulseStillpoint(defenderPlayer);
 		}
 
 		// Attacker-side affinity-capstone procs: fire on a landed apex melee hit
-		// against ANY defender (mob or player). Only the four promoted-affinity
+		// against hostile mobs or valid PvP opponents. Only the four promoted-affinity
 		// capstones live here; the original capstones keep their existing homes.
 		applyAffinityCapstoneProc(defender, source, attacker);
 	}
@@ -469,6 +470,7 @@ public final class Apex {
 
 	private static boolean isApexMeleeTarget(LivingEntity defender, Player attacker, DamageSource source) {
 		return isDirectMelee(attacker, source)
+			&& CombatTargets.isHostileOrPvpOpponent(defender, attacker)
 			&& canAffectApexTarget(defender, attacker)
 			&& !isOwnPet(defender, attacker)
 			&& !(defender instanceof AbstractVillager);
@@ -552,7 +554,7 @@ public final class Apex {
 		Long readyAt = identityCooldowns.get(player.getUUID());
 		if (readyAt != null && now < readyAt) {
 			int remaining = (int) (readyAt - now);
-			PlayerMessages.overlay(player, Component.translatable(
+			ActionBarMessages.send(player, ActionBarMessages.Priority.WARNING, Component.translatable(
 				"apex.attuned.identity_cooldown", cooldownSeconds(remaining)));
 			return true;
 		}
@@ -599,7 +601,8 @@ public final class Apex {
 			// knockback pushes opposite the (x, z) source vector, so passing the
 			// player's position throws the victim outward, away from the nova.
 			victim.knockback(MAELSTROM_NOVA_KNOCKBACK,
-				player.getX() - victim.getX(), player.getZ() - victim.getZ());
+				player.getX() - victim.getX(), player.getZ() - victim.getZ(),
+				level.damageSources().generic(), 0.0F);
 			victim.addEffect(new MobEffectInstance(MobEffects.WEAKNESS,
 				MAELSTROM_NOVA_WEAKNESS_TICKS, 0, true, true, true));
 		}
@@ -609,7 +612,8 @@ public final class Apex {
 			player.getX(), player.getY() + 1.0, player.getZ(), 48, 1.6, 0.8, 1.6, 0.4);
 		level.playSound(null, player.blockPosition(),
 			SoundEvents.WARDEN_SONIC_BOOM, SoundSource.PLAYERS, 0.9F, 1.4F);
-		PlayerMessages.overlay(player, Component.translatable("apex.attuned.maelstrom_nova"));
+		ActionBarMessages.send(player, ActionBarMessages.Priority.ABILITY,
+			Component.translatable("apex.attuned.maelstrom_nova"));
 	}
 
 	private static void fireStillpointField(ServerPlayer player, ServerLevel level) {
@@ -627,7 +631,8 @@ public final class Apex {
 			player.getX(), player.getY() + 1.0, player.getZ(), 16, 1.6, 0.8, 1.6, 0.0);
 		level.playSound(null, player.blockPosition(),
 			SoundEvents.BEACON_ACTIVATE, SoundSource.PLAYERS, 0.7F, 1.5F);
-		PlayerMessages.overlay(player, Component.translatable("apex.attuned.stillpoint_field"));
+		ActionBarMessages.send(player, ActionBarMessages.Priority.ABILITY,
+			Component.translatable("apex.attuned.stillpoint_field"));
 	}
 
 	private static boolean isApexNovaTarget(LivingEntity entity, Player player) {
@@ -660,6 +665,9 @@ public final class Apex {
 		}
 		LivingEntity attacker = AttunedCombat.attackerOf(source);
 		if (attacker == null) {
+			return true;
+		}
+		if (!CombatTargets.isHostileOrPvpOpponent(attacker, player)) {
 			return true;
 		}
 		Matchup matchup = matchupAgainst(Affinity.ZEPHYR, attacker);
@@ -755,7 +763,7 @@ public final class Apex {
 	private static void announceGained(ServerPlayer player, Capstone capstone) {
 		((ServerLevel) player.level()).playSound(null, player.blockPosition(),
 			SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, SoundSource.PLAYERS, 0.7F, 1.0F);
-		PlayerMessages.system(player, Component.literal("Apex active: ")
+		player.sendSystemMessage(Component.literal("Apex active: ")
 			.withStyle(ChatFormatting.GRAY)
 			.append(Component.literal(capstone.displayName())
 				.withStyle(capstone.chatColor(), ChatFormatting.BOLD))
@@ -767,7 +775,7 @@ public final class Apex {
 	private static void announceGainedDormant(ServerPlayer player, Capstone capstone) {
 		((ServerLevel) player.level()).playSound(null, player.blockPosition(),
 			SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, SoundSource.PLAYERS, 0.6F, 0.8F);
-		PlayerMessages.system(player, Component.translatable(
+		player.sendSystemMessage(Component.translatable(
 				"apex.attuned.unlocked_dormant",
 				Component.literal(capstone.displayName())
 					.withStyle(capstone.chatColor(), ChatFormatting.BOLD))
@@ -777,21 +785,23 @@ public final class Apex {
 	private static void announceRearmed(ServerPlayer player, Capstone capstone) {
 		((ServerLevel) player.level()).playSound(null, player.blockPosition(),
 			SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, SoundSource.PLAYERS, 0.7F, 1.3F);
-		PlayerMessages.overlay(player, Component.translatable("apex.attuned.rearmed",
-			Component.literal(capstone.displayName()).withStyle(capstone.chatColor(), ChatFormatting.BOLD)));
+		ActionBarMessages.send(player, ActionBarMessages.Priority.ABILITY,
+			Component.translatable("apex.attuned.rearmed",
+				Component.literal(capstone.displayName()).withStyle(capstone.chatColor(), ChatFormatting.BOLD)));
 		AttunedAdvancements.award(player, "attunement/apex");
 	}
 
 	private static void announceDormant(ServerPlayer player) {
 		((ServerLevel) player.level()).playSound(null, player.blockPosition(),
 			SoundEvents.AMETHYST_BLOCK_HIT, SoundSource.PLAYERS, 0.6F, 0.6F);
-		PlayerMessages.overlay(player, Component.translatable("apex.attuned.dormant"));
+		ActionBarMessages.send(player, ActionBarMessages.Priority.WARNING,
+			Component.translatable("apex.attuned.dormant"));
 	}
 
 	private static void announceLost(ServerPlayer player) {
 		((ServerLevel) player.level()).playSound(null, player.blockPosition(),
 			SoundEvents.BEACON_DEACTIVATE, SoundSource.PLAYERS, 0.6F, 1.0F);
-		PlayerMessages.system(player, Component.literal("Your Apex has faded.")
+		player.sendSystemMessage(Component.literal("Your Apex has faded.")
 			.withStyle(ChatFormatting.GRAY));
 	}
 

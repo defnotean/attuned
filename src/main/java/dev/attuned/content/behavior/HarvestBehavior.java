@@ -26,8 +26,10 @@ public final class HarvestBehavior implements FocusBehavior {
 
 	/** Ticks between growth passes (~1 second). */
 	private static final int GROW_INTERVAL = 20;
-	/** Search radius for crops, in blocks. */
-	private static final int RADIUS = 5;
+	/** Horizontal search radius for crops, in blocks. */
+	private static final int RADIUS_XZ = 5;
+	/** Vertical crop band to scan around the player. */
+	private static final int RADIUS_Y = 1;
 	/** Crops nudged per pass — kept low so the boost stays gentle. */
 	private static final int MAX_PER_PASS = 3;
 
@@ -61,8 +63,8 @@ public final class HarvestBehavior implements FocusBehavior {
 		BlockPos center = player.blockPosition();
 		int grown = 0;
 		for (BlockPos pos : BlockPos.betweenClosed(
-				center.offset(-RADIUS, -RADIUS, -RADIUS),
-				center.offset(RADIUS, RADIUS, RADIUS))) {
+				center.offset(-RADIUS_XZ, -RADIUS_Y, -RADIUS_XZ),
+				center.offset(RADIUS_XZ, RADIUS_Y, RADIUS_XZ))) {
 			BlockState state = level.getBlockState(pos);
 			if (state.getBlock() instanceof CropBlock crop && !crop.isMaxAge(state)
 					&& random.nextInt(6) == 0) {

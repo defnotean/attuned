@@ -20,6 +20,7 @@ public final class AttunedKeybinds {
 	private static KeyMapping toggleOwnAffinityHudKey;
 	private static KeyMapping toggleEnemyAffinityHudKey;
 	private static KeyMapping toggleFociHudKey;
+	private static KeyMapping togglePartyHudKey;
 	private static KeyMapping[] applyBuildKeys;
 	private static boolean initialized;
 
@@ -40,6 +41,9 @@ public final class AttunedKeybinds {
 			InputConstants.UNKNOWN.getType(), InputConstants.UNKNOWN.getValue(), KeyMapping.Category.GAMEPLAY));
 		toggleFociHudKey = KeyBindingHelper.registerKeyBinding(new KeyMapping(
 			"key.attuned.toggle_foci_hud",
+			InputConstants.UNKNOWN.getType(), InputConstants.UNKNOWN.getValue(), KeyMapping.Category.GAMEPLAY));
+		togglePartyHudKey = KeyMappingHelper.registerKeyMapping(new KeyMapping(
+			"key.attuned.toggle_party_hud",
 			InputConstants.UNKNOWN.getType(), InputConstants.UNKNOWN.getValue(), KeyMapping.Category.GAMEPLAY));
 		applyBuildKeys = new KeyMapping[3];
 		for (int i = 0; i < applyBuildKeys.length; i++) {
@@ -62,6 +66,9 @@ public final class AttunedKeybinds {
 			}
 			while (toggleFociHudKey.consumeClick()) {
 				AttunedClientConfig.toggleFociHud();
+			}
+			while (togglePartyHudKey.consumeClick()) {
+				AttunedClientConfig.togglePartyHud();
 			}
 			for (int i = 0; i < applyBuildKeys.length; i++) {
 				while (applyBuildKeys[i].consumeClick()) {

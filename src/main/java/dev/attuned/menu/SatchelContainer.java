@@ -83,7 +83,8 @@ public final class SatchelContainer implements Container {
 	}
 
 	private ItemStack focusStackAt(int slot) {
-		return holder().get(slot);
+		ItemStack stack = holder().get(slot);
+		return isReliquary(stack) ? ItemStack.EMPTY : stack;
 	}
 
 	@Override
@@ -127,6 +128,9 @@ public final class SatchelContainer implements Container {
 			satchel().set(contentsType, holder().with(slot, ItemStack.EMPTY));
 			return;
 		}
+		if (isReliquary(stack)) {
+			return;
+		}
 		if (Attunement.definitionFor(player, stack).isEmpty()) {
 			return;
 		}
@@ -145,6 +149,11 @@ public final class SatchelContainer implements Container {
 		ItemStack copy = stack.copy();
 		copy.setCount(Math.min(copy.getCount(), getMaxStackSize()));
 		return copy;
+	}
+
+	private static boolean isReliquary(ItemStack stack) {
+		return stack.getItem() == AttunedContent.SATCHEL_OF_FOCI
+			|| stack.getItem() == AttunedContent.GRAND_SATCHEL_OF_FOCI;
 	}
 
 	@Override

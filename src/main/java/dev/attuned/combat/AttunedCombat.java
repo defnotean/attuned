@@ -10,12 +10,14 @@ import dev.attuned.attunement.AttunedInv;
 import dev.attuned.attunement.Attunement;
 import dev.attuned.content.behavior.DreadfangBehavior;
 import dev.attuned.content.behavior.TemperBehavior;
+import dev.attuned.party.CircleContributions;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.minecraft.core.particles.DustParticleOptions;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.tags.DamageTypeTags;
@@ -143,15 +145,15 @@ public final class AttunedCombat {
 		if (context.attacker() instanceof Player && !(defender instanceof Player)) {
 			mobAffinitySpark(level, defender);
 		}
-		float adjusted = amount * multiplier;
+		float adjusted = DamageFormula.multiply(amount, multiplier);
 		if (cinderApplies(defender, source, context)) {
-			adjusted *= (1.0F + CINDER_BURNING_BONUS);
+			adjusted = DamageFormula.amplify(adjusted, CINDER_BURNING_BONUS);
 		}
 		if (sunlanceApplies(defender, source, context)) {
-			adjusted *= (1.0F + SUNLANCE_BONUS);
+			adjusted = DamageFormula.amplify(adjusted, SUNLANCE_BONUS);
 		}
 		if (temperApplies(defender, source, context)) {
-			adjusted *= (1.0F + TEMPER_BONUS);
+			adjusted = DamageFormula.amplify(adjusted, TEMPER_BONUS);
 		}
 		return adjusted;
 	}
@@ -159,6 +161,9 @@ public final class AttunedCombat {
 	private static boolean cinderApplies(LivingEntity defender, DamageSource source,
 			CombatContext context) {
 		if (!(context.attacker() instanceof Player player) || !isDirectMelee(player, source)) {
+			return false;
+		}
+		if (!CombatTargets.isHostileOrPvpOpponent(defender, player)) {
 			return false;
 		}
 		return defender.isOnFire() && context.hasActiveFocus(player, CINDER_FOCUS);
@@ -170,7 +175,10 @@ public final class AttunedCombat {
 				SUNLANCE_CHARGED_SWING_THRESHOLD) || !context.hasActiveFocus(player, SUNLANCE_FOCUS)) {
 			return false;
 		}
-		return defender.getType().is(EntityTypeTags.UNDEAD)
+		if (!CombatTargets.isHostileOrPvpOpponent(defender, player)) {
+			return false;
+		}
+		return defender.typeHolder().is(EntityTypeTags.UNDEAD)
 			|| context.affinityOf(defender).filter(affinity -> affinity == Affinity.FURY).isPresent();
 	}
 
@@ -178,6 +186,9 @@ public final class AttunedCombat {
 			CombatContext context) {
 		if (!(context.attacker() instanceof Player player)
 				|| !isChargedDirectMelee(player, defender, source, TEMPER_CHARGED_SWING_THRESHOLD)) {
+			return false;
+		}
+		if (!CombatTargets.isHostileOrPvpOpponent(defender, player)) {
 			return false;
 		}
 		return TemperBehavior.applies(player);
@@ -326,11 +337,15 @@ public final class AttunedCombat {
 	 */
 	private static void afterDamage(LivingEntity defender, DamageSource source,
 			float originalDamage, float dealtDamage, boolean blocked) {
-		if (dealtDamage <= 0.0F || REFLECTING.get()) {
+		if (REFLECTING.get()) {
 			return;
 		}
 		LivingEntity attacker = attackerOf(source);
 		if (attacker == null || attacker == defender) {
+			return;
+		}
+		recordCircleCombatContribution(defender, attacker);
+		if (dealtDamage <= 0.0F) {
 			return;
 		}
 
@@ -344,6 +359,7 @@ public final class AttunedCombat {
 		if (defender instanceof Player defenderPlayer
 				&& hasActiveFocus(defenderPlayer, THORNWARD_FOCUS)
 				&& isDirectMelee(attacker, source)
+				&& CombatTargets.isHostileOrPvpOpponent(attacker, defenderPlayer)
 				&& attacker.isAlive()) {
 			float reflected = pooledDamage * THORNWARD_REFLECT;
 			if (reflected > 0.0F && attacker.level() instanceof net.minecraft.server.level.ServerLevel serverLevel) {
@@ -364,6 +380,7 @@ public final class AttunedCombat {
 		if (attacker instanceof Player attackerPlayer
 				&& hasActiveFocus(attackerPlayer, LEECH_FOCUS)
 				&& isDirectMelee(attacker, source)
+				&& CombatTargets.isHostileOrPvpOpponent(defender, attackerPlayer)
 				&& !attackerPlayer.isDeadOrDying()) {
 			attackerPlayer.heal(pooledDamage * LEECH_LIFESTEAL);
 		}
@@ -381,6 +398,17 @@ public final class AttunedCombat {
 		// Palette on-hit behaviors: datapack-defined attuned:on_hit_effect Foci proc here so they
 		// share the live charge/target guards with the code procs above (no mixin, no new event).
 		PaletteCombat.onMeleeHit(attacker, defender, source, dealtDamage);
+	}
+
+	private static void recordCircleCombatContribution(LivingEntity defender, LivingEntity attacker) {
+		if (attacker instanceof ServerPlayer attackerPlayer
+				&& CombatTargets.isHostileOrPvpOpponent(defender, attackerPlayer)) {
+			CircleContributions.recordContribution(attackerPlayer);
+		}
+		if (defender instanceof ServerPlayer defenderPlayer
+				&& CombatTargets.isHostileOrPvpOpponent(attacker, defenderPlayer)) {
+			CircleContributions.recordContribution(defenderPlayer);
+		}
 	}
 
 	/** The committed affinity of a living entity — player attunement or mob mapping. */

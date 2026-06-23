@@ -1,6 +1,5 @@
 package dev.attuned.network;
 
-import dev.attuned.compat.PlayerMessages;
 import dev.attuned.AttunedPlayerCleanup;
 import dev.attuned.AttunedServerCleanup;
 import dev.attuned.api.focus.Affinity;
@@ -54,13 +53,14 @@ public final class AttunedNetworking {
 			return;
 		}
 		initialized = true;
-		PayloadTypeRegistry.playC2S().register(AbilityPayload.TYPE, AbilityPayload.CODEC);
+		CircleNetworking.init();
+		PayloadTypeRegistry.serverboundPlay().register(AbilityPayload.TYPE, AbilityPayload.CODEC);
 		ServerPlayNetworking.registerGlobalReceiver(AbilityPayload.TYPE, (payload, context) -> {
 			ServerPlayer player = context.player();
 			player.level().getServer().execute(() -> FocusAbilityState.trigger(player));
 		});
 
-		PayloadTypeRegistry.playC2S().register(InspectRequestPayload.TYPE, InspectRequestPayload.CODEC);
+		PayloadTypeRegistry.serverboundPlay().register(InspectRequestPayload.TYPE, InspectRequestPayload.CODEC);
 		ServerPlayNetworking.registerGlobalReceiver(InspectRequestPayload.TYPE, (payload, context) -> {
 			ServerPlayer player = context.player();
 			int targetId = payload.targetEntityId();
@@ -70,7 +70,7 @@ public final class AttunedNetworking {
 		AttunedServerCleanup.onStop(LAST_INSPECT::clear);
 		AttunedPlayerCleanup.onForget(LAST_INSPECT::remove);
 
-		PayloadTypeRegistry.playC2S().register(UpdraftLiftPayload.TYPE, UpdraftLiftPayload.CODEC);
+		PayloadTypeRegistry.serverboundPlay().register(UpdraftLiftPayload.TYPE, UpdraftLiftPayload.CODEC);
 		ServerPlayNetworking.registerGlobalReceiver(UpdraftLiftPayload.TYPE, (payload, context) -> {
 			ServerPlayer player = context.player();
 			player.level().getServer().execute(() -> {
@@ -109,7 +109,8 @@ public final class AttunedNetworking {
 		}
 
 		LAST_INSPECT.put(player.getUUID(), now);
-		PlayerMessages.overlay(player, inspectLine(target));
+		ActionBarMessages.send(player, ActionBarMessages.Priority.PROGRESS,
+			inspectLine(target));
 	}
 
 	// Builds the action-bar line: "<name>: <stance>" with an Apex suffix when the

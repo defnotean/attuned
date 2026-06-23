@@ -72,6 +72,7 @@ class RadiantExpansionContractTest {
 		"attuned:censer_focus",
 		"attuned:namesake_focus",
 		"attuned:oathguard_focus",
+		"attuned:rescueflame_focus",
 		"attuned:sunlance_focus",
 		"attuned:threshold_focus",
 		"attuned:votive_focus");
@@ -92,7 +93,12 @@ class RadiantExpansionContractTest {
 		"attuned:ashen_forge", Set.of(
 			"attuned:kilnward_focus",
 			"attuned:rivet_focus",
-			"attuned:temper_focus"));
+			"attuned:temper_focus"),
+		"attuned:deep_lanterns", Set.of(
+			"attuned:cavewick_focus",
+			"attuned:depthglass_focus",
+			"attuned:glowline_focus",
+			"attuned:rescueflame_focus"));
 	private static final Set<String> FIRST_WAVE_FOCI = firstWaveFoci();
 
 	@Test
@@ -242,8 +248,8 @@ class RadiantExpansionContractTest {
 		String behavior = Files.readString(RADIANT_BEHAVIORS_SOURCE, StandardCharsets.UTF_8);
 		assertTrue(behavior.contains("class Bellwether implements FocusBehavior"),
 			"Bellwether should remain a normal server-side Focus behavior");
-		assertTrue(behavior.contains("BELL_RADIUS = 8"),
-			"Bellwether should use the planned 8-block bell range");
+		assertTrue(behavior.contains("BELL_RADIUS_XZ = 8"),
+			"Bellwether should use the planned 8-block horizontal bell range");
 		assertTrue(behavior.contains("UseBlockCallback.EVENT.register(this::useBlock)")
 				&& behavior.contains("private InteractionResult useBlock(")
 				&& behavior.contains("Blocks.BELL"),
@@ -307,6 +313,18 @@ class RadiantExpansionContractTest {
 			"Namesake should scan nearby living entities for named non-player mobs");
 		assertTrue(behavior.contains("!(target instanceof Player)"),
 			"Namesake should not let nearby custom-named players activate the relic");
+		String namesake = classBody(behavior, "public static final class Namesake implements FocusBehavior");
+		String onTick = methodBody(namesake, "public void onTick(ServerPlayer player, ItemStack focus)");
+		assertTrue(namesake.contains("CHECK_INTERVAL = 20"),
+			"Namesake should throttle its inventory/entity scan to once per second.");
+		assertTrue(namesake.contains("private final Map<UUID, Integer> ticks = new HashMap<>()"),
+			"Namesake should track per-player scan cadence without global per-tick scans.");
+		assertTrue(namesake.contains("AttunedPlayerCleanup.onForget(ticks::remove)")
+				&& namesake.contains("AttunedServerCleanup.onStop(ticks::clear)"),
+			"Namesake scan cadence state should be cleared on player forget and server stop.");
+		assertTrue(onTick.indexOf("if (tick < CHECK_INTERVAL)") < onTick.indexOf("carriesNamedItem(player)")
+				&& onTick.indexOf("if (tick < CHECK_INTERVAL)") < onTick.indexOf("nearNamedNonPlayer(player)"),
+			"Namesake should pass the interval gate before doing the expensive inventory/entity predicates.");
 
 		String lang = Files.readString(LANG_FILE, StandardCharsets.UTF_8);
 		assertTrue(lang.contains("item.attuned.namesake_focus.effect")
@@ -682,6 +700,26 @@ class RadiantExpansionContractTest {
 			}
 		}
 		throw new AssertionError("Unclosed method body: " + signaturePrefix);
+	}
+
+	private static String classBody(String source, String signaturePrefix) {
+		int signature = source.indexOf(signaturePrefix);
+		assertTrue(signature >= 0, "Missing class: " + signaturePrefix);
+		int bodyStart = source.indexOf('{', signature);
+		assertTrue(bodyStart >= 0, "Missing class body: " + signaturePrefix);
+		int depth = 0;
+		for (int index = bodyStart; index < source.length(); index++) {
+			char current = source.charAt(index);
+			if (current == '{') {
+				depth++;
+			} else if (current == '}') {
+				depth--;
+				if (depth == 0) {
+					return source.substring(bodyStart, index + 1);
+				}
+			}
+		}
+		throw new AssertionError("Unclosed class body: " + signaturePrefix);
 	}
 
 	private static Set<String> firstWaveFoci() {
