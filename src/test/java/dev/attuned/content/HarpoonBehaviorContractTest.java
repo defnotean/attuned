@@ -92,6 +92,8 @@ class HarpoonBehaviorContractTest {
 		Path gltfModel = Path.of("src/main/resources/assets/attuned/gltf/ocean_relic_trident.glb");
 		Path blockbenchTexture = Path.of("src/main/resources/assets/attuned/textures/item/ocean_relic_trident_blockbench.png");
 		Path blockbenchTextureMeta = Path.of("src/main/resources/assets/attuned/textures/item/ocean_relic_trident_blockbench.png.mcmeta");
+		Path meshTexture = Path.of("src/main/resources/assets/attuned/textures/item/ocean_relic_trident_mesh.png");
+		Path meshTextureMeta = Path.of("src/main/resources/assets/attuned/textures/item/ocean_relic_trident_mesh.png.mcmeta");
 		Path itemTexture = Path.of("src/main/resources/assets/attuned/textures/item/ocean_relic_trident.png");
 		Path itemPalette = Path.of("src/main/resources/assets/attuned/textures/item/ocean_relic_trident_voxel_palette.png");
 
@@ -111,6 +113,10 @@ class HarpoonBehaviorContractTest {
 			"Temporary harpoon should ship the texture used by the actual held/thrown harpoon");
 		assertTrue(Files.isRegularFile(blockbenchTextureMeta),
 			"Temporary harpoon should clamp the texture used by the custom mesh renderer");
+		assertTrue(Files.isRegularFile(meshTexture),
+			"Temporary harpoon should ship a compact runtime mesh texture");
+		assertTrue(Files.isRegularFile(meshTextureMeta),
+			"Temporary harpoon runtime mesh texture should keep clamped custom-mesh sampling");
 		assertTrue(Files.isRegularFile(itemTexture),
 			"Temporary harpoon should keep a custom flat inventory texture");
 		assertTrue(Files.isRegularFile(itemPalette),
@@ -176,6 +182,14 @@ class HarpoonBehaviorContractTest {
 			"Blockbench harpoon texture should be downsampled to a game-scale atlas size");
 		assertTrue((blockbenchImage.getRGB(0, 0) & 0x00FFFFFF) != 0,
 			"Blockbench harpoon texture should pad unused UV space so atlas filtering does not bleed black into the mesh");
+		BufferedImage meshImage = ImageIO.read(meshTexture.toFile());
+		assertNotNull(meshImage, "Runtime mesh texture should decode as a PNG");
+		assertEquals(512, meshImage.getWidth(),
+			"Runtime mesh texture should stay compact for released jars");
+		assertEquals(512, meshImage.getHeight(),
+			"Runtime mesh texture should stay compact for released jars");
+		assertTrue((meshImage.getRGB(0, 0) & 0x00FFFFFF) != 0,
+			"Runtime mesh texture should preserve padded UV space for atlas filtering");
 	}
 
 	@Test
@@ -306,7 +320,7 @@ class HarpoonBehaviorContractTest {
 			"Special renderer should be Attuned's glTF mesh renderer");
 		assertEquals("attuned:gltf/ocean_relic_trident.glb", special.get("model").getAsString(),
 			"Special renderer should load the compact GLB model");
-		assertEquals("attuned:textures/item/ocean_relic_trident_blockbench.png", special.get("texture").getAsString(),
+		assertEquals("attuned:textures/item/ocean_relic_trident_mesh.png", special.get("texture").getAsString(),
 			"Special renderer should use the exported game-scale texture");
 	}
 

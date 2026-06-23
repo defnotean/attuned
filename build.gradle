@@ -86,6 +86,10 @@ processResources {
 	def version = project.version
 	inputs.property "version", version
 
+	exclude "assets/attuned/blockbench/**"
+	exclude "assets/attuned/textures/item/ocean_relic_trident_blockbench.png"
+	exclude "assets/attuned/textures/item/ocean_relic_trident_blockbench.png.mcmeta"
+
 	filesMatching("fabric.mod.json") {
 		expand "version": version
 	}

@@ -57,6 +57,10 @@ class AssetCustomizerContractTest {
 		Path.of("src/main/resources/assets/attuned/textures/item/ocean_relic_trident_blockbench.png");
 	private static final Path OCEAN_RELIC_TRIDENT_BLOCKBENCH_TEXTURE_META =
 		Path.of("src/main/resources/assets/attuned/textures/item/ocean_relic_trident_blockbench.png.mcmeta");
+	private static final Path OCEAN_RELIC_TRIDENT_MESH_TEXTURE =
+		Path.of("src/main/resources/assets/attuned/textures/item/ocean_relic_trident_mesh.png");
+	private static final Path OCEAN_RELIC_TRIDENT_MESH_TEXTURE_META =
+		Path.of("src/main/resources/assets/attuned/textures/item/ocean_relic_trident_mesh.png.mcmeta");
 	private static final Path OCEAN_RELIC_TRIDENT_INVENTORY_MODEL =
 		Path.of("src/main/resources/assets/attuned/models/item/ocean_relic_trident_inventory.json");
 	private static final Path OCEAN_RELIC_TRIDENT_ITEM_DEFINITION =
@@ -537,10 +541,14 @@ class AssetCustomizerContractTest {
 				"Shipped Blockbench model should strip the embedded base64 texture source");
 		}
 		assertTrue(Files.isRegularFile(OCEAN_RELIC_TRIDENT_BLOCKBENCH_TEXTURE),
-			"Blockbench harpoon texture should ship beside the item textures");
+			"Blockbench harpoon texture should stay available as source art for tools");
 		String textureMeta = read(OCEAN_RELIC_TRIDENT_BLOCKBENCH_TEXTURE_META);
 		assertTrue(textureMeta.contains("\"clamp\": true") && textureMeta.contains("\"blur\": false"),
 			"Harpoon texture should clamp and avoid blur while sampled through custom mesh UVs");
+		assertTrue(Files.isRegularFile(OCEAN_RELIC_TRIDENT_MESH_TEXTURE),
+			"Runtime GLB renderer should use a compact packaged mesh texture");
+		assertTrue(Files.isRegularFile(OCEAN_RELIC_TRIDENT_MESH_TEXTURE_META),
+			"Runtime GLB mesh texture should keep clamp/no-blur sampling metadata");
 
 		String renderer = read(GLTF_SPECIAL_RENDERER);
 		String modelManager = read(GLTF_MODEL_MANAGER);
@@ -640,7 +648,7 @@ class AssetCustomizerContractTest {
 			"Special renderer should use Attuned's glTF mesh renderer");
 		assertEquals("attuned:gltf/ocean_relic_trident.glb", special.get("model").getAsString(),
 			"Special renderer should load the compact GLB runtime model");
-		assertEquals("attuned:textures/item/ocean_relic_trident_blockbench.png", special.get("texture").getAsString(),
+		assertEquals("attuned:textures/item/ocean_relic_trident_mesh.png", special.get("texture").getAsString(),
 			"Special renderer should use the exported game-scale texture");
 	}
 
