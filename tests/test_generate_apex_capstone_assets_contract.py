@@ -43,7 +43,7 @@ def frame_rows(raw: bytes, *, width: int, frame: int, frame_height: int = 64) ->
 
 
 class GenerateApexCapstoneAssetsContractTest(unittest.TestCase):
-    def test_generator_imports_private_source_sheets(self) -> None:
+    def test_generator_imports_local_source_sheets(self) -> None:
         source = GENERATOR.read_text(encoding="utf-8")
 
         self.assertIn("apex-capstones-hud-source.png", source)

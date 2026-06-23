@@ -45,7 +45,7 @@ matchup pages carry the same table for players.
   to it — counter-combat and the Apex capstone apply.
 - Running active Foci of **two or more** affinities is **Discord**: every Focus
   still works, but the wearer is a glass cannon — dealing and taking extra
-  damage. A full every-affinity Discord build can reach **Maelstrom**, a special
+  damage. A wide mixed-affinity Discord build can reach **Maelstrom**, a special
   Apex path that keeps the risky mixed-affinity identity.
 - A Focus with **no** `affinity` is *neutral* — it never triggers Discord and
   fits any committed lane. Four or more active neutral Foci can reach
@@ -126,8 +126,8 @@ Drop below three active Foci of the faction and the bonus simply stops.
 
 Attuned currently ships these factions:
 
-| Faction id | Theme | Balance role | Set bonus (3+) |
-|------------|-------|--------------|----------------|
+| Faction id | Theme | Balance role | Set bonus (3 active Foci) |
+|------------|-------|--------------|----------------------------|
 | `attuned:unseen` | Stealth, stillness, smoke, ambush openings | Rewards setup and positioning without replacing armor, speed, or raw damage builds. | Speed I while sneaking. |
 | `attuned:seafarers` | Fishing, shore travel, return points | Peaceful Luck and water utility without PvP pressure. | Luck I while in or near water. |
 | `attuned:offshore` | Salvage, storms, wreck maps, deep-water risk | Utility with danger: temporary tools, water pressure, and anti-drowned/guardian space without becoming a permanent weapon line. | Water Breathing while submerged. |
@@ -140,6 +140,7 @@ Attuned currently ships these factions:
 | `attuned:ashen_forge` | Heat, craft, rivets, tempering | Craft-flavoured Fury/Bastion tools with restrained stat bonuses. | Fire Resistance near a lit forge, magma, or lava. |
 | `attuned:revenant` | Unfinished endings, debts, rites, grave-cold reprisals | Utility and controlled combat pressure through short revenge windows, cleansing, slowness, and one active movement ability. | Nearby undead are slowed (Slowness I). |
 | `attuned:umbral` | Shadow, darkness, stealth that rewards committing to the dark | Stronger the deeper the dark — movement, armor, and damage that only wake in low light, so it never out-scales a lit build. | Speed I in the dark (light level <= 7). |
+| `attuned:deep_lanterns` | Cave light, rescue beacons, and route markers | Group-safe exploration support with no item sharing or global tracking. | Night Vision while in or near water or placed lanterns. |
 
 ## Attribute modifiers
 
@@ -202,7 +203,7 @@ The first shipped custom-visual batch is:
 | Tide | cyan bubbles and splash motes |
 | Cinder | compact ember arc and lava sparks |
 
-Private asset sources stay outside the tracked repository.
+These shipped motifs are documented by their in-game effect.
 
 ## Behaviors
 
@@ -231,6 +232,8 @@ examples to copy from:
 | `attuned:softstep`   | `SoftstepBehavior`       | Makes crouched movement silent. |
 | `attuned:emberward`  | `EmberwardBehavior`      | Fire immunity. |
 | `attuned:tide`       | `TideBehavior`           | Underwater breathing. |
+| `attuned:wellspring_swim` | `focus_behavior/wellspring_swim.json` | 1.19.4 swim fallback: Dolphin's Grace while underwater. |
+| `attuned:current_runner_swim` | `focus_behavior/current_runner_swim.json` | 1.19.4 swim fallback: Dolphin's Grace while underwater. |
 | `attuned:galespur`   | `GalespurBehavior`       | Doubles the speed of living mounts while riding. |
 | `attuned:rainstep`   | `RainstepBehavior`       | Movement speed in rain, water, or waterlogged blocks. |
 | `attuned:updraft`    | `UpdraftBehavior`        | Hold jump while gliding with an elytra to boost forward; hold sprint/control to brake. |
@@ -286,6 +289,10 @@ examples to copy from:
 | `attuned:nullveil` | `focus_behavior/nullveil.json` | Grants Invisibility while standing in low light. |
 | `attuned:cinderthief` | `focus_behavior/cinderthief.json` | Charged melee hits steal a short Fire Resistance window. |
 | `attuned:snaremoon` | `focus_behavior/snaremoon.json` | Charged melee hits heavily slow hostile targets. |
+| `attuned:cavewick` | `focus_behavior/cavewick.json` | Placed lanterns and soul lanterns keep gentle Night Vision refreshed. |
+| `attuned:glowline` | `focus_behavior/glowline.json` | Points toward recent same-dimension Circle pings. |
+| `attuned:rescueflame` | `focus_behavior/rescueflame.json` | Assists nearby drowning Circle members with Water Breathing. |
+| `attuned:depthglass` | `focus_behavior/depthglass.json` | Provides same-dimension navigation hints from a held lodestone compass. |
 | `attuned:wildward`   | `WildwardBehavior`       | Confluence (Mossheart + Rootstep): refreshes Resistance I while standing on natural ground. |
 | `attuned:sunwarden`  | `SunwardenBehavior`      | Confluence (Votive + Bellwether): refreshes Regeneration I while standing in bright light. |
 | `attuned:forgewarded` | `ForgewardedBehavior`   | Confluence (Kilnward + Emberward): refreshes Fire Resistance while near a lit forge, magma, or lava. |
@@ -414,7 +421,7 @@ resets when the altar menu closes and you open it again.
 The reweaving screen shows an Affinity Loom hint with the current shard cost when
 the layout matches.
 
-## Pact Trials (Tier 4)
+## Pact Trials and Tier 4
 
 Each **Pact** carries a long-term **trial** that accrues progress only while
 that pact is **awake** (three or more active Foci sharing its affinity, or the
@@ -426,13 +433,13 @@ every trial, its goal, and your current progress.
 | Pact | Affinity | Trial goal | What accrues |
 |------|----------|------------|--------------|
 | Pyresworn | Fury | 40 | Ignite hostiles while Pyresworn is awake. |
-| Stoneheart | Bastion | 400 | Absorb damage **while blocking** while Stoneheart is awake. |
+| Stoneheart | Bastion | 400 | Absorb foe damage **while blocking** while Stoneheart is awake. |
 | Windrunner | Zephyr | 6,400 | Sprint blocks while Windrunner is awake **and** (near hostiles within 16 blocks **or** at Apex resonance). |
 | Radiant Covenant | Holy | 25 | Land charged reveals while Radiant Covenant is awake. |
 | Tidesworn | Tide | 40 | Slow foes while Tidesworn is awake. |
 | Forgebound | Forge | 25 | Sear (ignite) foes while Forgebound is awake **and** near hostiles within 16 blocks. |
 | Wildroot | Verdant | 36,000 | Time while Wildroot is awake: full rate with Regeneration; half rate near hostiles; idle safe zones accrue nothing (~30 minutes at full rate). |
-| Nightsworn | Umbral | 150 | Absorb damage in the dark while Nightsworn is awake. |
+| Nightsworn | Umbral | 150 | Absorb foe damage in the dark while Nightsworn is awake. |
 | Untethered | Discord spread | 20 | Slay affinity-bearing hostiles at Apex resonance **and** near hostiles within 16 blocks while Untethered is awake. |
 
 **Tier 4 bonuses** (active only while the matching pact is awake *and* its trial
@@ -458,12 +465,22 @@ blocks** of a hostile mob or PvP-valid opponent (`nearTrialPressure`). Windrunne
 also accepts Apex resonance in place of nearby pressure so you can finish long
 sprint trials in open terrain once you are fully armed.
 
-## Pact tacticals (1.6)
+**Circle shared trial credit.** Nearby online Circle members with recent
+contribution windows can share discrete trial events inside the configured
+radius (same dimension by default). Members with the same Pact awake receive the
+source trial's normal amount. The first support assist is narrower: when
+Stoneheart earns blocking/absorbed-damage trial credit, a contributing Witness
+whose Radiant Covenant Pact is awake can receive a 1-point Radiant Covenant
+assist tick instead of full Stoneheart damage credit.
 
-When **resonance is at least 50%** and your awake Pact has no competing **Focus
-Ability** Focus equipped, the **Focus Ability** keybind fires that Pact's
-**tactical** instead of a Focus ability. At **Apex** resonance the tactical is
-stronger and the HUD apex pulse is prominent.
+## Pact Tacticals
+
+When your awake Pact is at **Apex resonance** and no active ability Focus claims
+the **Focus Ability** key, that key fires the Pact's tactical instead of a Focus
+ability. Tacticals inherit the Pact identity: Pyresworn ignites, Stoneheart
+resists, Windrunner accelerates, Radiant Covenant reveals, Tidesworn slows,
+Forgebound sears, Wildroot regenerates, Nightsworn blinds in darkness, and
+Untethered knocks threats away.
 
 **Tactical overcharge.** **Crouch** while firing to spend **0.25 resonance** for
 an amplified tactical: larger radius, longer durations, and higher effect
@@ -472,7 +489,35 @@ trade. The action bar shows *Overcharged pact tactical — resonance spent.*
 
 Combat feedback (particles and sounds) also fires on resonance gain and drain,
 kill streaks, surge charge, ability casts, Apex capstone procs (including
-**Execute** and **Judgment**), and pact tactical use.
+**Execute** and **Judgment**), and pact tactical use. Kill-streak combat momentum
+can shave tactical cooldown while pressure stays active.
+
+## Resonant Surges
+
+During a thunderstorm, Attuned can start one **Resonant Surge** site near an
+online player in the thundering dimension. The site broadcasts with beacon-like
+feedback, marks approximate coordinates for nearby players, and lures monsters
+toward the storm so the event feels like a risky combat beacon rather than a
+quiet resource node.
+
+Players standing inside the surge radius gain Resonance faster while the event is
+live; Discord earns half Resonance from the surge field. Kills inside the surge
+have a chance to return one or two **Attunement Shard Fragments**, rewarding
+players who answer the storm and fight inside the pressure zone.
+
+## Updraft Focus
+
+The **Updraft Focus** is an elytra utility Focus. While the Focus is awake and the
+player has a functional elytra equipped, holding jump during flight applies
+smooth forward thrust based on look direction. Holding sprint/control sends a
+brake input that eases the current velocity down instead of snapping it.
+
+Updraft can start gliding when the player is eligible, clears fall distance while
+its flight controls are active, and supplies restrained particles, sounds, and
+action-bar feedback for boost, brake, and exhaustion states. Sustained PvP
+pressure eventually triggers **PvP exhaustion**: Updraft falters briefly, brakes
+hard, and applies short Weakness and Slowness so it cannot become endless combat
+disengage.
 
 ## Build sharing
 
@@ -493,9 +538,36 @@ object:
 The `slots` array holds up to six Focus **item** ids (empty strings for unused
 slots), in equipped priority order.
 
+Optional setup metadata can travel with the build code:
+
+| Field | Type | Meaning |
+|-------|------|---------|
+| `role` | text | Short archetype label, such as "Support" or "Tank". |
+| `note` | text | Short plain-text setup note. |
+| `party_size` | integer 0-8 | Preferred party size; `0` means no preference/solo-neutral. |
+| `warnings` | text list | Advisory setup warnings to show before use. |
+| `requires` | Focus id list | Extra Focus ids that should exist for the build to make sense. |
+| `mc` | text | Source Minecraft version. |
+| `attuned` | text | Source Attuned version. |
+
+Known metadata fields must be plain strings, string lists, or the integer
+`party_size`; chat component-like objects are rejected. Unknown optional fields
+are ignored. The server validates both `slots` and advisory `requires` ids
+against the server Focus registry before saving. `requires` only produces
+readable missing-content warnings; it does not grant or create items.
+
+Freshly saved Reliquary builds infer lightweight setup metadata server-side:
+role labels come from active affinity/faction dominance, while advisory warnings
+flag uncommitted mixed lanes, dormant over-capacity or duplicate-unique Foci,
+and builds with no active Focus Ability. This metadata is informational only and
+does not change Focus activation or item movement. When the saver is in a
+Circle, the server can also append public-role party-fit suggestions such as
+missing reveal, missing Anchor/Vanguard front line, or duplicate Shade pressure;
+these use only coarse role labels and honor `party_setup_suggestions_enabled`.
+
 **Validation:** the client decodes through `BuildShareCodec` (prefix, Base64,
 JSON shape, name length ≤ 32, slot count ≤ 6). The server receives an
-`ImportPresetPayload`, re-normalizes name and slots through `FocusPreset`, and
+`ImportPresetPayload`, re-normalizes the full `FocusPreset`, and
 only accepts the packet while a live reliquary menu is open with the reliquary
 still held in the menu hand — spoofed or out-of-menu imports are ignored.
 
@@ -514,7 +586,7 @@ matching `focus_behavior` entry. So a code behavior and a palette entry can neve
 collide, and existing Foci are unaffected.
 
 Each entry has a `type`. The shipped palette is **passive only** (no Focus Ability
-key — active-ability authoring is a later version) and ships four types:
+key — active-ability authoring is a later version) and ships nine types:
 
 | `type`                            | Gates on        | Effect |
 |-----------------------------------|-----------------|--------|
@@ -522,6 +594,11 @@ key — active-ability authoring is a later version) and ships four types:
 | `attuned:on_hit_effect`           | a charged, hostile-only melee hit | Apply a mob effect to the victim (or self) on the hit. |
 | `attuned:periodic_effect`         | a fixed tick cadence | Keep a flat mob effect refreshed — an unconditional buff. |
 | `attuned:attribute_while`         | a [condition](#conditions) | Apply an attribute modifier only while the condition holds. |
+| `attuned:block_context_effect`    | nearby tagged blocks | Keep a mob effect refreshed while near matching blocks. |
+| `attuned:use_item_window`         | server item-use event | Grant a short effect/modifier window after using an item. |
+| `attuned:party_assist`            | Circle contribution window | Assist a nearby Circle member with a small effect on cooldown. |
+| `attuned:marked_target`           | charged melee hits | Mark a target, then consume the mark for an effect. |
+| `attuned:navigation_hint`         | stored target data | Give restrained direction/distance feedback toward a stored point or party target. |
 
 ### `attuned:conditional_mob_effect`
 
@@ -562,6 +639,52 @@ The proc runs from Attuned's existing post-damage combat hook — no mixin — s
 never fires on a swing the code combat path would reject (reflected hits, projectiles,
 explosions, uncharged taps).
 
+### `attuned:marked_target`
+
+Primes a short-lived server-side mark on a valid charged melee hit, then consumes
+that mark on another valid charged melee hit against the same target. It reuses the
+same charged-hit and hostile/PvP target guards as `on_hit_effect`. Marks are keyed
+by behavior id, attacker, and target; cooldowns are keyed by behavior id and
+attacker.
+
+| Field                 | Type          | Required | Meaning |
+|-----------------------|---------------|----------|---------|
+| `type`                | text          | yes      | `attuned:marked_target` |
+| `prime_trigger`       | trigger id    | yes      | Currently `charged_melee_hit`. |
+| `consume_trigger`     | trigger id    | yes      | Currently `charged_melee_hit`. |
+| `mark_duration_ticks` | int 1-1000000 | yes      | How long the mark can be consumed. |
+| `cooldown_ticks`      | int 1-1000000 | yes      | Per-attacker cooldown after a consume. |
+| `effect_on_consume`   | object        | yes      | Effect object applied when the mark is consumed. |
+
+`effect_on_consume` fields:
+
+| Field            | Type          | Required | Meaning |
+|------------------|---------------|----------|---------|
+| `effect`         | mob effect id | yes      | e.g. `minecraft:weakness` |
+| `duration_ticks` | int 1-1000000 | yes      | How long the consumed effect lasts. |
+| `amplifier`      | int 0-255     | no (0)   | Effect level minus one. |
+| `target_self`    | bool          | no (false) | Apply to the attacker instead of the marked target. |
+
+### `attuned:navigation_hint`
+
+Gives restrained action-bar feedback toward a stored point or a party target.
+It never locates structures live and never scans chunks. Targets come from
+server-accepted Circle pings, the current online Circle leader, or a held vanilla
+lodestone compass target.
+
+| Field                    | Type      | Required | Meaning |
+|--------------------------|-----------|----------|---------|
+| `type`                   | text      | yes      | `attuned:navigation_hint` |
+| `target_kind`            | text      | yes      | `circle_ping`, `circle_leader`, or `held_lodestone_compass`. |
+| `max_age_ticks`          | int 1-1000000 | yes  | How old a stored target may be before feedback stops. |
+| `same_dimension_only`    | bool      | yes      | If true, suppress feedback for cross-dimension targets. |
+| `feedback_cadence_ticks` | int 20-1000000 | yes | How often to show the ambient hint. |
+
+`circle_ping` uses only pings that already passed Circle membership, range,
+loaded-chunk, and rate-limit checks. `held_lodestone_compass` reads the compass's
+existing `LODESTONE_TRACKER` data and keeps that explicit point briefly cached
+for the configured age window.
+
 ### `attuned:periodic_effect`
 
 Keeps a flat mob effect refreshed on a fixed cadence — an unconditional buff (a
@@ -579,6 +702,83 @@ no gating condition. Passive only.
 The effect is applied ambient, hidden, and icon-less. Keep `duration_ticks`
 comfortably above `refresh_ticks` so the buff never visibly lapses between refreshes.
 
+### `attuned:use_item_window`
+
+Grants a short mob-effect and/or transient attribute window after the player uses a
+matching item. The trigger is the server item-use event, so this never scans the
+player's inventory every tick. Cooldowns are keyed by player and behavior id.
+
+| Field            | Type             | Required | Meaning |
+|------------------|------------------|----------|---------|
+| `type`           | text             | yes      | `attuned:use_item_window` |
+| `item`           | item id          | one of `item`/`item_tag` | Exact item that triggers the window. |
+| `item_tag`       | item tag id      | one of `item`/`item_tag` | Item tag that triggers the window. |
+| `duration_ticks` | int 1-1000000    | yes      | How long the granted effect/modifier lasts. |
+| `cooldown_ticks` | int 1-1000000    | yes      | Per-player, per-behavior cooldown after a valid use. |
+| `effect`         | mob effect id    | no       | Optional effect to grant. |
+| `amplifier`      | int 0-255        | no (0)   | Effect level minus one. |
+| `modifier`       | modifier object  | no       | Optional transient attribute modifier. |
+| `condition`      | condition object | no       | Optional extra gate checked at use time. |
+
+Exactly one of `item` or `item_tag` is required. At least one of `effect` or
+`modifier` is required. Effects use the same ambient, hidden, icon-less flags as
+the other passive palette effects.
+
+### `attuned:party_assist`
+
+Assists one nearby Circle member with a small beneficial effect. The wearer and
+target must both be online, alive, non-spectating, same-dimension Circle members
+inside the configured contribution window. The behavior uses its own `radius`
+instead of the global shared-credit radius, respects `party_effects_enabled`, and
+starts one Circle-level cooldown only after an assist lands.
+
+| Field           | Type          | Required | Meaning |
+|-----------------|---------------|----------|---------|
+| `type`          | text          | yes      | `attuned:party_assist` |
+| `trigger`       | trigger id    | yes      | Currently `periodic_scan` (a once-per-second passive scan). |
+| `radius`        | int 1-64      | yes      | Same-dimension block radius around the wearer. |
+| `cooldown_ticks`| int 1-1000000 | yes      | Per-Circle, per-behavior cooldown after an assist lands. |
+| `target_filter` | filter id     | yes      | `nearby_members`, `wounded_members`, or `drowning_members`. |
+| `effect`        | object        | yes      | Beneficial effect object applied to the assisted member. |
+| `message_key`   | lang key      | yes      | Translation key shown to the assisted member. |
+
+`effect` fields:
+
+| Field            | Type          | Required | Meaning |
+|------------------|---------------|----------|---------|
+| `effect`         | mob effect id | yes      | e.g. `minecraft:water_breathing` |
+| `duration_ticks` | int 1-1000000 | yes      | How long the assist effect lasts. |
+| `amplifier`      | int 0-255     | no (0)   | Effect level minus one. |
+
+`party_assist` is intentionally party-only: it excludes the wearer, refuses valid
+PvP opponent targets in either direction, and never widens to cross-dimension
+credit even if `party_cross_dimension_credit_enabled` is true. Need-based assists
+(`wounded_members` and `drowning_members`) refresh the helper's support
+contribution window after the effect lands; generic `nearby_members` pulses do
+not refresh contribution credit by themselves.
+
+### `attuned:block_context_effect`
+
+Keeps a mob effect refreshed while the player is on or near blocks matching a block
+tag. The scan is passive only, server-side, shallow (`radius` horizontally and one
+block vertically), cached by player/block position, and throttled by `refresh_ticks`.
+Use it for local context such as leaves, paths, forge blocks, campfires, or crops -
+not for structure or chunk searches.
+
+| Field            | Type           | Required | Meaning |
+|------------------|----------------|----------|---------|
+| `type`           | text           | yes      | `attuned:block_context_effect` |
+| `block_tag`      | block tag id   | yes      | e.g. `minecraft:leaves` |
+| `radius`         | int 0-5        | no (2)   | Horizontal block radius to scan around the player. |
+| `requires_lit`   | bool           | no (false) | If true, matching blocks must have a lit block-state property and be lit. |
+| `effect`         | mob effect id  | yes      | e.g. `minecraft:speed` |
+| `amplifier`      | int 0-255      | no (0)   | Effect level minus one. |
+| `duration_ticks` | int >= 1       | no (80)  | How long each application lasts. |
+| `refresh_ticks`  | int 10-1000000 | no (20)  | Scan and refresh cadence; cannot be every tick. |
+
+The effect is applied ambient, hidden, and icon-less. Keep `duration_ticks` above
+`refresh_ticks` so the buff has room to bridge between scans.
+
 ### `attuned:attribute_while`
 
 Applies a transient attribute modifier only while a [condition](#conditions) holds,
@@ -592,7 +792,7 @@ unequip). The conditional twin of a Focus's declarative `modifiers`. Passive onl
 | `condition` | condition object | yes      | When the modifier should apply. |
 
 The `modifier` object matches the Focus `modifiers` schema — `attribute` (an
-`minecraft:` attribute id), `amount` (a finite number), and `operation`
+`minecraft:` attribute id), `amount` (a finite number from -1024.0 to 1024.0), and `operation`
 (`add_value`, `add_multiplied_base`, or `add_multiplied_total`). The modifier is
 applied under a stable, palette-specific id, so it is removed cleanly the moment the
 condition breaks or the Focus is unequipped.
@@ -656,6 +856,28 @@ hostile mob.
 }
 ```
 
+#### `marked_target` - Weakness after two charged hits
+
+A Focus that marks a hostile on a charged melee hit, then applies Weakness I if the
+same attacker lands another charged melee hit before the mark expires.
+
+`data/mypack/attuned/focus_behavior/brand_mark.json`:
+
+```json
+{
+  "type": "attuned:marked_target",
+  "prime_trigger": "charged_melee_hit",
+  "consume_trigger": "charged_melee_hit",
+  "mark_duration_ticks": 100,
+  "cooldown_ticks": 200,
+  "effect_on_consume": {
+    "effect": "minecraft:weakness",
+    "amplifier": 0,
+    "duration_ticks": 100
+  }
+}
+```
+
 #### `periodic_effect` — a gentle steady Regeneration
 
 A Focus that drips Regeneration I, refreshed every two seconds.
@@ -669,6 +891,66 @@ A Focus that drips Regeneration I, refreshed every two seconds.
   "amplifier": 0,
   "duration_ticks": 80,
   "refresh_ticks": 40
+}
+```
+
+#### `use_item_window` - route speed after using a map
+
+A Focus that grants Speed I for five seconds after the player uses a filled map,
+with a ten-second cooldown.
+
+`data/mypack/attuned/focus_behavior/route_window.json`:
+
+```json
+{
+  "type": "attuned:use_item_window",
+  "item": "minecraft:filled_map",
+  "duration_ticks": 100,
+  "cooldown_ticks": 200,
+  "effect": "minecraft:speed",
+  "amplifier": 0
+}
+```
+
+#### `party_assist` - water breathing for a drowning Circle member
+
+A Focus that checks nearby recent Circle contributors once per second, then grants
+Water Breathing I to one drowning member and starts a Circle cooldown.
+
+`data/mypack/attuned/focus_behavior/rescue_assist.json`:
+
+```json
+{
+  "type": "attuned:party_assist",
+  "trigger": "periodic_scan",
+  "radius": 24,
+  "cooldown_ticks": 300,
+  "target_filter": "drowning_members",
+  "effect": {
+    "effect": "minecraft:water_breathing",
+    "duration_ticks": 100,
+    "amplifier": 0
+  },
+  "message_key": "message.mypack.rescue_assist"
+}
+```
+
+#### `block_context_effect` - Slow Falling under leaves
+
+A Focus that grants Slow Falling I while standing under or near leaves.
+
+`data/mypack/attuned/focus_behavior/canopy_step.json`:
+
+```json
+{
+  "type": "attuned:block_context_effect",
+  "block_tag": "minecraft:leaves",
+  "radius": 2,
+  "requires_lit": false,
+  "effect": "minecraft:slow_falling",
+  "amplifier": 0,
+  "duration_ticks": 80,
+  "refresh_ticks": 20
 }
 ```
 
@@ -747,6 +1029,19 @@ Every key is optional and falls back to a built-in default:
 | `voidstep_cooldown_ticks` | 200 | Cooldown of the Voidstep blink, in ticks. |
 | `gravebind_cooldown_ticks` | 1200 | Cooldown of the Gravebind death-save, in ticks. |
 | `broadcast_pact_deaths` | true | If true, Pact death messages are broadcast to nearby players; if false, only the dying player sees them. |
+| `party_max_members` | 4 | Maximum members in a Circle, from 1 to 8. |
+| `party_shared_credit_radius` | 48.0 | Maximum block distance for Circle shared-credit checks. |
+| `party_shared_credit_window_ticks` | 200 | How recently a Circle member must have contributed to qualify for shared credit. |
+| `party_invite_ttl_ticks` | 1200 | How long a Circle invite stays valid before expiring. |
+| `party_invite_cooldown_ticks` | 200 | Per-sender and per-recipient cooldown after a successful Circle invite. |
+| `party_create_cooldown_ticks` | 600 | Cooldown after disbanding a Circle before the same player can create another. |
+| `party_cross_dimension_credit_enabled` | false | If true, shared-credit checks may opt into cross-dimension credit; the default requires the same dimension. |
+| `party_hud_enabled` | true | If true, the server sends public Circle HUD snapshots; if false, clients receive an empty party HUD snapshot. |
+| `party_shared_credit_enabled` | true | If true, Circle shared-credit systems may grant eligible nearby contributors credit; if false, party credit stays disabled separately from the HUD. |
+| `party_trial_assists_enabled` | true | If true, eligible Circle contributors can receive Pact Trial assist credit; if false, direct Pact Trial progress still accrues but party fan-out is disabled. |
+| `party_effects_enabled` | true | If true, Circle-linked party effects may run through their server cooldown gates; if false, party effects stay disabled separately from the HUD. |
+| `party_confluence_hints_enabled` | true | If true, nearby Circle members can receive shared Confluence Journal discovery hints; if false, only the active discoverer records them. |
+| `party_setup_suggestions_enabled` | true | If true, saved/imported setup metadata can include advisory role/loadout warnings; if false, those warnings are stripped while non-warning metadata remains. |
 | `surge_interval_ticks` | 12000 | Minimum ticks between resonant surges (one surge live at a time, server-wide). |
 | `surge_duration_ticks` | 1200 | How long a resonant surge stays live, in ticks. |
 | `surge_radius` | 16 | Radius, in blocks, of the resonant surge field that grants 4x resonance. |
@@ -755,6 +1050,11 @@ Every key is optional and falls back to a built-in default:
 | `discord_damage_multiplier` | 1.20 | Damage multiplier when either combatant is in Discord (softer than a full matchup advantage). |
 | `resonance_hit_empowered_gain_per_damage` | 0.012 | Resonance gained per point of damage dealt on an empowered matchup. |
 | `resonance_hit_neutralized_loss` | 0.10 | Resonance lost on a single hit taken from a neutralizing matchup. |
+
+Circle shared-credit windows are intentionally transient. They clear on
+disconnect, server stop, and successful Circle membership changes
+(create/accept/leave/kick/disband), so players cannot carry recent contribution
+credit through join/leave loops.
 | `resonance_kill_empowered_gain` | 0.30 | Resonance gained when finishing a kill on an empowered matchup. |
 | `resonance_decay_per_tick` | 0.00025 | Per-tick idle resonance drain (~200 seconds to zero at rest). |
 | `affinity_loom_base_shard_cost` | 1 | Attunement Shards spent on the first Affinity Loom reroll in a Reweaving session. |
@@ -811,8 +1111,10 @@ archaeology sites, but they remain possible anywhere Attuned Focus loot can roll
 The **Attunement Sanctum** is Attuned's own exploration site: a small data-driven
 jigsaw structure (one 15x8x15 piece of polished deepslate bricks, four amethyst
 pillars, and a central chiseled-deepslate altar) that generates rarely in lush
-caves, forests, and dark forests. Its template is generated deterministically by
-`tools/generate_sanctum_template.py` and committed as
+caves, forests, and dark forests. Deep Lanterns use the Attunement Sanctum as their first world clue:
+lantern light, depth, and rescue-routing show the faction before a player has
+to read an internal data label. Its template is generated
+deterministically by `tools/generate_sanctum_template.py` and committed as
 `data/attuned/structure/sanctum.nbt`; the datapack triple lives under
 `data/attuned/worldgen/{structure,structure_set,template_pool}/` with the biome
 list in `data/attuned/tags/worldgen/biome/has_sanctum.json`. The altar chest uses

@@ -263,7 +263,20 @@ class AttunedLootCompatibilityTest {
 			AttunedConfig.DEFAULT.resonanceKillEmpoweredGain(),
 			AttunedConfig.DEFAULT.resonanceDecayPerTick(),
 			AttunedConfig.DEFAULT.affinityLoomBaseShardCost(),
-			AttunedConfig.DEFAULT.affinityLoomMaxShardCost());
+			AttunedConfig.DEFAULT.affinityLoomMaxShardCost(),
+			AttunedConfig.DEFAULT.partyMaxMembers(),
+			AttunedConfig.DEFAULT.partySharedCreditRadius(),
+			AttunedConfig.DEFAULT.partySharedCreditWindowTicks(),
+			AttunedConfig.DEFAULT.partyInviteTtlTicks(),
+			AttunedConfig.DEFAULT.partyInviteCooldownTicks(),
+			AttunedConfig.DEFAULT.partyCreateCooldownTicks(),
+			AttunedConfig.DEFAULT.partyCrossDimensionCreditEnabled(),
+			AttunedConfig.DEFAULT.partyHudEnabled(),
+			AttunedConfig.DEFAULT.partySharedCreditEnabled(),
+			AttunedConfig.DEFAULT.partyTrialAssistsEnabled(),
+			AttunedConfig.DEFAULT.partyEffectsEnabled(),
+			AttunedConfig.DEFAULT.partyConfluenceHintsEnabled(),
+			AttunedConfig.DEFAULT.partySetupSuggestionsEnabled());
 	}
 
 	private static boolean isSupportedVanillaLootPath(String path) {

@@ -125,7 +125,7 @@ def render_chapter(lang, chapter_idx, scroll):
     except Exception:
         font = ImageFont.load_default()
 
-    draw_mc_text(d, PADDING, 8, "Attunement Codex", NAV_TITLE, font)
+    draw_mc_text(d, PADDING, 8, "Attunement Journal", NAV_TITLE, font)
     draw_mc_text(d, PADDING, 20, "Foci, pacts, altar craft", NAV_MUTED, font)
 
     for i, (name, keys, accent) in enumerate(CHAPTERS):

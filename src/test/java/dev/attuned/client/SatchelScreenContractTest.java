@@ -97,6 +97,37 @@ class SatchelScreenContractTest {
 	}
 
 	@Test
+	void savedBuildsDisplaySetupMetadataOnHover() throws IOException {
+		String screen = read(SCREEN);
+		assertTrue(screen.contains("drawBuildMetadataTooltip(graphics, mouseX, mouseY)"),
+			"The labels pass should show setup metadata when a saved build row is hovered.");
+		assertTrue(screen.contains("private void drawBuildMetadataTooltip"),
+			"Metadata hover rendering should live in a small helper beside the item preview.");
+		assertTrue(screen.contains("hoveredBuildIndex(mouseX, mouseY)"),
+			"Metadata tooltips should use the same row hit test as the build preview.");
+		assertTrue(screen.contains("buildMetadataTooltip(presets.get(hovered))"),
+			"The hover helper should render metadata for the actual hovered preset.");
+		assertTrue(screen.contains("graphics.setTooltipForNextFrame(this.font, lines, Optional.empty(), mouseX, mouseY)")
+				|| screen.contains("graphics.renderComponentTooltip(this.font, lines, mouseX - this.leftPos, mouseY - this.topPos)")
+				|| screen.contains("this.renderTooltip(graphics.pose(), visualLines, mouseX - this.leftPos, mouseY - this.topPos)"),
+			"Saved-build metadata should use the fork tooltip API instead of drawing free-floating text.");
+		assertTrue(screen.contains("private static List<Component> buildMetadataTooltip(FocusPreset preset)"),
+			"Tooltip line construction should be isolated for role/note/warning coverage.");
+		assertTrue(screen.contains("preset.role()"),
+			"Saved setup role metadata should be shown when present.");
+		assertTrue(screen.contains("preset.note()"),
+			"Saved setup note metadata should be shown when present.");
+		assertTrue(screen.contains("preset.preferredPartySize()"),
+			"Saved setup party-size metadata should be shown when present.");
+		assertTrue(screen.contains("preset.warnings()"),
+			"Saved setup warnings should be shown when present.");
+		assertTrue(screen.contains("preset.requires()"),
+			"Build-code requires metadata should be visible as advisory missing-content context.");
+		assertTrue(screen.contains("ChatFormatting.YELLOW"),
+			"Warnings should be visually distinct from ordinary metadata.");
+	}
+
+	@Test
 	void buildsCanBeNamedBeforeSaving() throws IOException {
 		String screen = read(SCREEN);
 		assertTrue(screen.contains("new EditBox"),
@@ -159,6 +190,11 @@ class SatchelScreenContractTest {
 		assertTrue(lang.has("screen.attuned.builds.empty"), "Empty-builds hint.");
 		assertTrue(lang.has("screen.attuned.builds.name"), "Build name field label.");
 		assertTrue(lang.has("screen.attuned.builds.name_hint"), "Build name field hint.");
+		assertTrue(lang.has("screen.attuned.preset.metadata.role"), "Setup role tooltip label.");
+		assertTrue(lang.has("screen.attuned.preset.metadata.note"), "Setup note tooltip label.");
+		assertTrue(lang.has("screen.attuned.preset.metadata.party_size"), "Setup party-size tooltip label.");
+		assertTrue(lang.has("screen.attuned.preset.metadata.warning"), "Setup warning tooltip label.");
+		assertTrue(lang.has("screen.attuned.preset.metadata.requires"), "Setup requires tooltip label.");
 	}
 
 	private static String read(Path file) throws IOException {

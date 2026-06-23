@@ -64,7 +64,10 @@ output/
 # local tooling scratch dirs
 /tmp/
 /.codex-remote-attachments/
+/.codex-logs/
 /.superpowers/
+/.attuned-art-sources/
+/docs/superpowers/
 
 # stray root-level resource-pack experiments (real assets live in src/main/resources)
 /assets/

@@ -1,0 +1,6 @@
+{
+	"item": "minecraft:compass",
+	"cost": 2,
+	"affinity": "zephyr",
+	"behavior": "example:route_window"
+}

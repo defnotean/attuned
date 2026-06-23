@@ -5,12 +5,16 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.mojang.datafixers.util.Pair;
 import com.mojang.serialization.Codec;
+import com.mojang.serialization.DataResult;
+import com.mojang.serialization.DynamicOps;
 import com.mojang.serialization.JsonOps;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Optional;
 import net.fabricmc.loader.api.FabricLoader;
 
 /**
@@ -47,7 +51,20 @@ public record AttunedConfig(
 		float resonanceKillEmpoweredGain,
 		float resonanceDecayPerTick,
 		int affinityLoomBaseShardCost,
-		int affinityLoomMaxShardCost) {
+		int affinityLoomMaxShardCost,
+		int partyMaxMembers,
+		float partySharedCreditRadius,
+		int partySharedCreditWindowTicks,
+		int partyInviteTtlTicks,
+		int partyInviteCooldownTicks,
+		int partyCreateCooldownTicks,
+		boolean partyCrossDimensionCreditEnabled,
+		boolean partyHudEnabled,
+		boolean partySharedCreditEnabled,
+		boolean partyTrialAssistsEnabled,
+		boolean partyEffectsEnabled,
+		boolean partyConfluenceHintsEnabled,
+		boolean partySetupSuggestionsEnabled) {
 
 	private static final int MIN_STARTING_CAPACITY = 0;
 	private static final int MAX_STARTING_CAPACITY = 256;
@@ -83,6 +100,19 @@ public record AttunedConfig(
 	private static final float MAX_RESONANCE_DECAY_PER_TICK = 0.01F;
 	private static final int MIN_AFFINITY_LOOM_SHARD_COST = 1;
 	private static final int MAX_AFFINITY_LOOM_SHARD_COST = 64;
+	private static final int MIN_PARTY_MAX_MEMBERS = 1;
+	private static final int MAX_PARTY_MAX_MEMBERS = 8;
+	private static final float MIN_PARTY_SHARED_CREDIT_RADIUS = 1.0F;
+	private static final float MAX_PARTY_SHARED_CREDIT_RADIUS = 128.0F;
+	private static final int MIN_PARTY_SHARED_CREDIT_WINDOW_TICKS = 1;
+	private static final int MAX_PARTY_SHARED_CREDIT_WINDOW_TICKS = 72000;
+	private static final int MIN_PARTY_COOLDOWN_TICKS = 1;
+	private static final int MAX_PARTY_COOLDOWN_TICKS = 72000;
+
+	private static <T> MapCodec<T> strictOptionalField(Codec<T> codec, String name, T defaultValue) {
+		return codec.optionalFieldOf(name)
+			.xmap(value -> value.orElse(defaultValue), Optional::of);
+	}
 
 	public AttunedConfig {
 		startingCapacity = requireIntRange(
@@ -135,6 +165,22 @@ public record AttunedConfig(
 			throw new IllegalArgumentException(
 				"affinityLoomMaxShardCost must be >= affinityLoomBaseShardCost");
 		}
+		partyMaxMembers = requireIntRange(
+			"partyMaxMembers", partyMaxMembers, MIN_PARTY_MAX_MEMBERS, MAX_PARTY_MAX_MEMBERS);
+		partySharedCreditRadius = requireFloatRange(
+			"partySharedCreditRadius", partySharedCreditRadius,
+			MIN_PARTY_SHARED_CREDIT_RADIUS, MAX_PARTY_SHARED_CREDIT_RADIUS);
+		partySharedCreditWindowTicks = requireIntRange(
+			"partySharedCreditWindowTicks", partySharedCreditWindowTicks,
+			MIN_PARTY_SHARED_CREDIT_WINDOW_TICKS, MAX_PARTY_SHARED_CREDIT_WINDOW_TICKS);
+		partyInviteTtlTicks = requireIntRange(
+			"partyInviteTtlTicks", partyInviteTtlTicks, MIN_PARTY_COOLDOWN_TICKS, MAX_PARTY_COOLDOWN_TICKS);
+		partyInviteCooldownTicks = requireIntRange(
+			"partyInviteCooldownTicks", partyInviteCooldownTicks,
+			MIN_PARTY_COOLDOWN_TICKS, MAX_PARTY_COOLDOWN_TICKS);
+		partyCreateCooldownTicks = requireIntRange(
+			"partyCreateCooldownTicks", partyCreateCooldownTicks,
+			MIN_PARTY_COOLDOWN_TICKS, MAX_PARTY_COOLDOWN_TICKS);
 		startingCapacity = Math.min(startingCapacity, capacityCap);
 	}
 
@@ -142,14 +188,15 @@ public record AttunedConfig(
 	public static final AttunedConfig DEFAULT =
 		new AttunedConfig(
 			4, 20, 2, 0.25F, 1.0F, 1.0F, 1.0F, 1.0F, 1.0F, 200, 1200, true, 12000, 1200, 16,
-			1.33F, 0.75F, 1.20F, 0.012F, 0.10F, 0.30F, 0.00025F, 1, 3);
+			1.33F, 0.75F, 1.20F, 0.012F, 0.10F, 0.30F, 0.00025F, 1, 3, 4, 48.0F, 200,
+			1200, 200, 600, false, true, true, true, true, true, true);
 
 	private static final Codec<Float> LOOT_MULTIPLIER =
 		Codec.floatRange(MIN_LOOT_MULTIPLIER, MAX_LOOT_MULTIPLIER);
 
 	/**
-	 * Codec split across two helper records: {@code RecordCodecBuilder.group}
-	 * accepts at most sixteen fields, and the full config has twenty-four.
+	 * Codec split across helper records: {@code RecordCodecBuilder.group}
+	 * accepts at most sixteen fields, and the full config has thirty-six.
 	 * Nested codecs keep the on-disk JSON flat — all keys remain top-level.
 	 */
 	private record CoreCodecFields(
@@ -294,39 +341,182 @@ public record AttunedConfig(
 		}
 	}
 
-	public static final Codec<AttunedConfig> CODEC = RecordCodecBuilder.create(in -> in.group(
+	private record PartyCodecFields(
+			int partyMaxMembers,
+			float partySharedCreditRadius,
+			int partySharedCreditWindowTicks,
+			int partyInviteTtlTicks,
+			int partyInviteCooldownTicks,
+			int partyCreateCooldownTicks,
+			boolean partyCrossDimensionCreditEnabled,
+			boolean partyHudEnabled,
+			boolean partySharedCreditEnabled,
+			boolean partyTrialAssistsEnabled,
+			boolean partyEffectsEnabled,
+			boolean partyConfluenceHintsEnabled,
+			boolean partySetupSuggestionsEnabled) {
+
+		private static final MapCodec<PartyCodecFields> MAP_CODEC = RecordCodecBuilder.mapCodec(in -> in.group(
+			strictOptionalField(Codec.intRange(MIN_PARTY_MAX_MEMBERS, MAX_PARTY_MAX_MEMBERS),
+					"party_max_members", DEFAULT.partyMaxMembers())
+				.forGetter(PartyCodecFields::partyMaxMembers),
+			strictOptionalField(Codec.floatRange(MIN_PARTY_SHARED_CREDIT_RADIUS, MAX_PARTY_SHARED_CREDIT_RADIUS),
+					"party_shared_credit_radius", DEFAULT.partySharedCreditRadius())
+				.forGetter(PartyCodecFields::partySharedCreditRadius),
+			strictOptionalField(Codec.intRange(MIN_PARTY_SHARED_CREDIT_WINDOW_TICKS, MAX_PARTY_SHARED_CREDIT_WINDOW_TICKS),
+					"party_shared_credit_window_ticks", DEFAULT.partySharedCreditWindowTicks())
+				.forGetter(PartyCodecFields::partySharedCreditWindowTicks),
+			strictOptionalField(Codec.intRange(MIN_PARTY_COOLDOWN_TICKS, MAX_PARTY_COOLDOWN_TICKS),
+					"party_invite_ttl_ticks", DEFAULT.partyInviteTtlTicks())
+				.forGetter(PartyCodecFields::partyInviteTtlTicks),
+			strictOptionalField(Codec.intRange(MIN_PARTY_COOLDOWN_TICKS, MAX_PARTY_COOLDOWN_TICKS),
+					"party_invite_cooldown_ticks", DEFAULT.partyInviteCooldownTicks())
+				.forGetter(PartyCodecFields::partyInviteCooldownTicks),
+			strictOptionalField(Codec.intRange(MIN_PARTY_COOLDOWN_TICKS, MAX_PARTY_COOLDOWN_TICKS),
+					"party_create_cooldown_ticks", DEFAULT.partyCreateCooldownTicks())
+				.forGetter(PartyCodecFields::partyCreateCooldownTicks),
+			strictOptionalField(Codec.BOOL,
+					"party_cross_dimension_credit_enabled", DEFAULT.partyCrossDimensionCreditEnabled())
+				.forGetter(PartyCodecFields::partyCrossDimensionCreditEnabled),
+			strictOptionalField(Codec.BOOL, "party_hud_enabled", DEFAULT.partyHudEnabled())
+				.forGetter(PartyCodecFields::partyHudEnabled),
+			strictOptionalField(Codec.BOOL, "party_shared_credit_enabled", DEFAULT.partySharedCreditEnabled())
+				.forGetter(PartyCodecFields::partySharedCreditEnabled),
+			strictOptionalField(Codec.BOOL, "party_trial_assists_enabled", DEFAULT.partyTrialAssistsEnabled())
+				.forGetter(PartyCodecFields::partyTrialAssistsEnabled),
+			strictOptionalField(Codec.BOOL, "party_effects_enabled", DEFAULT.partyEffectsEnabled())
+				.forGetter(PartyCodecFields::partyEffectsEnabled),
+			strictOptionalField(Codec.BOOL, "party_confluence_hints_enabled", DEFAULT.partyConfluenceHintsEnabled())
+				.forGetter(PartyCodecFields::partyConfluenceHintsEnabled),
+			strictOptionalField(Codec.BOOL,
+					"party_setup_suggestions_enabled", DEFAULT.partySetupSuggestionsEnabled())
+				.forGetter(PartyCodecFields::partySetupSuggestionsEnabled)
+		).apply(in, PartyCodecFields::new));
+
+		private static PartyCodecFields from(AttunedConfig config) {
+			return new PartyCodecFields(
+				config.partyMaxMembers(),
+				config.partySharedCreditRadius(),
+				config.partySharedCreditWindowTicks(),
+				config.partyInviteTtlTicks(),
+				config.partyInviteCooldownTicks(),
+				config.partyCreateCooldownTicks(),
+				config.partyCrossDimensionCreditEnabled(),
+				config.partyHudEnabled(),
+				config.partySharedCreditEnabled(),
+				config.partyTrialAssistsEnabled(),
+				config.partyEffectsEnabled(),
+				config.partyConfluenceHintsEnabled(),
+				config.partySetupSuggestionsEnabled());
+		}
+	}
+
+	private static final Codec<AttunedConfig> BASE_CODEC = RecordCodecBuilder.create(in -> in.group(
 		CoreCodecFields.MAP_CODEC.forGetter(CoreCodecFields::from),
 		CombatCodecFields.MAP_CODEC.forGetter(CombatCodecFields::from),
-		LoomCodecFields.MAP_CODEC.forGetter(LoomCodecFields::from)
+		LoomCodecFields.MAP_CODEC.forGetter(LoomCodecFields::from),
+		PartyCodecFields.MAP_CODEC.forGetter(PartyCodecFields::from)
 	).apply(in, AttunedConfig::mergeCodecFields));
 
+	public static final Codec<AttunedConfig> CODEC = Codec.of(BASE_CODEC, AttunedConfig::decodeConfig);
+
+	private static <T> DataResult<Pair<AttunedConfig, T>> decodeConfig(DynamicOps<T> ops, T input) {
+		return validatePartyConfigInput(ops, input)
+			.flatMap(validInput -> BASE_CODEC.decode(ops, validInput));
+	}
+
 	private static AttunedConfig mergeCodecFields(
-			CoreCodecFields core, CombatCodecFields combat, LoomCodecFields loom) {
+			CoreCodecFields core, CombatCodecFields combat, LoomCodecFields loom, PartyCodecFields party) {
 		return new AttunedConfig(
-		core.startingCapacity(),
-		core.capacityCap(),
-		core.capacityPerShard(),
-		core.focusLootChance(),
-		core.lowLootMultiplier(),
-		core.commonLootMultiplier(),
-		core.richLootMultiplier(),
-		core.treasureLootMultiplier(),
-		core.shardFragmentLootMultiplier(),
-		core.voidstepCooldownTicks(),
-		core.gravebindCooldownTicks(),
-		core.broadcastPactDeaths(),
-		core.surgeIntervalTicks(),
-		core.surgeDurationTicks(),
-		core.surgeRadius(),
-		combat.advantageMultiplier(),
-		combat.disadvantageMultiplier(),
-		combat.discordDamageMultiplier(),
-		combat.resonanceHitEmpoweredGainPerDamage(),
-		combat.resonanceHitNeutralizedLoss(),
-		combat.resonanceKillEmpoweredGain(),
-		combat.resonanceDecayPerTick(),
-		loom.affinityLoomBaseShardCost(),
-		loom.affinityLoomMaxShardCost());
+			core.startingCapacity(),
+			core.capacityCap(),
+			core.capacityPerShard(),
+			core.focusLootChance(),
+			core.lowLootMultiplier(),
+			core.commonLootMultiplier(),
+			core.richLootMultiplier(),
+			core.treasureLootMultiplier(),
+			core.shardFragmentLootMultiplier(),
+			core.voidstepCooldownTicks(),
+			core.gravebindCooldownTicks(),
+			core.broadcastPactDeaths(),
+			core.surgeIntervalTicks(),
+			core.surgeDurationTicks(),
+			core.surgeRadius(),
+			combat.advantageMultiplier(),
+			combat.disadvantageMultiplier(),
+			combat.discordDamageMultiplier(),
+			combat.resonanceHitEmpoweredGainPerDamage(),
+			combat.resonanceHitNeutralizedLoss(),
+			combat.resonanceKillEmpoweredGain(),
+			combat.resonanceDecayPerTick(),
+			loom.affinityLoomBaseShardCost(),
+			loom.affinityLoomMaxShardCost(),
+			party.partyMaxMembers(),
+			party.partySharedCreditRadius(),
+			party.partySharedCreditWindowTicks(),
+			party.partyInviteTtlTicks(),
+			party.partyInviteCooldownTicks(),
+			party.partyCreateCooldownTicks(),
+			party.partyCrossDimensionCreditEnabled(),
+			party.partyHudEnabled(),
+			party.partySharedCreditEnabled(),
+			party.partyTrialAssistsEnabled(),
+			party.partyEffectsEnabled(),
+			party.partyConfluenceHintsEnabled(),
+			party.partySetupSuggestionsEnabled());
+	}
+
+	private static <T> DataResult<T> validatePartyConfigInput(DynamicOps<T> ops, T input) {
+		JsonElement element = ops.convertTo(JsonOps.INSTANCE, input);
+		if (!element.isJsonObject()) {
+			return DataResult.success(input);
+		}
+		JsonObject json = element.getAsJsonObject();
+		return validatePartyInt(json, "party_max_members",
+				MIN_PARTY_MAX_MEMBERS, MAX_PARTY_MAX_MEMBERS, input)
+			.flatMap(validInput -> validatePartyFloat(json, "party_shared_credit_radius",
+				MIN_PARTY_SHARED_CREDIT_RADIUS, MAX_PARTY_SHARED_CREDIT_RADIUS, validInput))
+			.flatMap(validInput -> validatePartyInt(json, "party_shared_credit_window_ticks",
+				MIN_PARTY_SHARED_CREDIT_WINDOW_TICKS, MAX_PARTY_SHARED_CREDIT_WINDOW_TICKS, validInput))
+			.flatMap(validInput -> validatePartyInt(json, "party_invite_ttl_ticks",
+				MIN_PARTY_COOLDOWN_TICKS, MAX_PARTY_COOLDOWN_TICKS, validInput))
+			.flatMap(validInput -> validatePartyInt(json, "party_invite_cooldown_ticks",
+				MIN_PARTY_COOLDOWN_TICKS, MAX_PARTY_COOLDOWN_TICKS, validInput))
+			.flatMap(validInput -> validatePartyInt(json, "party_create_cooldown_ticks",
+				MIN_PARTY_COOLDOWN_TICKS, MAX_PARTY_COOLDOWN_TICKS, validInput));
+	}
+
+	private static <T> DataResult<T> validatePartyInt(
+			JsonObject json, String key, int min, int max, T input) {
+		if (!json.has(key)) {
+			return DataResult.success(input);
+		}
+		try {
+			int value = json.get(key).getAsInt();
+			if (value < min || value > max) {
+				return DataResult.error(() -> key + " must be between " + min + " and " + max);
+			}
+			return DataResult.success(input);
+		} catch (RuntimeException e) {
+			return DataResult.error(() -> key + " must be an integer");
+		}
+	}
+
+	private static <T> DataResult<T> validatePartyFloat(
+			JsonObject json, String key, float min, float max, T input) {
+		if (!json.has(key)) {
+			return DataResult.success(input);
+		}
+		try {
+			float value = json.get(key).getAsFloat();
+			if (!Float.isFinite(value) || value < min || value > max) {
+				return DataResult.error(() -> key + " must be between " + min + " and " + max);
+			}
+			return DataResult.success(input);
+		} catch (RuntimeException e) {
+			return DataResult.error(() -> key + " must be a number");
+		}
 	}
 
 	private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
@@ -412,6 +602,19 @@ public record AttunedConfig(
 		json.addProperty("resonance_decay_per_tick", current.resonanceDecayPerTick());
 		json.addProperty("affinity_loom_base_shard_cost", current.affinityLoomBaseShardCost());
 		json.addProperty("affinity_loom_max_shard_cost", current.affinityLoomMaxShardCost());
+		json.addProperty("party_max_members", current.partyMaxMembers());
+		json.addProperty("party_shared_credit_radius", current.partySharedCreditRadius());
+		json.addProperty("party_shared_credit_window_ticks", current.partySharedCreditWindowTicks());
+		json.addProperty("party_invite_ttl_ticks", current.partyInviteTtlTicks());
+		json.addProperty("party_invite_cooldown_ticks", current.partyInviteCooldownTicks());
+		json.addProperty("party_create_cooldown_ticks", current.partyCreateCooldownTicks());
+		json.addProperty("party_cross_dimension_credit_enabled", current.partyCrossDimensionCreditEnabled());
+		json.addProperty("party_hud_enabled", current.partyHudEnabled());
+		json.addProperty("party_shared_credit_enabled", current.partySharedCreditEnabled());
+		json.addProperty("party_trial_assists_enabled", current.partyTrialAssistsEnabled());
+		json.addProperty("party_effects_enabled", current.partyEffectsEnabled());
+		json.addProperty("party_confluence_hints_enabled", current.partyConfluenceHintsEnabled());
+		json.addProperty("party_setup_suggestions_enabled", current.partySetupSuggestionsEnabled());
 		Path path = path();
 		try {
 			Files.createDirectories(path.getParent());

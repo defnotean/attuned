@@ -58,7 +58,7 @@ texture, provide an override:
 
 ## Ocean Relic Asset Pipeline
 
-The original Meshy GLB is about 54 MB because it embeds large PNG textures. The
+The original source GLB can be large because it embeds PNG textures. The
 runtime asset is generated with:
 
 ```powershell
@@ -67,7 +67,7 @@ python tools\prepare_ocean_relic_gltf.py
 
 That script:
 
-- reads the source GLB from the user's Downloads folder by default,
+- reads the source GLB path provided on the command line,
 - converts positions and normals into Attuned's Minecraft/Blockbench model space,
 - preserves indices and UVs,
 - strips embedded images,

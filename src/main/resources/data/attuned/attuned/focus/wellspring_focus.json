@@ -1,7 +1,9 @@
 {
     "item":  "attuned:wellspring_focus",
     "cost":  4,
+    "unique":  true,
     "affinity":  "tide",
+    "behavior":  "attuned:wellspring_swim",
     "modifiers":  [
                       {
                           "attribute":  "minecraft:generic.max_health",

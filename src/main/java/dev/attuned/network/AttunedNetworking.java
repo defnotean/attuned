@@ -1,6 +1,5 @@
 package dev.attuned.network;
 
-import dev.attuned.compat.PlayerMessages;
 import dev.attuned.AttunedPlayerCleanup;
 import dev.attuned.AttunedServerCleanup;
 import dev.attuned.api.focus.Affinity;
@@ -53,6 +52,7 @@ public final class AttunedNetworking {
 			return;
 		}
 		initialized = true;
+		CircleNetworking.init();
 		ServerPlayNetworking.registerGlobalReceiver(AbilityPayload.TYPE, (payload, player, sender) -> {
 			player.getLevel().getServer().execute(() -> FocusAbilityState.trigger(player));
 		});
@@ -100,7 +100,8 @@ public final class AttunedNetworking {
 		}
 
 		LAST_INSPECT.put(player.getUUID(), now);
-		PlayerMessages.overlay(player, inspectLine(target));
+		ActionBarMessages.send(player, ActionBarMessages.Priority.PROGRESS,
+			inspectLine(target));
 	}
 
 	// Builds the action-bar line: "<name>: <stance>" with an Apex suffix when the

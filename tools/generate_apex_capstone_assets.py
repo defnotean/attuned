@@ -2,7 +2,7 @@ from __future__ import annotations
 
 """Import prepared art for the expanded Apex capstones.
 
-The game-facing assets are cropped from local private source sheets. This
+The game-facing assets are cropped from local source sheets. This
 script only normalizes them for Minecraft: crop, chroma-key, resize, assemble
 animation strips, and write a small verification preview under build/.
 """
@@ -229,7 +229,7 @@ def main() -> None:
     report = verify(paths, preview)
     print(f"wrote {preview.relative_to(ROOT).as_posix()}")
     print(f"wrote {report.relative_to(ROOT).as_posix()}")
-    print(f"imported {len(paths)} game asset files from private source sheets")
+    print(f"imported {len(paths)} game asset files from local source sheets")
 
 
 if __name__ == "__main__":

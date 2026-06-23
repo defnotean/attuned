@@ -8,24 +8,34 @@ import net.fabricmc.fabric.api.networking.v1.PacketType;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
 
-public record ImportPresetPayload(String name, List<String> slots) implements FabricPacket {
+public record ImportPresetPayload(FocusPreset preset) implements FabricPacket {
+	public ImportPresetPayload(String name, List<String> slots) {
+		this(new FocusPreset(name, slots));
+	}
+
 	public ImportPresetPayload {
-		FocusPreset normalized = new FocusPreset(name, slots);
-		name = normalized.name();
-		slots = normalized.slots();
+		preset = preset == null ? new FocusPreset("", List.of()) :
+			new FocusPreset(preset.name(), preset.slots(), preset.metadata());
 	}
 
 	public static final PacketType<ImportPresetPayload> TYPE =
 		PacketType.create(new ResourceLocation(Attuned.MOD_ID, "import_preset"), ImportPresetPayload::new);
 
 	public ImportPresetPayload(FriendlyByteBuf buf) {
-		this(buf.readUtf(32), buf.readList(FriendlyByteBuf::readUtf));
+		this(FocusPreset.read(buf));
+	}
+
+	public String name() {
+		return preset.name();
+	}
+
+	public List<String> slots() {
+		return preset.slots();
 	}
 
 	@Override
 	public void write(FriendlyByteBuf buf) {
-		buf.writeUtf(name);
-		buf.writeCollection(slots, FriendlyByteBuf::writeUtf);
+		preset.write(buf);
 	}
 
 	@Override

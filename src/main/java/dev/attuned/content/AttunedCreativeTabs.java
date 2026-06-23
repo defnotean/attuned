@@ -73,21 +73,26 @@ final class AttunedCreativeTabs {
 			.title(title)
 			.icon(() -> new net.minecraft.world.item.ItemStack(icon))
 			.displayItems((parameters, output) -> {
-				parameters.holders()
-					.lookup(AttunedRegistries.FOCUS_DEFINITIONS)
-					.map(lookup -> fociInDisplayOrder(lookup, include))
-					.orElse(List.of())
-					.forEach(output::accept);
 				if (includeCoreItems) {
+					output.accept(AttunedContent.ATTUNEMENT_JOURNAL);
 					output.accept(AttunedContent.ATTUNEMENT_SHARD);
 					output.accept(AttunedContent.ATTUNEMENT_SHARD_FRAGMENT);
-					output.accept(AttunedContent.ATTUNEMENT_JOURNAL);
-					output.accept(AttunedContent.SATCHEL_OF_FOCI);
-					output.accept(AttunedContent.GRAND_SATCHEL_OF_FOCI);
 					output.accept(AttunedContent.ATTUNEMENT_ALTAR);
 					output.accept(AttunedContent.ALTAR_OF_REWEAVING);
+					output.accept(AttunedContent.SATCHEL_OF_FOCI);
+					output.accept(AttunedContent.GRAND_SATCHEL_OF_FOCI);
+				}
+				List<Item> fociInDisplayOrder = parameters.holders()
+					.lookup(AttunedRegistries.FOCUS_DEFINITIONS)
+					.map(lookup -> fociInDisplayOrder(lookup, include))
+					.orElse(List.of());
+				for (Item focus : fociInDisplayOrder) {
+					output.accept(focus);
+				}
+				if (includeCoreItems) {
 					// The blank, author-skinnable Focus pool carries no FocusDefinition,
-					// so fociInDisplayOrder never surfaces it — accept it explicitly.
+					// so fociInDisplayOrder never surfaces it — accept it explicitly after
+					// real neutral Foci instead of ahead of player-facing build tools.
 					for (Item customFocus : AttunedContent.CUSTOM_FOCI) {
 						output.accept(customFocus);
 					}

@@ -77,7 +77,7 @@ public abstract class CreativeModeInventoryScreenMixin
 		Player player = Minecraft.getInstance().player;
 		if (player != null) {
 			List<FormattedCharSequence> lines = new ArrayList<>();
-			for (var c : AttunementReadout.tooltip(player)) {
+			for (var c : AttunementReadout.tooltip(AttunementReadout.cached(player))) {
 				lines.add(c.getVisualOrderText());
 			}
 			this.renderTooltip(poseStack, lines, mouseX, mouseY);
@@ -85,8 +85,7 @@ public abstract class CreativeModeInventoryScreenMixin
 	}
 
 	@Inject(method = "hasClickedOutside", at = @At("HEAD"), cancellable = true)
-	private void attuned$keepFocusPanelInside(double mx, double my, int xo, int yo, int button,
-			CallbackInfoReturnable<Boolean> cir) {
+	private void attuned$keepFocusPanelInside(double mx, double my, int xo, int yo, CallbackInfoReturnable<Boolean> cir) {
 		if (this.isInventoryOpen()
 				&& FocusPanel.withinPanel(FocusLayout.CREATIVE_X, FocusLayout.CREATIVE_Y, mx - xo, my - yo)) {
 			cir.setReturnValue(false);

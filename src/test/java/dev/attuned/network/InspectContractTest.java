@@ -31,7 +31,7 @@ class InspectContractTest {
 			"Inspect carries only the target entity id.");
 		assertTrue(payload.contains("public static final Type<InspectRequestPayload> TYPE")
 				|| payload.contains("public static final PacketType<InspectRequestPayload> TYPE"),
-			"Payload exposes a CustomPacketPayload TYPE.");
+			"Payload exposes the branch packet TYPE.");
 		assertTrue((payload.contains("StreamCodec.composite(ByteBufCodecs.VAR_INT")
 					&& payload.contains("InspectRequestPayload::targetEntityId")
 					&& payload.contains("InspectRequestPayload::new).cast()"))
@@ -49,7 +49,7 @@ class InspectContractTest {
 			"Inspect request is registered serverbound.");
 		assertTrue(net.contains("ServerPlayNetworking.registerGlobalReceiver(InspectRequestPayload.TYPE"),
 			"Inspect request has a server-side receiver.");
-		assertTrue(net.contains("player.level().getServer().execute(")
+		assertTrue(net.contains("player.getLevel().getServer().execute(")
 				|| net.contains("player.getLevel().getServer().execute("),
 			"Inspect handling hops to the server thread before touching world state.");
 	}
@@ -86,8 +86,10 @@ class InspectContractTest {
 			"Inspect derives committed affinity / Discord server-side from the target's attunement.");
 		assertTrue(net.contains("Apex.capstoneOf") && net.contains("Resonance.atApex"),
 			"Inspect reports the target's Apex capstone and whether it is armed.");
-		assertTrue(net.contains("sendOverlayMessage") || net.contains("PlayerMessages.overlay"),
-			"Inspect replies on the requester's action bar.");
+		assertTrue(net.contains("ActionBarMessages.send(player, ActionBarMessages.Priority.PROGRESS"),
+			"Inspect replies on the requester's action bar through the shared priority gate.");
+		assertTrue(!net.contains("sendOverlayMessage(inspectLine(target))"),
+			"Inspect should not bypass the action-bar priority gate.");
 	}
 
 	@Test

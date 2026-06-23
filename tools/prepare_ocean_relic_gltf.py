@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Prepare the Ocean Relic Trident GLB for Attuned's in-game renderer.
 
-The Meshy source GLB embeds very large texture images. Attuned renders the mesh
+The source GLB embeds very large texture images. Attuned renders the mesh
 with its game-scale item texture, so this script keeps only the mesh buffers and
 normalizes the coordinate system into the same model space used by the
 Blockbench source file.
@@ -27,8 +27,8 @@ def main() -> None:
 	parser.add_argument(
 		"source",
 		nargs="?",
-		default=r"C:\Users\ianga\Downloads\Meshy_AI_Ocean_Relic_Trident_0616193855_image-to-3d-texture.glb",
-		help="Source GLB exported from Meshy/Blockbench.",
+		default="source/ocean_relic_trident.glb",
+		help="Source GLB exported from the model authoring tool.",
 	)
 	parser.add_argument(
 		"output",
