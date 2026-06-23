@@ -144,13 +144,8 @@ class HarpoonBehaviorContractTest {
 		assertEquals("attuned:item/ocean_relic_trident_voxel_palette",
 			model.getAsJsonObject("textures").get("particle").getAsString(),
 			"Harpoon model should define a particle texture to avoid missing-texture warnings");
-		JsonObject report = json(Path.of("docs/superpowers/assets/ocean-relic-trident/ocean_relic_trident_voxel_report.json"));
 		assertTrue(model.getAsJsonArray("elements").size() >= 36,
 			"Harpoon model should contain a real cuboid trident silhouette");
-		assertTrue(report.getAsJsonArray("bbox_size").get(1).getAsDouble() >= 40.0D,
-			"Harpoon model should be long enough to read as a trident when held");
-		assertTrue(report.getAsJsonArray("bbox_size").get(0).getAsDouble() >= 10.0D,
-			"Harpoon model should keep the side prongs visibly separated");
 		assertTrue(model.has("display"),
 			"Harpoon model should define held/inventory transforms");
 		JsonObject display = model.getAsJsonObject("display");

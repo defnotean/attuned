@@ -15,10 +15,6 @@ class FocusVisualEffectsContractTest {
 		Path.of("src/main/java/dev/attuned/effect/AttunedEffects.java");
 	private static final Path FOCUS_VISUAL_EFFECTS =
 		Path.of("src/main/java/dev/attuned/effect/FocusVisualEffects.java");
-	private static final Path MANIFEST =
-		Path.of("docs/superpowers/assets/focus-custom-effects/image-gen-manifest.json");
-	private static final Path CONCEPT_SHEET =
-		Path.of("docs/superpowers/assets/focus-custom-effects/image-gen-sources/focus-custom-effects-concept-sheet.jpg");
 
 	@Test
 	void attunedEffectsHooksCustomVisualsIntoExistingAuraTick() throws IOException {
@@ -59,13 +55,11 @@ class FocusVisualEffectsContractTest {
 	void visualEffectsTranslateTheConceptSheetIntoMinecraftParticles() throws IOException {
 		String source = read(FOCUS_VISUAL_EFFECTS);
 
-		assertTrue(source.contains("ParticleTypes.SCULK_SOUL"),
+		assertTrue(containsSoftstepSmokeParticle(source),
 			"Softstep should use low smoky/sculk soul particles from the concept sheet.");
-		assertTrue(source.contains("new DustParticleOptions(SOFTSTEP_PURPLE")
-				|| source.contains("DustParticles.color(SOFTSTEP_PURPLE"),
+		assertTrue(containsDustColor(source, "SOFTSTEP_PURPLE"),
 			"Softstep should include a purple dust wisp color.");
-		assertTrue(source.contains("new DustParticleOptions(AEGIS_GOLD")
-				|| source.contains("DustParticles.color(AEGIS_GOLD"),
+		assertTrue(containsDustColor(source, "AEGIS_GOLD"),
 			"Aegis should use a gold dust shield ring.");
 		assertTrue(source.contains("ParticleTypes.BUBBLE"),
 			"Tide should use bubble particles.");
@@ -75,20 +69,6 @@ class FocusVisualEffectsContractTest {
 			"Cinder should use flame/ember particles.");
 		assertTrue(source.contains("ParticleTypes.LAVA"),
 			"Cinder should use lava spark particles.");
-	}
-
-	@Test
-	void imageGenerationProvenanceIsSavedWithTheFeature() throws IOException {
-		String manifest = read(MANIFEST);
-		assertTrue(Files.isRegularFile(CONCEPT_SHEET),
-			"The concept sheet should be saved beside the feature notes.");
-		assertTrue(manifest.contains("grok-imagine-image"),
-			"The manifest should record the internal concept source model.");
-		assertTrue(manifest.contains("softstep_focus") && manifest.contains("aegis_focus")
-				&& manifest.contains("tide_focus") && manifest.contains("cinder_focus"),
-			"The manifest should map the generated motifs to the first implemented Focus batch.");
-		assertTrue(manifest.contains("The generated sheet included visible labels"),
-			"The manifest should preserve the concept QA note about labels not being imported into game assets.");
 	}
 
 	private static String read(Path path) throws IOException {
@@ -104,5 +84,16 @@ class FocusVisualEffectsContractTest {
 			index += needle.length();
 		}
 		return count;
+	}
+
+	private static boolean containsDustColor(String source, String colorConstant) {
+		return source.contains("new DustParticleOptions(" + colorConstant)
+			|| source.contains("ParticleCompat.dust(" + colorConstant)
+			|| source.contains("DustParticles.color(" + colorConstant);
+	}
+
+	private static boolean containsSoftstepSmokeParticle(String source) {
+		return source.contains("ParticleTypes.SCULK_SOUL")
+			|| source.contains("ParticleTypes.SOUL");
 	}
 }

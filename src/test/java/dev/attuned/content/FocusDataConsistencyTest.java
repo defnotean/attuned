@@ -136,10 +136,6 @@ class FocusDataConsistencyTest {
 		"attuned:harborlight_focus", 1.0D,
 		"attuned:linecast_focus", 1.0D,
 		"attuned:netmender_focus", 1.0D);
-	private static final Path REVENANT_SOURCE =
-		Path.of("docs/superpowers/assets/revenant-foci/revenant-foci-concept-source.png");
-	private static final Path REVENANT_REPORT =
-		Path.of("docs/superpowers/assets/revenant-foci/revenant-foci-report.json");
 
 	@Test
 	void shippedFocusRegistrationsListAndDefinitionsStayInStep() throws IOException {
@@ -519,17 +515,9 @@ class FocusDataConsistencyTest {
 		assertEquals(REVENANT_FOCUS_ITEMS, revenantItems,
 			"The Revenant release should declare its planned Foci and Gravebind anchor");
 		assertLanguageKey(lang, "faction.attuned.revenant");
-		assertTrue(Files.isRegularFile(REVENANT_SOURCE),
-			"Revenant art should keep its concept source sheet");
-		assertTrue(Files.isRegularFile(REVENANT_REPORT),
-			"Revenant art should keep a reproducible texture build report");
-		String report = Files.readString(REVENANT_REPORT, StandardCharsets.UTF_8);
 		for (String item : REVENANT_FOCUS_ITEMS) {
 			String name = attunedPath(item);
-			if (!"gravebind_focus".equals(name)) {
-				assertTrue(report.contains(name),
-					"Revenant report should list each generated texture: " + name);
-			}
+			assertAnimatedFocusTexture(name);
 		}
 	}
 

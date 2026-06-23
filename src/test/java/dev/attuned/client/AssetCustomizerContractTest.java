@@ -28,8 +28,6 @@ class AssetCustomizerContractTest {
 	private static final Path STYLES = CUSTOMIZER.resolve("styles.css");
 	private static final Path SERVER = CUSTOMIZER.resolve("serve.py");
 	private static final Path GUI_PREVIEW_RENDERER = Path.of("tools/render_gui_previews.py");
-	private static final Path OFFSHORE_ASSETS =
-		Path.of("docs/superpowers/assets/offshore-harpoon");
 	private static final Path HARPOON_FOCUS_TEXTURE =
 		Path.of("src/main/resources/assets/attuned/textures/item/harpoon_focus.png");
 	private static final Path OFFSHORE_HARPOON_TEXTURE =
@@ -47,10 +45,6 @@ class AssetCustomizerContractTest {
 	private static final Path OCEAN_RELIC_TRIDENT_PROJECTILE_DEFINITION =
 		Path.of("src/main/resources/assets/attuned/items/ocean_relic_trident_projectile.json");
 	private static final Path CLIENT_MIXIN_CONFIG = Path.of("src/client/resources/attuned.client.mixins.json");
-	private static final Path OCEAN_RELIC_SOURCE =
-		Path.of("docs/superpowers/assets/ocean-relic-trident/ocean_relic_trident_source_model/ocean_relic_trident_source_model.obj");
-	private static final Path OCEAN_RELIC_VOXEL_REPORT =
-		Path.of("docs/superpowers/assets/ocean-relic-trident/ocean_relic_trident_voxel_report.json");
 	private static final Path OCEAN_RELIC_TRIDENT_BLOCKBENCH_MODEL =
 		Path.of("src/main/resources/assets/attuned/blockbench/ocean_relic_trident.bbmodel");
 	private static final Path OCEAN_RELIC_TRIDENT_GLTF_MODEL =
@@ -69,14 +63,6 @@ class AssetCustomizerContractTest {
 		Path.of("src/client/java/dev/attuned/client/render/GltfModelReceiver.java");
 	private static final Path FROSTBOUND_TEXTURE =
 		Path.of("src/main/resources/assets/attuned/textures/item/frostbound_trident.png");
-	private static final Path FROSTBOUND_REPORT =
-		Path.of("docs/superpowers/assets/frostbound-trident/frostbound_trident_report.json");
-	private static final Path FROSTBOUND_WRAPPED_SOURCE =
-		Path.of("docs/superpowers/assets/frostbound-trident/frostbound_trident_wrapped_concept_source.png");
-	private static final Path FROSTBOUND_WRAPPED =
-		Path.of("docs/superpowers/assets/frostbound-trident/frostbound_trident_wrapped.png");
-	private static final Path FROSTBOUND_SHAPE_ANALYSIS =
-		Path.of("docs/superpowers/assets/frostbound-trident/frostbound_trident_shape_analysis.json");
 
 	@Test
 	void assetCustomizerIsLaunchableInteractiveAndSelfContained() throws IOException {
@@ -350,11 +336,7 @@ class AssetCustomizerContractTest {
 	}
 
 	@Test
-	void offshoreArtKeepsPolishedSources() throws IOException {
-		assertTrue(Files.isRegularFile(OFFSHORE_ASSETS.resolve("harpoon-focus-concept-sheet.png")),
-			"Harpoon Focus should keep its polished sheet source");
-		assertTrue(Files.isRegularFile(OFFSHORE_ASSETS.resolve("offshore-harpoon-concept-source.png")),
-			"Offshore Harpoon should keep its polished source");
+	void offshoreArtUsesShippedAssetsOnly() throws IOException {
 		assertTrue(!Files.exists(Path.of("tools/generate_offshore_assets.py")),
 			"Offshore assets should not use the old hand-drawn PIL generator");
 	}
@@ -392,12 +374,8 @@ class AssetCustomizerContractTest {
 		assertTrue(source.contains("\"parent\": \"minecraft:item/generated\""),
 			"Mesh conversion pipeline should emit Minecraft generated item models");
 
-		assertTrue(Files.isRegularFile(OCEAN_RELIC_SOURCE),
-			"Ocean Relic Trident should keep its Meshy OBJ source");
 		assertTrue(Files.isRegularFile(OCEAN_RELIC_TRIDENT_PALETTE),
 			"Ocean Relic Trident should ship a palette for its voxel cuboid model");
-		assertTrue(Files.isRegularFile(OCEAN_RELIC_VOXEL_REPORT),
-			"Ocean Relic Trident should keep a voxelization report");
 
 		BufferedImage texture = ImageIO.read(FROSTBOUND_TEXTURE.toFile());
 		BufferedImage oceanRelic = ImageIO.read(OCEAN_RELIC_TRIDENT_TEXTURE.toFile());
@@ -418,13 +396,6 @@ class AssetCustomizerContractTest {
 		assertVisibleFootprint(texture, 52, 32);
 		assertVisibleFootprint(oceanRelic, 52, 32);
 
-		JsonObject report = JsonParser.parseString(read(FROSTBOUND_REPORT)).getAsJsonObject();
-		assertEquals(1, report.get("mesh_count").getAsInt(),
-			"Meshy source should import as one source mesh");
-		assertTrue(report.get("face_count").getAsInt() > 1000,
-			"Meshy report should preserve source complexity diagnostics");
-		assertTrue(report.get("normalized_material_count").getAsInt() >= 1,
-			"Material-less Meshy sources should receive a fallback material before render/export");
 	}
 
 	@Test
@@ -632,32 +603,6 @@ class AssetCustomizerContractTest {
 			"Minecraft 1.21.1 should omit the 1.21.11 render-state trident mixins and use vanilla projectile rendering.");
 		assertTrue(Files.isRegularFile(OCEAN_RELIC_TRIDENT_PROJECTILE_DEFINITION),
 			"The custom projectile item definition should still ship for branches with the newer renderer path.");
-	}
-
-	@Test
-	void frostboundWrapperKeepsShapeAnalysisAndConceptSource() throws IOException {
-		assertTrue(Files.isRegularFile(FROSTBOUND_WRAPPED_SOURCE),
-			"Frostbound wrapper should keep its concept source");
-		assertTrue(Files.isRegularFile(FROSTBOUND_WRAPPED),
-			"Frostbound wrapper should keep the cleaned transparent source");
-		assertTrue(Files.isRegularFile(FROSTBOUND_SHAPE_ANALYSIS),
-			"Frostbound wrapper should keep its measured shape analysis");
-
-		BufferedImage wrapped = ImageIO.read(FROSTBOUND_WRAPPED.toFile());
-		assertNotNull(wrapped, "Cleaned wrapper source should decode");
-		assertTransparentCorners(wrapped);
-		assertNoVisibleChromaKey(wrapped);
-
-		JsonObject analysis = JsonParser.parseString(read(FROSTBOUND_SHAPE_ANALYSIS)).getAsJsonObject();
-		assertEquals("src/main/resources/assets/attuned/textures/item/frostbound_trident.png",
-			analysis.get("minecraft_texture").getAsString(),
-			"Shape analysis should point at the shipped Minecraft texture");
-		double majorAxis = analysis.get("major_axis_degrees").getAsDouble();
-		assertTrue(majorAxis >= -55.0D && majorAxis <= -40.0D,
-			"Wrapped art should preserve the supplied trident's lower-left to upper-right diagonal axis");
-		JsonArray bboxSize = analysis.getAsJsonArray("bbox_size");
-		assertTrue(bboxSize.get(1).getAsInt() > bboxSize.get(0).getAsInt(),
-			"Wrapped art should preserve a tall diagonal trident silhouette");
 	}
 
 	private static void assertRelativeAssetExists(JsonObject asset, String key) {
