@@ -35,7 +35,7 @@ public final class GltfMeshSpecialRenderer implements GltfModelReceiver {
 	private static final ResourceLocation MODEL =
 		new ResourceLocation(Attuned.MOD_ID, "gltf/ocean_relic_trident.glb");
 	private static final ResourceLocation TEXTURE =
-		new ResourceLocation(Attuned.MOD_ID, "textures/item/ocean_relic_trident_blockbench.png");
+		new ResourceLocation(Attuned.MOD_ID, "textures/item/ocean_relic_trident_mesh.png");
 	private static final String HARPOON_ROOT_KEY = "AttunedHarpoon";
 	private static final String HARPOON_MARKER_KEY = "marker";
 	private static final String HARPOON_MARKER_ID = "attuned:offshore_harpoon";
