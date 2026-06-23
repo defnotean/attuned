@@ -53,7 +53,7 @@ def build_metadata(*, changelog: str, version: str, minecraft_version: str,
     return {
         "changelog": current_changelog_section(changelog, version),
         "changelogType": "markdown",
-        "displayName": f"Attuned {version}",
+        "displayName": f"Fabric: Minecraft {minecraft_version} - Attuned {version}",
         "gameVersionNames": [
             minecraft_version,
             f"Java {java_version}",
