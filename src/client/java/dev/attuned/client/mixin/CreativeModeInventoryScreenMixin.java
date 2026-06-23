@@ -18,9 +18,16 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import org.spongepowered.asm.mixin.injection.invoke.arg.Args;
 
-import java.util.Optional;
-
-/** 1.20.6 creative Survival Inventory tab hook for Attuned's Focus side panel. */
+/**
+ * Brings the six Focus slots into the creative inventory's Survival Inventory
+ * tab.
+ *
+ * <p>The creative menu rebuilds its slots every tab switch by wrapping each slot
+ * of the real {@code InventoryMenu} — Focus slots included — in a private
+ * {@code SlotWrapper}. It lays them out with the vanilla inventory formula,
+ * which drops our slots on top of the hotbar, so we re-place each Focus wrapper
+ * into the side panel as it is built and draw the panel behind it.</p>
+ */
 @Mixin(CreativeModeInventoryScreen.class)
 public abstract class CreativeModeInventoryScreenMixin
 		extends AbstractContainerScreen<CreativeModeInventoryScreen.ItemPickerMenu> {
@@ -29,9 +36,15 @@ public abstract class CreativeModeInventoryScreenMixin
 	public abstract boolean isInventoryOpen();
 
 	private CreativeModeInventoryScreenMixin() {
+		// Never invoked; mixin classes are not instantiated.
 		super(null, null, null);
 	}
 
+	/**
+	 * Each Focus slot is wrapped with the wrong screen coordinates. We catch the
+	 * wrapper as it is constructed and, when it wraps a {@link FocusSlot}, move it
+	 * into the side panel column instead.
+	 */
 	@ModifyArgs(
 		method = "selectTab",
 		require = 1,
@@ -49,8 +62,9 @@ public abstract class CreativeModeInventoryScreenMixin
 	}
 
 	@Inject(method = "renderBg", at = @At("TAIL"))
-	private void attuned$drawFocusPanel(GuiGraphics graphics, float partialTick, int mouseX, int mouseY,
-			CallbackInfo ci) {
+	private void attuned$drawFocusPanel(GuiGraphics graphics, float partialTick, int mouseX, int mouseY, CallbackInfo ci) {
+		// The Focus-slot suppression flag is a survival-only, recipe-book concern;
+		// clear it so the creative slots are never left hidden by a stale value.
 		FocusSlot.setSuppressed(false);
 		if (!this.isInventoryOpen()) {
 			return;
@@ -61,26 +75,19 @@ public abstract class CreativeModeInventoryScreenMixin
 		}
 		FocusPanel.draw(graphics, this.leftPos, this.topPos,
 			FocusLayout.CREATIVE_X, FocusLayout.CREATIVE_Y, player);
-	}
-
-	@Inject(method = "render", at = @At("TAIL"))
-	private void attuned$renderFocusReadoutTooltip(GuiGraphics graphics, int mouseX, int mouseY,
-			float partialTick, CallbackInfo ci) {
-		if (!this.isInventoryOpen()
-				|| !FocusPanel.overReadout(FocusLayout.CREATIVE_X, FocusLayout.CREATIVE_Y,
-					mouseX - this.leftPos, mouseY - this.topPos)) {
-			return;
-		}
-		Player player = Minecraft.getInstance().player;
-		if (player != null) {
-			graphics.renderTooltip(this.font, AttunementReadout.tooltip(player),
-				Optional.empty(), mouseX, mouseY);
+		if (FocusPanel.overReadout(FocusLayout.CREATIVE_X, FocusLayout.CREATIVE_Y,
+				mouseX - this.leftPos, mouseY - this.topPos)) {
+			graphics.renderComponentTooltip(this.font, AttunementReadout.tooltip(AttunementReadout.cached(player)), mouseX, mouseY);
 		}
 	}
 
+	/**
+	 * The Focus panel sits past the creative window's left edge, which {@code
+	 * hasClickedOutside} would otherwise flag as outside the GUI — turning a
+	 * place/take on a Focus slot into a drop. Veto that flag over the panel.
+	 */
 	@Inject(method = "hasClickedOutside", at = @At("HEAD"), cancellable = true)
-	private void attuned$keepFocusPanelInside(double mx, double my, int xo, int yo, int button,
-			CallbackInfoReturnable<Boolean> cir) {
+	private void attuned$keepFocusPanelInside(double mx, double my, int xo, int yo, CallbackInfoReturnable<Boolean> cir) {
 		if (this.isInventoryOpen()
 				&& FocusPanel.withinPanel(FocusLayout.CREATIVE_X, FocusLayout.CREATIVE_Y, mx - xo, my - yo)) {
 			cir.setReturnValue(false);

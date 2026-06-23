@@ -12,5 +12,31 @@
 	"item.example.example_warmth_focus": "Warmth Focus",
 	"item.example.example_warmth_focus.lore": "A coal that never cools.",
 	"item.example.example_warmth_focus.lore2": "It wakes only where the world burns.",
-	"item.example.example_warmth_focus.effect": "Grants Fire Resistance while in the Nether."
+	"item.example.example_warmth_focus.effect": "Grants Fire Resistance while in the Nether.",
+
+	"item.example.example_canopy_focus": "Canopy Focus",
+	"item.example.example_canopy_focus.lore": "Leaves remember how to catch you.",
+	"item.example.example_canopy_focus.lore2": "Step lightly beneath the green.",
+	"item.example.example_canopy_focus.effect": "Grants Slow Falling near leaves.",
+
+	"item.example.example_route_focus": "Route Focus",
+	"item.example.example_route_focus.lore": "A compass that trusts the map.",
+	"item.example.example_route_focus.lore2": "Plot the route, then move.",
+	"item.example.example_route_focus.effect": "Using a filled map grants Speed briefly.",
+
+	"item.example.example_rescue_focus": "Rescue Focus",
+	"item.example.example_rescue_focus.lore": "A promise held below the waves.",
+	"item.example.example_rescue_focus.lore2": "The Circle carries one more breath.",
+	"item.example.example_rescue_focus.effect": "Helps a drowning Circle member on cooldown.",
+	"message.example.rescue_assist": "%s pulls a breath toward you.",
+
+	"item.example.example_brand_focus": "Brand Focus",
+	"item.example.example_brand_focus.lore": "A spark that remembers its target.",
+	"item.example.example_brand_focus.lore2": "Mark first, punish second.",
+	"item.example.example_brand_focus.effect": "Two charged hits apply Weakness.",
+
+	"item.example.example_windrose_focus": "Windrose Focus",
+	"item.example.example_windrose_focus.lore": "A quiet needle for shared roads.",
+	"item.example.example_windrose_focus.lore2": "It trusts only marks your Circle placed.",
+	"item.example.example_windrose_focus.effect": "Shows the direction to the latest Circle ping."
 }

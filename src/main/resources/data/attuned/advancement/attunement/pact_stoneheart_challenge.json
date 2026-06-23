@@ -5,7 +5,7 @@
 			"id": "attuned:bulwark_focus"
 		},
 		"title": "Unbroken",
-		"description": "Survive a heavy hit while Stoneheart is active.",
+		"description": "Survive a heavy foe hit while Stoneheart is active.",
 		"frame": "challenge",
 		"show_toast": true,
 		"announce_to_chat": true,

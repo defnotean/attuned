@@ -75,6 +75,9 @@ public final class MaskBehavior implements FocusBehavior {
 		if (!(target instanceof ServerPlayer player)) {
 			return false;
 		}
+		if (VeilBehavior.isVeiled(player)) {
+			return false;
+		}
 		State state = STATES.get(player.getUUID());
 		return state != null && state.resistTicks > 0;
 	}

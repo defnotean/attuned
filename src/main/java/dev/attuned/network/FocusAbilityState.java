@@ -1,6 +1,5 @@
 package dev.attuned.network;
 
-import dev.attuned.compat.PlayerMessages;
 import dev.attuned.Attuned;
 import dev.attuned.AttunedPlayerCleanup;
 import dev.attuned.AttunedRegistries;
@@ -16,10 +15,11 @@ import dev.attuned.onboarding.Onboarding;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
-import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.ItemStack;
@@ -40,14 +40,20 @@ public final class FocusAbilityState {
 		}
 		initialized = true;
 		ServerTickEvents.END_SERVER_TICK.register(FocusAbilityState::tick);
-		AttunedServerCleanup.onStop(() -> {
-			COOLDOWNS.clear();
-			LAST_SENT.clear();
+		ServerLifecycleEvents.END_DATA_PACK_RELOAD.register((server, resourceManager, success) -> {
+			if (success) {
+				clearCooldownState();
+			}
 		});
+		AttunedServerCleanup.onStop(FocusAbilityState::clearCooldownState);
 		AttunedPlayerCleanup.onForget(uuid -> {
-			COOLDOWNS.keySet().removeIf(key -> key.playerId().equals(uuid));
 			LAST_SENT.remove(uuid);
 		});
+	}
+
+	private static void clearCooldownState() {
+		COOLDOWNS.clear();
+		LAST_SENT.clear();
 	}
 
 	public static void trigger(ServerPlayer player) {
@@ -60,7 +66,8 @@ public final class FocusAbilityState {
 			if (Apex.tryIdentityAbility(player)) {
 				return;
 			}
-			PlayerMessages.overlay(player, Component.translatable("item.attuned.focus_ability.none"));
+			ActionBarMessages.send(player, ActionBarMessages.Priority.WARNING,
+				Component.translatable("item.attuned.focus_ability.none"));
 			sync(player, FocusAbilityStatusPayload.NO_ABILITY_SLOT, 0, 0);
 			return;
 		}
@@ -68,8 +75,9 @@ public final class FocusAbilityState {
 		int remaining = cooldownRemaining(player, selection);
 		if (remaining > 0) {
 			Cooldown cooldown = COOLDOWNS.get(selection.cooldownKey(player.getUUID()));
-			PlayerMessages.overlay(player, Component.translatable(
-				"item.attuned.focus_ability.cooldown", cooldownSecondsForMessage(remaining)));
+			ActionBarMessages.send(player, ActionBarMessages.Priority.WARNING,
+				Component.translatable(
+					"item.attuned.focus_ability.cooldown", cooldownSecondsForMessage(remaining)));
 			sync(player, selection.slot(), remaining,
 				cooldown == null ? abilityCooldownTicks(selection.behavior(), player, selection.stack()) : cooldown.totalTicks());
 			return;
@@ -98,13 +106,17 @@ public final class FocusAbilityState {
 		AttunedInv inv = AttunedAttachments.getInventory(player);
 		for (int slot : Attunement.activeSlots(player)) {
 			ItemStack stack = inv.get(slot);
-			FocusBehavior behavior = Attunement.definitionFor(player, stack)
-				.flatMap(FocusDefinition::behavior)
-				.map(behaviorId -> AttunedRegistries.getBehavior(behaviorId, player.registryAccess()))
-				.orElse(null);
+			FocusDefinition definition = Attunement.definitionFor(player, stack).orElse(null);
+			if (definition == null) {
+				continue;
+			}
+			ResourceLocation behaviorId = definition.behavior().orElse(null);
+			if (behaviorId == null) {
+				continue;
+			}
+			FocusBehavior behavior = AttunedRegistries.getBehavior(behaviorId, player.registryAccess());
 			if (behavior != null && hasActiveAbility(behavior, player, stack)) {
-				String itemId = BuiltInRegistries.ITEM.getKey(stack.getItem()).toString();
-				return new AbilitySelection(slot, stack, behavior, itemId);
+				return new AbilitySelection(slot, stack, behavior, behaviorId.toString());
 			}
 		}
 		return null;
@@ -137,6 +149,7 @@ public final class FocusAbilityState {
 
 	private static void tick(MinecraftServer server) {
 		long now = server.overworld().getGameTime();
+		pruneExpiredCooldowns(now);
 		if (now % SYNC_INTERVAL_TICKS != 0) {
 			return;
 		}
@@ -162,6 +175,10 @@ public final class FocusAbilityState {
 			}
 			sync(player, selection.slot(), remaining, total);
 		}
+	}
+
+	private static void pruneExpiredCooldowns(long now) {
+		COOLDOWNS.entrySet().removeIf(entry -> entry.getValue().endsAt() <= now);
 	}
 
 	private static boolean hasActiveAbility(FocusBehavior behavior, ServerPlayer player, ItemStack stack) {
@@ -212,13 +229,13 @@ public final class FocusAbilityState {
 			payload.remainingTicks(), payload.totalTicks()));
 	}
 
-	record AbilitySelection(int slot, ItemStack stack, FocusBehavior behavior, String itemId) {
+	record AbilitySelection(int slot, ItemStack stack, FocusBehavior behavior, String abilityId) {
 		AbilityCooldownKey cooldownKey(UUID playerId) {
-			return new AbilityCooldownKey(playerId, itemId);
+			return new AbilityCooldownKey(playerId, abilityId);
 		}
 	}
 
-	private record AbilityCooldownKey(UUID playerId, String itemId) {
+	private record AbilityCooldownKey(UUID playerId, String abilityId) {
 	}
 
 	private record Cooldown(long endsAt, int totalTicks) {

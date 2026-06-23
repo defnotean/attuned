@@ -180,7 +180,7 @@ public final class AttunedAttachments {
 		for (int i = 0; i < Math.min(MAX_PRESETS, presets.size()); i++) {
 			FocusPreset preset = presets.get(i);
 			if (preset != null) {
-				normalized.add(new FocusPreset(preset.name(), preset.slots()));
+				normalized.add(new FocusPreset(preset.name(), preset.slots(), preset.metadata()));
 			}
 		}
 		return List.copyOf(normalized);

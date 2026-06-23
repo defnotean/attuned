@@ -150,6 +150,16 @@ public final class Resonance {
 		add(player, amount);
 	}
 
+	/** Whether the player recently dealt or received valid combat resonance pressure. */
+	public static boolean recentlyInCombat(Player player, long nowTick, long windowTicks) {
+		Long lastCombat = LAST_COMBAT_TICK.get(player.getUUID());
+		if (lastCombat == null) {
+			return false;
+		}
+		long elapsed = nowTick - lastCombat;
+		return elapsed >= 0L && elapsed <= Math.max(0L, windowTicks);
+	}
+
 	/** AFTER_DAMAGE: gain on empowered hits dealt, drain on neutralized hits taken. */
 	private static void afterDamage(LivingEntity defender, DamageSource source,
 			float originalDamage, float dealtDamage, boolean blocked) {
@@ -157,7 +167,7 @@ public final class Resonance {
 			return;
 		}
 		LivingEntity attacker = AttunedCombat.attackerOf(source);
-		if (attacker == defender) {
+		if (attacker == null || attacker == defender) {
 			return;
 		}
 		PlayerCombatState defenderState = null;
@@ -170,7 +180,8 @@ public final class Resonance {
 		}
 		// Attacker side — gain when the matchup empowers us. Maelstrom uses a
 		// generic combat path because Discord deliberately has no single lane.
-		if (attacker instanceof Player attackerPlayer) {
+		if (attacker instanceof Player attackerPlayer
+				&& CombatTargets.isHostileOrPvpOpponent(defender, attackerPlayer)) {
 			float hitEmpoweredGainPerDamage = AttunedConfig.get().resonanceHitEmpoweredGainPerDamage();
 			if (attackerState.isAt(Apex.Capstone.MAELSTROM)
 					&& hasAffinityPressure(defender, defenderState)) {
@@ -183,11 +194,13 @@ public final class Resonance {
 		}
 		// Defender side — drain when the matchup neutralizes us.
 		if (defender instanceof Player defenderPlayer && attacker != null
+				&& CombatTargets.isHostileOrPvpOpponent(attacker, defenderPlayer)
 				&& matchup(defenderState, attacker, attackerState) == Matchup.NEUTRALIZED) {
 			add(defenderPlayer, -AttunedConfig.get().resonanceHitNeutralizedLoss());
 			markCombat(defenderPlayer);
 		}
 		if (defender instanceof Player defenderPlayer && attacker != null
+				&& CombatTargets.isHostileOrPvpOpponent(attacker, defenderPlayer)
 				&& defenderState.isAt(Apex.Capstone.STILLPOINT)
 				&& hasAffinityPressure(attacker, attackerState)) {
 			add(defenderPlayer, KILL_NEUTRAL_GAIN);
@@ -199,6 +212,9 @@ public final class Resonance {
 	private static void afterDeath(LivingEntity entity, DamageSource source) {
 		LivingEntity attacker = AttunedCombat.attackerOf(source);
 		if (!(attacker instanceof Player player) || entity == player) {
+			return;
+		}
+		if (!CombatTargets.isHostileOrPvpOpponent(entity, player)) {
 			return;
 		}
 		PlayerCombatState attackerState = playerState(player);

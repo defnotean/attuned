@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import math
 import os
 import py_compile
 import re
@@ -9,6 +10,7 @@ import struct
 import subprocess
 import sys
 import tempfile
+import zipfile
 import zlib
 from pathlib import Path
 from typing import Iterable
@@ -16,6 +18,7 @@ from typing import Iterable
 ROOT = Path(__file__).resolve().parents[1]
 SRC_ROOT = ROOT / "src"
 PNG_RESOURCE_ROOT = SRC_ROOT / "main" / "resources"
+ROOT_ASSET_RELATIVE_DIR = Path("assets")
 ATTUNED_ASSET_RELATIVE_DIR = Path("src/main/resources/assets/attuned")
 ATTUNED_LANG_RELATIVE_FILE = Path("src/main/resources/assets/attuned/lang/en_us.json")
 MODRINTH_GALLERY_RELATIVE_DIR = Path("docs/modrinth-gallery")
@@ -27,6 +30,10 @@ JAVA_SOURCE_RELATIVE_DIRS = (
     Path("src/client/java"),
 )
 FOCUS_DEFINITION_RELATIVE_DIR = Path("src/main/resources/data/attuned/attuned/focus")
+FOCUS_BEHAVIOR_SCAN_RELATIVE_ROOTS = (
+    Path("src/main/resources/data"),
+    Path("docs/example-pack/data"),
+)
 GRADLE_PROPERTIES_RELATIVE_FILE = Path("gradle.properties")
 BUILD_GRADLE_RELATIVE_FILE = Path("build.gradle")
 CHANGELOG_RELATIVE_FILE = Path("CHANGELOG.md")
@@ -46,6 +53,16 @@ EXPECTED_MODRINTH_GALLERY_PNGS = (
     "attuned-zephyr-foci.png",
 )
 MODRINTH_GALLERY_SIZE = (1920, 1080)
+FOCUS_TEXTURE_WIDTH = 64
+FOCUS_TEXTURE_FRAME_HEIGHT = 64
+FORBIDDEN_RELEASE_JAR_BASENAMES = {
+    "asset-verification.json",
+    "untracked-asset-manifest.json",
+    "asset-source-manifest.json",
+}
+FORBIDDEN_RELEASE_JAR_PARTS = {
+    "asset-sources",
+}
 
 SOURCE_SUFFIXES = {
     ".accesswidener",
@@ -161,6 +178,117 @@ PUBLIC_FOCUS_COUNT_RELATIVE_FILES = (
     Path("docs/platform/modrinth-description.md"),
     Path("docs/platform/curseforge-description.md"),
 )
+FOCUS_TRANSLATION_SUFFIXES = ("", ".lore", ".lore2", ".effect")
+FACTION_SET_BONUS_REQUIRED_TEXT = "3 active Foci"
+FACTION_SET_BONUS_FORBIDDEN_TERMS = ("inventory", "affinity lane", "counter wheel")
+SETUP_GUIDE_PAGE_KEYS = (
+    "journal.attuned.page11",
+    "journal.attuned.page12",
+    "journal.attuned.page13",
+)
+SETUP_GUIDE_FORBIDDEN_PHRASES = (
+    "must run",
+    "required",
+    "mandatory",
+    "best build",
+    "best meta build",
+    "meta build",
+    "only correct",
+    "one correct",
+)
+FOCUS_BEHAVIOR_TYPES = {
+    "attuned:conditional_mob_effect",
+    "attuned:on_hit_effect",
+    "attuned:periodic_effect",
+    "attuned:attribute_while",
+    "attuned:block_context_effect",
+    "attuned:use_item_window",
+    "attuned:party_assist",
+    "attuned:marked_target",
+    "attuned:navigation_hint",
+}
+FOCUS_BEHAVIOR_EFFECT_TYPES = {
+    "attuned:conditional_mob_effect",
+    "attuned:on_hit_effect",
+    "attuned:periodic_effect",
+    "attuned:block_context_effect",
+}
+FOCUS_CONDITION_TYPES = {
+    "in_rain",
+    "underwater",
+    "low_light",
+    "sneaking",
+    "on_block_tag",
+    "in_biome_tag",
+}
+FOCUS_ATTRIBUTE_OPERATIONS = {
+    "add_value",
+    "add_multiplied_base",
+    "add_multiplied_total",
+}
+FOCUS_MARKED_TARGET_TRIGGERS = {
+    "charged_melee_hit",
+}
+FOCUS_NAVIGATION_TARGET_KINDS = {
+    "circle_leader",
+    "circle_ping",
+    "held_lodestone_compass",
+}
+FOCUS_PARTY_ASSIST_TRIGGERS = {
+    "periodic_scan",
+}
+FOCUS_PARTY_ASSIST_TARGET_FILTERS = {
+    "drowning_members",
+    "nearby_members",
+    "wounded_members",
+}
+FOCUS_BEHAVIOR_JAVA_RELATIVE_DIR = Path("src/main/java/dev/attuned/content/behavior")
+FOCUS_LIVE_STRUCTURE_SCAN_APIS = (
+    "findNearestMapStructure",
+    "locateStructure",
+    "getChunk(",
+    "getChunkSource(",
+    "getChunkSource().",
+)
+RELEASE_CLAIM_RELATIVE_FILES = (
+    Path("README.md"),
+    Path("docs/platform/modrinth-description.md"),
+    Path("docs/platform/curseforge-description.md"),
+)
+RELEASE_CLAIM_ARTIFACTS = (
+    (
+        "Circle runtime",
+        re.compile(r"\bCircles?\b", re.IGNORECASE),
+        (
+            Path("src/main/java/dev/attuned/party/CircleRuntime.java"),
+            Path("src/main/java/dev/attuned/network/CircleNetworking.java"),
+        ),
+    ),
+    (
+        "Circle snapshot / party HUD",
+        re.compile(r"\bparty\s+HUD\b", re.IGNORECASE),
+        (
+            Path("src/main/java/dev/attuned/network/CircleSnapshotPayload.java"),
+            Path("src/main/java/dev/attuned/network/CircleSnapshotSync.java"),
+        ),
+    ),
+    (
+        "shared credit",
+        re.compile(r"\bshared\s+credit\b", re.IGNORECASE),
+        (
+            Path("src/main/java/dev/attuned/party/CircleContributionPolicy.java"),
+        ),
+    ),
+)
+RELEASE_COPY_FORBIDDEN_TERMS = (
+    ".attuned-art-sources",
+    "asset-sources",
+    "asset source manifest",
+    "pixel clean",
+    "pixel-clean",
+    "untracked art",
+    "untracked asset workflow",
+)
 CHANGELOG_HEADING_PATTERN = re.compile(r"^##\s+Attuned\s+(?P<version>\S+)\b", re.MULTILINE)
 MODRINTH_CHANGELOG_PROVIDER_PATTERN = re.compile(
     r"^\s*changelog\s*=\s*providers\.provider\s*\{[^}]*currentChangelogSection\([^}]*\}\.get\(\)",
@@ -262,6 +390,328 @@ def check_src_json() -> str:
     return check_repository_json()
 
 
+def focus_behavior_palette_files(root: Path = ROOT) -> list[Path]:
+    files: set[Path] = set()
+    for relative_root in FOCUS_BEHAVIOR_SCAN_RELATIVE_ROOTS:
+        scan_root = root / relative_root
+        if not scan_root.is_dir():
+            continue
+        files.update(path for path in scan_root.glob("*/attuned/focus_behavior/*.json") if path.is_file())
+    return sorted(files)
+
+
+def _plain_int(value: object) -> bool:
+    return isinstance(value, int) and not isinstance(value, bool)
+
+
+def _finite_number(value: object) -> bool:
+    return isinstance(value, (int, float)) and not isinstance(value, bool) and math.isfinite(float(value))
+
+
+def _problem(path: Path, root: Path, field: str, expectation: str) -> str:
+    return f"{relative(path, root)}: {field} must be {expectation}"
+
+
+def _require_string(
+        data: dict[str, object],
+        field: str,
+        path: Path,
+        root: Path,
+        problems: list[str],
+        expectation: str = "a non-empty string") -> object:
+    value = data.get(field)
+    if not isinstance(value, str) or not value:
+        problems.append(_problem(path, root, field, expectation))
+    return value
+
+
+def _validate_optional_int_range(
+        data: dict[str, object],
+        field: str,
+        minimum: int,
+        maximum: int,
+        path: Path,
+        root: Path,
+        problems: list[str]) -> None:
+    if field not in data:
+        return
+    value = data[field]
+    if not _plain_int(value) or value < minimum or value > maximum:
+        problems.append(_problem(path, root, field, f"an integer in {minimum}..{maximum}"))
+
+
+def _validate_required_int_range(
+        data: dict[str, object],
+        field: str,
+        minimum: int,
+        maximum: int,
+        path: Path,
+        root: Path,
+        problems: list[str]) -> None:
+    value = data.get(field)
+    if not _plain_int(value) or value < minimum or value > maximum:
+        problems.append(_problem(path, root, field, f"an integer in {minimum}..{maximum}"))
+
+
+def _validate_optional_number_range(
+        data: dict[str, object],
+        field: str,
+        minimum: float,
+        maximum: float,
+        label: str,
+        path: Path,
+        root: Path,
+        problems: list[str]) -> None:
+    if field not in data:
+        return
+    value = data[field]
+    if not _finite_number(value) or float(value) < minimum or float(value) > maximum:
+        problems.append(_problem(path, root, field, f"a finite number in {label}"))
+
+
+def _validate_optional_bool(
+        data: dict[str, object],
+        field: str,
+        path: Path,
+        root: Path,
+        problems: list[str]) -> None:
+    if field in data and not isinstance(data[field], bool):
+        problems.append(_problem(path, root, field, "a boolean"))
+
+
+def _validate_required_bool(
+        data: dict[str, object],
+        field: str,
+        path: Path,
+        root: Path,
+        problems: list[str]) -> None:
+    if not isinstance(data.get(field), bool):
+        problems.append(_problem(path, root, field, "a boolean"))
+
+
+def _validate_focus_condition(value: object, path: Path, root: Path, field: str, problems: list[str]) -> None:
+    if not isinstance(value, dict):
+        problems.append(_problem(path, root, field, "a JSON object"))
+        return
+    condition = value.get("condition")
+    if not isinstance(condition, str):
+        problems.append(_problem(path, root, f"{field}.condition", "one of " + ", ".join(sorted(FOCUS_CONDITION_TYPES))))
+        return
+    if condition not in FOCUS_CONDITION_TYPES:
+        problems.append(
+            _problem(path, root, f"{field}.condition", "one of " + ", ".join(sorted(FOCUS_CONDITION_TYPES)))
+            + f" (found {condition})"
+        )
+    if condition == "low_light":
+        _validate_optional_int_range(value, "max_light", 0, 15, path, root, problems)
+    if condition in {"on_block_tag", "in_biome_tag"}:
+        _require_string(value, "tag", path, root, problems, "a resource id string")
+
+
+def _validate_focus_modifier(value: object, path: Path, root: Path, problems: list[str]) -> None:
+    if not isinstance(value, dict):
+        problems.append(_problem(path, root, "modifier", "a JSON object"))
+        return
+    attribute = value.get("attribute")
+    if not isinstance(attribute, str) or not attribute:
+        problems.append(_problem(path, root, "modifier.attribute", "a resource id string"))
+    amount = value.get("amount")
+    if not _finite_number(amount) or float(amount) < -1024.0 or float(amount) > 1024.0:
+        problems.append(_problem(path, root, "modifier.amount", "a finite number in -1024..1024"))
+    operation = value.get("operation")
+    if not isinstance(operation, str) or operation not in FOCUS_ATTRIBUTE_OPERATIONS:
+        problems.append(
+            _problem(path, root, "modifier.operation", "one of " + ", ".join(sorted(FOCUS_ATTRIBUTE_OPERATIONS)))
+        )
+
+
+def _validate_marked_target_effect(value: object, path: Path, root: Path, problems: list[str]) -> None:
+    if not isinstance(value, dict):
+        problems.append(_problem(path, root, "effect_on_consume", "a JSON object"))
+        return
+    effect = value.get("effect")
+    if not isinstance(effect, str) or not effect:
+        problems.append(_problem(path, root, "effect_on_consume.effect", "a resource id string"))
+    duration = value.get("duration_ticks")
+    if not _plain_int(duration) or duration < 1 or duration > 1_000_000:
+        problems.append(_problem(path, root, "effect_on_consume.duration_ticks", "an integer in 1..1000000"))
+    amplifier = value.get("amplifier")
+    if amplifier is not None and (not _plain_int(amplifier) or amplifier < 0 or amplifier > 255):
+        problems.append(_problem(path, root, "effect_on_consume.amplifier", "an integer in 0..255"))
+    if "target_self" in value and not isinstance(value["target_self"], bool):
+        problems.append(_problem(path, root, "effect_on_consume.target_self", "a boolean"))
+
+
+def _validate_party_assist_effect(value: object, path: Path, root: Path, problems: list[str]) -> None:
+    if not isinstance(value, dict):
+        problems.append(_problem(path, root, "effect", "a JSON object"))
+        return
+    effect = value.get("effect")
+    if not isinstance(effect, str) or not effect:
+        problems.append(_problem(path, root, "effect.effect", "a resource id string"))
+    duration = value.get("duration_ticks")
+    if not _plain_int(duration) or duration < 1 or duration > 1_000_000:
+        problems.append(_problem(path, root, "effect.duration_ticks", "an integer in 1..1000000"))
+    amplifier = value.get("amplifier")
+    if amplifier is not None and (not _plain_int(amplifier) or amplifier < 0 or amplifier > 255):
+        problems.append(_problem(path, root, "effect.amplifier", "an integer in 0..255"))
+
+
+def _validate_focus_behavior_palette_data(data: dict[str, object], path: Path, root: Path) -> list[str]:
+    problems: list[str] = []
+    type_id = data.get("type")
+    if not isinstance(type_id, str):
+        return [_problem(path, root, "type", "one of " + ", ".join(sorted(FOCUS_BEHAVIOR_TYPES)))]
+    if type_id not in FOCUS_BEHAVIOR_TYPES:
+        return [
+            _problem(path, root, "type", "one of " + ", ".join(sorted(FOCUS_BEHAVIOR_TYPES)))
+            + f" (found {type_id})"
+        ]
+
+    if type_id in FOCUS_BEHAVIOR_EFFECT_TYPES:
+        _require_string(data, "effect", path, root, problems, "a resource id string")
+        _validate_optional_int_range(data, "amplifier", 0, 255, path, root, problems)
+        _validate_optional_int_range(data, "duration_ticks", 1, 1_000_000, path, root, problems)
+    if type_id in {"attuned:conditional_mob_effect", "attuned:periodic_effect"}:
+        _validate_optional_int_range(data, "refresh_ticks", 1, 1_000_000, path, root, problems)
+    if type_id == "attuned:conditional_mob_effect":
+        _validate_focus_condition(data.get("condition"), path, root, "condition", problems)
+    if type_id == "attuned:on_hit_effect":
+        _validate_optional_number_range(data, "charge_threshold", 0.0, 1.0, "0..1", path, root, problems)
+        _validate_optional_bool(data, "target_self", path, root, problems)
+        _validate_optional_bool(data, "hostile_only", path, root, problems)
+    if type_id == "attuned:attribute_while":
+        _validate_focus_modifier(data.get("modifier"), path, root, problems)
+        _validate_focus_condition(data.get("condition"), path, root, "condition", problems)
+    if type_id == "attuned:block_context_effect":
+        _require_string(data, "block_tag", path, root, problems, "a resource id string")
+        _validate_optional_int_range(data, "radius", 0, 5, path, root, problems)
+        _validate_optional_bool(data, "requires_lit", path, root, problems)
+        _validate_optional_int_range(data, "refresh_ticks", 10, 1_000_000, path, root, problems)
+    if type_id == "attuned:use_item_window":
+        has_item = isinstance(data.get("item"), str) and bool(data.get("item"))
+        has_item_tag = isinstance(data.get("item_tag"), str) and bool(data.get("item_tag"))
+        if has_item == has_item_tag:
+            problems.append(_problem(path, root, "item/item_tag", "exactly one of item or item_tag"))
+        elif "item" in data and not has_item:
+            problems.append(_problem(path, root, "item", "a resource id string"))
+        elif "item_tag" in data and not has_item_tag:
+            problems.append(_problem(path, root, "item_tag", "a resource id string"))
+        _validate_required_int_range(data, "duration_ticks", 1, 1_000_000, path, root, problems)
+        _validate_required_int_range(data, "cooldown_ticks", 1, 1_000_000, path, root, problems)
+        if "effect" in data:
+            _require_string(data, "effect", path, root, problems, "a resource id string")
+            _validate_optional_int_range(data, "amplifier", 0, 255, path, root, problems)
+        if "modifier" in data:
+            _validate_focus_modifier(data.get("modifier"), path, root, problems)
+        if "effect" not in data and "modifier" not in data:
+            problems.append(_problem(path, root, "effect/modifier", "at least one of effect or modifier"))
+        if "condition" in data:
+            _validate_focus_condition(data.get("condition"), path, root, "condition", problems)
+    if type_id == "attuned:marked_target":
+        prime = data.get("prime_trigger")
+        if not isinstance(prime, str) or prime not in FOCUS_MARKED_TARGET_TRIGGERS:
+            problems.append(_problem(path, root, "prime_trigger",
+                "one of " + ", ".join(sorted(FOCUS_MARKED_TARGET_TRIGGERS))))
+        consume = data.get("consume_trigger")
+        if not isinstance(consume, str) or consume not in FOCUS_MARKED_TARGET_TRIGGERS:
+            problems.append(_problem(path, root, "consume_trigger",
+                "one of " + ", ".join(sorted(FOCUS_MARKED_TARGET_TRIGGERS))))
+        _validate_required_int_range(data, "mark_duration_ticks", 1, 1_000_000, path, root, problems)
+        _validate_required_int_range(data, "cooldown_ticks", 1, 1_000_000, path, root, problems)
+        _validate_marked_target_effect(data.get("effect_on_consume"), path, root, problems)
+    if type_id == "attuned:party_assist":
+        trigger = data.get("trigger")
+        if not isinstance(trigger, str) or trigger not in FOCUS_PARTY_ASSIST_TRIGGERS:
+            problems.append(_problem(path, root, "trigger",
+                "one of " + ", ".join(sorted(FOCUS_PARTY_ASSIST_TRIGGERS))))
+        _validate_required_int_range(data, "radius", 1, 64, path, root, problems)
+        _validate_required_int_range(data, "cooldown_ticks", 1, 1_000_000, path, root, problems)
+        target_filter = data.get("target_filter")
+        if not isinstance(target_filter, str) or target_filter not in FOCUS_PARTY_ASSIST_TARGET_FILTERS:
+            problems.append(_problem(path, root, "target_filter",
+                "one of " + ", ".join(sorted(FOCUS_PARTY_ASSIST_TARGET_FILTERS))))
+        _validate_party_assist_effect(data.get("effect"), path, root, problems)
+        _require_string(data, "message_key", path, root, problems)
+    if type_id == "attuned:navigation_hint":
+        target_kind = data.get("target_kind")
+        if not isinstance(target_kind, str) or target_kind not in FOCUS_NAVIGATION_TARGET_KINDS:
+            problems.append(_problem(path, root, "target_kind",
+                "one of " + ", ".join(sorted(FOCUS_NAVIGATION_TARGET_KINDS))))
+        _validate_required_int_range(data, "max_age_ticks", 1, 1_000_000, path, root, problems)
+        _validate_required_bool(data, "same_dimension_only", path, root, problems)
+        _validate_required_int_range(data, "feedback_cadence_ticks", 20, 1_000_000, path, root, problems)
+    return problems
+
+
+def focus_behavior_palette_problems(root: Path = ROOT) -> list[str]:
+    problems: list[str] = []
+    for path in focus_behavior_palette_files(root):
+        try:
+            data, duplicate_keys = load_json_with_duplicate_key_problems(path)
+        except json.JSONDecodeError as exc:
+            problems.append(f"{relative(path, root)}:{exc.lineno}:{exc.colno}: {exc.msg}")
+            continue
+        except OSError as exc:
+            problems.append(f"{relative(path, root)}: {exc}")
+            continue
+        for key in duplicate_keys:
+            problems.append(f"{relative(path, root)}: duplicate key {key}")
+        if not isinstance(data, dict):
+            problems.append(f"{relative(path, root)}: Focus behavior palette definition must be a JSON object")
+            continue
+        problems.extend(_validate_focus_behavior_palette_data(data, path, root))
+    return problems
+
+
+def check_focus_behavior_palette() -> str:
+    problems = focus_behavior_palette_problems()
+    if problems:
+        raise CheckFailed("Focus behavior palette", problems)
+    return f"Focus behavior palette: {len(focus_behavior_palette_files())} files"
+
+
+def focus_behavior_java_files(root: Path = ROOT) -> list[Path]:
+    behavior_dir = root / FOCUS_BEHAVIOR_JAVA_RELATIVE_DIR
+    if not behavior_dir.is_dir():
+        return []
+    files: list[Path] = []
+    for path in sorted(behavior_dir.glob("*.java")):
+        try:
+            source = path.read_text(encoding="utf-8")
+        except OSError:
+            continue
+        if "FocusBehavior" in source:
+            files.append(path)
+    return files
+
+
+def focus_live_structure_scan_problems(root: Path = ROOT) -> list[str]:
+    problems: list[str] = []
+    for path in focus_behavior_java_files(root):
+        try:
+            lines = path.read_text(encoding="utf-8").splitlines()
+        except OSError as exc:
+            problems.append(f"{relative(path, root)}: {exc}")
+            continue
+        for line_number, line in enumerate(lines, start=1):
+            stripped = line.strip()
+            for api in FOCUS_LIVE_STRUCTURE_SCAN_APIS:
+                if api in stripped:
+                    problems.append(
+                        f"{relative(path, root)}:{line_number}: Focus behaviors must store explicit "
+                        f"map/marker targets instead of live structure/chunk scans ({api})"
+                    )
+    return problems
+
+
+def check_focus_live_structure_scans(root: Path = ROOT) -> str:
+    problems = focus_live_structure_scan_problems(root)
+    if problems:
+        raise CheckFailed("Focus live structure scans", problems)
+    return f"Focus live structure scans: {len(focus_behavior_java_files(root))} behavior files checked"
+
+
 def png_dimensions(path: Path) -> tuple[int, int]:
     with path.open("rb") as handle:
         header = handle.read(33)
@@ -359,6 +809,57 @@ def png_mcmeta_problems(path: Path) -> list[str]:
     return problems
 
 
+def repository_root_for_resource_root(resource_root: Path) -> Path:
+    if (
+        resource_root.name == "resources"
+        and resource_root.parent.name == "main"
+        and resource_root.parent.parent.name == "src"
+    ):
+        return resource_root.parent.parent.parent
+    return ROOT
+
+
+def focus_texture_sheet_problems(root: Path = ROOT) -> list[str]:
+    focus_dir = root / FOCUS_DEFINITION_RELATIVE_DIR
+    texture_dir = root / ATTUNED_ASSET_RELATIVE_DIR / "textures" / "item"
+    problems: list[str] = []
+    if not focus_dir.is_dir():
+        return problems
+    for path in sorted(focus_dir.glob("*.json")):
+        try:
+            data = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError) as exc:
+            problems.append(f"{relative(path, root)}: {exc}")
+            continue
+        if not isinstance(data, dict):
+            continue
+        item = data.get("item")
+        if not isinstance(item, str) or not item.startswith("attuned:"):
+            continue
+        item_id = item.split(":", 1)[1]
+        texture = texture_dir / f"{item_id}.png"
+        if not texture.is_file():
+            problems.append(f"{relative(path, root)}: missing Focus texture sheet {relative(texture, root)}")
+            continue
+        try:
+            width, height = png_dimensions(texture)
+        except (OSError, ValueError):
+            continue
+        if (
+            width != FOCUS_TEXTURE_WIDTH
+            or height < FOCUS_TEXTURE_FRAME_HEIGHT
+            or height % FOCUS_TEXTURE_FRAME_HEIGHT != 0
+        ):
+            problems.append(
+                f"{relative(texture, root)}: expected animated {FOCUS_TEXTURE_WIDTH}px-wide Focus sheet "
+                f"with {FOCUS_TEXTURE_FRAME_HEIGHT}px frames, found {width}x{height}"
+            )
+        mcmeta = texture.with_name(texture.name + ".mcmeta")
+        if not mcmeta.is_file():
+            problems.append(f"{relative(texture, root)}: missing animation metadata {mcmeta.name}")
+    return problems
+
+
 def check_png_resources() -> str:
     png_files = sorted(PNG_RESOURCE_ROOT.rglob("*.png"))
     problems: list[str] = []
@@ -372,6 +873,7 @@ def check_png_resources() -> str:
         if not path.with_suffix("").is_file():
             problems.append(f"{relative(path)}: missing paired PNG")
         problems.extend(png_mcmeta_problems(path))
+    problems.extend(focus_texture_sheet_problems(repository_root_for_resource_root(PNG_RESOURCE_ROOT)))
     if problems:
         raise CheckFailed("PNG resource headers", problems)
     return f"PNG resource headers: {len(png_files)} files"
@@ -588,6 +1090,169 @@ def load_attuned_lang(root: Path = ROOT) -> dict[str, object]:
     if problems:
         raise ValueError("; ".join(problems))
     return data
+
+
+def focus_translation_item_prefix(item_id: str) -> str | None:
+    namespace, separator, path = item_id.partition(":")
+    if not separator or not namespace or not path:
+        return None
+    return f"item.{namespace}.{path.replace('/', '.')}"
+
+
+def faction_translation_key(faction_id: str) -> str | None:
+    namespace, separator, path = faction_id.partition(":")
+    if not separator or not namespace or not path:
+        return None
+    return f"faction.{namespace}.{path.replace('/', '.')}"
+
+
+def focus_translation_key_problems(root: Path = ROOT) -> list[str]:
+    try:
+        lang = load_attuned_lang(root)
+    except (OSError, json.JSONDecodeError, ValueError) as exc:
+        return [str(exc)]
+
+    focus_dir = root / FOCUS_DEFINITION_RELATIVE_DIR
+    if not focus_dir.is_dir():
+        return [f"{relative(focus_dir, root)}: missing FocusDefinition directory"]
+
+    problems: list[str] = []
+    for path in sorted(focus_dir.glob("*.json")):
+        try:
+            data, duplicate_keys = load_json_with_duplicate_key_problems(path)
+        except json.JSONDecodeError as exc:
+            problems.append(f"{relative(path, root)}:{exc.lineno}:{exc.colno}: {exc.msg}")
+            continue
+        except OSError as exc:
+            problems.append(f"{relative(path, root)}: {exc}")
+            continue
+        for key in duplicate_keys:
+            problems.append(f"{relative(path, root)}: duplicate key {key}")
+        if not isinstance(data, dict):
+            problems.append(f"{relative(path, root)}: Focus definition must be a JSON object")
+            continue
+        item_id = data.get("item")
+        if not isinstance(item_id, str):
+            problems.append(f"{relative(path, root)}: item must be a resource id string")
+            continue
+        prefix = focus_translation_item_prefix(item_id)
+        if prefix is None:
+            problems.append(f"{relative(path, root)}: item must be a resource id string")
+            continue
+        for suffix in FOCUS_TRANSLATION_SUFFIXES:
+            key = prefix + suffix
+            if key not in lang:
+                problems.append(f"{relative(path, root)}: missing lang {key}")
+    return problems
+
+
+def check_focus_translation_keys(root: Path = ROOT) -> str:
+    problems = focus_translation_key_problems(root)
+    if problems:
+        raise CheckFailed("Focus translation keys", problems)
+    count = sum(1 for path in (root / FOCUS_DEFINITION_RELATIVE_DIR).glob("*.json"))
+    return f"Focus translation keys: {count} Foci checked"
+
+
+def faction_translation_key_problems(root: Path = ROOT) -> list[str]:
+    try:
+        lang = load_attuned_lang(root)
+    except (OSError, json.JSONDecodeError, ValueError) as exc:
+        return [str(exc)]
+
+    focus_dir = root / FOCUS_DEFINITION_RELATIVE_DIR
+    if not focus_dir.is_dir():
+        return [f"{relative(focus_dir, root)}: missing FocusDefinition directory"]
+
+    problems: list[str] = []
+    seen_factions: set[str] = set()
+    for path in sorted(focus_dir.glob("*.json")):
+        try:
+            data, duplicate_keys = load_json_with_duplicate_key_problems(path)
+        except json.JSONDecodeError as exc:
+            problems.append(f"{relative(path, root)}:{exc.lineno}:{exc.colno}: {exc.msg}")
+            continue
+        except OSError as exc:
+            problems.append(f"{relative(path, root)}: {exc}")
+            continue
+        for key in duplicate_keys:
+            problems.append(f"{relative(path, root)}: duplicate key {key}")
+        if not isinstance(data, dict) or "faction" not in data:
+            continue
+        faction_id = data.get("faction")
+        if not isinstance(faction_id, str):
+            problems.append(f"{relative(path, root)}: faction must be a resource id string")
+            continue
+        faction_key = faction_translation_key(faction_id)
+        if faction_key is None:
+            problems.append(f"{relative(path, root)}: faction must be a resource id string")
+            continue
+        seen_factions.add(faction_id)
+        if faction_key not in lang:
+            problems.append(f"{relative(path, root)}: missing lang {faction_key}")
+
+    for key, value in sorted(lang.items()):
+        if not key.startswith("faction.") or ".set_bonus." not in key:
+            continue
+        if FACTION_SET_BONUS_REQUIRED_TEXT not in value:
+            problems.append(f"{ATTUNED_LANG_RELATIVE_FILE}: {key} must mention {FACTION_SET_BONUS_REQUIRED_TEXT}")
+        lowered = value.lower()
+        for term in FACTION_SET_BONUS_FORBIDDEN_TERMS:
+            if term in lowered:
+                problems.append(f"{ATTUNED_LANG_RELATIVE_FILE}: {key} must not mention {term}")
+    return problems
+
+
+def check_faction_translation_keys(root: Path = ROOT) -> str:
+    problems = faction_translation_key_problems(root)
+    if problems:
+        raise CheckFailed("Faction translation keys", problems)
+    faction_count = len({
+        faction_id
+        for path in (root / FOCUS_DEFINITION_RELATIVE_DIR).glob("*.json")
+        for faction_id in _focus_faction_ids(path)
+    })
+    return f"Faction translation keys: {faction_count} shipped factions checked"
+
+
+def setup_guide_copy_problems(root: Path = ROOT) -> list[str]:
+    try:
+        lang = load_attuned_lang(root)
+    except (OSError, json.JSONDecodeError, ValueError) as exc:
+        return [str(exc)]
+
+    problems: list[str] = []
+    for key in SETUP_GUIDE_PAGE_KEYS:
+        value = lang.get(key)
+        if not isinstance(value, str):
+            problems.append(f"{ATTUNED_LANG_RELATIVE_FILE}: missing setup guide page {key}")
+            continue
+        lowered = value.lower()
+        for phrase in SETUP_GUIDE_FORBIDDEN_PHRASES:
+            if phrase in lowered:
+                problems.append(
+                    f"{ATTUNED_LANG_RELATIVE_FILE}: {key} must frame builds as examples; "
+                    f"must not mention '{phrase}'"
+                )
+    return problems
+
+
+def check_setup_guide_copy(root: Path = ROOT) -> str:
+    problems = setup_guide_copy_problems(root)
+    if problems:
+        raise CheckFailed("Setup guide copy", problems)
+    return f"Setup guide copy: {len(SETUP_GUIDE_PAGE_KEYS)} pages checked"
+
+
+def _focus_faction_ids(path: Path) -> list[str]:
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return []
+    if not isinstance(data, dict):
+        return []
+    faction_id = data.get("faction")
+    return [faction_id] if isinstance(faction_id, str) else []
 
 
 def is_attuned_translation_key(key: str) -> bool:
@@ -809,6 +1474,8 @@ def public_focus_count_problems(root: Path = ROOT) -> list[str]:
     problems: list[str] = []
     for relative_file in PUBLIC_FOCUS_COUNT_RELATIVE_FILES:
         problems.extend(focus_count_doc_problems(root / relative_file, shipped_count, root))
+    if (root / CHANGELOG_RELATIVE_FILE).is_file() or (root / GRADLE_PROPERTIES_RELATIVE_FILE).is_file():
+        problems.extend(current_changelog_focus_count_problems(root))
     return problems
 
 
@@ -822,6 +1489,141 @@ def check_public_focus_counts() -> str:
     if problems:
         raise CheckFailed("Public Focus counts", problems)
     return f"Public Focus counts: {shipped_focus_definition_count()} Foci in {len(PUBLIC_FOCUS_COUNT_RELATIVE_FILES)} docs"
+
+
+def release_claim_files(root: Path = ROOT) -> list[Path]:
+    files = [root / relative_file for relative_file in RELEASE_CLAIM_RELATIVE_FILES]
+    platform_dir = root / "docs" / "platform"
+    if platform_dir.is_dir():
+        files.extend(sorted(platform_dir.glob("attuned-*-release-notes.md")))
+    return sorted({path for path in files if path.is_file()})
+
+
+def release_claim_problems(root: Path = ROOT) -> list[str]:
+    problems: list[str] = []
+    for doc in release_claim_files(root):
+        try:
+            text = doc.read_text(encoding="utf-8")
+        except OSError as exc:
+            problems.append(f"{relative(doc, root)}: {exc}")
+            continue
+        lowered = text.lower()
+        for term in RELEASE_COPY_FORBIDDEN_TERMS:
+            if term in lowered:
+                problems.append(
+                    f"{relative(doc, root)}: public release copy must not mention untracked asset workflow term '{term}'"
+                )
+        for claim_name, pattern, artifacts in RELEASE_CLAIM_ARTIFACTS:
+            if not pattern.search(text):
+                continue
+            missing = [path for path in artifacts if not (root / path).is_file()]
+            for path in missing:
+                problems.append(
+                    f"{relative(doc, root)}: claims {claim_name} but missing {path.as_posix()}"
+                )
+    return problems
+
+
+def check_release_claims() -> str:
+    problems = release_claim_problems()
+    if problems:
+        raise CheckFailed("Release-facing feature claims", problems)
+    return f"Release-facing feature claims: {len(release_claim_files())} docs checked"
+
+
+def repository_layout_problems(root: Path = ROOT) -> list[str]:
+    problems: list[str] = []
+    root_assets = root / ROOT_ASSET_RELATIVE_DIR
+    if root_assets.exists():
+        problems.append(
+            f"{ROOT_ASSET_RELATIVE_DIR}: generated root asset directory must not exist; "
+            "packaged assets belong under src/main/resources"
+        )
+    return problems
+
+
+def check_repository_layout() -> str:
+    problems = repository_layout_problems()
+    if problems:
+        raise CheckFailed("Repository layout", problems)
+    return "Repository layout: no generated root asset leakage"
+
+
+def release_jar_path(root: Path = ROOT) -> Path:
+    version = gradle_properties(root).get("mod_version")
+    if not version:
+        raise ValueError("gradle.properties: missing mod_version")
+    return root / "build" / "libs" / f"attuned-{version}.jar"
+
+
+def release_jar_expected_entries(root: Path = ROOT) -> list[str]:
+    focus_dir = root / FOCUS_DEFINITION_RELATIVE_DIR
+    entries = {"fabric.mod.json"}
+    if focus_dir.is_dir():
+        for path in sorted(focus_dir.glob("*.json")):
+            data = json.loads(path.read_text(encoding="utf-8"))
+            if not isinstance(data, dict):
+                continue
+            item = data.get("item")
+            if not isinstance(item, str) or not item.startswith("attuned:"):
+                continue
+            item_id = item.split(":", 1)[1]
+            entries.add(path.relative_to(root / "src" / "main" / "resources").as_posix())
+            entries.add(f"assets/attuned/items/{item_id}.json")
+            entries.add(f"assets/attuned/models/item/{item_id}.json")
+            entries.add(f"assets/attuned/textures/item/{item_id}.png")
+            entries.add(f"assets/attuned/textures/item/{item_id}.png.mcmeta")
+    return sorted(entries)
+
+
+def release_jar_problems(root: Path = ROOT, *, require: bool = False) -> list[str]:
+    try:
+        jar_path = release_jar_path(root)
+    except (OSError, ValueError) as exc:
+        return [str(exc)] if require else []
+    if not jar_path.is_file():
+        return [f"{relative(jar_path, root)}: missing release jar"] if require else []
+    try:
+        expected_entries = release_jar_expected_entries(root)
+        with zipfile.ZipFile(jar_path) as jar:
+            jar_entries = set(jar.namelist())
+    except (OSError, json.JSONDecodeError, zipfile.BadZipFile) as exc:
+        return [f"{relative(jar_path, root)}: {exc}"]
+    problems = [
+        f"{relative(jar_path, root)}: missing {entry}"
+        for entry in expected_entries
+        if entry not in jar_entries
+    ]
+    problems.extend(
+        f"{relative(jar_path, root)}: forbidden untracked asset artifact {entry}"
+        for entry in sorted(jar_entries)
+        if forbidden_release_jar_entry(entry)
+    )
+    return problems
+
+
+def forbidden_release_jar_entry(entry: str) -> bool:
+    parts = [part for part in entry.split("/") if part]
+    if Path(entry).name in FORBIDDEN_RELEASE_JAR_BASENAMES:
+        return True
+    return any(part in FORBIDDEN_RELEASE_JAR_PARTS for part in parts)
+
+
+def check_release_jar() -> str:
+    try:
+        jar_path = release_jar_path()
+    except (OSError, ValueError):
+        return "Release jar contents: skipped (jar not configured)"
+    problems = release_jar_problems()
+    if problems:
+        raise CheckFailed("Release jar contents", problems)
+    if not jar_path.is_file():
+        return "Release jar contents: skipped (jar not built)"
+    focus_entries = [
+        entry for entry in release_jar_expected_entries()
+        if entry.startswith("data/attuned/attuned/focus/")
+    ]
+    return f"Release jar contents: {len(focus_entries)} Focus definitions checked"
 
 
 def gradle_properties(root: Path = ROOT) -> dict[str, str]:
@@ -848,6 +1650,67 @@ def current_changelog_section(changelog: str, version: str) -> str:
             raise ValueError(f"CHANGELOG.md: empty Attuned {version} changelog section")
         return section
     raise ValueError(f"CHANGELOG.md: missing Attuned {version} changelog section")
+
+
+def changelog_sections(changelog: str) -> list[tuple[str, str]]:
+    headings = list(CHANGELOG_HEADING_PATTERN.finditer(changelog))
+    sections: list[tuple[str, str]] = []
+    for index, match in enumerate(headings):
+        end = headings[index + 1].start() if index + 1 < len(headings) else len(changelog)
+        sections.append((match.group("version"), changelog[match.start():end].strip()))
+    return sections
+
+
+def focus_counts_in_text(text: str) -> list[int]:
+    return [int(match.group("count")) for match in README_FOCI_PATTERN.finditer(text)]
+
+
+def previous_changelog_focus_count(changelog: str, current_version: str) -> int | None:
+    seen_current = False
+    for version, section in changelog_sections(changelog):
+        if version == current_version:
+            seen_current = True
+            continue
+        if not seen_current:
+            continue
+        counts = focus_counts_in_text(section)
+        if counts:
+            return max(counts)
+    return None
+
+
+def current_changelog_focus_count_problems(root: Path = ROOT) -> list[str]:
+    try:
+        version = gradle_properties(root).get("mod_version")
+    except OSError as exc:
+        return [f"gradle.properties: {exc}"]
+    if not version:
+        return ["gradle.properties: missing mod_version"]
+
+    try:
+        changelog = (root / CHANGELOG_RELATIVE_FILE).read_text(encoding="utf-8")
+        current = current_changelog_section(changelog, version)
+    except (OSError, ValueError) as exc:
+        return [str(exc)]
+
+    shipped_count = shipped_focus_definition_count(root)
+    current_counts = focus_counts_in_text(current)
+    if current_counts:
+        if shipped_count not in current_counts:
+            return [
+                f"CHANGELOG.md: Attuned {version} section mentions "
+                f"{', '.join(str(count) for count in sorted(set(current_counts)))} Foci "
+                f"but ships {shipped_count} Foci"
+            ]
+        return []
+
+    previous_count = previous_changelog_focus_count(changelog, version)
+    if previous_count is not None and previous_count != shipped_count:
+        return [
+            f"CHANGELOG.md: Attuned {version} section must mention {shipped_count} Foci "
+            f"because the shipped Focus roster changed from {previous_count}"
+        ]
+    return []
 
 
 def modrinth_changelog_problems(root: Path = ROOT) -> list[str]:
@@ -958,8 +1821,10 @@ def version_profile_problems(root: Path = ROOT) -> list[str]:
             )
         required_ci_snippets = {
             "git diff --check": "run whitespace diff check",
+            "python3 -m pip install -r requirements-dev.txt": "install Pillow/pytest image tooling dependencies",
             "tools/verify_repository.py": "run repository verification",
             "unittest discover -s tests": "run Python contract tests",
+            "python3 -m pytest tests/ -q": "run Pillow/pytest image tooling tests",
             "./gradlew test build --no-daemon": "run Gradle test/build",
             "tools/minecraft_runtime_smoke.py": "run Minecraft server smoke",
         }
@@ -991,12 +1856,20 @@ def check_version_profile() -> str:
 def run_checks() -> int:
     checks = (
         check_repository_json,
+        check_focus_behavior_palette,
+        check_focus_live_structure_scans,
+        check_repository_layout,
         check_png_resources,
         check_attuned_asset_references,
         check_language_files,
         check_static_translation_keys,
+        check_focus_translation_keys,
+        check_faction_translation_keys,
+        check_setup_guide_copy,
         check_modrinth_gallery_pngs,
         check_public_focus_counts,
+        check_release_claims,
+        check_release_jar,
         check_modrinth_changelog,
         check_version_profile,
         check_issue_markers,

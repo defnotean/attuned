@@ -2,13 +2,21 @@ package dev.attuned;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.google.gson.JsonObject;
 import com.mojang.serialization.JsonOps;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.function.Executable;
 
 class AttunedConfigContractTest {
+	private static final Path CONFIG_SOURCE = Path.of("src/main/java/dev/attuned/AttunedConfig.java");
+	private static final Path REFERENCE_DOC = Path.of("docs/reference.md");
+
 	@Test
 	void startingCapacityIsCappedAtCapacityCap() {
 		AttunedConfig direct = config(30, 12);
@@ -137,7 +145,20 @@ class AttunedConfigContractTest {
 			AttunedConfig.DEFAULT.resonanceKillEmpoweredGain(),
 			AttunedConfig.DEFAULT.resonanceDecayPerTick(),
 			AttunedConfig.DEFAULT.affinityLoomBaseShardCost(),
-			AttunedConfig.DEFAULT.affinityLoomMaxShardCost());
+			AttunedConfig.DEFAULT.affinityLoomMaxShardCost(),
+			AttunedConfig.DEFAULT.partyMaxMembers(),
+			AttunedConfig.DEFAULT.partySharedCreditRadius(),
+			AttunedConfig.DEFAULT.partySharedCreditWindowTicks(),
+			AttunedConfig.DEFAULT.partyInviteTtlTicks(),
+			AttunedConfig.DEFAULT.partyInviteCooldownTicks(),
+			AttunedConfig.DEFAULT.partyCreateCooldownTicks(),
+			AttunedConfig.DEFAULT.partyCrossDimensionCreditEnabled(),
+			AttunedConfig.DEFAULT.partyHudEnabled(),
+			AttunedConfig.DEFAULT.partySharedCreditEnabled(),
+			AttunedConfig.DEFAULT.partyTrialAssistsEnabled(),
+			AttunedConfig.DEFAULT.partyEffectsEnabled(),
+			AttunedConfig.DEFAULT.partyConfluenceHintsEnabled(),
+			AttunedConfig.DEFAULT.partySetupSuggestionsEnabled());
 	}
 
 	@Test
@@ -161,6 +182,181 @@ class AttunedConfigContractTest {
 	@Test
 	void directConfigRejectsMaxAffinityLoomCostBelowBase() {
 		assertInvalid(() -> loomConfig(3, 2));
+	}
+
+	@Test
+	void partyDefaultsMatchTheDocumentedSchema() {
+		assertEquals(4, AttunedConfig.DEFAULT.partyMaxMembers(),
+			"Circle cap should default to the dossier's four-player party foundation.");
+		assertEquals(48.0F, AttunedConfig.DEFAULT.partySharedCreditRadius(), 0.0001F,
+			"Shared-credit radius should default to the dossier's 48-block party foundation.");
+		assertEquals(200, AttunedConfig.DEFAULT.partySharedCreditWindowTicks(),
+			"Shared-credit contribution windows should default to ten seconds.");
+		assertEquals(1200, AttunedConfig.DEFAULT.partyInviteTtlTicks(),
+			"Circle invites should default to a 60-second expiration.");
+		assertEquals(200, AttunedConfig.DEFAULT.partyInviteCooldownTicks(),
+			"Circle invite spam protection should default to ten seconds.");
+		assertEquals(600, AttunedConfig.DEFAULT.partyCreateCooldownTicks(),
+			"Circle disband/recreate protection should default to thirty seconds.");
+		assertTrue(!AttunedConfig.DEFAULT.partyCrossDimensionCreditEnabled(),
+			"Cross-dimension shared credit should be disabled by default.");
+		assertTrue(AttunedConfig.DEFAULT.partyHudEnabled(),
+			"Server-owned Circle HUD snapshots should be enabled by default.");
+		assertTrue(AttunedConfig.DEFAULT.partySharedCreditEnabled(),
+			"Shared-credit systems should be enabled by default but separately configurable.");
+		assertTrue(AttunedConfig.DEFAULT.partyTrialAssistsEnabled(),
+			"Pact Trial assists should default on but stay separately configurable.");
+		assertTrue(AttunedConfig.DEFAULT.partyEffectsEnabled(),
+			"Party effects should be enabled by default but separately configurable.");
+		assertTrue(AttunedConfig.DEFAULT.partyConfluenceHintsEnabled(),
+			"Confluence discovery hints should default on but stay separately configurable.");
+		assertTrue(AttunedConfig.DEFAULT.partySetupSuggestionsEnabled(),
+			"Party/setup suggestions should default on so existing saved-build guidance remains visible.");
+	}
+
+	@Test
+	void partyKeysRoundTripThroughTheCodec() {
+		JsonObject json = new JsonObject();
+		json.addProperty("party_max_members", 8);
+		json.addProperty("party_shared_credit_radius", 64.0F);
+		json.addProperty("party_shared_credit_window_ticks", 400);
+		json.addProperty("party_invite_ttl_ticks", 2400);
+		json.addProperty("party_invite_cooldown_ticks", 300);
+		json.addProperty("party_create_cooldown_ticks", 900);
+		json.addProperty("party_cross_dimension_credit_enabled", true);
+		json.addProperty("party_hud_enabled", false);
+		json.addProperty("party_shared_credit_enabled", false);
+		json.addProperty("party_trial_assists_enabled", false);
+		json.addProperty("party_effects_enabled", false);
+		json.addProperty("party_confluence_hints_enabled", false);
+		json.addProperty("party_setup_suggestions_enabled", false);
+		AttunedConfig parsed = AttunedConfig.CODEC.parse(JsonOps.INSTANCE, json).getOrThrow();
+		assertEquals(8, parsed.partyMaxMembers());
+		assertEquals(64.0F, parsed.partySharedCreditRadius(), 0.0001F);
+		assertEquals(400, parsed.partySharedCreditWindowTicks());
+		assertEquals(2400, parsed.partyInviteTtlTicks());
+		assertEquals(300, parsed.partyInviteCooldownTicks());
+		assertEquals(900, parsed.partyCreateCooldownTicks());
+		assertTrue(parsed.partyCrossDimensionCreditEnabled());
+		assertEquals(false, parsed.partyHudEnabled());
+		assertEquals(false, parsed.partySharedCreditEnabled());
+		assertEquals(false, parsed.partyTrialAssistsEnabled());
+		assertEquals(false, parsed.partyEffectsEnabled());
+		assertEquals(false, parsed.partyConfluenceHintsEnabled());
+		assertEquals(false, parsed.partySetupSuggestionsEnabled());
+	}
+
+	@Test
+	void partyMaxMembersRejectsValuesOutsideTheDossierRange() {
+		JsonObject tooSmall = new JsonObject();
+		tooSmall.addProperty("party_max_members", 0);
+		JsonObject tooLarge = new JsonObject();
+		tooLarge.addProperty("party_max_members", 9);
+
+		assertTrue(AttunedConfig.CODEC.parse(JsonOps.INSTANCE, tooSmall).result().isEmpty(),
+			"Circle caps below one should be rejected rather than silently repaired.");
+		assertTrue(AttunedConfig.CODEC.parse(JsonOps.INSTANCE, tooLarge).result().isEmpty(),
+			"Circle caps above eight should be rejected so the party foundation stays small.");
+	}
+
+	@Test
+	void partySharedCreditTuningRejectsMalformedValues() {
+		JsonObject zeroRadius = new JsonObject();
+		zeroRadius.addProperty("party_shared_credit_radius", 0.0F);
+		JsonObject hugeRadius = new JsonObject();
+		hugeRadius.addProperty("party_shared_credit_radius", 129.0F);
+		JsonObject zeroWindow = new JsonObject();
+		zeroWindow.addProperty("party_shared_credit_window_ticks", 0);
+		JsonObject hugeWindow = new JsonObject();
+		hugeWindow.addProperty("party_shared_credit_window_ticks", 72001);
+
+		assertTrue(AttunedConfig.CODEC.parse(JsonOps.INSTANCE, zeroRadius).result().isEmpty(),
+			"Shared-credit radius should stay positive.");
+		assertTrue(AttunedConfig.CODEC.parse(JsonOps.INSTANCE, hugeRadius).result().isEmpty(),
+			"Shared-credit radius should stay bounded for nearby party play.");
+		assertTrue(AttunedConfig.CODEC.parse(JsonOps.INSTANCE, zeroWindow).result().isEmpty(),
+			"Contribution windows should require at least one tick.");
+		assertTrue(AttunedConfig.CODEC.parse(JsonOps.INSTANCE, hugeWindow).result().isEmpty(),
+			"Contribution windows should stay below one in-game hour.");
+	}
+
+	@Test
+	void partyCooldownTuningRejectsMalformedValues() {
+		for (String key : new String[] {
+				"party_invite_ttl_ticks",
+				"party_invite_cooldown_ticks",
+				"party_create_cooldown_ticks"}) {
+			JsonObject zero = new JsonObject();
+			zero.addProperty(key, 0);
+			JsonObject huge = new JsonObject();
+			huge.addProperty(key, 72001);
+
+			assertTrue(AttunedConfig.CODEC.parse(JsonOps.INSTANCE, zero).result().isEmpty(),
+				key + " should be at least one tick.");
+			assertTrue(AttunedConfig.CODEC.parse(JsonOps.INSTANCE, huge).result().isEmpty(),
+				key + " should stay below one in-game hour.");
+		}
+	}
+
+	@Test
+	void referenceDocsDocumentPartyServerToggles() throws IOException {
+		String reference = Files.readString(REFERENCE_DOC, StandardCharsets.UTF_8);
+		assertTrue(reference.contains("| `party_max_members` | 4 |"),
+			"Reference config table should document the server-side Circle member cap.");
+		assertTrue(reference.contains("| `party_shared_credit_radius` | 48.0 |"),
+			"Reference config table should document the shared-credit radius.");
+		assertTrue(reference.contains("| `party_shared_credit_window_ticks` | 200 |"),
+			"Reference config table should document the shared-credit contribution window.");
+		assertTrue(reference.contains("| `party_invite_ttl_ticks` | 1200 |"),
+			"Reference config table should document Circle invite expiry.");
+		assertTrue(reference.contains("| `party_invite_cooldown_ticks` | 200 |"),
+			"Reference config table should document Circle invite spam throttling.");
+		assertTrue(reference.contains("| `party_create_cooldown_ticks` | 600 |"),
+			"Reference config table should document Circle disband/recreate throttling.");
+		assertTrue(reference.contains("| `party_cross_dimension_credit_enabled` | false |"),
+			"Reference config table should document the cross-dimension shared-credit opt-in.");
+		assertTrue(reference.contains("| `party_hud_enabled` | true |"),
+			"Reference config table should document the server-side Circle HUD toggle.");
+		assertTrue(reference.contains("| `party_shared_credit_enabled` | true |"),
+			"Reference config table should document the shared-credit toggle separately from HUD.");
+		assertTrue(reference.contains("| `party_trial_assists_enabled` | true |"),
+			"Reference config table should document Pact Trial assists separately from shared-credit windows.");
+		assertTrue(reference.contains("| `party_effects_enabled` | true |"),
+			"Reference config table should document party-effect toggles separately from HUD.");
+		assertTrue(reference.contains("| `party_confluence_hints_enabled` | true |"),
+			"Reference config table should document Confluence discovery hints separately from combat shared credit.");
+		assertTrue(reference.contains("| `party_setup_suggestions_enabled` | true |"),
+			"Reference config table should document the optional setup/party suggestion layer.");
+	}
+
+	@Test
+	void partyConfigIncludesSeparateConfluenceHintToggle() throws IOException {
+		String source = Files.readString(CONFIG_SOURCE, StandardCharsets.UTF_8);
+		String reference = Files.readString(REFERENCE_DOC, StandardCharsets.UTF_8);
+
+		assertTrue(source.contains("boolean partyConfluenceHintsEnabled"),
+			"Confluence discovery hints should have their own party toggle instead of riding combat shared credit.");
+		assertTrue(source.contains("\"party_confluence_hints_enabled\""),
+			"The server config codec should persist the Confluence discovery hint toggle.");
+		assertTrue(source.contains("json.addProperty(\"party_confluence_hints_enabled\""),
+			"The rewritten config file should include the Confluence discovery hint toggle.");
+		assertTrue(reference.contains("| `party_confluence_hints_enabled` | true |"),
+			"Reference docs should document the Confluence discovery hint toggle.");
+	}
+
+	@Test
+	void partyConfigIncludesSeparateTrialAssistToggle() throws IOException {
+		String source = Files.readString(CONFIG_SOURCE, StandardCharsets.UTF_8);
+		String reference = Files.readString(REFERENCE_DOC, StandardCharsets.UTF_8);
+
+		assertTrue(source.contains("boolean partyTrialAssistsEnabled"),
+			"Pact Trial assists should have their own party toggle instead of riding all shared credit.");
+		assertTrue(source.contains("\"party_trial_assists_enabled\""),
+			"The server config codec should persist the Pact Trial assist toggle.");
+		assertTrue(source.contains("json.addProperty(\"party_trial_assists_enabled\""),
+			"The rewritten config file should include the Pact Trial assist toggle.");
+		assertTrue(reference.contains("| `party_trial_assists_enabled` | true |"),
+			"Reference docs should document the Pact Trial assist toggle.");
 	}
 
 	private static AttunedConfig loomConfig(int affinityLoomBaseShardCost, int affinityLoomMaxShardCost) {
@@ -188,7 +384,20 @@ class AttunedConfigContractTest {
 			AttunedConfig.DEFAULT.resonanceKillEmpoweredGain(),
 			AttunedConfig.DEFAULT.resonanceDecayPerTick(),
 			affinityLoomBaseShardCost,
-			affinityLoomMaxShardCost);
+			affinityLoomMaxShardCost,
+			AttunedConfig.DEFAULT.partyMaxMembers(),
+			AttunedConfig.DEFAULT.partySharedCreditRadius(),
+			AttunedConfig.DEFAULT.partySharedCreditWindowTicks(),
+			AttunedConfig.DEFAULT.partyInviteTtlTicks(),
+			AttunedConfig.DEFAULT.partyInviteCooldownTicks(),
+			AttunedConfig.DEFAULT.partyCreateCooldownTicks(),
+			AttunedConfig.DEFAULT.partyCrossDimensionCreditEnabled(),
+			AttunedConfig.DEFAULT.partyHudEnabled(),
+			AttunedConfig.DEFAULT.partySharedCreditEnabled(),
+			AttunedConfig.DEFAULT.partyTrialAssistsEnabled(),
+			AttunedConfig.DEFAULT.partyEffectsEnabled(),
+			AttunedConfig.DEFAULT.partyConfluenceHintsEnabled(),
+			AttunedConfig.DEFAULT.partySetupSuggestionsEnabled());
 	}
 
 	private static AttunedConfig config(int startingCapacity, int capacityCap) {
@@ -242,7 +451,20 @@ class AttunedConfigContractTest {
 			AttunedConfig.DEFAULT.resonanceKillEmpoweredGain(),
 			AttunedConfig.DEFAULT.resonanceDecayPerTick(),
 			AttunedConfig.DEFAULT.affinityLoomBaseShardCost(),
-			AttunedConfig.DEFAULT.affinityLoomMaxShardCost());
+			AttunedConfig.DEFAULT.affinityLoomMaxShardCost(),
+			AttunedConfig.DEFAULT.partyMaxMembers(),
+			AttunedConfig.DEFAULT.partySharedCreditRadius(),
+			AttunedConfig.DEFAULT.partySharedCreditWindowTicks(),
+			AttunedConfig.DEFAULT.partyInviteTtlTicks(),
+			AttunedConfig.DEFAULT.partyInviteCooldownTicks(),
+			AttunedConfig.DEFAULT.partyCreateCooldownTicks(),
+			AttunedConfig.DEFAULT.partyCrossDimensionCreditEnabled(),
+			AttunedConfig.DEFAULT.partyHudEnabled(),
+			AttunedConfig.DEFAULT.partySharedCreditEnabled(),
+			AttunedConfig.DEFAULT.partyTrialAssistsEnabled(),
+			AttunedConfig.DEFAULT.partyEffectsEnabled(),
+			AttunedConfig.DEFAULT.partyConfluenceHintsEnabled(),
+			AttunedConfig.DEFAULT.partySetupSuggestionsEnabled());
 	}
 
 	private static void assertInvalid(Executable constructor) {

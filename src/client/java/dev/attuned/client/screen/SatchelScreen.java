@@ -1,9 +1,12 @@
 package dev.attuned.client.screen;
 
 import dev.attuned.Attuned;
+import dev.attuned.AttunedRegistries;
+import dev.attuned.api.focus.FocusDefinition;
 import dev.attuned.attunement.AttunedAttachments;
 import dev.attuned.attunement.AttunedInv;
 import dev.attuned.attunement.FocusPreset;
+import dev.attuned.content.AttunedComponents;
 import dev.attuned.menu.ApplyPresetPayload;
 import dev.attuned.menu.BuildShareCodec;
 import dev.attuned.menu.BuildPreviewResolver;
@@ -21,11 +24,13 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.BooleanSupplier;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
+import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
+import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -217,8 +222,7 @@ public class SatchelScreen extends AbstractContainerScreen<SatchelMenu> {
 		}
 		FocusPreset preset = decoded.get();
 		this.nameField.setValue(preset.name());
-		ClientPlayNetworking.send(new ImportPresetPayload(preset.name(), preset.slots()));
-		minecraft.gui.setOverlayMessage(Component.translatable("screen.attuned.preset.imported", preset.name()), false);
+		ClientPlayNetworking.send(new ImportPresetPayload(preset));
 	}
 
 	@Override
@@ -358,6 +362,7 @@ public class SatchelScreen extends AbstractContainerScreen<SatchelMenu> {
 				BUILDS_X, BUILDS_LIST_Y, LABEL_TEXT, false);
 		}
 		drawBuildPreview(graphics, mouseX, mouseY);
+		drawBuildMetadataTooltip(graphics, mouseX, mouseY);
 	}
 
 	/**
@@ -379,7 +384,7 @@ public class SatchelScreen extends AbstractContainerScreen<SatchelMenu> {
 		}
 		List<String> slots = presets.get(hovered).slots();
 		List<BuildPreviewResolver.Availability> availability = BuildPreviewResolver.availability(
-			slots, equippedIds(), satchelIds(), inventoryFocusCounts());
+			slots, equippedIds(), satchelIds(), inventoryFocusCounts(), registeredFocusIds());
 
 		int rowW = PREVIEW_W + PREVIEW_PAD * 2;
 		int rowH = PREVIEW_CELL + PREVIEW_PAD * 2;
@@ -427,7 +432,44 @@ public class SatchelScreen extends AbstractContainerScreen<SatchelMenu> {
 
 	/** Resolves a saved Focus id to its item stack for the preview (client registry). */
 	private static ItemStack stackFor(String id) {
-		return BuiltInRegistries.ITEM.get(new ResourceLocation(id)).getDefaultInstance();
+		return BuiltInRegistries.ITEM.get(new ResourceLocation(FocusPreset.slotId(id))).getDefaultInstance();
+	}
+
+	private void drawBuildMetadataTooltip(GuiGraphics graphics, int mouseX, int mouseY) {
+		int hovered = hoveredBuildIndex(mouseX, mouseY);
+		if (hovered < 0) {
+			return;
+		}
+		List<FocusPreset> presets = presets();
+		if (hovered >= presets.size()) {
+			return;
+		}
+		List<Component> lines = buildMetadataTooltip(presets.get(hovered));
+		if (!lines.isEmpty()) {
+			graphics.renderComponentTooltip(this.font, lines, mouseX - this.leftPos, mouseY - this.topPos);
+		}
+	}
+
+	private static List<Component> buildMetadataTooltip(FocusPreset preset) {
+		List<Component> lines = new ArrayList<>();
+		if (!preset.role().isBlank()) {
+			lines.add(Component.translatable("screen.attuned.preset.metadata.role", preset.role()));
+		}
+		if (!preset.note().isBlank()) {
+			lines.add(Component.translatable("screen.attuned.preset.metadata.note", preset.note()));
+		}
+		if (preset.preferredPartySize() > 0) {
+			lines.add(Component.translatable("screen.attuned.preset.metadata.party_size", preset.preferredPartySize()));
+		}
+		for (String warning : preset.warnings()) {
+			lines.add(Component.translatable("screen.attuned.preset.metadata.warning", warning)
+				.withStyle(ChatFormatting.YELLOW));
+		}
+		for (String required : preset.requires()) {
+			lines.add(Component.translatable("screen.attuned.preset.metadata.requires", required)
+				.withStyle(ChatFormatting.YELLOW));
+		}
+		return lines;
 	}
 
 	private void drawWell(GuiGraphics graphics, int x, int y) {
@@ -484,7 +526,7 @@ public class SatchelScreen extends AbstractContainerScreen<SatchelMenu> {
 			if (stack.isEmpty()) {
 				continue;
 			}
-			String id = idFor(stack);
+			String id = keyFor(stack);
 			if (!id.isEmpty()) {
 				counts.merge(id, stack.getCount(), Integer::sum);
 			}
@@ -496,7 +538,7 @@ public class SatchelScreen extends AbstractContainerScreen<SatchelMenu> {
 		if (index < 0 || index >= this.menu.slots.size()) {
 			return "";
 		}
-		return idFor(this.menu.slots.get(index).getItem());
+		return keyFor(this.menu.slots.get(index).getItem());
 	}
 
 	private static String idFor(ItemStack stack) {
@@ -504,6 +546,24 @@ public class SatchelScreen extends AbstractContainerScreen<SatchelMenu> {
 			return "";
 		}
 		return BuiltInRegistries.ITEM.getKey(stack.getItem()).toString();
+	}
+
+	private static String keyFor(ItemStack stack) {
+		return FocusPreset.slotKey(idFor(stack), stack != null && stack.has(AttunedComponents.TEMPERED));
+	}
+
+	private static Set<String> registeredFocusIds() {
+		Minecraft minecraft = Minecraft.getInstance();
+		if (minecraft == null || minecraft.level == null) {
+			return Set.of();
+		}
+		Registry<FocusDefinition> registry =
+			minecraft.level.registryAccess().registryOrThrow(AttunedRegistries.FOCUS_DEFINITIONS);
+		Set<String> ids = new HashSet<>();
+		registry.stream()
+			.map(definition -> BuiltInRegistries.ITEM.getKey(definition.item().value()).toString())
+			.forEach(ids::add);
+		return ids;
 	}
 
 	private static String signatureOf(List<FocusPreset> presets) {
@@ -559,7 +619,7 @@ public class SatchelScreen extends AbstractContainerScreen<SatchelMenu> {
 			} else if (isHoveredOrFocused()) {
 				drawButtonOutline(graphics, x0, y0, x1, y1, BUTTON_HOVER_ARGB);
 			}
-			renderString(graphics, Minecraft.getInstance().font, LABEL_TEXT);
+			renderString(graphics, Minecraft.getInstance().font, this.active ? 0xFFFFFFFF : 0xFFA0A0A0);
 		}
 	}
 }

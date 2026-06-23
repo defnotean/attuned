@@ -77,6 +77,48 @@ class ResonanceSourceContractTest {
 			"Maelstrom death gain should branch on cached attacker capstone.");
 	}
 
+	@Test
+	void resonanceRewardsRequireHostileOrValidPvpTargets() throws IOException {
+		String source = read();
+		String afterDamage = methodBody(source,
+			"private static void afterDamage(LivingEntity defender, DamageSource source,");
+		String afterDeath = methodBody(source,
+			"private static void afterDeath(LivingEntity entity, DamageSource source)");
+
+		assertTrue(afterDamage.contains("CombatTargets.isHostileOrPvpOpponent(defender, attackerPlayer)"),
+			"Hit resonance should only build from hostile mobs or valid PvP opponents, not passive targets.");
+		assertBefore(afterDamage,
+			"CombatTargets.isHostileOrPvpOpponent(defender, attackerPlayer)",
+			"add(attackerPlayer, dealtDamage * hitEmpoweredGainPerDamage)");
+		assertTrue(afterDeath.contains("if (!CombatTargets.isHostileOrPvpOpponent(entity, player))"),
+			"Kill resonance, streaks, advancements, and surge rewards should reject passive or friendly targets.");
+		assertBefore(afterDeath,
+			"if (!CombatTargets.isHostileOrPvpOpponent(entity, player))",
+			"PlayerCombatState attackerState = playerState(player)");
+		assertBefore(afterDeath,
+			"if (!CombatTargets.isHostileOrPvpOpponent(entity, player))",
+			"ResonantSurges.tryKillReward(serverPlayer)");
+	}
+
+	@Test
+	void environmentalAndSelfDamageExitBeforeCombatStateResolution() throws IOException {
+		String source = read();
+		String afterDamage = methodBody(source,
+			"private static void afterDamage(LivingEntity defender, DamageSource source,");
+
+		assertTrue(afterDamage.contains("if (attacker == null || attacker == defender)"),
+			"Environmental damage and self-damage should leave before resonance combat state is resolved.");
+		assertBefore(afterDamage,
+			"if (attacker == null || attacker == defender)",
+			"PlayerCombatState defenderState = null");
+		assertBefore(afterDamage,
+			"if (attacker == null || attacker == defender)",
+			"add(attackerPlayer, dealtDamage * hitEmpoweredGainPerDamage)");
+		assertBefore(afterDamage,
+			"if (attacker == null || attacker == defender)",
+			"markCombat(attackerPlayer)");
+	}
+
 	private static String read() throws IOException {
 		return Files.readString(RESONANCE_SOURCE, StandardCharsets.UTF_8);
 	}
@@ -109,5 +151,14 @@ class ResonanceSourceContractTest {
 			index += needle.length();
 		}
 		return count;
+	}
+
+	private static void assertBefore(String source, String earlier, String later) {
+		int earlierIndex = source.indexOf(earlier);
+		int laterIndex = source.indexOf(later);
+		assertTrue(earlierIndex >= 0, "Missing expected source fragment: " + earlier);
+		assertTrue(laterIndex >= 0, "Missing expected source fragment: " + later);
+		assertTrue(earlierIndex < laterIndex,
+			"Expected `" + earlier + "` to appear before `" + later + "`.");
 	}
 }

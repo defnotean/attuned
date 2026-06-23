@@ -29,9 +29,88 @@ class FocusPresetTest {
 	}
 
 	@Test
+	void presetSlotKeysCanRequireATemperedCopy() {
+		String tempered = FocusPreset.slotKey("attuned:edge_focus", true);
+		FocusPreset preset = new FocusPreset("Tempered", List.of(tempered));
+
+		assertEquals("attuned:edge_focus#tempered", preset.slots().get(0),
+			"Tempered Focus presets should preserve the component-sensitive slot key.");
+		assertEquals("attuned:edge_focus", FocusPreset.slotId(preset.slots().get(0)));
+		assertTrue(FocusPreset.requiresTempered(preset.slots().get(0)));
+	}
+
+	@Test
+	void plainPresetSlotKeysRemainUntemperedAndBackwardCompatible() {
+		FocusPreset preset = new FocusPreset("Old Build", List.of("attuned:edge_focus"));
+
+		assertEquals("attuned:edge_focus", preset.slots().get(0));
+		assertEquals("attuned:edge_focus", FocusPreset.slotId(preset.slots().get(0)));
+		assertTrue(!FocusPreset.requiresTempered(preset.slots().get(0)));
+		assertEquals("", preset.role(), "Old saved presets should decode with no setup role metadata.");
+		assertEquals("", preset.note(), "Old saved presets should decode with no setup note metadata.");
+		assertEquals(0, preset.preferredPartySize(), "Old saved presets should have no party-size preference.");
+		assertEquals(List.of(), preset.warnings(), "Old saved presets should have no setup warnings.");
+		assertEquals(List.of(), preset.requires(), "Old saved presets should have no build-code requires metadata.");
+	}
+
+	@Test
 	void presetRejectsBlankNames() {
 		FocusPreset preset = new FocusPreset("   ", List.of());
 		assertTrue(!preset.name().isEmpty(), "Blank preset names should fall back to a placeholder, not persist empty.");
+	}
+
+	@Test
+	void presetNamesStripControlCharactersAndMinecraftFormattingCodes() {
+		FocusPreset preset = new FocusPreset(" \n§cRaid\r\nWatch\t§l! ", List.of());
+
+		assertEquals("RaidWatch!", preset.name(),
+			"Preset names should be single-line plain text before they reach chat or UI.");
+	}
+
+	@Test
+	void setupMetadataIsSanitizedCappedAndBackwardCompatible() {
+		FocusPreset preset = new FocusPreset("Rescue", List.of(),
+			new FocusPreset.SetupMetadata(
+				" \n\u00A7aWitness\tSupport ",
+				" Bring breath\n\u00A7cNo click events ",
+				9,
+				List.of(" over\ncap ", "\u00A7cduplicate unique "),
+				List.of(" attuned:tide_focus#tempered ", "", "attuned:tide_focus", "attuned:rescue_focus"),
+				" 1.21.11\n ",
+				" 1.5.4\u00A7k "));
+
+		assertEquals("WitnessSupport", preset.role());
+		assertEquals("Bring breathNo click events", preset.note());
+		assertEquals(8, preset.preferredPartySize(), "Party size metadata should clamp to the supported party max.");
+		assertEquals(List.of("overcap", "duplicate unique"), preset.warnings());
+		assertEquals(List.of("attuned:tide_focus", "attuned:rescue_focus"), preset.requires(),
+			"Requires metadata should be normalized to distinct base Focus ids, not trusted as item grants.");
+		assertEquals("1.21.11", preset.minecraftVersion());
+		assertEquals("1.5.4", preset.attunedVersion());
+	}
+
+	@Test
+	void presetCodecPinsOptionalSetupMetadataFields() throws IOException {
+		String source = read(Path.of("src/main/java/dev/attuned/attunement/FocusPreset.java"));
+
+		assertTrue(source.contains("record SetupMetadata("),
+			"FocusPreset should carry optional setup metadata without changing the old name+slots constructor.");
+		assertTrue(source.contains("Codec.STRING.optionalFieldOf(\"role\", \"\")"),
+			"Persistent preset data should allow an optional role label.");
+		assertTrue(source.contains("Codec.STRING.optionalFieldOf(\"note\", \"\")"),
+			"Persistent preset data should allow an optional short note.");
+		assertTrue(source.contains("Codec.intRange(0, MAX_PARTY_SIZE).optionalFieldOf(\"party_size\", 0)"),
+			"Persistent preset data should allow an optional party-size/solo preference.");
+		assertTrue(source.contains("Codec.STRING.listOf().optionalFieldOf(\"warnings\", List.of())"),
+			"Persistent preset data should allow captured setup warnings.");
+		assertTrue(source.contains("Codec.STRING.listOf().optionalFieldOf(\"requires\", List.of())"),
+			"Persistent preset data should allow build-code requires metadata.");
+		assertTrue(source.contains("Codec.STRING.optionalFieldOf(\"mc\", \"\")"),
+			"Build-code metadata should record the source Minecraft version when present.");
+		assertTrue(source.contains("Codec.STRING.optionalFieldOf(\"attuned\", \"\")"),
+			"Build-code metadata should record the source Attuned version when present.");
+		assertTrue(source.contains("SetupMetadata.STREAM_CODEC"),
+			"Synced preset data should carry setup metadata to the owning client.");
 	}
 
 	@Test
@@ -67,6 +146,14 @@ class FocusPresetTest {
 			"Preset list normalization should be centralized.");
 		assertTrue(attachments.contains("Math.min(MAX_PRESETS, presets.size())"),
 			"Preset list normalization should cap reads to MAX_PRESETS.");
+	}
+
+	@Test
+	void presetReadsPreserveOptionalSetupMetadata() throws IOException {
+		String attachments = read(ATTACHMENTS);
+
+		assertTrue(attachments.contains("new FocusPreset(preset.name(), preset.slots(), preset.metadata())"),
+			"Preset list normalization should keep saved setup metadata instead of downgrading imported builds to name+slots.");
 	}
 
 	private static String read(Path file) throws IOException {

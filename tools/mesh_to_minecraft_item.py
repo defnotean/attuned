@@ -15,7 +15,7 @@ ROOT = Path(__file__).resolve().parents[1]
 TMP_DIR = ROOT / "tmp/mesh_to_minecraft_item"
 ASSET_ROOT = ROOT / "src/main/resources/assets"
 CUSTOMIZER_MANIFEST = ROOT / "tools/asset_customizer/asset-manifest.json"
-DOC_ASSET_ROOT = ROOT / ".attuned-art-sources"
+PRIVATE_ASSET_ROOT = ROOT / ".attuned-art-sources"
 
 
 def main() -> None:
@@ -29,7 +29,7 @@ def main() -> None:
 	title = args.name or pretty_name(asset_id)
 	blender = find_blender(args.blender)
 
-	work_dir = DOC_ASSET_ROOT / asset_id.replace("_", "-")
+	work_dir = PRIVATE_ASSET_ROOT / asset_id.replace("_", "-")
 	work_dir.mkdir(parents=True, exist_ok=True)
 	TMP_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -65,7 +65,7 @@ def main() -> None:
 
 def parse_args() -> argparse.Namespace:
 	parser = argparse.ArgumentParser(
-		description="Convert a Meshy/Tripo-style 3D source asset into a Minecraft item sprite/model.")
+		description="Convert a source 3D asset into a Minecraft item sprite/model.")
 	parser.add_argument("source", type=Path, help="FBX, GLB, glTF, OBJ, or Blender-supported source file.")
 	parser.add_argument("--asset-id", required=True, help="Minecraft item asset id, for example frostbound_trident.")
 	parser.add_argument("--name", help="Display name for the asset customizer.")

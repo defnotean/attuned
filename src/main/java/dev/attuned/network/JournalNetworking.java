@@ -17,5 +17,9 @@ public final class JournalNetworking {
 		PayloadTypeRegistry.playS2C().register(TremorOreHintPayload.TYPE, TremorOreHintPayload.CODEC);
 		PayloadTypeRegistry.playS2C().register(FocusAbilityStatusPayload.TYPE, FocusAbilityStatusPayload.CODEC);
 		PayloadTypeRegistry.playS2C().register(AttunementStatePayload.TYPE, AttunementStatePayload.CODEC);
+		PayloadTypeRegistry.playS2C().register(CircleSnapshotPayload.TYPE, CircleSnapshotPayload.CODEC);
+		PayloadTypeRegistry.playS2C().register(CircleInvitePromptPayload.TYPE, CircleInvitePromptPayload.CODEC);
+		PayloadTypeRegistry.playS2C().register(CirclePingClientPayload.TYPE, CirclePingClientPayload.CODEC);
+		CircleSnapshotSync.init();
 	}
 }

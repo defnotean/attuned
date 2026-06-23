@@ -117,7 +117,7 @@ def alpha_at(decoded_rgba: bytes, *, width: int, x: int, y: int) -> int:
 
 
 class GenerateModifierFocusAssetsContractTest(unittest.TestCase):
-	def test_generator_imports_private_source_sheet(self) -> None:
+	def test_generator_imports_local_source_sheet(self) -> None:
 		source = GENERATOR.read_text(encoding="utf-8")
 
 		self.assertIn("modifier-foci-source.png", source)

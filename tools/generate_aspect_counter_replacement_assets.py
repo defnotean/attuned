@@ -132,7 +132,7 @@ def generate_assets() -> dict[str, object]:
 	save_preview(icons)
 	report = {
 		"source": relative(SOURCE_PATH),
-		"workflow": "private local source sheet normalized into selected Aspect Counter Focus textures",
+		"workflow": "local source sheet normalized into selected Aspect Counter Focus textures",
 		"source_grid": [5, 1],
 		"operations": [
 			"crop generated source grid cells",

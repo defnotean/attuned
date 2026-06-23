@@ -101,7 +101,7 @@ public final class RevenantCombat {
 		PENDING_DEBT.put(attacker.getUUID(),
 			new PendingProc(defender.getUUID(), attacker.level().getGameTime()));
 		ashenDebtFeedback(attacker, defender);
-		return amount * DEBT_MULTIPLIER;
+		return DamageFormula.multiply(amount, DEBT_MULTIPLIER);
 	}
 
 	private static void afterDamage(LivingEntity defender, DamageSource source,

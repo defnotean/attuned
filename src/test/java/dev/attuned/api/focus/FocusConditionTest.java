@@ -2,6 +2,7 @@ package dev.attuned.api.focus;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.google.gson.JsonParser;
@@ -60,6 +61,20 @@ class FocusConditionTest {
 	}
 
 	@Test
+	void lowLightProgrammaticConstructorMatchesCodecBounds() {
+		assertEquals(0, new FocusCondition.LowLight(0).maxLight());
+		assertEquals(15, new FocusCondition.LowLight(15).maxLight());
+
+		IllegalArgumentException low = assertThrows(IllegalArgumentException.class,
+			() -> new FocusCondition.LowLight(-1));
+		assertTrue(low.getMessage().contains("Low-light max_light must be between 0 and 15"));
+
+		IllegalArgumentException high = assertThrows(IllegalArgumentException.class,
+			() -> new FocusCondition.LowLight(16));
+		assertTrue(high.getMessage().contains("Low-light max_light must be between 0 and 15"));
+	}
+
+	@Test
 	void tagConditionsCarryTheirIdentifiers() {
 		FocusCondition block = roundTrip("{\"condition\":\"on_block_tag\",\"tag\":\"minecraft:wool\"}");
 		assertEquals(new ResourceLocation("minecraft", "wool"),
@@ -75,8 +90,11 @@ class FocusConditionTest {
 		var result = FocusCondition.CODEC.parse(JsonOps.INSTANCE,
 			JsonParser.parseString("{\"condition\":\"teleporting\"}"));
 		assertTrue(result.isError(), "An unknown condition type must fail to decode.");
-		assertTrue(result.error().orElseThrow().message().contains("Unknown Focus condition"),
+		String message = result.error().orElseThrow().message();
+		assertTrue(message.contains("Unknown Focus condition"),
 			"The decode error should name the unknown condition.");
+		assertTrue(message.contains("conditions: in_rain, underwater, low_light, sneaking, on_block_tag, in_biome_tag"),
+			"The decode error should list known condition ids for datapack authors.");
 	}
 
 	private static FocusCondition roundTrip(String json) {

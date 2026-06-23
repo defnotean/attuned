@@ -2,6 +2,7 @@ package dev.attuned.client;
 
 import dev.attuned.client.hud.CombatHud;
 import dev.attuned.client.hud.FociHud;
+import dev.attuned.client.hud.PartyHud;
 import dev.attuned.client.render.GltfMeshSpecialRenderer;
 import dev.attuned.client.screen.AltarScreens;
 import dev.attuned.client.screen.AttunementJournalScreen;
@@ -15,8 +16,10 @@ public class AttunedClient implements ClientModInitializer {
 		AttunedKeybinds.init();
 		AttunementStateClient.init();
 		FocusAbilityClientState.init();
+		CircleClientState.init();
 		AffinityInspectClient.init();
 		UpdraftLiftClient.init();
+		PartyHud.init();
 		FociHud.init();
 		CombatHud.init();
 		AltarScreens.init();

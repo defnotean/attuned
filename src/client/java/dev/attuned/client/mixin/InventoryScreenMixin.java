@@ -15,33 +15,30 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
-
-import java.util.Optional;
 
 /**
- * Minecraft 1.20.6 survival-inventory hook for Attuned's Focus side panel.
+ * Draws Attuned's six Focus slots as a side panel on the left of the survival
+ * inventory screen — clear of the potion effects vanilla draws down the right
+ * edge. The drawing itself lives in {@link FocusPanel}, shared with the creative
+ * inventory screen; hovering the panel frame shows the attunement readout.
  *
- * <p>1.20.6 predates the newer extractBackground/deferred-tooltip path used by
- * the latest branch, so the panel is drawn in renderBg and its tooltip is drawn
- * at the end of render.</p>
+ * <p>The recipe book opens across that same left side, so whenever it is showing
+ * the panel and its slots are suppressed, then restored once it closes.</p>
  */
 @Mixin(InventoryScreen.class)
 public abstract class InventoryScreenMixin extends AbstractContainerScreen<InventoryMenu> {
 	private InventoryScreenMixin() {
+		// Never invoked; mixin classes are not instantiated.
 		super(null, null, null);
 	}
 
-	@Inject(method = "render", at = @At("HEAD"))
-	private void attuned$syncFocusSlotVisibility(GuiGraphics graphics, int mouseX, int mouseY,
-			float partialTick, CallbackInfo ci) {
-		FocusSlot.setSuppressed(attuned$recipeBookOpen());
-	}
-
 	@Inject(method = "renderBg", at = @At("TAIL"))
-	private void attuned$drawFocusPanel(GuiGraphics graphics, float partialTick, int mouseX, int mouseY,
-			CallbackInfo ci) {
-		if (attuned$recipeBookOpen()) {
+	private void attuned$drawFocusPanel(GuiGraphics graphics, float partialTick, int mouseX, int mouseY, CallbackInfo ci) {
+		// The recipe book claims the same edge as the Focus panel. While it is
+		// open, suppress the panel and its slots; restore them once it closes.
+		boolean recipeBookOpen = attuned$recipeBookOpen();
+		FocusSlot.setSuppressed(recipeBookOpen);
+		if (recipeBookOpen) {
 			return;
 		}
 		Player player = Minecraft.getInstance().player;
@@ -50,29 +47,9 @@ public abstract class InventoryScreenMixin extends AbstractContainerScreen<Inven
 		}
 		FocusPanel.draw(graphics, this.leftPos, this.topPos,
 			FocusLayout.INVENTORY_X, FocusLayout.INVENTORY_Y, player);
-	}
-
-	@Inject(method = "render", at = @At("TAIL"))
-	private void attuned$renderFocusReadoutTooltip(GuiGraphics graphics, int mouseX, int mouseY,
-			float partialTick, CallbackInfo ci) {
-		if (attuned$recipeBookOpen()
-				|| !FocusPanel.overReadout(FocusLayout.INVENTORY_X, FocusLayout.INVENTORY_Y,
-					mouseX - this.leftPos, mouseY - this.topPos)) {
-			return;
-		}
-		Player player = Minecraft.getInstance().player;
-		if (player != null) {
-			graphics.renderTooltip(this.font, AttunementReadout.tooltip(player),
-				Optional.empty(), mouseX, mouseY);
-		}
-	}
-
-	@Inject(method = "hasClickedOutside", at = @At("HEAD"), cancellable = true)
-	private void attuned$keepFocusPanelInside(double mx, double my, int xo, int yo, int button,
-			CallbackInfoReturnable<Boolean> cir) {
-		if (!attuned$recipeBookOpen()
-				&& FocusPanel.withinPanel(FocusLayout.INVENTORY_X, FocusLayout.INVENTORY_Y, mx - xo, my - yo)) {
-			cir.setReturnValue(false);
+		if (FocusPanel.overReadout(FocusLayout.INVENTORY_X, FocusLayout.INVENTORY_Y,
+				mouseX - this.leftPos, mouseY - this.topPos)) {
+			graphics.renderComponentTooltip(this.font, AttunementReadout.tooltip(AttunementReadout.cached(player)), mouseX, mouseY);
 		}
 	}
 

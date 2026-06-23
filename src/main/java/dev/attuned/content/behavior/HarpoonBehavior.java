@@ -1,9 +1,9 @@
 package dev.attuned.content.behavior;
 
-import dev.attuned.compat.PlayerMessages;
 import dev.attuned.AttunedPlayerCleanup;
 import dev.attuned.AttunedServerCleanup;
 import dev.attuned.api.focus.FocusBehavior;
+import dev.attuned.network.ActionBarMessages;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -30,8 +30,10 @@ import net.minecraft.world.item.component.CustomData;
 
 /** Offshore Harpoon Focus: summons one temporary custom trident on the ability key. */
 public final class HarpoonBehavior implements FocusBehavior {
-	static final int DURATION_TICKS = 600;
 	static final int COOLDOWN_TICKS = 1200;
+	// A summoned harpoon — held or thrown and stuck in the world — lives for exactly one
+	// cooldown, then despawns, so it disappears precisely when the ability becomes ready again.
+	static final int LIFETIME_TICKS = COOLDOWN_TICKS;
 	private static final int ENTITY_CLEANUP_INTERVAL_TICKS = 20;
 	private static final String MARKER_ID = "attuned:offshore_harpoon";
 	private static final String MARKER_KEY = "marker";
@@ -61,17 +63,19 @@ public final class HarpoonBehavior implements FocusBehavior {
 		long now = player.level().getGameTime();
 		removeInvalidInventoryHarpoons(player, now);
 		if (ACTIVE_HARPOONS.getOrDefault(player.getUUID(), -1L) > now) {
-			PlayerMessages.overlay(player, Component.translatable("item.attuned.harpoon_focus.active"));
+			ActionBarMessages.send(player, ActionBarMessages.Priority.WARNING,
+				Component.translatable("item.attuned.harpoon_focus.active"));
 			return false;
 		}
 
 		ItemStack harpoon = createHarpoon(player, now);
 		if (!placeHarpoon(player, harpoon)) {
-			PlayerMessages.overlay(player, Component.translatable("item.attuned.harpoon_focus.no_space"));
+			ActionBarMessages.send(player, ActionBarMessages.Priority.WARNING,
+				Component.translatable("item.attuned.harpoon_focus.no_space"));
 			return false;
 		}
 
-		ACTIVE_HARPOONS.put(player.getUUID(), now + DURATION_TICKS);
+		ACTIVE_HARPOONS.put(player.getUUID(), now + LIFETIME_TICKS);
 		player.level().playSound(null, player.blockPosition(),
 			SoundEvents.TRIDENT_RETURN, SoundSource.PLAYERS, 0.75F, 0.85F);
 		return true;
@@ -111,7 +115,7 @@ public final class HarpoonBehavior implements FocusBehavior {
 		CompoundTag tag = new CompoundTag();
 		tag.putString(MARKER_KEY, MARKER_ID);
 		tag.putString(OWNER_KEY, player.getUUID().toString());
-		tag.putLong(EXPIRES_AT_KEY, now + DURATION_TICKS);
+		tag.putLong(EXPIRES_AT_KEY, now + LIFETIME_TICKS);
 		harpoon.set(DataComponents.CUSTOM_DATA, CustomData.of(tag));
 		harpoon.set(DataComponents.CUSTOM_NAME, HARPOON_NAME);
 		harpoon.set(DataComponents.INTANGIBLE_PROJECTILE, Unit.INSTANCE);

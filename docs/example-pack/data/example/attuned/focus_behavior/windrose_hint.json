@@ -1,0 +1,7 @@
+{
+	"type": "attuned:navigation_hint",
+	"target_kind": "circle_ping",
+	"max_age_ticks": 120,
+	"same_dimension_only": true,
+	"feedback_cadence_ticks": 40
+}
