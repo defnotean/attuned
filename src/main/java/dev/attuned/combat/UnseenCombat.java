@@ -1,14 +1,13 @@
 package dev.attuned.combat;
 
 import dev.attuned.compat.AfterDamageCallback;
-
-import dev.attuned.compat.PlayerMessages;
 import dev.attuned.AttunedPlayerCleanup;
 import dev.attuned.AttunedServerCleanup;
 import dev.attuned.attunement.AttunedAttachments;
 import dev.attuned.attunement.AttunedInv;
 import dev.attuned.attunement.Attunement;
 import dev.attuned.content.behavior.VeilBehavior;
+import dev.attuned.network.ActionBarMessages;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -84,7 +83,9 @@ public final class UnseenCombat {
 			return amount;
 		}
 		boolean wasVeiled = VeilBehavior.isVeiled(attacker);
-		if (!hasActiveFocus(attacker, NEEDLE_FOCUS) || !canNeedle(attacker, defender, wasVeiled)) {
+		boolean validCombatTarget = CombatTargets.isHostileOrPvpOpponent(defender, attacker);
+		if (!hasActiveFocus(attacker, NEEDLE_FOCUS) || !validCombatTarget
+				|| !canNeedle(attacker, defender, wasVeiled)) {
 			// No proc this swing: still break the Veil, but only once the hit lands
 			// (recorded so a dodged hit cannot strip stealth for free).
 			PENDING_NEEDLE.put(attacker.getUUID(),
@@ -96,7 +97,7 @@ public final class UnseenCombat {
 		PENDING_NEEDLE.put(attacker.getUUID(),
 			new PendingProc(defender.getUUID(), attacker.level().getGameTime(), true));
 		needleFeedback(attacker, defender);
-		return amount * NEEDLE_MULTIPLIER;
+		return DamageFormula.multiply(amount, NEEDLE_MULTIPLIER);
 	}
 
 	private static boolean isDirectHit(ServerPlayer attacker, DamageSource source) {
@@ -133,6 +134,9 @@ public final class UnseenCombat {
 
 	private static void afterDamage(LivingEntity defender, DamageSource source,
 			float originalDamage, float dealtDamage, boolean blocked) {
+		if (dealtDamage <= 0.0F || AttunedCombat.isReflecting()) {
+			return;
+		}
 		Entity entity = source.getEntity();
 		if (entity instanceof ServerPlayer attacker && dealtDamage > 0.0F) {
 			// The hit landed: spend the deferred opener resources now. A dodged or
@@ -171,7 +175,8 @@ public final class UnseenCombat {
 			10, 0.2, 0.25, 0.2, 0.01);
 		level.playSound(null, defender.blockPosition(),
 			SoundEvents.SCULK_SHRIEKER_SHRIEK, SoundSource.PLAYERS, 0.35F, 1.8F);
-		PlayerMessages.overlay(attacker, Component.translatable("combo.attuned.softstep_needle"));
+		ActionBarMessages.send(attacker, ActionBarMessages.Priority.ABILITY,
+			Component.translatable("combo.attuned.softstep_needle"));
 	}
 
 	private static boolean hasActiveFocus(Player player, ResourceLocation targetId) {

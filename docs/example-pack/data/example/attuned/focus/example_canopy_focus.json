@@ -1,0 +1,6 @@
+{
+	"item": "minecraft:oak_leaves",
+	"cost": 2,
+	"affinity": "verdant",
+	"behavior": "example:canopy_step"
+}

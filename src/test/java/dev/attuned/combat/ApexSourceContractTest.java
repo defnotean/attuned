@@ -71,8 +71,8 @@ class ApexSourceContractTest {
 		assertTrue(apex.contains("GLOAMING(\"Gloaming\"") && apex.contains("Affinity.UMBRAL,"),
 			"Gloaming should exist and be bound to Umbral.");
 
-		// afterDamage must restructure to drive the attacker-side proc for any
-		// defender while still pulsing Stillpoint for player defenders.
+		// afterDamage must restructure to drive the attacker-side proc for valid
+		// hostile/PvP defenders while still pulsing Stillpoint for player defenders.
 		String afterDamage = methodBody(apex,
 			"private static void afterDamage(LivingEntity defender, DamageSource source,");
 		assertTrue(afterDamage.contains("applyAffinityCapstoneProc(defender, source, attacker)"),
@@ -97,6 +97,41 @@ class ApexSourceContractTest {
 			"Bloomward should heal the attacker.");
 		assertTrue(methodBody(apex, "private static void procGloaming(").contains("MobEffects.WEAKNESS"),
 			"Gloaming should apply Weakness to the target.");
+	}
+
+	@Test
+	void apexMeleeCapstoneTargetsRejectPassiveAndFriendlyEntities() throws IOException {
+		String apex = read();
+		String targetGate = methodBody(apex,
+			"private static boolean isApexMeleeTarget(LivingEntity defender, Player attacker, DamageSource source)");
+		String proc = methodBody(apex,
+			"private static void applyAffinityCapstoneProc(LivingEntity defender, DamageSource source,");
+
+		assertTrue(targetGate.contains("CombatTargets.isHostileOrPvpOpponent(defender, attacker)"),
+			"Apex melee capstones should not proc against livestock, pets, allies, or friendly-fire-blocked players.");
+		assertTrue(proc.contains("!isApexMeleeTarget(defender, attackerPlayer, source)"),
+			"The promoted-affinity proc dispatcher should fail closed through the shared target gate.");
+	}
+
+	@Test
+	void defenderSideApexEffectsOnlyRespondToRealThreats() throws IOException {
+		String apex = read();
+		String afterDamage = methodBody(apex,
+			"private static void afterDamage(LivingEntity defender, DamageSource source,");
+		String allowDamage = methodBody(apex,
+			"private static boolean allowDamage(LivingEntity entity, DamageSource source, float amount)");
+
+		assertTrue(afterDamage.contains("CombatTargets.isHostileOrPvpOpponent(attacker, defenderPlayer)"),
+			"Stillpoint should not pulse Absorption from passive mobs, pets, allies, or Circle members.");
+		assertBefore(afterDamage,
+			"CombatTargets.isHostileOrPvpOpponent(attacker, defenderPlayer)",
+			"pulseStillpoint(defenderPlayer)");
+
+		assertTrue(allowDamage.contains("!CombatTargets.isHostileOrPvpOpponent(attacker, player)"),
+			"Untouchable should only dodge hostile mobs or valid PvP opponents.");
+		assertBefore(allowDamage,
+			"!CombatTargets.isHostileOrPvpOpponent(attacker, player)",
+			"onDodge(player)");
 	}
 
 	private static String read() throws IOException {
@@ -132,5 +167,14 @@ class ApexSourceContractTest {
 			index += needle.length();
 		}
 		return count;
+	}
+
+	private static void assertBefore(String source, String earlier, String later) {
+		int earlierIndex = source.indexOf(earlier);
+		int laterIndex = source.indexOf(later);
+		assertTrue(earlierIndex >= 0, "Missing expected source fragment: " + earlier);
+		assertTrue(laterIndex >= 0, "Missing expected source fragment: " + later);
+		assertTrue(earlierIndex < laterIndex,
+			"Expected `" + earlier + "` to appear before `" + later + "`.");
 	}
 }

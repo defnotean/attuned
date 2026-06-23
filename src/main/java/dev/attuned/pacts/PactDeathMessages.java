@@ -2,6 +2,7 @@ package dev.attuned.pacts;
 
 import dev.attuned.AttunedConfig;
 import dev.attuned.combat.AttunedCombat;
+import dev.attuned.combat.CombatTargets;
 import java.util.Locale;
 import java.util.Optional;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
@@ -52,6 +53,9 @@ public final class PactDeathMessages {
 		}
 		LivingEntity attacker = AttunedCombat.attackerOf(source);
 		if (!(attacker instanceof Player attackerPlayer) || attacker == victim) {
+			return;
+		}
+		if (!CombatTargets.canCreditPvpKill(attackerPlayer, victim)) {
 			return;
 		}
 		Optional<Pact> pact = Pacts.activeOf(attackerPlayer);

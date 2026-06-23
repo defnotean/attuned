@@ -29,6 +29,10 @@ class FocusPvpAvailabilityContractTest {
 		Path.of("src/main/java/dev/attuned/content/behavior/RadiantFocusBehaviors.java");
 	private static final Path REVENANT_COMBAT_SOURCE =
 		Path.of("src/main/java/dev/attuned/combat/RevenantCombat.java");
+	private static final Path DATA_BEHAVIORS_SOURCE =
+		Path.of("src/main/java/dev/attuned/content/behavior/DataFocusBehaviors.java");
+	private static final Path UPDRAFT_BEHAVIOR_SOURCE =
+		Path.of("src/main/java/dev/attuned/content/behavior/UpdraftBehavior.java");
 	private static final Path LANG_FILE =
 		Path.of("src/main/resources/assets/attuned/lang/en_us.json");
 
@@ -45,6 +49,45 @@ class FocusPvpAvailabilityContractTest {
 			"PvP Focus effects should never target the player wearing the Focus.");
 		assertTrue(source.contains("!target.isSpectator()"),
 			"PvP Focus effects should ignore spectators.");
+	}
+
+	@Test
+	void pvpTargetHelperRejectsCircleMembersBeforeHostileOnlyProcs() throws IOException {
+		String source = readSource(COMBAT_TARGETS_SOURCE);
+
+		assertTrue(source.contains("import dev.attuned.party.CircleRuntime;"),
+			"Shared PvP target rules should know about server-owned Circle membership.");
+		assertTrue(source.contains("&& !sameCircle(attacker, target)"),
+			"Circle members should not be valid PvP opponents for hostile-only Attuned procs.");
+		assertTrue(source.contains("private static boolean sameCircle(Player attacker, Player target)"),
+			"The Circle exclusion should live in one shared helper.");
+		assertTrue(source.contains("CircleRuntime.manager().circleOf(attacker.getUUID())"),
+			"Circle exclusion should derive membership from the server-owned Circle manager.");
+		assertTrue(source.contains("circle.members().contains(target.getUUID())"),
+			"Circle exclusion should reject any target already in the attacker's Circle.");
+		assertTrue(source.indexOf("&& !sameCircle(attacker, target)")
+				< source.indexOf("&& attacker.canHarmPlayer(target)"),
+			"Attuned Circle membership should narrow vanilla PvP before Focus procs can affect a player.");
+	}
+
+	@Test
+	void partyAssistsInheritSustainedPvpExhaustionPressure() throws IOException {
+		String partyAssist = methodBody(readSource(DATA_BEHAVIORS_SOURCE),
+			"private boolean matchesTarget(ServerPlayer player, ServerPlayer target)");
+		String updraft = readSource(UPDRAFT_BEHAVIOR_SOURCE);
+
+		assertTrue(updraft.contains("static boolean isPvpAssistDampened(ServerPlayer player)"),
+			"Updraft's sustained PvP pressure state should be exposed for party-assist dampening.");
+		assertTrue(updraft.contains("return isPvpExhausted(player);"),
+			"Party-assist dampening should reuse the same five-second PvP exhaustion window as flight controls.");
+		assertTrue(partyAssist.contains("UpdraftBehavior.isPvpAssistDampened(player) || UpdraftBehavior.isPvpAssistDampened(target)"),
+			"Rescue, mobility, and shield party assists should not bypass sustained PvP exhaustion.");
+		assertBefore(partyAssist,
+			"CombatTargets.canAffectPlayer(player, target) || CombatTargets.canAffectPlayer(target, player)",
+			"UpdraftBehavior.isPvpAssistDampened(player) || UpdraftBehavior.isPvpAssistDampened(target)");
+		assertBefore(partyAssist,
+			"UpdraftBehavior.isPvpAssistDampened(player) || UpdraftBehavior.isPvpAssistDampened(target)",
+			"return switch (def.targetFilter())");
 	}
 
 	@Test
@@ -71,6 +114,27 @@ class FocusPvpAvailabilityContractTest {
 	}
 
 	@Test
+	void revealFociMarkCircleContributionOnlyAfterFindingVisibleThreats() throws IOException {
+		String lantern = readSource(LANTERN_SOURCE);
+		String radiant = readSource(RADIANT_BEHAVIORS_SOURCE);
+		String lanternTick = methodBody(lantern,
+			"public void onTick(ServerPlayer player, ItemStack focus)");
+		String bellwetherReveal = methodBody(radiant,
+			"private void revealVisibleThreats(ServerPlayer player, Cooldown cooldown)");
+		String witnessAbility = methodBody(radiant,
+			"public boolean onAbility(ServerPlayer player, ItemStack focus)");
+
+		assertTrue(lantern.contains("import dev.attuned.party.CircleContributions;"),
+			"Lantern reveals should feed the server-owned Circle contribution runtime.");
+		assertTrue(radiant.contains("import dev.attuned.party.CircleContributions;"),
+			"Radiant reveal Foci should feed the server-owned Circle contribution runtime.");
+
+		assertRevealContributionUsesFilteredTargets(lanternTick, "Lantern");
+		assertRevealContributionUsesFilteredTargets(bellwetherReveal, "Bellwether");
+		assertRevealContributionUsesFilteredTargets(witnessAbility, "Oathguard witness");
+	}
+
+	@Test
 	void ashenDebtOnlyRecordsAndSpendsAgainstFoes() throws IOException {
 		String revenant = readSource(REVENANT_COMBAT_SOURCE);
 		String adjustDamage = methodBody(revenant,
@@ -92,7 +156,7 @@ class FocusPvpAvailabilityContractTest {
 		JsonObject lang = JsonParser.parseString(Files.readString(LANG_FILE, StandardCharsets.UTF_8))
 			.getAsJsonObject();
 
-		assertEquals("Your melee hits set foes alight.",
+		assertEquals("Half-charged or stronger melee hits set hostile foes alight.",
 			lang.get("pact.attuned.pyresworn.description").getAsString());
 		assertTrue(pyreswornIgnite.contains("defender instanceof Player targetPlayer"),
 			"Pyresworn should name player targets before applying the shared PvP predicate.");
@@ -117,6 +181,19 @@ class FocusPvpAvailabilityContractTest {
 			"Offensive Apex capstones should be guarded by the same PvP player-target rules.");
 		assertTrue(apex.contains("context.hasAffinityPressure(defender)"),
 			"Maelstrom should treat player attunement as affinity pressure.");
+	}
+
+	@Test
+	void radiantCovenantChargedRevealRequiresLineOfSight() throws IOException {
+		String pacts = readSource(PACTS_SOURCE);
+		String reveal = methodBody(pacts,
+			"private static void radiantCovenantReveal(Player attacker, LivingEntity defender, DamageSource source)");
+
+		assertTrue(reveal.contains("attacker.hasLineOfSight(defender)"),
+			"Radiant Covenant charged reveal should not apply Glowing to a defender the attacker cannot see.");
+		assertTrue(reveal.indexOf("attacker.hasLineOfSight(defender)")
+				< reveal.indexOf("defender.addEffect(new MobEffectInstance("),
+			"Radiant Covenant should verify visibility before applying the reveal effect.");
 	}
 
 	@Test
@@ -159,5 +236,29 @@ class FocusPvpAvailabilityContractTest {
 			}
 		}
 		throw new AssertionError("Unterminated method body: " + signaturePrefix);
+	}
+
+	private static void assertRevealContributionUsesFilteredTargets(String body, String label) {
+		assertTrue(body.contains("List<LivingEntity> targets"),
+			label + " should materialize the visible hostile/PvP target list before granting contribution credit.");
+		assertTrue(body.contains("if (!targets.isEmpty())"),
+			label + " should not open a contribution window for an empty reveal pulse.");
+		assertTrue(body.contains("CircleContributions.recordContribution(player)"),
+			label + " should open a Circle contribution window after revealing valid threats.");
+		assertBefore(body, "CombatTargets.isHostileOrPvpOpponent(target, player)",
+			"CircleContributions.recordContribution(player)");
+		assertBefore(body, "!MaskBehavior.resistsReveal(target)",
+			"CircleContributions.recordContribution(player)");
+		assertBefore(body, "player.hasLineOfSight(target)",
+			"CircleContributions.recordContribution(player)");
+	}
+
+	private static void assertBefore(String source, String earlier, String later) {
+		int earlierIndex = source.indexOf(earlier);
+		int laterIndex = source.indexOf(later);
+		assertTrue(earlierIndex >= 0, "Missing expected source fragment: " + earlier);
+		assertTrue(laterIndex >= 0, "Missing expected source fragment: " + later);
+		assertTrue(earlierIndex < laterIndex,
+			"Expected `" + earlier + "` to appear before `" + later + "`.");
 	}
 }

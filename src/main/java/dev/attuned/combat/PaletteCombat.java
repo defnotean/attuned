@@ -6,6 +6,7 @@ import dev.attuned.api.focus.FocusDefinition;
 import dev.attuned.attunement.AttunedAttachments;
 import dev.attuned.attunement.AttunedInv;
 import dev.attuned.attunement.Attunement;
+import dev.attuned.content.behavior.DataFocusBehaviors.MarkedTargetBehavior;
 import dev.attuned.content.behavior.DataFocusBehaviors.OnHitEffectBehavior;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.damagesource.DamageSource;
@@ -43,16 +44,24 @@ public final class PaletteCombat {
 				.flatMap(FocusDefinition::behavior)
 				.map(behaviorId -> AttunedRegistries.getBehavior(behaviorId, player.level().registryAccess()))
 				.orElse(null);
-			if (!(behavior instanceof OnHitEffectBehavior onHit)) {
-				continue;
+			if (behavior instanceof OnHitEffectBehavior onHit) {
+				if (!AttunedCombat.isChargedDirectMelee(player, defender, source, onHit.chargeThreshold())) {
+					continue;
+				}
+				if (onHit.hostileOnly() && !CombatTargets.isHostileOrPvpOpponent(defender, player)) {
+					continue;
+				}
+				onHit.applyTo(player, defender);
+			} else if (behavior instanceof MarkedTargetBehavior markedTarget) {
+				if (!AttunedCombat.isChargedDirectMelee(player, defender, source, markedTarget.chargeThreshold())) {
+					continue;
+				}
+				if (!CombatTargets.isHostileOrPvpOpponent(defender, player)) {
+					continue;
+				}
+				long now = player.level().getGameTime();
+				markedTarget.onChargedMeleeHit(player, defender, now);
 			}
-			if (!AttunedCombat.isChargedDirectMelee(player, defender, source, onHit.chargeThreshold())) {
-				continue;
-			}
-			if (onHit.hostileOnly() && !CombatTargets.isHostileOrPvpOpponent(defender, player)) {
-				continue;
-			}
-			onHit.applyTo(player, defender);
 		}
 	}
 }

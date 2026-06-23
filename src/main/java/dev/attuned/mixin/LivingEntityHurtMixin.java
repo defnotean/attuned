@@ -24,7 +24,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
  * the Pacts set bonuses (Stoneheart's dampen, Untethered's amplifier), and
  * The Unseen's direct-melee opener.
  *
- * <p>{@code LivingEntity.hurt(DamageSource, float)} is the 1.20.6
+ * <p>{@code LivingEntity.hurt(DamageSource, float)} is the 1.20.1
  * server-side entry point for all damage. We rescale its {@code float}
  * amount argument at HEAD, before armour, absorption and resistance, so every
  * system compounds correctly with the rest of the damage pipeline. The matchup
@@ -54,6 +54,8 @@ public abstract class LivingEntityHurtMixin {
 		}
 		UpdraftBehavior.recordPvpDamage(self, source);
 		CombatContext context = CombatContext.of(self, source);
+		// Confluence or party role damage hooks must join this ordered pipeline,
+		// consuming the previous stage's output so independent bonuses compound.
 		float scaled = AttunedCombat.applyAffinity(level, self, source, amount, context);
 		float capped = Apex.adjustDamage(self, source, scaled, context);
 		float adjusted = Pacts.adjustDamage(self, source, capped, context);

@@ -18,8 +18,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import org.spongepowered.asm.mixin.injection.invoke.arg.Args;
 
-import java.util.Optional;
-
 /** 1.20.1 creative Survival Inventory tab hook for Attuned's Focus side panel. */
 @Mixin(CreativeModeInventoryScreen.class)
 public abstract class CreativeModeInventoryScreenMixin
@@ -49,8 +47,7 @@ public abstract class CreativeModeInventoryScreenMixin
 	}
 
 	@Inject(method = "renderBg", at = @At("TAIL"))
-	private void attuned$drawFocusPanel(GuiGraphics graphics, float partialTick, int mouseX, int mouseY,
-			CallbackInfo ci) {
+	private void attuned$drawFocusPanel(GuiGraphics graphics, float partialTick, int mouseX, int mouseY, CallbackInfo ci) {
 		FocusSlot.setSuppressed(false);
 		if (!this.isInventoryOpen()) {
 			return;
@@ -61,26 +58,15 @@ public abstract class CreativeModeInventoryScreenMixin
 		}
 		FocusPanel.draw(graphics, this.leftPos, this.topPos,
 			FocusLayout.CREATIVE_X, FocusLayout.CREATIVE_Y, player);
-	}
-
-	@Inject(method = "render", at = @At("TAIL"))
-	private void attuned$renderFocusReadoutTooltip(GuiGraphics graphics, int mouseX, int mouseY,
-			float partialTick, CallbackInfo ci) {
-		if (!this.isInventoryOpen()
-				|| !FocusPanel.overReadout(FocusLayout.CREATIVE_X, FocusLayout.CREATIVE_Y,
-					mouseX - this.leftPos, mouseY - this.topPos)) {
-			return;
-		}
-		Player player = Minecraft.getInstance().player;
-		if (player != null) {
-			graphics.renderTooltip(this.font, AttunementReadout.tooltip(player),
-				Optional.empty(), mouseX, mouseY);
+		if (FocusPanel.overReadout(FocusLayout.CREATIVE_X, FocusLayout.CREATIVE_Y,
+				mouseX - this.leftPos, mouseY - this.topPos)) {
+			graphics.renderComponentTooltip(this.font,
+				AttunementReadout.tooltip(AttunementReadout.cached(player)), mouseX, mouseY);
 		}
 	}
 
 	@Inject(method = "hasClickedOutside", at = @At("HEAD"), cancellable = true)
-	private void attuned$keepFocusPanelInside(double mx, double my, int xo, int yo, int button,
-			CallbackInfoReturnable<Boolean> cir) {
+	private void attuned$keepFocusPanelInside(double mx, double my, int xo, int yo, CallbackInfoReturnable<Boolean> cir) {
 		if (this.isInventoryOpen()
 				&& FocusPanel.withinPanel(FocusLayout.CREATIVE_X, FocusLayout.CREATIVE_Y, mx - xo, my - yo)) {
 			cir.setReturnValue(false);

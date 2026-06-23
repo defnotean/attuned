@@ -3,7 +3,9 @@ package dev.attuned.api.focus;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import java.util.Arrays;
 import java.util.Objects;
+import java.util.stream.Collectors;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
@@ -71,7 +73,14 @@ public sealed interface FocusCondition {
 				return com.mojang.serialization.DataResult.success(type);
 			}
 		}
-		return com.mojang.serialization.DataResult.error(() -> "Unknown Focus condition: " + name);
+		return com.mojang.serialization.DataResult.error(() -> "Unknown Focus condition: " + name
+			+ " (conditions: " + conditionTypeList() + ")");
+	}
+
+	private static String conditionTypeList() {
+		return Arrays.stream(Type.values())
+			.map(Type::id)
+			.collect(Collectors.joining(", "));
 	}
 
 	// ---- Variants ---------------------------------------------------------
@@ -109,9 +118,19 @@ public sealed interface FocusCondition {
 
 	/** Holds while the local light level is at or below {@code maxLight}. */
 	record LowLight(int maxLight) implements FocusCondition {
+		private static final int MIN_LIGHT = 0;
+		private static final int MAX_LIGHT = 15;
+
 		static final MapCodec<LowLight> MAP_CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(
-			Codec.intRange(0, 15).optionalFieldOf("max_light", DEFAULT_MAX_LIGHT).forGetter(LowLight::maxLight)
+			Codec.intRange(MIN_LIGHT, MAX_LIGHT).optionalFieldOf("max_light", DEFAULT_MAX_LIGHT).forGetter(LowLight::maxLight)
 		).apply(instance, LowLight::new));
+
+		public LowLight {
+			if (maxLight < MIN_LIGHT || maxLight > MAX_LIGHT) {
+				throw new IllegalArgumentException(
+					"Low-light max_light must be between " + MIN_LIGHT + " and " + MAX_LIGHT);
+			}
+		}
 
 		@Override
 		public boolean test(ServerPlayer player) {

@@ -1,6 +1,5 @@
 package dev.attuned.content.behavior;
 
-import dev.attuned.compat.PlayerMessages;
 import dev.attuned.AttunedPlayerCleanup;
 import dev.attuned.AttunedServerCleanup;
 import dev.attuned.api.focus.FocusBehavior;
@@ -8,6 +7,7 @@ import dev.attuned.content.AttunedContent;
 import dev.attuned.attunement.AttunedAttachments;
 import dev.attuned.attunement.AttunedInv;
 import dev.attuned.attunement.Attunement;
+import dev.attuned.network.ActionBarMessages;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -305,6 +305,10 @@ public final class UpdraftBehavior implements FocusBehavior {
 		return exhaustedByDuration(started, now);
 	}
 
+	static boolean isPvpAssistDampened(ServerPlayer player) {
+		return isPvpExhausted(player);
+	}
+
 	static boolean exhaustedByDuration(long startedTick, long nowTick) {
 		return nowTick - startedTick >= PVP_EXHAUSTION_TICKS;
 	}
@@ -321,16 +325,17 @@ public final class UpdraftBehavior implements FocusBehavior {
 			EXHAUSTION_DEBUFF_TICKS, 0, true, true, true));
 		player.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN,
 			EXHAUSTION_DEBUFF_TICKS, 0, true, true, true));
-		PlayerMessages.overlay(player, Component.translatable(
-			"item.attuned.updraft_focus.exhausted"));
-		ServerLevel level = (ServerLevel) player.level();
-		Vec3 at = player.position().add(0.0D, player.getBbHeight() * 0.55D, 0.0D);
-		level.sendParticles(ParticleTypes.SMOKE,
-			at.x, at.y, at.z, 8, 0.25D, 0.20D, 0.25D, 0.015D);
-		level.sendParticles(ParticleTypes.POOF,
-			at.x, at.y, at.z, 4, 0.20D, 0.12D, 0.20D, 0.01D);
-		level.playSound(null, player.blockPosition(),
-			SoundEvents.WOOL_STEP, SoundSource.PLAYERS, 0.45F, 0.65F);
+		ActionBarMessages.send(player, ActionBarMessages.Priority.WARNING,
+			Component.translatable("item.attuned.updraft_focus.exhausted"));
+		if (player.level() instanceof ServerLevel level) {
+			Vec3 at = player.position().add(0.0D, player.getBbHeight() * 0.55D, 0.0D);
+			level.sendParticles(ParticleTypes.SMOKE,
+				at.x, at.y, at.z, 8, 0.25D, 0.20D, 0.25D, 0.015D);
+			level.sendParticles(ParticleTypes.POOF,
+				at.x, at.y, at.z, 4, 0.20D, 0.12D, 0.20D, 0.01D);
+			level.playSound(null, player.blockPosition(),
+				SoundEvents.WOOL_STEP, SoundSource.PLAYERS, 0.45F, 0.65F);
+		}
 	}
 
 	private static boolean canStartGlide(ServerPlayer player) {

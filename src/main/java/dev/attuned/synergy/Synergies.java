@@ -1,10 +1,10 @@
 package dev.attuned.synergy;
 
 import dev.attuned.compat.AttributeModifierIds;
-
 import dev.attuned.compat.PlayerMessages;
 import dev.attuned.Attuned;
 import dev.attuned.AttunedAdvancements;
+import dev.attuned.AttunedConfig;
 import dev.attuned.AttunedPlayerCleanup;
 import dev.attuned.AttunedRegistries;
 import dev.attuned.AttunedServerCleanup;
@@ -14,7 +14,9 @@ import dev.attuned.api.synergy.SynergyDefinition;
 import dev.attuned.Milestones;
 import dev.attuned.attunement.AttunedAttachments;
 import dev.attuned.attunement.Attunement;
+import dev.attuned.network.ActionBarMessages;
 import dev.attuned.onboarding.Onboarding;
+import dev.attuned.party.CircleContributions;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -244,22 +246,40 @@ public final class Synergies {
 	}
 
 	private static void fanfare(ServerPlayer player, String confluenceId) {
+		recordConfluenceDiscovery(player, confluenceId);
+		shareConfluenceDiscovery(player, confluenceId);
+		Component discovery = Component.translatable("confluence.attuned.first_discovery", nameOf(confluenceId))
+			.withStyle(ChatFormatting.LIGHT_PURPLE, ChatFormatting.BOLD);
+		if (player.level() instanceof ServerLevel level) {
+			level.playSound(null, player.blockPosition(),
+				SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, SoundSource.PLAYERS, 0.7F, 1.0F);
+			level.sendParticles(ParticleTypes.ENCHANT,
+				player.getX(),
+				player.getY() + player.getBbHeight() * 0.5,
+				player.getZ(),
+				16, 0.5, 0.7, 0.5, 0.4);
+		}
+		ActionBarMessages.send(player, ActionBarMessages.Priority.PROGRESS, discovery);
+		PlayerMessages.system(player, discovery);
+	}
+
+	private static void recordConfluenceDiscovery(ServerPlayer player, String confluenceId) {
 		AttunedAttachments.markConfluenceDiscovered(player, confluenceId); // flips the journal row to discovered
 		if (AttunedAttachments.getDiscoveredConfluences(player).size() == 1) {
 			Milestones.onFirstConfluence(player);
 		}
-		Component discovery = Component.translatable("confluence.attuned.first_discovery", nameOf(confluenceId))
-			.withStyle(ChatFormatting.LIGHT_PURPLE, ChatFormatting.BOLD);
-		ServerLevel level = (ServerLevel) player.level();
-		level.playSound(null, player.blockPosition(),
-			SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, SoundSource.PLAYERS, 0.7F, 1.0F);
-		level.sendParticles(ParticleTypes.ENCHANT,
-			player.getX(),
-			player.getY() + player.getBbHeight() * 0.5,
-			player.getZ(),
-			16, 0.5, 0.7, 0.5, 0.4);
-		PlayerMessages.overlay(player, discovery);
-		PlayerMessages.system(player, discovery);
+	}
+
+	private static void shareConfluenceDiscovery(ServerPlayer player, String confluenceId) {
+		if (!AttunedConfig.get().partyConfluenceHintsEnabled()) {
+			return;
+		}
+		for (ServerPlayer member : CircleContributions.nearbyCircleMembers(player)) {
+			if (member.getUUID().equals(player.getUUID())) {
+				continue;
+			}
+			recordConfluenceDiscovery(member, confluenceId);
+		}
 	}
 
 	/**

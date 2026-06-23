@@ -187,7 +187,7 @@ def generate_assets() -> dict[str, object]:
 	verification = {
 		"source": relative(SOURCE_PATH),
 		"preview": relative(PREVIEW_PATH),
-		"workflow": "private local source sheet normalized into shipped textures",
+		"workflow": "local source sheet normalized into shipped textures",
 		"source_grid": [4, 4],
 		"operations": [
 			"crop generated source grid cells",

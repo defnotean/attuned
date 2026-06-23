@@ -1,12 +1,16 @@
 package dev.attuned.combat;
 
-import dev.attuned.compat.PlayerMessages;
 import dev.attuned.AttunedConfig;
+import dev.attuned.AttunedPlayerCleanup;
 import dev.attuned.AttunedServerCleanup;
 import dev.attuned.content.AttunedContent;
 import dev.attuned.attunement.Attunement;
+import dev.attuned.network.ActionBarMessages;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.item.ItemStack;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
@@ -68,6 +72,10 @@ public final class ResonantSurges {
 	private static final int SURGE_COORD_GRID = 8;
 	/** Chance a kill inside an active surge drops shard fragments. */
 	private static final float SURGE_KILL_REWARD_CHANCE = 0.45F;
+	/** Recent combat remains valid surge activity for five seconds. */
+	private static final int SURGE_ACTIVITY_WINDOW_TICKS = 100;
+	/** Minimum horizontal movement over one surge tick that counts as active play. */
+	private static final double MIN_SURGE_MOVEMENT_SQUARED = 0.04D;
 
 	/** The single active surge, or {@code null} when none is live. Server-thread only. */
 	private static Surge active;
@@ -75,6 +83,7 @@ public final class ResonantSurges {
 	private static long lastSurgeEnd;
 	private static int tickCounter;
 	private static boolean initialized;
+	private static final Map<UUID, Vec3> LAST_SURGE_POSITIONS = new HashMap<>();
 
 	/** One live surge: where it is, which dimension, and when it ends. */
 	private record Surge(ResourceKey<Level> dimension, BlockPos pos, long endTick) {}
@@ -89,7 +98,9 @@ public final class ResonantSurges {
 			active = null;
 			lastSurgeEnd = 0L;
 			tickCounter = 0;
+			LAST_SURGE_POSITIONS.clear();
 		});
+		AttunedPlayerCleanup.onForget(LAST_SURGE_POSITIONS::remove);
 		ServerTickEvents.END_SERVER_TICK.register(ResonantSurges::tick);
 	}
 
@@ -168,13 +179,15 @@ public final class ResonantSurges {
 		int count = 1 + player.getRandom().nextInt(2);
 		ItemStack stack = new ItemStack(AttunedContent.ATTUNEMENT_SHARD_FRAGMENT, count);
 		if (player.getInventory().add(stack)) {
-			PlayerMessages.overlay(player, Component.translatable("surge.attuned.kill_reward", count));
+			ActionBarMessages.send(player, ActionBarMessages.Priority.PROGRESS,
+				Component.translatable("surge.attuned.kill_reward", count));
 			return;
 		}
 		ItemEntity drop = new ItemEntity(player.level(), player.getX(), player.getY() + 0.5, player.getZ(), stack);
 		drop.setDefaultPickUpDelay();
 		player.level().addFreshEntity(drop);
-		PlayerMessages.overlay(player, Component.translatable("surge.attuned.kill_reward", count));
+		ActionBarMessages.send(player, ActionBarMessages.Priority.PROGRESS,
+			Component.translatable("surge.attuned.kill_reward", count));
 	}
 
 	/** Grants resonance and emits feedback while a surge is live; ends it on expiry. */
@@ -184,6 +197,7 @@ public final class ResonantSurges {
 		if (level == null) {
 			active = null;
 			lastSurgeEnd = now;
+			LAST_SURGE_POSITIONS.clear();
 			return;
 		}
 		int radius = AttunedConfig.get().surgeRadius();
@@ -194,11 +208,20 @@ public final class ResonantSurges {
 			double dx = player.getX() - (pos.getX() + 0.5);
 			double dz = player.getZ() - (pos.getZ() + 0.5);
 			if (!ResonantSurgeResolver.isInside(dx, dz, radius)) {
+				LAST_SURGE_POSITIONS.remove(player.getUUID());
 				continue;
 			}
 			if (expired) {
-				PlayerMessages.overlay(player, Component.translatable("surge.attuned.faded"));
+				LAST_SURGE_POSITIONS.remove(player.getUUID());
+				ActionBarMessages.send(player, ActionBarMessages.Priority.AMBIENT,
+					Component.translatable("surge.attuned.faded"));
 			} else {
+				boolean moved = hasSurgeMovement(player);
+				boolean recentCombat = Resonance.recentlyInCombat(player, now, SURGE_ACTIVITY_WINDOW_TICKS);
+				if (!ResonantSurgeResolver.shouldGrantCredit(true,
+					moved, recentCombat, false, false)) {
+					continue;
+				}
 				Resonance.grantSurge(player, surgeResonanceGain(player, gain));
 				CombatFeedback.surgeCharge(player);
 			}
@@ -206,6 +229,7 @@ public final class ResonantSurges {
 		if (expired) {
 			active = null;
 			lastSurgeEnd = now;
+			LAST_SURGE_POSITIONS.clear();
 			return;
 		}
 		if (tickCounter % MOB_LURE_INTERVAL_TICKS == 0) {
@@ -214,11 +238,24 @@ public final class ResonantSurges {
 		emitFeedback(level, pos);
 	}
 
+	private static boolean hasSurgeMovement(ServerPlayer player) {
+		Vec3 current = player.position();
+		Vec3 previous = LAST_SURGE_POSITIONS.put(player.getUUID(), current);
+		return previous != null && horizontalDistanceSquared(previous, current) >= MIN_SURGE_MOVEMENT_SQUARED;
+	}
+
+	private static double horizontalDistanceSquared(Vec3 first, Vec3 second) {
+		double dx = first.x - second.x;
+		double dz = first.z - second.z;
+		return dx * dx + dz * dz;
+	}
+
 	/** Alerts every player in the dimension and marks the surge site audibly. */
 	private static void broadcastSurgeStart(ServerLevel level, BlockPos site) {
 		level.playSound(null, site, SoundEvents.BEACON_ACTIVATE, SoundSource.BLOCKS, 1.2F, 1.0F);
 		for (ServerPlayer player : level.players()) {
-			PlayerMessages.overlay(player, surgeStartedMessage(site, player));
+			ActionBarMessages.send(player, ActionBarMessages.Priority.AMBIENT,
+				surgeStartedMessage(site, player));
 		}
 	}
 

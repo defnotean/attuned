@@ -30,7 +30,7 @@ class SneakingSpeedFocusContractTest {
 		JsonArray modifiers = root.getAsJsonArray("modifiers");
 		assertNotNull(modifiers, fileName + " should declare its sneaking-speed modifier");
 		assumeTrue(modifiers.size() > 0,
-			"Minecraft 1.20.6 maintenance builds remove minecraft:sneaking_speed because the attribute is unavailable.");
+			"Minecraft 1.20.1 maintenance builds remove minecraft:sneaking_speed because the attribute is unavailable.");
 
 		JsonObject modifier = modifiers.asList().stream()
 			.map(element -> element.getAsJsonObject())

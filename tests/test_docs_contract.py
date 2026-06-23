@@ -59,6 +59,16 @@ class DocsContractTest(unittest.TestCase):
         self.assertIn("FocusDefinition data", reference)
         self.assertNotIn("AttunedContent.FOCI", reference)
 
+    def test_reference_docs_cover_build_share_metadata_safety(self) -> None:
+        reference = (ROOT / "docs" / "reference.md").read_text(encoding="utf-8")
+
+        for field in ("`role`", "`note`", "`party_size`", "`warnings`", "`requires`", "`mc`", "`attuned`"):
+            self.assertIn(field, reference)
+        self.assertIn("Unknown optional fields", reference)
+        self.assertIn("are ignored", reference)
+        self.assertIn("does not grant or create items", reference)
+        self.assertIn("plain strings", reference)
+
     def test_contributing_describes_current_version_release_notes(self) -> None:
         contributing = (ROOT / "CONTRIBUTING.md").read_text(encoding="utf-8")
 
@@ -99,7 +109,7 @@ class DocsContractTest(unittest.TestCase):
             ROOT / "docs" / "platform" / "modrinth-description.md",
             ROOT / "docs" / "platform" / "curseforge-description.md",
         ]
-        forbidden = re.compile(r"private asset workflow|asset-source manifest|generated image", re.IGNORECASE)
+        forbidden = re.compile(r"untracked asset workflow|asset workflow manifest|workflow-only image", re.IGNORECASE)
 
         leaks = []
         for doc in public_docs:
@@ -107,7 +117,22 @@ class DocsContractTest(unittest.TestCase):
             for match in forbidden.finditer(text):
                 leaks.append(f"{doc.relative_to(ROOT)}:{text[:match.start()].count(chr(10)) + 1}:{match.group(0)}")
 
-        self.assertEqual([], leaks, "Public docs should describe art neutrally and keep asset workflow details private")
+        self.assertEqual([], leaks, "Public docs should describe art neutrally and omit workflow-only asset details")
+
+    def test_platform_descriptions_keep_release_note_process_private(self) -> None:
+        platform_docs = [
+            ROOT / "docs" / "platform" / "modrinth-description.md",
+            ROOT / "docs" / "platform" / "curseforge-description.md",
+        ]
+        forbidden = re.compile(r"generated from|CHANGELOG\.md|uploaded version", re.IGNORECASE)
+
+        leaks = []
+        for doc in platform_docs:
+            text = doc.read_text(encoding="utf-8")
+            for match in forbidden.finditer(text):
+                leaks.append(f"{doc.relative_to(ROOT)}:{text[:match.start()].count(chr(10)) + 1}:{match.group(0)}")
+
+        self.assertEqual([], leaks, "Platform descriptions should use player-facing release-note copy")
 
 
 if __name__ == "__main__":

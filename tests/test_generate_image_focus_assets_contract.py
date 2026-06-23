@@ -175,7 +175,7 @@ def frame(image: RgbaImage, index: int) -> RgbaImage:
 
 
 class GenerateImageFocusAssetsContractTest(unittest.TestCase):
-	def test_generators_import_private_source_sheets(self) -> None:
+	def test_generators_import_local_source_sheets(self) -> None:
 		for generator, source_name in (
 			(UMBRAL_GENERATOR, "umbral-eclipse-foci-source.png"),
 			(CUSTOM_GENERATOR, "custom-foci-source.png"),

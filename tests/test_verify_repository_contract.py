@@ -5,6 +5,7 @@ import shutil
 import struct
 import tempfile
 import unittest
+import zipfile
 import zlib
 from pathlib import Path
 
@@ -81,8 +82,10 @@ def write_version_profile_fixture(root: Path, *, java_version: str = "25") -> No
         "run: python3 tools/minecraft_version_profile.py current --github-output \"$GITHUB_OUTPUT\"\n"
         "java-version: ${{ steps.versions.outputs.build_java_version }}\n"
         "run: git diff --check\n"
+        "run: python3 -m pip install -r requirements-dev.txt\n"
         "run: python3 tools/verify_repository.py\n"
         "run: python3 -m unittest discover -s tests\n"
+        "run: python3 -m pytest tests/ -q\n"
         "run: ./gradlew test build --no-daemon\n"
         "run: python3 tools/minecraft_runtime_smoke.py --accept-eula --timeout 240 --stop-timeout 60\n",
         encoding="utf-8",
@@ -188,6 +191,287 @@ class VerifyRepositoryContractTest(unittest.TestCase):
             self.assertIn("duplicate.json", failure.exception.problems[0])
             self.assertIn("duplicate key model", failure.exception.problems[0])
 
+    def test_focus_behavior_palette_problems_report_invalid_type_and_bounds(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            behavior_dir = root / "src" / "main" / "resources" / "data" / "attuned" / "attuned" / "focus_behavior"
+            example_dir = root / "docs" / "example-pack" / "data" / "example" / "attuned" / "focus_behavior"
+            behavior_dir.mkdir(parents=True)
+            example_dir.mkdir(parents=True)
+            (behavior_dir / "bad_periodic.json").write_text(
+                """{
+  "type": "attuned:periodic_effect",
+  "effect": "minecraft:speed",
+  "amplifier": 256,
+  "duration_ticks": 0,
+  "refresh_ticks": 0
+}
+""",
+                encoding="utf-8",
+            )
+            (behavior_dir / "bad_on_hit.json").write_text(
+                """{
+  "type": "attuned:on_hit_effect",
+  "effect": "minecraft:weakness",
+  "charge_threshold": 1.5,
+  "target_self": "false"
+}
+""",
+                encoding="utf-8",
+            )
+            (behavior_dir / "bad_block_context.json").write_text(
+                """{
+  "type": "attuned:block_context_effect",
+  "block_tag": "",
+  "effect": "minecraft:haste",
+  "radius": 6,
+  "requires_lit": "sometimes",
+  "refresh_ticks": 1
+}
+""",
+                encoding="utf-8",
+            )
+            (behavior_dir / "bad_use_item_window.json").write_text(
+                """{
+  "type": "attuned:use_item_window",
+  "item": "minecraft:map",
+  "item_tag": "minecraft:compasses",
+  "duration_ticks": 0,
+  "cooldown_ticks": 0,
+  "effect": 42,
+  "modifier": {
+    "attribute": "",
+    "amount": "fast",
+    "operation": "multiply"
+  },
+  "condition": "sneaking"
+}
+""",
+                encoding="utf-8",
+            )
+            (behavior_dir / "bad_marked_target.json").write_text(
+                """{
+  "type": "attuned:marked_target",
+  "prime_trigger": "any_hit",
+  "consume_trigger": "projectile",
+  "mark_duration_ticks": 0,
+  "cooldown_ticks": 0,
+  "effect_on_consume": {
+    "effect": 7,
+    "duration_ticks": 0,
+    "amplifier": 256,
+    "target_self": "no"
+  }
+}
+""",
+                encoding="utf-8",
+            )
+            (behavior_dir / "bad_navigation_hint.json").write_text(
+                """{
+  "type": "attuned:navigation_hint",
+  "target_kind": "nearest_shipwreck",
+  "max_age_ticks": 0,
+  "same_dimension_only": "yes",
+  "feedback_cadence_ticks": 1
+}
+""",
+                encoding="utf-8",
+            )
+            (behavior_dir / "bad_party_assist.json").write_text(
+                """{
+  "type": "attuned:party_assist",
+  "trigger": "ally_anywhere",
+  "radius": 0,
+  "cooldown_ticks": 0,
+  "target_filter": "everyone",
+  "effect": {
+    "effect": 7,
+    "duration_ticks": 0,
+    "amplifier": 256
+  },
+  "message_key": ""
+}
+""",
+                encoding="utf-8",
+            )
+            (behavior_dir / "bad_type.json").write_text(
+                '{"type": "attuned:unknown"}\n',
+                encoding="utf-8",
+            )
+            (example_dir / "bad_attribute.json").write_text(
+                """{
+  "type": "attuned:attribute_while",
+  "modifier": {
+    "attribute": "minecraft:generic.movement_speed",
+    "amount": 1025,
+    "operation": "multiply"
+  },
+  "condition": "underwater"
+}
+""",
+                encoding="utf-8",
+            )
+
+            problems = verify_repository.focus_behavior_palette_problems(root)
+
+            self.assertTrue(any("bad_periodic.json" in problem and "amplifier" in problem and "0..255" in problem for problem in problems))
+            self.assertTrue(any("bad_periodic.json" in problem and "duration_ticks" in problem and "1..1000000" in problem for problem in problems))
+            self.assertTrue(any("bad_periodic.json" in problem and "refresh_ticks" in problem and "1..1000000" in problem for problem in problems))
+            self.assertTrue(any("bad_on_hit.json" in problem and "charge_threshold" in problem and "0..1" in problem for problem in problems))
+            self.assertTrue(any("bad_on_hit.json" in problem and "target_self" in problem and "boolean" in problem for problem in problems))
+            self.assertTrue(any("bad_block_context.json" in problem and "block_tag" in problem and "resource id" in problem for problem in problems))
+            self.assertTrue(any("bad_block_context.json" in problem and "radius" in problem and "0..5" in problem for problem in problems))
+            self.assertTrue(any("bad_block_context.json" in problem and "requires_lit" in problem and "boolean" in problem for problem in problems))
+            self.assertTrue(any("bad_block_context.json" in problem and "refresh_ticks" in problem and "10..1000000" in problem for problem in problems))
+            self.assertTrue(any("bad_use_item_window.json" in problem and "item/item_tag" in problem and "exactly one" in problem for problem in problems))
+            self.assertTrue(any("bad_use_item_window.json" in problem and "duration_ticks" in problem and "1..1000000" in problem for problem in problems))
+            self.assertTrue(any("bad_use_item_window.json" in problem and "cooldown_ticks" in problem and "1..1000000" in problem for problem in problems))
+            self.assertTrue(any("bad_use_item_window.json" in problem and "effect" in problem and "resource id" in problem for problem in problems))
+            self.assertTrue(any("bad_use_item_window.json" in problem and "modifier.attribute" in problem and "resource id" in problem for problem in problems))
+            self.assertTrue(any("bad_use_item_window.json" in problem and "modifier.amount" in problem and "-1024..1024" in problem for problem in problems))
+            self.assertTrue(any("bad_use_item_window.json" in problem and "condition" in problem and "object" in problem for problem in problems))
+            self.assertTrue(any("bad_marked_target.json" in problem and "prime_trigger" in problem and "charged_melee_hit" in problem for problem in problems))
+            self.assertTrue(any("bad_marked_target.json" in problem and "consume_trigger" in problem and "charged_melee_hit" in problem for problem in problems))
+            self.assertTrue(any("bad_marked_target.json" in problem and "mark_duration_ticks" in problem and "1..1000000" in problem for problem in problems))
+            self.assertTrue(any("bad_marked_target.json" in problem and "cooldown_ticks" in problem and "1..1000000" in problem for problem in problems))
+            self.assertTrue(any("bad_marked_target.json" in problem and "effect_on_consume.effect" in problem and "resource id" in problem for problem in problems))
+            self.assertTrue(any("bad_marked_target.json" in problem and "effect_on_consume.duration_ticks" in problem and "1..1000000" in problem for problem in problems))
+            self.assertTrue(any("bad_marked_target.json" in problem and "effect_on_consume.amplifier" in problem and "0..255" in problem for problem in problems))
+            self.assertTrue(any("bad_marked_target.json" in problem and "effect_on_consume.target_self" in problem and "boolean" in problem for problem in problems))
+            self.assertTrue(any("bad_navigation_hint.json" in problem and "target_kind" in problem and "circle_ping" in problem for problem in problems))
+            self.assertTrue(any("bad_navigation_hint.json" in problem and "max_age_ticks" in problem and "1..1000000" in problem for problem in problems))
+            self.assertTrue(any("bad_navigation_hint.json" in problem and "same_dimension_only" in problem and "boolean" in problem for problem in problems))
+            self.assertTrue(any("bad_navigation_hint.json" in problem and "feedback_cadence_ticks" in problem and "20..1000000" in problem for problem in problems))
+            self.assertTrue(any("bad_party_assist.json" in problem and "trigger" in problem and "periodic_scan" in problem for problem in problems))
+            self.assertTrue(any("bad_party_assist.json" in problem and "radius" in problem and "1..64" in problem for problem in problems))
+            self.assertTrue(any("bad_party_assist.json" in problem and "cooldown_ticks" in problem and "1..1000000" in problem for problem in problems))
+            self.assertTrue(any("bad_party_assist.json" in problem and "target_filter" in problem and "wounded_members" in problem for problem in problems))
+            self.assertTrue(any("bad_party_assist.json" in problem and "effect.effect" in problem and "resource id" in problem for problem in problems))
+            self.assertTrue(any("bad_party_assist.json" in problem and "effect.duration_ticks" in problem and "1..1000000" in problem for problem in problems))
+            self.assertTrue(any("bad_party_assist.json" in problem and "effect.amplifier" in problem and "0..255" in problem for problem in problems))
+            self.assertTrue(any("bad_party_assist.json" in problem and "message_key" in problem and "non-empty string" in problem for problem in problems))
+            self.assertTrue(any("bad_type.json" in problem and "attuned:unknown" in problem and "type" in problem for problem in problems))
+            self.assertTrue(any("bad_attribute.json" in problem and "modifier.amount" in problem and "-1024..1024" in problem for problem in problems))
+            self.assertTrue(any("bad_attribute.json" in problem and "modifier.operation" in problem and "add_value" in problem for problem in problems))
+            self.assertTrue(any("bad_attribute.json" in problem and "condition" in problem and "object" in problem for problem in problems))
+
+    def test_focus_translation_key_problems_require_all_focus_tooltip_lines(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            focus_dir = root / "src" / "main" / "resources" / "data" / "attuned" / "attuned" / "focus"
+            lang_dir = root / "src" / "main" / "resources" / "assets" / "attuned" / "lang"
+            focus_dir.mkdir(parents=True)
+            lang_dir.mkdir(parents=True)
+            (focus_dir / "thin_focus.json").write_text(
+                '{"item": "attuned:thin_focus", "cost": 1, "modifiers": []}\n',
+                encoding="utf-8",
+            )
+            (lang_dir / "en_us.json").write_text(
+                """{
+  "item.attuned.thin_focus": "Thin Focus",
+  "item.attuned.thin_focus.lore": "First line"
+}
+""",
+                encoding="utf-8",
+            )
+
+            problems = verify_repository.focus_translation_key_problems(root)
+
+            self.assertTrue(any("thin_focus.json" in problem and "item.attuned.thin_focus.lore2" in problem for problem in problems))
+            self.assertTrue(any("thin_focus.json" in problem and "item.attuned.thin_focus.effect" in problem for problem in problems))
+            self.assertFalse(any("item.attuned.thin_focus.lore " in problem for problem in problems))
+            with self.assertRaises(verify_repository.CheckFailed) as failure:
+                verify_repository.check_focus_translation_keys(root)
+            self.assertEqual("Focus translation keys", failure.exception.title)
+
+    def test_faction_translation_key_problems_require_faction_names_and_active_set_bonus_copy(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            focus_dir = root / "src" / "main" / "resources" / "data" / "attuned" / "attuned" / "focus"
+            lang_dir = root / "src" / "main" / "resources" / "assets" / "attuned" / "lang"
+            focus_dir.mkdir(parents=True)
+            lang_dir.mkdir(parents=True)
+            (focus_dir / "missing_family_focus.json").write_text(
+                '{"item": "attuned:missing_family_focus", "faction": "attuned:missing_family"}\n',
+                encoding="utf-8",
+            )
+            (focus_dir / "stale_family_focus.json").write_text(
+                '{"item": "attuned:stale_family_focus", "faction": "attuned:stale_family"}\n',
+                encoding="utf-8",
+            )
+            (lang_dir / "en_us.json").write_text(
+                """{
+  "faction.attuned.stale_family": "Stale Family",
+  "faction.attuned.set_bonus.stale_family": "Set bonus: works from inventory and changes the affinity lane."
+}
+""",
+                encoding="utf-8",
+            )
+
+            problems = verify_repository.faction_translation_key_problems(root)
+
+            self.assertTrue(any("missing_family_focus.json" in problem and "faction.attuned.missing_family" in problem for problem in problems))
+            self.assertTrue(any("faction.attuned.set_bonus.stale_family" in problem and "3 active Foci" in problem for problem in problems))
+            self.assertTrue(any("faction.attuned.set_bonus.stale_family" in problem and "inventory" in problem for problem in problems))
+            self.assertTrue(any("faction.attuned.set_bonus.stale_family" in problem and "affinity lane" in problem for problem in problems))
+            with self.assertRaises(verify_repository.CheckFailed) as failure:
+                verify_repository.check_faction_translation_keys(root)
+            self.assertEqual("Faction translation keys", failure.exception.title)
+
+    def test_setup_guide_copy_problems_reject_meta_or_required_build_language(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            lang_dir = root / "src" / "main" / "resources" / "assets" / "attuned" / "lang"
+            lang_dir.mkdir(parents=True)
+            (lang_dir / "en_us.json").write_text(
+                """{
+  "journal.attuned.page11": "First Builds\\n\\nYou must run Swift and Leap; this is the best meta build.",
+  "journal.attuned.page12": "Capacity 6\\n\\nRequired Fury setup.",
+  "journal.attuned.page13": "Adjusting\\n\\nOnly correct builds keep Neutral Foci."
+}
+""",
+                encoding="utf-8",
+            )
+
+            problems = verify_repository.setup_guide_copy_problems(root)
+
+            self.assertTrue(any("journal.attuned.page11" in problem and "must run" in problem for problem in problems))
+            self.assertTrue(any("journal.attuned.page11" in problem and "best meta build" in problem for problem in problems))
+            self.assertTrue(any("journal.attuned.page12" in problem and "required" in problem for problem in problems))
+            self.assertTrue(any("journal.attuned.page13" in problem and "only correct" in problem for problem in problems))
+            with self.assertRaises(verify_repository.CheckFailed) as failure:
+                verify_repository.check_setup_guide_copy(root)
+            self.assertEqual("Setup guide copy", failure.exception.title)
+
+    def test_focus_live_structure_scan_problems_reject_tick_locate_loops(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            behavior_dir = root / "src" / "main" / "java" / "dev" / "attuned" / "content" / "behavior"
+            behavior_dir.mkdir(parents=True)
+            (behavior_dir / "WrecksignBehavior.java").write_text(
+                """package dev.attuned.content.behavior;
+
+import dev.attuned.api.focus.FocusBehavior;
+
+public final class WrecksignBehavior implements FocusBehavior {
+\t@Override
+\tpublic void onTick(ServerPlayer player, ItemStack focus) {
+\t\tplayer.serverLevel().findNearestMapStructure(null, player.blockPosition(), 128, false);
+\t\tplayer.level().getChunk(player.blockPosition());
+\t}
+}
+""",
+                encoding="utf-8",
+            )
+
+            problems = verify_repository.focus_live_structure_scan_problems(root)
+
+            self.assertTrue(any("findNearestMapStructure" in problem for problem in problems))
+            self.assertTrue(any("getChunk(" in problem for problem in problems))
+            with self.assertRaises(verify_repository.CheckFailed) as failure:
+                verify_repository.check_focus_live_structure_scans(root)
+            self.assertEqual("Focus live structure scans", failure.exception.title)
+
     def test_sensitive_assignment_scan_omits_assigned_value(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
             sample = Path(temp_dir) / "sample.properties"
@@ -237,6 +521,51 @@ class VerifyRepositoryContractTest(unittest.TestCase):
             self.assertIn("advertises 1 Foci", problems[0])
             self.assertIn("ships 2 FocusDefinition files", problems[0])
 
+    def test_release_claims_require_matching_implementation_artifacts(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            (root / "docs" / "platform").mkdir(parents=True)
+            (root / "README.md").write_text(
+                "## Current release\n\n"
+                "- Circles now ship with a party HUD and shared credit.\n",
+                encoding="utf-8",
+            )
+
+            problems = verify_repository.release_claim_problems(root)
+
+            self.assertTrue(any("README.md" in problem for problem in problems))
+            self.assertTrue(any("Circle runtime" in problem for problem in problems))
+            self.assertTrue(any("Circle snapshot" in problem for problem in problems))
+            self.assertTrue(any("shared credit" in problem for problem in problems))
+
+            for relative in (
+                "src/main/java/dev/attuned/party/CircleRuntime.java",
+                "src/main/java/dev/attuned/network/CircleNetworking.java",
+                "src/main/java/dev/attuned/network/CircleSnapshotPayload.java",
+                "src/main/java/dev/attuned/network/CircleSnapshotSync.java",
+                "src/main/java/dev/attuned/party/CircleContributionPolicy.java",
+            ):
+                path = root / relative
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_text("// implemented\n", encoding="utf-8")
+
+            self.assertEqual([], verify_repository.release_claim_problems(root))
+
+    def test_release_claims_report_untracked_art_workflow_copy(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            platform = root / "docs" / "platform"
+            platform.mkdir(parents=True)
+            (platform / "modrinth-description.md").write_text(
+                "Generated from the untracked asset workflow.\n",
+                encoding="utf-8",
+            )
+
+            problems = verify_repository.release_claim_problems(root)
+
+            self.assertEqual(1, len(problems))
+            self.assertTrue(any("untracked asset workflow" in problem for problem in problems))
+
     def test_current_changelog_section_excludes_prior_release_notes(self) -> None:
         changelog = (
             "# Changelog\n\n"
@@ -252,6 +581,30 @@ class VerifyRepositoryContractTest(unittest.TestCase):
         self.assertIn("Current note", section)
         self.assertNotIn("Attuned 1.2.6", section)
         self.assertNotIn("Stale note", section)
+
+    def test_current_changelog_reports_focus_roster_count_when_it_changes(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            focus_dir = root / "src" / "main" / "resources" / "data" / "attuned" / "attuned" / "focus"
+            focus_dir.mkdir(parents=True)
+            (focus_dir / "first_focus.json").write_text("{}", encoding="utf-8")
+            (focus_dir / "second_focus.json").write_text("{}", encoding="utf-8")
+            (root / "gradle.properties").write_text("mod_version=1.2.7\n", encoding="utf-8")
+            (root / "CHANGELOG.md").write_text(
+                "# Changelog\n\n"
+                "## Attuned 1.2.7 - Current release\n\n"
+                "- Current note without roster count\n\n"
+                "## Attuned 1.2.6 - Prior release\n\n"
+                "- 1 Foci across test categories\n",
+                encoding="utf-8",
+            )
+
+            problems = verify_repository.current_changelog_focus_count_problems(root)
+
+            self.assertEqual(len(problems), 1)
+            self.assertIn("CHANGELOG.md", problems[0])
+            self.assertIn("2 Foci", problems[0])
+            self.assertIn("changed from 1", problems[0])
 
     def test_modrinth_changelog_problems_report_whole_file_uploads(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -332,6 +685,25 @@ class VerifyRepositoryContractTest(unittest.TestCase):
             problems = verify_repository.version_profile_problems(root)
 
             self.assertTrue(any("whitespace diff" in problem for problem in problems))
+
+    def test_version_profile_problems_report_missing_ci_pytest_pillow_gate(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            write_version_profile_fixture(root)
+            (root / ".github" / "workflows" / "ci.yml").write_text(
+                "run: python3 tools/minecraft_version_profile.py current --github-output \"$GITHUB_OUTPUT\"\n"
+                "java-version: ${{ steps.versions.outputs.build_java_version }}\n"
+                "run: git diff --check\n"
+                "run: python3 tools/verify_repository.py\n"
+                "run: python3 -m unittest discover -s tests\n"
+                "run: ./gradlew test build --no-daemon\n"
+                "run: python3 tools/minecraft_runtime_smoke.py --accept-eula --timeout 240 --stop-timeout 60\n",
+                encoding="utf-8",
+            )
+
+            problems = verify_repository.version_profile_problems(root)
+
+            self.assertTrue(any("Pillow/pytest image tooling" in problem for problem in problems))
 
     def test_modrinth_gallery_pngs_report_missing_or_wrong_sized_panels(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -420,6 +792,27 @@ class VerifyRepositoryContractTest(unittest.TestCase):
             self.assertEqual("PNG resource headers", failure.exception.title)
             self.assertTrue(any("frametime must be a positive integer" in problem for problem in failure.exception.problems))
             self.assertTrue(any("interpolate must be a boolean" in problem for problem in failure.exception.problems))
+
+    def test_png_resources_report_static_or_wrong_sized_focus_texture_sheets(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            focus_dir = root / "src" / "main" / "resources" / "data" / "attuned" / "attuned" / "focus"
+            textures = root / "src" / "main" / "resources" / "assets" / "attuned" / "textures" / "item"
+            focus_dir.mkdir(parents=True)
+            textures.mkdir(parents=True)
+            (focus_dir / "bad_focus.json").write_text('{"item": "attuned:bad_focus"}\n', encoding="utf-8")
+            write_complete_png(textures / "bad_focus.png", 32, 64)
+            original_png_resource_root = verify_repository.PNG_RESOURCE_ROOT
+            verify_repository.PNG_RESOURCE_ROOT = root / "src" / "main" / "resources"
+            try:
+                with self.assertRaises(verify_repository.CheckFailed) as failure:
+                    verify_repository.check_png_resources()
+            finally:
+                verify_repository.PNG_RESOURCE_ROOT = original_png_resource_root
+
+            self.assertEqual("PNG resource headers", failure.exception.title)
+            self.assertTrue(any("64px-wide" in problem for problem in failure.exception.problems))
+            self.assertTrue(any("missing animation metadata" in problem for problem in failure.exception.problems))
 
     def test_attuned_asset_references_report_missing_models_and_textures(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -514,6 +907,89 @@ class VerifyRepositoryContractTest(unittest.TestCase):
             problems = verify_repository.attuned_asset_reference_problems(root)
 
             self.assertEqual([], problems)
+
+    def test_release_jar_problems_report_missing_shipped_focus_entries(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            focus_dir = root / "src" / "main" / "resources" / "data" / "attuned" / "attuned" / "focus"
+            focus_dir.mkdir(parents=True)
+            (focus_dir / "first_focus.json").write_text('{"item": "attuned:first_focus"}\n', encoding="utf-8")
+            (root / "gradle.properties").write_text("mod_version=1.2.3\n", encoding="utf-8")
+            jar_path = root / "build" / "libs" / "attuned-1.2.3.jar"
+            jar_path.parent.mkdir(parents=True)
+            with zipfile.ZipFile(jar_path, "w") as jar:
+                jar.writestr("fabric.mod.json", "{}")
+                jar.writestr("data/attuned/attuned/focus/first_focus.json", "{}")
+                jar.writestr("assets/attuned/items/first_focus.json", "{}")
+
+            problems = verify_repository.release_jar_problems(root, require=True)
+
+            self.assertEqual(3, len(problems))
+            self.assertTrue(any("assets/attuned/models/item/first_focus.json" in problem for problem in problems))
+            self.assertTrue(any("assets/attuned/textures/item/first_focus.png" in problem for problem in problems))
+            self.assertTrue(any("assets/attuned/textures/item/first_focus.png.mcmeta" in problem for problem in problems))
+
+            with zipfile.ZipFile(jar_path, "a") as jar:
+                jar.writestr("assets/attuned/models/item/first_focus.json", "{}")
+                jar.writestr("assets/attuned/textures/item/first_focus.png", b"png")
+                jar.writestr("assets/attuned/textures/item/first_focus.png.mcmeta", "{}")
+
+            self.assertEqual([], verify_repository.release_jar_problems(root, require=True))
+
+    def test_repository_layout_problems_report_root_asset_leakage(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            leaked_asset = root / "assets" / "attuned" / "textures" / "item" / "leaked_focus.png"
+            leaked_asset.parent.mkdir(parents=True)
+            leaked_asset.write_bytes(b"not a packaged resource")
+
+            problems = verify_repository.repository_layout_problems(root)
+
+            self.assertEqual(1, len(problems))
+            self.assertIn("assets", problems[0])
+            self.assertIn("generated root asset directory", problems[0])
+
+    def test_release_jar_problems_report_untracked_source_manifest_leakage(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            focus_dir = root / "src" / "main" / "resources" / "data" / "attuned" / "attuned" / "focus"
+            focus_dir.mkdir(parents=True)
+            (focus_dir / "first_focus.json").write_text('{"item": "attuned:first_focus"}\n', encoding="utf-8")
+            (root / "gradle.properties").write_text("mod_version=1.2.3\n", encoding="utf-8")
+            jar_path = root / "build" / "libs" / "attuned-1.2.3.jar"
+            jar_path.parent.mkdir(parents=True)
+            with zipfile.ZipFile(jar_path, "w") as jar:
+                for entry in verify_repository.release_jar_expected_entries(root):
+                    jar.writestr(entry, "{}")
+                jar.writestr("assets/attuned/asset-sources/asset-source-manifest.json", "{}")
+                jar.writestr("assets/attuned/textures/item/untracked-asset-manifest.json", "{}")
+
+            problems = verify_repository.release_jar_problems(root, require=True)
+
+            self.assertEqual(2, len(problems))
+            self.assertTrue(any("asset-source-manifest.json" in problem for problem in problems))
+            self.assertTrue(any("untracked-asset-manifest.json" in problem for problem in problems))
+
+    def test_ci_runs_repository_verifier_after_gradle_build_for_jar_inspection(self) -> None:
+        ci = (ROOT / ".github" / "workflows" / "ci.yml").read_text(encoding="utf-8")
+
+        build_index = ci.index("run: ./gradlew test build --no-daemon")
+        post_build_verify_index = ci.rindex("run: python3 tools/verify_repository.py")
+
+        self.assertGreater(post_build_verify_index, build_index)
+
+    def test_ci_runs_the_documented_pytest_pillow_gate(self) -> None:
+        ci = (ROOT / ".github" / "workflows" / "ci.yml").read_text(encoding="utf-8")
+        migration = (ROOT / "docs" / "versioning" / "minecraft-version-migration.md").read_text(encoding="utf-8")
+        requirements = (ROOT / "requirements-dev.txt").read_text(encoding="utf-8")
+
+        self.assertIn("Pillow==", requirements)
+        self.assertIn("pytest", requirements)
+        self.assertIn("python3 -m pip install -r requirements-dev.txt", ci)
+        self.assertIn("python3 -m unittest discover -s tests", ci)
+        self.assertIn("python3 -m pytest tests/ -q", ci)
+        self.assertIn("python -m pip install -r requirements-dev.txt", migration)
+        self.assertIn("python -m pytest tests/ -q", migration)
 
     def test_static_translation_key_problems_report_missing_java_literals(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
