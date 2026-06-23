@@ -55,11 +55,11 @@ public final class PresetNetworking {
 			return;
 		}
 		initialized = true;
-		PayloadTypeRegistry.serverboundPlay().register(SavePresetPayload.TYPE, SavePresetPayload.CODEC);
-		PayloadTypeRegistry.serverboundPlay().register(ApplyPresetPayload.TYPE, ApplyPresetPayload.CODEC);
-		PayloadTypeRegistry.serverboundPlay().register(DeletePresetPayload.TYPE, DeletePresetPayload.CODEC);
-		PayloadTypeRegistry.serverboundPlay().register(QuickApplyPresetPayload.TYPE, QuickApplyPresetPayload.CODEC);
-		PayloadTypeRegistry.serverboundPlay().register(ImportPresetPayload.TYPE, ImportPresetPayload.CODEC);
+		PayloadTypeRegistry.playC2S().register(SavePresetPayload.TYPE, SavePresetPayload.CODEC);
+		PayloadTypeRegistry.playC2S().register(ApplyPresetPayload.TYPE, ApplyPresetPayload.CODEC);
+		PayloadTypeRegistry.playC2S().register(DeletePresetPayload.TYPE, DeletePresetPayload.CODEC);
+		PayloadTypeRegistry.playC2S().register(QuickApplyPresetPayload.TYPE, QuickApplyPresetPayload.CODEC);
+		PayloadTypeRegistry.playC2S().register(ImportPresetPayload.TYPE, ImportPresetPayload.CODEC);
 		ServerPlayNetworking.registerGlobalReceiver(SavePresetPayload.TYPE, (payload, context) -> {
 			ServerPlayer player = context.player();
 			player.level().getServer().execute(() -> savePreset(player, payload));

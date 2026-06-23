@@ -378,7 +378,7 @@ public final class Pacts {
 			if (attackerPact == Pact.RADIANT_COVENANT
 					&& !(defender instanceof Player)
 					&& CombatTargets.isHostileOrPvpOpponent(defender, attackerPlayer)
-					&& defender.typeHolder().is(EntityTypeTags.UNDEAD)
+					&& defender.getType().is(EntityTypeTags.UNDEAD)
 					&& AttunedCombat.isChargedDirectMelee(attackerPlayer, defender, source, RADIANT_COVENANT_SWING_THRESHOLD)) {
 				amount = DamageFormula.amplify(amount, PactTier4.radiantUndeadBonus(attackerPlayer));
 			}

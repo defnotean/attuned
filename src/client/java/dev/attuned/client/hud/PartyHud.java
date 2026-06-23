@@ -13,7 +13,7 @@ import net.fabricmc.fabric.api.client.rendering.v1.hud.VanillaHudElements;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 
@@ -61,7 +61,7 @@ public final class PartyHud {
 		HudElementRegistry.attachElementAfter(VanillaHudElements.HOTBAR, id, PartyHud::renderLayer);
 	}
 
-	private static void renderLayer(GuiGraphicsExtractor graphics, DeltaTracker delta) {
+	private static void renderLayer(GuiGraphics graphics, DeltaTracker delta) {
 		Minecraft minecraft = Minecraft.getInstance();
 		if (minecraft.player == null || !AttunedClientConfig.get().showPartyHud()) {
 			return;
@@ -80,7 +80,7 @@ public final class PartyHud {
 		draw(graphics, minecraft, CircleClientState.name(), members, invitePrompt, ping, nowTick);
 	}
 
-	private static void draw(GuiGraphicsExtractor graphics, Minecraft minecraft,
+	private static void draw(GuiGraphics graphics, Minecraft minecraft,
 			String circleName, List<CircleSnapshotPayload.Member> members,
 			Optional<CircleInvitePromptPayload> invitePrompt,
 			Optional<CirclePingClientPayload> ping, long nowTick) {
@@ -115,7 +115,7 @@ public final class PartyHud {
 
 		if (rows > 0) {
 			graphics.fill(x, cursorY, x + PARTY_HUD_W, cursorY + HEADER_H, HEADER_BG);
-			graphics.text(font, trimName(font, circleName, HEADER_NAME_MAX_W),
+			graphics.drawString(font, trimName(font, circleName, HEADER_NAME_MAX_W),
 				x + TEXT_X, cursorY + 2, HEADER_TEXT, false);
 		}
 
@@ -128,10 +128,10 @@ public final class PartyHud {
 			} else {
 				drawMemberMark(graphics, x + 3, rowY + 3);
 			}
-			graphics.text(font, trimName(font, member.name(), MEMBER_NAME_MAX_W),
+			graphics.drawString(font, trimName(font, member.name(), MEMBER_NAME_MAX_W),
 				x + TEXT_X + 6, rowY + 1, MEMBER_TEXT, false);
 			String summary = trimName(font, memberSummary(member).getString(), MEMBER_SUMMARY_MAX_W);
-			graphics.text(font, summary, x + TEXT_X + 6, rowY + 10, 0xFFB7C6D8, false);
+			graphics.drawString(font, summary, x + TEXT_X + 6, rowY + 10, 0xFFB7C6D8, false);
 			rowY += ROW_H + ROW_GAP;
 		}
 
@@ -166,19 +166,19 @@ public final class PartyHud {
 		}
 	}
 
-	private static void drawLeaderMark(GuiGraphicsExtractor graphics, int x, int y) {
+	private static void drawLeaderMark(GuiGraphics graphics, int x, int y) {
 		graphics.fill(x, y + 3, x + 7, y + 5, LEADER_MARK);
 		graphics.fill(x + 1, y + 1, x + 3, y + 3, LEADER_MARK);
 		graphics.fill(x + 4, y, x + 6, y + 3, LEADER_MARK);
 	}
 
-	private static void drawMemberMark(GuiGraphicsExtractor graphics, int x, int y) {
+	private static void drawMemberMark(GuiGraphics graphics, int x, int y) {
 		graphics.fill(x + 2, y, x + 5, y + 1, MEMBER_MARK);
 		graphics.fill(x + 1, y + 1, x + 6, y + 3, MEMBER_MARK);
 		graphics.fill(x + 2, y + 3, x + 5, y + 4, MEMBER_MARK);
 	}
 
-	private static void drawInvitePrompt(GuiGraphicsExtractor graphics, Font font,
+	private static void drawInvitePrompt(GuiGraphics graphics, Font font,
 			CircleInvitePromptPayload prompt, int x, int y, long nowTick) {
 		String sender = trimName(font, prompt.senderName(), INVITE_TEXT_MAX_W);
 		String circle = trimName(font, prompt.circleName(), INVITE_TEXT_MAX_W);
@@ -200,7 +200,7 @@ public final class PartyHud {
 			x + TEXT_X, y + 33, MEMBER_TEXT, INVITE_TEXT_MAX_W);
 	}
 
-	private static void drawPing(GuiGraphicsExtractor graphics, Font font,
+	private static void drawPing(GuiGraphics graphics, Font font,
 			CirclePingClientPayload ping, int x, int y, long nowTick) {
 		String sender = trimName(font, ping.sourceName(), PING_TEXT_MAX_W);
 		String location = Math.round(ping.x()) + ", " + Math.round(ping.y()) + ", "
@@ -235,9 +235,9 @@ public final class PartyHud {
 		return font.plainSubstrByWidth(value, Math.max(0, maxWidth - font.width(ELLIPSIS))) + ELLIPSIS;
 	}
 
-	private static void drawTrimmedText(GuiGraphicsExtractor graphics, Font font,
+	private static void drawTrimmedText(GuiGraphics graphics, Font font,
 			Component text, int x, int y, int color, int maxWidth) {
-		graphics.text(font, trimText(font, text, maxWidth), x, y, color, false);
+		graphics.drawString(font, trimText(font, text, maxWidth), x, y, color, false);
 	}
 
 	private static String trimText(Font font, Component text, int maxWidth) {

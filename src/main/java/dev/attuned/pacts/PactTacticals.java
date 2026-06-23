@@ -222,7 +222,7 @@ public final class PactTacticals {
 				dx = player.getRandom().nextDouble() - 0.5D;
 				dz = player.getRandom().nextDouble() - 0.5D;
 			}
-			target.knockback(strength, -dx, -dz, level.damageSources().generic(), 0.0F);
+			target.knockback(strength, -dx, -dz);
 		}
 	}
 

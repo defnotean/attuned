@@ -54,13 +54,13 @@ public final class AttunedNetworking {
 		}
 		initialized = true;
 		CircleNetworking.init();
-		PayloadTypeRegistry.serverboundPlay().register(AbilityPayload.TYPE, AbilityPayload.CODEC);
+		PayloadTypeRegistry.playC2S().register(AbilityPayload.TYPE, AbilityPayload.CODEC);
 		ServerPlayNetworking.registerGlobalReceiver(AbilityPayload.TYPE, (payload, context) -> {
 			ServerPlayer player = context.player();
 			player.level().getServer().execute(() -> FocusAbilityState.trigger(player));
 		});
 
-		PayloadTypeRegistry.serverboundPlay().register(InspectRequestPayload.TYPE, InspectRequestPayload.CODEC);
+		PayloadTypeRegistry.playC2S().register(InspectRequestPayload.TYPE, InspectRequestPayload.CODEC);
 		ServerPlayNetworking.registerGlobalReceiver(InspectRequestPayload.TYPE, (payload, context) -> {
 			ServerPlayer player = context.player();
 			int targetId = payload.targetEntityId();
@@ -70,7 +70,7 @@ public final class AttunedNetworking {
 		AttunedServerCleanup.onStop(LAST_INSPECT::clear);
 		AttunedPlayerCleanup.onForget(LAST_INSPECT::remove);
 
-		PayloadTypeRegistry.serverboundPlay().register(UpdraftLiftPayload.TYPE, UpdraftLiftPayload.CODEC);
+		PayloadTypeRegistry.playC2S().register(UpdraftLiftPayload.TYPE, UpdraftLiftPayload.CODEC);
 		ServerPlayNetworking.registerGlobalReceiver(UpdraftLiftPayload.TYPE, (payload, context) -> {
 			ServerPlayer player = context.player();
 			player.level().getServer().execute(() -> {

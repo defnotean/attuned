@@ -42,7 +42,7 @@ public final class AttunedKeybinds {
 		toggleFociHudKey = KeyBindingHelper.registerKeyBinding(new KeyMapping(
 			"key.attuned.toggle_foci_hud",
 			InputConstants.UNKNOWN.getType(), InputConstants.UNKNOWN.getValue(), KeyMapping.Category.GAMEPLAY));
-		togglePartyHudKey = KeyMappingHelper.registerKeyMapping(new KeyMapping(
+		togglePartyHudKey = KeyBindingHelper.registerKeyBinding(new KeyMapping(
 			"key.attuned.toggle_party_hud",
 			InputConstants.UNKNOWN.getType(), InputConstants.UNKNOWN.getValue(), KeyMapping.Category.GAMEPLAY));
 		applyBuildKeys = new KeyMapping[3];

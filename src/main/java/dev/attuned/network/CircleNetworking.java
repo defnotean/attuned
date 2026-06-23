@@ -38,7 +38,7 @@ public final class CircleNetworking {
 		AttunedServerCleanup.onStop(LAST_PING::clear);
 		AttunedPlayerCleanup.onForget(LAST_PING::remove);
 
-		PayloadTypeRegistry.serverboundPlay().register(CircleCreatePayload.TYPE, CircleCreatePayload.CODEC);
+		PayloadTypeRegistry.playC2S().register(CircleCreatePayload.TYPE, CircleCreatePayload.CODEC);
 		ServerPlayNetworking.registerGlobalReceiver(CircleCreatePayload.TYPE, (payload, context) -> {
 			ServerPlayer player = context.player();
 			player.level().getServer().execute(() -> {
@@ -50,7 +50,7 @@ public final class CircleNetworking {
 			});
 		});
 
-		PayloadTypeRegistry.serverboundPlay().register(CircleInvitePayload.TYPE, CircleInvitePayload.CODEC);
+		PayloadTypeRegistry.playC2S().register(CircleInvitePayload.TYPE, CircleInvitePayload.CODEC);
 		ServerPlayNetworking.registerGlobalReceiver(CircleInvitePayload.TYPE, (payload, context) -> {
 			ServerPlayer player = context.player();
 			player.level().getServer().execute(() -> {
@@ -71,7 +71,7 @@ public final class CircleNetworking {
 			});
 		});
 
-		PayloadTypeRegistry.serverboundPlay().register(CircleAcceptPayload.TYPE, CircleAcceptPayload.CODEC);
+		PayloadTypeRegistry.playC2S().register(CircleAcceptPayload.TYPE, CircleAcceptPayload.CODEC);
 		ServerPlayNetworking.registerGlobalReceiver(CircleAcceptPayload.TYPE, (payload, context) -> {
 			ServerPlayer player = context.player();
 			player.level().getServer().execute(() -> {
@@ -85,7 +85,7 @@ public final class CircleNetworking {
 			});
 		});
 
-		PayloadTypeRegistry.serverboundPlay().register(CircleLeavePayload.TYPE, CircleLeavePayload.CODEC);
+		PayloadTypeRegistry.playC2S().register(CircleLeavePayload.TYPE, CircleLeavePayload.CODEC);
 		ServerPlayNetworking.registerGlobalReceiver(CircleLeavePayload.TYPE, (payload, context) -> {
 			ServerPlayer player = context.player();
 			player.level().getServer().execute(() -> {
@@ -96,7 +96,7 @@ public final class CircleNetworking {
 			});
 		});
 
-		PayloadTypeRegistry.serverboundPlay().register(CircleDisbandPayload.TYPE, CircleDisbandPayload.CODEC);
+		PayloadTypeRegistry.playC2S().register(CircleDisbandPayload.TYPE, CircleDisbandPayload.CODEC);
 		ServerPlayNetworking.registerGlobalReceiver(CircleDisbandPayload.TYPE, (payload, context) -> {
 			ServerPlayer player = context.player();
 			player.level().getServer().execute(() -> {
@@ -111,7 +111,7 @@ public final class CircleNetworking {
 			});
 		});
 
-		PayloadTypeRegistry.serverboundPlay().register(CircleKickPayload.TYPE, CircleKickPayload.CODEC);
+		PayloadTypeRegistry.playC2S().register(CircleKickPayload.TYPE, CircleKickPayload.CODEC);
 		ServerPlayNetworking.registerGlobalReceiver(CircleKickPayload.TYPE, (payload, context) -> {
 			ServerPlayer player = context.player();
 			player.level().getServer().execute(() -> {
@@ -124,7 +124,7 @@ public final class CircleNetworking {
 			});
 		});
 
-		PayloadTypeRegistry.serverboundPlay().register(CirclePingPayload.TYPE, CirclePingPayload.CODEC);
+		PayloadTypeRegistry.playC2S().register(CirclePingPayload.TYPE, CirclePingPayload.CODEC);
 		ServerPlayNetworking.registerGlobalReceiver(CirclePingPayload.TYPE, (payload, context) -> {
 			ServerPlayer player = context.player();
 			player.level().getServer().execute(() -> handlePing(player, payload));

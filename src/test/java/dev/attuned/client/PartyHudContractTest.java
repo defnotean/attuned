@@ -78,7 +78,7 @@ class PartyHudContractTest {
 			"The party HUD should use a distinct translation when a member has a public role label.");
 		assertTrue(hud.contains("member.role().isBlank()"),
 			"The party HUD should fall back cleanly for builds that do not infer a role yet.");
-		assertTrue(hud.contains("graphics.text"),
+		assertTrue(hud.contains("graphics.drawString"),
 			"The party HUD should draw readable member names.");
 		assertTrue(hud.contains("trimName("),
 			"Long party/member names should be trimmed to fit the compact panel.");
@@ -92,9 +92,9 @@ class PartyHudContractTest {
 	void partyHudUsesShapeCodedLeaderAndMemberMarkers() throws IOException {
 		String hud = read(PARTY_HUD);
 		String leader = methodBody(hud,
-			"private static void drawLeaderMark(GuiGraphicsExtractor graphics, int x, int y)");
+			"private static void drawLeaderMark(GuiGraphics graphics, int x, int y)");
 		String member = methodBody(hud,
-			"private static void drawMemberMark(GuiGraphicsExtractor graphics, int x, int y)");
+			"private static void drawMemberMark(GuiGraphics graphics, int x, int y)");
 
 		assertTrue(hud.contains("if (member.leader())")
 				&& hud.contains("drawLeaderMark(graphics")
@@ -203,11 +203,11 @@ class PartyHudContractTest {
 	void partyHudTruncatesTranslatedInviteAndPingLinesAfterComposition() throws IOException {
 		String hud = read(PARTY_HUD);
 		String invite = methodBody(hud,
-			"private static void drawInvitePrompt(GuiGraphicsExtractor graphics, Font font,");
+			"private static void drawInvitePrompt(GuiGraphics graphics, Font font,");
 		String ping = methodBody(hud,
-			"private static void drawPing(GuiGraphicsExtractor graphics, Font font,");
+			"private static void drawPing(GuiGraphics graphics, Font font,");
 		String drawTrimmedText = methodBody(hud,
-			"private static void drawTrimmedText(GuiGraphicsExtractor graphics, Font font,");
+			"private static void drawTrimmedText(GuiGraphics graphics, Font font,");
 		String trimText = methodBody(hud, "private static String trimText(Font font, Component text, int maxWidth)");
 
 		assertTrue(hud.contains("INVITE_SIZE_MAX_W") && hud.contains("INVITE_EXPIRES_MAX_W"),
@@ -228,7 +228,7 @@ class PartyHudContractTest {
 			"Ping location should trim the composed coordinate phrase.");
 		assertTrue(ping.contains("drawTrimmedText(graphics, font, Component.translatable(\"party.attuned.ping.expires\", seconds)"),
 			"Ping expiry should trim final copy as rendered.");
-		assertTrue(drawTrimmedText.contains("graphics.text(font, trimText(font, text, maxWidth)"),
+		assertTrue(drawTrimmedText.contains("graphics.drawString(font, trimText(font, text, maxWidth)"),
 			"Translated HUD copy should be clipped by one helper before drawing.");
 		assertTrue(trimText.contains("text == null ? \"\" : text.getString()"),
 			"Final-line trimming should operate on the rendered text copy, not only pre-trimmed arguments.");

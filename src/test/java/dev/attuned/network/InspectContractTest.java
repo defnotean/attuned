@@ -40,7 +40,7 @@ class InspectContractTest {
 	@Test
 	void networkingRegistersServerboundAndHandlesOnServerThread() throws IOException {
 		String net = read(NET);
-		assertTrue(net.contains("PayloadTypeRegistry.serverboundPlay().register(InspectRequestPayload.TYPE, InspectRequestPayload.CODEC)"),
+		assertTrue(net.contains("PayloadTypeRegistry.playC2S().register(InspectRequestPayload.TYPE, InspectRequestPayload.CODEC)"),
 			"Inspect request is registered serverbound.");
 		assertTrue(net.contains("ServerPlayNetworking.registerGlobalReceiver(InspectRequestPayload.TYPE"),
 			"Inspect request has a server-side receiver.");
