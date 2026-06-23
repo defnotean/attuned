@@ -150,7 +150,7 @@ modrinth {
 	projectId = "attuned-mod"
 	versionNumber = project.version
 	versionType = "release"
-	versionName = "Attuned ${project.version}"
+	versionName = "Fabric: Minecraft ${project.minecraft_version} - Attuned ${project.version}"
 	def changelogFile = layout.projectDirectory.file("CHANGELOG.md")
 	changelog = providers.provider {
 		currentChangelogSection(changelogFile.asFile.getText("UTF-8"), project.version.toString())
