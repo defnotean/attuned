@@ -3,15 +3,59 @@
 ## Attuned 1.5.2 - Minecraft 26.2 Chaos Cubed
 
 ### Added
-- **Deep Lanterns faction** - four exploration-support Foci bring the shipped roster to 99 Foci: Cavewick rewards placed lantern routes with gentle Night Vision, Glowline follows same-dimension Circle pings, Rescueflame helps drowning Circle members breathe, and Depthglass reads held lodestone compass targets for restrained navigation hints.
+- **Deep Lanterns faction** - four exploration-support Foci bring the shipped roster to 99 Foci and give cave expeditions a support identity that is not another raw damage lane.
+  - **Cavewick Focus** is a two-cost utility Focus that rewards player-built routes: placed lanterns and soul lanterns in a small radius keep gentle Night Vision refreshed, making caves readable without granting global tracking or structure search.
+  - **Glowline Focus** is a three-cost route-following Focus that points toward recent same-dimension Circle pings. It uses only server-accepted party markers, so it is a coordination aid rather than a live locator.
+  - **Rescueflame Focus** is a four-cost Holy support Focus that periodically assists a nearby drowning Circle member with Water Breathing. It deliberately excludes the wearer and uses Circle eligibility/cooldown rules so it behaves like rescue support, not a personal underwater buff.
+  - **Depthglass Focus** is a three-cost navigation Focus that reads a held lodestone compass target and gives restrained same-dimension hints. It works from an explicit vanilla target the player already owns.
+- **Server-authoritative Circles** - Attuned now has a small temporary party system for expeditions. Players can create, invite, accept, leave, disband, and kick through `/attuned circle ...`; the server owns membership, invite expiry, capacity, cooldowns, disconnect cleanup, and snapshot syncing.
+- **Party HUD and invite prompts** - clients now receive Circle snapshots, invite prompts, and recent ping notices through dedicated payloads. The HUD shows public member summaries, role labels, invite expiry, and ping locations without exposing hidden inventory, private cooldowns, or item sharing.
+- **Circle pings and navigation targets** - the new ping pipeline remembers accepted same-dimension Circle markers with range, visibility, loaded-target, and rate-limit checks. Glowline consumes those stored markers instead of scanning the world.
+- **Shared contribution windows** - Circle members can earn shared progress only when they are nearby, online, same-dimension, and recently contributing. Combat, blocking, reveal, and helper actions open short contribution windows; passive proximity alone should not farm Pact, Field, Circle, surge, or party progress.
+- **Party-aware Pact Trial support** - Pact trial progress can now credit eligible Circle contributors while preserving solo play. The checks are intentionally narrow so coordinated play feels better without turning groups into idle progress multipliers.
+- **Expanded data-driven Focus behavior palette** - author packs and shipped content now have a broader passive behavior vocabulary:
+  - `attuned:block_context_effect` keeps an effect refreshed near tagged local blocks, used by Cavewick for lantern routes.
+  - `attuned:navigation_hint` gives restrained feedback toward accepted stored targets, used by Glowline and Depthglass.
+  - `attuned:party_assist` helps an eligible Circle member with a small effect on cooldown, used by Rescueflame.
+  - `attuned:use_item_window` grants a short effect or modifier after using a matching item or item tag.
+  - `attuned:marked_target` lets a charged hit prime a short-lived mark and a later charged hit consume it for an effect.
+- **Build setup metadata** - saved and imported Focus builds can now carry advisory metadata such as role, notes, preferred party size, required Focus ids, and version context. The metadata is informational only: it does not grant missing Foci, bypass attunement rules, or change equipped slots.
+- **Import validation and setup suggestions** - imported build codes are validated against the server's Focus registry before they become saved presets. Missing required Focus ids become warnings, names and metadata are sanitized, and optional party setup suggestions can be disabled while preserving non-warning metadata.
+- **Action-bar message priority gate** - repeated cooldown, apply, party, and combat feedback now route through shared action-bar helpers so important messages are less likely to be overwritten by low-priority spam.
+- **Gameplay polish QA checklist** - added a platform-facing manual QA checklist covering combat feel, Pact loops, Confluence discovery, Resonant Surges, Circles, Updraft flight, onboarding, and journal clarity. The goal is to make release verification match how the mod actually feels in play, not just whether contract tests compile.
 
 ### Changed
 - **Minecraft 26.2 Chaos Cubed support** - the `latest` line now targets Minecraft 26.2 with Fabric Loader 0.19.3, Fabric API 0.152.1+26.2, Loom 1.17.11, and Gradle 9.5.1. The port updates 26.2 entity/knockback APIs, client render submit nodes, and screen/toast hooks so server and client dev runtimes launch cleanly.
 - **Release line split** - Minecraft 26.1.2 remains preserved on `maintenance/minecraft-26.1.2`, while `latest` carries the current Minecraft 26.2 release train.
 - **Updraft release carried forward** - Attuned 1.5.2 includes the 1.5.1 Updraft Focus, smoother boost/brake controls, flight feedback, and PvP exhaustion safeguard.
+- **Deep Lanterns documentation and journal pages** - the Attunement Journal now explains Circles, public attunement state, shared credit, party pings, and the Deep Lanterns faction. The reference docs now list the new faction, behaviors, config fields, and worked authoring examples.
+- **Example datapack expanded** - the sample pack now covers more real authoring lanes with five example Foci and matching behavior files, including build-mark, canopy-step, rescue-assist, route-window, and windrose-style patterns. This gives pack authors concrete JSON examples for the new behavior palette.
+- **Gallery coverage refreshed** - Modrinth/CurseForge gallery sheets were updated so the current Focus roster, neutral sets, Holy/Forge/Umbral coverage, and shipped item art remain visible after the new Foci landed.
+- **Combat and support math centralized** - damage and support calculations now use small shared helpers where repeated logic was starting to diverge. This includes clearer direct-combat targeting checks and capped positive Luck stacking so support builds stay useful without runaway stacking.
+- **Pact and resonance feedback tightened** - Pact deaths, tactical feedback, trial progress messaging, combat polish hooks, and resonance/surge feedback now share more of the same routing and validation paths.
+- **Reliquary/build workflows hardened** - preset save, import, apply, delete, metadata inference, and quick-apply paths now share stricter validation boundaries so stale UI state or malformed imported data cannot silently mutate the wrong build.
+
+### Fixed
+- Circle membership changes now clean up contribution windows and sync updated snapshots so clients do not keep stale party rows after leaving, kicking, disbanding, or disconnecting.
+- Friendly or invalid targets are filtered out of party-assist, hostile-only Focus, Pact, Apex, and contribution checks so Circle members are not treated as enemies just because they are nearby.
+- Build-share imports reject malformed metadata, non-string slot ids, component-like names, and unknown required Focus ids before saving the preset.
+- Positive Luck modifiers are capped through shared logic, preventing stacked support effects from turning fishing and loot-adjacent bonuses into unbounded values.
+- Deep Lantern support effects use bounded cadences and same-dimension checks so navigation and rescue feedback remain readable and cannot become global trackers.
 
 ### Internal
+- **Why this patch is large** - the roughly 14k-line increase is not one oversized mechanic. It is the combined cost of shipping a server-authoritative Circle runtime, client HUD state, network payloads, party contribution rules, new Focus behavior schema, four complete Foci with item/model/texture/data definitions, expanded authoring docs, gallery updates, example datapack coverage, and a large regression-test net around every new boundary.
+- **Regression coverage** - added contract tests for Circle policy, Circle manager behavior, pings, snapshots, invite prompts, party HUD geometry, shared contribution credit, party effects, action-bar routing, preset metadata/import validation, damage formula helpers, Luck stacking, Deep Lantern content, and block-context scans.
+- **Repository validation coverage** - `tools/verify_repository.py` now checks more generated and authored repository structure, source-marker hygiene, Focus definitions, behavior palettes, docs claims, platform gallery assets, release-facing feature counts, Python syntax, and transient-cache leaks.
+- **CI gate expansion** - CI now installs Python tooling, runs repository checks, runs unittest coverage, runs the Python test suite through pytest, builds/tests Gradle, verifies the built release jar, and runs the Minecraft server smoke check.
+- **Config surface** - added Circle and party knobs for max members, invite TTL/cooldowns, shared-credit radius/window, same-dimension behavior, party effects, party HUD, confluence hints, and setup suggestions.
+- **Tooling and docs cleanup** - release-facing docs now keep private source archives out of tracked content while still documenting the shipped assets, public behavior contracts, and authoring workflows.
 - Refreshed dependency locking, Gradle verification metadata, version-profile docs, and release upload metadata for the Minecraft 26.2 toolchain.
+
+### Compatibility and migration notes
+- Existing worlds do not need a data migration for Circles. Circle state is transient server runtime state, not permanent item ownership.
+- Solo play remains complete. Circle systems add coordination, public role hints, and eligible shared credit, but they do not replace solo Pact, Focus, or Confluence progression.
+- Author datapacks using older Focus behavior palette entries continue to work; the new behavior types are additive.
+- The current `latest` line is Minecraft 26.2. Minecraft 26.1.2 remains on its maintenance branch.
 
 ## Attuned 1.5.1 - Updraft Flight Polish
 
