@@ -11,10 +11,11 @@ from generate_umbral_eclipse_focus_assets import alpha_bounds, remove_key_backgr
 
 
 ROOT = Path(__file__).resolve().parents[1]
-DOCS_DIR = ROOT / "docs" / "superpowers" / "assets" / "aspect-counter-foci" / "replacements"
-SOURCE_PATH = DOCS_DIR / "aspect-counter-replacements-source.png"
-PREVIEW_PATH = DOCS_DIR / "aspect-counter-replacements-preview.png"
-REPORT_PATH = DOCS_DIR / "asset-verification.json"
+SOURCE_DIR = ROOT / ".attuned-art-sources" / "aspect-counter-foci" / "replacements"
+OUTPUT_DIR = ROOT / "build" / "asset-previews" / "aspect-counter-foci" / "replacements"
+SOURCE_PATH = SOURCE_DIR / "aspect-counter-replacements-source.png"
+PREVIEW_PATH = OUTPUT_DIR / "aspect-counter-replacements-preview.png"
+REPORT_PATH = OUTPUT_DIR / "asset-verification.json"
 TEXTURE_DIR = ROOT / "src" / "main" / "resources" / "assets" / "attuned" / "textures" / "item"
 
 ICON_SIZE = 64
@@ -131,8 +132,7 @@ def generate_assets() -> dict[str, object]:
 	save_preview(icons)
 	report = {
 		"source": relative(SOURCE_PATH),
-		"generated_by": "OpenAI built-in image_gen",
-		"purpose": "Image-generated replacement art for selected Aspect Counter Focus textures.",
+		"workflow": "private local source sheet normalized into selected Aspect Counter Focus textures",
 		"source_grid": [5, 1],
 		"operations": [
 			"crop generated source grid cells",

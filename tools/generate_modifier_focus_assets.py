@@ -9,10 +9,11 @@ from PIL import Image, ImageEnhance
 
 
 ROOT = Path(__file__).resolve().parents[1]
-DOCS_DIR = ROOT / "docs" / "superpowers" / "assets" / "modifier-foci"
-SOURCE_PATH = DOCS_DIR / "modifier-foci-source.png"
-PREVIEW_PATH = DOCS_DIR / "modifier-foci-preview.png"
-VERIFY_PATH = DOCS_DIR / "asset-verification.json"
+SOURCE_DIR = ROOT / ".attuned-art-sources" / "modifier-foci"
+OUTPUT_DIR = ROOT / "build" / "asset-previews" / "modifier-foci"
+SOURCE_PATH = SOURCE_DIR / "modifier-foci-source.png"
+PREVIEW_PATH = OUTPUT_DIR / "modifier-foci-preview.png"
+VERIFY_PATH = OUTPUT_DIR / "asset-verification.json"
 TEXTURE_DIR = ROOT / "src" / "main" / "resources" / "assets" / "attuned" / "textures" / "item"
 
 ICON_SIZE = 64
@@ -186,6 +187,7 @@ def generate_assets() -> dict[str, object]:
 	verification = {
 		"source": relative(SOURCE_PATH),
 		"preview": relative(PREVIEW_PATH),
+		"workflow": "private local source sheet normalized into shipped textures",
 		"source_grid": [4, 4],
 		"operations": [
 			"crop generated source grid cells",
