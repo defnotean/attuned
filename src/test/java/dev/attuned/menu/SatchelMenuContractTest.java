@@ -94,6 +94,31 @@ class SatchelMenuContractTest {
 	}
 
 	@Test
+	void satchelContainerRejectsNestedReliquariesAtTheWriteBoundary() throws IOException {
+		String container = read(CONTAINER);
+		String setItem = methodBody(container, "public void setItem(int slot, ItemStack stack)");
+
+		assertTrue(container.contains("private static boolean isReliquary(ItemStack stack)"),
+			"Nested-reliquary denial should live beside the low-level container write boundary.");
+		assertTrue(setItem.contains("isReliquary(stack)"),
+			"Direct container writes must reject both reliquary tiers even if a datapack later makes one look like a Focus.");
+		assertBefore(setItem, "isReliquary(stack)", "Attunement.definitionFor(player, stack).isEmpty()");
+	}
+
+	@Test
+	void satchelContainerHidesNestedReliquariesAtTheReadBoundary() throws IOException {
+		String container = read(CONTAINER);
+		String focusStackAt = methodBody(container, "private ItemStack focusStackAt(int slot)");
+
+		assertTrue(focusStackAt.contains("ItemStack stack = holder().get(slot);"),
+			"Stored component stacks should be inspected before being exposed to the menu.");
+		assertTrue(focusStackAt.contains("isReliquary(stack) ? ItemStack.EMPTY : stack"),
+			"Preexisting nested reliquary component contents should not render as movable menu stacks.");
+		assertTrue(focusStackAt.contains("ItemStack.EMPTY"),
+			"Nested reliquary reads should be hidden as an empty slot rather than exposed to recursive storage.");
+	}
+
+	@Test
 	void satchelMenuTypeRegistersInsideGuardAndProvidesFromHand() throws IOException {
 		String type = read(TYPE);
 		assertTrue(type.contains("private static boolean initialized;"),
@@ -114,6 +139,26 @@ class SatchelMenuContractTest {
 		int e = source.indexOf(earlier);
 		int l = source.indexOf(later);
 		assertTrue(e >= 0 && l >= 0 && e < l, "Expected " + earlier + " before " + later);
+	}
+
+	private static String methodBody(String source, String signature) {
+		int start = source.indexOf(signature);
+		assertTrue(start >= 0, "Expected method: " + signature);
+		int brace = source.indexOf('{', start);
+		assertTrue(brace >= 0, "Expected method body: " + signature);
+		int depth = 0;
+		for (int index = brace; index < source.length(); index++) {
+			char current = source.charAt(index);
+			if (current == '{') {
+				depth++;
+			} else if (current == '}') {
+				depth--;
+				if (depth == 0) {
+					return source.substring(brace, index + 1);
+				}
+			}
+		}
+		throw new AssertionError("Unclosed method body: " + signature);
 	}
 
 	private static String read(Path file) throws IOException {

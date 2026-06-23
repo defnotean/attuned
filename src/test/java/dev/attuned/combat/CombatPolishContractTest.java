@@ -76,12 +76,10 @@ class CombatPolishContractTest {
 		assertTrue(apex.contains("CombatFeedback.executeFinisher("));
 		assertTrue(apex.contains("CombatFeedback.unyieldingCap("));
 		assertTrue(apex.contains("CombatFeedback.stillpointPulse("));
-		assertTrue(apex.contains("sendOverlayMessage(Component.translatable(\"apex.attuned.rearmed\"")
-				|| apex.contains("PlayerMessages.overlay(player, Component.translatable(\"apex.attuned.rearmed\"")
-				|| apex.contains("PlayerMessages.overlay(player, new net.minecraft.network.chat.TranslatableComponent(\"apex.attuned.rearmed\""));
-		assertTrue(apex.contains("sendOverlayMessage(Component.translatable(\"apex.attuned.dormant\"")
-				|| apex.contains("PlayerMessages.overlay(player, Component.translatable(\"apex.attuned.dormant\"")
-				|| apex.contains("PlayerMessages.overlay(player, new net.minecraft.network.chat.TranslatableComponent(\"apex.attuned.dormant\""));
+		assertTrue(apex.contains("ActionBarMessages.send(player, ActionBarMessages.Priority.ABILITY,\n"
+				+ "\t\t\tComponent.translatable(\"apex.attuned.rearmed\""));
+		assertTrue(apex.contains("ActionBarMessages.send(player, ActionBarMessages.Priority.WARNING,\n"
+				+ "\t\t\tComponent.translatable(\"apex.attuned.dormant\"))"));
 	}
 
 	@Test
@@ -150,6 +148,7 @@ class CombatPolishContractTest {
 		assertTrue(onboarding.contains("tryConfluencePreviewHint("));
 		assertTrue(onboarding.contains("Synergies.oneAwayConfluence("));
 		assertTrue(onboarding.contains("\"confluence_one_away_\""));
+		assertTrue(onboarding.contains("ActionBarMessages.send(player, ActionBarMessages.Priority.AMBIENT, preview)"));
 	}
 
 	private static String read(Path path) throws IOException {

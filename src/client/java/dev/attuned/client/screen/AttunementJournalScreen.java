@@ -27,7 +27,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.FormattedCharSequence;
 
 /**
- * Attuned's custom guide UI: a compact codex with a chapter rail and a single
+ * Attuned's custom guide UI: a compact field guide with a chapter rail and a single
  * reading pane. Each chapter owns its pages and renders as one continuous,
  * mouse-wheel-scrollable document; the rail (and the Previous/Next buttons) move
  * between chapters. No content is ever truncated.
@@ -93,6 +93,8 @@ public final class AttunementJournalScreen extends Screen {
 			gemPage("journal.attuned.page39", 0xFF5FC23E, Affinity.VERDANT),
 			gemPage("journal.attuned.page40", 0xFF7A4FB5, Affinity.UMBRAL),
 			page("journal.attuned.page18", 0xFFFF6AA8),
+			page("journal.attuned.page42", 0xFFFF6AA8),
+			page("journal.attuned.page43", 0xFFFF6AA8),
 			dynamicPage(PACT_TRIALS_PAGE_KEY, 0xFFFF6AA8),
 			page("journal.attuned.page19", 0xFFFF6AA8)),
 		chapter("Apex",
@@ -125,9 +127,19 @@ public final class AttunementJournalScreen extends Screen {
 			page("journal.attuned.page26", 0xFF70D7FF),
 			page("journal.attuned.page27", 0xFF70D7FF)),
 		chapter("Offshore",
-			page("journal.attuned.page32", 0xFF56D8CF)),
+			page("journal.attuned.page32", 0xFF56D8CF),
+			page("journal.attuned.page44", 0xFF56D8CF)),
 		chapter("HUD",
-			page("journal.attuned.page28", 0xFF95E6B3)),
+			page("journal.attuned.page28", 0xFF95E6B3),
+			page("journal.attuned.page45", 0xFF95E6B3)),
+		chapter("Circles",
+			page("journal.attuned.page46", 0xFFAEEAFF),
+			page("journal.attuned.page47", 0xFFAEEAFF),
+			page("journal.attuned.page48", 0xFFAEEAFF),
+			page("journal.attuned.page49", 0xFFAEEAFF),
+			page("journal.attuned.page50", 0xFFAEEAFF),
+			page("journal.attuned.page51", 0xFFAEEAFF),
+			page("journal.attuned.page52", 0xFFAEEAFF)),
 		chapter("Confluences",
 			dynamicPage(CONFLUENCE_PAGE_KEY, 0xFF95E6B3))
 	);

@@ -60,6 +60,29 @@ class FocusBehaviorResolutionContractTest {
 	}
 
 	@Test
+	void dataBehaviorCacheIsBoundToServerLifecycle() throws IOException {
+		String source = read(REGISTRIES);
+
+		assertTrue(source.contains("new WeakHashMap<>()"),
+			"Data behaviour caches should stay weak-keyed by RegistryAccess for datapack reload safety.");
+		assertTrue(source.contains("AttunedServerCleanup.onStop("),
+			"The data behaviour cache should be cleared when a server lifetime ends.");
+		assertTrue(source.contains("DATA_BEHAVIOR_CACHE.clear()"),
+			"Server-stop cleanup should empty every cached data-built Focus behavior.");
+	}
+
+	@Test
+	void dataBehaviorCacheDoesNotStoreMissingPaletteLookups() throws IOException {
+		String source = read(REGISTRIES);
+
+		assertTrue(source.contains("if (def == null)"),
+			"Missing data behavior ids should not be cached as null entries.");
+		assertBefore(source, "if (def == null)", "perAccess.put(id, built);");
+		assertTrue(source.contains("return null;"),
+			"Missing data behavior ids should return without growing the per-access cache.");
+	}
+
+	@Test
 	void builderRejectsUnknownPaletteTypesAtCompileTime() throws IOException {
 		String source = read(BUILDER);
 
@@ -69,12 +92,32 @@ class FocusBehaviorResolutionContractTest {
 			"DataFocusBehaviors should reject unknown palette definitions if the hierarchy expands.");
 		assertTrue(source.contains("def.condition().test(player)"),
 			"The conditional behaviour should only refresh while its condition holds.");
-		assertTrue(source.contains("PassiveEffectRefresher.shouldRefresh(current, def.refreshTicks())"),
-			"The conditional behaviour should reuse the shared near-expiry refresh gate.");
+		assertTrue(source.contains("PassiveEffectRefresher.refresh(player, def.effect(), def.durationTicks(), def.amplifier(), def.refreshTicks())"),
+			"The conditional behaviour should reuse the shared near-expiry refresh gate and passive effect flags.");
+	}
+
+	@Test
+	void periodicPaletteEffectsApplyImmediatelyWhenActivated() throws IOException {
+		String source = read(BUILDER);
+
+		assertTrue(source.contains("public void onActivate(ServerPlayer player, ItemStack focus)"),
+			"A newly awake periodic_effect Focus should apply its first buff immediately, not wait for the cadence tick.");
+		assertTrue(source.contains("refreshPeriodicEffect(player);"),
+			"Periodic activation and tick refresh should share one helper so their effect flags stay identical.");
+		assertTrue(source.contains("private void refreshPeriodicEffect(ServerPlayer player)"),
+			"The shared helper should keep periodic_effect application in one place.");
 	}
 
 	private static String read(Path path) throws IOException {
 		assertTrue(Files.isRegularFile(path), "Expected file to exist: " + path);
 		return Files.readString(path, StandardCharsets.UTF_8);
+	}
+
+	private static void assertBefore(String source, String earlier, String later) {
+		int earlierIndex = source.indexOf(earlier);
+		int laterIndex = source.indexOf(later);
+		assertTrue(earlierIndex >= 0, "Expected source to contain: " + earlier);
+		assertTrue(laterIndex >= 0, "Expected source to contain: " + later);
+		assertTrue(earlierIndex < laterIndex, "Expected " + earlier + " before " + later);
 	}
 }

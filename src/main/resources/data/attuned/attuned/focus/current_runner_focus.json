@@ -1,7 +1,9 @@
 {
     "item":  "attuned:current_runner_focus",
     "cost":  3,
+    "unique":  true,
     "affinity":  "tide",
+    "behavior":  "attuned:current_runner_swim",
     "modifiers":  [
                       {
                           "attribute":  "minecraft:generic.movement_speed",

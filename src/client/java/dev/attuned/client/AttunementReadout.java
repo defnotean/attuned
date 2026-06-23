@@ -209,6 +209,8 @@ public final class AttunementReadout {
 				.append(Component.literal("Discord").withStyle(ChatFormatting.LIGHT_PURPLE)));
 			lines.add(Component.literal("Clashing affinities — you deal and take extra damage.")
 				.withStyle(ChatFormatting.GRAY));
+			lines.add(Component.literal("Discord: half Resonance from surge fields.")
+				.withStyle(ChatFormatting.DARK_GRAY));
 		} else {
 			Optional<Affinity> affinity = snapshot.committed();
 			lines.add(Component.literal("Affinity: ").withStyle(ChatFormatting.GRAY)

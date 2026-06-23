@@ -1,0 +1,6 @@
+{
+	"item": "minecraft:compass",
+	"cost": 3,
+	"affinity": "zephyr",
+	"behavior": "example:windrose_hint"
+}

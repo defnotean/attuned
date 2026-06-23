@@ -15,8 +15,8 @@ class NetworkingRegistrationContractTest {
 	private static final Path SOURCE_ROOT =
 		Path.of("src/main/java/dev/attuned");
 	private static final List<String> NETWORK_REGISTRATION_MARKERS = List.of(
-		"PayloadTypeRegistry.serverboundPlay().register",
-		"PayloadTypeRegistry.clientboundPlay().register",
+		"PayloadTypeRegistry.playC2S().register",
+		"PayloadTypeRegistry.playS2C().register",
 		"ServerPlayNetworking.registerGlobalReceiver"
 	);
 

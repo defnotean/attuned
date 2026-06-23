@@ -1,6 +1,7 @@
 {
 	"item": "attuned:shadowmeld_focus",
 	"cost": 4,
+	"unique": true,
 	"affinity": "umbral",
 	"faction": "attuned:umbral",
 	"behavior": "attuned:shadowmeld"

@@ -4,6 +4,7 @@ import dev.attuned.AttunedPlayerCleanup;
 import dev.attuned.AttunedServerCleanup;
 import dev.attuned.api.focus.FocusBehavior;
 import dev.attuned.combat.CombatTargets;
+import dev.attuned.party.CircleContributions;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -54,6 +55,9 @@ public final class LanternBehavior implements FocusBehavior {
 				&& player.hasLineOfSight(target));
 		for (LivingEntity target : targets) {
 			target.addEffect(new MobEffectInstance(MobEffects.GLOWING, GLOW_DURATION, 0, true, false, false));
+		}
+		if (!targets.isEmpty()) {
+			CircleContributions.recordContribution(player);
 		}
 	}
 

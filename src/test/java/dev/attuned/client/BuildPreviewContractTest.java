@@ -26,6 +26,21 @@ class BuildPreviewContractTest {
 	}
 
 	@Test
+	void hoverPreviewUsesSyncedFocusDefinitionRegistryForAvailability() throws IOException {
+		String screen = read(SCREEN);
+		assertTrue(screen.contains("import dev.attuned.AttunedRegistries;"),
+			"The client preview should read the synced FocusDefinition registry.");
+		assertTrue(screen.contains("lookupOrThrow(AttunedRegistries.FOCUS_DEFINITIONS)")
+				|| screen.contains("registryOrThrow(AttunedRegistries.FOCUS_DEFINITIONS)"),
+			"Availability should use the same registry id source as server-side Apply.");
+		assertTrue(screen.contains("private Set<String> registeredFocusIds()")
+				|| screen.contains("private static Set<String> registeredFocusIds()"),
+			"The registry-derived Focus ids should be isolated in one helper.");
+		assertTrue(screen.contains("slots, equippedIds(), satchelIds(), inventoryFocusCounts(), registeredFocusIds())"),
+			"The hover preview must pass registered Focus ids into the pure availability resolver.");
+	}
+
+	@Test
 	void hoverPreviewDrawsSixFocusIconsViaTheForkItemHook() throws IOException {
 		String screen = read(SCREEN);
 		assertTrue(screen.contains("graphics.item(") || screen.contains("graphics.renderItem("),

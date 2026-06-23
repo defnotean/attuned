@@ -11,7 +11,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-/** Discards temporary Offshore Harpoons when 1.20.6 handles trident block hits in AbstractArrow. */
+/** Discards temporary Offshore Harpoons when 1.19.2 handles trident block hits in AbstractArrow. */
 @Mixin(AbstractArrow.class)
 public abstract class AbstractArrowTridentMixin {
 	@Shadow

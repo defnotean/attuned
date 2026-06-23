@@ -11,8 +11,8 @@ import java.util.Objects;
 import java.util.WeakHashMap;
 import net.minecraft.core.Registry;
 import net.minecraft.core.RegistryAccess;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
 
 /**
  * Registry keys and the single code-first-then-data Focus behaviour funnel for Attuned.
@@ -40,6 +40,10 @@ public final class AttunedRegistries {
 	/** Per-RegistryAccess cache of behaviours built from data palette entries, so ticking never rebuilds. */
 	private static final Map<RegistryAccess, Map<ResourceLocation, FocusBehavior>> DATA_BEHAVIOR_CACHE =
 		new WeakHashMap<>();
+
+	static {
+		AttunedServerCleanup.onStop(AttunedRegistries::clearDataBehaviorCache);
+	}
 
 	/** Registers a code behaviour under an id that a {@link FocusDefinition} can reference. */
 	public static void registerBehavior(ResourceLocation id, FocusBehavior behavior) {
@@ -83,8 +87,15 @@ public final class AttunedRegistries {
 			return perAccess.get(id);
 		}
 		FocusBehaviorDef def = registries.registryOrThrow(FOCUS_BEHAVIORS).get(id);
-		FocusBehavior built = def == null ? null : DataFocusBehaviors.build(id, def);
+		if (def == null) {
+			return null;
+		}
+		FocusBehavior built = DataFocusBehaviors.build(id, def);
 		perAccess.put(id, built);
 		return built;
+	}
+
+	private static synchronized void clearDataBehaviorCache() {
+		DATA_BEHAVIOR_CACHE.clear();
 	}
 }
