@@ -73,9 +73,12 @@ That script:
 - strips embedded images,
 - writes `src/main/resources/assets/attuned/gltf/ocean_relic_trident.glb`.
 
-The item definition supplies
-`attuned:textures/item/ocean_relic_trident_blockbench.png` as the texture. Its
+The runtime mesh path uses
+`attuned:textures/item/ocean_relic_trident_mesh.png` as the packaged texture. Its
 `.mcmeta` clamps sampling so unused atlas space does not bleed into the mesh.
+The full-size Blockbench model and texture stay in the repository for editing
+and preview tools, but `processResources` excludes those source-only files from
+release jars.
 
 ## Minecraft 26.2 Render Detail
 

@@ -35,7 +35,7 @@ public final class GltfMeshSpecialRenderer implements GltfModelReceiver {
 	private static final ResourceLocation MODEL =
 		ResourceLocation.fromNamespaceAndPath(Attuned.MOD_ID, "gltf/ocean_relic_trident.glb");
 	private static final ResourceLocation TEXTURE =
-		ResourceLocation.fromNamespaceAndPath(Attuned.MOD_ID, "textures/item/ocean_relic_trident_blockbench.png");
+		ResourceLocation.fromNamespaceAndPath(Attuned.MOD_ID, "textures/item/ocean_relic_trident_mesh.png");
 	private static boolean initialized;
 
 	private final ResourceLocation model;
