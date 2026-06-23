@@ -45,7 +45,6 @@
 		"kind": "generated",
 		"model": "../../src/main/resources/assets/attuned/models/item/frostbound_trident.json",
 		"texture": "../../src/main/resources/assets/attuned/textures/item/frostbound_trident.png",
-		"definition": "../../src/main/resources/assets/attuned/items/frostbound_trident.json",
-		"source": "../../docs/superpowers/assets/frostbound-trident/frostbound_trident.glb"
+		"definition": "../../src/main/resources/assets/attuned/items/frostbound_trident.json"
 	}
 ]
