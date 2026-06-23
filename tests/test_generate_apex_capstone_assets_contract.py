@@ -8,7 +8,6 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 GENERATOR = ROOT / "tools" / "generate_apex_capstone_assets.py"
-DOC_DIR = ROOT / "docs" / "superpowers" / "assets" / "apex-capstones"
 HUD_DIR = ROOT / "src" / "main" / "resources" / "assets" / "attuned" / "textures" / "gui" / "sprites" / "hud"
 BLOCK_DIR = ROOT / "src" / "main" / "resources" / "assets" / "attuned" / "textures" / "block"
 
@@ -44,17 +43,16 @@ def frame_rows(raw: bytes, *, width: int, frame: int, frame_height: int = 64) ->
 
 
 class GenerateApexCapstoneAssetsContractTest(unittest.TestCase):
-    def test_generator_imports_image_generated_source_sheets(self) -> None:
+    def test_generator_imports_private_source_sheets(self) -> None:
         source = GENERATOR.read_text(encoding="utf-8")
 
         self.assertIn("apex-capstones-hud-source.png", source)
         self.assertIn("apex-capstones-altar-source.png", source)
         self.assertIn("crop, chroma-key, resize", source)
+        self.assertIn(".attuned-art-sources", source)
+        self.assertIn("asset-previews", source)
         self.assertNotIn("draw_tide_glyph", source)
         self.assertNotIn("medallion(", source)
-
-        self.assertTrue((DOC_DIR / "apex-capstones-hud-source.png").is_file())
-        self.assertTrue((DOC_DIR / "apex-capstones-altar-source.png").is_file())
 
     def test_generated_hud_and_altar_assets_have_minecraft_sizes(self) -> None:
         for name in (

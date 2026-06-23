@@ -15,7 +15,7 @@ ROOT = Path(__file__).resolve().parents[1]
 TMP_DIR = ROOT / "tmp/mesh_to_minecraft_item"
 ASSET_ROOT = ROOT / "src/main/resources/assets"
 CUSTOMIZER_MANIFEST = ROOT / "tools/asset_customizer/asset-manifest.json"
-DOC_ASSET_ROOT = ROOT / "docs/superpowers/assets"
+DOC_ASSET_ROOT = ROOT / ".attuned-art-sources"
 
 
 def main() -> None:

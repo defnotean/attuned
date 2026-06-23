@@ -8,7 +8,6 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 GENERATOR = ROOT / "tools" / "generate_modifier_focus_assets.py"
-DOC_DIR = ROOT / "docs" / "superpowers" / "assets" / "modifier-foci"
 TEXTURE_DIR = ROOT / "src" / "main" / "resources" / "assets" / "attuned" / "textures" / "item"
 
 FOCUS_IDS = (
@@ -118,10 +117,12 @@ def alpha_at(decoded_rgba: bytes, *, width: int, x: int, y: int) -> int:
 
 
 class GenerateModifierFocusAssetsContractTest(unittest.TestCase):
-	def test_generator_imports_image_generated_source_sheet(self) -> None:
+	def test_generator_imports_private_source_sheet(self) -> None:
 		source = GENERATOR.read_text(encoding="utf-8")
 
 		self.assertIn("modifier-foci-source.png", source)
+		self.assertIn(".attuned-art-sources", source)
+		self.assertIn("asset-previews", source)
 		self.assertIn("crop generated source grid cells", source)
 		self.assertIn("remove flat magenta key background", source)
 		for forbidden in (
@@ -136,9 +137,6 @@ class GenerateModifierFocusAssetsContractTest(unittest.TestCase):
 			"glyph",
 		):
 			self.assertNotIn(forbidden, source)
-
-		self.assertTrue((DOC_DIR / "modifier-foci-source.png").is_file())
-		self.assertTrue((DOC_DIR / "modifier-foci-preview.png").is_file())
 
 	def test_generated_focus_assets_have_minecraft_sizes_and_animation(self) -> None:
 		for focus_id in FOCUS_IDS:

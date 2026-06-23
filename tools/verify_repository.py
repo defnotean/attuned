@@ -85,8 +85,7 @@ TRANSIENT_SKIP_DIRS = {
     # ignore rules so locally-ignored __pycache__ from a pytest run never fails
     # the gate, while a cache that git would actually pick up still does.
     ".gradle",
-    ".codex-remote-attachments",
-    ".superpowers",
+    ".attuned-art-sources",
     "build",
     "out",
     "run",
