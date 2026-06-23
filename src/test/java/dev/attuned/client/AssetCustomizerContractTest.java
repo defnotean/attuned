@@ -610,8 +610,8 @@ class AssetCustomizerContractTest {
 			"Client mixins should replace vanilla thrown-trident rendering for temporary harpoons");
 		assertTrue(clientMixins.contains("ThrownTridentRenderStateMixin"),
 			"Client mixins should attach custom item render state to thrown trident render states");
-		assertTrue(rendererMixin.contains("HarpoonBehavior.isTemporaryHarpoon"),
-			"Renderer should only override Attuned temporary harpoons, not every vanilla trident");
+		assertTrue(rendererMixin.contains("attuned$isTemporaryHarpoon()"),
+			"Renderer should only override Attuned temporary harpoons (via the synced entity flag), not every vanilla trident");
 		assertTrue(rendererMixin.contains("ocean_relic_trident_projectile"),
 			"Thrown harpoon should resolve Attuned's projectile item definition");
 		assertTrue(rendererMixin.contains("ci.cancel()"),

@@ -274,11 +274,15 @@ class HarpoonBehaviorContractTest {
 		assertTrue(mixin.contains("method = \"tick\""),
 			"Mixin should discard expired projectiles before vanilla tick work");
 		assertTrue(mixin.contains("method = \"tryPickup\""),
-			"Mixin should block expired pickup");
-		assertTrue(mixin.contains("method = \"onHitEntity\""),
-			"Mixin should discard the temporary harpoon after entity hits");
-		assertTrue(mixin.contains("method = \"hitBlockEnchantmentEffects\""),
-			"Mixin should discard the temporary harpoon after block hits");
+			"Mixin should intercept pickup attempts");
+		assertTrue(mixin.contains("cir.setReturnValue(false)"),
+			"A temporary harpoon should never be collectable, so pickup always returns false");
+		assertFalse(mixin.contains("onHitEntity") || mixin.contains("hitBlockEnchantmentEffects"),
+			"A thrown harpoon should stay stuck where it lands, not be discarded on impact");
+		assertTrue(mixin.contains("ATTUNED_TEMPORARY_HARPOON") && mixin.contains("method = \"defineSynchedData\""),
+			"Mixin should sync a temporary-harpoon flag to clients (mirroring vanilla ID_FOIL) so the renderer can swap in the custom mesh");
+		assertTrue(mixin.contains("attuned$isTemporaryHarpoon()"),
+			"Mixin should expose the synced harpoon flag to the client renderer");
 	}
 
 	private static String read(Path file) throws IOException {

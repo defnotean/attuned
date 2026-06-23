@@ -7,7 +7,7 @@ Before publishing a release, keep the long-form project descriptions in sync wit
 
 - Modrinth project description source: `docs/platform/modrinth-description.md`
 - CurseForge project description source: `docs/platform/curseforge-description.md`
-- Platform release-notes copy for the current release: `docs/platform/attuned-1.5.1-release-notes.md`
+- Platform release-notes copy for the current release: `docs/platform/attuned-1.5.5-mc26.1.2-release-notes.md`
 
 Updating these files does **not** update the public project pages by itself. Paste
 or upload the matching description during the platform release step, and do not

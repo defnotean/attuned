@@ -28,7 +28,6 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
-import net.minecraft.client.gui.components.toasts.SystemToast;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.renderer.RenderPipelines;
@@ -222,14 +221,6 @@ public class SatchelScreen extends AbstractContainerScreen<SatchelMenu> {
 		FocusPreset preset = decoded.get();
 		this.nameField.setValue(preset.name());
 		ClientPlayNetworking.send(new ImportPresetPayload(preset));
-	}
-
-	private static void showPresetToast(Minecraft minecraft, Component message) {
-		SystemToast.addOrUpdate(
-			minecraft.gui.toastManager(),
-			SystemToast.SystemToastId.PERIODIC_NOTIFICATION,
-			Component.literal("Attuned"),
-			message);
 	}
 
 	@Override
