@@ -33,7 +33,10 @@ class PublishCurseForgeTest(unittest.TestCase):
             java_version="25",
         )
 
-        self.assertEqual("Attuned 1.3.0", metadata["displayName"])
+        self.assertEqual(
+            f"Fabric: Minecraft {metadata['gameVersionNames'][0]} - Attuned 1.3.0",
+            metadata["displayName"],
+        )
         self.assertEqual("markdown", metadata["changelogType"])
         self.assertEqual("release", metadata["releaseType"])
         self.assertIn("## Attuned 1.3.0 - The Focus Reliquary", metadata["changelog"])
