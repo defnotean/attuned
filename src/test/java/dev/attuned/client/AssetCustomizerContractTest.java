@@ -405,7 +405,7 @@ class AssetCustomizerContractTest {
 	}
 
 	@Test
-	void meshyFbxConversionProducesMinecraftItemSpriteAndReusableReport() throws IOException {
+	void sourceFbxConversionProducesMinecraftItemSpriteAndReusableReport() throws IOException {
 		Path converter = Path.of("tools/mesh_to_minecraft_item.py");
 		assertTrue(Files.isRegularFile(converter), "Mesh conversion pipeline should be reusable");
 		String source = read(converter);
