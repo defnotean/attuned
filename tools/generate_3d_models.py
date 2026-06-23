@@ -327,7 +327,7 @@ def regenerate_ocean_relic():
 
 def update_voxel_report(elements):
 	"""Keep the shipped voxel report truthful about the regenerated geometry."""
-	report_path = ROOT / "docs/superpowers/assets/ocean-relic-trident/ocean_relic_trident_voxel_report.json"
+	report_path = ROOT / ".attuned-art-sources/ocean-relic-trident/ocean_relic_trident_voxel_report.json"
 	report = json.loads(report_path.read_text(encoding="utf-8"))
 	mins = [min(e["from"][axis] for e in elements) for axis in range(3)]
 	maxs = [max(e["to"][axis] for e in elements) for axis in range(3)]

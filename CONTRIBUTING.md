@@ -66,14 +66,14 @@ Commit the resulting `gradle.lockfile` and `gradle/verification-metadata.xml` ch
 
 ## Large assets
 
-Install Git LFS before working with source/reference assets under `docs/superpowers/assets`:
+Install Git LFS before working with large source/reference assets outside the tracked repository:
 
 ```sh
 git lfs install
 git lfs pull
 ```
 
-GLB, OBJ, and PNG files in `docs/superpowers/assets` are stored as LFS objects. Keep shipped game textures under `src/main/resources` in the normal repository unless a separate release decision changes that.
+Keep shipped game textures under `src/main/resources` in the normal repository unless a separate release decision changes that.
 
 Keep local secrets in environment variables or untracked `.env` files. The Modrinth publish task expects `MODRINTH_TOKEN` in the environment.
 

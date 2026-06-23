@@ -202,8 +202,7 @@ The first shipped custom-visual batch is:
 | Tide | cyan bubbles and splash motes |
 | Cinder | compact ember arc and lava sparks |
 
-Source art and generation manifests for tooling live under
-`docs/superpowers/assets/focus-custom-effects/`.
+Private asset sources stay outside the tracked repository.
 
 ## Behaviors
 

@@ -25,7 +25,6 @@
 		"texture": "../../src/main/resources/assets/attuned/textures/item/ocean_relic_trident_blockbench.png",
 		"sprite": "../../src/main/resources/assets/attuned/textures/item/ocean_relic_trident.png",
 		"definition": "../../src/main/resources/assets/attuned/items/ocean_relic_trident.json",
-		"source": "../../docs/superpowers/assets/ocean-relic-trident/ocean_relic_trident_source_model/ocean_relic_trident_source_model.obj",
 		"data": "../../src/main/resources/data/attuned/attuned/focus/harpoon_focus.json"
 	},
 	{
@@ -36,7 +35,6 @@
 		"texture": "../../src/main/resources/assets/attuned/textures/item/ocean_relic_trident_blockbench.png",
 		"sprite": "../../src/main/resources/assets/attuned/textures/item/ocean_relic_trident.png",
 		"definition": "../../src/main/resources/assets/attuned/items/ocean_relic_trident_projectile.json",
-		"source": "../../docs/superpowers/assets/ocean-relic-trident/ocean_relic_trident_source_model/ocean_relic_trident_source_model.obj",
 		"data": "../../src/main/resources/data/attuned/attuned/focus/harpoon_focus.json"
 	},
 	{
@@ -45,7 +43,6 @@
 		"kind": "generated",
 		"model": "../../src/main/resources/assets/attuned/models/item/frostbound_trident.json",
 		"texture": "../../src/main/resources/assets/attuned/textures/item/frostbound_trident.png",
-		"definition": "../../src/main/resources/assets/attuned/items/frostbound_trident.json",
-		"source": "../../docs/superpowers/assets/frostbound-trident/frostbound_trident.glb"
+		"definition": "../../src/main/resources/assets/attuned/items/frostbound_trident.json"
 	}
 ]
