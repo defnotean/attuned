@@ -133,13 +133,8 @@ public final class UpdraftBehavior implements FocusBehavior {
 			return;
 		}
 
-		player.resetFallDistance();
-		player.fallDistance = 0.0F;
-
-		if (controls.boosting() && !player.isFallFlying() && canStartGlide(player)) {
-			player.startFallFlying();
-		}
 		if (!player.isFallFlying()) {
+			setControls(player.getUUID(), false, false);
 			return;
 		}
 		applyFlightControls(player, controls);
@@ -147,7 +142,7 @@ public final class UpdraftBehavior implements FocusBehavior {
 
 	public static boolean mitigatesFallDamage(ServerPlayer player) {
 		return isActive(player) && hasFunctionalElytra(player)
-			&& controlsFor(player).active() && !isPvpExhausted(player);
+			&& player.isFallFlying() && controlsFor(player).active() && !isPvpExhausted(player);
 	}
 
 	public static void recordPvpDamage(LivingEntity defender, DamageSource source) {
@@ -336,14 +331,6 @@ public final class UpdraftBehavior implements FocusBehavior {
 			level.playSound(null, player.blockPosition(),
 				SoundEvents.WOOL_STEP, SoundSource.PLAYERS, 0.45F, 0.65F);
 		}
-	}
-
-	private static boolean canStartGlide(ServerPlayer player) {
-		return !player.onGround()
-			&& !player.isInWater()
-			&& !player.isPassenger()
-			&& !player.isFallFlying()
-			&& hasFunctionalElytra(player);
 	}
 
 	private static Vec3 horizontalLook(ServerPlayer player) {
