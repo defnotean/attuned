@@ -11,7 +11,7 @@ import dev.attuned.client.hud.CombatHud;
 import dev.attuned.menu.FocusLayout;
 import dev.attuned.pacts.Pact;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import dev.attuned.client.compat.GuiGraphics;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Player;
 

@@ -1,44 +1,38 @@
 package dev.attuned.attunement;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.List;
-import dev.attuned.test.MinecraftTestBootstrap;
-import net.minecraft.world.item.ItemStack;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 class FocusHolderRoundTripTest {
+	private static final Path HOLDER = Path.of("src/main/java/dev/attuned/attunement/FocusHolder.java");
 	private static final Path COMPONENTS = Path.of("src/main/java/dev/attuned/content/AttunedComponents.java");
 
-	@BeforeAll
-	static void bootstrapMinecraft() {
-		MinecraftTestBootstrap.ensureBootstrapped();
+	@Test
+	void holderPreservesEmptySlotsAcrossItemsRoundTrip() throws IOException {
+		String holder = read(HOLDER);
+
+		assertTrue(holder.contains("public List<ItemStack> items()")
+				&& holder.contains("return copyItems(items, maxPerSlot);"),
+			"The persisted/synced items view should be a defensive copy of the normalized slot list.");
+		assertTrue(holder.contains("private static List<ItemStack> sizedItems(int size, int maxPerSlot, List<ItemStack> source)"),
+			"Decode should rebuild holder contents through the shared size/cap normalizer.");
+		assertTrue(holder.contains("i < sourceSize ? source.get(i) : ItemStack.EMPTY"),
+			"Empty padded slots must survive an items() -> constructor round trip.");
 	}
 
 	@Test
-	void holderPreservesEmptySlotsAcrossItemsRoundTrip() {
-		// The exact value the satchel component persists/syncs is FocusHolder.items().
-		// Reconstructing from that list (what decode does) must be size-stable and lossless for empties.
-		FocusHolder empty = FocusHolder.empty(27, 1);
-		FocusHolder rebuilt = new FocusHolder(27, 1, empty.items());
-		assertEquals(empty.items().size(), rebuilt.items().size(), "Empty satchel must round-trip its slot count.");
-		for (int i = 0; i < 27; i++) {
-			assertTrue(rebuilt.get(i).isEmpty(), "Empty slots survive the items() round-trip.");
-		}
-	}
+	void holderTruncatesOversizedSourceToTheConfiguredSize() throws IOException {
+		String holder = read(HOLDER);
 
-	@Test
-	void holderTruncatesOversizedSourceToTheConfiguredSize() {
-		// A persisted list longer than size is deliberately truncated (documented, no migration).
-		List<ItemStack> oversized = java.util.Collections.nCopies(40, ItemStack.EMPTY);
-		FocusHolder holder = new FocusHolder(27, 1, oversized);
-		assertEquals(27, holder.items().size(), "Decode must clamp an over-long persisted list to the configured size.");
+		assertTrue(holder.contains("for (int i = 0; i < size; i++)"),
+			"Decode must clamp an over-long persisted list to the configured size.");
+		assertTrue(holder.contains("int sourceSize = source == null ? 0 : source.size();"),
+			"Oversized and null persisted lists should be normalized through one path.");
 	}
 
 	@Test

@@ -11,7 +11,7 @@ import java.util.Optional;
 import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
+import dev.attuned.client.compat.GuiGraphics;
 import net.minecraft.network.chat.Component;
 
 /** Compact public Circle roster HUD. */

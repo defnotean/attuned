@@ -6,11 +6,11 @@ import dev.attuned.client.hud.PartyHud;
 import dev.attuned.client.render.GltfMeshSpecialRenderer;
 import dev.attuned.client.screen.AltarScreens;
 import dev.attuned.client.screen.AttunementJournalScreen;
-import net.fabricmc.api.ClientModInitializer;
 
-public class AttunedClient implements ClientModInitializer {
-	@Override
-	public void onInitializeClient() {
+public final class AttunedClient {
+	private AttunedClient() {}
+
+	public static void init() {
 		AttunedClientConfig.load();
 		AttunedTooltips.init();
 		AttunedStateClientSync.init();

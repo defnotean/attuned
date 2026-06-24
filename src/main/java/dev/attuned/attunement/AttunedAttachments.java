@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.nbt.CompoundTag;
@@ -53,12 +54,23 @@ public final class AttunedAttachments {
 			return;
 		}
 		initialized = true;
+		ServerPlayerEvents.AFTER_RESPAWN.register(AttunedAttachments::copyForRespawn);
 		ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> sync(handler.player));
 	}
 
 	public static void copy(Player from, Player to) {
 		STATES.put(to.getUUID(), state(from).copy());
 		sync(to);
+	}
+
+	private static void copyForRespawn(ServerPlayer oldPlayer, ServerPlayer newPlayer, boolean alive) {
+		State oldState = STATES.get(oldPlayer.getUUID());
+		if (oldState == null) {
+			return;
+		}
+		// All branch-local fields mirror the current copy-on-death attachment set.
+		STATES.put(newPlayer.getUUID(), oldState.copy());
+		sync(newPlayer);
 	}
 
 	public static void load(Player player, CompoundTag playerTag) {

@@ -85,9 +85,7 @@ class UmbralEclipseContractTest {
 				name + ": behavior " + spec.behavior() + " must be registered in AttunedFocusBehaviors");
 
 			String field = name.toUpperCase();
-			assertTrue(content.contains("registerFocus(\"" + name + "\")"),
-				name + ": Focus item must be registered in AttunedContent");
-			assertTrue(content.contains(field + " = registerFocus(\"" + name + "\");"),
+			assertTrue(content.contains("registerFocus(\"" + name + "\", item -> " + field + " = item)"),
 				name + ": Focus field should follow the shipped naming convention");
 		}
 	}
