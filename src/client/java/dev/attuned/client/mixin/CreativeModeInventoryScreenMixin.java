@@ -90,7 +90,7 @@ public abstract class CreativeModeInventoryScreenMixin
 	 * place/take on a Focus slot into a drop. Veto that flag over the panel.
 	 */
 	@Inject(method = "hasClickedOutside", at = @At("HEAD"), cancellable = true)
-	private void attuned$keepFocusPanelInside(double mx, double my, int xo, int yo, CallbackInfoReturnable<Boolean> cir) {
+	private void attuned$keepFocusPanelInside(double mx, double my, int xo, int yo, int button, CallbackInfoReturnable<Boolean> cir) {
 		if (this.isInventoryOpen()
 				&& FocusPanel.withinPanel(FocusLayout.CREATIVE_X, FocusLayout.CREATIVE_Y, mx - xo, my - yo)) {
 			cir.setReturnValue(false);
