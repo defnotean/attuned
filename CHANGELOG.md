@@ -1,5 +1,19 @@
 # Changelog
 
+## Attuned 1.5.7+forge.mc26.1.2 - Forge Updraft Flight Patch
+
+### Fixed
+- **Updraft Focus flight gating** - boost and brake input now only apply while the wearer is already in elytra flight, so normal on-foot jumps no longer force the flight stance.
+- **Server-side control cleanup** - stale Updraft controls are cleared when the wearer is not fall-flying, and fall-damage mitigation is tied to active elytra flight instead of any recent jump input.
+
+### Changed
+- **Forge release metadata** - Modrinth and CurseForge uploads use Forge: Minecraft 26.1.2 - Attuned 1.5.7+forge.mc26.1.2 as the public display name, and CurseForge no longer declares Fabric API for Forge files.
+
+### Verification
+- .\\gradlew.bat test --tests dev.attuned.content.UpdraftFocusContractTest --no-daemon
+- .\\gradlew.bat build --no-daemon
+- python tools\\publish_curseforge.py --dry-run
+
 ## Attuned 1.5.6+mc26.1.2 - Fabric Artifact Size Patch
 
 ### Changed
