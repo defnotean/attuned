@@ -2,7 +2,7 @@
 
 Date: 2026-06-23
 
-This matrix is the working checklist for porting the Fabric release branches to Forge. The Fabric source branches are the renamed GitHub branches under `fabric/minecraft-*`; the target branches use `forge/<minecraft-version>`.
+This matrix is the working checklist for porting the Fabric release branches to Forge. The Fabric source branches are the renamed GitHub branches under `fabric/minecraft-*`; the target branches use `forge/<minecraft-version>`. The end-of-pass summary is in `forge-final-report.md`.
 
 ## Sources
 
