@@ -1,6 +1,6 @@
 # Forge Port Version Matrix
 
-Date: 2026-06-23
+Date: 2026-06-24
 
 This matrix is the working checklist for porting the Fabric release branches to Forge. The Fabric source branches are the renamed GitHub branches under `fabric/minecraft-*`; the target branches use `forge/<minecraft-version>`. The end-of-pass summary is in `forge-final-report.md`.
 
@@ -27,20 +27,21 @@ This matrix is the working checklist for porting the Fabric release branches to 
 ## Current Port Status
 
 All target Forge branches now have first-pass source ports, build verification,
-runtime smoke coverage, and a cross-branch Focus data/asset/mechanics audit.
-The Forge branches remain independent from the Fabric maintenance branches.
+server or game-test runtime smoke coverage, client startup smoke coverage, and
+a cross-branch Focus data/asset/mechanics audit. The Forge branches remain
+independent from the Fabric maintenance branches.
 
 | Target Forge branch | Minecraft | Status | Last verification | Branch-specific notes |
 | --- | ---: | --- | --- | --- |
-| `forge/26.2` | 26.2 | First-pass port verified | `build`, `runServer`, focus audit | Reference Forge port on Forge 65.0.0 and Java 25. |
-| `forge/26.1.2` | 26.1.2 | First-pass port verified | `build`, `runServer`, focus audit | Same modern ForgeGradle 7 shape as 26.2 with branch-local dependency pins. |
-| `forge/1.21.11` | 1.21.11 | First-pass port verified | `build`, `runServer`, focus audit | Mixin configs pin `minVersion` to 0.8.5 and Java compatibility to the recognized runtime level. |
-| `forge/1.21.1` | 1.21.1 | First-pass port verified | `build`, `runServer`, focus audit | Uses the newer water/fall attributes while retaining the 1.21.1 `minecraft:generic.*` attribute ids. |
-| `forge/1.20.6` | 1.20.6 | First-pass port verified | `build`, `runServer`, focus audit | Uses the 1.20.6 fall-damage attribute and swim-behavior fallbacks for missing water movement efficiency. |
-| `forge/1.20.1` | 1.20.1 | First-pass port verified | `build`, `runGameTestServer`, focus audit | Legacy ForgeGradle 6 port with Ebbstride's fall reduction handled by a runtime behavior fallback. |
-| `forge/1.19.4` | 1.19.4 | First-pass port verified | `build`, `runGameTestServer`, focus audit | Legacy creative-tab/event wiring plus the same Ebbstride fallback as 1.20.1. |
-| `forge/1.19.2` | 1.19.2 | First-pass port verified | `build`, `runGameTestServer`, focus audit | Legacy networking and screen compatibility layer; game-test server loads and exits cleanly. |
-| `forge/1.18.2` | 1.18.2 | First-pass port verified | `build`, `runGameTestServer`, focus audit | Widest compatibility layer, with pre-1.19 screen/menu shims and Ebbstride fall fallback. |
+| `forge/26.2` | 26.2 | First-pass port verified | `build`, `runServer`, `runClient`, focus audit | Reference Forge port on Forge 65.0.0 and Java 25. |
+| `forge/26.1.2` | 26.1.2 | First-pass port verified | `build`, `runServer`, `runClient`, focus audit | Same modern ForgeGradle 7 shape as 26.2 with branch-local dependency pins. |
+| `forge/1.21.11` | 1.21.11 | First-pass port verified | `build`, `runServer`, `runClient`, focus audit | Mixin configs pin `minVersion` to 0.8.5 and Java compatibility to the recognized runtime level. |
+| `forge/1.21.1` | 1.21.1 | First-pass port verified | `build`, `runServer`, `runClient`, focus audit | Uses the newer water/fall attributes while retaining the 1.21.1 `minecraft:generic.*` attribute ids. |
+| `forge/1.20.6` | 1.20.6 | First-pass port verified | `build`, `runServer`, `runClient`, focus audit | Uses the 1.20.6 fall-damage attribute and swim-behavior fallbacks for missing water movement efficiency. |
+| `forge/1.20.1` | 1.20.1 | First-pass port verified | `build`, `runGameTestServer`, `runClient`, focus audit | Legacy ForgeGradle 6 port with Ebbstride's fall reduction handled by a runtime behavior fallback. |
+| `forge/1.19.4` | 1.19.4 | First-pass port verified | `build`, `runGameTestServer`, `runClient`, focus audit | Legacy creative-tab/event wiring plus the same Ebbstride fallback as 1.20.1. |
+| `forge/1.19.2` | 1.19.2 | First-pass port verified | `build`, `runGameTestServer`, `runClient`, focus audit | Legacy networking and screen compatibility layer; game-test server loads and exits cleanly. |
+| `forge/1.18.2` | 1.18.2 | First-pass port verified | `build`, `runGameTestServer`, `runClient`, focus audit | Widest compatibility layer, with pre-1.19 screen/menu shims and Ebbstride fall fallback. |
 
 ## Completed Verification
 
@@ -54,6 +55,11 @@ The Forge branches remain independent from the Fabric maintenance branches.
   `forge/1.21.1`, `forge/1.21.11`, `forge/26.1.2`, and `forge/26.2`.
   Those branches use server smoke coverage because the modern game-test
   dev task does not receive named test functions in this workspace.
+- `.\gradlew.bat runClient --no-daemon` reached stable client startup on every
+  Forge branch. The observed milestone was Forge and Attuned initialization,
+  resource reload, OpenAL startup, and texture-atlas creation. Each client was
+  then stopped manually, so non-zero `runClient` exits after that point mean
+  the verified client process was interrupted rather than a launch failure.
 - A branch-wide Focus audit checked 22 targeted Foci and 22 generated Focus
   textures per branch: Bramblegate, Seedcall, Riptide Heart, Pearlguard,
   Slagbrand, Anvilheart, the Tide/Verdant/Forge/Fury/Bastion modifier wave,
@@ -90,6 +96,9 @@ The Forge branches remain independent from the Fabric maintenance branches.
 - Optional Netty native transport messages can appear on Windows during
   dev-server startup for the newest branches. They did not prevent Attuned
   initialization, server readiness, or clean shutdown.
+- Offline/dev-profile Realms authentication errors can appear during newer
+  client startup. They did not prevent Attuned initialization, resource reload,
+  sound startup, or texture-atlas creation.
 - The 26.x attachment bridge remains a first-pass Forge compatibility layer:
   clone/respawn copying is covered, but save-file persistence, owner sync, and
   dedicated-server reconnect parity still need release-hardening work before a

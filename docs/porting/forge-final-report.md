@@ -24,9 +24,9 @@ No detected Fabric version branch was skipped.
 
 ## Coordinator Branch
 
-| Branch | Commit pushed | Purpose |
+| Branch | Status | Purpose |
 | --- | --- | --- |
-| `origin/forge/coordinator` | `7ec1dc1e` | Version matrix, first-pass report, and this final report. |
+| `origin/forge/coordinator` | Pushed | Version matrix, first-pass report, final report, and client-smoke evidence. |
 
 ## Forge Tooling Choices
 
@@ -48,15 +48,15 @@ Each row is the required first-pass worker report for its version branch.
 
 | Branch worked on | Files changed | Migration patterns used | Build status | Remaining errors | Risks or manual testing needed |
 | --- | ---: | --- | --- | --- | --- |
-| `forge/1.18.2` | 89 files, +2706/-576 | ForgeGradle 6 metadata, `mods.toml`, `@Mod`, deferred registration bridge, legacy Fabric API facades, legacy networking facades, Ebbstride fall-damage behavior fallback, `@Redirect` fishing hook, client compatibility shim | `.\gradlew.bat build --no-daemon` passed; `runGameTestServer` passed | None blocking build or server launch | Full client main-menu/world-join smoke, packet-flow playthrough, older custom trident/harpoon visuals |
-| `forge/1.19.2` | 89 files, +2727/-576 | Same legacy pattern as 1.18.2 plus 1.19.2 command/event facades | `.\gradlew.bat build --no-daemon` passed; `runGameTestServer` passed | None blocking build or server launch | Full client main-menu/world-join smoke, packet-flow playthrough, older custom trident/harpoon visuals |
-| `forge/1.19.4` | 89 files, +2580/-533 | Legacy ForgeGradle 6 port, creative-tab event registration, legacy networking/rendering facades, Ebbstride fallback | `.\gradlew.bat build --no-daemon` passed; `runGameTestServer` passed | None blocking build or server launch | Full client main-menu/world-join smoke, packet-flow playthrough, older custom trident/harpoon visuals |
-| `forge/1.20.1` | 78 files, +2599/-586 | Legacy ForgeGradle 6 port, 1.20.1 creative-tab and menu registration, Ebbstride fallback, Forge metadata replacement | `.\gradlew.bat build --no-daemon` passed; `runGameTestServer` passed | None blocking build or server launch | Full client main-menu/world-join smoke, packet-flow playthrough |
-| `forge/1.20.6` | 86 files, +2765/-618 | ForgeGradle 7 metadata, modern payload facades, attachment facade, swim behavior fallback for missing water movement attribute, fall-damage attribute retained | `.\gradlew.bat build --no-daemon` passed; `runServer` passed | Modern game-test dev task did not receive named test functions in this workspace | Full client main-menu/world-join smoke, packet-flow playthrough |
-| `forge/1.21.1` | 85 files, +2769/-675 | ForgeGradle 7 metadata, modern attachment/network facades, newer water/fall attributes with 1.21.1 `minecraft:generic.*` ids | `.\gradlew.bat build --no-daemon` passed; `runServer` passed | None blocking build or server launch | Full client main-menu/world-join smoke, packet-flow playthrough |
-| `forge/1.21.11` | 78 files, +3410/-1601 | ForgeGradle 7 metadata, Java compatibility/mixin minVersion correction, modern client event/render facades, modern attribute ids | `.\gradlew.bat build --no-daemon` passed; `runServer` passed | Optional Windows Netty native transport log noise only | Full client main-menu/world-join smoke, packet-flow playthrough |
-| `forge/26.1.2` | 73 files, +3280/-636 | Modern ForgeGradle 7/Java 25 port, attachment bridge, payload registry facade, Forge creative tab and registry bridge | `.\gradlew.bat build --no-daemon` passed; `runServer` passed | Optional Windows Netty native transport log noise only | Full client main-menu/world-join smoke, packet-flow playthrough, attachment persistence/reconnect parity |
-| `forge/26.2` | 73 files, +2477/-438 | Reference Forge port: ForgeGradle 7/Java 25, `@Mod`, deferred registration, payload/attachment/event facades, source-run manifest mixin config, Java compatibility cap | `.\gradlew.bat test --no-daemon`, `build`, `runGameTestServer`, `runServer`, and client idle smoke passed during first-pass stabilization | Optional Windows Netty native transport log noise only | Deeper packet-flow playthrough, attachment persistence/reconnect parity |
+| `forge/1.18.2` | 89 files, +2706/-576 | ForgeGradle 6 metadata, `mods.toml`, `@Mod`, deferred registration bridge, legacy Fabric API facades, legacy networking facades, Ebbstride fall-damage behavior fallback, `@Redirect` fishing hook, client compatibility shim | `.\gradlew.bat build --no-daemon` passed; `runGameTestServer` passed; `runClient` startup smoke passed | None blocking build, server launch, or client startup | Interactive world-join playthrough, packet-flow playthrough, older custom trident/harpoon visuals |
+| `forge/1.19.2` | 89 files, +2727/-576 | Same legacy pattern as 1.18.2 plus 1.19.2 command/event facades | `.\gradlew.bat build --no-daemon` passed; `runGameTestServer` passed; `runClient` startup smoke passed | None blocking build, server launch, or client startup | Interactive world-join playthrough, packet-flow playthrough, older custom trident/harpoon visuals |
+| `forge/1.19.4` | 89 files, +2580/-533 | Legacy ForgeGradle 6 port, creative-tab event registration, legacy networking/rendering facades, Ebbstride fallback | `.\gradlew.bat build --no-daemon` passed; `runGameTestServer` passed; `runClient` startup smoke passed | None blocking build, server launch, or client startup | Interactive world-join playthrough, packet-flow playthrough, older custom trident/harpoon visuals |
+| `forge/1.20.1` | 78 files, +2599/-586 | Legacy ForgeGradle 6 port, 1.20.1 creative-tab and menu registration, Ebbstride fallback, Forge metadata replacement | `.\gradlew.bat build --no-daemon` passed; `runGameTestServer` passed; `runClient` startup smoke passed | None blocking build, server launch, or client startup | Interactive world-join playthrough and packet-flow playthrough |
+| `forge/1.20.6` | 86 files, +2765/-618 | ForgeGradle 7 metadata, modern payload facades, attachment facade, swim behavior fallback for missing water movement attribute, fall-damage attribute retained | `.\gradlew.bat build --no-daemon` passed; `runServer` passed; `runClient` startup smoke passed | Modern game-test dev task did not receive named test functions in this workspace | Interactive world-join playthrough and packet-flow playthrough |
+| `forge/1.21.1` | 85 files, +2769/-675 | ForgeGradle 7 metadata, modern attachment/network facades, newer water/fall attributes with 1.21.1 `minecraft:generic.*` ids | `.\gradlew.bat build --no-daemon` passed; `runServer` passed; `runClient` startup smoke passed | None blocking build, server launch, or client startup | Interactive world-join playthrough and packet-flow playthrough |
+| `forge/1.21.11` | 78 files, +3410/-1601 | ForgeGradle 7 metadata, Java compatibility/mixin minVersion correction, modern client event/render facades, modern attribute ids | `.\gradlew.bat build --no-daemon` passed; `runServer` passed; `runClient` startup smoke passed | Optional Windows Netty/Realms dev-environment log noise only | Interactive world-join playthrough and packet-flow playthrough |
+| `forge/26.1.2` | 73 files, +3280/-636 | Modern ForgeGradle 7/Java 25 port, attachment bridge, payload registry facade, Forge creative tab and registry bridge | `.\gradlew.bat build --no-daemon` passed; `runServer` passed; `runClient` startup smoke passed | Optional Windows Netty/Realms dev-environment log noise only | Interactive world-join playthrough, packet-flow playthrough, attachment persistence/reconnect parity |
+| `forge/26.2` | 73 files, +2477/-438 | Reference Forge port: ForgeGradle 7/Java 25, `@Mod`, deferred registration, payload/attachment/event facades, source-run manifest mixin config, Java compatibility cap | `.\gradlew.bat test --no-daemon`, `build`, `runGameTestServer`, `runServer`, and `runClient` startup smoke passed | Optional Windows Netty/Realms dev-environment log noise only | Interactive world-join playthrough, packet-flow playthrough, attachment persistence/reconnect parity |
 
 ## Major Migration Patterns
 
@@ -81,6 +81,8 @@ Each row is the required first-pass worker report for its version branch.
 - Forge metadata is present on every target branch.
 - Every target branch builds.
 - Every target branch starts a Forge server-side dev runtime.
+- Every target branch starts a Forge dev client through Attuned initialization,
+  resource reload, OpenAL startup, and texture-atlas creation.
 - Attuned initializes during runtime smoke on every target branch.
 - Focus data, item registration, language keys, item models, item definitions
   where present, animated 64x512 textures, and animation metadata pass the
@@ -99,17 +101,36 @@ Each row is the required first-pass worker report for its version branch.
 
 ## Exact Verification Commands
 
-| Branch | Build command | Runtime command used |
+| Branch | Build command | Server or game-test runtime | Client startup smoke |
+| --- | --- | --- | --- |
+| `forge/1.18.2` | `.\gradlew.bat build --no-daemon` | `.\gradlew.bat runGameTestServer --no-daemon` | `.\gradlew.bat runClient --no-daemon` |
+| `forge/1.19.2` | `.\gradlew.bat build --no-daemon` | `.\gradlew.bat runGameTestServer --no-daemon` | `.\gradlew.bat runClient --no-daemon` |
+| `forge/1.19.4` | `.\gradlew.bat build --no-daemon` | `.\gradlew.bat runGameTestServer --no-daemon` | `.\gradlew.bat runClient --no-daemon` |
+| `forge/1.20.1` | `.\gradlew.bat build --no-daemon` | `.\gradlew.bat runGameTestServer --no-daemon` | `.\gradlew.bat runClient --no-daemon` |
+| `forge/1.20.6` | `.\gradlew.bat build --no-daemon` | `.\gradlew.bat runServer --no-daemon` | `.\gradlew.bat runClient --no-daemon` |
+| `forge/1.21.1` | `.\gradlew.bat build --no-daemon` | `.\gradlew.bat runServer --no-daemon` | `.\gradlew.bat runClient --no-daemon` |
+| `forge/1.21.11` | `.\gradlew.bat build --no-daemon` | `.\gradlew.bat runServer --no-daemon` | `.\gradlew.bat runClient --no-daemon` |
+| `forge/26.1.2` | `.\gradlew.bat build --no-daemon` | `.\gradlew.bat runServer --no-daemon` | `.\gradlew.bat runClient --no-daemon` |
+| `forge/26.2` | `.\gradlew.bat test --no-daemon`; `.\gradlew.bat build --no-daemon` | `.\gradlew.bat runGameTestServer --no-daemon`; `.\gradlew.bat runServer --no-daemon` | `.\gradlew.bat runClient --no-daemon` |
+
+## Client Startup Smoke
+
+All client startup smokes were run on 2026-06-24 with
+`.\gradlew.bat runClient --no-daemon`. Each client was stopped manually after
+the stable startup milestone, so the task exits non-zero only because the
+batch process is interrupted after verification.
+
+| Branch | Result | Evidence observed |
 | --- | --- | --- |
-| `forge/1.18.2` | `.\gradlew.bat build --no-daemon` | `.\gradlew.bat runGameTestServer --no-daemon` |
-| `forge/1.19.2` | `.\gradlew.bat build --no-daemon` | `.\gradlew.bat runGameTestServer --no-daemon` |
-| `forge/1.19.4` | `.\gradlew.bat build --no-daemon` | `.\gradlew.bat runGameTestServer --no-daemon` |
-| `forge/1.20.1` | `.\gradlew.bat build --no-daemon` | `.\gradlew.bat runGameTestServer --no-daemon` |
-| `forge/1.20.6` | `.\gradlew.bat build --no-daemon` | `.\gradlew.bat runServer --no-daemon` |
-| `forge/1.21.1` | `.\gradlew.bat build --no-daemon` | `.\gradlew.bat runServer --no-daemon` |
-| `forge/1.21.11` | `.\gradlew.bat build --no-daemon` | `.\gradlew.bat runServer --no-daemon` |
-| `forge/26.1.2` | `.\gradlew.bat build --no-daemon` | `.\gradlew.bat runServer --no-daemon` |
-| `forge/26.2` | `.\gradlew.bat test --no-daemon`; `.\gradlew.bat build --no-daemon` | `.\gradlew.bat runGameTestServer --no-daemon`; `.\gradlew.bat runServer --no-daemon`; `.\gradlew.bat runClient --no-daemon` idle smoke |
+| `forge/1.18.2` | Passed | Forge 40.3.12 loaded the `attuned` mod, `Attuned initializing` logged, resources reloaded, OpenAL started, and vanilla atlases were created. |
+| `forge/1.19.2` | Passed | Forge 43.5.2 loaded the `attuned` mod, `Attuned initializing` logged, resources reloaded, OpenAL started, atlases were created, and recipe/advancement loading appeared during shutdown. |
+| `forge/1.19.4` | Passed | Forge 45.4.3 loaded the `attuned` mod, `Attuned initializing` logged, resources reloaded, OpenAL started, atlases were created, and recipe/advancement loading appeared during shutdown. |
+| `forge/1.20.1` | Passed | Forge 47.4.20 loaded the `attuned` mod, `Attuned initializing` logged, early display initialized, resources reloaded, OpenAL started, and atlases were created. |
+| `forge/1.20.6` | Passed | Forge 50.2.8 launched on Java 21 after first-run asset downloads, loaded Attuned, reloaded resources, started OpenAL, and created GUI/item/block atlases. |
+| `forge/1.21.1` | Passed | Forge 52.1.14 launched on Java 21, loaded Attuned, reloaded resources, started OpenAL, and created GUI/item/block atlases. |
+| `forge/1.21.11` | Passed | Forge 61.1.8 launched with the corrected mixin config, loaded Attuned, reloaded resources, started OpenAL, and created GUI/item/block atlases. |
+| `forge/26.1.2` | Passed | Forge 64.0.10 launched on Java 25, loaded Attuned, reloaded resources, started OpenAL, and created GUI/item/block atlases. |
+| `forge/26.2` | Passed | Forge 65.0.0 launched on Java 25, loaded Attuned, reloaded resources, started OpenAL, and created GUI/item/block atlases. |
 
 ## Branches Skipped
 
@@ -120,9 +141,9 @@ Forge port.
 
 ## Known Limitations
 
-- Full dev-client smoke has only been directly recorded for the 26.2 reference
-  branch in this report. The remaining Forge branches need client main-menu and
-  world-join smoke before a public Forge release.
+- Full client startup smoke is now recorded for every Forge branch. Interactive
+  singleplayer world-join, menu-click, and packet-flow playtests are still
+  needed before publishing Forge packages.
 - The 26.x attachment bridge copies in-memory values across clone/respawn, but
   save-file persistence, owner sync, and dedicated-server reconnect parity need
   release-hardening work.
@@ -142,10 +163,8 @@ Forge port.
 
 Before publishing Forge artifacts, run this narrower second-pass checklist:
 
-1. `.\gradlew.bat runClient --no-daemon` on every Forge branch, stopping only
-   after the main menu/resource reload is stable.
-2. A singleplayer world-join smoke on every branch.
-3. A focused packet-flow playtest for inspect, updraft, journal, altar,
+1. A singleplayer world-join smoke on every branch.
+2. A focused packet-flow playtest for inspect, updraft, journal, altar,
    reweaving, satchel, presets, and party/circle payloads.
-4. A dedicated-server join/reconnect smoke on 26.x to harden attachment state.
-5. A visual check for older trident/harpoon renderer fallbacks.
+3. A dedicated-server join/reconnect smoke on 26.x to harden attachment state.
+4. A visual check for older trident/harpoon renderer fallbacks.
