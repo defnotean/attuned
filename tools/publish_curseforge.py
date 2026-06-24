@@ -53,20 +53,16 @@ def build_metadata(*, changelog: str, version: str, minecraft_version: str,
     return {
         "changelog": current_changelog_section(changelog, version),
         "changelogType": "markdown",
-        "displayName": f"Fabric: Minecraft {minecraft_version} - Attuned {version}",
+        "displayName": f"Forge: Minecraft {minecraft_version} - Attuned {version}",
         "gameVersionNames": [
             minecraft_version,
             f"Java {java_version}",
             "Client",
             "Server",
-            "Fabric",
+            "Forge",
         ],
         "releaseType": "release",
-        "relations": {
-            "projects": [
-                {"slug": "fabric-api", "type": "requiredDependency"},
-            ],
-        },
+        "relations": {"projects": []},
     }
 
 
