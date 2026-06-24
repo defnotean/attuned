@@ -62,7 +62,6 @@ def build_metadata(*, changelog: str, version: str, minecraft_version: str,
             "Forge",
         ],
         "releaseType": "release",
-        "relations": {"projects": []},
     }
 
 
