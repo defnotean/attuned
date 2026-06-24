@@ -1,5 +1,6 @@
 package dev.attuned.content;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
@@ -35,7 +36,10 @@ class UpdraftFocusContractTest {
 		assertTrue(behavior.contains("mitigatesFallDamage("));
 		assertTrue(behavior.contains("setControls("));
 		assertTrue(behavior.contains("LAST_FLIGHT_TICK"));
-		assertTrue(behavior.contains("startFallFlying()"));
+		assertFalse(behavior.contains("startFallFlying()"),
+			"Updraft boost must not force the player into elytra flight from a normal jump.");
+		assertFalse(behavior.contains("canStartGlide("),
+			"Updraft should only control an already active elytra flight state.");
 		assertTrue(behavior.contains("Items.ELYTRA"));
 		assertTrue(behavior.contains("BOOST_THRUST"));
 		assertTrue(behavior.contains("BRAKE_FACTOR"));
@@ -71,6 +75,11 @@ class UpdraftFocusContractTest {
 		assertTrue(client.contains("heartbeat"));
 		assertTrue(client.contains("wantsLift(Player player)"));
 		assertTrue(client.contains("wantsBrake(Player player)"));
+		assertFalse(client.contains("player.isFallFlying() || (!player.onGround()"),
+			"Client boost packets must not be sent merely because the player is airborne.");
+		assertFalse(client.contains("player.isFallFlying() || (!player.isOnGround()"),
+			"Client boost packets must not be sent merely because the player is airborne.");
+		assertTrue(client.contains("return player.isFallFlying();"));
 		assertTrue(client.contains("heartbeat % 10"));
 		assertTrue(client.contains("applyLocalPrediction("));
 		assertTrue(client.contains("UpdraftBehavior.controlledMotion("));
