@@ -1,7 +1,5 @@
 package dev.attuned.pacts;
 
-import dev.attuned.compat.ParticleCompat;
-import dev.attuned.compat.PlayerMessages;
 import dev.attuned.Milestones;
 import dev.attuned.AttunedAdvancements;
 import dev.attuned.AttunedConfig;
@@ -23,6 +21,7 @@ import java.util.UUID;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.minecraft.ChatFormatting;
+import net.minecraft.core.particles.DustParticleOptions;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceKey;
@@ -36,6 +35,7 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
+import org.joml.Vector3f;
 
 /**
  * Long-term Pact Trial progression: counters accrue only while the matching pact
@@ -105,11 +105,11 @@ public final class PactTrials {
 		int goal = goalOf(pact);
 		checkTrialMilestones(player, pact, current, next, goal);
 		if (next >= goal) {
-			AttunedAttachments.setPactTrialProgress(player, progress.withCounter(id, goal));
+			AttunedAttachments.set(player, AttunedAttachments.PACT_TRIAL_PROGRESS, progress.withCounter(id, goal));
 			onComplete(player, pact);
 			return true;
 		}
-		AttunedAttachments.setPactTrialProgress(player, progress.withCounter(id, next));
+		AttunedAttachments.set(player, AttunedAttachments.PACT_TRIAL_PROGRESS, progress.withCounter(id, next));
 		return true;
 	}
 
@@ -171,9 +171,9 @@ public final class PactTrials {
 		}
 		String id = pactId(pact);
 		PactTrialProgress progress = get(player).withTier4Completed(id);
-		AttunedAttachments.setPactTrialProgress(player, progress);
+		AttunedAttachments.set(player, AttunedAttachments.PACT_TRIAL_PROGRESS, progress);
 		AttunedAdvancements.award(player, "attunement/pact_" + id + "_trial");
-		PlayerMessages.system(player, Component.translatable("pact.attuned." + id + "_trial.title")
+		player.sendSystemMessage(Component.translatable("pact.attuned." + id + "_trial.title")
 			.withStyle(pact.chatColor(), ChatFormatting.BOLD)
 			.append(Component.translatable("pact.attuned.trial.complete").withStyle(ChatFormatting.GRAY)));
 		ServerLevel level = (ServerLevel) player.level();
@@ -185,11 +185,19 @@ public final class PactTrials {
 		double py = player.getY() + player.getBbHeight() * 0.65;
 		double pz = player.getZ();
 		level.sendParticles(ParticleTypes.END_ROD, px, py, pz, 14, 0.5, 0.4, 0.5, 0.02);
-		level.sendParticles(ParticleCompat.dust(pact.argb() & 0x00FFFFFF, 0.9F),
+		level.sendParticles(new DustParticleOptions(dustColor(pact.argb()), 0.9F),
 			px, py, pz, 6, 0.4, 0.3, 0.4, 0.0);
 		Onboarding.tryPactTrialCompleteHint(player);
 		Milestones.onPactTrialComplete(player);
 		PactTier4.reconcileStoneheartToughness(player, Pacts.activeOf(player).orElse(null));
+	}
+
+	private static Vector3f dustColor(int argb) {
+		int rgb = argb & 0x00FFFFFF;
+		return new Vector3f(
+			((rgb >> 16) & 0xFF) / 255.0F,
+			((rgb >> 8) & 0xFF) / 255.0F,
+			(rgb & 0xFF) / 255.0F);
 	}
 
 	public static void onPyreswornIgnite(ServerPlayer player) {
@@ -300,7 +308,7 @@ public final class PactTrials {
 	}
 
 	private static PactTrialProgress get(Player player) {
-		return player.getAttachedOrElse(AttunedAttachments.PACT_TRIAL_PROGRESS, PactTrialProgress.EMPTY);
+		return AttunedAttachments.get(player, AttunedAttachments.PACT_TRIAL_PROGRESS, PactTrialProgress.EMPTY);
 	}
 
 	static String pactId(Pact pact) {

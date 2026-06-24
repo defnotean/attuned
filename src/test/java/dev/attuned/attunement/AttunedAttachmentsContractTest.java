@@ -18,9 +18,9 @@ class AttunedAttachmentsContractTest {
 	void capacityReadsAndWritesRespectConfiguredCap() throws IOException {
 		String attachments = read(ATTACHMENTS);
 
-		assertTrue(attachments.contains("return clampCapacity(player.getAttachedOrElse(CAPACITY, 0));"),
+		assertTrue(attachments.contains("return clampCapacity(get(player, CAPACITY, 0));"),
 			"Capacity reads should clamp old persisted values to the configured cap.");
-		assertTrue(attachments.contains("player.setAttached(CAPACITY, clampCapacity(value));"),
+		assertTrue(attachments.contains("set(player, CAPACITY, clampCapacity(value));"),
 			"Capacity writes should not persist values above the configured cap.");
 		assertTrue(attachments.contains("private static int clampCapacity(int value)"),
 			"Capacity clamping should be centralized in a named helper.");
@@ -46,9 +46,9 @@ class AttunedAttachmentsContractTest {
 	void resonanceReadsAndWritesClampToGaugeBounds() throws IOException {
 		String attachments = read(ATTACHMENTS);
 
-		assertTrue(attachments.contains("return clampResonance(player.getAttachedOrElse(RESONANCE, 0.0F));"),
+		assertTrue(attachments.contains("return clampResonance(get(player, RESONANCE, 0.0F));"),
 			"Resonance reads should sanitize old persisted values before gameplay logic sees them.");
-		assertTrue(attachments.contains("player.setAttached(RESONANCE, clampResonance(value));"),
+		assertTrue(attachments.contains("set(player, RESONANCE, clampResonance(value));"),
 			"Resonance writes should not persist values outside the gauge bounds.");
 		assertTrue(attachments.contains("private static float clampResonance(float value)"),
 			"Resonance clamping should be centralized in a named helper.");
@@ -107,10 +107,26 @@ class AttunedAttachmentsContractTest {
 			"Milestone and onboarding APIs should normalize ids before touching persistent attachments.");
 		assertTrue(attachments.contains(".orElse(false)"),
 			"Milestone and onboarding reads should report invalid ids as unseen instead of throwing.");
-		assertTrue(attachments.contains("player.setAttached(MILESTONES, List.copyOf(updated));"),
+		assertTrue(attachments.contains("set(player, MILESTONES, List.copyOf(updated));"),
 			"Milestone writes should persist an immutable defensive snapshot.");
-		assertTrue(attachments.contains("player.setAttached(ONBOARDING, List.copyOf(updated));"),
+		assertTrue(attachments.contains("set(player, ONBOARDING, List.copyOf(updated));"),
 			"Onboarding writes should persist an immutable defensive snapshot.");
+	}
+
+	@Test
+	void forgeRespawnCopyPreservesCopyOnDeathState() throws IOException {
+		String attachments = read(ATTACHMENTS);
+
+		assertTrue(attachments.contains("ServerPlayerEvents.AFTER_RESPAWN.register(AttunedAttachments::copyForRespawn);"),
+			"The Forge compatibility attachment bridge should copy eligible values during player clone/respawn.");
+		assertTrue(attachments.contains("if (initialized)"),
+			"Attachment init should guard against duplicate respawn and cleanup registrations.");
+		assertTrue(attachments.contains("private static void copyForRespawn(ServerPlayer oldPlayer, ServerPlayer newPlayer, boolean alive)"),
+			"Respawn copying should be centralized in a named helper.");
+		assertTrue(attachments.contains("if (alive || type.copyOnDeath())"),
+			"Death respawns should only copy attachment types that requested copy-on-death behavior.");
+		assertTrue(attachments.contains("PLAYER_ATTACHMENTS.put(newPlayer.getUUID(), copied);"),
+			"Copied attachment state should move onto the new ServerPlayer UUID entry.");
 	}
 
 	private static String read(Path file) throws IOException {

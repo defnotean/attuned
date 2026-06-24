@@ -1,11 +1,10 @@
 package dev.attuned.content;
 
+import com.mojang.serialization.Codec;
 import dev.attuned.Attuned;
 import dev.attuned.attunement.FocusHolder;
-import com.mojang.serialization.Codec;
-import net.minecraft.core.Registry;
+import dev.attuned.platform.ForgeRegistration;
 import net.minecraft.core.component.DataComponentType;
-import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.resources.ResourceLocation;
@@ -14,6 +13,9 @@ import net.minecraft.util.Unit;
 /** Registers custom item data components used by Attuned items. */
 public final class AttunedComponents {
 	private static boolean initialized;
+	private static final Codec<Unit> UNIT_CODEC = Codec.unit(Unit.INSTANCE);
+	private static final StreamCodec<RegistryFriendlyByteBuf, Unit> UNIT_STREAM_CODEC =
+		StreamCodec.unit(Unit.INSTANCE);
 
 	private AttunedComponents() {}
 
@@ -28,9 +30,6 @@ public final class AttunedComponents {
 
 	/** Marker on a Focus that has been tempered at the Altar of Reweaving. */
 	public static DataComponentType<Unit> TEMPERED;
-	private static final Codec<Unit> UNIT_CODEC = Codec.unit(Unit.INSTANCE);
-	private static final StreamCodec<RegistryFriendlyByteBuf, Unit> UNIT_STREAM_CODEC =
-		StreamCodec.unit(Unit.INSTANCE);
 
 	public static FocusHolder emptyContents() {
 		return FocusHolder.empty(SATCHEL_SIZE, 1);
@@ -45,20 +44,17 @@ public final class AttunedComponents {
 			return;
 		}
 		initialized = true;
-		SATCHEL_CONTENTS = Registry.register(BuiltInRegistries.DATA_COMPONENT_TYPE,
-			new ResourceLocation(Attuned.MOD_ID, "satchel_contents"),
+		SATCHEL_CONTENTS = ForgeRegistration.dataComponent("satchel_contents",
 			DataComponentType.<FocusHolder>builder()
 				.persistent(FocusHolder.codec(SATCHEL_SIZE, 1))
 				.networkSynchronized(FocusHolder.streamCodec(SATCHEL_SIZE, 1))
 				.build());
-		GRAND_SATCHEL_CONTENTS = Registry.register(BuiltInRegistries.DATA_COMPONENT_TYPE,
-			new ResourceLocation(Attuned.MOD_ID, "grand_satchel_contents"),
+		GRAND_SATCHEL_CONTENTS = ForgeRegistration.dataComponent("grand_satchel_contents",
 			DataComponentType.<FocusHolder>builder()
 				.persistent(FocusHolder.codec(GRAND_SATCHEL_SIZE, 1))
 				.networkSynchronized(FocusHolder.streamCodec(GRAND_SATCHEL_SIZE, 1))
 				.build());
-		TEMPERED = Registry.register(BuiltInRegistries.DATA_COMPONENT_TYPE,
-			new ResourceLocation(Attuned.MOD_ID, "tempered"),
+		TEMPERED = ForgeRegistration.dataComponent("tempered",
 			DataComponentType.<Unit>builder()
 				.persistent(UNIT_CODEC)
 				.networkSynchronized(UNIT_STREAM_CODEC)

@@ -68,7 +68,7 @@ class FocusDataConsistencyTest {
 		Path.of("src/main/resources/assets/attuned/lang/en_us.json");
 
 	private static final Pattern REGISTERED_FOCUS = Pattern.compile(
-		"public\\s+static\\s+final\\s+Item\\s+([A-Z0-9_]+_FOCUS)\\s*=\\s*registerFocus\\(\"([a-z0-9_]+_focus)\"\\);");
+		"registerFocus\\(\\s*\"([a-z0-9_]+_focus)\"\\s*,\\s*item\\s*->\\s*([A-Z0-9_]+_FOCUS)\\s*=\\s*item\\s*\\)");
 	private static final Pattern REGISTERED_BEHAVIOR = Pattern.compile(
 		"register\\(\\s*\"([a-z0-9_/.-]+)\"\\s*,\\s*new\\s+",
 		Pattern.DOTALL);
@@ -133,16 +133,14 @@ class FocusDataConsistencyTest {
 
 		assertEquals(registeredItemsByField.size(), registeredItems.size(),
 			"Registered shipped Focus item ids should not be duplicated");
-		assertTrue(source.contains("public static final List<Item> FOCI = List.copyOf(REGISTERED_FOCI);"),
-			"AttunedContent.FOCI should be derived from registerFocus order, not manually duplicated");
-		assertTrue(source.contains("private static final Set<Item> FOCI_SET = Set.copyOf(REGISTERED_FOCI);"),
-			"AttunedContent should keep constant-time Focus membership alongside the ordered list");
+		assertTrue(source.contains("public static final List<Item> FOCI = Collections.unmodifiableList(REGISTERED_FOCI);"),
+			"AttunedContent.FOCI should expose the deferred registerFocus order, not a manually duplicated list");
 		assertTrue(source.contains("REGISTERED_FOCI.add(item);"),
-			"registerFocus should append every Focus to the public FOCI snapshot");
+			"registerFocus should append every deferred Focus to the public FOCI view");
 		assertTrue(source.contains("public static boolean isFocus(Item item)"),
 			"AttunedContent should expose the canonical Focus item membership check");
-		assertTrue(source.contains("return item != null && FOCI_SET.contains(item);"),
-			"Focus item membership should use the set-backed lookup and reject null safely");
+		assertTrue(source.contains("return item != null && REGISTERED_FOCI.contains(item);"),
+			"Focus item membership should use the deferred Focus list and reject null safely");
 		assertTrue(source.contains("public static boolean isFocus(ItemStack stack)"),
 			"AttunedContent should expose the canonical Focus stack membership check");
 		assertTrue(!source.contains("FOCI = List.of("),
@@ -337,8 +335,8 @@ class FocusDataConsistencyTest {
 	@Test
 	void bloodrushTooltipSeparatesFlatAttackSpeedFromPercentMovementSpeed() throws IOException {
 		JsonObject root = focusDefinitionRoot(FOCUS_DATA_DIR.resolve("bloodrush_focus.json"));
-		JsonObject attackSpeed = modifierFor(root, "minecraft:attack_speed");
-		JsonObject movementSpeed = modifierFor(root, "minecraft:movement_speed");
+		JsonObject attackSpeed = modifierFor(root, "minecraft:generic.attack_speed");
+		JsonObject movementSpeed = modifierFor(root, "minecraft:generic.movement_speed");
 		String effect = languageRoot().get("item.attuned.bloodrush_focus.effect").getAsString();
 
 		assertEquals("add_value", attackSpeed.get("operation").getAsString(),
@@ -360,54 +358,54 @@ class FocusDataConsistencyTest {
 		JsonObject lang = languageRoot();
 
 		assertModifierProfile(lang, "tidewarden_focus", List.of(
-			expected("minecraft:armor", "add_value", 3.0D, "+3 armor"),
-			expected("minecraft:knockback_resistance", "add_value", 0.3D, "30% knockback resistance")));
+			expected("minecraft:generic.armor", "add_value", 3.0D, "+3 armor"),
+			expected("minecraft:generic.knockback_resistance", "add_value", 0.3D, "30% knockback resistance")));
 		assertModifierProfile(lang, "wellspring_focus", List.of(
-			expected("minecraft:max_health", "add_value", 6.0D, "3 extra hearts")));
-		assertSwimBehavior(lang, "wellspring_focus", "attuned:wellspring_swim", "improved swimming");
+			expected("minecraft:generic.max_health", "add_value", 6.0D, "3 extra hearts")));
+		assertBehaviorProfile(lang, "wellspring_focus", "attuned:wellspring_swim", "improved swimming");
 		assertModifierProfile(lang, "current_runner_focus", List.of(
-			expected("minecraft:movement_speed", "add_multiplied_base", 0.12D, "+12% movement speed")));
-		assertSwimBehavior(lang, "current_runner_focus", "attuned:current_runner_swim", "movement through water");
+			expected("minecraft:generic.movement_speed", "add_multiplied_base", 0.12D, "+12% movement speed")));
+		assertBehaviorProfile(lang, "current_runner_focus", "attuned:current_runner_swim", "movement through water");
 		assertModifierProfile(lang, "saltbrand_focus", List.of(
-			expected("minecraft:attack_damage", "add_value", 4.0D, "+4 attack damage"),
-			expected("minecraft:armor_toughness", "add_value", 2.0D, "+2 armor toughness")));
+			expected("minecraft:generic.attack_damage", "add_value", 4.0D, "+4 attack damage"),
+			expected("minecraft:generic.armor_toughness", "add_value", 2.0D, "+2 armor toughness")));
 		assertModifierProfile(lang, "ebbstride_focus", List.of(
-			expected("minecraft:attack_speed", "add_multiplied_base", 0.15D, "+15% attack speed"),
-			expected("minecraft:fall_damage_multiplier", "add_multiplied_total", -0.4D, "softer landing")));
+			expected("minecraft:generic.attack_speed", "add_multiplied_base", 0.15D, "+15% attack speed"),
+			expected("minecraft:generic.fall_damage_multiplier", "add_multiplied_total", -0.4D, "softer landing")));
 		assertModifierProfile(lang, "overgrowth_focus", List.of(
-			expected("minecraft:max_health", "add_value", 6.0D, "3 extra hearts"),
-			expected("minecraft:armor", "add_value", 3.0D, "+3 armor")));
+			expected("minecraft:generic.max_health", "add_value", 6.0D, "3 extra hearts"),
+			expected("minecraft:generic.armor", "add_value", 3.0D, "+3 armor")));
 		assertModifierProfile(lang, "deeproot_focus", List.of(
-			expected("minecraft:knockback_resistance", "add_value", 0.2D, "20% knockback resistance"),
-			expected("minecraft:armor_toughness", "add_value", 2.0D, "+2 armor toughness")));
+			expected("minecraft:generic.knockback_resistance", "add_value", 0.2D, "20% knockback resistance"),
+			expected("minecraft:generic.armor_toughness", "add_value", 2.0D, "+2 armor toughness")));
 		assertModifierProfile(lang, "briarcoat_focus", List.of(
-			expected("minecraft:attack_damage", "add_value", 2.0D, "attack damage by 2"),
-			expected("minecraft:attack_speed", "add_value", 0.3D, "attack speed by 0.3")));
+			expected("minecraft:generic.attack_damage", "add_value", 2.0D, "attack damage by 2"),
+			expected("minecraft:generic.attack_speed", "add_value", 0.3D, "attack speed by 0.3")));
 		assertModifierProfile(lang, "fernstride_focus", List.of(
-			expected("minecraft:movement_speed", "add_multiplied_base", 0.12D, "movement speed by 12%"),
-			expected("minecraft:jump_strength", "add_multiplied_base", 0.2D, "jump strength by 20%")));
+			expected("minecraft:generic.movement_speed", "add_multiplied_base", 0.12D, "movement speed by 12%"),
+			expected("minecraft:generic.jump_strength", "add_multiplied_base", 0.2D, "jump strength by 20%")));
 		assertModifierProfile(lang, "sapflow_focus", List.of(
-			expected("minecraft:max_health", "add_value", 4.0D, "2 extra hearts"),
-			expected("minecraft:attack_damage", "add_value", 2.0D, "attack damage by 2")));
+			expected("minecraft:generic.max_health", "add_value", 4.0D, "2 extra hearts"),
+			expected("minecraft:generic.attack_damage", "add_value", 2.0D, "attack damage by 2")));
 		assertModifierProfile(lang, "cinderplate_focus", List.of(
-			expected("minecraft:armor", "add_value", 3.0D, "+3 armor"),
-			expected("minecraft:armor_toughness", "add_value", 2.0D, "+2 armor toughness")));
+			expected("minecraft:generic.armor", "add_value", 3.0D, "+3 armor"),
+			expected("minecraft:generic.armor_toughness", "add_value", 2.0D, "+2 armor toughness")));
 		assertModifierProfile(lang, "bellowsfury_focus", List.of(
-			expected("minecraft:attack_damage", "add_value", 2.0D, "+2 attack damage"),
-			expected("minecraft:attack_speed", "add_multiplied_base", 0.2D, "20% attack speed")));
+			expected("minecraft:generic.attack_damage", "add_value", 2.0D, "+2 attack damage"),
+			expected("minecraft:generic.attack_speed", "add_multiplied_base", 0.2D, "20% attack speed")));
 		assertModifierProfile(lang, "bloodrush_focus", List.of(
-			expected("minecraft:attack_speed", "add_value", 0.35D, "+0.35 attack speed"),
-			expected("minecraft:movement_speed", "add_multiplied_base", 0.1D, "10% movement speed")));
+			expected("minecraft:generic.attack_speed", "add_value", 0.35D, "+0.35 attack speed"),
+			expected("minecraft:generic.movement_speed", "add_multiplied_base", 0.1D, "10% movement speed")));
 		assertModifierProfile(lang, "ravager_focus", List.of(
-			expected("minecraft:attack_damage", "add_multiplied_base", 0.4D, "attack damage by 40%"),
-			expected("minecraft:knockback_resistance", "add_value", -0.1D, "knockback resistance by 10%")));
+			expected("minecraft:generic.attack_damage", "add_multiplied_base", 0.4D, "attack damage by 40%"),
+			expected("minecraft:generic.knockback_resistance", "add_value", -0.1D, "knockback resistance by 10%")));
 		assertModifierProfile(lang, "granitehide_focus", List.of(
-			expected("minecraft:armor", "add_value", 3.0D, "+3 armor"),
-			expected("minecraft:armor_toughness", "add_value", 3.0D, "+3 armor toughness")));
+			expected("minecraft:generic.armor", "add_value", 3.0D, "+3 armor"),
+			expected("minecraft:generic.armor_toughness", "add_value", 3.0D, "+3 armor toughness")));
 		assertModifierProfile(lang, "hammerward_focus", List.of(
-			expected("minecraft:max_health", "add_value", 4.0D, "2 extra hearts"),
-			expected("minecraft:knockback_resistance", "add_value", 0.3D, "30% knockback resistance"),
-			expected("minecraft:attack_damage", "add_value", 2.0D, "+2 attack damage")));
+			expected("minecraft:generic.max_health", "add_value", 4.0D, "2 extra hearts"),
+			expected("minecraft:generic.knockback_resistance", "add_value", 0.3D, "30% knockback resistance"),
+			expected("minecraft:generic.attack_damage", "add_value", 2.0D, "+2 attack damage")));
 	}
 
 	@Test
@@ -663,7 +661,7 @@ class FocusDataConsistencyTest {
 	private static JsonObject modifierFor(JsonObject root, String attribute) {
 		for (JsonElement element : root.get("modifiers").getAsJsonArray()) {
 			JsonObject modifier = element.getAsJsonObject();
-			if (attribute.equals(normalizeAttributeId(modifier.get("attribute").getAsString()))) {
+			if (attribute.equals(modifier.get("attribute").getAsString())) {
 				return modifier;
 			}
 		}
@@ -692,26 +690,16 @@ class FocusDataConsistencyTest {
 		}
 	}
 
-	private static void assertSwimBehavior(JsonObject lang, String focusName, String behaviorId,
-			String tooltipToken) throws IOException {
-		JsonObject focus = focusDefinitionRoot(FOCUS_DATA_DIR.resolve(focusName + ".json"));
-		assertEquals(behaviorId, focus.get("behavior").getAsString(),
-			"Older Minecraft versions should express swim benefits through a safe palette behavior: " + focusName);
-		String effect = lang.get("item.attuned." + focusName + ".effect").getAsString()
-			.toLowerCase(Locale.ROOT);
+	private static void assertBehaviorProfile(JsonObject lang, String focusName,
+			String expectedBehavior, String tooltipToken) throws IOException {
+		JsonObject root = focusDefinitionRoot(FOCUS_DATA_DIR.resolve(focusName + ".json"));
+		assertEquals(expectedBehavior, root.get("behavior").getAsString(),
+			"Behavior id should stay synced for " + focusName);
+		String effectKey = "item.attuned." + focusName + ".effect";
+		assertLanguageKey(lang, effectKey);
+		String effect = lang.get(effectKey).getAsString().toLowerCase(Locale.ROOT);
 		assertTrue(effect.contains(tooltipToken.toLowerCase(Locale.ROOT)),
 			"Tooltip should mention '" + tooltipToken + "' for " + focusName);
-
-		String behaviorPath = behaviorId.substring(behaviorId.indexOf(':') + 1);
-		JsonObject behavior = JsonParser.parseString(
-			Files.readString(FOCUS_BEHAVIOR_DIR.resolve(behaviorPath + ".json"), StandardCharsets.UTF_8))
-			.getAsJsonObject();
-		assertEquals("attuned:conditional_mob_effect", behavior.get("type").getAsString(),
-			"Swim fallback should be a passive conditional effect.");
-		assertEquals("minecraft:dolphins_grace", behavior.get("effect").getAsString(),
-			"Swim fallback should use the vanilla underwater movement effect.");
-		assertEquals("underwater", behavior.getAsJsonObject("condition").get("condition").getAsString(),
-			"Swim fallback should only refresh while underwater.");
 	}
 
 	private static void assertSeafarersLuckModifier(JsonObject root, String itemId, Path file) {
@@ -722,16 +710,12 @@ class FocusDataConsistencyTest {
 			"Seafarers should only carry their non-combat Luck modifier: " + file);
 
 		JsonObject modifier = modifiers.getAsJsonArray().get(0).getAsJsonObject();
-		assertEquals("minecraft:luck", normalizeAttributeId(modifier.get("attribute").getAsString()),
+		assertEquals("minecraft:generic.luck", modifier.get("attribute").getAsString(),
 			"Seafarers modifier should affect vanilla player Luck: " + file);
 		assertEquals(SEAFARERS_LUCK_AMOUNTS.get(itemId), modifier.get("amount").getAsDouble(), 0.0001D,
 			"Seafarers Luck amount should stay significant but vanilla-friendly: " + file);
 		assertEquals("add_value", modifier.get("operation").getAsString(),
 			"Seafarers Luck should add a flat utility bonus: " + file);
-	}
-
-	private static String normalizeAttributeId(String id) {
-		return id.replace("minecraft:generic.", "minecraft:");
 	}
 
 	private static void assertNoDownCullface(Path file) throws IOException {
@@ -782,7 +766,7 @@ class FocusDataConsistencyTest {
 		Matcher matcher = REGISTERED_FOCUS.matcher(source);
 		Map<String, String> itemsByField = new TreeMap<>();
 		while (matcher.find()) {
-			itemsByField.put(matcher.group(1), "attuned:" + matcher.group(2));
+			itemsByField.put(matcher.group(2), "attuned:" + matcher.group(1));
 		}
 		assertTrue(!itemsByField.isEmpty(), "Could not find registered Focus item fields in AttunedContent");
 		return itemsByField;

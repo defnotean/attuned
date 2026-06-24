@@ -32,7 +32,8 @@ class PactTrialHudContractTest {
 		assertTrue(trials.contains("ParticleTypes.END_ROD"),
 			"Trial completion should burst end-rod particles at the player's chest.");
 		assertTrue(trials.contains("new DustParticleOptions(pact.argb()")
-				|| trials.contains("ParticleCompat.dust(pact.argb()"),
+				|| trials.contains("ParticleCompat.dust(pact.argb()")
+				|| trials.contains("new DustParticleOptions(dustColor(pact.argb())"),
 			"Trial completion should tint dust particles with the pact colour.");
 		assertTrue(trials.contains("Onboarding.tryPactTrialCompleteHint(player)"),
 			"Trial completion should fire the one-time onboarding hint.");

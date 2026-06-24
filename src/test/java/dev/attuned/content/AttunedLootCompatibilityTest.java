@@ -30,8 +30,8 @@ class AttunedLootCompatibilityTest {
 		Path.of("src/main/java/dev/attuned/content/AttunedLoot.java");
 	private static final Path FOCUS_DATA_DIR =
 		Path.of("src/main/resources/data/attuned/attuned/focus");
-	private static final Path FABRIC_MOD_JSON =
-		Path.of("src/main/resources/fabric.mod.json");
+	private static final Path FORGE_MODS_TOML =
+		Path.of("src/main/resources/META-INF/mods.toml");
 	private static final float EPSILON = 0.00001F;
 
 	@Test
@@ -56,12 +56,10 @@ class AttunedLootCompatibilityTest {
 	void lootFocusUniverseComesFromFocusDefinitionRegistry() throws IOException {
 		String source = Files.readString(LOOT_SOURCE, StandardCharsets.UTF_8);
 
-		assertTrue(source.contains("lookup.listElements()")
-				|| source.contains("AttunedContent.FOCI"),
-			"Loot injection should build Focus candidates from the synced FocusDefinition registry.");
-		assertTrue(!source.contains("AttunedContent.FOCI")
-				|| source.contains("1.20.6"),
-			"Loot injection should not cap drops to the static shipped-Foci list.");
+		assertTrue(source.contains("AttunedContent.FOCI.stream()"),
+			"Forge 1.20.6 loot injection should use the shipped Focus item list because this callback does not expose dynamic registries.");
+		assertTrue(source.contains("does not expose dynamic registries"),
+			"The static-list fallback should be documented in source.");
 	}
 
 	@Test
@@ -165,19 +163,18 @@ class AttunedLootCompatibilityTest {
 				"Unseen-themed tables should bias Unseen Foci without excluding other Foci");
 		}
 
-		JsonObject manifest = JsonParser.parseString(Files.readString(FABRIC_MOD_JSON, StandardCharsets.UTF_8))
-			.getAsJsonObject();
-		assertTrue(!manifest.getAsJsonObject("depends").has("lootr"),
+		String metadata = Files.readString(FORGE_MODS_TOML, StandardCharsets.UTF_8);
+		assertTrue(metadata.contains("modId=\"lootr\""),
+			"Lootr should stay listed for modpack discovery");
+		assertTrue(metadata.contains("mandatory=false"),
 			"Lootr should remain optional because Attuned uses vanilla loot-table injection");
-		assertEquals("*", manifest.getAsJsonObject("suggests").get("lootr").getAsString(),
-			"Lootr should stay suggested for modpack discovery");
 	}
 
 	@Test
 	void fishingTreasureBiasesSeafarersWithoutAddingCombatWeight() throws IOException {
 		Map<String, FocusData> foci = focusDataByItemId();
 		AttunedLoot.Drop fishing = AttunedLoot.targetDrops()
-			.get(new ResourceLocation("minecraft", "gameplay/fishing/treasure"));
+			.get(ResourceLocation.fromNamespaceAndPath("minecraft", "gameplay/fishing/treasure"));
 		assertTrue(fishing != null && fishing.fishingTheme(),
 			"Fishing treasure should use the Seafarers-themed drop");
 
@@ -298,7 +295,7 @@ class AttunedLootCompatibilityTest {
 		assertTrue(element.isJsonPrimitive(), "FocusDefinition faction should be a string id: " + file);
 		String[] parts = element.getAsString().split(":", 2);
 		assertEquals(2, parts.length, "FocusDefinition faction should be namespaced: " + file);
-		return new ResourceLocation(parts[0], parts[1]);
+		return ResourceLocation.fromNamespaceAndPath(parts[0], parts[1]);
 	}
 
 	private record FocusData(Affinity affinity, ResourceLocation faction) {}

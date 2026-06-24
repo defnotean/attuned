@@ -120,12 +120,10 @@ class FocusPresetTest {
 			"Presets should be a per-player list attachment.");
 		assertTrue(attachments.contains("FocusPreset.CODEC.listOf()"),
 			"Presets should persist via the preset codec list.");
-		assertTrue(attachments.contains("FocusPreset.STREAM_CODEC.apply(ByteBufCodecs.list())")
-				|| attachments.contains(".buildAndRegister(new ResourceLocation(Attuned.MOD_ID, \"presets\"))"),
-			"Presets should sync via a list-wrapped preset stream codec when the active Fabric attachment API supports sync hooks.");
-		assertTrue(attachments.contains("AttachmentSyncPredicate.targetOnly()")
-				|| attachments.contains("AttachmentRegistry.<List<FocusPreset>>builder()"),
-			"Presets should sync only to the owning client when attachment sync is available.");
+		assertTrue(attachments.contains("getPresets(serverPlayer)"),
+			"Presets should be included in the manual owning-client sync payload.");
+		assertTrue(attachments.contains("syncToClient(player)"),
+			"Preset writes should push the manual sync packet after server-side changes.");
 		assertTrue(attachments.contains(".copyOnDeath()"), "Presets should survive death.");
 		assertTrue(attachments.contains("public static List<FocusPreset> getPresets(Player player)"),
 			"There should be a read helper.");
@@ -140,7 +138,7 @@ class FocusPresetTest {
 	@Test
 	void presetReadsClampOldPersistedListsToTheMaxPresetCap() throws IOException {
 		String attachments = read(ATTACHMENTS);
-		assertTrue(attachments.contains("return normalizePresets(player.getAttachedOrElse(PRESETS, List.of()));"),
+		assertTrue(attachments.contains("return normalizePresets(get(player, PRESETS, List.of()));"),
 			"Preset reads should clamp old persisted/synced lists instead of exposing more than MAX_PRESETS.");
 		assertTrue(attachments.contains("private static List<FocusPreset> normalizePresets(List<FocusPreset> presets)"),
 			"Preset list normalization should be centralized.");

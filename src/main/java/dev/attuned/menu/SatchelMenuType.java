@@ -3,8 +3,7 @@ package dev.attuned.menu;
 import dev.attuned.Attuned;
 import dev.attuned.content.AttunedComponents;
 import dev.attuned.content.AttunedContent;
-import net.minecraft.core.Registry;
-import net.minecraft.core.registries.BuiltInRegistries;
+import dev.attuned.platform.ForgeRegistration;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.InteractionHand;
@@ -34,11 +33,11 @@ public final class SatchelMenuType {
 			return;
 		}
 		initialized = true;
-		TYPE = Registry.register(BuiltInRegistries.MENU,
-			new ResourceLocation(Attuned.MOD_ID, "satchel_of_foci"),
+		TYPE = ForgeRegistration.menu(
+			new ResourceLocation(Attuned.MOD_ID, "satchel_of_foci").getPath(),
 			new MenuType<>(SatchelMenu::new, FeatureFlags.VANILLA_SET));
-		GRAND_TYPE = Registry.register(BuiltInRegistries.MENU,
-			new ResourceLocation(Attuned.MOD_ID, "grand_satchel_of_foci"),
+		GRAND_TYPE = ForgeRegistration.menu(
+			new ResourceLocation(Attuned.MOD_ID, "grand_satchel_of_foci").getPath(),
 			new MenuType<>(SatchelMenu::grand, FeatureFlags.VANILLA_SET));
 	}
 
