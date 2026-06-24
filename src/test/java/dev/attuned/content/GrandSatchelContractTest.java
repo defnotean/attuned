@@ -53,22 +53,25 @@ class GrandSatchelContractTest {
 		// Both registrations must live after the single idempotent guard flip.
 		if (components.contains("initialized = true;")) {
 			assertBefore(components, "initialized = true;",
-				"new ResourceLocation(Attuned.MOD_ID, \"grand_satchel_contents\")");
+				"ForgeRegistration.dataComponent(\"grand_satchel_contents\"");
 		}
 	}
 
 	@Test
 	void grandSatchelItemIsRegisteredAndAcceptedInTheUtilityTabBesideTheSmallSatchel() throws IOException {
 		String content = read(CONTENT);
-		assertTrue(content.contains("GRAND_SATCHEL_OF_FOCI = register(\"grand_satchel_of_foci\""),
+		assertTrue(content.contains("public static Item GRAND_SATCHEL_OF_FOCI;")
+				&& content.contains("register(\"grand_satchel_of_foci\", SatchelItem::grand, item -> GRAND_SATCHEL_OF_FOCI = item)"),
 			"The grand reliquary should be a public field using the plain register helper.");
 		assertTrue(content.contains("grand_satchel_of_foci"),
 			"The grand reliquary registry path should be grand_satchel_of_foci.");
 		String tabs = read(TABS);
-		int satchel = Math.max(tabs.indexOf("output.accept(AttunedContent.SATCHEL_OF_FOCI)"),
-			tabs.indexOf("new ItemStack(AttunedContent.SATCHEL_OF_FOCI)"));
-		int grand = Math.max(tabs.indexOf("output.accept(AttunedContent.GRAND_SATCHEL_OF_FOCI)"),
-			tabs.indexOf("new ItemStack(AttunedContent.GRAND_SATCHEL_OF_FOCI)"));
+		int satchel = firstIndexOf(tabs,
+			"output.accept(AttunedContent.SATCHEL_OF_FOCI)",
+			"stacks.add(new ItemStack(AttunedContent.SATCHEL_OF_FOCI))");
+		int grand = firstIndexOf(tabs,
+			"output.accept(AttunedContent.GRAND_SATCHEL_OF_FOCI)",
+			"stacks.add(new ItemStack(AttunedContent.GRAND_SATCHEL_OF_FOCI))");
 		assertTrue(satchel >= 0 && grand >= 0 && Math.abs(satchel - grand) < 400,
 			"The grand reliquary should be accepted in the utility tab next to the small satchel.");
 	}
@@ -164,5 +167,16 @@ class GrandSatchelContractTest {
 	private static String read(Path file) throws IOException {
 		assertTrue(Files.isRegularFile(file), "Expected file to exist: " + file);
 		return Files.readString(file, StandardCharsets.UTF_8);
+	}
+
+	private static int firstIndexOf(String source, String... needles) {
+		int best = Integer.MAX_VALUE;
+		for (String needle : needles) {
+			int index = source.indexOf(needle);
+			if (index >= 0) {
+				best = Math.min(best, index);
+			}
+		}
+		return best == Integer.MAX_VALUE ? -1 : best;
 	}
 }

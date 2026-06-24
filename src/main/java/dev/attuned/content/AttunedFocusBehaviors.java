@@ -13,6 +13,7 @@ import dev.attuned.content.behavior.DelverBehavior;
 import dev.attuned.content.behavior.DreadfangBehavior;
 import dev.attuned.content.behavior.DriftglassBehavior;
 import dev.attuned.content.behavior.DuskwardBehavior;
+import dev.attuned.content.behavior.EbbstrideBehavior;
 import dev.attuned.content.behavior.EclipseBehavior;
 import dev.attuned.content.behavior.GloomstrideBehavior;
 import dev.attuned.content.behavior.EmberwardBehavior;
@@ -65,6 +66,7 @@ final class AttunedFocusBehaviors {
 		initialized = true;
 
 		register("tide", new TideBehavior());
+		register("ebbstride", new EbbstrideBehavior());
 		register("pearlguard", new PearlguardBehavior());
 		register("galespur", new GalespurBehavior());
 		register("rainstep", new RainstepBehavior());

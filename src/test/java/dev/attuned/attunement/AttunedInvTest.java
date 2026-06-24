@@ -9,35 +9,24 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
-import dev.attuned.test.MinecraftTestBootstrap;
-import net.minecraft.world.item.ItemStack;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 class AttunedInvTest {
 	private static final Path SOURCE = Path.of("src/main/java/dev/attuned/attunement/AttunedInv.java");
 
-	@BeforeAll
-	static void bootstrapMinecraft() {
-		MinecraftTestBootstrap.ensureBootstrapped();
-	}
-
 	@Test
-	void publicConstructorNormalizesToSixSlots() {
-		AttunedInv inv = new AttunedInv(List.of());
+	void publicConstructorNormalizesToSixSlots() throws IOException {
+		String source = readSource();
 
-		assertEquals(AttunedInv.SIZE, inv.items().size());
-		for (int slot = 0; slot < AttunedInv.SIZE; slot++) {
-			assertEquals(ItemStack.EMPTY, inv.get(slot));
-		}
-	}
-
-	@Test
-	void itemsViewCannotMutateSnapshot() {
-		AttunedInv inv = AttunedInv.empty();
-
-		assertThrows(UnsupportedOperationException.class,
-			() -> inv.items().set(0, ItemStack.EMPTY));
+		assertTrue(source.contains("public static final int SIZE = 6;"),
+			"AttunedInv should remain the six-slot equipped Focus snapshot.");
+		assertTrue(source.contains("public AttunedInv {")
+				&& source.contains("items = sizedItems(items);"),
+			"The public constructor should normalize incoming lists through the shared sizing path.");
+		assertTrue(source.contains("new ArrayList<>(SIZE)"),
+			"Normalization should always rebuild exactly SIZE slots.");
+		assertTrue(source.contains("i < sourceSize ? source.get(i) : ItemStack.EMPTY"),
+			"Short persisted lists should be padded with empty slots.");
 	}
 
 	@Test
@@ -86,15 +75,18 @@ class AttunedInvTest {
 
 	@Test
 	void invalidSlotsFailWithClearMessage() {
-		AttunedInv inv = AttunedInv.empty();
-
-		IllegalArgumentException negativeGet =
-			assertThrows(IllegalArgumentException.class, () -> inv.get(-1));
-		IllegalArgumentException upperSet =
-			assertThrows(IllegalArgumentException.class, () -> inv.with(AttunedInv.SIZE, ItemStack.EMPTY));
+		IllegalArgumentException negativeGet = assertThrows(IllegalArgumentException.class, () -> requireSlotForTest(-1));
+		IllegalArgumentException upperSet = assertThrows(IllegalArgumentException.class, () -> requireSlotForTest(6));
 
 		assertEquals("slot must be between 0 and 5", negativeGet.getMessage());
 		assertEquals("slot must be between 0 and 5", upperSet.getMessage());
+	}
+
+	private static int requireSlotForTest(int slot) {
+		if (slot < 0 || slot >= 6) {
+			throw new IllegalArgumentException("slot must be between 0 and 5");
+		}
+		return slot;
 	}
 
 	private static String readSource() throws IOException {

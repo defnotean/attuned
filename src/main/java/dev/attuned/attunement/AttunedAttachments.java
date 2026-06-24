@@ -12,8 +12,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
-import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.StringTag;
@@ -54,11 +54,23 @@ public final class AttunedAttachments {
 		}
 		initialized = true;
 		ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> sync(handler.player));
+		ServerPlayerEvents.AFTER_RESPAWN.register(AttunedAttachments::copyForRespawn);
 	}
 
 	public static void copy(Player from, Player to) {
 		STATES.put(to.getUUID(), state(from).copy());
 		sync(to);
+	}
+
+	private static void copyForRespawn(ServerPlayer oldPlayer, ServerPlayer newPlayer, boolean alive) {
+		State oldState = STATES.get(oldPlayer.getUUID());
+		if (oldState == null) {
+			return;
+		}
+		// This legacy bridge stores one persisted state object; its values all match
+		// copy-on-death attachments until full per-type metadata is implemented.
+		STATES.put(newPlayer.getUUID(), oldState.copy());
+		sync(newPlayer);
 	}
 
 	public static void load(Player player, CompoundTag playerTag) {
