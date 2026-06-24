@@ -41,7 +41,7 @@ class ExampleDatapackContractTest {
 		Path.of("src/main/java/dev/attuned/content/AttunedFocusBehaviors.java");
 
 	private static final Pattern REGISTERED_FOCUS = Pattern.compile(
-		"registerFocus\\(\"([a-z0-9_]+)\"\\)");
+		"registerFocus\\(\\s*\"([a-z0-9_]+)\"");
 	private static final Pattern REGISTERED_BEHAVIOR = Pattern.compile(
 		"register\\(\\s*\"([a-z0-9_/.-]+)\"\\s*,\\s*new\\s+", Pattern.DOTALL);
 	private static final Set<String> PALETTE_TYPES = Set.of(

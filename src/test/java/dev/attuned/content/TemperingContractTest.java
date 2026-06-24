@@ -40,7 +40,7 @@ class TemperingContractTest {
 		assertTrue(components.contains("\"tempered\""),
 			"The Tempered component id path should be tempered.");
 		assertBefore(components, "initialized = true;",
-			"Identifier.fromNamespaceAndPath(Attuned.MOD_ID, \"tempered\")");
+			"ForgeRegistration.dataComponent(\"tempered\"");
 	}
 
 	@Test

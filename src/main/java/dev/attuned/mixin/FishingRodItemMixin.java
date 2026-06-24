@@ -2,26 +2,25 @@ package dev.attuned.mixin;
 
 import dev.attuned.content.behavior.SeafarersFishing;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.entity.projectile.FishingHook;
 import net.minecraft.world.item.FishingRodItem;
+import net.minecraft.world.level.Level;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.ModifyArgs;
-import org.spongepowered.asm.mixin.injection.invoke.arg.Args;
+import org.spongepowered.asm.mixin.injection.Redirect;
 
 /** Adds active Seafarers Foci to the Luck of the Sea value used by new bobbers. */
 @Mixin(FishingRodItem.class)
 public abstract class FishingRodItemMixin {
 
-	@ModifyArgs(
+	@Redirect(
 		method = "use",
 		at = @At(
-			value = "INVOKE",
-			target = "Lnet/minecraft/world/entity/projectile/FishingHook;<init>(Lnet/minecraft/world/entity/player/Player;Lnet/minecraft/world/level/Level;II)V"
+			value = "NEW",
+			target = "net/minecraft/world/entity/projectile/FishingHook"
 		)
 	)
-	private void attuned$boostFishingLuck(Args args) {
-		Player player = args.get(0);
-		int luck = args.get(2);
-		args.set(2, SeafarersFishing.boostedFishingLuck(player, luck));
+	private FishingHook attuned$boostFishingLuck(Player player, Level level, int luck, int lure) {
+		return new FishingHook(player, level, SeafarersFishing.boostedFishingLuck(player, luck), lure);
 	}
 }
