@@ -4,6 +4,10 @@ This repository keeps the newest development line on `latest`. Older Minecraft
 targets live on independent maintenance branches and should not be merged back
 to `latest` unless the change is also intended for the newest target.
 
+Forge ports live on parallel `forge/<minecraft-version>` branches. They are
+not replacements for the Fabric maintenance branches; they are the starting
+point for Forge packaging, testing, and release hardening.
+
 | Branch | Minecraft | Status |
 | --- | --- | --- |
 | `latest` | `26.2` | current |
@@ -12,6 +16,20 @@ to `latest` unless the change is also intended for the newest target.
 | `maintenance/minecraft-1.20.6` | `1.20.6` | maintenance |
 | `maintenance/minecraft-1.19.4` | `1.19.4` | maintenance |
 | `maintenance/minecraft-1.18.2` | `1.18.2` | maintenance |
+
+## Forge Port Branches
+
+| Branch | Minecraft | Status |
+| --- | --- | --- |
+| `forge/26.2` | `26.2` | first-pass verified |
+| `forge/26.1.2` | `26.1.2` | first-pass verified |
+| `forge/1.21.11` | `1.21.11` | first-pass verified |
+| `forge/1.21.1` | `1.21.1` | first-pass verified |
+| `forge/1.20.6` | `1.20.6` | first-pass verified |
+| `forge/1.20.1` | `1.20.1` | first-pass verified |
+| `forge/1.19.4` | `1.19.4` | first-pass verified |
+| `forge/1.19.2` | `1.19.2` | first-pass verified |
+| `forge/1.18.2` | `1.18.2` | first-pass verified |
 
 ## Famous Version Target Audit - 2026-06-17
 
