@@ -33,7 +33,7 @@ independent from the Fabric maintenance branches.
 
 | Target Forge branch | Minecraft | Status | Last verification | Branch-specific notes |
 | --- | ---: | --- | --- | --- |
-| `forge/26.2` | 26.2 | First-pass port verified | `build`, `runServer`, `runClient`, focus audit | Reference Forge port on Forge 65.0.0 and Java 25. |
+| `forge/26.2` | 26.2 | First-pass port verified with in-world Focus smoke | `build`, `runServer`, `runClient`, focus audit, quick-play world join, Focus equip/modifier smoke | Reference Forge port on Forge 65.0.0 and Java 25. |
 | `forge/26.1.2` | 26.1.2 | First-pass port verified | `build`, `runServer`, `runClient`, focus audit | Same modern ForgeGradle 7 shape as 26.2 with branch-local dependency pins. |
 | `forge/1.21.11` | 1.21.11 | First-pass port verified | `build`, `runServer`, `runClient`, focus audit | Mixin configs pin `minVersion` to 0.8.5 and Java compatibility to the recognized runtime level. |
 | `forge/1.21.1` | 1.21.1 | First-pass port verified | `build`, `runServer`, `runClient`, focus audit | Uses the newer water/fall attributes while retaining the 1.21.1 `minecraft:generic.*` attribute ids. |
@@ -60,6 +60,16 @@ independent from the Fabric maintenance branches.
   resource reload, OpenAL startup, and texture-atlas creation. Each client was
   then stopped manually, so non-zero `runClient` exits after that point mean
   the verified client process was interrupted rather than a launch failure.
+- `forge/26.2` additionally passed a manual quick-play singleplayer smoke:
+  the integrated server started, spawn chunks prepared, the player joined,
+  `/attuned validate` checked 99 Focus definitions, 17 palette behaviors, and
+  13 Confluence definitions, and the survival Focus UI accepted equipped Foci.
+- The 26.2 in-world Focus smoke equipped Wellspring, Current-Runner, and
+  Overgrowth, then verified `/attuned status` reported them active at
+  `12 / 20` capacity. Attribute probes showed the expected modifier values:
+  max health `32.0`, armor `3.0`, movement speed `0.11200000166893005`, and
+  water movement efficiency `1.0`. After unequipping, status returned to
+  `Active Foci (0)` and the same attributes returned to vanilla baselines.
 - A branch-wide Focus audit checked 22 targeted Foci and 22 generated Focus
   textures per branch: Bramblegate, Seedcall, Riptide Heart, Pearlguard,
   Slagbrand, Anvilheart, the Tide/Verdant/Forge/Fury/Bastion modifier wave,
@@ -90,6 +100,9 @@ independent from the Fabric maintenance branches.
   `minecraft:generic.*` ids. `1.21.11`, `26.1.2`, and `26.2` use the newer
   short attribute ids such as `minecraft:armor` and `minecraft:attack_speed`.
 - No Focus asset or gameplay-definition gaps remain in the audited set.
+- On `forge/26.2`, the Focus inventory UI, HUD mirroring, active-state resolver,
+  and attribute modifier cleanup were manually exercised in a joined
+  singleplayer world for Wellspring, Current-Runner, and Overgrowth.
 
 ## Runtime Notes
 
@@ -99,6 +112,10 @@ independent from the Fabric maintenance branches.
 - Offline/dev-profile Realms authentication errors can appear during newer
   client startup. They did not prevent Attuned initialization, resource reload,
   sound startup, or texture-atlas creation.
+- Opening a temporary LAN server in the 26.2 Windows dev client produced Netty
+  native transport/logging noise. The release-relevant singleplayer quick-play
+  path did not depend on LAN and completed its world join, validation, Focus
+  equip, modifier, and cleanup checks.
 - The 26.x attachment bridge remains a first-pass Forge compatibility layer:
   clone/respawn copying is covered, but save-file persistence, owner sync, and
   dedicated-server reconnect parity still need release-hardening work before a

@@ -56,7 +56,7 @@ Each row is the required first-pass worker report for its version branch.
 | `forge/1.21.1` | 85 files, +2769/-675 | ForgeGradle 7 metadata, modern attachment/network facades, newer water/fall attributes with 1.21.1 `minecraft:generic.*` ids | `.\gradlew.bat build --no-daemon` passed; `runServer` passed; `runClient` startup smoke passed | None blocking build, server launch, or client startup | Interactive world-join playthrough and packet-flow playthrough |
 | `forge/1.21.11` | 78 files, +3410/-1601 | ForgeGradle 7 metadata, Java compatibility/mixin minVersion correction, modern client event/render facades, modern attribute ids | `.\gradlew.bat build --no-daemon` passed; `runServer` passed; `runClient` startup smoke passed | Optional Windows Netty/Realms dev-environment log noise only | Interactive world-join playthrough and packet-flow playthrough |
 | `forge/26.1.2` | 73 files, +3280/-636 | Modern ForgeGradle 7/Java 25 port, attachment bridge, payload registry facade, Forge creative tab and registry bridge | `.\gradlew.bat build --no-daemon` passed; `runServer` passed; `runClient` startup smoke passed | Optional Windows Netty/Realms dev-environment log noise only | Interactive world-join playthrough, packet-flow playthrough, attachment persistence/reconnect parity |
-| `forge/26.2` | 73 files, +2477/-438 | Reference Forge port: ForgeGradle 7/Java 25, `@Mod`, deferred registration, payload/attachment/event facades, source-run manifest mixin config, Java compatibility cap | `.\gradlew.bat test --no-daemon`, `build`, `runGameTestServer`, `runServer`, and `runClient` startup smoke passed | Optional Windows Netty/Realms dev-environment log noise only | Interactive world-join playthrough, packet-flow playthrough, attachment persistence/reconnect parity |
+| `forge/26.2` | 73 files, +2477/-438 | Reference Forge port: ForgeGradle 7/Java 25, `@Mod`, deferred registration, payload/attachment/event facades, source-run manifest mixin config, Java compatibility cap | `.\gradlew.bat test --no-daemon`, `build`, `runGameTestServer`, `runServer`, `runClient` startup smoke, and manual in-world Focus smoke passed | Optional Windows Netty/Realms dev-environment log noise only | Wider packet-flow playthrough, attachment persistence/reconnect parity |
 
 ## Major Migration Patterns
 
@@ -83,6 +83,10 @@ Each row is the required first-pass worker report for its version branch.
 - Every target branch starts a Forge server-side dev runtime.
 - Every target branch starts a Forge dev client through Attuned initialization,
   resource reload, OpenAL startup, and texture-atlas creation.
+- `forge/26.2` joins a quick-play singleplayer world, accepts in-game Attuned
+  commands, validates live registries, equips Focus items through the survival
+  Focus UI, syncs the HUD, applies the expected player modifiers, and removes
+  those modifiers after unequip.
 - Attuned initializes during runtime smoke on every target branch.
 - Focus data, item registration, language keys, item models, item definitions
   where present, animated 64x512 textures, and animation metadata pass the
@@ -113,6 +117,22 @@ Each row is the required first-pass worker report for its version branch.
 | `forge/26.1.2` | `.\gradlew.bat build --no-daemon` | `.\gradlew.bat runServer --no-daemon` | `.\gradlew.bat runClient --no-daemon` |
 | `forge/26.2` | `.\gradlew.bat test --no-daemon`; `.\gradlew.bat build --no-daemon` | `.\gradlew.bat runGameTestServer --no-daemon`; `.\gradlew.bat runServer --no-daemon` | `.\gradlew.bat runClient --no-daemon` |
 
+## Manual In-World Focus Smoke
+
+`forge/26.2` was also run through a live singleplayer Focus smoke on
+2026-06-24. A copied dev save under the ignored `run/saves` directory was used
+as the smoke world, with commands enabled only for the local test harness.
+
+| Step | Result |
+| --- | --- |
+| Quick-play launch | `.\gradlew.bat runClient --no-daemon --args='--quickPlaySingleplayer SmokeWorld-26.2'` launched Forge 65.0.0, loaded Attuned, started the integrated server, prepared spawn chunks, and logged `Dev joined the game`. |
+| Live content validation | `/attuned validate` passed in the joined world: `99 Focus definitions`, `17 palette behavior(s)`, and `13 Confluence definition(s)` checked. |
+| Focus item setup | `/attuned capacity 30` clamped to the configured cap of `20`; `give` commands produced Cinderplate, Bloodrush, Tidewarden, Wellspring, Current-Runner, and Overgrowth Focus items. |
+| Survival Focus UI | Wellspring, Current-Runner, and Overgrowth were moved from the player inventory into the vertical Focus slots. The Focus HUD mirrored the equipped items immediately. |
+| Server status | `/attuned status` reported `Capacity: 12 / 20`, `Active Foci (3)`, `wellspring_focus (cost 4, tide)`, `current_runner_focus (cost 3, tide)`, and `overgrowth_focus (cost 5, verdant)`. |
+| Modifier values | Attribute queries reported `Max Health = 32.0`, `Armor = 3.0`, `Speed = 0.11200000166893005`, and `Water Movement Efficiency = 1.0`, matching Wellspring, Current-Runner, and Overgrowth. |
+| Unequip cleanup | After moving the three Foci back out of the Focus slots, `/attuned status` returned `Active Foci (0)`, and attributes returned to `Max Health = 20.0`, `Armor = 0.0`, `Speed = 0.10000000149011612`, `Water Movement Efficiency = 0.0`. |
+
 ## Client Startup Smoke
 
 All client startup smokes were run on 2026-06-24 with
@@ -141,9 +161,10 @@ Forge port.
 
 ## Known Limitations
 
-- Full client startup smoke is now recorded for every Forge branch. Interactive
-  singleplayer world-join, menu-click, and packet-flow playtests are still
-  needed before publishing Forge packages.
+- Full client startup smoke is recorded for every Forge branch. A 26.2
+  singleplayer Focus equip/modifier cleanup smoke is also recorded. Older and
+  intermediate branches still need interactive world-join, menu-click, and
+  packet-flow playtests before publishing Forge packages.
 - The 26.x attachment bridge copies in-memory values across clone/respawn, but
   save-file persistence, owner sync, and dedicated-server reconnect parity need
   release-hardening work.
@@ -163,7 +184,8 @@ Forge port.
 
 Before publishing Forge artifacts, run this narrower second-pass checklist:
 
-1. A singleplayer world-join smoke on every branch.
+1. A singleplayer world-join smoke on every non-26.2 branch, plus a repeated
+   spot check on 26.2 after any attachment or networking changes.
 2. A focused packet-flow playtest for inspect, updraft, journal, altar,
    reweaving, satchel, presets, and party/circle payloads.
 3. A dedicated-server join/reconnect smoke on 26.x to harden attachment state.
