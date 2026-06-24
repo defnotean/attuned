@@ -34,17 +34,17 @@ class PublishCurseForgeTest(unittest.TestCase):
         )
 
         self.assertEqual(
-            f"Fabric: Minecraft {metadata['gameVersionNames'][0]} - Attuned 1.3.0",
+            f"Forge: Minecraft {metadata['gameVersionNames'][0]} - Attuned 1.3.0",
             metadata["displayName"],
         )
         self.assertEqual("markdown", metadata["changelogType"])
         self.assertEqual("release", metadata["releaseType"])
         self.assertIn("## Attuned 1.3.0 - The Focus Reliquary", metadata["changelog"])
         self.assertNotIn("Attuned 1.2.7", metadata["changelog"])
-        self.assertEqual(["26.2", "Java 25", "Client", "Server", "Fabric"],
+        self.assertEqual(["26.2", "Java 25", "Client", "Server", "Forge"],
                          metadata["gameVersionNames"])
         self.assertEqual(
-            {"projects": [{"slug": "fabric-api", "type": "requiredDependency"}]},
+            {"projects": []},
             metadata["relations"],
         )
 
