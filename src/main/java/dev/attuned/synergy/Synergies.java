@@ -105,8 +105,13 @@ public final class Synergies {
 				activeFocusIds.add(BuiltInRegistries.ITEM.getKey(def.item().value()).toString()));
 		}
 
-		Registry<SynergyDefinition> registry =
-			player.getLevel().registryAccess().registryOrThrow(AttunedRegistries.SYNERGY_DEFINITIONS);
+		Optional<Registry<SynergyDefinition>> registryLookup = definitionRegistry(player);
+		if (registryLookup.isEmpty()) {
+			synergyState.remove(player.getUUID());
+			activeBehaviors.remove(player.getUUID());
+			return;
+		}
+		Registry<SynergyDefinition> registry = registryLookup.get();
 		List<SynergyResolver.SynergyDef> defs = new ArrayList<>();
 		Map<String, SynergyDefinition> byId = new HashMap<>();
 		registry.stream().forEach(def -> {
@@ -226,8 +231,13 @@ public final class Synergies {
 	 * gain and re-applies it deterministically.
 	 */
 	private static void reconcileOnJoin(ServerPlayer player) {
-		Registry<SynergyDefinition> registry =
-			player.getLevel().registryAccess().registryOrThrow(AttunedRegistries.SYNERGY_DEFINITIONS);
+		Optional<Registry<SynergyDefinition>> registryLookup = definitionRegistry(player);
+		if (registryLookup.isEmpty()) {
+			synergyState.remove(player.getUUID());
+			activeBehaviors.remove(player.getUUID());
+			return;
+		}
+		Registry<SynergyDefinition> registry = registryLookup.get();
 		registry.stream().forEach(def -> {
 			removeModifiers(player, registry.getKey(def).toString(), def);
 		});
@@ -330,8 +340,11 @@ public final class Synergies {
 	 * compute active Confluences and the "one away" preview without touching the budget core.
 	 */
 	public static List<SynergyResolver.SynergyDef> definitions(Player player) {
-		Registry<SynergyDefinition> registry =
-			player.getLevel().registryAccess().registryOrThrow(AttunedRegistries.SYNERGY_DEFINITIONS);
+		Optional<Registry<SynergyDefinition>> registryLookup = definitionRegistry(player);
+		if (registryLookup.isEmpty()) {
+			return List.of();
+		}
+		Registry<SynergyDefinition> registry = registryLookup.get();
 		List<SynergyResolver.SynergyDef> defs = new ArrayList<>();
 		registry.stream().forEach(def -> {
 			defs.add(new SynergyResolver.SynergyDef(
@@ -339,6 +352,14 @@ public final class Synergies {
 				def.members().stream().map(ResourceLocation::toString).toList()));
 		});
 		return defs;
+	}
+
+	private static Optional<Registry<SynergyDefinition>> definitionRegistry(Player player) {
+		try {
+			return Optional.of(player.getLevel().registryAccess().registryOrThrow(AttunedRegistries.SYNERGY_DEFINITIONS));
+		} catch (IllegalStateException ignored) {
+			return Optional.empty();
+		}
 	}
 
 	/** Stable per-Confluence, per-modifier-index id, distinct from the slot-based Focus scheme. */

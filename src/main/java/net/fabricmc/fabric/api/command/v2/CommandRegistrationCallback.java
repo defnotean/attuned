@@ -7,8 +7,6 @@ import java.util.Objects;
 import net.minecraft.commands.CommandBuildContext;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
-import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.event.RegisterCommandsEvent;
 
 public final class CommandRegistrationCallback {
 	public static final Event EVENT = new Event();
@@ -18,16 +16,17 @@ public final class CommandRegistrationCallback {
 	public static final class Event {
 		private final List<Callback> callbacks = new ArrayList<>();
 
-		private Event() {
-			MinecraftForge.EVENT_BUS.addListener((RegisterCommandsEvent event) -> {
-				for (Callback callback : List.copyOf(callbacks)) {
-					callback.register(event.getDispatcher(), event.getBuildContext(), event.getCommandSelection());
-				}
-			});
-		}
+		private Event() {}
 
 		public void register(Callback callback) {
 			callbacks.add(Objects.requireNonNull(callback, "callback"));
+		}
+
+		public void fire(CommandDispatcher<CommandSourceStack> dispatcher,
+				CommandBuildContext registryAccess, Commands.CommandSelection environment) {
+			for (Callback callback : List.copyOf(callbacks)) {
+				callback.register(dispatcher, registryAccess, environment);
+			}
 		}
 	}
 

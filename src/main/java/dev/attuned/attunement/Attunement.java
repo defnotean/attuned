@@ -57,8 +57,12 @@ public final class Attunement {
 		if (stack.isEmpty()) {
 			return Optional.empty();
 		}
-		Registry<FocusDefinition> registry =
-			player.getLevel().registryAccess().registryOrThrow(AttunedRegistries.FOCUS_DEFINITIONS);
+		Registry<FocusDefinition> registry;
+		try {
+			registry = player.getLevel().registryAccess().registryOrThrow(AttunedRegistries.FOCUS_DEFINITIONS);
+		} catch (IllegalStateException ignored) {
+			return Optional.empty();
+		}
 		return FocusLookup.forItem(registry, stack.getItem());
 	}
 

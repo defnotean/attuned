@@ -147,13 +147,35 @@ public final class AttunedTooltips {
 	}
 
 	private static FocusDefinition definitionFor(ItemStack stack) {
+		Registry<FocusDefinition> registry = focusRegistry();
+		if (registry == null) {
+			return null;
+		}
+		return FocusLookup.forItem(registry, stack.getItem()).orElse(null);
+	}
+
+	private static Registry<FocusDefinition> focusRegistry() {
 		Minecraft minecraft = Minecraft.getInstance();
 		if (minecraft.level == null) {
 			return null;
 		}
-		Registry<FocusDefinition> registry =
-			minecraft.level.registryAccess().registryOrThrow(AttunedRegistries.FOCUS_DEFINITIONS);
-		return FocusLookup.forItem(registry, stack.getItem()).orElse(null);
+		try {
+			return minecraft.level.registryAccess().registryOrThrow(AttunedRegistries.FOCUS_DEFINITIONS);
+		} catch (IllegalStateException ignored) {
+			return null;
+		}
+	}
+
+	private static Registry<SynergyDefinition> synergyRegistry() {
+		Minecraft minecraft = Minecraft.getInstance();
+		if (minecraft.level == null) {
+			return null;
+		}
+		try {
+			return minecraft.level.registryAccess().registryOrThrow(AttunedRegistries.SYNERGY_DEFINITIONS);
+		} catch (IllegalStateException ignored) {
+			return null;
+		}
 	}
 
 	/**
@@ -163,12 +185,10 @@ public final class AttunedTooltips {
 	 * without naming the Confluence.
 	 */
 	private static boolean nearUndiscoveredConfluence(Player player, ItemStack stack) {
-		Minecraft minecraft = Minecraft.getInstance();
-		if (minecraft.level == null) {
+		Registry<FocusDefinition> focusRegistry = focusRegistry();
+		if (focusRegistry == null) {
 			return false;
 		}
-		Registry<FocusDefinition> focusRegistry =
-			minecraft.level.registryAccess().registryOrThrow(AttunedRegistries.FOCUS_DEFINITIONS);
 		FocusDefinition focus = FocusLookup.forItem(focusRegistry, stack.getItem()).orElse(null);
 		if (focus == null) {
 			return false;
@@ -178,8 +198,10 @@ public final class AttunedTooltips {
 		Set<String> activeFocusIds = equippedFocusIds(player, focusRegistry);
 		Set<String> discovered = new HashSet<>(AttunedAttachments.getDiscoveredConfluences(player));
 
-		Registry<SynergyDefinition> synergyRegistry =
-			minecraft.level.registryAccess().registryOrThrow(AttunedRegistries.SYNERGY_DEFINITIONS);
+		Registry<SynergyDefinition> synergyRegistry = synergyRegistry();
+		if (synergyRegistry == null) {
+			return false;
+		}
 		List<SynergyResolver.SynergyDef> defs = new ArrayList<>();
 		synergyRegistry.stream().forEach(def -> {
 			String id = synergyRegistry.getKey(def).toString();
