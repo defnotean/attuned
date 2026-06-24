@@ -42,5 +42,4 @@ publish or mutate public pages unless that release action is explicitly requeste
 
 The script uploads `build/libs/attuned-<mod_version>.jar` to CurseForge project
 `1553444`, uses the matching `CHANGELOG.md` section, marks the file as a
-release, tags it for Minecraft/Fabric/Java/client/server, and declares Fabric
-API as a required dependency.
+release, tags it for Minecraft/Forge/Java/client/server without declaring Fabric API.
