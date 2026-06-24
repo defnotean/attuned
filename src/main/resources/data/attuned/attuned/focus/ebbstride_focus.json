@@ -2,16 +2,12 @@
     "item":  "attuned:ebbstride_focus",
     "cost":  3,
     "affinity":  "tide",
+    "behavior":  "attuned:ebbstride",
     "modifiers":  [
                       {
                           "attribute":  "minecraft:generic.attack_speed",
                           "amount":  0.15,
                           "operation":  "add_multiplied_base"
-                      },
-                      {
-                          "attribute":  "minecraft:generic.fall_damage_multiplier",
-                          "amount":  -0.4,
-                          "operation":  "add_multiplied_total"
                       }
                   ]
 }

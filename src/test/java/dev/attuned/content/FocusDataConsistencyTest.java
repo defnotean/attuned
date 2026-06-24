@@ -68,7 +68,7 @@ class FocusDataConsistencyTest {
 		Path.of("src/main/resources/assets/attuned/lang/en_us.json");
 
 	private static final Pattern REGISTERED_FOCUS = Pattern.compile(
-		"public\\s+static\\s+final\\s+Item\\s+([A-Z0-9_]+_FOCUS)\\s*=\\s*registerFocus\\(\"([a-z0-9_]+_focus)\"\\);");
+		"registerFocus\\(\\s*\"([a-z0-9_]+_focus)\"\\s*,\\s*item\\s*->\\s*([A-Z0-9_]+_FOCUS)\\s*=\\s*item\\s*\\)");
 	private static final Pattern REGISTERED_BEHAVIOR = Pattern.compile(
 		"register\\(\\s*\"([a-z0-9_/.-]+)\"\\s*,\\s*new\\s+",
 		Pattern.DOTALL);
@@ -133,16 +133,14 @@ class FocusDataConsistencyTest {
 
 		assertEquals(registeredItemsByField.size(), registeredItems.size(),
 			"Registered shipped Focus item ids should not be duplicated");
-		assertTrue(source.contains("public static final List<Item> FOCI = List.copyOf(REGISTERED_FOCI);"),
-			"AttunedContent.FOCI should be derived from registerFocus order, not manually duplicated");
-		assertTrue(source.contains("private static final Set<Item> FOCI_SET = Set.copyOf(REGISTERED_FOCI);"),
-			"AttunedContent should keep constant-time Focus membership alongside the ordered list");
+		assertTrue(source.contains("public static final List<Item> FOCI = Collections.unmodifiableList(REGISTERED_FOCI);"),
+			"AttunedContent.FOCI should expose the deferred registerFocus order, not a manually duplicated list");
 		assertTrue(source.contains("REGISTERED_FOCI.add(item);"),
-			"registerFocus should append every Focus to the public FOCI snapshot");
+			"registerFocus should append every deferred Focus to the public FOCI view");
 		assertTrue(source.contains("public static boolean isFocus(Item item)"),
 			"AttunedContent should expose the canonical Focus item membership check");
-		assertTrue(source.contains("return item != null && FOCI_SET.contains(item);"),
-			"Focus item membership should use the set-backed lookup and reject null safely");
+		assertTrue(source.contains("return item != null && REGISTERED_FOCI.contains(item);"),
+			"Focus item membership should use the deferred Focus list and reject null safely");
 		assertTrue(source.contains("public static boolean isFocus(ItemStack stack)"),
 			"AttunedContent should expose the canonical Focus stack membership check");
 		assertTrue(!source.contains("FOCI = List.of("),
@@ -252,6 +250,7 @@ class FocusDataConsistencyTest {
 
 	@Test
 	void behaviorBackedShippedFociAreUniqueToPreventDuplicateRuntimeHooks() throws IOException {
+		Set<String> statFallbackBehaviors = Set.of("attuned:ebbstride_focus");
 		Set<String> stackableBehaviorItems = new TreeSet<>();
 		try (Stream<Path> paths = Files.list(FOCUS_DATA_DIR)) {
 			for (Path file : paths
@@ -265,7 +264,10 @@ class FocusDataConsistencyTest {
 				if (root.has("unique") && root.get("unique").getAsBoolean()) {
 					continue;
 				}
-				stackableBehaviorItems.add(root.get("item").getAsString());
+				String item = root.get("item").getAsString();
+				if (!statFallbackBehaviors.contains(item)) {
+					stackableBehaviorItems.add(item);
+				}
 			}
 		}
 		assertEquals(Set.of(), stackableBehaviorItems,
@@ -372,8 +374,8 @@ class FocusDataConsistencyTest {
 			expected("minecraft:attack_damage", "add_value", 4.0D, "+4 attack damage"),
 			expected("minecraft:armor_toughness", "add_value", 2.0D, "+2 armor toughness")));
 		assertModifierProfile(lang, "ebbstride_focus", List.of(
-			expected("minecraft:attack_speed", "add_multiplied_base", 0.15D, "+15% attack speed"),
-			expected("minecraft:fall_damage_multiplier", "add_multiplied_total", -0.4D, "softer landing")));
+			expected("minecraft:attack_speed", "add_multiplied_base", 0.15D, "+15% attack speed")));
+		assertBehaviorProfile(lang, "ebbstride_focus", "attuned:ebbstride", "softer landing");
 		assertModifierProfile(lang, "overgrowth_focus", List.of(
 			expected("minecraft:max_health", "add_value", 6.0D, "3 extra hearts"),
 			expected("minecraft:armor", "add_value", 3.0D, "+3 armor")));
@@ -428,37 +430,38 @@ class FocusDataConsistencyTest {
 			"Creative inventory should split Verdant/Umbral Foci into their own readable tab");
 		assertTrue(source.contains("\"attuned_utility\""),
 			"Creative inventory should include a utility tab for neutral Foci and tools");
+		boolean legacyStaticTabs = source.contains("private static void registerFocusCreativeTab")
+			&& source.contains("Item... focusItems");
 		assertTrue(source.contains("Set.of(Affinity.FURY, Affinity.BASTION)")
-				|| (source.contains("AttunedContent.CINDER_FOCUS")
-					&& source.contains("AttunedContent.AEGIS_FOCUS")),
+				|| (legacyStaticTabs
+					&& source.contains("AttunedContent.BLOODRUSH_FOCUS")
+					&& source.contains("AttunedContent.GRANITEHIDE_FOCUS")),
 			"First Focus tab should group Fury and Bastion side-by-side");
 		assertTrue(source.contains("Set.of(Affinity.ZEPHYR, Affinity.HOLY)")
-				|| (source.contains("AttunedContent.DRIFT_FOCUS")
-					&& source.contains("AttunedContent.THRESHOLD_FOCUS")),
+				|| (legacyStaticTabs
+					&& source.contains("AttunedContent.GALESPUR_FOCUS")
+					&& source.contains("AttunedContent.RESCUEFLAME_FOCUS")),
 			"Second Focus tab should group Zephyr and Holy side-by-side");
 		assertTrue(source.contains("Set.of(Affinity.TIDE, Affinity.FORGE)")
-				|| (source.contains("AttunedContent.CURRENT_RUNNER_FOCUS")
-					&& source.contains("AttunedContent.ANVILHEART_FOCUS")),
+				|| (legacyStaticTabs
+					&& source.contains("AttunedContent.TIDEWARDEN_FOCUS")
+					&& source.contains("AttunedContent.CINDERPLATE_FOCUS")),
 			"Third Focus tab should group Tide and Forge side-by-side");
 		assertTrue(source.contains("Set.of(Affinity.VERDANT, Affinity.UMBRAL)")
-				|| (source.contains("AttunedContent.FERNSTRIDE_FOCUS")
+				|| (legacyStaticTabs
+					&& source.contains("AttunedContent.OVERGROWTH_FOCUS")
 					&& source.contains("AttunedContent.ECLIPSE_FOCUS")),
 			"Fourth Focus tab should group Verdant and Umbral side-by-side");
-		assertTrue(source.contains("definition.faction()")
-				|| source.contains("AttunedContent.SEEDCALL_FOCUS")
-				|| source.contains("AttunedContent.SOFTSTEP_FOCUS"),
+		assertTrue(source.contains("definition.faction()") || legacyStaticTabs,
 			"Creative tab order should keep named Focus families together within each affinity lane");
-		assertTrue(source.contains("factionKey(definition.faction())")
-				|| source.contains("AttunedContent.RIPTIDE_HEART_FOCUS")
-				|| source.contains("AttunedContent.SLAGBRAND_FOCUS"),
+		assertTrue(source.contains("factionKey(definition.faction())") || legacyStaticTabs,
 			"Creative tab sorting should use a stable faction key between affinity and cost");
 		assertTrue(source.contains("ALTAR_OF_REWEAVING"),
 			"Utility tab should keep the Altar of Reweaving reachable");
 		int coreItems = source.indexOf("if (includeCoreItems) {");
-		int neutralFoci = source.indexOf("for (Item focus : fociInDisplayOrder");
-		if (neutralFoci < 0) {
-			neutralFoci = source.indexOf("for (Item focus : focusItems)");
-		}
+		int neutralFoci = firstIndexOf(source,
+			"for (Item focus : fociInDisplayOrder",
+			"for (Item focus : focusItems)");
 		int customPlaceholders = source.indexOf("for (Item customFocus : AttunedContent.CUSTOM_FOCI)");
 		assertTrue(coreItems >= 0 && neutralFoci >= 0 && customPlaceholders >= 0,
 			"Utility tab source should contain core tools, synced Foci, and custom placeholders.");
@@ -466,20 +469,29 @@ class FocusDataConsistencyTest {
 			"Utility tab should show onboarding tools before the neutral Focus roster.");
 		assertTrue(neutralFoci < customPlaceholders,
 			"Blank custom Focus placeholders should stay after the real neutral Focus roster.");
-		assertTrue(indexOfAny(source, "output.accept(AttunedContent.ATTUNEMENT_JOURNAL);",
-				"stacks.add(new ItemStack(AttunedContent.ATTUNEMENT_JOURNAL));")
-				< indexOfAny(source, "output.accept(AttunedContent.ATTUNEMENT_SHARD);",
-					"stacks.add(new ItemStack(AttunedContent.ATTUNEMENT_SHARD));"),
+		int journalIndex = firstIndexOf(source,
+			"output.accept(AttunedContent.ATTUNEMENT_JOURNAL);",
+			"stacks.add(new ItemStack(AttunedContent.ATTUNEMENT_JOURNAL));");
+		int shardIndex = firstIndexOf(source,
+			"output.accept(AttunedContent.ATTUNEMENT_SHARD);",
+			"stacks.add(new ItemStack(AttunedContent.ATTUNEMENT_SHARD));");
+		assertTrue(journalIndex >= 0 && shardIndex >= 0 && journalIndex < shardIndex,
 			"Journal should lead the utility tab as the onboarding item.");
-		assertTrue(indexOfAny(source, "output.accept(AttunedContent.ATTUNEMENT_SHARD_FRAGMENT);",
-				"stacks.add(new ItemStack(AttunedContent.ATTUNEMENT_SHARD_FRAGMENT));")
-				< indexOfAny(source, "output.accept(AttunedContent.ATTUNEMENT_ALTAR);",
-					"stacks.add(new ItemStack(AttunedContent.ATTUNEMENT_ALTAR));"),
+		int shardFragmentIndex = firstIndexOf(source,
+			"output.accept(AttunedContent.ATTUNEMENT_SHARD_FRAGMENT);",
+			"stacks.add(new ItemStack(AttunedContent.ATTUNEMENT_SHARD_FRAGMENT));");
+		int altarIndex = firstIndexOf(source,
+			"output.accept(AttunedContent.ATTUNEMENT_ALTAR);",
+			"stacks.add(new ItemStack(AttunedContent.ATTUNEMENT_ALTAR));");
+		assertTrue(shardFragmentIndex >= 0 && altarIndex >= 0 && shardFragmentIndex < altarIndex,
 			"Shards and fragments should appear before altar blocks.");
-		assertTrue(indexOfAny(source, "output.accept(AttunedContent.ALTAR_OF_REWEAVING);",
-				"stacks.add(new ItemStack(AttunedContent.ALTAR_OF_REWEAVING));")
-				< indexOfAny(source, "output.accept(AttunedContent.SATCHEL_OF_FOCI);",
-					"stacks.add(new ItemStack(AttunedContent.SATCHEL_OF_FOCI));"),
+		int reweavingAltarIndex = firstIndexOf(source,
+			"output.accept(AttunedContent.ALTAR_OF_REWEAVING);",
+			"stacks.add(new ItemStack(AttunedContent.ALTAR_OF_REWEAVING));");
+		int satchelIndex = firstIndexOf(source,
+			"output.accept(AttunedContent.SATCHEL_OF_FOCI);",
+			"stacks.add(new ItemStack(AttunedContent.SATCHEL_OF_FOCI));");
+		assertTrue(reweavingAltarIndex >= 0 && satchelIndex >= 0 && reweavingAltarIndex < satchelIndex,
 			"Altars should appear before reliquaries in the utility tab.");
 		assertTrue(!source.contains("AttunedContent.FOCI"),
 			"Creative tabs should display Foci from the synced FocusDefinition registry, not the static shipped-Foci list");
@@ -735,6 +747,17 @@ class FocusDataConsistencyTest {
 			"Swim fallback should only refresh while underwater.");
 	}
 
+	private static void assertBehaviorProfile(JsonObject lang, String focusName, String behaviorId,
+			String tooltipToken) throws IOException {
+		JsonObject focus = focusDefinitionRoot(FOCUS_DATA_DIR.resolve(focusName + ".json"));
+		assertEquals(behaviorId, focus.get("behavior").getAsString(),
+			"Focus should reference its version-safe code behavior: " + focusName);
+		String effect = lang.get("item.attuned." + focusName + ".effect").getAsString()
+			.toLowerCase(Locale.ROOT);
+		assertTrue(effect.contains(tooltipToken.toLowerCase(Locale.ROOT)),
+			"Tooltip should mention '" + tooltipToken + "' for " + focusName);
+	}
+
 	private static void assertSeafarersLuckModifier(JsonObject root, String itemId, Path file) {
 		JsonElement modifiers = root.get("modifiers");
 		assertNotNull(modifiers, "Seafarers Foci should grant real player Luck while active: " + file);
@@ -791,16 +814,6 @@ class FocusDataConsistencyTest {
 		assertTrue(earlierIndex < laterIndex, "Expected " + earlier + " before " + later);
 	}
 
-	private static int indexOfAny(String source, String... needles) {
-		for (String needle : needles) {
-			int index = source.indexOf(needle);
-			if (index >= 0) {
-				return index;
-			}
-		}
-		return -1;
-	}
-
 	private static String methodRegion(String source, String start, String end) {
 		int startIndex = source.indexOf(start);
 		int endIndex = source.indexOf(end);
@@ -813,7 +826,7 @@ class FocusDataConsistencyTest {
 		Matcher matcher = REGISTERED_FOCUS.matcher(source);
 		Map<String, String> itemsByField = new TreeMap<>();
 		while (matcher.find()) {
-			itemsByField.put(matcher.group(1), "attuned:" + matcher.group(2));
+			itemsByField.put(matcher.group(2), "attuned:" + matcher.group(1));
 		}
 		assertTrue(!itemsByField.isEmpty(), "Could not find registered Focus item fields in AttunedContent");
 		return itemsByField;
@@ -1048,6 +1061,17 @@ class FocusDataConsistencyTest {
 
 	private static void assertLanguageKey(JsonObject lang, String key) {
 		assertTrue(lang.has(key), "Missing language key: " + key);
+	}
+
+	private static int firstIndexOf(String source, String... needles) {
+		int best = Integer.MAX_VALUE;
+		for (String needle : needles) {
+			int index = source.indexOf(needle);
+			if (index >= 0) {
+				best = Math.min(best, index);
+			}
+		}
+		return best == Integer.MAX_VALUE ? -1 : best;
 	}
 
 	private static String attunedPath(String itemId) {

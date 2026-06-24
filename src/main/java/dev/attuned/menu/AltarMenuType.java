@@ -1,9 +1,8 @@
 package dev.attuned.menu;
 
 import dev.attuned.Attuned;
+import dev.attuned.platform.ForgeRegistration;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.Registry;
-import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.MenuProvider;
@@ -41,10 +40,7 @@ public final class AltarMenuType {
 		}
 		initialized = true;
 		ResourceLocation id = new ResourceLocation(Attuned.MOD_ID, "attunement_altar");
-		// The MenuType constructor is widened by fabric-menu-api-v1; vanilla also
-		// instantiates its menu types this way (see net.minecraft.world.inventory.MenuType).
-		TYPE = Registry.register(BuiltInRegistries.MENU, id,
-			new MenuType<>(AltarMenu::new));
+		TYPE = ForgeRegistration.menu(id.getPath(), new MenuType<>(AltarMenu::new));
 	}
 
 	/**

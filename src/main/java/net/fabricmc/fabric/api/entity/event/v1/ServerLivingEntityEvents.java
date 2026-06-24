@@ -5,7 +5,7 @@ import net.fabricmc.fabric.api.event.EventFactory;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.LivingEntity;
 
-/** 1.18 compatibility facade for the later Fabric living-entity events used by Attuned. */
+/** Legacy compatibility facade for the later Fabric living-entity events used by Attuned. */
 public final class ServerLivingEntityEvents {
 	public static final Event<AllowDamage> ALLOW_DAMAGE = EventFactory.createArrayBacked(
 		AllowDamage.class,

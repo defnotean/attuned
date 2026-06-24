@@ -119,6 +119,22 @@ class AttunedAttachmentsContractTest {
 			"Onboarding writes should persist an immutable defensive snapshot.");
 	}
 
+	@Test
+	void inMemoryBridgeCopiesStateForRespawnOnce() throws IOException {
+		String attachments = read(ATTACHMENTS);
+
+		assertTrue(attachments.contains("if (initialized)"),
+			"Attachment init should guard against duplicate respawn and sync registrations.");
+		assertTrue(attachments.contains("ServerPlayerEvents.AFTER_RESPAWN.register(AttunedAttachments::copyForRespawn);"),
+			"The in-memory attachment bridge should copy eligible values during player clone/respawn.");
+		assertTrue(attachments.contains("private static void copyForRespawn(ServerPlayer oldPlayer, ServerPlayer newPlayer, boolean alive)"),
+			"Respawn copying should be centralized in a named helper.");
+		assertTrue(attachments.contains("STATES.put(newPlayer.getUUID(), oldState.copy());"),
+			"The legacy single-state bridge should move copied state onto the new ServerPlayer UUID entry.");
+		assertTrue(attachments.contains("until full per-type metadata is implemented"),
+			"The port should document the remaining per-type copy/persistence risk.");
+	}
+
 	private static String read(Path file) throws IOException {
 		assertTrue(Files.isRegularFile(file), "Expected file to exist: " + file);
 		return Files.readString(file, StandardCharsets.UTF_8);

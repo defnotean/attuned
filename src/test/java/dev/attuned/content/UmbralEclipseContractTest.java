@@ -15,7 +15,6 @@ import java.nio.file.Path;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.StreamSupport;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -86,9 +85,7 @@ class UmbralEclipseContractTest {
 				name + ": behavior " + spec.behavior() + " must be registered in AttunedFocusBehaviors");
 
 			String field = name.toUpperCase();
-			assertTrue(content.contains("registerFocus(\"" + name + "\")"),
-				name + ": Focus item must be registered in AttunedContent");
-			assertTrue(content.contains(field + " = registerFocus(\"" + name + "\");"),
+			assertTrue(content.contains("registerFocus(\"" + name + "\", item -> " + field + " = item)"),
 				name + ": Focus field should follow the shipped naming convention");
 		}
 	}
@@ -121,9 +118,10 @@ class UmbralEclipseContractTest {
 	void totalEclipseConfluenceBindsTheThreeUmbralFociAndPureModifiers() throws IOException {
 		JsonObject root = focusDefinitionRoot(SYNERGY_DIR.resolve("total_eclipse.json"));
 		JsonArray members = root.getAsJsonArray("members");
-		List<String> memberIds = StreamSupport.stream(members.spliterator(), false)
-			.map(JsonElement::getAsString)
-			.toList();
+		List<String> memberIds = new java.util.ArrayList<>();
+		for (JsonElement member : members) {
+			memberIds.add(member.getAsString());
+		}
 		assertEquals(List.of(
 				"attuned:eclipse_focus", "attuned:gloomstride_focus", "attuned:duskward_focus"),
 			memberIds, "Total Eclipse must bind exactly its three Umbral members");
