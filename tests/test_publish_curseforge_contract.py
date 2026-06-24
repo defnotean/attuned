@@ -43,10 +43,7 @@ class PublishCurseForgeTest(unittest.TestCase):
         self.assertNotIn("Attuned 1.2.7", metadata["changelog"])
         self.assertEqual(["26.2", "Java 25", "Client", "Server", "Forge"],
                          metadata["gameVersionNames"])
-        self.assertEqual(
-            {"projects": []},
-            metadata["relations"],
-        )
+        self.assertNotIn("relations", metadata)
 
     def test_multipart_body_contains_metadata_and_jar_file(self):
         metadata = {"displayName": "Attuned 1.3.0", "releaseType": "release"}
