@@ -85,9 +85,7 @@ class UmbralEclipseContractTest {
 				name + ": behavior " + spec.behavior() + " must be registered in AttunedFocusBehaviors");
 
 			String field = name.toUpperCase();
-			assertTrue(content.contains("registerFocus(\"" + name + "\")"),
-				name + ": Focus item must be registered in AttunedContent");
-			assertTrue(content.contains(field + " = registerFocus(\"" + name + "\");"),
+			assertTrue(content.contains("registerFocus(\"" + name + "\", item -> " + field + " = item)"),
 				name + ": Focus field should follow the shipped naming convention");
 		}
 	}
@@ -135,11 +133,11 @@ class UmbralEclipseContractTest {
 			JsonObject object = modifier.getAsJsonObject();
 			assertEquals("add_value", object.get("operation").getAsString(),
 				"Total Eclipse modifiers should add flat values");
-			byAttribute.put(normalizeAttributeId(object.get("attribute").getAsString()), object.get("amount").getAsDouble());
+			byAttribute.put(object.get("attribute").getAsString(), object.get("amount").getAsDouble());
 		}
-		assertEquals(4.0D, byAttribute.get("minecraft:max_health"), 0.0001D,
+		assertEquals(4.0D, byAttribute.get("minecraft:generic.max_health"), 0.0001D,
 			"Total Eclipse should grant +4 max health");
-		assertEquals(1.0D, byAttribute.get("minecraft:attack_damage"), 0.0001D,
+		assertEquals(1.0D, byAttribute.get("minecraft:generic.attack_damage"), 0.0001D,
 			"Total Eclipse should grant +1 attack damage");
 	}
 
@@ -165,9 +163,5 @@ class UmbralEclipseContractTest {
 	private static String read(Path path) throws IOException {
 		assertTrue(Files.isRegularFile(path), "Expected file to exist: " + path);
 		return Files.readString(path, StandardCharsets.UTF_8);
-	}
-
-	private static String normalizeAttributeId(String id) {
-		return id.replace("minecraft:generic.", "minecraft:");
 	}
 }

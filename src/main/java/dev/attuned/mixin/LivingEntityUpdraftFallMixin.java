@@ -1,5 +1,6 @@
 package dev.attuned.mixin;
 
+import dev.attuned.content.behavior.EbbstrideBehavior;
 import dev.attuned.content.behavior.UpdraftBehavior;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.damagesource.DamageSource;
@@ -21,6 +22,9 @@ public abstract class LivingEntityUpdraftFallMixin {
 		LivingEntity self = (LivingEntity) (Object) this;
 		if (self instanceof ServerPlayer player && UpdraftBehavior.mitigatesFallDamage(player)) {
 			return 0.0F;
+		}
+		if (self instanceof ServerPlayer player) {
+			return EbbstrideBehavior.adjustFallDamage(player, amount);
 		}
 		return amount;
 	}

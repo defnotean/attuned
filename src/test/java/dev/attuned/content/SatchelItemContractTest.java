@@ -35,15 +35,15 @@ class SatchelItemContractTest {
 		assertTrue(item.contains(".component(contentsType, emptyContents)")
 				|| item.contains("private final FocusHolder emptyContents"),
 			"The satchel should carry an empty contents default for its tier.");
-		assertTrue(item.contains("public InteractionResult use(Level level, Player player, InteractionHand hand)")
-				|| item.contains("public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand)"),
+		assertTrue(item.contains("public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand)"),
 			"The satchel should open its screen on use.");
 	}
 
 	@Test
 	void satchelIsRegisteredAsAStandardPublicItemInTheUtilityTab() throws IOException {
 		String content = read(CONTENT);
-		assertTrue(content.contains("public static final Item SATCHEL_OF_FOCI = register(\"satchel_of_foci\", SatchelItem::new);"),
+		assertTrue(content.contains("public static Item SATCHEL_OF_FOCI;")
+				&& content.contains("register(\"satchel_of_foci\", SatchelItem::new, item -> SATCHEL_OF_FOCI = item)"),
 			"Satchel should be a public field using the plain register helper, never registerFocus.");
 		String tabs = read(TABS);
 		int journal = tabs.indexOf("output.accept(AttunedContent.ATTUNEMENT_JOURNAL)");

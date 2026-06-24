@@ -234,6 +234,7 @@ examples to copy from:
 | `attuned:tide`       | `TideBehavior`           | Underwater breathing. |
 | `attuned:wellspring_swim` | `focus_behavior/wellspring_swim.json` | 1.20.1 swim fallback: Dolphin's Grace while underwater. |
 | `attuned:current_runner_swim` | `focus_behavior/current_runner_swim.json` | 1.20.1 swim fallback: Dolphin's Grace while underwater. |
+| `attuned:ebbstride` | `EbbstrideBehavior` | 1.20.1 fall-damage fallback: scales fall damage to match the newer fall-damage-multiplier attribute. |
 | `attuned:galespur`   | `GalespurBehavior`       | Doubles the speed of living mounts while riding. |
 | `attuned:rainstep`   | `RainstepBehavior`       | Movement speed in rain, water, or waterlogged blocks. |
 | `attuned:updraft`    | `UpdraftBehavior`        | Hold jump while gliding with an elytra to boost forward; hold sprint/control to brake. |

@@ -1,9 +1,8 @@
 package dev.attuned.menu;
 
 import dev.attuned.Attuned;
+import dev.attuned.platform.ForgeRegistration;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.Registry;
-import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.MenuProvider;
@@ -30,8 +29,7 @@ public final class ReweavingMenuType {
 		}
 		initialized = true;
 		ResourceLocation id = new ResourceLocation(Attuned.MOD_ID, "altar_of_reweaving");
-		TYPE = Registry.register(BuiltInRegistries.MENU, id,
-			new MenuType<>(ReweavingMenu::new, FeatureFlags.VANILLA_SET));
+		TYPE = ForgeRegistration.menu(id.getPath(), new MenuType<>(ReweavingMenu::new, FeatureFlags.VANILLA_SET));
 	}
 
 	public static MenuProvider provider(Level level, BlockPos pos) {

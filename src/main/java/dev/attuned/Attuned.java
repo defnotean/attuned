@@ -32,18 +32,28 @@ import dev.attuned.party.CircleRuntime;
 import dev.attuned.pacts.PactDeathMessages;
 import dev.attuned.pacts.PactTrials;
 import dev.attuned.pacts.Pacts;
+import dev.attuned.platform.ForgeRegistration;
 import dev.attuned.synergy.Synergies;
-import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.event.registry.DynamicRegistries;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
+import net.minecraftforge.fml.loading.FMLEnvironment;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class Attuned implements ModInitializer {
+@Mod(Attuned.MOD_ID)
+public class Attuned {
 	public static final String MOD_ID = "attuned";
 	public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
 
-	@Override
-	public void onInitialize() {
+	public Attuned() {
+		ForgeRegistration.registerAll(FMLJavaModLoadingContext.get().getModEventBus());
+		init();
+		initClientWhenPresent();
+	}
+
+	public static void init() {
 		AttunedConfig.load();
 		DynamicRegistries.registerSynced(AttunedRegistries.FOCUS_DEFINITIONS, FocusDefinition.CODEC);
 		DynamicRegistries.registerSynced(AttunedRegistries.SYNERGY_DEFINITIONS, SynergyDefinition.CODEC);
@@ -83,5 +93,18 @@ public class Attuned implements ModInitializer {
 		Milestones.init();
 		Onboarding.init();
 		LOGGER.info("Attuned initializing");
+	}
+
+	private static void initClientWhenPresent() {
+		if (FMLEnvironment.dist != Dist.CLIENT) {
+			return;
+		}
+		try {
+			Class.forName("dev.attuned.client.AttunedClient")
+				.getMethod("init")
+				.invoke(null);
+		} catch (ReflectiveOperationException e) {
+			throw new IllegalStateException("Unable to initialize Attuned client", e);
+		}
 	}
 }

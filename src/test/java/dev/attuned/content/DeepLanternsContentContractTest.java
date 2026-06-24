@@ -37,12 +37,16 @@ class DeepLanternsContentContractTest {
 	void deepLanternFocusItemsAreRegisteredInTheShippedRoster() throws IOException {
 		String source = Files.readString(CONTENT_SOURCE, StandardCharsets.UTF_8);
 
-		assertContains(source, "public static final Item CAVEWICK_FOCUS = registerFocus(\"cavewick_focus\");");
-		assertContains(source, "public static final Item GLOWLINE_FOCUS = registerFocus(\"glowline_focus\");");
-		assertContains(source, "public static final Item RESCUEFLAME_FOCUS = registerFocus(\"rescueflame_focus\");");
-		assertContains(source, "public static final Item DEPTHGLASS_FOCUS = registerFocus(\"depthglass_focus\");");
-		assertBefore(source, "CAVEWICK_FOCUS", "CUSTOM_FOCI",
-			"Deep Lantern Foci should be registered before the custom Focus pool snapshot");
+		assertContains(source, "public static Item CAVEWICK_FOCUS;");
+		assertContains(source, "registerFocus(\"cavewick_focus\", item -> CAVEWICK_FOCUS = item);");
+		assertContains(source, "public static Item GLOWLINE_FOCUS;");
+		assertContains(source, "registerFocus(\"glowline_focus\", item -> GLOWLINE_FOCUS = item);");
+		assertContains(source, "public static Item RESCUEFLAME_FOCUS;");
+		assertContains(source, "registerFocus(\"rescueflame_focus\", item -> RESCUEFLAME_FOCUS = item);");
+		assertContains(source, "public static Item DEPTHGLASS_FOCUS;");
+		assertContains(source, "registerFocus(\"depthglass_focus\", item -> DEPTHGLASS_FOCUS = item);");
+		assertBefore(source, "registerFocus(\"cavewick_focus\"", "registerCustomFocusPool();",
+			"Deep Lantern Foci should be scheduled before the custom Focus pool");
 	}
 
 	@Test
