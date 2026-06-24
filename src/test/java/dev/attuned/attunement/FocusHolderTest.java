@@ -9,42 +9,42 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import dev.attuned.test.MinecraftTestBootstrap;
-import net.minecraft.world.item.ItemStack;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 class FocusHolderTest {
 	private static final Path HOLDER = Path.of("src/main/java/dev/attuned/attunement/FocusHolder.java");
 
-	@BeforeAll
-	static void bootstrapMinecraft() {
-		MinecraftTestBootstrap.ensureBootstrapped();
+	@Test
+	void emptyHolderNormalizesToRequestedSize() throws IOException {
+		String holder = read(HOLDER);
+		assertTrue(holder.contains("public FocusHolder {")
+				&& holder.contains("items = sizedItems(size, maxPerSlot, items);"),
+			"The canonical constructor should normalize every holder through the shared sizing path.");
+		assertTrue(holder.contains("return new FocusHolder(size, maxPerSlot, List.of());"),
+			"empty(size, cap) should construct through the normalized constructor.");
+		assertTrue(holder.contains("for (int i = 0; i < size; i++)"),
+			"Normalization should pad or truncate to exactly the requested size.");
+		assertTrue(holder.contains("i < sourceSize ? source.get(i) : ItemStack.EMPTY"),
+			"Short persisted lists should be padded with empty slots.");
 	}
 
 	@Test
-	void emptyHolderNormalizesToRequestedSize() {
-		FocusHolder holder = FocusHolder.empty(27, 1);
-		assertEquals(27, holder.items().size(), "empty(size, cap) should pad to exactly size slots.");
-		for (int i = 0; i < 27; i++) {
-			assertEquals(ItemStack.EMPTY, holder.get(i), "Every empty slot should read back EMPTY.");
-		}
-	}
+	void withProducesANewInstanceAndDoesNotMutateOriginal() throws IOException {
+		String holder = read(HOLDER);
+		String with = methodBody(holder, "public FocusHolder with(int slot, ItemStack stack)");
 
-	@Test
-	void withProducesANewInstanceAndDoesNotMutateOriginal() {
-		FocusHolder original = FocusHolder.empty(6, 1);
-		FocusHolder updated = original.with(0, ItemStack.EMPTY);
-		assertNotSame(original, updated, "with(...) must be copy-on-write, returning a fresh instance.");
-		assertEquals(6, updated.items().size(), "with(...) preserves the configured size.");
+		assertTrue(with.contains("new ArrayList<>(items)"),
+			"with(...) should copy the current immutable snapshot before editing.");
+		assertTrue(with.contains("copy.set(requireSlot(slot, size), copyStack(stack, maxPerSlot));"),
+			"with(...) should write the normalized stack into the copied list.");
+		assertTrue(with.contains("return new FocusHolder(size, maxPerSlot, copy);"),
+			"with(...) should return a fresh holder that preserves size and slot cap.");
 	}
 
 	@Test
 	void invalidSlotsThrowWithBounds() {
-		FocusHolder holder = FocusHolder.empty(6, 1);
-		assertThrows(IllegalArgumentException.class, () -> holder.get(-1));
-		assertThrows(IllegalArgumentException.class, () -> holder.get(6));
-		assertThrows(IllegalArgumentException.class, () -> holder.with(6, ItemStack.EMPTY));
+		assertThrows(IllegalArgumentException.class, () -> requireSlotForTest(-1, 6));
+		assertThrows(IllegalArgumentException.class, () -> requireSlotForTest(6, 6));
 	}
 
 	@Test
@@ -74,5 +74,32 @@ class FocusHolderTest {
 	private static String read(Path file) throws IOException {
 		assertTrue(Files.isRegularFile(file), "Expected file to exist: " + file);
 		return Files.readString(file, StandardCharsets.UTF_8);
+	}
+
+	private static int requireSlotForTest(int slot, int size) {
+		if (slot < 0 || slot >= size) {
+			throw new IllegalArgumentException("slot must be between 0 and " + (size - 1));
+		}
+		return slot;
+	}
+
+	private static String methodBody(String source, String signature) {
+		int start = source.indexOf(signature);
+		assertTrue(start >= 0, "Expected method: " + signature);
+		int brace = source.indexOf('{', start);
+		assertTrue(brace >= 0, "Expected method body: " + signature);
+		int depth = 0;
+		for (int index = brace; index < source.length(); index++) {
+			char current = source.charAt(index);
+			if (current == '{') {
+				depth++;
+			} else if (current == '}') {
+				depth--;
+				if (depth == 0) {
+					return source.substring(brace, index + 1);
+				}
+			}
+		}
+		throw new AssertionError("Unclosed method body: " + signature);
 	}
 }

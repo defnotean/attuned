@@ -49,13 +49,14 @@ class GrandSatchelContractTest {
 			"AttunedComponents should expose an emptyGrandContents() default for the grand item.");
 		// Both registrations must live after the single idempotent guard flip.
 		assertBefore(components, "initialized = true;",
-			"ResourceLocation.fromNamespaceAndPath(Attuned.MOD_ID, \"grand_satchel_contents\")");
+			"ForgeRegistration.dataComponent(\"grand_satchel_contents\"");
 	}
 
 	@Test
 	void grandSatchelItemIsRegisteredAndAcceptedInTheUtilityTabBesideTheSmallSatchel() throws IOException {
 		String content = read(CONTENT);
-		assertTrue(content.contains("GRAND_SATCHEL_OF_FOCI = register(\"grand_satchel_of_foci\""),
+		assertTrue(content.contains("public static Item GRAND_SATCHEL_OF_FOCI;")
+				&& content.contains("register(\"grand_satchel_of_foci\", SatchelItem::grand, item -> GRAND_SATCHEL_OF_FOCI = item)"),
 			"The grand reliquary should be a public field using the plain register helper.");
 		assertTrue(content.contains("grand_satchel_of_foci"),
 			"The grand reliquary registry path should be grand_satchel_of_foci.");

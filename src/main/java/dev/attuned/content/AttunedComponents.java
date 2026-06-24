@@ -2,9 +2,9 @@ package dev.attuned.content;
 
 import dev.attuned.Attuned;
 import dev.attuned.attunement.FocusHolder;
-import net.minecraft.core.Registry;
+import dev.attuned.platform.ForgeRegistration;
 import net.minecraft.core.component.DataComponentType;
-import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Unit;
@@ -26,6 +26,8 @@ public final class AttunedComponents {
 
 	/** Marker on a Focus that has been tempered at the Altar of Reweaving. */
 	public static DataComponentType<Unit> TEMPERED;
+	private static final StreamCodec<RegistryFriendlyByteBuf, Unit> UNIT_STREAM_CODEC =
+		StreamCodec.unit(Unit.INSTANCE);
 
 	public static FocusHolder emptyContents() {
 		return FocusHolder.empty(SATCHEL_SIZE, 1);
@@ -40,23 +42,20 @@ public final class AttunedComponents {
 			return;
 		}
 		initialized = true;
-		SATCHEL_CONTENTS = Registry.register(BuiltInRegistries.DATA_COMPONENT_TYPE,
-			ResourceLocation.fromNamespaceAndPath(Attuned.MOD_ID, "satchel_contents"),
+		SATCHEL_CONTENTS = ForgeRegistration.dataComponent("satchel_contents",
 			DataComponentType.<FocusHolder>builder()
 				.persistent(FocusHolder.codec(SATCHEL_SIZE, 1))
 				.networkSynchronized(FocusHolder.streamCodec(SATCHEL_SIZE, 1))
 				.build());
-		GRAND_SATCHEL_CONTENTS = Registry.register(BuiltInRegistries.DATA_COMPONENT_TYPE,
-			ResourceLocation.fromNamespaceAndPath(Attuned.MOD_ID, "grand_satchel_contents"),
+		GRAND_SATCHEL_CONTENTS = ForgeRegistration.dataComponent("grand_satchel_contents",
 			DataComponentType.<FocusHolder>builder()
 				.persistent(FocusHolder.codec(GRAND_SATCHEL_SIZE, 1))
 				.networkSynchronized(FocusHolder.streamCodec(GRAND_SATCHEL_SIZE, 1))
 				.build());
-		TEMPERED = Registry.register(BuiltInRegistries.DATA_COMPONENT_TYPE,
-			ResourceLocation.fromNamespaceAndPath(Attuned.MOD_ID, "tempered"),
+		TEMPERED = ForgeRegistration.dataComponent("tempered",
 			DataComponentType.<Unit>builder()
 				.persistent(Unit.CODEC)
-				.networkSynchronized(StreamCodec.unit(Unit.INSTANCE))
+				.networkSynchronized(UNIT_STREAM_CODEC)
 				.build());
 	}
 }

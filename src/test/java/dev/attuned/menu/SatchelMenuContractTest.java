@@ -56,7 +56,7 @@ class SatchelMenuContractTest {
 			"SatchelMenu should be a real container menu.");
 		assertTrue(menu.contains("public SatchelMenu(int containerId, Inventory inventory)"),
 			"A client (int, Inventory) constructor is required by the MenuType factory.");
-		assertTrue(menu.contains("addStandardInventorySlots") || menu.contains("addPlayerInventorySlots"),
+		assertTrue(menu.contains("addPlayerInventorySlots"),
 			"SatchelMenu should expose the player inventory for transfers.");
 		assertTrue(menu.contains("public boolean stillValid(Player player)"),
 			"SatchelMenu must validate the satchel is still in hand.");
@@ -122,7 +122,7 @@ class SatchelMenuContractTest {
 			"MenuType registration should be idempotent.");
 		assertTrue(type.contains("initialized = true;"),
 			"MenuType registration should set its guard before registering.");
-		assertBefore(type, "initialized = true;", "Registry.register(BuiltInRegistries.MENU");
+		assertBefore(type, "initialized = true;", "ForgeRegistration.menu");
 		assertTrue(type.contains("new MenuType<>(SatchelMenu::new, FeatureFlags.VANILLA_SET)"),
 			"SatchelMenuType should use the plain MenuType ctor like AltarMenuType.");
 		assertTrue(type.contains("public static MenuProvider provider(Player player, InteractionHand hand)"),
