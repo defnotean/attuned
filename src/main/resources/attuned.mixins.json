@@ -12,6 +12,7 @@
 		"LivingEntityUpdraftFallMixin",
 		"PlayerUpdraftMixin",
 		"PlayerAttackMixin",
+		"CommandsMixin",
 		"AbstractArrowAccessor",
 		"PlayerAttunedStateMixin",
 		"ServerGamePacketListenerImplMixin",
