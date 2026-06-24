@@ -1,0 +1,2 @@
+Manifest-Version: 1.0
+MixinConfigs: attuned.mixins.json,attuned.client.mixins.json

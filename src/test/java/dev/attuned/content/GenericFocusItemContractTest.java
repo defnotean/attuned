@@ -45,21 +45,24 @@ class GenericFocusItemContractTest {
 		String source = Files.readString(CONTENT_SOURCE, StandardCharsets.UTF_8);
 		// The pool registers in a loop over the registerFocus idiom so each id lands in
 		// REGISTERED_FOCI (and therefore isFocus()), without N unrolled fields.
-		assertTrue(source.contains("registerFocus(\"custom_focus_\" + n)"),
+		assertTrue(source.contains("registerFocus(\"custom_focus_\" + n, REGISTERED_CUSTOM_FOCI::add)"),
 			"The generic Focus pool must register each custom_focus_N via the registerFocus idiom");
 		assertTrue(source.contains("for (int n = 1; n <= " + POOL_SIZE + "; n++)"),
 			"The generic Focus pool must register exactly " + POOL_SIZE + " custom_focus items");
 	}
 
 	@Test
-	void poolIsSnapshotBeforeTheFociListFreezes() throws IOException {
+	void poolIsIncludedInTheDeferredFociView() throws IOException {
 		String source = Files.readString(CONTENT_SOURCE, StandardCharsets.UTF_8);
-		int poolIndex = source.indexOf("registerCustomFocusPool()");
-		int fociFreezeIndex = source.indexOf("public static final List<Item> FOCI = List.copyOf(REGISTERED_FOCI);");
+		int poolIndex = source.indexOf("registerCustomFocusPool();");
+		int coreItemIndex = source.indexOf("register(\"attunement_shard\"");
 		assertTrue(poolIndex >= 0, "The generic Focus pool must be registered via registerCustomFocusPool()");
-		assertTrue(fociFreezeIndex >= 0, "AttunedContent must keep the FOCI snapshot");
-		assertTrue(poolIndex < fociFreezeIndex,
-			"The generic Focus pool must register before the FOCI/FOCI_SET snapshots freeze so isFocus() includes them");
+		assertTrue(source.contains("public static final List<Item> FOCI = Collections.unmodifiableList(REGISTERED_FOCI);"),
+			"AttunedContent must keep a public ordered Focus view");
+		assertTrue(source.contains("public static final List<Item> CUSTOM_FOCI = Collections.unmodifiableList(REGISTERED_CUSTOM_FOCI);"),
+			"AttunedContent must keep a public custom-Focus view");
+		assertTrue(poolIndex < coreItemIndex,
+			"The generic Focus pool should be scheduled with shipped Foci before non-Focus utility items");
 	}
 
 	@Test
@@ -149,7 +152,7 @@ class GenericFocusItemContractTest {
 		// are not forced to ship a FocusDefinition or animated 64x512 texture. Pin both halves so a
 		// future rename cannot silently drag the pool back into the shipped-Focus gate.
 		Pattern shippedFocus = Pattern.compile(
-			"public\\s+static\\s+final\\s+Item\\s+([A-Z0-9_]+_FOCUS)\\s*=\\s*registerFocus\\(\"([a-z0-9_]+_focus)\"\\);");
+			"registerFocus\\(\\s*\"([a-z0-9_]+_focus)\"\\s*,\\s*item\\s*->\\s*([A-Z0-9_]+_FOCUS)\\s*=\\s*item\\s*\\)");
 		String source = Files.readString(CONTENT_SOURCE, StandardCharsets.UTF_8);
 		Matcher matcher = shippedFocus.matcher(source);
 		while (matcher.find()) {

@@ -1,7 +1,8 @@
 {
 	"required": true,
 	"package": "dev.attuned.client.mixin",
-	"compatibilityLevel": "JAVA_21",
+	"minVersion": "0.8.5",
+	"compatibilityLevel": "JAVA_17",
 	"client": [
 		"AbstractRecipeBookScreenAccessor",
 		"AbstractRecipeBookScreenMixin",

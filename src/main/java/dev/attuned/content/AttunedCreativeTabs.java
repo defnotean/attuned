@@ -1,9 +1,9 @@
 package dev.attuned.content;
 
-import dev.attuned.Attuned;
 import dev.attuned.AttunedRegistries;
 import dev.attuned.api.focus.Affinity;
 import dev.attuned.api.focus.FocusDefinition;
+import dev.attuned.platform.ForgeRegistration;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
@@ -11,11 +11,9 @@ import java.util.Set;
 import java.util.function.Predicate;
 import net.fabricmc.fabric.api.itemgroup.v1.FabricItemGroup;
 import net.minecraft.core.HolderLookup;
-import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
-import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 
@@ -72,7 +70,7 @@ final class AttunedCreativeTabs {
 
 	private static void registerFocusCreativeTab(String id, Component title, Item icon,
 			Predicate<FocusDefinition> include, boolean includeCoreItems) {
-		CreativeModeTab tab = FabricItemGroup.builder()
+		ForgeRegistration.creativeModeTab(id, () -> FabricItemGroup.builder()
 			.title(title)
 			.icon(() -> new ItemStack(icon))
 			.displayItems((parameters, output) -> {
@@ -99,9 +97,7 @@ final class AttunedCreativeTabs {
 					}
 				}
 			})
-			.build();
-		Registry.register(BuiltInRegistries.CREATIVE_MODE_TAB,
-			Identifier.fromNamespaceAndPath(Attuned.MOD_ID, id), tab);
+			.build());
 	}
 
 	/**

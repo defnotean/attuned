@@ -1,0 +1,24 @@
+package net.fabricmc.fabric.api.client.rendering.v1.level;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+
+public final class LevelRenderEvents {
+	public static final Event END_MAIN = new Event();
+
+	private LevelRenderEvents() {}
+
+	public static final class Event {
+		private final List<Callback> callbacks = new ArrayList<>();
+
+		public void register(Callback callback) {
+			callbacks.add(Objects.requireNonNull(callback, "callback"));
+		}
+	}
+
+	@FunctionalInterface
+	public interface Callback {
+		void render(LevelRenderContext context);
+	}
+}
