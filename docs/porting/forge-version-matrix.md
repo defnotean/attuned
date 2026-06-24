@@ -28,25 +28,30 @@ This matrix is the working checklist for porting the Fabric release branches to 
 
 All target Forge branches now have first-pass source ports, build verification,
 server or game-test runtime smoke coverage, client startup smoke coverage, and
-a cross-branch Focus data/asset/mechanics audit. The Forge branches remain
+a cross-branch Focus data/asset/mechanics audit. Five branches also have
+manual in-world Focus equip/modifier smoke coverage. The Forge branches remain
 independent from the Fabric maintenance branches.
 
 | Target Forge branch | Minecraft | Status | Last verification | Branch-specific notes |
 | --- | ---: | --- | --- | --- |
 | `forge/26.2` | 26.2 | First-pass port verified with in-world Focus smoke | `build`, `runServer`, `runClient`, focus audit, quick-play world join, Focus equip/modifier smoke | Reference Forge port on Forge 65.0.0 and Java 25. |
-| `forge/26.1.2` | 26.1.2 | First-pass port verified | `build`, `runServer`, `runClient`, focus audit | Same modern ForgeGradle 7 shape as 26.2 with branch-local dependency pins. |
-| `forge/1.21.11` | 1.21.11 | First-pass port verified | `build`, `runServer`, `runClient`, focus audit | Mixin configs pin `minVersion` to 0.8.5 and Java compatibility to the recognized runtime level. |
-| `forge/1.21.1` | 1.21.1 | First-pass port verified | `build`, `runServer`, `runClient`, focus audit | Uses the newer water/fall attributes while retaining the 1.21.1 `minecraft:generic.*` attribute ids. |
-| `forge/1.20.6` | 1.20.6 | First-pass port verified | `build`, `runServer`, `runClient`, focus audit | Uses the 1.20.6 fall-damage attribute and swim-behavior fallbacks for missing water movement efficiency. |
-| `forge/1.20.1` | 1.20.1 | First-pass port verified | `build`, `runGameTestServer`, `runClient`, focus audit | Legacy ForgeGradle 6 port with Ebbstride's fall reduction handled by a runtime behavior fallback. |
-| `forge/1.19.4` | 1.19.4 | First-pass port verified | `build`, `runGameTestServer`, `runClient`, focus audit | Legacy creative-tab/event wiring plus the same Ebbstride fallback as 1.20.1. |
-| `forge/1.19.2` | 1.19.2 | First-pass port verified | `build`, `runGameTestServer`, `runClient`, focus audit | Legacy networking and screen compatibility layer; game-test server loads and exits cleanly. |
-| `forge/1.18.2` | 1.18.2 | First-pass port verified | `build`, `runGameTestServer`, `runClient`, focus audit | Widest compatibility layer, with pre-1.19 screen/menu shims and Ebbstride fall fallback. |
+| `forge/26.1.2` | 26.1.2 | First-pass port verified with in-world Focus smoke | `build`, `runServer`, `runClient`, focus audit, world join, Focus equip/modifier smoke | Same modern ForgeGradle 7 shape as 26.2 with branch-local dependency pins. |
+| `forge/1.21.11` | 1.21.11 | First-pass port verified with in-world Focus smoke | `build`, `runServer`, `runClient`, focus audit, world join, Focus equip/modifier smoke | Mixin configs pin `minVersion` to 0.8.5 and Java compatibility to the recognized runtime level. |
+| `forge/1.21.1` | 1.21.1 | First-pass port verified with in-world Focus smoke | `test`, `build`, `runServer`, `runClient`, focus audit, world join, Focus equip/modifier smoke | Uses the newer water/fall attributes while retaining the 1.21.1 `minecraft:generic.*` attribute ids; latest commit fixes the creative Focus panel click descriptor. |
+| `forge/1.20.6` | 1.20.6 | First-pass port verified with in-world Focus smoke | `test`, `build`, `runServer`, `runClient`, focus audit, world join, `/attuned validate`, Focus equip/modifier smoke | Uses the 1.20.6 fall-damage attribute and swim-behavior fallbacks for missing water movement efficiency; latest commit adds command and registry hardening. |
+| `forge/1.20.1` | 1.20.1 | First-pass port verified; manual UI smoke pending | `test`, `build`, `runGameTestServer`, `runClient`, focus audit | Legacy ForgeGradle 6 port with Ebbstride's fall reduction handled by a runtime behavior fallback; latest client run reached main menu, but desktop-control approval timed out before world-join UI testing. |
+| `forge/1.19.4` | 1.19.4 | First-pass port verified; manual UI smoke pending | `test`, `build`, `runGameTestServer`, `runClient`, focus audit | Legacy creative-tab/event wiring plus the same Ebbstride fallback as 1.20.1; latest commit adds command and registry hardening plus the creative Focus panel click descriptor fix. |
+| `forge/1.19.2` | 1.19.2 | First-pass port verified; manual UI smoke pending | `test`, `build`, `runGameTestServer`, `runClient`, focus audit | Legacy networking and screen compatibility layer; latest commit adds command and registry hardening. |
+| `forge/1.18.2` | 1.18.2 | First-pass port verified; manual UI smoke pending | `test`, `build`, `runGameTestServer`, `runClient`, focus audit | Widest compatibility layer, with pre-1.19 screen/menu shims, Ebbstride fall fallback, and the legacy command bridge. |
 
 ## Completed Verification
 
 - `.\gradlew.bat build --no-daemon` passed on every Forge branch after the
   branch-local source, metadata, test, and resource changes.
+- `.\gradlew.bat test --no-daemon` and `.\gradlew.bat build --no-daemon`
+  passed on every branch touched by the hardening pass: `forge/1.18.2`,
+  `forge/1.19.2`, `forge/1.19.4`, `forge/1.20.1`, `forge/1.20.6`, and
+  `forge/1.21.1`.
 - `.\gradlew.bat runGameTestServer --no-daemon` passed on `forge/1.18.2`,
   `forge/1.19.2`, `forge/1.19.4`, and `forge/1.20.1`. Those runs loaded
   Forge, initialized Attuned, prepared a world, reported the enabled Attuned
@@ -60,16 +65,24 @@ independent from the Fabric maintenance branches.
   resource reload, OpenAL startup, and texture-atlas creation. Each client was
   then stopped manually, so non-zero `runClient` exits after that point mean
   the verified client process was interrupted rather than a launch failure.
-- `forge/26.2` additionally passed a manual quick-play singleplayer smoke:
-  the integrated server started, spawn chunks prepared, the player joined,
-  `/attuned validate` checked 99 Focus definitions, 17 palette behaviors, and
-  13 Confluence definitions, and the survival Focus UI accepted equipped Foci.
-- The 26.2 in-world Focus smoke equipped Wellspring, Current-Runner, and
+- `forge/26.2`, `forge/26.1.2`, `forge/1.21.11`, `forge/1.21.1`, and
+  `forge/1.20.6` additionally passed manual singleplayer Focus smokes: the
+  integrated server started, the player joined, `/attuned validate` checked
+  live registries, and the survival Focus UI accepted equipped Foci.
+- Those in-world Focus smokes equipped Wellspring, Current-Runner, and
   Overgrowth, then verified `/attuned status` reported them active at
   `12 / 20` capacity. Attribute probes showed the expected modifier values:
   max health `32.0`, armor `3.0`, movement speed `0.11200000166893005`, and
-  water movement efficiency `1.0`. After unequipping, status returned to
-  `Active Foci (0)` and the same attributes returned to vanilla baselines.
+  water movement efficiency `1.0` on versions that expose that attribute.
+  After unequipping, status returned to `Active Foci (0)` and the same
+  attributes returned to vanilla baselines.
+- `forge/1.20.6` proved the command bridge fix in-world: `/attuned journal`
+  opened and `/attuned validate` reported `99 Focus definitions`,
+  `19 palette behavior(s)`, and `13 Confluence definition(s)`.
+- `forge/1.20.1` relaunched after the hardening commit and reached the Forge
+  main menu, but Windows desktop-control approval timed out before world-join
+  UI testing. The 1.20.1, 1.19.4, 1.19.2, and 1.18.2 hands-on Focus UI smokes
+  remain pending instead of being inferred from build success.
 - A branch-wide Focus audit checked 22 targeted Foci and 22 generated Focus
   textures per branch: Bramblegate, Seedcall, Riptide Heart, Pearlguard,
   Slagbrand, Anvilheart, the Tide/Verdant/Forge/Fury/Bastion modifier wave,
@@ -100,9 +113,10 @@ independent from the Fabric maintenance branches.
   `minecraft:generic.*` ids. `1.21.11`, `26.1.2`, and `26.2` use the newer
   short attribute ids such as `minecraft:armor` and `minecraft:attack_speed`.
 - No Focus asset or gameplay-definition gaps remain in the audited set.
-- On `forge/26.2`, the Focus inventory UI, HUD mirroring, active-state resolver,
-  and attribute modifier cleanup were manually exercised in a joined
-  singleplayer world for Wellspring, Current-Runner, and Overgrowth.
+- On `forge/26.2`, `forge/26.1.2`, `forge/1.21.11`, `forge/1.21.1`, and
+  `forge/1.20.6`, the Focus inventory UI, HUD mirroring, active-state
+  resolver, and attribute modifier cleanup were manually exercised in joined
+  singleplayer worlds for Wellspring, Current-Runner, and Overgrowth.
 
 ## Runtime Notes
 
@@ -116,6 +130,9 @@ independent from the Fabric maintenance branches.
   native transport/logging noise. The release-relevant singleplayer quick-play
   path did not depend on LAN and completed its world join, validation, Focus
   equip, modifier, and cleanup checks.
+- The latest 1.20.1 client run reached the Forge main menu and closed with
+  `BUILD SUCCESSFUL`; hands-on world-join UI automation was stopped because
+  Windows desktop-control approval timed out during activation/screenshot.
 - The 26.x attachment bridge remains a first-pass Forge compatibility layer:
   clone/respawn copying is covered, but save-file persistence, owner sync, and
   dedicated-server reconnect parity still need release-hardening work before a

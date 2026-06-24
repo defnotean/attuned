@@ -10,12 +10,12 @@ version matrix in `forge-version-matrix.md`.
 
 | Source Fabric branch | Target Forge branch | Minecraft | Commit pushed |
 | --- | --- | ---: | --- |
-| `origin/fabric/minecraft-1.18.2` | `origin/forge/1.18.2` | 1.18.2 | `c257ce7d` |
-| `origin/fabric/minecraft-1.19.2` | `origin/forge/1.19.2` | 1.19.2 | `3ae2c5bd` |
-| `origin/fabric/minecraft-1.19.4` | `origin/forge/1.19.4` | 1.19.4 | `8088cc37` |
-| `origin/fabric/minecraft-1.20.1` | `origin/forge/1.20.1` | 1.20.1 | `eb04f1ba` |
-| `origin/fabric/minecraft-1.20.6` | `origin/forge/1.20.6` | 1.20.6 | `1be44926` |
-| `origin/fabric/minecraft-1.21.1` | `origin/forge/1.21.1` | 1.21.1 | `96df1e96` |
+| `origin/fabric/minecraft-1.18.2` | `origin/forge/1.18.2` | 1.18.2 | `31257d2c` |
+| `origin/fabric/minecraft-1.19.2` | `origin/forge/1.19.2` | 1.19.2 | `84cc3f83` |
+| `origin/fabric/minecraft-1.19.4` | `origin/forge/1.19.4` | 1.19.4 | `271c16aa` |
+| `origin/fabric/minecraft-1.20.1` | `origin/forge/1.20.1` | 1.20.1 | `1082022e` |
+| `origin/fabric/minecraft-1.20.6` | `origin/forge/1.20.6` | 1.20.6 | `d5ac35fd` |
+| `origin/fabric/minecraft-1.21.1` | `origin/forge/1.21.1` | 1.21.1 | `e755f556` |
 | `origin/fabric/minecraft-1.21.11` | `origin/forge/1.21.11` | 1.21.11 | `a65d50d7` |
 | `origin/fabric/minecraft-26.1.2` | `origin/forge/26.1.2` | 26.1.2 | `15ce8d05` |
 | `origin/fabric/minecraft-26.2` | `origin/forge/26.2` | 26.2 | `4e93e2e0` |
@@ -48,12 +48,12 @@ Each row is the required first-pass worker report for its version branch.
 
 | Branch worked on | Files changed | Migration patterns used | Build status | Remaining errors | Risks or manual testing needed |
 | --- | ---: | --- | --- | --- | --- |
-| `forge/1.18.2` | 89 files, +2706/-576 | ForgeGradle 6 metadata, `mods.toml`, `@Mod`, deferred registration bridge, legacy Fabric API facades, legacy networking facades, Ebbstride fall-damage behavior fallback, `@Redirect` fishing hook, client compatibility shim | `.\gradlew.bat build --no-daemon` passed; `runGameTestServer` passed; `runClient` startup smoke passed | None blocking build, server launch, or client startup | Interactive world-join playthrough, packet-flow playthrough, older custom trident/harpoon visuals |
-| `forge/1.19.2` | 89 files, +2727/-576 | Same legacy pattern as 1.18.2 plus 1.19.2 command/event facades | `.\gradlew.bat build --no-daemon` passed; `runGameTestServer` passed; `runClient` startup smoke passed | None blocking build, server launch, or client startup | Interactive world-join playthrough, packet-flow playthrough, older custom trident/harpoon visuals |
-| `forge/1.19.4` | 89 files, +2580/-533 | Legacy ForgeGradle 6 port, creative-tab event registration, legacy networking/rendering facades, Ebbstride fallback | `.\gradlew.bat build --no-daemon` passed; `runGameTestServer` passed; `runClient` startup smoke passed | None blocking build, server launch, or client startup | Interactive world-join playthrough, packet-flow playthrough, older custom trident/harpoon visuals |
-| `forge/1.20.1` | 78 files, +2599/-586 | Legacy ForgeGradle 6 port, 1.20.1 creative-tab and menu registration, Ebbstride fallback, Forge metadata replacement | `.\gradlew.bat build --no-daemon` passed; `runGameTestServer` passed; `runClient` startup smoke passed | None blocking build, server launch, or client startup | Interactive world-join playthrough and packet-flow playthrough |
-| `forge/1.20.6` | 86 files, +2765/-618 | ForgeGradle 7 metadata, modern payload facades, attachment facade, swim behavior fallback for missing water movement attribute, fall-damage attribute retained | `.\gradlew.bat build --no-daemon` passed; `runServer` passed; `runClient` startup smoke passed | Modern game-test dev task did not receive named test functions in this workspace | Interactive world-join playthrough and packet-flow playthrough |
-| `forge/1.21.1` | 85 files, +2769/-675 | ForgeGradle 7 metadata, modern attachment/network facades, newer water/fall attributes with 1.21.1 `minecraft:generic.*` ids | `.\gradlew.bat build --no-daemon` passed; `runServer` passed; `runClient` startup smoke passed | None blocking build, server launch, or client startup | Interactive world-join playthrough and packet-flow playthrough |
+| `forge/1.18.2` | First pass plus 7-file hardening commit | ForgeGradle 6 metadata, `mods.toml`, `@Mod`, deferred registration bridge, legacy Fabric API facades, legacy networking facades, command constructor bridge, registry-missing fallbacks, Ebbstride fall-damage behavior fallback, `@Redirect` fishing hook, client compatibility shim | `.\gradlew.bat test --no-daemon` and `.\gradlew.bat build --no-daemon` passed after hardening; earlier `runGameTestServer` and `runClient` startup smoke passed | None blocking test, build, jar assembly, server launch, or client startup | Interactive world-join, Focus UI, and packet-flow playthrough still pending; older custom trident/harpoon visuals remain visual-only work |
+| `forge/1.19.2` | First pass plus 7-file hardening commit | Same legacy pattern as 1.18.2 plus 1.19.2 command/event facades, command constructor bridge, and registry-missing fallbacks | `.\gradlew.bat test --no-daemon` and `.\gradlew.bat build --no-daemon` passed after hardening; earlier `runGameTestServer` and `runClient` startup smoke passed | None blocking test, build, jar assembly, server launch, or client startup | Interactive world-join, Focus UI, and packet-flow playthrough still pending; older custom trident/harpoon visuals remain visual-only work |
+| `forge/1.19.4` | First pass plus 8-file hardening commit | Legacy ForgeGradle 6 port, creative-tab event registration, legacy networking/rendering facades, command constructor bridge, registry-missing fallbacks, creative Focus panel click descriptor fix, Ebbstride fallback | `.\gradlew.bat test --no-daemon` and `.\gradlew.bat build --no-daemon` passed after hardening; earlier `runGameTestServer` and `runClient` startup smoke passed | None blocking test, build, jar assembly, server launch, or client startup | Interactive world-join, Focus UI, and packet-flow playthrough still pending; older custom trident/harpoon visuals remain visual-only work |
+| `forge/1.20.1` | First pass plus 8-file hardening commit | Legacy ForgeGradle 6 port, 1.20.1 creative-tab and menu registration, command constructor bridge, registry-missing fallbacks, creative Focus panel click descriptor fix, Ebbstride fallback, Forge metadata replacement | `.\gradlew.bat test --no-daemon` and `.\gradlew.bat build --no-daemon` passed after hardening; `runClient` reached the Forge 1.20.1 main menu and exited with `BUILD SUCCESSFUL` when closed | None blocking test, build, jar assembly, or client startup | Hands-on world-join and Focus UI smoke blocked by Windows desktop-control approval timeout; packet-flow playthrough still pending |
+| `forge/1.20.6` | First pass plus 8-file hardening commit | ForgeGradle 7 metadata, modern payload facades, attachment facade, command constructor bridge, registry-missing fallbacks, creative Focus panel click descriptor fix, swim behavior fallback for missing water movement attribute, fall-damage attribute retained | `.\gradlew.bat test --no-daemon`, `.\gradlew.bat build --no-daemon`, and manual in-world Focus smoke passed after hardening | Modern game-test dev task did not receive named test functions in this workspace | Packet-flow playthrough still pending; 1.20.6 lacks the water movement efficiency attribute, so swim support remains behavior-backed |
+| `forge/1.21.1` | First pass plus creative-panel fix commit | ForgeGradle 7 metadata, modern attachment/network facades, newer water/fall attributes with 1.21.1 `minecraft:generic.*` ids, creative Focus panel click descriptor fix | `.\gradlew.bat test --no-daemon`, `.\gradlew.bat build --no-daemon`, and manual in-world Focus smoke passed after the creative-panel fix | None blocking test, build, jar assembly, server launch, client startup, or Focus UI smoke | Packet-flow playthrough still pending |
 | `forge/1.21.11` | 78 files, +3410/-1601 | ForgeGradle 7 metadata, Java compatibility/mixin minVersion correction, modern client event/render facades, modern attribute ids | `.\gradlew.bat build --no-daemon` passed; `runServer` passed; `runClient` startup smoke passed | Optional Windows Netty/Realms dev-environment log noise only | Interactive world-join playthrough and packet-flow playthrough |
 | `forge/26.1.2` | 73 files, +3280/-636 | Modern ForgeGradle 7/Java 25 port, attachment bridge, payload registry facade, Forge creative tab and registry bridge | `.\gradlew.bat build --no-daemon` passed; `runServer` passed; `runClient` startup smoke passed | Optional Windows Netty/Realms dev-environment log noise only | Interactive world-join playthrough, packet-flow playthrough, attachment persistence/reconnect parity |
 | `forge/26.2` | 73 files, +2477/-438 | Reference Forge port: ForgeGradle 7/Java 25, `@Mod`, deferred registration, payload/attachment/event facades, source-run manifest mixin config, Java compatibility cap | `.\gradlew.bat test --no-daemon`, `build`, `runGameTestServer`, `runServer`, `runClient` startup smoke, and manual in-world Focus smoke passed | Optional Windows Netty/Realms dev-environment log noise only | Wider packet-flow playthrough, attachment persistence/reconnect parity |
@@ -80,13 +80,24 @@ Each row is the required first-pass worker report for its version branch.
 
 - Forge metadata is present on every target branch.
 - Every target branch builds.
+- Every branch touched in the hardening pass also passes
+  `.\gradlew.bat test --no-daemon` and `.\gradlew.bat build --no-daemon` on
+  2026-06-24.
 - Every target branch starts a Forge server-side dev runtime.
 - Every target branch starts a Forge dev client through Attuned initialization,
   resource reload, OpenAL startup, and texture-atlas creation.
-- `forge/26.2` joins a quick-play singleplayer world, accepts in-game Attuned
-  commands, validates live registries, equips Focus items through the survival
-  Focus UI, syncs the HUD, applies the expected player modifiers, and removes
-  those modifiers after unequip.
+- The assembled Forge jars contain `META-INF/mods.toml`, `attuned.mixins.json`,
+  and the expected mixin classes. `forge/1.18.2` through `forge/1.20.6` also
+  package `dev/attuned/mixin/CommandsMixin.class` for the command bridge.
+- `forge/26.2`, `forge/26.1.2`, `forge/1.21.11`, `forge/1.21.1`, and
+  `forge/1.20.6` join singleplayer worlds, accept in-game Attuned commands,
+  validate live registries, equip Focus items through the survival Focus UI,
+  sync the HUD, apply the expected player modifiers, and remove those
+  modifiers after unequip.
+- `forge/1.20.6` specifically proved the command bridge fix in-world:
+  `/attuned journal` opened the guide and `/attuned validate` reported
+  `99 Focus definitions`, `19 palette behavior(s)`, and `13 Confluence
+  definition(s)` after the constructor mixin was added.
 - Attuned initializes during runtime smoke on every target branch.
 - Focus data, item registration, language keys, item models, item definitions
   where present, animated 64x512 textures, and animation metadata pass the
@@ -119,19 +130,24 @@ Each row is the required first-pass worker report for its version branch.
 
 ## Manual In-World Focus Smoke
 
-`forge/26.2` was also run through a live singleplayer Focus smoke on
-2026-06-24. A copied dev save under the ignored `run/saves` directory was used
-as the smoke world, with commands enabled only for the local test harness.
+Five Forge branches were run through a live singleplayer Focus smoke on
+2026-06-24. The smoke path intentionally used normal in-game commands and the
+survival Focus slots rather than treating compile success as proof.
 
-| Step | Result |
-| --- | --- |
-| Quick-play launch | `.\gradlew.bat runClient --no-daemon --args='--quickPlaySingleplayer SmokeWorld-26.2'` launched Forge 65.0.0, loaded Attuned, started the integrated server, prepared spawn chunks, and logged `Dev joined the game`. |
-| Live content validation | `/attuned validate` passed in the joined world: `99 Focus definitions`, `17 palette behavior(s)`, and `13 Confluence definition(s)` checked. |
-| Focus item setup | `/attuned capacity 30` clamped to the configured cap of `20`; `give` commands produced Cinderplate, Bloodrush, Tidewarden, Wellspring, Current-Runner, and Overgrowth Focus items. |
-| Survival Focus UI | Wellspring, Current-Runner, and Overgrowth were moved from the player inventory into the vertical Focus slots. The Focus HUD mirrored the equipped items immediately. |
-| Server status | `/attuned status` reported `Capacity: 12 / 20`, `Active Foci (3)`, `wellspring_focus (cost 4, tide)`, `current_runner_focus (cost 3, tide)`, and `overgrowth_focus (cost 5, verdant)`. |
-| Modifier values | Attribute queries reported `Max Health = 32.0`, `Armor = 3.0`, `Speed = 0.11200000166893005`, and `Water Movement Efficiency = 1.0`, matching Wellspring, Current-Runner, and Overgrowth. |
-| Unequip cleanup | After moving the three Foci back out of the Focus slots, `/attuned status` returned `Active Foci (0)`, and attributes returned to `Max Health = 20.0`, `Armor = 0.0`, `Speed = 0.10000000149011612`, `Water Movement Efficiency = 0.0`. |
+| Branch | Live validation | Focus UI and status | Attribute proof | Cleanup proof |
+| --- | --- | --- | --- | --- |
+| `forge/26.2` | `/attuned validate` passed: `99 Focus definitions`, `17 palette behavior(s)`, `13 Confluence definition(s)` | Wellspring, Current-Runner, and Overgrowth equipped through the survival Focus UI; `/attuned status` reported `12 / 20` capacity and all three active Foci | Max Health `32.0`, Armor `3.0`, Speed `0.11200000166893005`, Water Movement Efficiency `1.0` | After unequip, `/attuned status` returned `Active Foci (0)` and attributes returned to `20.0`, `0.0`, `0.10000000149011612`, `0.0` |
+| `forge/26.1.2` | `/attuned validate` passed: `99 Focus definitions`, `17 palette behavior(s)`, `13 Confluence definition(s)` | Same three-Focus survival UI smoke; `/attuned status` reported `12 / 20` capacity and all three active Foci | Max Health `32.0`, Armor `3.0`, Speed `0.11200000166893005`, Water Movement Efficiency `1.0` | After unequip, status and attributes returned to vanilla baselines |
+| `forge/1.21.11` | `/attuned validate` passed: `99 Focus definitions`, `17 palette behavior(s)`, `13 Confluence definition(s)` | Same three-Focus survival UI smoke; `/attuned status` reported `12 / 20` capacity and all three active Foci | Max Health `32.0`, Armor `3.0`, Speed `0.11200000166893005`, Water Movement Efficiency `1.0` | After unequip, status and attributes returned to vanilla baselines |
+| `forge/1.21.1` | `/attuned validate` passed: `99 Focus definitions`, `17 palette behavior(s)`, `13 Confluence definition(s)` | Clean `ManualSmoke-1.21.1` world; same three-Focus survival UI smoke; `/attuned status` reported `12 / 20` capacity and all three active Foci | Max Health `32.0`, Armor `3.0`, Speed `0.11200000166893005`, Water Movement Efficiency `1.0` | After unequip, status and attributes returned to vanilla baselines |
+| `forge/1.20.6` | `/attuned validate` passed: `99 Focus definitions`, `19 palette behavior(s)`, `13 Confluence definition(s)` | Clean `ManualFlat-1.20.6` world; `/attuned journal` opened; Wellspring, Current-Runner, and Overgrowth equipped through the survival Focus UI; `/attuned status` reported `12 / 20` capacity and all three active Foci | Max Health `32.0`, Armor `3.0`, Speed `0.11200000166893005`; `minecraft:generic.water_movement_efficiency` is absent on 1.20.6 as expected, so swim support is behavior-backed | After unequip, `/attuned status` returned `Active Foci (0)` and attributes returned to `20.0`, `0.0`, `0.10000000149011612` |
+
+`forge/1.20.1` was launched again after the command bridge and registry
+fallback fixes. It reached the Forge 1.20.1 main menu and exited with
+`BUILD SUCCESSFUL` when closed, but the Windows desktop-control approval timed
+out while trying to drive the world-join UI. Because of that, the 1.20.1,
+1.19.4, 1.19.2, and 1.18.2 hands-on Focus UI smokes remain pending instead of
+being claimed from build output.
 
 ## Client Startup Smoke
 
@@ -161,10 +177,13 @@ Forge port.
 
 ## Known Limitations
 
-- Full client startup smoke is recorded for every Forge branch. A 26.2
-  singleplayer Focus equip/modifier cleanup smoke is also recorded. Older and
-  intermediate branches still need interactive world-join, menu-click, and
-  packet-flow playtests before publishing Forge packages.
+- Full client startup smoke is recorded for every Forge branch. Manual
+  singleplayer Focus equip/modifier cleanup smoke is recorded for `forge/26.2`,
+  `forge/26.1.2`, `forge/1.21.11`, `forge/1.21.1`, and `forge/1.20.6`.
+  `forge/1.20.1` and older still need interactive world-join, Focus UI, and
+  packet-flow playtests; the most recent 1.20.1 attempt was blocked only by
+  Windows desktop-control approval timing out after the client reached the main
+  menu.
 - The 26.x attachment bridge copies in-memory values across clone/respawn, but
   save-file persistence, owner sync, and dedicated-server reconnect parity need
   release-hardening work.
@@ -184,8 +203,9 @@ Forge port.
 
 Before publishing Forge artifacts, run this narrower second-pass checklist:
 
-1. A singleplayer world-join smoke on every non-26.2 branch, plus a repeated
-   spot check on 26.2 after any attachment or networking changes.
+1. A singleplayer world-join and Focus UI smoke on `forge/1.20.1`,
+   `forge/1.19.4`, `forge/1.19.2`, and `forge/1.18.2`, plus a repeated spot
+   check on 26.x after any attachment or networking changes.
 2. A focused packet-flow playtest for inspect, updraft, journal, altar,
    reweaving, satchel, presets, and party/circle payloads.
 3. A dedicated-server join/reconnect smoke on 26.x to harden attachment state.
