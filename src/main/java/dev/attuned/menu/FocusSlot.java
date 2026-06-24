@@ -1,6 +1,9 @@
 package dev.attuned.menu;
 
+import dev.attuned.Attuned;
 import dev.attuned.attunement.Attunement;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 
@@ -41,7 +44,18 @@ public class FocusSlot extends Slot {
 	@Override
 	public boolean mayPlace(ItemStack stack) {
 		// Only a registered Focus may occupy a Focus slot.
-		return Attunement.definitionFor(focusContainer.player(), stack).isPresent();
+		return Attunement.definitionFor(focusContainer.player(), stack).isPresent()
+			|| isFocusItem(stack);
+	}
+
+	private static boolean isFocusItem(ItemStack stack) {
+		if (stack.isEmpty()) {
+			return false;
+		}
+		ResourceLocation id = BuiltInRegistries.ITEM.getKey(stack.getItem());
+		return id != null
+			&& id.getNamespace().equals(Attuned.MOD_ID)
+			&& id.getPath().endsWith("_focus");
 	}
 
 	@Override

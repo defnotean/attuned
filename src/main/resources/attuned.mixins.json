@@ -12,6 +12,7 @@
 		"LivingEntityUpdraftFallMixin",
 		"PlayerUpdraftMixin",
 		"PlayerAttackMixin",
+		"CommandsMixin",
 		"ServerGamePacketListenerImplMixin",
 		"AbstractArrowTridentMixin",
 		"ThrownTridentMixin"
