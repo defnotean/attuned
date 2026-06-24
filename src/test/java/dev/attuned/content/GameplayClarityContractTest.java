@@ -29,7 +29,7 @@ class GameplayClarityContractTest {
 	private static final Path REFERENCE = Path.of("docs/reference.md");
 	private static final Path QA_CHECKLIST = Path.of("docs/platform/attuned-gameplay-polish-qa.md");
 	private static final Path DOCS_PLATFORM = Path.of("docs/platform");
-	private static final Path FABRIC_MOD = Path.of("src/main/resources/fabric.mod.json");
+	private static final Path LOADER_METADATA = Path.of("src/main/resources/META-INF/mods.toml");
 
 	@Test
 	void pactTrialDescriptionsMatchCurrentCodeGoals() throws IOException {
@@ -253,7 +253,7 @@ class GameplayClarityContractTest {
 		paths.add(Path.of("docs/README.md"));
 		paths.add(Path.of("docs/adding-a-focus.md"));
 		paths.add(REFERENCE);
-		paths.add(FABRIC_MOD);
+		paths.add(LOADER_METADATA);
 		try (Stream<Path> stream = Files.walk(DOCS_PLATFORM)) {
 			stream.filter(Files::isRegularFile)
 				.filter(path -> path.getFileName().toString().endsWith(".md"))

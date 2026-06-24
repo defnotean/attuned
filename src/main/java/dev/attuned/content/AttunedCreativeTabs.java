@@ -4,14 +4,15 @@ import dev.attuned.Attuned;
 import dev.attuned.AttunedRegistries;
 import dev.attuned.api.focus.Affinity;
 import dev.attuned.api.focus.FocusDefinition;
+import dev.attuned.platform.ForgeRegistration;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 import net.fabricmc.fabric.api.creativetab.v1.FabricCreativeModeTab;
 import net.minecraft.core.HolderLookup;
-import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
@@ -41,40 +42,40 @@ final class AttunedCreativeTabs {
 		registerFocusCreativeTab(
 			"attuned",
 			Component.translatable("itemGroup.attuned.fury_bastion_foci"),
-			AttunedContent.BLOODFURY_FOCUS,
+			() -> AttunedContent.BLOODFURY_FOCUS,
 			definition -> hasAnyAffinity(definition, Set.of(Affinity.FURY, Affinity.BASTION)),
 			false);
 		registerFocusCreativeTab(
 			"attuned_zephyr_holy",
 			Component.translatable("itemGroup.attuned.zephyr_holy_foci"),
-			AttunedContent.GALESPUR_FOCUS,
+			() -> AttunedContent.GALESPUR_FOCUS,
 			definition -> hasAnyAffinity(definition, Set.of(Affinity.ZEPHYR, Affinity.HOLY)),
 			false);
 		registerFocusCreativeTab(
 			"attuned_tide_forge",
 			Component.translatable("itemGroup.attuned.tide_forge_foci"),
-			AttunedContent.TIDEWARDEN_FOCUS,
+			() -> AttunedContent.TIDEWARDEN_FOCUS,
 			definition -> hasAnyAffinity(definition, Set.of(Affinity.TIDE, Affinity.FORGE)),
 			false);
 		registerFocusCreativeTab(
 			"attuned_verdant_umbral",
 			Component.translatable("itemGroup.attuned.verdant_umbral_foci"),
-			AttunedContent.OVERGROWTH_FOCUS,
+			() -> AttunedContent.OVERGROWTH_FOCUS,
 			definition -> hasAnyAffinity(definition, Set.of(Affinity.VERDANT, Affinity.UMBRAL)),
 			false);
 		registerFocusCreativeTab(
 			"attuned_utility",
 			Component.translatable("itemGroup.attuned.utility_foci"),
-			AttunedContent.LINECAST_FOCUS,
+			() -> AttunedContent.LINECAST_FOCUS,
 			definition -> definition.affinity().isEmpty(),
 			true);
 	}
 
-	private static void registerFocusCreativeTab(String id, Component title, Item icon,
+	private static void registerFocusCreativeTab(String id, Component title, Supplier<Item> icon,
 			Predicate<FocusDefinition> include, boolean includeCoreItems) {
-		CreativeModeTab tab = FabricCreativeModeTab.builder()
+		ForgeRegistration.creativeModeTab(id, () -> FabricCreativeModeTab.builder()
 			.title(title)
-			.icon(() -> new ItemStack(icon))
+			.icon(() -> new ItemStack(icon.get()))
 			.displayItems((parameters, output) -> {
 				if (includeCoreItems) {
 					output.accept(AttunedContent.ATTUNEMENT_JOURNAL);
@@ -99,9 +100,7 @@ final class AttunedCreativeTabs {
 					}
 				}
 			})
-			.build();
-		Registry.register(BuiltInRegistries.CREATIVE_MODE_TAB,
-			Identifier.fromNamespaceAndPath(Attuned.MOD_ID, id), tab);
+			.build());
 	}
 
 	/**
