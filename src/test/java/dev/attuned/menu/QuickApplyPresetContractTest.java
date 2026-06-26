@@ -32,7 +32,8 @@ class QuickApplyPresetContractTest {
 	@Test
 	void quickApplyIsRegisteredAndDoesNotRequireTheOpenSatchelMenu() throws IOException {
 		String net = read(NET);
-		assertTrue(net.contains("PayloadTypeRegistry.serverboundPlay().register(QuickApplyPresetPayload.TYPE"),
+		assertTrue(net.contains("PayloadTypeRegistry.serverboundPlay().register(QuickApplyPresetPayload.TYPE")
+				|| net.contains("PayloadTypeRegistry.playC2S().register(QuickApplyPresetPayload.TYPE"),
 			"Quick apply payload should be registered serverbound.");
 		assertTrue(net.contains("ServerPlayNetworking.registerGlobalReceiver(QuickApplyPresetPayload.TYPE"),
 			"Quick apply should have a server receiver.");

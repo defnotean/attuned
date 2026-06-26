@@ -250,12 +250,12 @@ public final class Onboarding {
 
 	/** Whether the player is carrying at least one Attunement Shard in their main inventory. */
 	private static boolean carriesShard(ServerPlayer player) {
-		return carries(player, AttunedContent.ATTUNEMENT_SHARD);
+		return carries(player, AttunedContent.ATTUNEMENT_SHARD.get());
 	}
 
 	/** Whether the player is carrying at least one Attunement Shard Fragment. */
 	private static boolean carriesFragment(ServerPlayer player) {
-		return carries(player, AttunedContent.ATTUNEMENT_SHARD_FRAGMENT);
+		return carries(player, AttunedContent.ATTUNEMENT_SHARD_FRAGMENT.get());
 	}
 
 	private static boolean carries(ServerPlayer player, Item item) {

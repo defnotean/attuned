@@ -42,16 +42,16 @@ public final class SeafarersFishing {
 
 	public static int fishingLuckBonus(Player player) {
 		int bonus = 0;
-		if (hasActive(player, AttunedContent.LINECAST_FOCUS)) {
+		if (hasActive(player, AttunedContent.LINECAST_FOCUS.get())) {
 			bonus += LINECAST_LUCK_OF_THE_SEA_BONUS;
 		}
-		if (hasActive(player, AttunedContent.NETMENDER_FOCUS)) {
+		if (hasActive(player, AttunedContent.NETMENDER_FOCUS.get())) {
 			bonus += NETMENDER_LUCK_OF_THE_SEA_BONUS;
 		}
-		if (hasActive(player, AttunedContent.HARBORLIGHT_FOCUS)) {
+		if (hasActive(player, AttunedContent.HARBORLIGHT_FOCUS.get())) {
 			bonus += HARBORLIGHT_LUCK_OF_THE_SEA_BONUS;
 		}
-		if (hasActive(player, AttunedContent.DRIFTGLASS_FOCUS)) {
+		if (hasActive(player, AttunedContent.DRIFTGLASS_FOCUS.get())) {
 			bonus += DRIFTGLASS_LUCK_OF_THE_SEA_BONUS;
 		}
 		return Math.min(MAX_LUCK_OF_THE_SEA_BONUS, bonus);
@@ -61,13 +61,13 @@ public final class SeafarersFishing {
 		if (damage != 1) {
 			return damage;
 		}
-		if (hasActive(player, AttunedContent.LINECAST_FOCUS)
+		if (hasActive(player, AttunedContent.LINECAST_FOCUS.get())
 				&& player.getRandom().nextFloat() < LINECAST_EXTRA_FISH_CHANCE) {
 			ItemEntity extra = new ItemEntity(player.level(), player.getX(), player.getY() + 0.5, player.getZ(),
 				new ItemStack(Items.COD));
 			player.level().addFreshEntity(extra);
 		}
-		if (hasActive(player, AttunedContent.NETMENDER_FOCUS)
+		if (hasActive(player, AttunedContent.NETMENDER_FOCUS.get())
 				&& canRepairWithNetmender(player, rod)
 				&& player.getRandom().nextFloat() < NETMENDER_REPAIR_CHANCE) {
 			rod.setDamageValue(rod.getDamageValue() - 1);

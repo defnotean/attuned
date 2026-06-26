@@ -53,6 +53,8 @@ class FocusDataConsistencyTest {
 		Path.of("src/main/resources/data/attuned/attuned/focus");
 	private static final Path FOCUS_BEHAVIOR_DIR =
 		Path.of("src/main/resources/data/attuned/attuned/focus_behavior");
+	private static final Path SYNERGY_DATA_DIR =
+		Path.of("src/main/resources/data/attuned/attuned/synergy");
 	private static final Path ITEM_DEFINITION_DIR =
 		Path.of("src/main/resources/assets/attuned/items");
 	private static final Path ITEM_MODEL_DIR =
@@ -67,7 +69,7 @@ class FocusDataConsistencyTest {
 		Path.of("src/main/resources/assets/attuned/lang/en_us.json");
 
 	private static final Pattern REGISTERED_FOCUS = Pattern.compile(
-		"public\\s+static\\s+final\\s+Item\\s+([A-Z0-9_]+_FOCUS)\\s*=\\s*registerFocus\\(\"([a-z0-9_]+_focus)\"\\);");
+		"public\\s+static\\s+final\\s+DeferredItem<Item>\\s+([A-Z0-9_]+_FOCUS)\\s*=\\s*registerFocus\\(\"([a-z0-9_]+_focus)\"\\);");
 	private static final Pattern REGISTERED_BEHAVIOR = Pattern.compile(
 		"register\\(\\s*\"([a-z0-9_/.-]+)\"\\s*,\\s*new\\s+",
 		Pattern.DOTALL);
@@ -87,6 +89,20 @@ class FocusDataConsistencyTest {
 		"attuned:netmender_focus");
 	private static final Set<String> OFFSHORE_FOCUS_ITEMS = Set.of(
 		"attuned:harpoon_focus");
+	private static final Set<String> MINECRAFT_121_BARE_ATTRIBUTE_IDS = Set.of(
+		"minecraft:armor",
+		"minecraft:armor_toughness",
+		"minecraft:attack_damage",
+		"minecraft:attack_speed",
+		"minecraft:fall_damage_multiplier",
+		"minecraft:jump_strength",
+		"minecraft:knockback_resistance",
+		"minecraft:luck",
+		"minecraft:max_health",
+		"minecraft:movement_speed",
+		"minecraft:safe_fall_distance",
+		"minecraft:sneaking_speed",
+		"minecraft:water_movement_efficiency");
 	private static final Set<String> REVENANT_FOCUS_ITEMS = Set.of(
 		"attuned:ashen_debt_focus",
 		"attuned:bonechill_focus",
@@ -135,16 +151,16 @@ class FocusDataConsistencyTest {
 
 		assertEquals(registeredItemsByField.size(), registeredItems.size(),
 			"Registered shipped Focus item ids should not be duplicated");
-		assertTrue(source.contains("public static final List<Item> FOCI = List.copyOf(REGISTERED_FOCI);"),
+		assertTrue(source.contains("public static final List<DeferredItem<Item>> FOCI = List.copyOf(REGISTERED_FOCI);"),
 			"AttunedContent.FOCI should be derived from registerFocus order, not manually duplicated");
-		assertTrue(source.contains("private static final Set<Item> FOCI_SET = Set.copyOf(REGISTERED_FOCI);"),
-			"AttunedContent should keep constant-time Focus membership alongside the ordered list");
+		assertTrue(source.contains("private static final Set<Identifier> FOCUS_IDS = REGISTERED_FOCI.stream()"),
+			"AttunedContent should keep constant-time Focus id membership alongside the ordered list");
 		assertTrue(source.contains("REGISTERED_FOCI.add(item);"),
 			"registerFocus should append every Focus to the public FOCI snapshot");
 		assertTrue(source.contains("public static boolean isFocus(Item item)"),
 			"AttunedContent should expose the canonical Focus item membership check");
-		assertTrue(source.contains("return item != null && FOCI_SET.contains(item);"),
-			"Focus item membership should use the set-backed lookup and reject null safely");
+		assertTrue(source.contains("return item != null && FOCUS_IDS.contains(BuiltInRegistries.ITEM.getKey(item));"),
+			"Focus item membership should use the id-backed lookup and reject null safely");
 		assertTrue(source.contains("public static boolean isFocus(ItemStack stack)"),
 			"AttunedContent should expose the canonical Focus stack membership check");
 		assertTrue(!source.contains("FOCI = List.of("),
@@ -250,6 +266,16 @@ class FocusDataConsistencyTest {
 		}
 		assertEquals(Set.of(), inertItems,
 			"Every shipped Focus should have modifiers, a behavior id, or a direct gameplay hook");
+	}
+
+	@Test
+	void minecraft2612FocusAndSynergyModifiersUseCurrentAttributeRegistryIds() throws IOException {
+		Set<String> invalidAttributes = new TreeSet<>();
+		collectDottedGenericAttributes(FOCUS_DATA_DIR, invalidAttributes);
+		collectDottedGenericAttributes(SYNERGY_DATA_DIR, invalidAttributes);
+
+		assertEquals(Set.of(), invalidAttributes,
+			"Minecraft 26.1.2 data in this branch uses current bare vanilla attribute ids such as minecraft:attack_damage");
 	}
 
 	@Test
@@ -750,6 +776,54 @@ class FocusDataConsistencyTest {
 
 	private static JsonObject focusDefinitionRoot(Path file) throws IOException {
 		return JsonParser.parseString(Files.readString(file, StandardCharsets.UTF_8)).getAsJsonObject();
+	}
+
+	private static void collectBareMinecraft121Attributes(Path directory, Set<String> invalidAttributes)
+			throws IOException {
+		assertTrue(Files.isDirectory(directory), "Could not find data directory: " + directory);
+		try (Stream<Path> paths = Files.list(directory)) {
+			for (Path file : paths
+					.filter(path -> path.getFileName().toString().endsWith(".json"))
+					.sorted()
+					.toList()) {
+				JsonObject root = JsonParser.parseString(Files.readString(file, StandardCharsets.UTF_8))
+					.getAsJsonObject();
+				if (!hasNonEmptyArray(root, "modifiers")) {
+					continue;
+				}
+				for (JsonElement element : root.getAsJsonArray("modifiers")) {
+					JsonObject modifier = element.getAsJsonObject();
+					String attribute = modifier.get("attribute").getAsString();
+					if (MINECRAFT_121_BARE_ATTRIBUTE_IDS.contains(attribute)) {
+						invalidAttributes.add(file + " -> " + attribute);
+					}
+				}
+			}
+		}
+	}
+
+	private static void collectDottedGenericAttributes(Path directory, Set<String> invalidAttributes)
+			throws IOException {
+		assertTrue(Files.isDirectory(directory), "Could not find data directory: " + directory);
+		try (Stream<Path> paths = Files.list(directory)) {
+			for (Path file : paths
+					.filter(path -> path.getFileName().toString().endsWith(".json"))
+					.sorted()
+					.toList()) {
+				JsonObject root = JsonParser.parseString(Files.readString(file, StandardCharsets.UTF_8))
+					.getAsJsonObject();
+				if (!hasNonEmptyArray(root, "modifiers")) {
+					continue;
+				}
+				for (JsonElement element : root.getAsJsonArray("modifiers")) {
+					JsonObject modifier = element.getAsJsonObject();
+					String attribute = modifier.get("attribute").getAsString();
+					if (attribute.startsWith("minecraft:generic.")) {
+						invalidAttributes.add(file + " -> " + attribute);
+					}
+				}
+			}
+		}
 	}
 
 	private static Set<String> translatedFactionIds() throws IOException {

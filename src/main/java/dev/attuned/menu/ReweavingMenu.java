@@ -206,7 +206,7 @@ public class ReweavingMenu extends AbstractContainerMenu {
 
 	@Override
 	public boolean stillValid(Player player) {
-		return stillValid(this.access, player, AttunedContent.ALTAR_OF_REWEAVING);
+		return stillValid(this.access, player, AttunedContent.ALTAR_OF_REWEAVING.get());
 	}
 
 	@Override

@@ -184,7 +184,7 @@ public class AltarMenu extends AbstractContainerMenu {
 		// Mirrors the vanilla pattern from EnchantmentMenu / CraftingMenu —
 		// closes the GUI if the player walks out of range, dimension-changes,
 		// or the Altar block is broken.
-		return stillValid(this.access, player, AttunedContent.ATTUNEMENT_ALTAR);
+		return stillValid(this.access, player, AttunedContent.ATTUNEMENT_ALTAR.get());
 	}
 
 	@Override

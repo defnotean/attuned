@@ -6,6 +6,7 @@ import java.util.IdentityHashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.WeakHashMap;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.core.Registry;
 import net.minecraft.world.item.Item;
 
@@ -31,6 +32,14 @@ public final class FocusLookup {
 	public static Optional<FocusDefinition> forItem(Registry<FocusDefinition> registry, Item item) {
 		Map<Item, FocusDefinition> byItem = INDEX.computeIfAbsent(registry, FocusLookup::index);
 		return Optional.ofNullable(byItem.get(item));
+	}
+
+	/** The definition registered for {@code item} in a dynamic registry lookup, if any. */
+	public static Optional<FocusDefinition> forItem(HolderLookup.RegistryLookup<FocusDefinition> registry, Item item) {
+		return registry.listElements()
+			.map(holder -> holder.value())
+			.filter(def -> def.item().value() == item)
+			.findFirst();
 	}
 
 	private static Map<Item, FocusDefinition> index(Registry<FocusDefinition> registry) {

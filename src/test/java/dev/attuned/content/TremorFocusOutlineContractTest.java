@@ -54,7 +54,8 @@ class TremorFocusOutlineContractTest {
 			"The clientbound payload should carry every vein block position.");
 		assertTrue(payload.contains("BlockPos.STREAM_CODEC.apply(ByteBufCodecs.list())"),
 			"The payload should use the vanilla BlockPos stream codec in list form.");
-		assertTrue(networking.contains("PayloadTypeRegistry.clientboundPlay().register(TremorOreHintPayload.TYPE"),
+		assertTrue(networking.contains("PayloadTypeRegistry.clientboundPlay().register(TremorOreHintPayload.TYPE")
+				|| networking.contains("PayloadTypeRegistry.playS2C().register(TremorOreHintPayload.TYPE"),
 			"Common networking should register Tremor's clientbound payload type.");
 	}
 
