@@ -30,18 +30,33 @@ import dev.attuned.onboarding.Onboarding;
 import dev.attuned.pacts.PactDeathMessages;
 import dev.attuned.pacts.PactTrials;
 import dev.attuned.pacts.Pacts;
+import dev.attuned.platform.NeoForgeDeferredRegistries;
+import dev.attuned.platform.NeoForgeEventBuses;
 import dev.attuned.synergy.Synergies;
-import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.event.registry.DynamicRegistries;
+import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
+import net.neoforged.bus.api.IEventBus;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.fml.common.Mod;
+import net.neoforged.fml.loading.FMLEnvironment;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class Attuned implements ModInitializer {
+@Mod(Attuned.MOD_ID)
+public class Attuned {
 	public static final String MOD_ID = "attuned";
 	public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
 
-	@Override
-	public void onInitialize() {
+	public Attuned(IEventBus modEventBus) {
+		NeoForgeEventBuses.setModEventBus(modEventBus);
+		DynamicRegistries.setModEventBus(modEventBus);
+		PayloadTypeRegistry.setModEventBus(modEventBus);
+		NeoForgeDeferredRegistries.register(modEventBus);
+		init();
+		initClientWhenPresent();
+	}
+
+	public static void init() {
 		AttunedConfig.load();
 		DynamicRegistries.registerSynced(AttunedRegistries.FOCUS_DEFINITIONS, FocusDefinition.CODEC);
 		DynamicRegistries.registerSynced(AttunedRegistries.SYNERGY_DEFINITIONS, SynergyDefinition.CODEC);
@@ -75,9 +90,23 @@ public class Attuned implements ModInitializer {
 		PresetNetworking.init();
 		ReweavingMenuType.init();
 		ReweavingNetworking.init();
+		PayloadTypeRegistry.buildForgeChannel();
 		GravebindSave.init();
 		Milestones.init();
 		Onboarding.init();
 		LOGGER.info("Attuned initializing");
+	}
+
+	private static void initClientWhenPresent() {
+		if (FMLEnvironment.getDist() != Dist.CLIENT) {
+			return;
+		}
+		try {
+			Class.forName("dev.attuned.client.AttunedClient")
+				.getMethod("init")
+				.invoke(null);
+		} catch (ReflectiveOperationException e) {
+			throw new IllegalStateException("Unable to initialize Attuned client", e);
+		}
 	}
 }

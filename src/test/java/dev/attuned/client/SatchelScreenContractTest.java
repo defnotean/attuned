@@ -26,13 +26,15 @@ class SatchelScreenContractTest {
 		String screen = read(SCREEN);
 		assertTrue(screen.contains("extends AbstractContainerScreen<SatchelMenu>"),
 			"SatchelScreen should be a container screen over the satchel menu.");
-		assertTrue(screen.contains("extractBackground(GuiGraphicsExtractor"),
-			"SatchelScreen must use the fork background render hook, not vanilla renderBg.");
-		assertTrue(screen.contains("extractLabels(GuiGraphicsExtractor"),
-			"SatchelScreen must use the fork label render hook.");
+		assertTrue(screen.contains("extractBackground(GuiGraphicsExtractor")
+				|| screen.contains("renderBg(GuiGraphics"),
+			"SatchelScreen must use the active background render hook.");
+		assertTrue(screen.contains("extractLabels(GuiGraphicsExtractor")
+				|| screen.contains("renderLabels(GuiGraphics"),
+			"SatchelScreen must use the active label render hook.");
 		assertTrue(screen.contains("textures/gui/satchel.png"),
 			"SatchelScreen must reference its background texture.");
-		assertTrue(read(SCREENS).contains("MenuScreens.register(SatchelMenuType.TYPE, SatchelScreen::new)"),
+		assertTrue(read(SCREENS).contains("event.register(SatchelMenuType.TYPE, SatchelScreen::new)"),
 			"The satchel screen must be registered against its menu type.");
 	}
 

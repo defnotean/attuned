@@ -96,11 +96,11 @@ public final class PactTrials {
 		int goal = goalOf(pact);
 		checkTrialMilestones(player, pact, current, next, goal);
 		if (next >= goal) {
-			player.setAttached(AttunedAttachments.PACT_TRIAL_PROGRESS, progress.withCounter(id, goal));
+			AttunedAttachments.setPactTrialProgress(player, progress.withCounter(id, goal));
 			onComplete(player, pact);
 			return;
 		}
-		player.setAttached(AttunedAttachments.PACT_TRIAL_PROGRESS, progress.withCounter(id, next));
+		AttunedAttachments.setPactTrialProgress(player, progress.withCounter(id, next));
 	}
 
 	public static int progress(Player player, Pact pact) {
@@ -121,7 +121,7 @@ public final class PactTrials {
 		}
 		String id = pactId(pact);
 		PactTrialProgress progress = get(player).withTier4Completed(id);
-		player.setAttached(AttunedAttachments.PACT_TRIAL_PROGRESS, progress);
+		AttunedAttachments.setPactTrialProgress(player, progress);
 		AttunedAdvancements.award(player, "attunement/pact_" + id + "_trial");
 		player.sendSystemMessage(Component.translatable("pact.attuned." + id + "_trial.title")
 			.withStyle(pact.chatColor(), ChatFormatting.BOLD)
@@ -250,7 +250,7 @@ public final class PactTrials {
 	}
 
 	private static PactTrialProgress get(Player player) {
-		return player.getAttachedOrElse(AttunedAttachments.PACT_TRIAL_PROGRESS, PactTrialProgress.EMPTY);
+		return AttunedAttachments.getPactTrialProgressValue(player);
 	}
 
 	static String pactId(Pact pact) {

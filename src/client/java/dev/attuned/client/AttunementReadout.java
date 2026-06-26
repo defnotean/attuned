@@ -95,6 +95,26 @@ public final class AttunementReadout {
 	 * Resonance fill for HUD bars — eases toward the synced server value so the
 	 * gauge flows instead of stepping on batched decay ticks.
 	 */
+	public static void invalidate(Player player) {
+		if (player == null) {
+			cachedSnapshot = null;
+			cachedPlayerId = null;
+			cachedTick = -1;
+			displayedResonanceFor = null;
+			displayedResonance = -1.0F;
+			return;
+		}
+		UUID id = player.getUUID();
+		if (id.equals(cachedPlayerId)) {
+			cachedSnapshot = null;
+			cachedTick = -1;
+		}
+		if (id.equals(displayedResonanceFor)) {
+			displayedResonanceFor = null;
+			displayedResonance = -1.0F;
+		}
+	}
+
 	public static float displayResonance(Player player) {
 		float target = cached(player).resonance();
 		UUID id = player.getUUID();

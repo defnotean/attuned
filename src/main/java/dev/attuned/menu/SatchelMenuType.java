@@ -3,8 +3,7 @@ package dev.attuned.menu;
 import dev.attuned.Attuned;
 import dev.attuned.content.AttunedComponents;
 import dev.attuned.content.AttunedContent;
-import net.minecraft.core.Registry;
-import net.minecraft.core.registries.BuiltInRegistries;
+import dev.attuned.platform.NeoForgeDeferredRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.InteractionHand;
@@ -34,10 +33,10 @@ public final class SatchelMenuType {
 			return;
 		}
 		initialized = true;
-		TYPE = Registry.register(BuiltInRegistries.MENU,
+		TYPE = NeoForgeDeferredRegistries.menu(
 			Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "satchel_of_foci"),
 			new MenuType<>(SatchelMenu::new, FeatureFlags.VANILLA_SET));
-		GRAND_TYPE = Registry.register(BuiltInRegistries.MENU,
+		GRAND_TYPE = NeoForgeDeferredRegistries.menu(
 			Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "grand_satchel_of_foci"),
 			new MenuType<>(SatchelMenu::grand, FeatureFlags.VANILLA_SET));
 	}
@@ -50,7 +49,7 @@ public final class SatchelMenuType {
 		if (grand) {
 			return new SimpleMenuProvider(
 				(containerId, inventory, p) -> new SatchelMenu(containerId, inventory,
-					new SatchelContainer(p, hand, AttunedContent.GRAND_SATCHEL_OF_FOCI,
+					new SatchelContainer(p, hand, AttunedContent.GRAND_SATCHEL_OF_FOCI.get(),
 						AttunedComponents.GRAND_SATCHEL_CONTENTS, AttunedComponents.GRAND_SATCHEL_SIZE),
 					hand, GRAND_TYPE),
 				GRAND_DISPLAY_NAME);

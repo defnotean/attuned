@@ -38,7 +38,7 @@ class PresetNetworkingContractTest {
 	void presetNetworkingIsIdempotentServerAuthoritativeAndUsesTheResolver() throws IOException {
 		String net = read(NET);
 		assertTrue(net.contains("private static boolean initialized;"), "Idempotent init.");
-		assertBefore(net, "initialized = true;", "PayloadTypeRegistry.serverboundPlay().register");
+		assertBefore(net, "initialized = true;", serverboundRegistrationNeedle(net));
 		assertTrue(net.contains("ServerPlayNetworking.registerGlobalReceiver(SavePresetPayload.TYPE"), "Save receiver.");
 		assertTrue(net.contains("ServerPlayNetworking.registerGlobalReceiver(ApplyPresetPayload.TYPE"), "Apply receiver.");
 		assertTrue(net.contains("ServerPlayNetworking.registerGlobalReceiver(DeletePresetPayload.TYPE"), "Delete receiver.");
@@ -59,7 +59,7 @@ class PresetNetworkingContractTest {
 		// item check (small satchel or Grand Reliquary) is centralized in isReliquary().
 		assertTrue(net.contains("isReliquary(player.getItemInHand(menu.hand()))"),
 			"Preset mutation packets should re-read the held reliquary from the menu hand before mutating.");
-		assertTrue(net.contains("stack.getItem() == AttunedContent.SATCHEL_OF_FOCI"),
+		assertTrue(net.contains("AttunedContent.is(stack, AttunedContent.SATCHEL_OF_FOCI)"),
 			"isReliquary should still recognize the small Focus Reliquary item.");
 		assertEquals(4, countOccurrences(net, "if (!hasOpenLiveSatchel(player))"),
 			"Save, apply, delete, and import should all reject spoofed/out-of-menu preset packets.");
@@ -154,6 +154,12 @@ class PresetNetworkingContractTest {
 		int e = source.indexOf(earlier);
 		int l = source.indexOf(later);
 		assertTrue(e >= 0 && l >= 0 && e < l, "Expected " + earlier + " before " + later);
+	}
+
+	private static String serverboundRegistrationNeedle(String source) {
+		return source.contains("PayloadTypeRegistry.serverboundPlay().register")
+			? "PayloadTypeRegistry.serverboundPlay().register"
+			: "PayloadTypeRegistry.playC2S().register";
 	}
 
 	private static int countOccurrences(String source, String needle) {

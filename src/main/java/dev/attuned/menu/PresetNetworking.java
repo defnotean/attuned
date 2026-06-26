@@ -1,5 +1,6 @@
 package dev.attuned.menu;
 
+import dev.attuned.compat.PlayerMessages;
 import dev.attuned.AttunedPlayerCleanup;
 import dev.attuned.AttunedRegistries;
 import dev.attuned.AttunedServerCleanup;
@@ -23,7 +24,7 @@ import java.util.UUID;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.ChatFormatting;
-import net.minecraft.core.Registry;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.core.component.DataComponentType;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
@@ -44,11 +45,11 @@ public final class PresetNetworking {
 			return;
 		}
 		initialized = true;
-		PayloadTypeRegistry.serverboundPlay().register(SavePresetPayload.TYPE, SavePresetPayload.CODEC);
-		PayloadTypeRegistry.serverboundPlay().register(ApplyPresetPayload.TYPE, ApplyPresetPayload.CODEC);
-		PayloadTypeRegistry.serverboundPlay().register(DeletePresetPayload.TYPE, DeletePresetPayload.CODEC);
-		PayloadTypeRegistry.serverboundPlay().register(QuickApplyPresetPayload.TYPE, QuickApplyPresetPayload.CODEC);
-		PayloadTypeRegistry.serverboundPlay().register(ImportPresetPayload.TYPE, ImportPresetPayload.CODEC);
+		PayloadTypeRegistry.playC2S().register(SavePresetPayload.TYPE, SavePresetPayload.CODEC);
+		PayloadTypeRegistry.playC2S().register(ApplyPresetPayload.TYPE, ApplyPresetPayload.CODEC);
+		PayloadTypeRegistry.playC2S().register(DeletePresetPayload.TYPE, DeletePresetPayload.CODEC);
+		PayloadTypeRegistry.playC2S().register(QuickApplyPresetPayload.TYPE, QuickApplyPresetPayload.CODEC);
+		PayloadTypeRegistry.playC2S().register(ImportPresetPayload.TYPE, ImportPresetPayload.CODEC);
 		ServerPlayNetworking.registerGlobalReceiver(SavePresetPayload.TYPE, (payload, context) -> {
 			ServerPlayer player = context.player();
 			player.level().getServer().execute(() -> savePreset(player, payload));
@@ -126,7 +127,7 @@ public final class PresetNetworking {
 			return;
 		}
 
-		Registry<FocusDefinition> registry =
+		HolderLookup.RegistryLookup<FocusDefinition> registry =
 			player.level().registryAccess().lookupOrThrow(AttunedRegistries.FOCUS_DEFINITIONS);
 		Set<String> registeredFocusIds = registeredFocusIds(registry);
 		Map<String, Integer> inventoryCounts = inventoryFocusCounts(player, registeredFocusIds);
@@ -165,10 +166,10 @@ public final class PresetNetworking {
 		if (player.containerMenu instanceof SatchelMenu menu) {
 			menu.broadcastChanges();
 		}
-		player.sendOverlayMessage(Component.translatable(
+		PlayerMessages.overlay(player, Component.translatable(
 			"screen.attuned.preset.applied", presets.get(index).name()));
 		if (!result.missing().isEmpty()) {
-			player.sendSystemMessage(Component.translatable(
+			PlayerMessages.system(player, Component.translatable(
 				"screen.attuned.preset.missing", String.join(", ", result.missing()))
 				.withStyle(ChatFormatting.RED));
 		}
@@ -195,28 +196,28 @@ public final class PresetNetworking {
 
 	/** True for either reliquary tier: the small satchel or the Grand Focus Reliquary. */
 	private static boolean isReliquary(ItemStack stack) {
-		return stack.getItem() == AttunedContent.SATCHEL_OF_FOCI
-			|| stack.getItem() == AttunedContent.GRAND_SATCHEL_OF_FOCI;
+		return AttunedContent.is(stack, AttunedContent.SATCHEL_OF_FOCI)
+			|| AttunedContent.is(stack, AttunedContent.GRAND_SATCHEL_OF_FOCI);
 	}
 
 	/** Contents component type for the reliquary tier of this stack. */
 	private static DataComponentType<FocusHolder> contentsTypeOf(ItemStack stack) {
-		return stack.getItem() == AttunedContent.GRAND_SATCHEL_OF_FOCI
+		return AttunedContent.is(stack, AttunedContent.GRAND_SATCHEL_OF_FOCI)
 			? AttunedComponents.GRAND_SATCHEL_CONTENTS
 			: AttunedComponents.SATCHEL_CONTENTS;
 	}
 
 	/** Grid size for the reliquary tier of this stack. */
 	private static int sizeOf(ItemStack stack) {
-		return stack.getItem() == AttunedContent.GRAND_SATCHEL_OF_FOCI
+		return AttunedContent.is(stack, AttunedContent.GRAND_SATCHEL_OF_FOCI)
 			? AttunedComponents.GRAND_SATCHEL_SIZE
 			: AttunedComponents.SATCHEL_SIZE;
 	}
 
-	private static Set<String> registeredFocusIds(Registry<FocusDefinition> registry) {
+	private static Set<String> registeredFocusIds(HolderLookup.RegistryLookup<FocusDefinition> registry) {
 		Set<String> ids = new HashSet<>();
-		registry.stream()
-			.map(def -> BuiltInRegistries.ITEM.getKey(def.item().value()).toString())
+		registry.listElements()
+			.map(holder -> BuiltInRegistries.ITEM.getKey(holder.value().item().value()).toString())
 			.forEach(ids::add);
 		return ids;
 	}

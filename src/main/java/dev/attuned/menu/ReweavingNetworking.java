@@ -14,7 +14,7 @@ import java.util.Set;
 import java.util.TreeSet;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
-import net.minecraft.core.Registry;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
@@ -37,7 +37,7 @@ public final class ReweavingNetworking {
 			return;
 		}
 		initialized = true;
-		PayloadTypeRegistry.serverboundPlay().register(ReweavePayload.TYPE, ReweavePayload.CODEC);
+		PayloadTypeRegistry.playC2S().register(ReweavePayload.TYPE, ReweavePayload.CODEC);
 		ServerPlayNetworking.registerGlobalReceiver(ReweavePayload.TYPE, (payload, context) -> {
 			ServerPlayer player = context.player();
 			player.level().getServer().execute(() -> tryReweave(player));
@@ -56,14 +56,14 @@ public final class ReweavingNetworking {
 				return;
 			}
 			BlockState state = serverLevel.getBlockState(pos);
-			if (!state.is(AttunedContent.ALTAR_OF_REWEAVING)) {
+			if (!state.is(AttunedContent.ALTAR_OF_REWEAVING.get())) {
 				return;
 			}
-			if (!player.isWithinBlockInteractionRange(pos, 4.0)) {
+			if (!withinInteractionRange(player, pos, 4.0)) {
 				return;
 			}
 			Container container = menu.container();
-			Registry<FocusDefinition> registry =
+			HolderLookup.RegistryLookup<FocusDefinition> registry =
 				serverLevel.registryAccess().lookupOrThrow(AttunedRegistries.FOCUS_DEFINITIONS);
 			if (!container.getItem(ReweavingMenu.OUTPUT_SLOT).isEmpty()) {
 				return;
@@ -112,6 +112,13 @@ public final class ReweavingNetworking {
 		});
 	}
 
+	private static boolean withinInteractionRange(ServerPlayer player, net.minecraft.core.BlockPos pos, double range) {
+		double x = pos.getX() + 0.5D;
+		double y = pos.getY() + 0.5D;
+		double z = pos.getZ() + 0.5D;
+		return player.distanceToSqr(x, y, z) <= range * range;
+	}
+
 	/**
 	 * A fresh, single Tempered copy of the Focus in the first input slot. Carries
 	 * nothing from the inputs beyond the item itself plus the Tempered marker, so
@@ -127,17 +134,18 @@ public final class ReweavingNetworking {
 		return tempered;
 	}
 
-	private static boolean hasThreeFociAndFragment(Container container, Registry<FocusDefinition> registry) {
+	private static boolean hasThreeFociAndFragment(Container container,
+			HolderLookup.RegistryLookup<FocusDefinition> registry) {
 		for (int i = 0; i < ReweavingMenu.FOCUS_INPUTS; i++) {
 			if (focusDefinitionFor(registry, container.getItem(i)).isEmpty()) {
 				return false;
 			}
 		}
-		return container.getItem(ReweavingMenu.CATALYST_SLOT).is(AttunedContent.ATTUNEMENT_SHARD_FRAGMENT);
+		return AttunedContent.is(container.getItem(ReweavingMenu.CATALYST_SLOT), AttunedContent.ATTUNEMENT_SHARD_FRAGMENT);
 	}
 
 	private static ItemStack rollAffinityLoom(ServerLevel level, Container container,
-			Registry<FocusDefinition> registry) {
+			HolderLookup.RegistryLookup<FocusDefinition> registry) {
 		ItemStack input = container.getItem(0);
 		Optional<FocusDefinition> inputDef = focusDefinitionFor(registry, input);
 		if (inputDef.isEmpty()) {
@@ -152,7 +160,7 @@ public final class ReweavingNetworking {
 		if (picked.isEmpty()) {
 			return ItemStack.EMPTY;
 		}
-		Item item = BuiltInRegistries.ITEM.getValue(identifier(picked.get()));
+		Item item = BuiltInRegistries.ITEM.getValue(Identifier(picked.get()));
 		if (item == Items.AIR) {
 			Attuned.LOGGER.warn("Affinity Loom picked unknown Focus item id {}", picked.get());
 			return ItemStack.EMPTY;
@@ -161,7 +169,7 @@ public final class ReweavingNetworking {
 	}
 
 	private static ItemStack rollResult(ServerPlayer player, ServerLevel level, Container container,
-			Registry<FocusDefinition> registry) {
+			HolderLookup.RegistryLookup<FocusDefinition> registry) {
 		List<ReweavingResultPicker.Candidate> candidates = focusCandidates(registry);
 		Set<String> sacrificedIds = sacrificedIds(container, registry);
 		Optional<String> committedAffinity =
@@ -171,7 +179,7 @@ public final class ReweavingNetworking {
 		if (picked.isEmpty()) {
 			return ItemStack.EMPTY;
 		}
-		Item item = BuiltInRegistries.ITEM.getValue(identifier(picked.get()));
+		Item item = BuiltInRegistries.ITEM.getValue(Identifier(picked.get()));
 		if (item == Items.AIR) {
 			Attuned.LOGGER.warn("Reweaving picked unknown Focus item id {}", picked.get());
 			return ItemStack.EMPTY;
@@ -179,15 +187,18 @@ public final class ReweavingNetworking {
 		return new ItemStack(item);
 	}
 
-	private static List<ReweavingResultPicker.Candidate> focusCandidates(Registry<FocusDefinition> registry) {
-		return registry.stream()
+	private static List<ReweavingResultPicker.Candidate> focusCandidates(
+			HolderLookup.RegistryLookup<FocusDefinition> registry) {
+		return registry.listElements()
+			.map(holder -> holder.value())
 			.map(def -> new ReweavingResultPicker.Candidate(
 				BuiltInRegistries.ITEM.getKey(def.item().value()).toString(),
 				def.affinity().map(affinity -> affinity.getSerializedName())))
 			.toList();
 	}
 
-	private static Set<String> sacrificedIds(Container container, Registry<FocusDefinition> registry) {
+	private static Set<String> sacrificedIds(Container container,
+			HolderLookup.RegistryLookup<FocusDefinition> registry) {
 		Set<String> ids = new TreeSet<>();
 		for (int i = 0; i < ReweavingMenu.FOCUS_INPUTS; i++) {
 			ItemStack stack = container.getItem(i);
@@ -198,14 +209,15 @@ public final class ReweavingNetworking {
 		return ids;
 	}
 
-	private static Optional<FocusDefinition> focusDefinitionFor(Registry<FocusDefinition> registry, ItemStack stack) {
+	private static Optional<FocusDefinition> focusDefinitionFor(
+			HolderLookup.RegistryLookup<FocusDefinition> registry, ItemStack stack) {
 		if (stack.isEmpty()) {
 			return Optional.empty();
 		}
 		return FocusLookup.forItem(registry, stack.getItem());
 	}
 
-	private static Identifier identifier(String id) {
+	private static Identifier Identifier(String id) {
 		String[] parts = id.split(":", 2);
 		if (parts.length == 2) {
 			return Identifier.fromNamespaceAndPath(parts[0], parts[1]);

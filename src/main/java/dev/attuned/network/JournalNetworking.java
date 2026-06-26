@@ -13,8 +13,9 @@ public final class JournalNetworking {
 			return;
 		}
 		initialized = true;
-		PayloadTypeRegistry.clientboundPlay().register(OpenJournalPayload.TYPE, OpenJournalPayload.CODEC);
-		PayloadTypeRegistry.clientboundPlay().register(TremorOreHintPayload.TYPE, TremorOreHintPayload.CODEC);
-		PayloadTypeRegistry.clientboundPlay().register(FocusAbilityStatusPayload.TYPE, FocusAbilityStatusPayload.CODEC);
+		PayloadTypeRegistry.playS2C().register(OpenJournalPayload.TYPE, OpenJournalPayload.CODEC);
+		PayloadTypeRegistry.playS2C().register(TremorOreHintPayload.TYPE, TremorOreHintPayload.CODEC);
+		PayloadTypeRegistry.playS2C().register(FocusAbilityStatusPayload.TYPE, FocusAbilityStatusPayload.CODEC);
+		PayloadTypeRegistry.playS2C().register(AttunementStatePayload.TYPE, AttunementStatePayload.CODEC);
 	}
 }

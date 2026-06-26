@@ -59,7 +59,7 @@ class FocusPresetTest {
 	@Test
 	void presetReadsClampOldPersistedListsToTheMaxPresetCap() throws IOException {
 		String attachments = read(ATTACHMENTS);
-		assertTrue(attachments.contains("return normalizePresets(player.getAttachedOrElse(PRESETS, List.of()));"),
+		assertTrue(attachments.contains("return normalizePresets(get(player, PRESETS, List.of()));"),
 			"Preset reads should clamp old persisted/synced lists instead of exposing more than MAX_PRESETS.");
 		assertTrue(attachments.contains("private static List<FocusPreset> normalizePresets(List<FocusPreset> presets)"),
 			"Preset list normalization should be centralized.");
