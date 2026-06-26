@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraftforge.client.event.RenderGameOverlayEvent;
+import net.minecraftforge.common.MinecraftForge;
 
 public final class HudRenderCallback {
 	public static final Event EVENT = new Event();
@@ -13,8 +15,21 @@ public final class HudRenderCallback {
 	public static final class Event {
 		private final List<Callback> callbacks = new ArrayList<>();
 
+		private Event() {
+			MinecraftForge.EVENT_BUS.addListener(this::onRender);
+		}
+
 		public void register(Callback callback) {
 			callbacks.add(Objects.requireNonNull(callback, "callback"));
+		}
+
+		private void onRender(RenderGameOverlayEvent.Post event) {
+			if (event.getType() != RenderGameOverlayEvent.ElementType.ALL) {
+				return;
+			}
+			for (Callback callback : List.copyOf(callbacks)) {
+				callback.onHudRender(event.getMatrixStack(), event.getPartialTicks());
+			}
 		}
 	}
 
