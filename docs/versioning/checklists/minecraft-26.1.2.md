@@ -13,6 +13,12 @@ Branch: `maintenance/minecraft-26.1.2`
 - Loader range for metadata/docs: `>=0.19.3`
 - Status: `maintenance`
 
+This checklist covers the Fabric maintenance artifact. A Quilt-native,
+Forge, or NeoForge file needs a separate loader checklist, build, metadata dry
+run, server smoke, and client smoke before publication.
+Quilt compatibility needs Quilt Loader + QFAPI dependency evidence, server
+smoke, and client smoke before it is listed as compatible.
+
 ## 1. Branch and Mechanical Retarget
 
 - [ ] Start from green `latest`: `git checkout latest && git pull --ff-only origin latest`.

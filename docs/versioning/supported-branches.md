@@ -38,6 +38,22 @@ legacy rewrite track should become a separate project plan because this Fabric
 mod's loader metadata, resource pack layout, Fabric API dependency, and modern
 Minecraft APIs do not map to those versions as a small profile change.
 
+## Loader Tracks
+
+| Loader track | Status | Branch/documentation policy |
+| --- | --- | --- |
+| Fabric | Current implemented and published loader | Keep using `latest`, maintenance branches, and `config/minecraft-version-profiles.json` for Fabric Minecraft-version work. |
+| Quilt compatibility | Documented validation track, no verified compatibility claim yet | Test the Fabric jar on Quilt Loader + QFAPI per Minecraft version before documenting compatibility. |
+| Quilt native | `quilt/1.19.2` and `quilt/1.20.6` branch build/server-smoke candidates | Use a separate Quilt branch or future module with `quilt.mod.json`, Quilt metadata, build evidence, server/client smoke tests, hands-on HUD smoke, and Quilt platform tags before release. |
+| NeoForge | `neoforge/1.20.6`, `neoforge/1.21.1`, `neoforge/1.21.11`, `neoforge/26.1.2`, and `neoforge/26.2` branch build/server-smoke candidates; `neoforge/1.20.1` blocked behind legacy coordinate work | Use a separate NeoForge branch or future module, with loader-specific metadata, state/networking adapters, server/client smoke tests, hands-on HUD smoke, and NeoForge platform tags before release. |
+| Forge | Branch build candidates across 1.18.2 through 26.2 | Use a separate Forge branch or future module, with loader-specific metadata, state/networking adapters, server/client smoke tests, hands-on HUD smoke, and Forge platform tags before release. |
+
+Quilt, Forge, and NeoForge work is not a branch-local Fabric profile change. Use
+`docs/loader-support.md` and
+`docs/superpowers/plans/2026-06-25-loader-port-roadmap.md` to decide what
+remains common and what needs a loader adapter before promoting any non-Fabric
+branch to supported.
+
 ## Verification Results - 2026-06-16
 
 All branches below were pushed to `origin` after their branch-local version

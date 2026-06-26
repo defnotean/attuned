@@ -1,0 +1,944 @@
+{
+  "active_loader": "fabric-26.2",
+  "profiles": [
+    {
+      "id": "fabric-26.2",
+      "loader": "fabric",
+      "minecraft_version": "26.2",
+      "java_version": "25",
+      "status": "current",
+      "artifact": "build/libs/attuned-1.5.2.jar",
+      "branch": "latest",
+      "metadata": {
+        "api_dependency": "fabric-api >=0.152.1+26.2",
+        "gradle_plugin": "net.fabricmc.fabric-loom",
+        "loader_dependency": "fabricloader >=0.19.3",
+        "mod_file": "src/main/resources/fabric.mod.json"
+      },
+      "verification": [
+        "python tools/verify_repository.py",
+        "python -B -m unittest discover -s tests",
+        ".\\gradlew.bat build --no-daemon",
+        "python tools/minecraft_runtime_smoke.py --accept-eula --timeout 240 --stop-timeout 60"
+      ],
+      "notes": [
+        "Current shipping Fabric artifact.",
+        "Protect this profile while adding other loader tracks."
+      ]
+    },
+    {
+      "id": "fabric-26.1.2",
+      "loader": "fabric",
+      "minecraft_version": "26.1.2",
+      "java_version": "25",
+      "status": "maintenance",
+      "artifact": "build/libs/attuned-<version>-fabric-26.1.2.jar",
+      "branch": "maintenance/minecraft-26.1.2",
+      "metadata": {
+        "api_dependency": "fabric-api >=0.152.1+26.1.2",
+        "gradle_plugin": "net.fabricmc.fabric-loom",
+        "loader_dependency": "fabricloader >=0.19.3",
+        "mod_file": "src/main/resources/fabric.mod.json"
+      },
+      "verification": [
+        "python tools/verify_repository.py",
+        "python -B -m unittest discover -s tests",
+        ".\\gradlew.bat build --no-daemon",
+        "python tools/minecraft_runtime_smoke.py --accept-eula --timeout 240 --stop-timeout 60"
+      ],
+      "notes": [
+        "Fabric maintenance profile mirroring config/minecraft-version-profiles.json."
+      ]
+    },
+    {
+      "id": "fabric-1.21.11",
+      "loader": "fabric",
+      "minecraft_version": "1.21.11",
+      "java_version": "21",
+      "status": "maintenance",
+      "artifact": "build/libs/attuned-<version>-fabric-1.21.11.jar",
+      "branch": "maintenance/minecraft-1.21.11",
+      "metadata": {
+        "api_dependency": "fabric-api >=0.141.4+1.21.11",
+        "gradle_plugin": "net.fabricmc.fabric-loom",
+        "loader_dependency": "fabricloader >=0.19.3",
+        "mod_file": "src/main/resources/fabric.mod.json"
+      },
+      "verification": [
+        "python tools/verify_repository.py",
+        "python -B -m unittest discover -s tests",
+        ".\\gradlew.bat build --no-daemon",
+        "python tools/minecraft_runtime_smoke.py --accept-eula --timeout 240 --stop-timeout 60"
+      ],
+      "notes": [
+        "Fabric maintenance profile for the 1.21 line."
+      ]
+    },
+    {
+      "id": "fabric-1.20.6",
+      "loader": "fabric",
+      "minecraft_version": "1.20.6",
+      "java_version": "21",
+      "status": "maintenance",
+      "artifact": "build/libs/attuned-<version>-fabric-1.20.6.jar",
+      "branch": "maintenance/minecraft-1.20.6",
+      "metadata": {
+        "api_dependency": "fabric-api >=0.100.8+1.20.6",
+        "gradle_plugin": "net.fabricmc.fabric-loom",
+        "loader_dependency": "fabricloader >=0.19.3",
+        "mod_file": "src/main/resources/fabric.mod.json"
+      },
+      "verification": [
+        "python tools/verify_repository.py",
+        "python -B -m unittest discover -s tests",
+        ".\\gradlew.bat build --no-daemon",
+        "python tools/minecraft_runtime_smoke.py --accept-eula --timeout 240 --stop-timeout 60"
+      ],
+      "notes": [
+        "Fabric maintenance profile for the 1.20 line."
+      ]
+    },
+    {
+      "id": "fabric-1.19.4",
+      "loader": "fabric",
+      "minecraft_version": "1.19.4",
+      "java_version": "17",
+      "status": "maintenance",
+      "artifact": "build/libs/attuned-<version>-fabric-1.19.4.jar",
+      "branch": "maintenance/minecraft-1.19.4",
+      "metadata": {
+        "api_dependency": "fabric-api >=0.87.2+1.19.4",
+        "gradle_plugin": "net.fabricmc.fabric-loom",
+        "loader_dependency": "fabricloader >=0.19.3",
+        "mod_file": "src/main/resources/fabric.mod.json"
+      },
+      "verification": [
+        "python tools/verify_repository.py",
+        "python -B -m unittest discover -s tests",
+        ".\\gradlew.bat build --no-daemon",
+        "python tools/minecraft_runtime_smoke.py --accept-eula --timeout 240 --stop-timeout 60"
+      ],
+      "notes": [
+        "Fabric maintenance profile for the 1.19 line."
+      ]
+    },
+    {
+      "id": "fabric-1.18.2",
+      "loader": "fabric",
+      "minecraft_version": "1.18.2",
+      "java_version": "17",
+      "status": "maintenance",
+      "artifact": "build/libs/attuned-<version>-fabric-1.18.2.jar",
+      "branch": "maintenance/minecraft-1.18.2",
+      "metadata": {
+        "api_dependency": "fabric-api >=0.77.0+1.18.2",
+        "gradle_plugin": "net.fabricmc.fabric-loom",
+        "loader_dependency": "fabricloader >=0.19.3",
+        "mod_file": "src/main/resources/fabric.mod.json"
+      },
+      "verification": [
+        "python tools/verify_repository.py",
+        "python -B -m unittest discover -s tests",
+        ".\\gradlew.bat build --no-daemon",
+        "python tools/minecraft_runtime_smoke.py --accept-eula --timeout 240 --stop-timeout 60"
+      ],
+      "notes": [
+        "Fabric maintenance profile for the 1.18 line."
+      ]
+    },
+    {
+      "id": "quilt-compat-26.2",
+      "loader": "quilt-compat",
+      "minecraft_version": "26.2",
+      "java_version": "25",
+      "status": "blocked",
+      "artifact": "Existing Fabric jar tested on Quilt Loader and QFAPI when matching dependencies exist.",
+      "branch": "port/quilt-compat-26x",
+      "metadata": {
+        "api_dependency": "QFAPI for the target Minecraft version",
+        "mod_file": "src/main/resources/fabric.mod.json",
+        "runtime_loader": "quilt-loader"
+      },
+      "verification": [
+        "Confirm Quilt Loader and QFAPI versions exist for the Minecraft target before runtime smoke",
+        "python tools/verify_repository.py",
+        "Quilt dedicated server smoke",
+        "Quilt client smoke"
+      ],
+      "notes": [
+        "Compatibility track only.",
+        "Current audit found no matching QFAPI support for the 26.x target, so this cannot be claimed compatible yet.",
+        "Do not relabel the Fabric jar as a Quilt-native artifact."
+      ]
+    },
+    {
+      "id": "quilt-compat-1.21.11",
+      "loader": "quilt-compat",
+      "minecraft_version": "1.21.11",
+      "java_version": "21",
+      "status": "blocked",
+      "artifact": "Existing 1.21.11 Fabric jar tested on Quilt Loader and QFAPI.",
+      "branch": "port/quilt-compat-1.21.11",
+      "metadata": {
+        "api_dependency": "QFAPI for 1.21.11",
+        "mod_file": "src/main/resources/fabric.mod.json",
+        "runtime_loader": "quilt-loader"
+      },
+      "verification": [
+        "Confirm Quilt Loader and QFAPI versions exist for 1.21.11",
+        "python tools/verify_repository.py",
+        "Quilt dedicated server smoke",
+        "Quilt client smoke"
+      ],
+      "notes": [
+        "Current audit found no matching 1.21.11 QFAPI line, so this cannot be claimed compatible yet.",
+        "Use the matching Fabric maintenance branch as the artifact source."
+      ]
+    },
+    {
+      "id": "quilt-compat-1.20.6",
+      "loader": "quilt-compat",
+      "minecraft_version": "1.20.6",
+      "java_version": "21",
+      "status": "planned",
+      "artifact": "Existing 1.20.6 Fabric jar tested on Quilt Loader and QFAPI.",
+      "branch": "port/quilt-compat-1.20.6",
+      "metadata": {
+        "api_dependency": "QFAPI for 1.20.6",
+        "mod_file": "src/main/resources/fabric.mod.json",
+        "runtime_loader": "quilt-loader"
+      },
+      "verification": [
+        "Confirm Quilt Loader and QFAPI versions exist for 1.20.6",
+        "python tools/verify_repository.py",
+        "Quilt dedicated server smoke",
+        "Quilt client smoke"
+      ],
+      "notes": [
+        "Newest plausible Quilt compatibility target found in the audit, but QFAPI embeds a slightly older Fabric API line than this branch.",
+        "Use the matching Fabric maintenance branch as the artifact source only after dependency resolution is confirmed."
+      ]
+    },
+    {
+      "id": "quilt-compat-1.19.2",
+      "loader": "quilt-compat",
+      "minecraft_version": "1.19.2",
+      "java_version": "17",
+      "status": "planned",
+      "artifact": "Existing 1.19.2 Fabric jar tested on Quilt Loader and QFAPI.",
+      "branch": "port/quilt-compat-1.19.2",
+      "metadata": {
+        "api_dependency": "QFAPI 4.0.0-beta.30+0.77.0-1.19.2",
+        "fabric_api_source": "fabric-api 0.77.0+1.19.2",
+        "mod_file": "src/main/resources/fabric.mod.json",
+        "runtime_loader": "quilt-loader"
+      },
+      "verification": [
+        "Confirm Quilt Loader and QFAPI resolve for 1.19.2",
+        "python tools/verify_repository.py",
+        "Quilt dedicated server smoke",
+        "Quilt client smoke",
+        "Hands-on state, HUD, keybind, screen, and networking smoke"
+      ],
+      "notes": [
+        "Recommended first Quilt compatibility proof target from the 2026-06-25 audit because Fabric API 0.77.0+1.19.2 matches the available QFAPI line exactly.",
+        "This remains a compatibility test of the Fabric artifact, not a native Quilt jar.",
+        "Do not document Quilt compatibility until the server and client smokes pass."
+      ]
+    },
+    {
+      "id": "quilt-native-26.2",
+      "loader": "quilt",
+      "minecraft_version": "26.2",
+      "java_version": "25",
+      "status": "blocked",
+      "artifact": "Dedicated Quilt jar after quilt.mod.json and Quilt build are implemented.",
+      "branch": "port/quilt-native-26x",
+      "metadata": {
+        "api_dependency": "QFAPI target version",
+        "gradle_plugin": "org.quiltmc.loom",
+        "loader_dependency": "quilt_loader target version",
+        "mod_file": "src/main/resources/quilt.mod.json"
+      },
+      "verification": [
+        "python tools/verify_repository.py",
+        "Quilt build",
+        "Quilt dedicated server smoke",
+        "Quilt client smoke"
+      ],
+      "notes": [
+        "Native Quilt cannot reuse Fabric initializer classes directly; add Quilt initializer adapters before adding quilt.mod.json.",
+        "Current audit found no matching QFAPI support for 26.x.",
+        "Start only after compatibility smoke determines whether a native artifact is needed.",
+        "Native Quilt metadata must not be committed to latest until a Quilt build task exists."
+      ]
+    },
+    {
+      "id": "quilt-native-26.1.2",
+      "loader": "quilt",
+      "minecraft_version": "26.1.2",
+      "java_version": "25",
+      "status": "blocked",
+      "artifact": "Dedicated Quilt jar after a 26.x Quilt API/runtime strategy exists.",
+      "branch": "port/quilt-native-26.1.2",
+      "metadata": {
+        "api_dependency": "No matching QFAPI strategy confirmed for 26.1.2",
+        "gradle_plugin": "org.quiltmc.loom",
+        "loader_dependency": "quilt_loader target version",
+        "mod_file": "src/main/resources/quilt.mod.json"
+      },
+      "verification": [
+        "Confirm Quilt Loader and QFAPI or Fabric API compatibility strategy for 26.1.2",
+        "python -m pytest tests/test_quilt_scaffold_contract.py -q",
+        ".\\gradlew.bat compileJava compileClientJava --no-daemon --stacktrace",
+        ".\\gradlew.bat build --no-daemon --stacktrace",
+        "Quilt dedicated server smoke",
+        "Quilt client smoke",
+        "Hands-on combat HUD smoke"
+      ],
+      "notes": [
+        "Blocked with the 26.x Quilt line until a matching API/runtime strategy exists.",
+        "Do not copy the 1.20.6 QFAPI setup forward without dependency resolution, server smoke, and client smoke."
+      ]
+    },
+    {
+      "id": "quilt-native-1.21.1",
+      "loader": "quilt",
+      "minecraft_version": "1.21.1",
+      "java_version": "21",
+      "status": "planned",
+      "artifact": "Dedicated Quilt jar after Quilt metadata, dependencies, build, and smokes are implemented.",
+      "branch": "port/quilt-native-1.21.1",
+      "metadata": {
+        "api_dependency": "Target-specific QFAPI or Fabric API compatibility strategy",
+        "gradle_plugin": "org.quiltmc.loom",
+        "loader_dependency": "quilt_loader target version",
+        "mod_file": "src/main/resources/quilt.mod.json"
+      },
+      "verification": [
+        "Confirm Quilt Loader and QFAPI or Fabric API compatibility strategy for 1.21.1",
+        "python -m pytest tests/test_quilt_scaffold_contract.py -q",
+        ".\\gradlew.bat compileJava compileClientJava --no-daemon --stacktrace",
+        ".\\gradlew.bat build --no-daemon --stacktrace",
+        "Quilt dedicated server smoke",
+        "Quilt client smoke",
+        "Hands-on combat HUD smoke"
+      ],
+      "notes": [
+        "Planned native Quilt target.",
+        "Start from the verified 1.20.6 metadata/entrypoint/HUD-sync pattern only after dependencies resolve for this Minecraft version."
+      ]
+    },
+    {
+      "id": "quilt-native-1.20.1",
+      "loader": "quilt",
+      "minecraft_version": "1.20.1",
+      "java_version": "17",
+      "status": "planned",
+      "artifact": "Dedicated Quilt jar after Quilt metadata, dependencies, build, and smokes are implemented.",
+      "branch": "port/quilt-native-1.20.1",
+      "metadata": {
+        "api_dependency": "Target-specific QFAPI or Fabric API compatibility strategy",
+        "gradle_plugin": "org.quiltmc.loom",
+        "loader_dependency": "quilt_loader target version",
+        "mod_file": "src/main/resources/quilt.mod.json"
+      },
+      "verification": [
+        "Confirm Quilt Loader and QFAPI or Fabric API compatibility strategy for 1.20.1",
+        "python -m pytest tests/test_quilt_scaffold_contract.py -q",
+        ".\\gradlew.bat compileJava compileClientJava --no-daemon --stacktrace",
+        ".\\gradlew.bat build --no-daemon --stacktrace",
+        "Quilt dedicated server smoke",
+        "Quilt client smoke",
+        "Hands-on combat HUD smoke"
+      ],
+      "notes": [
+        "Planned native Quilt target for the high-demand 1.20.1 modpack line.",
+        "Do not claim compatibility until both server and client smokes pass with the exact dependency tuple."
+      ]
+    },
+    {
+      "id": "quilt-native-1.19.4",
+      "loader": "quilt",
+      "minecraft_version": "1.19.4",
+      "java_version": "17",
+      "status": "planned",
+      "artifact": "Dedicated Quilt jar after Quilt metadata, dependencies, build, and smokes are implemented.",
+      "branch": "port/quilt-native-1.19.4",
+      "metadata": {
+        "api_dependency": "Target-specific QFAPI or Fabric API compatibility strategy",
+        "gradle_plugin": "org.quiltmc.loom",
+        "loader_dependency": "quilt_loader target version",
+        "mod_file": "src/main/resources/quilt.mod.json"
+      },
+      "verification": [
+        "Confirm Quilt Loader and QFAPI or Fabric API compatibility strategy for 1.19.4",
+        "python -m pytest tests/test_quilt_scaffold_contract.py -q",
+        ".\\gradlew.bat compileJava compileClientJava --no-daemon --stacktrace",
+        ".\\gradlew.bat build --no-daemon --stacktrace",
+        "Quilt dedicated server smoke",
+        "Quilt client smoke",
+        "Hands-on combat HUD smoke"
+      ],
+      "notes": [
+        "Planned native Quilt target.",
+        "Keep this behind the verified 1.19.2 and 1.20.6 candidates until its dependency tuple is proven."
+      ]
+    },
+    {
+      "id": "quilt-native-1.18.2",
+      "loader": "quilt",
+      "minecraft_version": "1.18.2",
+      "java_version": "17",
+      "status": "planned",
+      "artifact": "Dedicated Quilt jar after Quilt metadata, dependencies, build, and smokes are implemented.",
+      "branch": "port/quilt-native-1.18.2",
+      "metadata": {
+        "api_dependency": "Target-specific QFAPI or Fabric API compatibility strategy",
+        "gradle_plugin": "org.quiltmc.loom",
+        "loader_dependency": "quilt_loader target version",
+        "mod_file": "src/main/resources/quilt.mod.json"
+      },
+      "verification": [
+        "Confirm Quilt Loader and QFAPI or Fabric API compatibility strategy for 1.18.2",
+        "python -m pytest tests/test_quilt_scaffold_contract.py -q",
+        ".\\gradlew.bat compileJava compileClientJava --no-daemon --stacktrace",
+        ".\\gradlew.bat build --no-daemon --stacktrace",
+        "Quilt dedicated server smoke",
+        "Quilt client smoke",
+        "Hands-on combat HUD smoke"
+      ],
+      "notes": [
+        "Planned native Quilt target.",
+        "Treat as lower priority than the verified 1.19.2 and 1.20.6 candidates unless user demand changes."
+      ]
+    },
+    {
+      "id": "quilt-native-1.19.2",
+      "loader": "quilt",
+      "minecraft_version": "1.19.2",
+      "java_version": "17",
+      "status": "candidate",
+      "artifact": "Dedicated Quilt branch build/server-smoke candidate; release needs client runtime smoke and hands-on combat HUD smoke.",
+      "branch": "quilt/1.19.2",
+      "metadata": {
+        "api_dependency": "Fabric API 0.77.0+1.19.2 supplied to Quilt Loader through loader.addMods",
+        "gradle_plugin": "org.quiltmc.loom 1.15.1",
+        "loader_dependency": "Quilt Loader 0.17.8",
+        "mod_file": "src/main/resources/quilt.mod.json",
+        "native_entrypoints": "dev.attuned.quilt.AttunedQuilt and dev.attuned.quilt.AttunedQuiltClient",
+        "rejected_qfapi": "QFAPI/QSL 1.19.2 aggregate and split-module paths fail dev runtime resolution under the audited loader/metadata combination"
+      },
+      "verification": [
+        "python -m pytest tests/test_quilt_scaffold_contract.py -q",
+        ".\\gradlew.bat dependencies --write-locks --no-daemon --stacktrace",
+        ".\\gradlew.bat build --no-daemon --stacktrace",
+        ".\\gradlew.bat runServer --no-daemon --stacktrace (2026-06-25 reached Attuned initializing and server Done)",
+        "Quilt client smoke",
+        "Hands-on combat HUD smoke"
+      ],
+      "notes": [
+        "quilt/1.19.2 now has Quilt Loom, quilt.mod.json, Quilt Loader dependency metadata, Quilt entrypoint adapters, an Attuned-owned access widener, Quilt Modrinth loader tags, and Fabric API compatibility supplied as the original aggregate jar through loader.addMods.",
+        "The 2026-06-25 audit rejected QFAPI/QSL for this old branch because aggregate remapping drops nested module metadata, split QFAPI modules leave Fabric-id dependencies unsatisfied in this loader line, and newer Quilt Loader strict parsing rejects old QFAPI metadata.",
+        "Server-side runtime proof passes: Quilt Loader loads Attuned plus Fabric API compatibility modules, logs Attuned initializing, and reaches server Done.",
+        "Do not publish or claim public Quilt support until client smoke and hands-on resonance HUD fill verification pass."
+      ]
+    },
+    {
+      "id": "quilt-native-1.20.6",
+      "loader": "quilt",
+      "minecraft_version": "1.20.6",
+      "java_version": "21",
+      "status": "candidate",
+      "artifact": "Dedicated Quilt branch build/server-smoke candidate; release needs client runtime smoke and hands-on combat HUD smoke.",
+      "branch": "quilt/1.20.6",
+      "metadata": {
+        "api_dependency": "QFAPI 10.0.0-alpha.3+0.100.4-1.20.6",
+        "gradle_plugin": "org.quiltmc.loom 1.15.1",
+        "loader_dependency": "Quilt Loader 0.30.0-beta.8",
+        "mod_file": "src/main/resources/quilt.mod.json",
+        "native_entrypoints": "dev.attuned.quilt.AttunedQuilt and dev.attuned.quilt.AttunedQuiltClient",
+        "resonance_sync": "client AttunementStateClient applies synced owner state and invalidates AttunementReadout"
+      },
+      "verification": [
+        "python -m pytest tests/test_quilt_scaffold_contract.py -q",
+        ".\\gradlew.bat compileJava compileClientJava --no-daemon --stacktrace",
+        ".\\gradlew.bat build --no-daemon --stacktrace",
+        ".\\gradlew.bat runServer --no-daemon --stacktrace (2026-06-26 reached Attuned initializing and server Done; stopped cleanly)",
+        "Quilt client smoke",
+        "Hands-on combat HUD smoke"
+      ],
+      "notes": [
+        "quilt/1.20.6 has Quilt Loom, quilt.mod.json, Quilt Loader dependency metadata, Quilt entrypoint adapters, QFAPI dependency wiring, Quilt Modrinth tags, and the owner-state HUD cache invalidation path.",
+        "The 2026-06-26 pass added AttunementReadout invalidation after synced owner state applies so the resonance HUD does not read stale client cache data.",
+        "Scaffold pytest, common/client compilation, full Gradle build, and a headless dedicated server startup to Done pass locally as of 2026-06-26.",
+        "The second server-log audit found no ModNioResourcePack, NoSuchFileException, ERROR, or Exception entries after resource directory mirroring was added.",
+        "Do not publish or claim public Quilt support until client smoke and hands-on resonance HUD fill verification pass."
+      ]
+    },
+    {
+      "id": "neoforge-1.20.1",
+      "loader": "neoforge",
+      "minecraft_version": "1.20.1",
+      "java_version": "17",
+      "status": "blocked",
+      "artifact": "Dedicated NeoForge 1.20.1 jar after the legacy NeoForge coordinate strategy is implemented.",
+      "branch": "port/neoforge-1.20.1-legacy",
+      "metadata": {
+        "gradle_plugin": "Legacy NeoForge/ForgeGradle or a dedicated legacy ModDevGradle setup, not the modern net.neoforged:neoforge path",
+        "loader_dependency": "Legacy NeoForge coordinate net.neoforged:forge:1.20.1-47.1.106",
+        "mod_file": "src/main/resources/META-INF/neoforge.mods.toml",
+        "networking": "RegisterPayloadHandlersEvent and PayloadRegistrar",
+        "state_storage": "NeoForge persistent player bridge with explicit owner-state payload sync"
+      },
+      "verification": [
+        "Confirm the legacy net.neoforged:forge coordinate strategy and Gradle plugin surface",
+        "python -m pytest tests/test_neoforge_scaffold_contract.py -q",
+        ".\\gradlew.bat compileJava compileClientJava --no-daemon --stacktrace",
+        ".\\gradlew.bat build --no-daemon --stacktrace",
+        "NeoForge dedicated server smoke",
+        "NeoForge client smoke",
+        "Hands-on combat HUD smoke"
+      ],
+      "notes": [
+        "The current official modern NeoForge artifact stream does not provide a net.neoforged:neoforge 1.20.1 coordinate; 1.20.1 uses the older net.neoforged:forge namespace.",
+        "Do not copy the 1.20.6/1.21.1 ModDevGradle setup blindly onto 1.20.1.",
+        "Keep this blocked until the legacy coordinate compiles, builds, reaches server Done, and proves the owner-state resonance HUD path on the client."
+      ]
+    },
+    {
+      "id": "neoforge-1.21.1",
+      "loader": "neoforge",
+      "minecraft_version": "1.21.1",
+      "java_version": "21",
+      "status": "candidate",
+      "artifact": "Dedicated NeoForge branch build/server-smoke candidate; release needs client runtime smoke and hands-on combat HUD smoke.",
+      "branch": "neoforge/1.21.1",
+      "metadata": {
+        "gradle_plugin": "ModDevGradle 2.0.141",
+        "loader_dependency": "NeoForge 21.1.234",
+        "mod_file": "src/main/resources/META-INF/neoforge.mods.toml",
+        "networking": "RegisterPayloadHandlersEvent and PayloadRegistrar",
+        "state_storage": "NeoForge-backed Fabric compatibility shim with codec-backed persistent player data bridge and explicit owner-state payload sync"
+      },
+      "verification": [
+        "python -m pytest tests/test_neoforge_scaffold_contract.py -q",
+        ".\\gradlew.bat compileJava --no-daemon --stacktrace",
+        ".\\gradlew.bat compileClientJava --no-daemon --stacktrace",
+        ".\\gradlew.bat build --no-daemon --stacktrace",
+        ".\\gradlew.bat runServer --no-daemon --stacktrace (2026-06-25 reached Attuned initializing and server Done after explicit owner-state payload registration; stopped after startup because Gradle stdin was unavailable)",
+        "NeoForge client smoke",
+        "Hands-on combat HUD smoke"
+      ],
+      "notes": [
+        "neoforge/1.21.1 has ModDevGradle metadata, neoforge.mods.toml, @Mod entrypoint wiring, Fabric-shaped NeoForge shims, persistent player state bridge, payload registration, client key/HUD/screen hooks, and optional Lootr metadata.",
+        "2026-06-25 patch adds explicit owner-client AttunementStatePayload sync because attachment sync is a local compatibility shim, registers the client receiver, and invalidates AttunementReadout after applying mirrored state; this is the resonance HUD fill path.",
+        "compileJava, compileClientJava, pytest scaffold contracts, full Gradle build, and a headless dedicated server startup pass locally as of 2026-06-25.",
+        "Do not publish or claim public NeoForge support until client smoke and hands-on resonance HUD fill verification pass."
+      ]
+    },
+    {
+      "id": "neoforge-1.20.6",
+      "loader": "neoforge",
+      "minecraft_version": "1.20.6",
+      "java_version": "21",
+      "status": "candidate",
+      "artifact": "Dedicated NeoForge branch build/server-smoke candidate; release needs client runtime smoke and hands-on combat HUD smoke.",
+      "branch": "neoforge/1.20.6",
+      "metadata": {
+        "gradle_plugin": "ModDevGradle 2.0.141",
+        "loader_dependency": "NeoForge 20.6.139",
+        "mod_file": "src/main/resources/META-INF/neoforge.mods.toml",
+        "networking": "RegisterPayloadHandlersEvent and PayloadRegistrar",
+        "state_storage": "NeoForge-backed Fabric compatibility shim with codec-backed persistent player data bridge and explicit owner-state payload sync"
+      },
+      "verification": [
+        "python -m pytest tests/test_neoforge_scaffold_contract.py -q",
+        ".\\gradlew.bat compileJava --no-daemon --stacktrace",
+        ".\\gradlew.bat compileClientJava --no-daemon --stacktrace",
+        ".\\gradlew.bat build --no-daemon --stacktrace",
+        ".\\gradlew.bat runServer --no-daemon --stacktrace (2026-06-25 reached Done; stopped after startup because Gradle stdin was unavailable)",
+        "NeoForge client smoke",
+        "Hands-on combat HUD smoke"
+      ],
+      "notes": [
+        "neoforge/1.20.6 backports the proven 1.21.1 ModDevGradle adapter shape with NeoForge metadata, @Mod entrypoint wiring, Fabric-shaped NeoForge shims, persistent player state, payload registration, client key/HUD/screen hooks, and optional Lootr metadata.",
+        "2026-06-25 patch adds explicit owner-client AttunementStatePayload sync because attachment sync is a local compatibility shim, registers the client receiver from AttunedClient, and invalidates AttunementReadout after applying mirrored state; this is the resonance HUD fill path.",
+        "compileJava, compileClientJava, pytest scaffold contracts, full Gradle build, and a headless dedicated server startup pass locally as of 2026-06-25.",
+        "On NeoForge 20.6, Attuned appends new loot pools through LootTable.addPool instead of mutating existing archaeology pools in place.",
+        "Do not publish or claim public NeoForge support until client smoke and hands-on resonance HUD fill verification pass."
+      ]
+    },
+    {
+      "id": "neoforge-1.21.11",
+      "loader": "neoforge",
+      "minecraft_version": "1.21.11",
+      "java_version": "21",
+      "status": "candidate",
+      "artifact": "Dedicated NeoForge branch build/server-smoke candidate; release needs client runtime smoke and hands-on combat HUD smoke.",
+      "branch": "neoforge/1.21.11",
+      "metadata": {
+        "gradle_plugin": "ModDevGradle 2.0.141",
+        "loader_dependency": "NeoForge 21.11.42",
+        "mod_file": "src/main/resources/META-INF/neoforge.mods.toml",
+        "networking": "RegisterPayloadHandlersEvent and PayloadRegistrar",
+        "state_storage": "NeoForge-backed Fabric compatibility shim with codec-backed persistent player data bridge and explicit owner-state payload sync"
+      },
+      "verification": [
+        "python -m pytest tests/test_neoforge_scaffold_contract.py -q",
+        ".\\gradlew.bat compileJava compileClientJava --no-daemon --stacktrace",
+        ".\\gradlew.bat build --no-daemon --stacktrace",
+        ".\\gradlew.bat runServer --no-daemon --stacktrace (2026-06-26 reached Attuned initializing and server Done; process tree stopped after startup because Gradle stdin was unavailable)",
+        "NeoForge client smoke",
+        "Hands-on combat HUD smoke"
+      ],
+      "notes": [
+        "neoforge/1.21.11 carries the same verified ModDevGradle adapter pattern as 1.21.1 with the exact NeoForge 21.11.42 dependency tuple.",
+        "The branch includes explicit owner-client AttunementStatePayload sync and invalidates AttunementReadout after applying mirrored state; this is the resonance HUD fill path.",
+        "Scaffold pytest, common/client compilation, full Gradle build, and a headless dedicated server startup to Done pass locally as of 2026-06-26.",
+        "Do not publish or claim public NeoForge support until client smoke and hands-on resonance HUD fill verification pass."
+      ]
+    },
+    {
+      "id": "neoforge-26.1.2",
+      "loader": "neoforge",
+      "minecraft_version": "26.1.2",
+      "java_version": "25",
+      "status": "candidate",
+      "artifact": "Dedicated NeoForge branch build/server-smoke candidate; release needs client runtime smoke and hands-on combat HUD smoke.",
+      "branch": "neoforge/26.1.2",
+      "metadata": {
+        "gradle_plugin": "ModDevGradle 2.0.141",
+        "loader_dependency": "NeoForge 26.1.2.76",
+        "mod_file": "src/main/resources/META-INF/neoforge.mods.toml",
+        "networking": "RegisterPayloadHandlersEvent and PayloadRegistrar",
+        "state_storage": "NeoForge-backed Fabric compatibility shim with codec-backed persistent player data bridge and explicit owner-state payload sync"
+      },
+      "verification": [
+        "python -m pytest tests/test_neoforge_scaffold_contract.py -q",
+        ".\\gradlew.bat compileJava compileClientJava --no-daemon --stacktrace",
+        ".\\gradlew.bat build --no-daemon --stacktrace",
+        ".\\gradlew.bat runServer --no-daemon --stacktrace (2026-06-26 reached Attuned initializing and server Done; process tree stopped after startup because Gradle stdin was unavailable)",
+        "NeoForge client smoke",
+        "Hands-on combat HUD smoke"
+      ],
+      "notes": [
+        "neoforge/26.1.2 carries the verified modern 26.x ModDevGradle adapter pattern with the exact NeoForge 26.1.2.76 dependency tuple.",
+        "The branch includes explicit owner-client AttunementStatePayload sync and invalidates AttunementReadout after applying mirrored state; this is the resonance HUD fill path.",
+        "Scaffold pytest, common/client compilation, full Gradle build, and a headless dedicated server startup to Done pass locally as of 2026-06-26.",
+        "Do not publish or claim public NeoForge support until client smoke and hands-on resonance HUD fill verification pass."
+      ]
+    },
+    {
+      "id": "neoforge-26.2",
+      "loader": "neoforge",
+      "minecraft_version": "26.2",
+      "java_version": "25",
+      "status": "candidate",
+      "artifact": "Dedicated NeoForge branch build/server-smoke candidate; release needs client runtime smoke and hands-on combat HUD smoke.",
+      "branch": "neoforge/26.2",
+      "metadata": {
+        "gradle_plugin": "ModDevGradle 2.0.141",
+        "loader_dependency": "NeoForge 26.2.0.7-beta",
+        "mod_file": "src/main/resources/META-INF/neoforge.mods.toml",
+        "networking": "RegisterPayloadHandlersEvent and PayloadRegistrar",
+        "state_storage": "NeoForge-backed Fabric compatibility shim with codec-backed persistent player data bridge and explicit owner-state payload sync",
+        "world_outline_rendering": "SubmitCustomGeometryEvent and SubmitNodeCollector for the 26.2 renderer"
+      },
+      "verification": [
+        "python -m pytest tests/test_neoforge_scaffold_contract.py -q",
+        ".\\gradlew.bat compileJava compileClientJava --no-daemon --stacktrace",
+        ".\\gradlew.bat build --no-daemon --stacktrace",
+        ".\\gradlew.bat runServer --no-daemon --stacktrace (2026-06-26 clean second boot reached Attuned initializing and server Done; process tree stopped after startup because Gradle stdin was unavailable)",
+        "NeoForge client smoke",
+        "Hands-on combat HUD smoke"
+      ],
+      "notes": [
+        "neoforge/26.2 carries the verified modern 26.x ModDevGradle adapter pattern with the exact NeoForge 26.2.0.7-beta dependency tuple.",
+        "The 2026-06-26 pass refreshed the NeoForge lock/verification metadata and updated the Fabric-shaped level-render shim to use NeoForge SubmitCustomGeometryEvent with event.getSubmitNodeCollector().",
+        "The branch includes explicit owner-client AttunementStatePayload sync and invalidates AttunementReadout after applying mirrored state; this is the resonance HUD fill path.",
+        "Scaffold pytest, common/client compilation, full Gradle build, and a clean second headless dedicated server startup to Done pass locally as of 2026-06-26.",
+        "Do not publish or claim public NeoForge support until client smoke and hands-on resonance HUD fill verification pass."
+      ]
+    },
+    {
+      "id": "forge-26.2",
+      "loader": "forge",
+      "minecraft_version": "26.2",
+      "java_version": "25",
+      "status": "candidate",
+      "artifact": "Dedicated Forge branch build candidate; release needs hands-on combat HUD smoke.",
+      "branch": "forge/26.2",
+      "metadata": {
+        "gradle_plugin": "ForgeGradle",
+        "loader_dependency": "Forge version matching 26.2",
+        "mod_file": "src/main/resources/META-INF/mods.toml",
+        "networking": "Forge branch-local networking",
+        "state_storage": "Forge persistent attachment bridge"
+      },
+      "verification": [
+        "python tools/verify_repository.py",
+        ".\\gradlew.bat test --tests dev.attuned.attunement.ForgeAttachmentPersistenceContractTest --tests dev.attuned.client.ForgeOwnerStateSyncContractTest --tests dev.attuned.client.ForgeHudBridgeContractTest --no-daemon",
+        ".\\gradlew.bat build --no-daemon",
+        "Forge dedicated server smoke",
+        "Forge client smoke",
+        "Hands-on resonance HUD smoke"
+      ],
+      "notes": [
+        "2026-06-25 patch adds explicit owner-client AttunementStatePayload sync and HUD readout invalidation.",
+        "2026-06-25 persistence patch retains attachment codecs and reads/writes player persistent data for reconnect parity.",
+        "Focused contracts and build pass.",
+        "Release still needs hands-on resonance HUD fill verification."
+      ]
+    },
+    {
+      "id": "forge-26.1.2",
+      "loader": "forge",
+      "minecraft_version": "26.1.2",
+      "java_version": "25",
+      "status": "candidate",
+      "artifact": "Dedicated Forge branch build candidate; release needs hands-on combat HUD smoke.",
+      "branch": "forge/26.1.2",
+      "metadata": {
+        "gradle_plugin": "ForgeGradle",
+        "loader_dependency": "Forge version matching 26.1.2",
+        "mod_file": "src/main/resources/META-INF/mods.toml",
+        "networking": "Forge branch-local networking",
+        "state_storage": "Forge persistent attachment bridge"
+      },
+      "verification": [
+        "python tools/verify_repository.py",
+        ".\\gradlew.bat test --tests dev.attuned.attunement.ForgeAttachmentPersistenceContractTest --tests dev.attuned.client.ForgeOwnerStateSyncContractTest --tests dev.attuned.client.ForgeHudBridgeContractTest --no-daemon",
+        ".\\gradlew.bat build --no-daemon",
+        "Forge dedicated server smoke",
+        "Forge client smoke",
+        "Hands-on resonance HUD smoke"
+      ],
+      "notes": [
+        "2026-06-25 patch adds explicit owner-client AttunementStatePayload sync and HUD readout invalidation.",
+        "2026-06-25 persistence patch retains attachment codecs and reads/writes player persistent data for reconnect parity.",
+        "Focused contracts and build pass.",
+        "Release still needs hands-on resonance HUD fill verification."
+      ]
+    },
+    {
+      "id": "forge-1.21.11",
+      "loader": "forge",
+      "minecraft_version": "1.21.11",
+      "java_version": "21",
+      "status": "candidate",
+      "artifact": "Dedicated Forge branch build candidate; release needs hands-on combat HUD smoke.",
+      "branch": "forge/1.21.11",
+      "metadata": {
+        "gradle_plugin": "ForgeGradle",
+        "loader_dependency": "Forge version matching 1.21.11",
+        "mod_file": "src/main/resources/META-INF/mods.toml",
+        "networking": "Forge branch-local networking",
+        "state_storage": "Forge persistent attachment bridge"
+      },
+      "verification": [
+        "python tools/verify_repository.py",
+        ".\\gradlew.bat test --tests dev.attuned.attunement.ForgeAttachmentPersistenceContractTest --tests dev.attuned.client.ForgeOwnerStateSyncContractTest --tests dev.attuned.client.ForgeHudBridgeContractTest --no-daemon",
+        ".\\gradlew.bat build --no-daemon",
+        "Forge dedicated server smoke",
+        "Forge client smoke",
+        "Hands-on resonance HUD smoke"
+      ],
+      "notes": [
+        "2026-06-25 patch adds explicit owner-client AttunementStatePayload sync and HUD readout invalidation.",
+        "2026-06-25 persistence patch retains attachment codecs and reads/writes player persistent data for reconnect parity.",
+        "Focused contracts and build pass.",
+        "Release still needs hands-on resonance HUD fill verification."
+      ]
+    },
+    {
+      "id": "forge-1.21.1",
+      "loader": "forge",
+      "minecraft_version": "1.21.1",
+      "java_version": "21",
+      "status": "candidate",
+      "artifact": "Dedicated Forge branch build candidate; release needs hands-on combat HUD smoke.",
+      "branch": "forge/1.21.1",
+      "metadata": {
+        "gradle_plugin": "ForgeGradle",
+        "loader_dependency": "Forge version matching 1.21.1",
+        "mod_file": "src/main/resources/META-INF/mods.toml",
+        "networking": "Forge branch-local networking",
+        "state_storage": "Forge persistent attachment bridge"
+      },
+      "verification": [
+        "python tools/verify_repository.py",
+        ".\\gradlew.bat test --tests dev.attuned.attunement.ForgeAttachmentPersistenceContractTest --tests dev.attuned.client.ForgeOwnerStateSyncContractTest --tests dev.attuned.client.ForgeHudBridgeContractTest --no-daemon",
+        ".\\gradlew.bat build --no-daemon",
+        "Forge dedicated server smoke",
+        "Forge client smoke",
+        "Hands-on resonance HUD smoke"
+      ],
+      "notes": [
+        "2026-06-25 patch adds explicit owner-client AttunementStatePayload sync and HUD readout invalidation.",
+        "2026-06-25 persistence patch retains attachment codecs and reads/writes player persistent data for reconnect parity.",
+        "Focused contracts and build pass.",
+        "Release still needs hands-on resonance HUD fill verification."
+      ]
+    },
+    {
+      "id": "forge-1.20.6",
+      "loader": "forge",
+      "minecraft_version": "1.20.6",
+      "java_version": "21",
+      "status": "candidate",
+      "artifact": "Dedicated Forge branch build candidate; release needs hands-on combat HUD smoke.",
+      "branch": "forge/1.20.6",
+      "metadata": {
+        "gradle_plugin": "ForgeGradle 7.0.29",
+        "loader_dependency": "Forge 50.2.8",
+        "mod_file": "src/main/resources/META-INF/mods.toml",
+        "networking": "Modern branch-local owner state payload",
+        "state_storage": "Forge branch-local state bridge"
+      },
+      "verification": [
+        "python tools/verify_repository.py",
+        ".\\gradlew.bat test --tests dev.attuned.client.ForgeStateSyncHudContractTest --no-daemon",
+        ".\\gradlew.bat build --no-daemon",
+        "Forge dedicated server smoke",
+        "Forge client combat HUD smoke"
+      ],
+      "notes": [
+        "2026-06-25 patch invalidates AttunementReadout after owner state sync.",
+        "Build passes after pinning ForgeGradle to 7.0.29.",
+        "Release still needs hands-on combat HUD resonance fill verification."
+      ]
+    },
+    {
+      "id": "forge-1.20.1",
+      "loader": "forge",
+      "minecraft_version": "1.20.1",
+      "java_version": "17",
+      "status": "candidate",
+      "artifact": "Dedicated Forge branch build candidate; release needs hands-on combat HUD smoke.",
+      "branch": "forge/1.20.1",
+      "metadata": {
+        "gradle_plugin": "ForgeGradle",
+        "loader_dependency": "Forge version matching 1.20.1",
+        "mod_file": "src/main/resources/META-INF/mods.toml",
+        "networking": "SimpleChannel",
+        "state_storage": "Forge capabilities"
+      },
+      "verification": [
+        "python tools/verify_repository.py",
+        ".\\gradlew.bat test --tests dev.attuned.client.ForgeHudBridgeContractTest --tests dev.attuned.client.ForgeResonancePipelineContractTest --no-daemon",
+        ".\\gradlew.bat build --no-daemon",
+        "Forge dedicated server smoke",
+        "Forge client combat HUD smoke"
+      ],
+      "notes": [
+        "2026-06-25 patch bridges HudRenderCallback through RenderGuiOverlayEvent.Post and invalidates AttunementReadout after owner state sync.",
+        "Focused contracts and build pass.",
+        "Chosen because 1.20.1 is a high-value modpack target."
+      ]
+    },
+    {
+      "id": "forge-1.19.4",
+      "loader": "forge",
+      "minecraft_version": "1.19.4",
+      "java_version": "17",
+      "status": "candidate",
+      "artifact": "Dedicated Forge branch build candidate; release needs hands-on combat HUD smoke.",
+      "branch": "forge/1.19.4",
+      "metadata": {
+        "gradle_plugin": "ForgeGradle",
+        "loader_dependency": "Forge version matching 1.19.4",
+        "mod_file": "src/main/resources/META-INF/mods.toml",
+        "networking": "SimpleChannel",
+        "state_storage": "Forge branch-local state bridge"
+      },
+      "verification": [
+        "python tools/verify_repository.py",
+        ".\\gradlew.bat build --no-daemon",
+        "Forge dedicated server smoke",
+        "Forge client combat HUD smoke"
+      ],
+      "notes": [
+        "2026-06-25 patch bridges HudRenderCallback through the 45.x RenderGuiOverlayEvent.Post API and invalidates AttunementReadout after owner state sync.",
+        "Build passes; release still needs hands-on resonance HUD verification."
+      ]
+    },
+    {
+      "id": "forge-1.19.2",
+      "loader": "forge",
+      "minecraft_version": "1.19.2",
+      "java_version": "17",
+      "status": "candidate",
+      "artifact": "Dedicated Forge branch build candidate; release needs hands-on combat HUD smoke.",
+      "branch": "forge/1.19.2",
+      "metadata": {
+        "gradle_plugin": "ForgeGradle",
+        "loader_dependency": "Forge version matching 1.19.2",
+        "mod_file": "src/main/resources/META-INF/mods.toml",
+        "networking": "SimpleChannel",
+        "state_storage": "Forge capabilities"
+      },
+      "verification": [
+        "python tools/verify_repository.py",
+        "Forge build",
+        "Forge dedicated server smoke",
+        "Forge client smoke"
+      ],
+      "notes": [
+        "2026-06-25 patch bridges HudRenderCallback through the 43.x RenderGuiOverlayEvent.Post API and invalidates AttunementReadout after owner state sync.",
+        "Build passes; release still needs hands-on resonance HUD verification."
+      ]
+    },
+    {
+      "id": "forge-1.18.2",
+      "loader": "forge",
+      "minecraft_version": "1.18.2",
+      "java_version": "17",
+      "status": "candidate",
+      "artifact": "Dedicated Forge branch build candidate; release needs hands-on combat HUD smoke.",
+      "branch": "forge/1.18.2",
+      "metadata": {
+        "gradle_plugin": "ForgeGradle",
+        "loader_dependency": "Forge version matching 1.18.2",
+        "mod_file": "src/main/resources/META-INF/mods.toml",
+        "networking": "SimpleChannel",
+        "state_storage": "Forge capabilities"
+      },
+      "verification": [
+        "python tools/verify_repository.py",
+        "Forge build",
+        "Forge dedicated server smoke",
+        "Forge client smoke"
+      ],
+      "notes": [
+        "2026-06-25 patch bridges HudRenderCallback through RenderGameOverlayEvent.Post and invalidates AttunementReadout after owner state sync.",
+        "Build passes; release still needs hands-on resonance HUD verification."
+      ]
+    },
+    {
+      "id": "forge-1.12.2-legacy",
+      "loader": "forge",
+      "minecraft_version": "1.12.2",
+      "java_version": "8",
+      "status": "blocked",
+      "artifact": "Separate legacy rewrite artifact, not a direct modern-port jar.",
+      "branch": "port/forge-1.12.2-legacy",
+      "metadata": {
+        "gradle_plugin": "Legacy ForgeGradle",
+        "loader_dependency": "Forge version matching 1.12.2",
+        "mod_file": "src/main/resources/META-INF/mods.toml",
+        "networking": "Legacy Forge networking",
+        "state_storage": "Legacy Forge capabilities or extended properties"
+      },
+      "verification": [
+        "Separate legacy rewrite plan",
+        "Legacy Forge build",
+        "Legacy Forge dedicated server smoke",
+        "Legacy Forge client smoke"
+      ],
+      "notes": [
+        "Blocked behind a separate legacy rewrite because current Attuned APIs, data packs, and rendering hooks do not map cleanly to 1.12.2."
+      ]
+    }
+  ]
+}
