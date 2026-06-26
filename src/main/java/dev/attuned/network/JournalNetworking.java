@@ -16,6 +16,7 @@ public final class JournalNetworking {
 		PayloadTypeRegistry.clientboundPlay().register(OpenJournalPayload.TYPE, OpenJournalPayload.CODEC);
 		PayloadTypeRegistry.clientboundPlay().register(TremorOreHintPayload.TYPE, TremorOreHintPayload.CODEC);
 		PayloadTypeRegistry.clientboundPlay().register(FocusAbilityStatusPayload.TYPE, FocusAbilityStatusPayload.CODEC);
+		PayloadTypeRegistry.clientboundPlay().register(AttunementStatePayload.TYPE, AttunementStatePayload.CODEC);
 		PayloadTypeRegistry.clientboundPlay().register(CircleSnapshotPayload.TYPE, CircleSnapshotPayload.CODEC);
 		PayloadTypeRegistry.clientboundPlay().register(CircleInvitePromptPayload.TYPE, CircleInvitePromptPayload.CODEC);
 		PayloadTypeRegistry.clientboundPlay().register(CirclePingClientPayload.TYPE, CirclePingClientPayload.CODEC);
