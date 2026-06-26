@@ -25,7 +25,7 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 
 /**
- * First-time onboarding hints — short, one-shot messages that nudge a player
+ * First-time onboarding hints â€” short, one-shot messages that nudge a player
  * toward the next discovery the first time a triggering condition is met.
  *
  * <p>Each hint is keyed by a stable id and gated through the persistent
@@ -52,7 +52,7 @@ public final class Onboarding {
 	 *
 	 * <p>5 ticks = 4Hz. Chosen so the altar-sight hint reliably catches a quick
 	 * glance at an altar (a player can easily look away in under a second), while
-	 * the polling cost stays trivial — each tick we do at most one inventory
+	 * the polling cost stays trivial â€” each tick we do at most one inventory
 	 * scan and one short raycast per online player.
 	 */
 	private static final int POLL_INTERVAL_TICKS = 5;
@@ -251,12 +251,12 @@ public final class Onboarding {
 
 	/** Whether the player is carrying at least one Attunement Shard in their main inventory. */
 	private static boolean carriesShard(ServerPlayer player) {
-		return carries(player, AttunedContent.ATTUNEMENT_SHARD);
+		return carries(player, AttunedContent.ATTUNEMENT_SHARD.get());
 	}
 
 	/** Whether the player is carrying at least one Attunement Shard Fragment. */
 	private static boolean carriesFragment(ServerPlayer player) {
-		return carries(player, AttunedContent.ATTUNEMENT_SHARD_FRAGMENT);
+		return carries(player, AttunedContent.ATTUNEMENT_SHARD_FRAGMENT.get());
 	}
 
 	private static boolean carries(ServerPlayer player, Item item) {
@@ -272,7 +272,7 @@ public final class Onboarding {
 	private static boolean holdsShard(ServerPlayer player) {
 		ItemStack main = player.getMainHandItem();
 		ItemStack off = player.getOffhandItem();
-		return main.is(AttunedContent.ATTUNEMENT_SHARD) || off.is(AttunedContent.ATTUNEMENT_SHARD);
+		return main.is(AttunedContent.ATTUNEMENT_SHARD.get()) || off.is(AttunedContent.ATTUNEMENT_SHARD.get());
 	}
 
 	/**
@@ -288,7 +288,7 @@ public final class Onboarding {
 			return false;
 		}
 		BlockPos pos = ((BlockHitResult) hit).getBlockPos();
-		return player.level().getBlockState(pos).is(AttunedContent.ATTUNEMENT_ALTAR);
+		return player.level().getBlockState(pos).is(AttunedContent.ATTUNEMENT_ALTAR.get());
 	}
 
 	private static String confluencePath(String confluenceId) {
@@ -300,7 +300,7 @@ public final class Onboarding {
 	 * Shared gate-and-fire for every onboarding hint. Returns immediately if
 	 * the player has already seen the hint with this id; otherwise marks the
 	 * attachment, sends the styled chat message, and plays a soft amethyst
-	 * chime cue for consistent feedback across every onboarding moment —
+	 * chime cue for consistent feedback across every onboarding moment â€”
 	 * distinct from the louder pact-awakening toast.
 	 */
 	private static void fireHint(ServerPlayer player, String id, Component message) {

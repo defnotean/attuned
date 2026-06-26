@@ -1,13 +1,11 @@
 package dev.attuned.test;
 
-import net.minecraft.SharedConstants;
-import net.minecraft.server.Bootstrap;
-
 public final class MinecraftTestBootstrap {
 	private MinecraftTestBootstrap() {}
 
 	public static void ensureBootstrapped() {
-		SharedConstants.tryDetectVersion();
-		Bootstrap.bootStrap();
+		// NeoForge 21.11 routes SharedConstants initialization through FML loader
+		// state, which plain unit tests intentionally do not create. The tests that
+		// call this helper use only empty ItemStack values and source contracts.
 	}
 }

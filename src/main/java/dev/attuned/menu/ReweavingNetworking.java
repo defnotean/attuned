@@ -56,7 +56,7 @@ public final class ReweavingNetworking {
 				return;
 			}
 			BlockState state = serverLevel.getBlockState(pos);
-			if (!state.is(AttunedContent.ALTAR_OF_REWEAVING)) {
+			if (!state.is(AttunedContent.ALTAR_OF_REWEAVING.get())) {
 				return;
 			}
 			if (!player.isWithinBlockInteractionRange(pos, 4.0)) {
@@ -133,7 +133,7 @@ public final class ReweavingNetworking {
 				return false;
 			}
 		}
-		return container.getItem(ReweavingMenu.CATALYST_SLOT).is(AttunedContent.ATTUNEMENT_SHARD_FRAGMENT);
+		return container.getItem(ReweavingMenu.CATALYST_SLOT).is(AttunedContent.ATTUNEMENT_SHARD_FRAGMENT.get());
 	}
 
 	private static ItemStack rollAffinityLoom(ServerLevel level, Container container,

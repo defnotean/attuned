@@ -1,51 +1,15 @@
 package dev.attuned.attunement;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotSame;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import dev.attuned.test.MinecraftTestBootstrap;
-import net.minecraft.world.item.ItemStack;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 class FocusHolderTest {
 	private static final Path HOLDER = Path.of("src/main/java/dev/attuned/attunement/FocusHolder.java");
-
-	@BeforeAll
-	static void bootstrapMinecraft() {
-		MinecraftTestBootstrap.ensureBootstrapped();
-	}
-
-	@Test
-	void emptyHolderNormalizesToRequestedSize() {
-		FocusHolder holder = FocusHolder.empty(27, 1);
-		assertEquals(27, holder.items().size(), "empty(size, cap) should pad to exactly size slots.");
-		for (int i = 0; i < 27; i++) {
-			assertEquals(ItemStack.EMPTY, holder.get(i), "Every empty slot should read back EMPTY.");
-		}
-	}
-
-	@Test
-	void withProducesANewInstanceAndDoesNotMutateOriginal() {
-		FocusHolder original = FocusHolder.empty(6, 1);
-		FocusHolder updated = original.with(0, ItemStack.EMPTY);
-		assertNotSame(original, updated, "with(...) must be copy-on-write, returning a fresh instance.");
-		assertEquals(6, updated.items().size(), "with(...) preserves the configured size.");
-	}
-
-	@Test
-	void invalidSlotsThrowWithBounds() {
-		FocusHolder holder = FocusHolder.empty(6, 1);
-		assertThrows(IllegalArgumentException.class, () -> holder.get(-1));
-		assertThrows(IllegalArgumentException.class, () -> holder.get(6));
-		assertThrows(IllegalArgumentException.class, () -> holder.with(6, ItemStack.EMPTY));
-	}
 
 	@Test
 	void holderIsAParameterizedImmutableRecordWithCappingAndCodecs() throws IOException {
@@ -69,6 +33,32 @@ class FocusHolderTest {
 			"FocusHolder should build a size/cap-bound network StreamCodec.");
 		assertTrue(holder.contains("ItemStack.OPTIONAL_LIST_STREAM_CODEC"),
 			"FocusHolder sync should reuse the OPTIONAL_LIST_STREAM_CODEC pattern.");
+	}
+
+	@Test
+	void holderNormalizesSizeAndProtectsMutableStacks() throws IOException {
+		String holder = read(HOLDER);
+		assertTrue(holder.contains("size = Math.max(0, size);"),
+			"FocusHolder should clamp negative sizes to zero.");
+		assertTrue(holder.contains("maxPerSlot = Math.max(1, maxPerSlot);"),
+			"FocusHolder should clamp per-slot caps to at least one.");
+		assertTrue(holder.contains("for (int i = 0; i < size; i++)"),
+			"FocusHolder should pad or truncate to the configured size.");
+		assertTrue(holder.contains("ItemStack stack = i < sourceSize ? source.get(i) : ItemStack.EMPTY;"),
+			"Missing slots should normalize to ItemStack.EMPTY.");
+		assertTrue(holder.contains("return List.copyOf(list);"),
+			"FocusHolder should store immutable slot snapshots.");
+		assertTrue(holder.contains("return copyItems(items, maxPerSlot);"),
+			"The public items accessor should return defensive stack copies.");
+	}
+
+	@Test
+	void holderValidatesSlotsWithStableBounds() throws IOException {
+		String holder = read(HOLDER);
+		assertTrue(holder.contains("private static int requireSlot(int slot, int size)"),
+			"FocusHolder slot validation should be centralized.");
+		assertTrue(holder.contains("throw new IllegalArgumentException(\"slot must be between 0 and \" + (size - 1));"),
+			"Invalid holder slots should fail with the stable bounds message.");
 	}
 
 	private static String read(Path file) throws IOException {

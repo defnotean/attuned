@@ -91,6 +91,14 @@ public final class AttunementReadout {
 		return cachedSnapshot;
 	}
 
+	public static void invalidate(Player player) {
+		if (player.getUUID().equals(cachedPlayerId)) {
+			cachedPlayerId = null;
+			cachedTick = -1;
+			cachedSnapshot = null;
+		}
+	}
+
 	/**
 	 * Resonance fill for HUD bars — eases toward the synced server value so the
 	 * gauge flows instead of stepping on batched decay ticks.

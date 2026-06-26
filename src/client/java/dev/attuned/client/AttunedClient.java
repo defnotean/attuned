@@ -4,15 +4,16 @@ import dev.attuned.client.hud.CombatHud;
 import dev.attuned.client.hud.FociHud;
 import dev.attuned.client.screen.AltarScreens;
 import dev.attuned.client.screen.AttunementJournalScreen;
-import net.fabricmc.api.ClientModInitializer;
 
-public class AttunedClient implements ClientModInitializer {
-	@Override
-	public void onInitializeClient() {
+public final class AttunedClient {
+	private AttunedClient() {}
+
+	public static void init() {
 		AttunedClientConfig.load();
 		AttunedTooltips.init();
 		AttunedKeybinds.init();
 		FocusAbilityClientState.init();
+		AttunementStateClient.init();
 		AffinityInspectClient.init();
 		UpdraftLiftClient.init();
 		FociHud.init();

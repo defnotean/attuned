@@ -48,14 +48,14 @@ import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
 
 /**
- * The Attunement Altar — the home block of the attunement economy, where crafted
+ * The Attunement Altar â€” the home block of the attunement economy, where crafted
  * Attunement Shards are bound into permanent capacity. The {@link #AFFINITY}
  * blockstate records the affinity the Altar was last attuned to, which drives its
  * glow. Player interactions are added as overrides on this class.
  */
 public class AttunementAltarBlock extends Block {
 
-	/** The affinity an Altar currently glows with — {@code NONE} until first used. */
+	/** The affinity an Altar currently glows with â€” {@code NONE} until first used. */
 	public enum AltarAffinity implements StringRepresentable {
 		NONE("none"),
 		FURY("fury"),
@@ -93,7 +93,7 @@ public class AttunementAltarBlock extends Block {
 	}
 
 	// Mirrors the solid-block monument 3D model element-for-element so the
-	// raytrace hits every visible surface — full 16x1 base slab and top plate,
+	// raytrace hits every visible surface â€” full 16x1 base slab and top plate,
 	// 14x14 stepped base and capital, the 12x10x12 solid core, and the four
 	// full-height 2x10x2 corner gem columns that protrude beyond the core.
 	private static final VoxelShape SHAPE = Shapes.or(
@@ -134,15 +134,15 @@ public class AttunementAltarBlock extends Block {
 		// When the held stack isn't a shard (including the empty hand), defer to
 		// the empty-hand path so {@link #useWithoutItem} gets a chance to fire. In
 		// 26.1.2 the dispatcher in ServerPlayerGameMode only calls useWithoutItem
-		// when useItemOn returns TRY_WITH_EMPTY_HAND — returning PASS here would
+		// when useItemOn returns TRY_WITH_EMPTY_HAND â€” returning PASS here would
 		// swallow the click and never open the altar GUI.
-		if (stack.is(AttunedContent.ATTUNEMENT_SHARD_FRAGMENT)) {
+		if (stack.is(AttunedContent.ATTUNEMENT_SHARD_FRAGMENT.get())) {
 			if (!level.isClientSide()) {
 				AttunementShardFragmentItem.sendProgressHint(player);
 			}
 			return level.isClientSide() ? InteractionResult.SUCCESS : InteractionResult.SUCCESS_SERVER;
 		}
-		if (!stack.is(AttunedContent.ATTUNEMENT_SHARD)) {
+		if (!stack.is(AttunedContent.ATTUNEMENT_SHARD.get())) {
 			return InteractionResult.TRY_WITH_EMPTY_HAND;
 		}
 		if (level.isClientSide()) {
@@ -212,7 +212,7 @@ public class AttunementAltarBlock extends Block {
 			AltarAnimations.begin(server, pos, serverPlayer, stanceRgb(affinity), flair);
 			applyBindingPerk(serverPlayer);
 		}
-		PlayerMessages.system(player, Component.literal("The Altar binds the shard — capacity ")
+		PlayerMessages.system(player, Component.literal("The Altar binds the shard â€” capacity ")
 			.withStyle(ChatFormatting.GRAY)
 			.append(Component.literal(raised + " / " + cap).withStyle(ChatFormatting.AQUA)));
 		return true;
@@ -290,7 +290,7 @@ public class AttunementAltarBlock extends Block {
 			|| state.is(Blocks.SMALL_AMETHYST_BUD);
 	}
 
-	/** The stance label for {@code player} — Discord, a committed affinity, or None. */
+	/** The stance label for {@code player} â€” Discord, a committed affinity, or None. */
 	public static Component stanceLabel(Player player) {
 		if (Attunement.isDiscord(player)) {
 			return Component.literal("Discord").withStyle(ChatFormatting.LIGHT_PURPLE);
@@ -311,7 +311,7 @@ public class AttunementAltarBlock extends Block {
 		};
 	}
 
-	/** A particle drifting up from the Altar — affinity-coloured once it has been attuned. */
+	/** A particle drifting up from the Altar â€” affinity-coloured once it has been attuned. */
 	@Override
 	public void animateTick(BlockState state, Level level, BlockPos pos, RandomSource random) {
 		AltarAffinity affinity = state.getValue(AFFINITY);

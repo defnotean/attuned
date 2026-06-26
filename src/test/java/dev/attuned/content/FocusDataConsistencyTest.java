@@ -53,6 +53,8 @@ class FocusDataConsistencyTest {
 		Path.of("src/main/resources/data/attuned/attuned/focus");
 	private static final Path FOCUS_BEHAVIOR_DIR =
 		Path.of("src/main/resources/data/attuned/attuned/focus_behavior");
+	private static final Path SYNERGY_DATA_DIR =
+		Path.of("src/main/resources/data/attuned/attuned/synergy");
 	private static final Path ITEM_DEFINITION_DIR =
 		Path.of("src/main/resources/assets/attuned/items");
 	private static final Path ITEM_MODEL_DIR =
@@ -67,7 +69,7 @@ class FocusDataConsistencyTest {
 		Path.of("src/main/resources/assets/attuned/lang/en_us.json");
 
 	private static final Pattern REGISTERED_FOCUS = Pattern.compile(
-		"public\\s+static\\s+final\\s+Item\\s+([A-Z0-9_]+_FOCUS)\\s*=\\s*registerFocus\\(\"([a-z0-9_]+_focus)\"\\);");
+		"public\\s+static\\s+final\\s+DeferredItem<Item>\\s+([A-Z0-9_]+_FOCUS)\\s*=\\s*registerFocus\\(\"([a-z0-9_]+_focus)\"\\);");
 	private static final Pattern REGISTERED_BEHAVIOR = Pattern.compile(
 		"register\\(\\s*\"([a-z0-9_/.-]+)\"\\s*,\\s*new\\s+",
 		Pattern.DOTALL);
@@ -135,16 +137,16 @@ class FocusDataConsistencyTest {
 
 		assertEquals(registeredItemsByField.size(), registeredItems.size(),
 			"Registered shipped Focus item ids should not be duplicated");
-		assertTrue(source.contains("public static final List<Item> FOCI = List.copyOf(REGISTERED_FOCI);"),
+		assertTrue(source.contains("public static final List<DeferredItem<Item>> FOCI = List.copyOf(REGISTERED_FOCI);"),
 			"AttunedContent.FOCI should be derived from registerFocus order, not manually duplicated");
-		assertTrue(source.contains("private static final Set<Item> FOCI_SET = Set.copyOf(REGISTERED_FOCI);"),
-			"AttunedContent should keep constant-time Focus membership alongside the ordered list");
+		assertTrue(source.contains("private static final Set<Identifier> FOCUS_IDS = REGISTERED_FOCI.stream()"),
+			"AttunedContent should keep constant-time Focus id membership alongside the ordered list");
 		assertTrue(source.contains("REGISTERED_FOCI.add(item);"),
 			"registerFocus should append every Focus to the public FOCI snapshot");
 		assertTrue(source.contains("public static boolean isFocus(Item item)"),
 			"AttunedContent should expose the canonical Focus item membership check");
-		assertTrue(source.contains("return item != null && FOCI_SET.contains(item);"),
-			"Focus item membership should use the set-backed lookup and reject null safely");
+		assertTrue(source.contains("return item != null && FOCUS_IDS.contains(BuiltInRegistries.ITEM.getKey(item));"),
+			"Focus item membership should use the id-backed lookup and reject null safely");
 		assertTrue(source.contains("public static boolean isFocus(ItemStack stack)"),
 			"AttunedContent should expose the canonical Focus stack membership check");
 		assertTrue(!source.contains("FOCI = List.of("),

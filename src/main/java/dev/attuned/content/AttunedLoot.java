@@ -25,8 +25,8 @@ import net.minecraft.world.level.storage.loot.providers.number.ConstantValue;
  * Seeds the Foci into survival as exploration rewards: a chance at one Focus is
  * injected into a spread of vanilla loot tables.
  *
- * <p>Each targeted table has a {@link Tier} — deeper, more dangerous structures
- * yield Foci more often — and an affinity {@link Drop#theme theme} that weights
+ * <p>Each targeted table has a {@link Tier} â€” deeper, more dangerous structures
+ * yield Foci more often â€” and an affinity {@link Drop#theme theme} that weights
  * its pool toward Foci of one affinity, so where you explore softly steers which
  * Foci you find. The base drop chance is the {@code focus_loot_chance} config
  * value; each tier scales it.
@@ -40,7 +40,7 @@ public final class AttunedLoot {
 
 	private AttunedLoot() {}
 
-	/** How rich a reward source's Focus drop is — a multiplier on the configured base chance. */
+	/** How rich a reward source's Focus drop is â€” a multiplier on the configured base chance. */
 	enum Tier {
 		LOW(0.35F),
 		COMMON(0.7F),
@@ -78,7 +78,7 @@ public final class AttunedLoot {
 
 	/** Vanilla loot tables that gain a chance at a Focus. Grouped by source family. */
 	private static final Map<Identifier, Drop> TARGETS = Map.ofEntries(
-		// Structure chests — common exploration, modest odds.
+		// Structure chests â€” common exploration, modest odds.
 		Map.entry(chest("simple_dungeon"), normal(Tier.COMMON, null)),
 		Map.entry(chest("abandoned_mineshaft"), unseen(Tier.COMMON, null)),
 		Map.entry(chest("igloo_chest"), normal(Tier.COMMON, null)),
@@ -87,7 +87,7 @@ public final class AttunedLoot {
 		Map.entry(chest("village/village_toolsmith"), normal(Tier.COMMON, null)),
 		Map.entry(chest("village/village_temple"), normal(Tier.COMMON, Affinity.HOLY)),
 		Map.entry(chest("shipwreck_treasure"), unseen(Tier.COMMON, Affinity.ZEPHYR)),
-		// Structure chests — riskier places, better odds.
+		// Structure chests â€” riskier places, better odds.
 		Map.entry(chest("jungle_temple"), normal(Tier.RICH, Affinity.ZEPHYR)),
 		Map.entry(chest("desert_pyramid"), unseen(Tier.RICH, null)),
 		Map.entry(chest("buried_treasure"), normal(Tier.RICH, Affinity.ZEPHYR)),
@@ -97,7 +97,7 @@ public final class AttunedLoot {
 		Map.entry(chest("pillager_outpost"), unseen(Tier.RICH, Affinity.FURY)),
 		Map.entry(chest("ruined_portal"), unseen(Tier.RICH, null)),
 		Map.entry(chest("bastion_other"), normal(Tier.RICH, Affinity.BASTION)),
-		// Structure chests — the deep and dangerous, the best odds.
+		// Structure chests â€” the deep and dangerous, the best odds.
 		Map.entry(chest("woodland_mansion"), unseen(Tier.TREASURE, Affinity.FURY)),
 		Map.entry(chest("ancient_city"), unseen(Tier.TREASURE, Affinity.BASTION)),
 		Map.entry(chest("end_city_treasure"), unseen(Tier.TREASURE, Affinity.ZEPHYR)),
@@ -172,7 +172,7 @@ public final class AttunedLoot {
 							.setWeight(weightFor(focus, drop))
 							.when(LootItemRandomChanceCondition.randomChance(focusEntryChance)));
 					}
-					pool.add(LootItem.lootTableItem(AttunedContent.ATTUNEMENT_SHARD_FRAGMENT)
+					pool.add(LootItem.lootTableItem(AttunedContent.ATTUNEMENT_SHARD_FRAGMENT.get())
 						.setWeight(WEIGHT_NEUTRAL)
 						.when(LootItemRandomChanceCondition.randomChance(fragmentChance)));
 				});
@@ -189,7 +189,7 @@ public final class AttunedLoot {
 			tableBuilder.withPool(LootPool.lootPool()
 				.setRolls(ConstantValue.exactly(1.0F))
 				.when(LootItemRandomChanceCondition.randomChance(fragmentChance))
-				.add(LootItem.lootTableItem(AttunedContent.ATTUNEMENT_SHARD_FRAGMENT)));
+				.add(LootItem.lootTableItem(AttunedContent.ATTUNEMENT_SHARD_FRAGMENT.get())));
 		});
 	}
 

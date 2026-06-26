@@ -99,7 +99,7 @@ public final class UpdraftBehavior implements FocusBehavior {
 	public static boolean isActive(ServerPlayer player) {
 		AttunedInv inv = AttunedAttachments.getInventory(player);
 		for (int slot : Attunement.resolution(player).activeSlots()) {
-			if (inv.get(slot).is(AttunedContent.UPDRAFT_FOCUS)) {
+			if (inv.get(slot).is(AttunedContent.UPDRAFT_FOCUS.get())) {
 				return true;
 			}
 		}

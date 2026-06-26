@@ -17,12 +17,12 @@ import net.minecraft.world.item.ItemStack;
  * The Attunement Altar's container menu. Exposes a single input slot that only
  * accepts Attunement Shards alongside the player's normal inventory, so the
  * shard can be shift-clicked in and out like any other container. The Bind
- * action itself is driven by a separate client-to-server payload — the menu's
+ * action itself is driven by a separate client-to-server payload â€” the menu's
  * job is to hold the shard until the player commits it.
  */
 public class AltarMenu extends AbstractContainerMenu {
 
-	/** Number of input slots — a single shard slot, kept as a constant for clarity. */
+	/** Number of input slots â€” a single shard slot, kept as a constant for clarity. */
 	public static final int INPUT_SIZE = 1;
 	/** Index of the shard input slot within {@link #slots}. */
 	public static final int INPUT_SLOT = 0;
@@ -83,12 +83,12 @@ public class AltarMenu extends AbstractContainerMenu {
 		this.input = input;
 		this.access = access;
 
-		// Shard input slot — only Attunement Shards are accepted, and it stacks
+		// Shard input slot â€” only Attunement Shards are accepted, and it stacks
 		// to a full shard pile so a player can dump a stack in if they want.
 		this.addSlot(new Slot(input, 0, INPUT_SLOT_X, INPUT_SLOT_Y) {
 			@Override
 			public boolean mayPlace(ItemStack stack) {
-				return stack.is(AttunedContent.ATTUNEMENT_SHARD);
+				return stack.is(AttunedContent.ATTUNEMENT_SHARD.get());
 			}
 		});
 
@@ -181,10 +181,10 @@ public class AltarMenu extends AbstractContainerMenu {
 
 	@Override
 	public boolean stillValid(Player player) {
-		// Mirrors the vanilla pattern from EnchantmentMenu / CraftingMenu —
+		// Mirrors the vanilla pattern from EnchantmentMenu / CraftingMenu â€”
 		// closes the GUI if the player walks out of range, dimension-changes,
 		// or the Altar block is broken.
-		return stillValid(this.access, player, AttunedContent.ATTUNEMENT_ALTAR);
+		return stillValid(this.access, player, AttunedContent.ATTUNEMENT_ALTAR.get());
 	}
 
 	@Override
@@ -202,7 +202,7 @@ public class AltarMenu extends AbstractContainerMenu {
 				if (!this.moveItemStackTo(stack, INPUT_SIZE, this.slots.size(), true)) {
 					return ItemStack.EMPTY;
 				}
-			} else if (stack.is(AttunedContent.ATTUNEMENT_SHARD)) {
+			} else if (stack.is(AttunedContent.ATTUNEMENT_SHARD.get())) {
 				// From inventory into the shard slot, only if it's a shard.
 				if (!this.moveItemStackTo(stack, 0, INPUT_SIZE, false)) {
 					return ItemStack.EMPTY;

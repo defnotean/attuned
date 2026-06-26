@@ -196,20 +196,20 @@ public final class PresetNetworking {
 
 	/** True for either reliquary tier: the small satchel or the Grand Focus Reliquary. */
 	private static boolean isReliquary(ItemStack stack) {
-		return stack.getItem() == AttunedContent.SATCHEL_OF_FOCI
-			|| stack.getItem() == AttunedContent.GRAND_SATCHEL_OF_FOCI;
+		return stack.getItem() == AttunedContent.SATCHEL_OF_FOCI.get()
+			|| stack.getItem() == AttunedContent.GRAND_SATCHEL_OF_FOCI.get();
 	}
 
 	/** Contents component type for the reliquary tier of this stack. */
 	private static DataComponentType<FocusHolder> contentsTypeOf(ItemStack stack) {
-		return stack.getItem() == AttunedContent.GRAND_SATCHEL_OF_FOCI
+		return stack.getItem() == AttunedContent.GRAND_SATCHEL_OF_FOCI.get()
 			? AttunedComponents.GRAND_SATCHEL_CONTENTS
 			: AttunedComponents.SATCHEL_CONTENTS;
 	}
 
 	/** Grid size for the reliquary tier of this stack. */
 	private static int sizeOf(ItemStack stack) {
-		return stack.getItem() == AttunedContent.GRAND_SATCHEL_OF_FOCI
+		return stack.getItem() == AttunedContent.GRAND_SATCHEL_OF_FOCI.get()
 			? AttunedComponents.GRAND_SATCHEL_SIZE
 			: AttunedComponents.SATCHEL_SIZE;
 	}
@@ -247,7 +247,7 @@ public final class PresetNetworking {
 
 	/**
 	 * Hotkey-path reliquary lookup: the first Focus Reliquary (either tier) anywhere
-	 * in the player's inventory. Empty state when the player carries none — the apply
+	 * in the player's inventory. Empty state when the player carries none â€” the apply
 	 * then sources from equipped and loose inventory Foci only.
 	 */
 	private static SatchelState inventorySatchelState(ServerPlayer player) {

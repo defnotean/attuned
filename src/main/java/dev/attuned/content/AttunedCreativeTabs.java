@@ -9,15 +9,16 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
+import dev.attuned.platform.NeoForgeDeferredRegistries;
 import net.fabricmc.fabric.api.itemgroup.v1.FabricItemGroup;
 import net.minecraft.core.HolderLookup;
-import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.neoforged.neoforge.registries.DeferredItem;
 
 /** Registers and orders Attuned creative-inventory tabs. */
 final class AttunedCreativeTabs {
@@ -70,11 +71,11 @@ final class AttunedCreativeTabs {
 			true);
 	}
 
-	private static void registerFocusCreativeTab(String id, Component title, Item icon,
+	private static void registerFocusCreativeTab(String id, Component title, DeferredItem<? extends Item> icon,
 			Predicate<FocusDefinition> include, boolean includeCoreItems) {
 		CreativeModeTab tab = FabricItemGroup.builder()
 			.title(title)
-			.icon(() -> new ItemStack(icon))
+			.icon(() -> new ItemStack(icon.get()))
 			.displayItems((parameters, output) -> {
 				HolderLookup.RegistryLookup<FocusDefinition> lookup =
 					parameters.holders().lookupOrThrow(AttunedRegistries.FOCUS_DEFINITIONS);
@@ -82,23 +83,22 @@ final class AttunedCreativeTabs {
 					output.accept(focus);
 				}
 				if (includeCoreItems) {
-					output.accept(AttunedContent.ATTUNEMENT_SHARD);
-					output.accept(AttunedContent.ATTUNEMENT_SHARD_FRAGMENT);
-					output.accept(AttunedContent.ATTUNEMENT_JOURNAL);
-					output.accept(AttunedContent.SATCHEL_OF_FOCI);
-					output.accept(AttunedContent.GRAND_SATCHEL_OF_FOCI);
-					output.accept(AttunedContent.ATTUNEMENT_ALTAR);
-					output.accept(AttunedContent.ALTAR_OF_REWEAVING);
+					output.accept(AttunedContent.ATTUNEMENT_SHARD.get());
+					output.accept(AttunedContent.ATTUNEMENT_SHARD_FRAGMENT.get());
+					output.accept(AttunedContent.ATTUNEMENT_JOURNAL.get());
+					output.accept(AttunedContent.SATCHEL_OF_FOCI.get());
+					output.accept(AttunedContent.GRAND_SATCHEL_OF_FOCI.get());
+					output.accept(AttunedContent.ATTUNEMENT_ALTAR.get());
+					output.accept(AttunedContent.ALTAR_OF_REWEAVING.get());
 					// The blank, author-skinnable Focus pool carries no FocusDefinition,
-					// so fociInDisplayOrder never surfaces it — accept it explicitly.
-					for (Item customFocus : AttunedContent.CUSTOM_FOCI) {
-						output.accept(customFocus);
+					// so fociInDisplayOrder never surfaces it â€” accept it explicitly.
+					for (DeferredItem<Item> customFocus : AttunedContent.CUSTOM_FOCI) {
+						output.accept(customFocus.get());
 					}
 				}
 			})
 			.build();
-		Registry.register(BuiltInRegistries.CREATIVE_MODE_TAB,
-			Identifier.fromNamespaceAndPath(Attuned.MOD_ID, id), tab);
+		NeoForgeDeferredRegistries.creativeTab(Identifier.fromNamespaceAndPath(Attuned.MOD_ID, id), tab);
 	}
 
 	/**

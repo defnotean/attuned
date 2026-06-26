@@ -3,7 +3,8 @@ package dev.attuned.client.screen;
 import dev.attuned.menu.AltarMenuType;
 import dev.attuned.menu.ReweavingMenuType;
 import dev.attuned.menu.SatchelMenuType;
-import net.minecraft.client.gui.screens.MenuScreens;
+import dev.attuned.platform.NeoForgeEventBuses;
+import net.neoforged.neoforge.client.event.RegisterMenuScreensEvent;
 
 /**
  * Client-side hook-up for the Altar's screen: maps the registered Altar menu
@@ -23,9 +24,13 @@ public final class AltarScreens {
 		}
 		initialized = true;
 
-		MenuScreens.register(AltarMenuType.TYPE, AltarScreen::new);
-		MenuScreens.register(ReweavingMenuType.TYPE, ReweavingScreen::new);
-		MenuScreens.register(SatchelMenuType.TYPE, SatchelScreen::new);
-		MenuScreens.register(SatchelMenuType.GRAND_TYPE, SatchelScreen::new);
+		NeoForgeEventBuses.modEventBus().addListener(AltarScreens::register);
+	}
+
+	private static void register(RegisterMenuScreensEvent event) {
+		event.register(AltarMenuType.TYPE, AltarScreen::new);
+		event.register(ReweavingMenuType.TYPE, ReweavingScreen::new);
+		event.register(SatchelMenuType.TYPE, SatchelScreen::new);
+		event.register(SatchelMenuType.GRAND_TYPE, SatchelScreen::new);
 	}
 }

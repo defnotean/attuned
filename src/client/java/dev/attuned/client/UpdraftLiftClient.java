@@ -91,7 +91,7 @@ public final class UpdraftLiftClient {
 	private static boolean hasActiveUpdraft(Player player) {
 		AttunedInv inv = AttunedAttachments.getInventory(player);
 		for (int slot : Attunement.resolution(player).activeSlots()) {
-			if (inv.get(slot).is(AttunedContent.UPDRAFT_FOCUS)) {
+			if (inv.get(slot).is(AttunedContent.UPDRAFT_FOCUS.get())) {
 				return true;
 			}
 		}

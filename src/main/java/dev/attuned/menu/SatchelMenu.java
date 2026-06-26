@@ -88,8 +88,8 @@ public class SatchelMenu extends AbstractContainerMenu {
 					@Override
 					public boolean mayPlace(ItemStack stack) {
 						return Attunement.definitionFor(inventory.player, stack).isPresent()
-							&& stack.getItem() != AttunedContent.SATCHEL_OF_FOCI
-							&& stack.getItem() != AttunedContent.GRAND_SATCHEL_OF_FOCI;
+							&& stack.getItem() != AttunedContent.SATCHEL_OF_FOCI.get()
+							&& stack.getItem() != AttunedContent.GRAND_SATCHEL_OF_FOCI.get();
 					}
 				});
 			}
@@ -150,8 +150,8 @@ public class SatchelMenu extends AbstractContainerMenu {
 	}
 
 	private static boolean isReliquary(ItemStack stack) {
-		return stack.getItem() == AttunedContent.SATCHEL_OF_FOCI
-			|| stack.getItem() == AttunedContent.GRAND_SATCHEL_OF_FOCI;
+		return stack.getItem() == AttunedContent.SATCHEL_OF_FOCI.get()
+			|| stack.getItem() == AttunedContent.GRAND_SATCHEL_OF_FOCI.get();
 	}
 
 	@Override

@@ -25,7 +25,7 @@ import net.minecraft.world.effect.MobEffects;
  * <p>When a player with an active Gravebind Focus would die and the save is off
  * cooldown, the death is cancelled, the player is restored to half health with a
  * brief regeneration and resistance, and a totem-like flourish plays. The
- * per-player cooldown lives only in memory — it need not survive a restart.
+ * per-player cooldown lives only in memory â€” it need not survive a restart.
  */
 public final class GravebindSave {
 	private GravebindSave() {}
@@ -61,7 +61,7 @@ public final class GravebindSave {
 	private static boolean hasGravebindActive(ServerPlayer player) {
 		AttunedInv inv = AttunedAttachments.getInventory(player);
 		for (int slot : Attunement.activeSlots(player)) {
-			if (inv.get(slot).is(AttunedContent.GRAVEBIND_FOCUS)) {
+			if (inv.get(slot).is(AttunedContent.GRAVEBIND_FOCUS.get())) {
 				return true;
 			}
 		}

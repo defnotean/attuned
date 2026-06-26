@@ -42,7 +42,7 @@ public class AttunementShardFragmentItem extends Item {
 		int count = 0;
 		for (int i = 0; i < player.getInventory().getContainerSize(); i++) {
 			ItemStack stack = player.getInventory().getItem(i);
-			if (stack.is(AttunedContent.ATTUNEMENT_SHARD_FRAGMENT)) {
+			if (stack.is(AttunedContent.ATTUNEMENT_SHARD_FRAGMENT.get())) {
 				count += stack.getCount();
 			}
 		}

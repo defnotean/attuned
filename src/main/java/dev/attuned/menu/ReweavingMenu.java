@@ -84,10 +84,10 @@ public class ReweavingMenu extends AbstractContainerMenu {
 		this.addSlot(new Slot(container, CATALYST_SLOT, CATALYST_SLOT_X, CATALYST_SLOT_Y) {
 			@Override
 			public boolean mayPlace(ItemStack stack) {
-				if (stack.is(AttunedContent.ATTUNEMENT_SHARD_FRAGMENT)) {
+				if (stack.is(AttunedContent.ATTUNEMENT_SHARD_FRAGMENT.get())) {
 					return true;
 				}
-				return stack.is(AttunedContent.ATTUNEMENT_SHARD) && ReweavingMenu.this.affinityLoomCatalystAllowed();
+				return stack.is(AttunedContent.ATTUNEMENT_SHARD.get()) && ReweavingMenu.this.affinityLoomCatalystAllowed();
 			}
 		});
 		this.addSlot(new Slot(container, OUTPUT_SLOT, OUTPUT_SLOT_X, OUTPUT_SLOT_Y) {
@@ -111,7 +111,7 @@ public class ReweavingMenu extends AbstractContainerMenu {
 		if (!hasAllFocusInputs()) {
 			return false;
 		}
-		return this.container.getItem(CATALYST_SLOT).is(AttunedContent.ATTUNEMENT_SHARD_FRAGMENT);
+		return this.container.getItem(CATALYST_SLOT).is(AttunedContent.ATTUNEMENT_SHARD_FRAGMENT.get());
 	}
 
 	public boolean hasAllFocusInputs() {
@@ -129,7 +129,7 @@ public class ReweavingMenu extends AbstractContainerMenu {
 	 * Shard Fragment catalyst is present. Gated through {@link TemperingResolver}.
 	 */
 	public boolean canTemper() {
-		if (!this.container.getItem(CATALYST_SLOT).is(AttunedContent.ATTUNEMENT_SHARD_FRAGMENT)) {
+		if (!this.container.getItem(CATALYST_SLOT).is(AttunedContent.ATTUNEMENT_SHARD_FRAGMENT.get())) {
 			return false;
 		}
 		ItemStack first = this.container.getItem(0);
@@ -169,7 +169,7 @@ public class ReweavingMenu extends AbstractContainerMenu {
 		}
 		ItemStack catalyst = this.container.getItem(CATALYST_SLOT);
 		int cost = affinityLoomShardCost();
-		return catalyst.is(AttunedContent.ATTUNEMENT_SHARD) && catalyst.getCount() >= cost;
+		return catalyst.is(AttunedContent.ATTUNEMENT_SHARD.get()) && catalyst.getCount() >= cost;
 	}
 
 	public boolean affinityLoomLayout() {
@@ -206,7 +206,7 @@ public class ReweavingMenu extends AbstractContainerMenu {
 
 	@Override
 	public boolean stillValid(Player player) {
-		return stillValid(this.access, player, AttunedContent.ALTAR_OF_REWEAVING);
+		return stillValid(this.access, player, AttunedContent.ALTAR_OF_REWEAVING.get());
 	}
 
 	@Override
@@ -230,8 +230,8 @@ public class ReweavingMenu extends AbstractContainerMenu {
 			if (!this.moveItemStackTo(stack, INPUT_START, FOCUS_INPUTS, false)) {
 				return ItemStack.EMPTY;
 			}
-		} else if (stack.is(AttunedContent.ATTUNEMENT_SHARD_FRAGMENT)
-				|| stack.is(AttunedContent.ATTUNEMENT_SHARD)) {
+		} else if (stack.is(AttunedContent.ATTUNEMENT_SHARD_FRAGMENT.get())
+				|| stack.is(AttunedContent.ATTUNEMENT_SHARD.get())) {
 			if (!this.moveItemStackTo(stack, CATALYST_SLOT, CATALYST_SLOT + 1, false)) {
 				return ItemStack.EMPTY;
 			}

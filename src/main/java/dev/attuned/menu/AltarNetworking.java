@@ -29,7 +29,7 @@ public final class AltarNetworking {
 
 	/**
 	 * Minimum number of server ticks between two accepted binds from the same
-	 * player. A short window — enough to absorb a forged-client spam burst
+	 * player. A short window â€” enough to absorb a forged-client spam burst
 	 * without being noticeable to a human clicking the Bind button.
 	 */
 	private static final int BIND_COOLDOWN_TICKS = 5;
@@ -60,8 +60,8 @@ public final class AltarNetworking {
 	 * Validates that the player has the Altar menu open with a shard in the
 	 * input slot, then performs one bind: consumes a shard and raises capacity
 	 * by the configured amount. Reachability is rechecked through the menu's
-	 * {@code ContainerLevelAccess} so a forged payload from a fleeing player —
-	 * or one who has dimension-changed since opening the GUI — cannot bind
+	 * {@code ContainerLevelAccess} so a forged payload from a fleeing player â€”
+	 * or one who has dimension-changed since opening the GUI â€” cannot bind
 	 * against a stale or wrong-dimension position.
 	 */
 	private static void tryBind(ServerPlayer player) {
@@ -76,7 +76,7 @@ public final class AltarNetworking {
 				return;
 			}
 			BlockState state = serverLevel.getBlockState(pos);
-			if (!state.is(AttunedContent.ATTUNEMENT_ALTAR)) {
+			if (!state.is(AttunedContent.ATTUNEMENT_ALTAR.get())) {
 				return;
 			}
 			if (!player.isWithinBlockInteractionRange(pos, 4.0)) {
@@ -84,7 +84,7 @@ public final class AltarNetworking {
 			}
 			Container input = menu.inputContainer();
 			ItemStack shard = input.getItem(AltarMenu.INPUT_SLOT);
-			if (shard.isEmpty() || !shard.is(AttunedContent.ATTUNEMENT_SHARD)) {
+			if (shard.isEmpty() || !shard.is(AttunedContent.ATTUNEMENT_SHARD.get())) {
 				return;
 			}
 			// Silently ignore binds once capacity is at the cap. The client-side
@@ -104,11 +104,11 @@ public final class AltarNetworking {
 			if (last != null && now - last < BIND_COOLDOWN_TICKS) {
 				return;
 			}
-			// bindShard mutates the stack in place — it shrinks by one on success.
+			// bindShard mutates the stack in place â€” it shrinks by one on success.
 			AttunementAltarBlock.bindShard(serverLevel, pos, state, player, shard);
 			LAST_BIND_TICK.put(id, now);
 			// Whether or not it bound (cap reached, etc.), make sure the slot reflects
-			// the current stack — including the case where bindShard emptied it.
+			// the current stack â€” including the case where bindShard emptied it.
 			if (shard.isEmpty()) {
 				input.setItem(AltarMenu.INPUT_SLOT, ItemStack.EMPTY);
 			} else {

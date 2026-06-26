@@ -56,7 +56,7 @@ class SatchelMenuContractTest {
 			"SatchelMenu should be a real container menu.");
 		assertTrue(menu.contains("public SatchelMenu(int containerId, Inventory inventory)"),
 			"A client (int, Inventory) constructor is required by the MenuType factory.");
-		assertTrue(menu.contains("addStandardInventorySlots"),
+		assertTrue(menu.contains("addStandardInventorySlots") || menu.contains("addPlayerInventorySlots"),
 			"SatchelMenu should expose the player inventory for transfers.");
 		assertTrue(menu.contains("public boolean stillValid(Player player)"),
 			"SatchelMenu must validate the satchel is still in hand.");
@@ -82,11 +82,11 @@ class SatchelMenuContractTest {
 		assertTrue(menu.contains("isReliquary(player.getMainHandItem())")
 				&& menu.contains("isReliquary(player.getOffhandItem())"),
 			"Unknown-hand validity should accept a reliquary in either hand for offhand opens.");
-		assertTrue(menu.contains("stack.getItem() == AttunedContent.SATCHEL_OF_FOCI"),
+		assertTrue(menu.contains("stack.getItem() == AttunedContent.SATCHEL_OF_FOCI.get()"),
 			"isReliquary should still recognize the small Focus Reliquary item.");
 		assertTrue(menu.contains("getItemInHand"),
 			"Validity should check the held satchel stack rather than a block position.");
-		assertTrue(menu.contains("!= AttunedContent.SATCHEL_OF_FOCI"),
+		assertTrue(menu.contains("stack.getItem() != AttunedContent.SATCHEL_OF_FOCI.get()"),
 			"Satchel slots must refuse the satchel item itself (no nested-bag duplication).");
 	}
 
@@ -97,7 +97,7 @@ class SatchelMenuContractTest {
 			"MenuType registration should be idempotent.");
 		assertTrue(type.contains("initialized = true;"),
 			"MenuType registration should set its guard before registering.");
-		assertBefore(type, "initialized = true;", "Registry.register(BuiltInRegistries.MENU");
+		assertBefore(type, "initialized = true;", "NeoForgeDeferredRegistries.menu");
 		assertTrue(type.contains("new MenuType<>(SatchelMenu::new, FeatureFlags.VANILLA_SET)"),
 			"SatchelMenuType should use the plain MenuType ctor like AltarMenuType.");
 		assertTrue(type.contains("public static MenuProvider provider(Player player, InteractionHand hand)"),

@@ -30,11 +30,11 @@ import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 
 /**
- * Resonant surges — periodic thunderstorm events. While a dimension is
+ * Resonant surges â€” periodic thunderstorm events. While a dimension is
  * thundering, a surge site may activate near a random online player there: for
  * the configured duration, players within the surge radius gain resonance at
  * {@link ResonantSurgeResolver#resonanceGainMultiplier()} the normal rate. The
- * surge is deliberately loud — particles and ambient sound every second — so the
+ * surge is deliberately loud â€” particles and ambient sound every second â€” so the
  * reward of fast resonance comes with the risk of being a beacon in the dark.
  *
  * <p>Server-only and single-threaded: the one active surge and its arithmetic
@@ -158,7 +158,7 @@ public final class ResonantSurges {
 	}
 
 	/**
-	 * Bonus loot for fighting at the surge site — a small shard-fragment drip that
+	 * Bonus loot for fighting at the surge site â€” a small shard-fragment drip that
 	 * rewards players who answer the storm beacon.
 	 */
 	static void tryKillReward(ServerPlayer player) {
@@ -166,7 +166,7 @@ public final class ResonantSurges {
 			return;
 		}
 		int count = 1 + player.getRandom().nextInt(2);
-		ItemStack stack = new ItemStack(AttunedContent.ATTUNEMENT_SHARD_FRAGMENT, count);
+		ItemStack stack = new ItemStack(AttunedContent.ATTUNEMENT_SHARD_FRAGMENT.get(), count);
 		if (player.getInventory().add(stack)) {
 			PlayerMessages.overlay(player, Component.translatable("surge.attuned.kill_reward", count));
 			return;

@@ -102,7 +102,7 @@ public class ReweavingScreen extends AbstractContainerScreen<ReweavingMenu> {
 			return Component.translatable("screen.attuned.reweaving_altar.hint.missing_foci");
 		}
 		if (!this.menu.container().getItem(ReweavingMenu.CATALYST_SLOT)
-				.is(dev.attuned.content.AttunedContent.ATTUNEMENT_SHARD_FRAGMENT)) {
+				.is(dev.attuned.content.AttunedContent.ATTUNEMENT_SHARD_FRAGMENT.get())) {
 			return Component.translatable("screen.attuned.reweaving_altar.hint.missing_fragment");
 		}
 		return Component.translatable("screen.attuned.reweaving_altar.hint.ready");

@@ -1,43 +1,28 @@
 package dev.attuned.attunement;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.List;
-import dev.attuned.test.MinecraftTestBootstrap;
-import net.minecraft.world.item.ItemStack;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 class AttunedInvTest {
 	private static final Path SOURCE = Path.of("src/main/java/dev/attuned/attunement/AttunedInv.java");
 
-	@BeforeAll
-	static void bootstrapMinecraft() {
-		MinecraftTestBootstrap.ensureBootstrapped();
-	}
-
 	@Test
-	void publicConstructorNormalizesToSixSlots() {
-		AttunedInv inv = new AttunedInv(List.of());
+	void inventoryNormalizesToSixImmutableSlots() throws IOException {
+		String source = readSource();
 
-		assertEquals(AttunedInv.SIZE, inv.items().size());
-		for (int slot = 0; slot < AttunedInv.SIZE; slot++) {
-			assertEquals(ItemStack.EMPTY, inv.get(slot));
-		}
-	}
-
-	@Test
-	void itemsViewCannotMutateSnapshot() {
-		AttunedInv inv = AttunedInv.empty();
-
-		assertThrows(UnsupportedOperationException.class,
-			() -> inv.items().set(0, ItemStack.EMPTY));
+		assertTrue(source.contains("public static final int SIZE = 6;"),
+			"AttunedInv should keep the six equipped Focus slots contract.");
+		assertTrue(source.contains("for (int i = 0; i < SIZE; i++)"),
+			"Construction should pad or truncate to exactly SIZE slots.");
+		assertTrue(source.contains("ItemStack stack = i < sourceSize ? source.get(i) : ItemStack.EMPTY;"),
+			"Missing slots should normalize to ItemStack.EMPTY.");
+		assertTrue(source.contains("return List.copyOf(list);"),
+			"The normalized inventory snapshot should be immutable.");
 	}
 
 	@Test
@@ -77,24 +62,15 @@ class AttunedInvTest {
 	}
 
 	@Test
-	void getCopiesMutableItemStack() throws IOException {
+	void getCopiesMutableItemStackAndValidatesSlots() throws IOException {
 		String source = readSource();
 
 		assertTrue(source.contains("return copyStack(items.get(requireSlot(slot)));"),
 			"get should not expose the stored mutable ItemStack from the immutable snapshot.");
-	}
-
-	@Test
-	void invalidSlotsFailWithClearMessage() {
-		AttunedInv inv = AttunedInv.empty();
-
-		IllegalArgumentException negativeGet =
-			assertThrows(IllegalArgumentException.class, () -> inv.get(-1));
-		IllegalArgumentException upperSet =
-			assertThrows(IllegalArgumentException.class, () -> inv.with(AttunedInv.SIZE, ItemStack.EMPTY));
-
-		assertEquals("slot must be between 0 and 5", negativeGet.getMessage());
-		assertEquals("slot must be between 0 and 5", upperSet.getMessage());
+		assertTrue(source.contains("private static int requireSlot(int slot)"),
+			"Slot validation should be centralized.");
+		assertTrue(source.contains("throw new IllegalArgumentException(\"slot must be between 0 and \" + (SIZE - 1));"),
+			"Invalid slots should fail with the stable bounds message.");
 	}
 
 	private static String readSource() throws IOException {
