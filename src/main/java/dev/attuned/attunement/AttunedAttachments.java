@@ -5,6 +5,7 @@ import dev.attuned.Attuned;
 import dev.attuned.AttunedConfig;
 import dev.attuned.AttunedPlayerCleanup;
 import dev.attuned.AttunedServerCleanup;
+import dev.attuned.network.AttunementStatePayload;
 import dev.attuned.pacts.Pact;
 import dev.attuned.pacts.PactTrialProgress;
 import dev.attuned.pacts.PactTrials;
@@ -12,6 +13,10 @@ import net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentRegistry;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentSyncPredicate;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentType;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
+import net.minecraft.nbt.NbtOps;
+import net.minecraft.nbt.Tag;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
@@ -127,6 +132,7 @@ public final class AttunedAttachments {
 			return;
 		}
 		initialized = true;
+		ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> syncToClient(handler.player));
 		ServerPlayerEvents.AFTER_RESPAWN.register(AttunedAttachments::copyForRespawn);
 		AttunedPlayerCleanup.onForget(PLAYER_ATTACHMENTS::remove);
 		AttunedServerCleanup.onStop(PLAYER_ATTACHMENTS::clear);
@@ -135,6 +141,7 @@ public final class AttunedAttachments {
 	private static void copyForRespawn(ServerPlayer oldPlayer, ServerPlayer newPlayer, boolean alive) {
 		Map<AttachmentType<?>, Object> oldValues = PLAYER_ATTACHMENTS.get(oldPlayer.getUUID());
 		if (oldValues == null || oldValues.isEmpty()) {
+			syncToClient(newPlayer);
 			return;
 		}
 		Map<AttachmentType<?>, Object> copied = new HashMap<>();
@@ -145,17 +152,28 @@ public final class AttunedAttachments {
 		});
 		if (!copied.isEmpty()) {
 			PLAYER_ATTACHMENTS.put(newPlayer.getUUID(), copied);
+			copied.forEach((type, value) -> persistCopied(newPlayer, type, value));
 		}
+		syncToClient(newPlayer);
 	}
 
 	public static <T> T get(Player player, AttachmentType<T> type, T fallback) {
 		if (player == null) {
 			return fallback;
 		}
-		Object value = PLAYER_ATTACHMENTS
-			.getOrDefault(player.getUUID(), Map.of())
-			.get(type);
+		Map<AttachmentType<?>, Object> values = PLAYER_ATTACHMENTS.get(player.getUUID());
+		Object value = values == null ? null : values.get(type);
 		if (value == null) {
+			if (player instanceof ServerPlayer serverPlayer) {
+				Optional<T> persisted = loadPersistent(serverPlayer, type);
+				if (persisted.isPresent()) {
+					T persistedValue = persisted.get();
+					PLAYER_ATTACHMENTS
+						.computeIfAbsent(player.getUUID(), ignored -> new HashMap<>())
+						.put(type, persistedValue);
+					return persistedValue;
+				}
+			}
 			T initial = type.initialValue();
 			return initial == null ? fallback : initial;
 		}
@@ -169,6 +187,41 @@ public final class AttunedAttachments {
 		PLAYER_ATTACHMENTS
 			.computeIfAbsent(player.getUUID(), ignored -> new HashMap<>())
 			.put(type, value);
+		if (player instanceof ServerPlayer serverPlayer) {
+			persist(serverPlayer, type, value);
+		}
+		syncToClient(player);
+	}
+
+	private static <T> Optional<T> loadPersistent(ServerPlayer player, AttachmentType<T> type) {
+		Codec<T> codec = type.persistentCodec();
+		if (codec == null) {
+			return Optional.empty();
+		}
+		Tag tag = player.getPersistentData().get(type.id().toString());
+		if (tag == null) {
+			return Optional.empty();
+		}
+		return codec.parse(NbtOps.INSTANCE, tag)
+			.resultOrPartial(message -> Attuned.LOGGER.warn(
+				"Unable to decode persisted attachment {} for {}: {}",
+				type.id(), player.getScoreboardName(), message));
+	}
+
+	private static <T> void persist(ServerPlayer player, AttachmentType<T> type, T value) {
+		Codec<T> codec = type.persistentCodec();
+		if (codec == null) {
+			return;
+		}
+		codec.encodeStart(NbtOps.INSTANCE, value)
+			.resultOrPartial(message -> Attuned.LOGGER.warn(
+				"Unable to encode persisted attachment {} for {}: {}",
+				type.id(), player.getScoreboardName(), message))
+			.ifPresent(tag -> player.getPersistentData().put(type.id().toString(), tag));
+	}
+
+	private static <T> void persistCopied(ServerPlayer player, AttachmentType<T> type, Object value) {
+		persist(player, type, type.cast(value));
 	}
 
 	/**
@@ -308,6 +361,14 @@ public final class AttunedAttachments {
 		set(player, RESONANCE, clampResonance(value));
 	}
 
+	public static PactTrialProgress getPactTrialProgressValue(Player player) {
+		return get(player, PACT_TRIAL_PROGRESS, PactTrialProgress.EMPTY);
+	}
+
+	public static void setPactTrialProgress(Player player, PactTrialProgress progress) {
+		set(player, PACT_TRIAL_PROGRESS, progress == null ? PactTrialProgress.EMPTY : progress);
+	}
+
 	private static float clampResonance(float value) {
 		if (!Float.isFinite(value)) {
 			return 0.0F;
@@ -357,6 +418,31 @@ public final class AttunedAttachments {
 		List<String> updated = new ArrayList<>(discovered);
 		updated.add(confluenceId);
 		set(player, DISCOVERED_CONFLUENCES, List.copyOf(updated));
+	}
+
+	public static void applySyncedState(Player player, AttunementStatePayload state) {
+		if (player == null || state == null) {
+			return;
+		}
+		set(player, CAPACITY, clampCapacity(state.capacity()));
+		set(player, INVENTORY, state.inventory());
+		set(player, PRESETS, normalizePresets(state.presets()));
+		set(player, RESONANCE, clampResonance(state.resonance()));
+		set(player, PACT_TRIAL_PROGRESS, state.pactTrialProgress());
+		set(player, DISCOVERED_CONFLUENCES, List.copyOf(state.discoveredConfluences()));
+	}
+
+	public static void syncToClient(Player player) {
+		if (!(player instanceof ServerPlayer serverPlayer)) {
+			return;
+		}
+		ServerPlayNetworking.send(serverPlayer, new AttunementStatePayload(
+			getCapacity(serverPlayer),
+			getInventory(serverPlayer),
+			getPresets(serverPlayer),
+			getResonance(serverPlayer),
+			getPactTrialProgressValue(serverPlayer),
+			getDiscoveredConfluences(serverPlayer)));
 	}
 
 	private static Optional<String> normalizedAttachmentId(String id) {

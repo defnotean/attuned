@@ -15,6 +15,7 @@ public final class AttunedClient {
 		AttunedClientConfig.load();
 		AttunedTooltips.init();
 		AttunedKeybinds.init();
+		AttunementStateClient.init();
 		FocusAbilityClientState.init();
 		CircleClientState.init();
 		AffinityInspectClient.init();
