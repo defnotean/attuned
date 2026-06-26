@@ -1,31 +1,50 @@
 package dev.attuned.command;
 
 import com.mojang.brigadier.arguments.IntegerArgumentType;
+import com.mojang.brigadier.arguments.StringArgumentType;
+import com.mojang.brigadier.builder.LiteralArgumentBuilder;
+import dev.attuned.Attuned;
+import dev.attuned.AttunedRegistries;
 import dev.attuned.api.focus.Affinity;
+import dev.attuned.api.focus.FocusBehaviorDef;
 import dev.attuned.api.focus.FocusDefinition;
 import dev.attuned.api.focus.ModifierEntry;
-import dev.attuned.AttunedRegistries;
 import dev.attuned.attunement.AttunedAttachments;
 import dev.attuned.attunement.AttunedInv;
 import dev.attuned.attunement.Attunement;
 import dev.attuned.combat.Apex;
 import dev.attuned.combat.Resonance;
 import dev.attuned.content.AttunementJournalItem;
+import dev.attuned.network.CircleSnapshotSync;
+import dev.attuned.network.CircleInvitePromptPayload;
+import dev.attuned.party.CircleContributions;
+import dev.attuned.party.CirclePolicy;
+import dev.attuned.party.CircleRuntime;
 import dev.attuned.pacts.Pact;
 import dev.attuned.pacts.Pacts;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
+import java.util.function.Function;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.minecraft.ChatFormatting;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
+import net.minecraft.commands.arguments.EntityArgument;
+import net.minecraft.core.Holder;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.effect.MobEffect;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 
 /**
@@ -75,6 +94,7 @@ public final class AttunedCommands {
 									int to = IntegerArgumentType.getInteger(ctx, "to") - 1;
 									return moveFocus(ctx.getSource(), player, from, to);
 								})))))
+				.then(circleCommands())
 				// Operator-only (permission level 2). In 26.1 the old
 				// CommandSourceStack#hasPermission(int) is gone; gating now uses
 				// Commands.hasPermission(PermissionCheck) with a LEVEL_* constant.
@@ -109,6 +129,124 @@ public final class AttunedCommands {
 					.executes(ctx -> validateContent(ctx.getSource())))));
 	}
 
+	private static LiteralArgumentBuilder<CommandSourceStack> circleCommands() {
+		return Commands.literal("circle")
+			.then(Commands.literal("create")
+				.then(Commands.argument("name", StringArgumentType.greedyString())
+					.executes(ctx -> {
+						CommandSourceStack source = ctx.getSource();
+						ServerPlayer player = source.getPlayerOrException();
+						CirclePolicy.Result result = CircleRuntime.manager().create(player.getUUID(), StringArgumentType.getString(ctx, "name"), player.level().getGameTime());
+						CircleContributions.forgetIfMembershipChanged(result, player);
+						CircleSnapshotSync.syncAfter(player.level().getServer(), result, player);
+						sendCircleResult(source, result.status());
+						return circleResultCode(result.status());
+					})))
+			.then(Commands.literal("invite")
+				.then(Commands.argument("target", EntityArgument.player())
+					.executes(ctx -> {
+						CommandSourceStack source = ctx.getSource();
+						ServerPlayer player = source.getPlayerOrException();
+						ServerPlayer target = EntityArgument.getPlayer(ctx, "target");
+						CirclePolicy.Result result = CircleRuntime.manager().invite(player.getUUID(), target.getUUID(), player.level().getGameTime());
+						CircleSnapshotSync.syncAfter(player.level().getServer(), result, player, target);
+						sendCircleResult(source, result.status());
+						if (result.status() == CirclePolicy.Status.OK) {
+							sendCircleInviteNotice(target, player, result.circle().orElseThrow());
+						}
+						return circleResultCode(result.status());
+					})))
+			.then(Commands.literal("accept")
+				.then(Commands.argument("inviter", EntityArgument.player())
+					.executes(ctx -> {
+						CommandSourceStack source = ctx.getSource();
+						ServerPlayer player = source.getPlayerOrException();
+						ServerPlayer inviter = EntityArgument.getPlayer(ctx, "inviter");
+						CirclePolicy.Result result = CircleRuntime.manager().accept(player.getUUID(), inviter.getUUID(), player.level().getGameTime());
+						CircleContributions.forgetIfMembershipChanged(result, player);
+						CircleSnapshotSync.syncAfter(player.level().getServer(), result, player, inviter);
+						sendCircleResult(source, result.status());
+						return circleResultCode(result.status());
+					})))
+			.then(Commands.literal("leave")
+				.executes(ctx -> {
+					CommandSourceStack source = ctx.getSource();
+					ServerPlayer player = source.getPlayerOrException();
+					CirclePolicy.Result result = CircleRuntime.manager().leave(player.getUUID(), player.level().getGameTime());
+					CircleContributions.forgetIfMembershipChanged(result, player);
+					CircleSnapshotSync.syncAfter(player.level().getServer(), result, player);
+					sendCircleResult(source, result.status());
+					return circleResultCode(result.status());
+				}))
+			.then(Commands.literal("disband")
+				.executes(ctx -> {
+					CommandSourceStack source = ctx.getSource();
+					ServerPlayer player = source.getPlayerOrException();
+					Optional<CirclePolicy.Circle> previousCircle =
+						CircleRuntime.manager().circleOf(player.getUUID());
+					CirclePolicy.Result result =
+						CircleRuntime.manager().disband(player.getUUID(), player.level().getGameTime());
+					ServerPlayer[] affected = onlineCircleMembers(player, previousCircle);
+					CircleContributions.forgetIfMembershipChanged(result, affected);
+					CircleSnapshotSync.syncAfter(player.level().getServer(), result, affected);
+					sendCircleResult(source, result.status());
+					return circleResultCode(result.status());
+				}))
+			.then(Commands.literal("kick")
+				.then(Commands.argument("target", EntityArgument.player())
+					.executes(ctx -> {
+						CommandSourceStack source = ctx.getSource();
+						ServerPlayer player = source.getPlayerOrException();
+						ServerPlayer target = EntityArgument.getPlayer(ctx, "target");
+						CirclePolicy.Result result = CircleRuntime.manager().kick(player.getUUID(), target.getUUID());
+						CircleContributions.forgetIfMembershipChanged(result, target);
+						CircleSnapshotSync.syncAfter(player.level().getServer(), result, player, target);
+						sendCircleResult(source, result.status());
+						return circleResultCode(result.status());
+					})));
+	}
+
+	private static void sendCircleResult(CommandSourceStack source, CirclePolicy.Status status) {
+		MutableComponent message = Component.translatable("circle.attuned.status."
+			+ status.name().toLowerCase(Locale.ROOT));
+		if (circleResultCode(status) > 0) {
+			source.sendSuccess(() -> message.withStyle(ChatFormatting.AQUA), false);
+		} else {
+			source.sendFailure(message.withStyle(ChatFormatting.RED));
+		}
+	}
+
+	private static int circleResultCode(CirclePolicy.Status status) {
+		return status == CirclePolicy.Status.OK || status == CirclePolicy.Status.DISBANDED ? 1 : 0;
+	}
+
+	private static ServerPlayer[] onlineCircleMembers(ServerPlayer player,
+			Optional<CirclePolicy.Circle> previousCircle) {
+		if (previousCircle.isEmpty()) {
+			return new ServerPlayer[] { player };
+		}
+		return previousCircle.orElseThrow().members().stream()
+			.map(member -> player.level().getServer().getPlayerList().getPlayer(member))
+			.filter(member -> member != null)
+			.toArray(ServerPlayer[]::new);
+	}
+
+	private static void sendCircleInviteNotice(ServerPlayer target, ServerPlayer inviter, CirclePolicy.Circle circle) {
+		ServerPlayNetworking.send(target, new CircleInvitePromptPayload(
+			inviter.getUUID(),
+			inviter.getName().getString(),
+			circle.name(),
+			circle.members().size(),
+			CircleRuntime.maxMembers(),
+			circle.invites().get(target.getUUID()).expiresAtTick()));
+		target.sendSystemMessage(Component.translatable("circle.attuned.invited",
+			inviter.getDisplayName(),
+			circle.name(),
+			circle.members().size(),
+			CircleRuntime.maxMembers(),
+			CircleRuntime.inviteTtlSeconds()).withStyle(ChatFormatting.AQUA));
+	}
+
 	private static int moveFocus(CommandSourceStack source, ServerPlayer player, int from, int to) {
 		if (to < 0 || to >= AttunedInv.SIZE) {
 			source.sendFailure(Component.literal("That Focus slot cannot move any further."));
@@ -140,41 +278,54 @@ public final class AttunedCommands {
 	}
 
 	private static int validateContent(CommandSourceStack source) {
-		List<String> problems = new ArrayList<>();
-		List<String> warnings = new ArrayList<>();
+		List<ValidationIssue> problems = new ArrayList<>();
+		List<ValidationIssue> warnings = new ArrayList<>();
 		var registries = source.getServer().registryAccess();
 		var registry = registries.lookupOrThrow(AttunedRegistries.FOCUS_DEFINITIONS);
-		Map<net.minecraft.world.item.Item, FocusDefinition> byItem = new IdentityHashMap<>();
+		Map<Item, FocusDefinition> byItem = new IdentityHashMap<>();
+		Set<Identifier> focusDefinitionIds = new HashSet<>();
 		// Walk every focus/<name>.json file by file: each problem and each warning
 		// is qualified with the Focus's item key so an author can find the source file.
 		registry.listElements().forEach(holder -> {
 			FocusDefinition def = holder.value();
-			var itemKey = BuiltInRegistries.ITEM.getKey(def.item().value());
+			Identifier focusId = holder.key().identifier();
+			focusDefinitionIds.add(focusId);
+			String focusPath = focusDefinitionPath(focusId);
+			Identifier itemId = registryId(def.item(), BuiltInRegistries.ITEM::getKey);
 			// An item that failed to resolve to a real registered item.
 			if (!def.item().isBound()) {
-				problems.add("Focus item failed to resolve: " + itemKey);
-			}
-			FocusDefinition previous = byItem.putIfAbsent(def.item().value(), def);
-			if (previous != null) {
-				problems.add("Duplicate FocusDefinition item: " + itemKey);
+				problems.add(ValidationIssue.error(focusPath, "item", itemId.toString(),
+					"Focus item failed to resolve."));
+			} else {
+				FocusDefinition previous = byItem.putIfAbsent(def.item().value(), def);
+				if (previous != null) {
+					problems.add(ValidationIssue.error(focusPath, "item", itemId.toString(),
+						"Duplicate FocusDefinition item."));
+				}
 			}
 			// Behavior ids resolve code-first-then-data through the single funnel.
 			def.behavior().ifPresent(behaviorId -> {
 				if (AttunedRegistries.getBehavior(behaviorId, registries) == null) {
-					problems.add("Missing behavior " + behaviorId + " for " + itemKey);
+					problems.add(ValidationIssue.error(focusPath, "behavior", behaviorId.toString(),
+						"Behavior id is not registered in code or the focus_behavior palette."));
 				}
 			});
 			// Attribute ids on every modifier must resolve to a real attribute.
-			for (ModifierEntry modifier : def.modifiers()) {
+			for (int index = 0; index < def.modifiers().size(); index++) {
+				ModifierEntry modifier = def.modifiers().get(index);
 				if (!modifier.attribute().isBound()) {
-					problems.add("Modifier attribute failed to resolve on " + itemKey);
+					Identifier attributeId = registryId(modifier.attribute(), BuiltInRegistries.ATTRIBUTE::getKey);
+					String fieldPath = "modifiers[" + index + "].attribute";
+					problems.add(ValidationIssue.error(focusPath, fieldPath, attributeId.toString(),
+						"Modifier attribute failed to resolve."));
 				}
 			}
 			// A missing display-name lang key is a warning, not a hard failure: the
 			// Focus still works, it just shows a raw translation key in game.
-			String langKey = "item." + itemKey.getNamespace() + "." + itemKey.getPath();
+			String langKey = "item." + itemId.getNamespace() + "." + itemId.getPath();
 			if (!net.minecraft.locale.Language.getInstance().has(langKey)) {
-				warnings.add("Missing display-name lang key (expected " + langKey + ") for " + itemKey);
+				warnings.add(ValidationIssue.warning(focusPath, "lang." + langKey, langKey,
+					"Missing display-name lang key."));
 			}
 		});
 
@@ -182,16 +333,54 @@ public final class AttunedCommands {
 		// author shipped is reported alongside their focus files. A palette entry that
 		// failed to decode never reaches the registry, so reaching here means it built.
 		var behaviorRegistry = registries.lookupOrThrow(AttunedRegistries.FOCUS_BEHAVIORS);
-		int paletteCount = (int) behaviorRegistry.listElements().count();
+		var behaviorDefinitions = behaviorRegistry.listElements().toList();
+		int paletteCount = behaviorDefinitions.size();
+		behaviorDefinitions.forEach(holder -> {
+			Identifier behaviorId = holder.key().identifier();
+			String behaviorPath = focusBehaviorDefinitionPath(behaviorId);
+			validateBehaviorDefinition(problems, behaviorPath, holder.value());
+		});
+		var synergyRegistry = registries.lookupOrThrow(AttunedRegistries.SYNERGY_DEFINITIONS);
+		var synergies = synergyRegistry.listElements().toList();
+		int synergyCount = synergies.size();
+		synergies.forEach(holder -> {
+			var def = holder.value();
+			Identifier synergyId = holder.key().identifier();
+			String synergyPath = synergyDefinitionPath(synergyId);
+			for (int index = 0; index < def.members().size(); index++) {
+				Identifier memberId = def.members().get(index);
+				if (!focusDefinitionIds.contains(memberId)) {
+					String fieldPath = "members[" + index + "]";
+					problems.add(ValidationIssue.error(synergyPath, fieldPath, memberId.toString(),
+						"Confluence member FocusDefinition failed to resolve."));
+				}
+			}
+			def.behavior().ifPresent(behaviorId -> {
+				if (AttunedRegistries.getBehavior(behaviorId, registries) == null) {
+					problems.add(ValidationIssue.error(synergyPath, "behavior", behaviorId.toString(),
+						"Confluence behavior id is not registered in code or the focus_behavior palette."));
+				}
+			});
+			for (int index = 0; index < def.modifiers().size(); index++) {
+				ModifierEntry modifier = def.modifiers().get(index);
+				if (!modifier.attribute().isBound()) {
+					Identifier attributeId = registryId(modifier.attribute(), BuiltInRegistries.ATTRIBUTE::getKey);
+					String fieldPath = "modifiers[" + index + "].attribute";
+					problems.add(ValidationIssue.error(synergyPath, fieldPath, attributeId.toString(),
+						"Confluence modifier attribute failed to resolve."));
+				}
+			}
+		});
 
 		if (problems.isEmpty()) {
 			source.sendSuccess(() -> Component.literal("Attuned validation passed: "
-				+ byItem.size() + " Focus definitions and " + paletteCount + " palette behavior(s) checked."), false);
+				+ byItem.size() + " Focus definitions, " + paletteCount + " palette behavior(s), and "
+				+ synergyCount + " Confluence definition(s) checked."), false);
 			if (!warnings.isEmpty()) {
 				source.sendSuccess(() -> Component.literal(
 					"Attuned validation: " + warnings.size() + " warning(s) (missing lang keys)."), false);
-				for (String warning : warnings.subList(0, Math.min(8, warnings.size()))) {
-					source.sendSuccess(() -> Component.literal("- " + warning), false);
+				for (ValidationIssue warning : warnings.subList(0, Math.min(8, warnings.size()))) {
+					source.sendSuccess(() -> Component.literal("- " + warning.format()), false);
 				}
 				if (warnings.size() > 8) {
 					source.sendSuccess(() -> Component.literal(
@@ -201,8 +390,8 @@ public final class AttunedCommands {
 			return byItem.size();
 		}
 		source.sendFailure(Component.literal("Attuned validation found " + problems.size() + " issue(s):"));
-		for (String problem : problems.subList(0, Math.min(8, problems.size()))) {
-			source.sendFailure(Component.literal("- " + problem));
+		for (ValidationIssue problem : problems.subList(0, Math.min(8, problems.size()))) {
+			source.sendFailure(Component.literal("- " + problem.format()));
 		}
 		if (problems.size() > 8) {
 			source.sendFailure(Component.literal("- ...and " + (problems.size() - 8) + " more."));
@@ -210,11 +399,92 @@ public final class AttunedCommands {
 		if (!warnings.isEmpty()) {
 			source.sendFailure(Component.literal(
 				"Plus " + warnings.size() + " warning(s) (missing lang keys):"));
-			for (String warning : warnings.subList(0, Math.min(8, warnings.size()))) {
-				source.sendFailure(Component.literal("- " + warning));
+			for (ValidationIssue warning : warnings.subList(0, Math.min(8, warnings.size()))) {
+				source.sendFailure(Component.literal("- " + warning.format()));
 			}
 		}
 		return 0;
+	}
+
+	private static String focusDefinitionPath(Identifier focusId) {
+		return "data/" + focusId.getNamespace() + "/" + Attuned.MOD_ID + "/focus/" + focusId.getPath() + ".json";
+	}
+
+	private static String focusBehaviorDefinitionPath(Identifier behaviorId) {
+		return "data/" + behaviorId.getNamespace() + "/" + Attuned.MOD_ID
+			+ "/focus_behavior/" + behaviorId.getPath() + ".json";
+	}
+
+	private static String synergyDefinitionPath(Identifier synergyId) {
+		return "data/" + synergyId.getNamespace() + "/" + Attuned.MOD_ID + "/synergy/" + synergyId.getPath() + ".json";
+	}
+
+	private static void validateBehaviorDefinition(List<ValidationIssue> problems, String behaviorPath,
+			FocusBehaviorDef definition) {
+		switch (definition) {
+			case FocusBehaviorDef.ConditionalMobEffect effect ->
+				validatePaletteMobEffect(problems, behaviorPath, effect.effect());
+			case FocusBehaviorDef.OnHitEffect effect ->
+				validatePaletteMobEffect(problems, behaviorPath, effect.effect());
+			case FocusBehaviorDef.PeriodicEffect effect ->
+				validatePaletteMobEffect(problems, behaviorPath, effect.effect());
+			case FocusBehaviorDef.BlockContextEffect effect ->
+				validatePaletteMobEffect(problems, behaviorPath, effect.effect());
+			case FocusBehaviorDef.UseItemWindow window -> {
+				window.effect().ifPresent(effect -> validatePaletteMobEffect(problems, behaviorPath, effect));
+				window.modifier().ifPresent(modifier -> validatePaletteModifier(problems, behaviorPath, modifier));
+			}
+			case FocusBehaviorDef.PartyAssist assist ->
+				validatePaletteMobEffect(problems, behaviorPath, assist.effect().effect());
+			case FocusBehaviorDef.MarkedTarget marked ->
+				validatePaletteMobEffect(problems, behaviorPath, marked.effectOnConsume().effect());
+			case FocusBehaviorDef.NavigationHint navigation -> {
+				// No nested registry ids: target_kind is codec-validated data.
+			}
+			case FocusBehaviorDef.AttributeWhile attributeWhile ->
+				validatePaletteModifier(problems, behaviorPath, attributeWhile.modifier());
+		}
+	}
+
+	private static void validatePaletteMobEffect(List<ValidationIssue> problems, String behaviorPath,
+			Holder<MobEffect> effect) {
+		if (!effect.isBound()) {
+			Identifier effectId = registryId(effect, BuiltInRegistries.MOB_EFFECT::getKey);
+			problems.add(ValidationIssue.error(behaviorPath, "effect", effectId.toString(),
+				"Palette mob effect failed to resolve."));
+		}
+	}
+
+	private static void validatePaletteModifier(List<ValidationIssue> problems, String behaviorPath,
+			ModifierEntry modifier) {
+		if (!modifier.attribute().isBound()) {
+			Identifier attributeId = registryId(modifier.attribute(), BuiltInRegistries.ATTRIBUTE::getKey);
+			problems.add(ValidationIssue.error(behaviorPath, "modifier.attribute", attributeId.toString(),
+				"Palette modifier attribute failed to resolve."));
+		}
+	}
+
+	private static <T> Identifier registryId(Holder<T> holder, Function<T, Identifier> boundId) {
+		return holder.unwrapKey()
+			.map(key -> key.identifier())
+			.orElseGet(() -> holder.isBound()
+				? boundId.apply(holder.value())
+				: Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "unknown_unbound_id"));
+	}
+
+	private record ValidationIssue(String filePath, String fieldPath, String badId, String message,
+			boolean warning) {
+		static ValidationIssue error(String filePath, String fieldPath, String badId, String message) {
+			return new ValidationIssue(filePath, fieldPath, badId, message, false);
+		}
+
+		static ValidationIssue warning(String filePath, String fieldPath, String badId, String message) {
+			return new ValidationIssue(filePath, fieldPath, badId, message, true);
+		}
+
+		String format() {
+			return filePath + ": " + fieldPath + " [" + badId + "] " + message;
+		}
 	}
 
 	/** Dumps the player's attunement state to the command source as styled chat lines. */

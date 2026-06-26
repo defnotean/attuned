@@ -17,6 +17,7 @@ import dev.attuned.content.AttunedComponents;
 import dev.attuned.content.AttunedContent;
 import dev.attuned.content.AttunedLoot;
 import dev.attuned.content.behavior.FactionSetBonuses;
+import dev.attuned.content.behavior.PaletteItemUse;
 import dev.attuned.effect.AttunedEffects;
 import dev.attuned.menu.AltarMenuType;
 import dev.attuned.menu.AltarNetworking;
@@ -27,12 +28,16 @@ import dev.attuned.menu.SatchelMenuType;
 import dev.attuned.network.AttunedNetworking;
 import dev.attuned.network.JournalNetworking;
 import dev.attuned.onboarding.Onboarding;
+import dev.attuned.party.CircleRuntime;
 import dev.attuned.pacts.PactDeathMessages;
 import dev.attuned.pacts.PactTrials;
 import dev.attuned.pacts.Pacts;
+import dev.attuned.platform.AttunedPlatform;
+import dev.attuned.platform.AttunedPlatformServices;
 import dev.attuned.synergy.Synergies;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.event.registry.DynamicRegistries;
+import net.fabricmc.loader.api.FabricLoader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,6 +47,7 @@ public class Attuned implements ModInitializer {
 
 	@Override
 	public void onInitialize() {
+		AttunedPlatform.install(new AttunedPlatformServices(FabricLoader.getInstance().getConfigDir()));
 		AttunedConfig.load();
 		DynamicRegistries.registerSynced(AttunedRegistries.FOCUS_DEFINITIONS, FocusDefinition.CODEC);
 		DynamicRegistries.registerSynced(AttunedRegistries.SYNERGY_DEFINITIONS, SynergyDefinition.CODEC);
@@ -49,6 +55,7 @@ public class Attuned implements ModInitializer {
 		AttunedAttachments.init();
 		AttunedPlayerCleanup.init();
 		AttunedServerCleanup.init();
+		CircleRuntime.init();
 		// Register generic Focus teardown before Focus behaviors add fallback cleanup callbacks.
 		AttunedEffects.init();
 		FactionSetBonuses.init();
@@ -58,6 +65,7 @@ public class Attuned implements ModInitializer {
 		AttunedLoot.init();
 		AttunedCommands.init();
 		AttunedCombat.init();
+		PaletteItemUse.init();
 		UnseenCombat.init();
 		RevenantCombat.init();
 		Apex.init();

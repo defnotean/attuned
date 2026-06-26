@@ -22,6 +22,24 @@ ROOT = Path(__file__).resolve().parents[1]
 PROJECT_ID = "1553444"
 ENDPOINT = f"https://minecraft.curseforge.com/api/projects/{PROJECT_ID}/upload-file"
 DEFAULT_AUTH_ENV = "CURSEFORGE_" + "TOKEN"
+LOADER_RELEASE_METADATA = {
+    "fabric": {
+        "game_version_name": "Fabric",
+        "required_dependency_slugs": ("fabric-api",),
+    },
+    "quilt": {
+        "game_version_name": "Quilt",
+        "required_dependency_slugs": (),
+    },
+    "neoforge": {
+        "game_version_name": "NeoForge",
+        "required_dependency_slugs": (),
+    },
+    "forge": {
+        "game_version_name": "Forge",
+        "required_dependency_slugs": (),
+    },
+}
 
 
 def gradle_properties(path: Path = ROOT / "gradle.properties") -> dict[str, str]:
@@ -48,8 +66,23 @@ def current_changelog_section(changelog: str, version: str) -> str:
     raise ValueError(f"CHANGELOG.md: missing Attuned {version} section")
 
 
+def loader_release_metadata(loader: str) -> dict[str, object]:
+    try:
+        return LOADER_RELEASE_METADATA[loader]
+    except KeyError as exc:
+        known = ", ".join(sorted(LOADER_RELEASE_METADATA))
+        raise ValueError(f"Unknown CurseForge loader {loader!r}. Known loaders: {known}") from exc
+
+
 def build_metadata(*, changelog: str, version: str, minecraft_version: str,
-                   java_version: str) -> dict[str, object]:
+                   java_version: str, loader: str = "fabric",
+                   required_dependency_slugs: tuple[str, ...] | None = None) -> dict[str, object]:
+    release_metadata = loader_release_metadata(loader)
+    dependency_slugs = (
+        tuple(required_dependency_slugs)
+        if required_dependency_slugs is not None
+        else tuple(release_metadata["required_dependency_slugs"])
+    )
     return {
         "changelog": current_changelog_section(changelog, version),
         "changelogType": "markdown",
@@ -59,12 +92,13 @@ def build_metadata(*, changelog: str, version: str, minecraft_version: str,
             f"Java {java_version}",
             "Client",
             "Server",
-            "Fabric",
+            str(release_metadata["game_version_name"]),
         ],
         "releaseType": "release",
         "relations": {
             "projects": [
-                {"slug": "fabric-api", "type": "requiredDependency"},
+                {"slug": slug, "type": "requiredDependency"}
+                for slug in dependency_slugs
             ],
         },
     }
@@ -121,6 +155,8 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
                         help="Print the metadata that would be uploaded, without sending the jar.")
     parser.add_argument("--auth-env", default=DEFAULT_AUTH_ENV,
                         help=f"Environment variable containing the Authors API token. Default: {DEFAULT_AUTH_ENV}.")
+    parser.add_argument("--loader", default="fabric", choices=sorted(LOADER_RELEASE_METADATA),
+                        help="CurseForge loader tag to apply. Default: fabric.")
     return parser.parse_args(argv)
 
 
@@ -135,6 +171,7 @@ def main(argv: list[str] | None = None) -> int:
         version=version,
         minecraft_version=minecraft_version,
         java_version=java_version,
+        loader=args.loader,
     )
     jar_path = ROOT / "build" / "libs" / f"attuned-{version}.jar"
     if not jar_path.is_file():

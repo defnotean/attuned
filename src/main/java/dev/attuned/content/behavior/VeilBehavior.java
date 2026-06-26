@@ -23,6 +23,7 @@ import net.minecraft.world.item.ItemStack;
 public final class VeilBehavior implements FocusBehavior {
 	private static final int CHARGE_TICKS = 40;
 	private static final int BREAK_COOLDOWN_TICKS = 60;
+	private static final int REVEALED_BREAK_COOLDOWN_TICKS = 100;
 	private static final int ABILITY_COOLDOWN_TICKS = 300;
 	private static final int ABILITY_VEIL_TICKS = 60;
 	private static final int MAX_LIGHT = 7;
@@ -41,6 +42,10 @@ public final class VeilBehavior implements FocusBehavior {
 		UUID id = player.getUUID();
 		State state = STATES.computeIfAbsent(id, ignored -> new State());
 		long now = player.level().getGameTime();
+		if (isRevealed(player)) {
+			breakVeil(player, REVEALED_BREAK_COOLDOWN_TICKS);
+			return;
+		}
 		if (!canCharge(player, now)) {
 			clear(player, state, false);
 			return;
@@ -77,6 +82,10 @@ public final class VeilBehavior implements FocusBehavior {
 	@Override
 	public boolean onAbility(ServerPlayer player, ItemStack focus) {
 		long now = player.level().getGameTime();
+		if (isRevealed(player)) {
+			breakVeil(player, REVEALED_BREAK_COOLDOWN_TICKS);
+			return false;
+		}
 		if (!canCharge(player, now)) {
 			breakVeil(player);
 			return false;
@@ -111,6 +120,10 @@ public final class VeilBehavior implements FocusBehavior {
 	public static boolean isVeiled(ServerPlayer player) {
 		State state = STATES.get(player.getUUID());
 		return state != null && state.veiled;
+	}
+
+	private static boolean isRevealed(ServerPlayer player) {
+		return player.hasEffect(MobEffects.GLOWING);
 	}
 
 	private static void forgetPlayer(ServerPlayer player) {

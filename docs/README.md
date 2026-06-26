@@ -51,6 +51,7 @@ That is the whole idea: a Focus is a trade-off, never a free bonus.
 | Change a Focus's cost, affinity, stats, text  | [adding-a-focus.md](adding-a-focus.md#changing-an-existing-focus) |
 | Look up a field, an attribute, a tuning number| [reference.md](reference.md) |
 | Check commands, recipes, and setup files      | [reference.md](reference.md#commands) |
+| Understand Fabric, Quilt, NeoForge, and Forge loader support | [loader-support.md](loader-support.md) |
 | Prepare a newer/older Minecraft version port  | [versioning/minecraft-version-migration.md](versioning/minecraft-version-migration.md) |
 
 ## The two kinds of Focus
@@ -63,6 +64,22 @@ That is the whole idea: a Focus is a trade-off, never a free bonus.
 
 The [adding-a-focus](adding-a-focus.md) guide covers both, clearly labelled, so
 you can stop after the easy path if that is all you need.
+
+## Loader support
+
+The current repository build publishes a Fabric jar. The content and gameplay
+docs are intentionally loader-neutral where they can be, but the `latest`
+runtime integration is Fabric-specific: entrypoints, Fabric API events,
+attachments, payload registration, mixins, client hooks, and publish metadata.
+
+Quilt compatibility/native support, NeoForge support, and Forge support are
+tracked separately in [loader-support.md](loader-support.md). Current worktree
+status is recorded there: Forge branch candidates exist after the resonance HUD
+and owner-state sync pass, NeoForge 1.21.1/1.20.6 branch candidates build and
+server-smoke, and Quilt 1.19.2 has a native build/server-smoke candidate. These
+tracks still need client smoke and hands-on resonance HUD fill verification
+before release. The implementation roadmap is saved at
+[2026-06-25-loader-port-roadmap.md](superpowers/plans/2026-06-25-loader-port-roadmap.md).
 
 ## A rule that saves you every time
 

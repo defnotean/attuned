@@ -123,12 +123,12 @@ class HarpoonBehaviorContractTest {
 		assertEquals("attuned:item/ocean_relic_trident_voxel_palette",
 			model.getAsJsonObject("textures").get("particle").getAsString(),
 			"Harpoon model should define a particle texture to avoid missing-texture warnings");
-		JsonObject report = json(Path.of("docs/superpowers/assets/ocean-relic-trident/ocean_relic_trident_voxel_report.json"));
 		assertTrue(model.getAsJsonArray("elements").size() >= 36,
 			"Harpoon model should contain a real cuboid trident silhouette");
-		assertTrue(report.getAsJsonArray("bbox_size").get(1).getAsDouble() >= 40.0D,
+		double[] span = elementSpan(model.getAsJsonArray("elements"));
+		assertTrue(span[1] >= 40.0D,
 			"Harpoon model should be long enough to read as a trident when held");
-		assertTrue(report.getAsJsonArray("bbox_size").get(0).getAsDouble() >= 10.0D,
+		assertTrue(span[0] >= 10.0D,
 			"Harpoon model should keep the side prongs visibly separated");
 		assertTrue(model.has("display"),
 			"Harpoon model should define held/inventory transforms");
@@ -267,6 +267,27 @@ class HarpoonBehaviorContractTest {
 
 	private static JsonObject json(Path file) throws IOException {
 		return JsonParser.parseString(read(file)).getAsJsonObject();
+	}
+
+	private static double[] elementSpan(com.google.gson.JsonArray elements) {
+		double minX = Double.POSITIVE_INFINITY;
+		double minY = Double.POSITIVE_INFINITY;
+		double minZ = Double.POSITIVE_INFINITY;
+		double maxX = Double.NEGATIVE_INFINITY;
+		double maxY = Double.NEGATIVE_INFINITY;
+		double maxZ = Double.NEGATIVE_INFINITY;
+		for (com.google.gson.JsonElement element : elements) {
+			JsonObject cuboid = element.getAsJsonObject();
+			com.google.gson.JsonArray from = cuboid.getAsJsonArray("from");
+			com.google.gson.JsonArray to = cuboid.getAsJsonArray("to");
+			minX = Math.min(minX, Math.min(from.get(0).getAsDouble(), to.get(0).getAsDouble()));
+			minY = Math.min(minY, Math.min(from.get(1).getAsDouble(), to.get(1).getAsDouble()));
+			minZ = Math.min(minZ, Math.min(from.get(2).getAsDouble(), to.get(2).getAsDouble()));
+			maxX = Math.max(maxX, Math.max(from.get(0).getAsDouble(), to.get(0).getAsDouble()));
+			maxY = Math.max(maxY, Math.max(from.get(1).getAsDouble(), to.get(1).getAsDouble()));
+			maxZ = Math.max(maxZ, Math.max(from.get(2).getAsDouble(), to.get(2).getAsDouble()));
+		}
+		return new double[] { maxX - minX, maxY - minY, maxZ - minZ };
 	}
 
 	private static boolean hasVisiblePixels(BufferedImage image) {

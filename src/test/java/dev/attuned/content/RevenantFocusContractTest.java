@@ -3,8 +3,6 @@ package dev.attuned.content;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -28,10 +26,6 @@ class RevenantFocusContractTest {
 		Path.of("src/main/java/dev/attuned/mixin/LivingEntityHurtMixin.java");
 	private static final Path COMMON_INIT =
 		Path.of("src/main/java/dev/attuned/Attuned.java");
-	private static final Path SOURCE_ART =
-		Path.of("docs/superpowers/assets/revenant-foci/revenant-foci-concept-source.png");
-	private static final Path REPORT =
-		Path.of("docs/superpowers/assets/revenant-foci/revenant-foci-report.json");
 	private static final Path TEXTURE_DIR =
 		Path.of("src/main/resources/assets/attuned/textures/item");
 
@@ -74,7 +68,7 @@ class RevenantFocusContractTest {
 			"Ashen Debt should keep its revenge window short");
 		assertTrue(combat.contains("DEBT_MULTIPLIER = 1.25F"),
 			"Ashen Debt should keep the revenge hit controlled");
-		assertTrue(combat.contains("MobEffects.SLOWNESS"),
+		assertTrue(containsSlownessEffect(combat),
 			"Bonechill should apply a real vanilla slow effect");
 		assertTrue(combat.contains("CombatTargets.isHostileOrPvpOpponent(attacker, player)"),
 			"Bonechill should respect PvP and hostile target rules");
@@ -82,7 +76,7 @@ class RevenantFocusContractTest {
 			"Last Rites should respect PvP and hostile target rules");
 		assertTrue(combat.contains("removeEffect(MobEffects.POISON)")
 				&& combat.contains("removeEffect(MobEffects.WITHER)")
-				&& combat.contains("removeEffect(MobEffects.SLOWNESS)")
+				&& containsSlownessCleanse(combat)
 				&& combat.contains("player.clearFire()"),
 			"Last Rites should cleanse the intended harmful states");
 	}
@@ -111,14 +105,7 @@ class RevenantFocusContractTest {
 	}
 
 	@Test
-	void revenantArtKeepsSourceAndShipsAnimatedSheets() throws IOException {
-		assertTrue(Files.isRegularFile(SOURCE_ART),
-			"Revenant Foci should keep their concept source");
-		JsonObject report = JsonParser.parseString(read(REPORT)).getAsJsonObject();
-		assertEquals("concept_source_chroma_key_crops_with_pulsed_revenant_glow",
-			report.get("strategy").getAsString(),
-			"Revenant texture report should document the source-art pipeline");
-
+	void revenantArtShipsAnimatedSheets() throws IOException {
 		for (String name : NEW_REVENANT_FOCI) {
 			Path texture = TEXTURE_DIR.resolve(name + ".png");
 			Path metadata = TEXTURE_DIR.resolve(name + ".png.mcmeta");
@@ -133,5 +120,15 @@ class RevenantFocusContractTest {
 	private static String read(Path file) throws IOException {
 		assertTrue(Files.isRegularFile(file), "Expected file to exist: " + file);
 		return Files.readString(file, StandardCharsets.UTF_8);
+	}
+
+	private static boolean containsSlownessEffect(String source) {
+		return source.contains("MobEffects.SLOWNESS")
+			|| source.contains("MobEffects.MOVEMENT_SLOWDOWN");
+	}
+
+	private static boolean containsSlownessCleanse(String source) {
+		return source.contains("removeEffect(MobEffects.SLOWNESS)")
+			|| source.contains("removeEffect(MobEffects.MOVEMENT_SLOWDOWN)");
 	}
 }

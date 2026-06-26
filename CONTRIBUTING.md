@@ -12,7 +12,7 @@ python -m pip install -r requirements-dev.txt
 
 ## Local checks
 
-Run the Java/Fabric build and tests with:
+Run the current Fabric build and tests with:
 
 ```sh
 ./gradlew build
@@ -37,6 +37,23 @@ python -B tools/minecraft_runtime_smoke.py --accept-eula
 ```
 
 The smoke check starts the Fabric `runServer` task, waits for the server-ready signal, stops it, and fails on fatal server, mixin, or resource-load errors.
+
+## Loader-specific work
+
+Fabric is the current implemented loader target. Quilt compatibility, Quilt
+native support, NeoForge, and Forge are separate validation or port tracks, not
+labels for the Fabric jar. Before adding loader-specific code, read
+`docs/loader-support.md` and
+`docs/superpowers/plans/2026-06-25-loader-port-roadmap.md`, then keep new imports
+inside the matching loader adapter whenever possible.
+
+Fabric changes should continue to pass the Gradle build, repository verifier,
+Python contracts, and Fabric server/client smoke checks. Quilt compatibility
+needs Quilt Loader plus target-specific API dependency evidence and Quilt
+server/client smoke. Quilt-native, NeoForge, and Forge changes need their own
+build plugin, metadata file, state adapter, networking adapter, server/client
+smoke evidence, hands-on HUD smoke, and platform metadata dry run before they
+are treated as releasable.
 
 ## Pre-push clean-checkout check
 
@@ -66,14 +83,14 @@ Commit the resulting `gradle.lockfile` and `gradle/verification-metadata.xml` ch
 
 ## Large assets
 
-Install Git LFS before working with source/reference assets under `docs/superpowers/assets`:
+Install Git LFS before working with large source/reference assets outside the tracked repository:
 
 ```sh
 git lfs install
 git lfs pull
 ```
 
-GLB, OBJ, and PNG files in `docs/superpowers/assets` are stored as LFS objects. Keep shipped game textures under `src/main/resources` in the normal repository unless a separate release decision changes that.
+Keep shipped game textures under `src/main/resources` in the normal repository unless a separate release decision changes that.
 
 Keep local secrets in environment variables or untracked `.env` files. The Modrinth publish task expects `MODRINTH_TOKEN` in the environment.
 

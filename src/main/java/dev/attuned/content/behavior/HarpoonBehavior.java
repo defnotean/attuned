@@ -4,6 +4,7 @@ import dev.attuned.Attuned;
 import dev.attuned.AttunedPlayerCleanup;
 import dev.attuned.AttunedServerCleanup;
 import dev.attuned.api.focus.FocusBehavior;
+import dev.attuned.network.ActionBarMessages;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -64,13 +65,15 @@ public final class HarpoonBehavior implements FocusBehavior {
 		long now = player.level().getGameTime();
 		removeInvalidInventoryHarpoons(player, now);
 		if (ACTIVE_HARPOONS.getOrDefault(player.getUUID(), -1L) > now) {
-			player.sendOverlayMessage(Component.translatable("item.attuned.harpoon_focus.active"));
+			ActionBarMessages.send(player, ActionBarMessages.Priority.WARNING,
+				Component.translatable("item.attuned.harpoon_focus.active"));
 			return false;
 		}
 
 		ItemStack harpoon = createHarpoon(player, now);
 		if (!placeHarpoon(player, harpoon)) {
-			player.sendOverlayMessage(Component.translatable("item.attuned.harpoon_focus.no_space"));
+			ActionBarMessages.send(player, ActionBarMessages.Priority.WARNING,
+				Component.translatable("item.attuned.harpoon_focus.no_space"));
 			return false;
 		}
 

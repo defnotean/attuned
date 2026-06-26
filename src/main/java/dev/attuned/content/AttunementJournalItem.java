@@ -41,6 +41,8 @@ public class AttunementJournalItem extends WrittenBookItem {
 		"journal.attuned.page39",
 		"journal.attuned.page40",
 		"journal.attuned.page18",
+		"journal.attuned.page42",
+		"journal.attuned.page43",
 		"journal.attuned.page19",
 		"journal.attuned.page7",
 		"journal.attuned.page41",
@@ -64,7 +66,16 @@ public class AttunementJournalItem extends WrittenBookItem {
 		"journal.attuned.page26",
 		"journal.attuned.page27",
 		"journal.attuned.page32",
-		"journal.attuned.page28"
+		"journal.attuned.page44",
+		"journal.attuned.page28",
+		"journal.attuned.page45",
+		"journal.attuned.page46",
+		"journal.attuned.page47",
+		"journal.attuned.page48",
+		"journal.attuned.page49",
+		"journal.attuned.page50",
+		"journal.attuned.page51",
+		"journal.attuned.page52"
 	);
 	private static final WrittenBookContent GUIDE_CONTENT = createGuideContent();
 

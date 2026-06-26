@@ -45,6 +45,48 @@ class PublishCurseForgeTest(unittest.TestCase):
             metadata["relations"],
         )
 
+    def test_metadata_can_target_non_fabric_loader_without_fabric_dependency(self):
+        changelog = """# Changelog
+
+## Attuned 1.3.0 - The Focus Reliquary
+
+- Added the reliquary.
+"""
+        metadata = publish_curseforge.build_metadata(
+            changelog=changelog,
+            version="1.3.0",
+            minecraft_version="1.20.1",
+            java_version="17",
+            loader="forge",
+        )
+
+        self.assertEqual(["1.20.1", "Java 17", "Client", "Server", "Forge"],
+                         metadata["gameVersionNames"])
+        self.assertEqual({"projects": []}, metadata["relations"])
+        self.assertNotIn("Fabric", metadata["gameVersionNames"])
+
+    def test_metadata_allows_loader_specific_required_dependencies(self):
+        changelog = """# Changelog
+
+## Attuned 1.3.0 - The Focus Reliquary
+
+- Added the reliquary.
+"""
+        metadata = publish_curseforge.build_metadata(
+            changelog=changelog,
+            version="1.3.0",
+            minecraft_version="26.1",
+            java_version="25",
+            loader="neoforge",
+            required_dependency_slugs=("loader-api-example",),
+        )
+
+        self.assertEqual("NeoForge", metadata["gameVersionNames"][-1])
+        self.assertEqual(
+            {"projects": [{"slug": "loader-api-example", "type": "requiredDependency"}]},
+            metadata["relations"],
+        )
+
     def test_multipart_body_contains_metadata_and_jar_file(self):
         metadata = {"displayName": "Attuned 1.3.0", "releaseType": "release"}
         body, content_type = publish_curseforge.multipart_body(

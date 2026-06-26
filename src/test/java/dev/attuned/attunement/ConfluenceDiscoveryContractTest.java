@@ -18,6 +18,8 @@ import org.junit.jupiter.api.Test;
 class ConfluenceDiscoveryContractTest {
 	private static final Path ATTACHMENTS =
 		Path.of("src/main/java/dev/attuned/attunement/AttunedAttachments.java");
+	private static final Path PLAYER_STATE_KEY =
+		Path.of("src/main/java/dev/attuned/platform/AttunedPlayerStateKey.java");
 	private static final Path JOURNAL =
 		Path.of("src/client/java/dev/attuned/client/screen/AttunementJournalScreen.java");
 	private static final Path LANG =
@@ -30,8 +32,15 @@ class ConfluenceDiscoveryContractTest {
 				"public static final AttachmentType<List<String>> DISCOVERED_CONFLUENCES = AttachmentRegistry.create("),
 			"Discoveries must be a synced list attachment.");
 		assertTrue(attachments.contains(
-				"Identifier.fromNamespaceAndPath(Attuned.MOD_ID, \"discovered_confluences\")"),
-			"Discovery attachment must use the discovered_confluences id.");
+				"AttunedPlayerStateKey.DISCOVERED_CONFLUENCES.id()"),
+			"Discovery attachment must use the platform state-key id.");
+
+		String playerStateKey = read(PLAYER_STATE_KEY);
+		assertTrue(playerStateKey.contains(
+				"DISCOVERED_CONFLUENCES(\"discovered_confluences\", true, true, true)"),
+			"Discovery state key must stay persistent, synced to owner, and copied on death.");
+		assertTrue(playerStateKey.contains("Identifier.fromNamespaceAndPath(Attuned.MOD_ID, path)"),
+			"Player state keys must resolve under the Attuned namespace.");
 		assertTrue(attachments.contains(".persistent(Codec.STRING.listOf())"),
 			"Discovered confluences must persist across restart.");
 		assertTrue(attachments.contains(

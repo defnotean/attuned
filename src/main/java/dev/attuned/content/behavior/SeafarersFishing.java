@@ -25,7 +25,7 @@ public final class SeafarersFishing {
 	private static final int NETMENDER_LUCK_OF_THE_SEA_BONUS = 1;
 	private static final int HARBORLIGHT_LUCK_OF_THE_SEA_BONUS = 1;
 	private static final int DRIFTGLASS_LUCK_OF_THE_SEA_BONUS = 1;
-	private static final int MAX_LUCK_OF_THE_SEA_BONUS = 5;
+	private static final int MAX_LUCK_OF_THE_SEA_BONUS = 3;
 
 	private static final Map<UUID, Long> netmenderCooldowns = new HashMap<>();
 

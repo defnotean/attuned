@@ -2,7 +2,7 @@
 
 Run on Minecraft 26.2 with `mod_version=1.5.2`. Check each box before publishing.
 
-## Minecraft 26.2 Runtime
+## Minecraft 26.2 Fabric Runtime
 
 - [ ] Dedicated server starts cleanly with Fabric Loader 0.19.3 and Fabric API 0.152.1+26.2.
 - [ ] Client dev runtime reaches the title screen without Attuned mixin, renderer, toast, or screen errors.
@@ -23,3 +23,5 @@ Run on Minecraft 26.2 with `mod_version=1.5.2`. Check each box before publishing
 - [ ] `.\gradlew.bat clean build --no-daemon` passes.
 - [ ] `python tools/publish_curseforge.py --dry-run` shows `attuned-1.5.2.jar` and the 1.5.2 changelog section.
 - [ ] `.\gradlew.bat modrinth --dry-run --no-daemon` passes.
+- [ ] Any Quilt compatibility claim has Quilt Loader + QFAPI dependency evidence, server smoke, and client smoke before it is listed as compatible.
+- [ ] Any Quilt-native, NeoForge, or Forge file has its own separate build, metadata dry run, server smoke, and client smoke before it is listed as supported.

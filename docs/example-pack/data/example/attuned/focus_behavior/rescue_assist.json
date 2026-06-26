@@ -1,0 +1,13 @@
+{
+	"type": "attuned:party_assist",
+	"trigger": "periodic_scan",
+	"radius": 24,
+	"cooldown_ticks": 300,
+	"target_filter": "drowning_members",
+	"effect": {
+		"effect": "minecraft:water_breathing",
+		"duration_ticks": 100,
+		"amplifier": 0
+	},
+	"message_key": "message.example.rescue_assist"
+}

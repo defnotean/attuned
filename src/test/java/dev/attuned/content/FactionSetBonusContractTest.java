@@ -37,7 +37,8 @@ class FactionSetBonusContractTest {
 		"attuned:verdant_choir",
 		"attuned:ashen_forge",
 		"attuned:revenant",
-		"attuned:umbral");
+		"attuned:umbral",
+		"attuned:deep_lanterns");
 
 	@Test
 	void initIsWiredDirectlyAfterAttunedEffects() throws IOException {
@@ -64,6 +65,21 @@ class FactionSetBonusContractTest {
 	}
 
 	@Test
+	void factionSourceWalksOnlyBudgetResolvedActiveSlots() throws IOException {
+		String source = read(BONUSES);
+		String activeFactionIds = methodBody(source, "private static List<String> activeFactionIds(ServerPlayer player)");
+
+		assertContains(activeFactionIds, "BudgetResolver.Resolution resolution = Attunement.resolution(player)");
+		assertContains(activeFactionIds, "List<Integer> activeSlots = resolution.activeSlots()");
+		assertContains(activeFactionIds, "new ArrayList<>(activeSlots.size())");
+		assertContains(activeFactionIds, "for (int slot : activeSlots)");
+		assertTrue(!activeFactionIds.contains("for (int slot = 0"),
+			"Faction set bonuses must not scan every equipped slot because over-budget Foci are dormant.");
+		assertTrue(!activeFactionIds.contains("AttunedInv.SIZE"),
+			"Faction set bonuses should count the resolved active-awake slice, not raw inventory size.");
+	}
+
+	@Test
 	void applierIsInitIdempotentAndRegistersCleanup() throws IOException {
 		String source = read(BONUSES);
 		assertContains(source, "private static boolean initialized;");
@@ -81,7 +97,7 @@ class FactionSetBonusContractTest {
 	void everyFactionPerkIsDocumentedAndLocalised() throws IOException {
 		String reference = read(REFERENCE);
 		String lang = read(LANG);
-		assertContains(reference, "Set bonus (3+)");
+		assertContains(reference, "Set bonus (3 active Foci)");
 		for (String factionId : FACTION_IDS) {
 			assertTrue(reference.contains("`" + factionId + "`"),
 				"reference.md Factions table should document " + factionId);
@@ -100,6 +116,28 @@ class FactionSetBonusContractTest {
 		}
 	}
 
+	@Test
+	void revenantUndeadChillUsesSharedHostileTargetGate() throws IOException {
+		String source = read(BONUSES);
+		String chill = methodBody(source, "private static void chillNearbyUndead(ServerPlayer player)");
+
+		assertContains(source, "import dev.attuned.combat.CombatTargets;");
+		assertContains(chill, "CombatTargets.isHostileOrPvpOpponent(entity, player)");
+		assertBefore(chill, "CombatTargets.isHostileOrPvpOpponent(entity, player)",
+			"entity.addEffect(new MobEffectInstance(");
+	}
+
+	@Test
+	void deepLanternSetBonusIsContextualNightVision() throws IOException {
+		String source = read(BONUSES);
+		String perkTable = methodBody(source, "private static void applyPerk(ServerPlayer player, String faction)");
+
+		assertContains(source, "FACTION_DEEP_LANTERNS = \"attuned:deep_lanterns\"");
+		assertContains(perkTable, "case FACTION_DEEP_LANTERNS");
+		assertContains(perkTable, "nearLantern(player)");
+		assertContains(perkTable, "MobEffects.NIGHT_VISION");
+	}
+
 	private static void assertContains(String source, String needle) {
 		assertTrue(source.contains(needle), "Expected source to contain: " + needle);
 	}
@@ -115,5 +153,25 @@ class FactionSetBonusContractTest {
 	private static String read(Path file) throws IOException {
 		assertTrue(Files.isRegularFile(file), "Expected file to exist: " + file);
 		return Files.readString(file, StandardCharsets.UTF_8);
+	}
+
+	private static String methodBody(String source, String signaturePrefix) {
+		int signatureStart = source.indexOf(signaturePrefix);
+		assertTrue(signatureStart >= 0, "Missing method signature: " + signaturePrefix);
+		int bodyStart = source.indexOf('{', signatureStart);
+		assertTrue(bodyStart >= 0, "Missing method body: " + signaturePrefix);
+		int depth = 0;
+		for (int index = bodyStart; index < source.length(); index++) {
+			char current = source.charAt(index);
+			if (current == '{') {
+				depth++;
+			} else if (current == '}') {
+				depth--;
+				if (depth == 0) {
+					return source.substring(bodyStart, index + 1);
+				}
+			}
+		}
+		throw new AssertionError("Unterminated method body: " + signaturePrefix);
 	}
 }

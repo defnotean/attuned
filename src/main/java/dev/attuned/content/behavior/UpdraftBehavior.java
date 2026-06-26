@@ -7,6 +7,7 @@ import dev.attuned.content.AttunedContent;
 import dev.attuned.attunement.AttunedAttachments;
 import dev.attuned.attunement.AttunedInv;
 import dev.attuned.attunement.Attunement;
+import dev.attuned.network.ActionBarMessages;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -132,13 +133,8 @@ public final class UpdraftBehavior implements FocusBehavior {
 			return;
 		}
 
-		player.resetFallDistance();
-		player.fallDistance = 0.0F;
-
-		if (controls.boosting() && !player.isFallFlying() && canStartGlide(player)) {
-			player.startFallFlying();
-		}
 		if (!player.isFallFlying()) {
+			setControls(player.getUUID(), false, false);
 			return;
 		}
 		applyFlightControls(player, controls);
@@ -146,7 +142,7 @@ public final class UpdraftBehavior implements FocusBehavior {
 
 	public static boolean mitigatesFallDamage(ServerPlayer player) {
 		return isActive(player) && hasFunctionalElytra(player)
-			&& controlsFor(player).active() && !isPvpExhausted(player);
+			&& player.isFallFlying() && controlsFor(player).active() && !isPvpExhausted(player);
 	}
 
 	public static void recordPvpDamage(LivingEntity defender, DamageSource source) {
@@ -165,7 +161,7 @@ public final class UpdraftBehavior implements FocusBehavior {
 		if (controls != null) {
 			return controls;
 		}
-		return new Controls(player.getLastClientInput().jump(), false);
+		return new Controls(false, false);
 	}
 
 	public static void applyFlightControls(ServerPlayer player, Controls controls) {
@@ -304,6 +300,10 @@ public final class UpdraftBehavior implements FocusBehavior {
 		return exhaustedByDuration(started, now);
 	}
 
+	static boolean isPvpAssistDampened(ServerPlayer player) {
+		return isPvpExhausted(player);
+	}
+
 	static boolean exhaustedByDuration(long startedTick, long nowTick) {
 		return nowTick - startedTick >= PVP_EXHAUSTION_TICKS;
 	}
@@ -320,8 +320,8 @@ public final class UpdraftBehavior implements FocusBehavior {
 			EXHAUSTION_DEBUFF_TICKS, 0, true, true, true));
 		player.addEffect(new MobEffectInstance(MobEffects.SLOWNESS,
 			EXHAUSTION_DEBUFF_TICKS, 0, true, true, true));
-		player.sendOverlayMessage(Component.translatable(
-			"item.attuned.updraft_focus.exhausted"));
+		ActionBarMessages.send(player, ActionBarMessages.Priority.WARNING,
+			Component.translatable("item.attuned.updraft_focus.exhausted"));
 		if (player.level() instanceof ServerLevel level) {
 			Vec3 at = player.position().add(0.0D, player.getBbHeight() * 0.55D, 0.0D);
 			level.sendParticles(ParticleTypes.SMOKE,
@@ -333,13 +333,6 @@ public final class UpdraftBehavior implements FocusBehavior {
 		}
 	}
 
-	private static boolean canStartGlide(ServerPlayer player) {
-		return !player.onGround()
-			&& !player.isInWater()
-			&& !player.isPassenger()
-			&& !player.isFallFlying()
-			&& hasFunctionalElytra(player);
-	}
 
 	private static Vec3 horizontalLook(ServerPlayer player) {
 		return horizontalLook(player.getLookAngle(), player.getYRot());

@@ -10,3 +10,10 @@ pluginManagement {
 }
 
 rootProject.name = 'attuned'
+
+// Loader port roadmap:
+// - Keep the root project as the active Fabric build until common extraction starts.
+// - Add include("common"), include("fabric"), include("quilt"), include("neoforge"),
+//   and include("forge") only in the port branch that moves code into modules.
+// - Do not include empty loader modules on latest because that would create
+//   misleading CI/build expectations.

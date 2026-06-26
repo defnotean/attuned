@@ -6,6 +6,7 @@ import dev.attuned.api.focus.Affinity;
 import dev.attuned.combat.Apex;
 import dev.attuned.combat.Resonance;
 import dev.attuned.content.AttunedContent;
+import dev.attuned.network.ActionBarMessages;
 import dev.attuned.pacts.Pacts;
 import dev.attuned.synergy.Synergies;
 import java.util.Locale;
@@ -223,7 +224,7 @@ public final class Onboarding {
 		Pacts.previewOf(player).ifPresent(preview -> {
 			((ServerLevel) player.level()).playSound(null, player.blockPosition(),
 				SoundEvents.EXPERIENCE_ORB_PICKUP, SoundSource.PLAYERS, 0.35F, 1.25F);
-			player.sendOverlayMessage(preview);
+			ActionBarMessages.send(player, ActionBarMessages.Priority.AMBIENT, preview);
 		});
 	}
 
@@ -244,7 +245,7 @@ public final class Onboarding {
 		Synergies.previewOf(player).ifPresent(preview -> {
 			((ServerLevel) player.level()).playSound(null, player.blockPosition(),
 				SoundEvents.EXPERIENCE_ORB_PICKUP, SoundSource.PLAYERS, 0.35F, 1.25F);
-			player.sendOverlayMessage(preview);
+			ActionBarMessages.send(player, ActionBarMessages.Priority.AMBIENT, preview);
 		});
 	}
 

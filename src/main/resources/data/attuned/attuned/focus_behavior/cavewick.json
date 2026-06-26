@@ -1,0 +1,10 @@
+{
+	"type": "attuned:block_context_effect",
+	"block_tag": "attuned:lanterns",
+	"radius": 4,
+	"requires_lit": false,
+	"effect": "minecraft:night_vision",
+	"amplifier": 0,
+	"duration_ticks": 120,
+	"refresh_ticks": 40
+}

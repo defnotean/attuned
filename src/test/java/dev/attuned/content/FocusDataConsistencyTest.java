@@ -13,6 +13,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
@@ -120,10 +121,7 @@ class FocusDataConsistencyTest {
 		"attuned:harborlight_focus", 1.0D,
 		"attuned:linecast_focus", 1.0D,
 		"attuned:netmender_focus", 1.0D);
-	private static final Path REVENANT_SOURCE =
-		Path.of("docs/superpowers/assets/revenant-foci/revenant-foci-concept-source.png");
-	private static final Path REVENANT_REPORT =
-		Path.of("docs/superpowers/assets/revenant-foci/revenant-foci-report.json");
+	private record ExpectedModifier(String attribute, String operation, double amount, String tooltipToken) {}
 
 	@Test
 	void shippedFocusRegistrationsListAndDefinitionsStayInStep() throws IOException {
@@ -253,6 +251,28 @@ class FocusDataConsistencyTest {
 	}
 
 	@Test
+	void behaviorBackedShippedFociAreUniqueToPreventDuplicateRuntimeHooks() throws IOException {
+		Set<String> stackableBehaviorItems = new TreeSet<>();
+		try (Stream<Path> paths = Files.list(FOCUS_DATA_DIR)) {
+			for (Path file : paths
+					.filter(path -> path.getFileName().toString().endsWith(".json"))
+					.sorted()
+					.toList()) {
+				JsonObject root = focusDefinitionRoot(file);
+				if (!root.has("behavior")) {
+					continue;
+				}
+				if (root.has("unique") && root.get("unique").getAsBoolean()) {
+					continue;
+				}
+				stackableBehaviorItems.add(root.get("item").getAsString());
+			}
+		}
+		assertEquals(Set.of(), stackableBehaviorItems,
+			"Behavior-backed Foci should be unique while active; pure modifier Foci may remain stackable.");
+	}
+
+	@Test
 	void blackoutFocusStaysAWeakerSmokeAbility() throws IOException {
 		JsonObject root = focusDefinitionRoot(FOCUS_DATA_DIR.resolve("blackout_focus.json"));
 		String registrations = Files.readString(BEHAVIOR_REGISTRATION_SOURCE, StandardCharsets.UTF_8);
@@ -336,6 +356,61 @@ class FocusDataConsistencyTest {
 	}
 
 	@Test
+	void modifierWaveTooltipsStaySyncedWithTheirDataProfiles() throws IOException {
+		JsonObject lang = languageRoot();
+
+		assertModifierProfile(lang, "tidewarden_focus", List.of(
+			expected("minecraft:armor", "add_value", 3.0D, "+3 armor"),
+			expected("minecraft:knockback_resistance", "add_value", 0.3D, "30% knockback resistance")));
+		assertModifierProfile(lang, "wellspring_focus", List.of(
+			expected("minecraft:max_health", "add_value", 6.0D, "3 extra hearts"),
+			expected("minecraft:water_movement_efficiency", "add_value", 0.4D, "improved swimming")));
+		assertModifierProfile(lang, "current_runner_focus", List.of(
+			expected("minecraft:movement_speed", "add_multiplied_base", 0.12D, "+12% movement speed"),
+			expected("minecraft:water_movement_efficiency", "add_value", 0.6D, "movement through water")));
+		assertModifierProfile(lang, "saltbrand_focus", List.of(
+			expected("minecraft:attack_damage", "add_value", 4.0D, "+4 attack damage"),
+			expected("minecraft:armor_toughness", "add_value", 2.0D, "+2 armor toughness")));
+		assertModifierProfile(lang, "ebbstride_focus", List.of(
+			expected("minecraft:attack_speed", "add_multiplied_base", 0.15D, "+15% attack speed"),
+			expected("minecraft:fall_damage_multiplier", "add_multiplied_total", -0.4D, "softer landing")));
+		assertModifierProfile(lang, "overgrowth_focus", List.of(
+			expected("minecraft:max_health", "add_value", 6.0D, "3 extra hearts"),
+			expected("minecraft:armor", "add_value", 3.0D, "+3 armor")));
+		assertModifierProfile(lang, "deeproot_focus", List.of(
+			expected("minecraft:knockback_resistance", "add_value", 0.2D, "20% knockback resistance"),
+			expected("minecraft:armor_toughness", "add_value", 2.0D, "+2 armor toughness")));
+		assertModifierProfile(lang, "briarcoat_focus", List.of(
+			expected("minecraft:attack_damage", "add_value", 2.0D, "attack damage by 2"),
+			expected("minecraft:attack_speed", "add_value", 0.3D, "attack speed by 0.3")));
+		assertModifierProfile(lang, "fernstride_focus", List.of(
+			expected("minecraft:movement_speed", "add_multiplied_base", 0.12D, "movement speed by 12%"),
+			expected("minecraft:jump_strength", "add_multiplied_base", 0.2D, "jump strength by 20%")));
+		assertModifierProfile(lang, "sapflow_focus", List.of(
+			expected("minecraft:max_health", "add_value", 4.0D, "2 extra hearts"),
+			expected("minecraft:attack_damage", "add_value", 2.0D, "attack damage by 2")));
+		assertModifierProfile(lang, "cinderplate_focus", List.of(
+			expected("minecraft:armor", "add_value", 3.0D, "+3 armor"),
+			expected("minecraft:armor_toughness", "add_value", 2.0D, "+2 armor toughness")));
+		assertModifierProfile(lang, "bellowsfury_focus", List.of(
+			expected("minecraft:attack_damage", "add_value", 2.0D, "+2 attack damage"),
+			expected("minecraft:attack_speed", "add_multiplied_base", 0.2D, "20% attack speed")));
+		assertModifierProfile(lang, "bloodrush_focus", List.of(
+			expected("minecraft:attack_speed", "add_value", 0.35D, "+0.35 attack speed"),
+			expected("minecraft:movement_speed", "add_multiplied_base", 0.1D, "10% movement speed")));
+		assertModifierProfile(lang, "ravager_focus", List.of(
+			expected("minecraft:attack_damage", "add_multiplied_base", 0.4D, "attack damage by 40%"),
+			expected("minecraft:knockback_resistance", "add_value", -0.1D, "knockback resistance by 10%")));
+		assertModifierProfile(lang, "granitehide_focus", List.of(
+			expected("minecraft:armor", "add_value", 3.0D, "+3 armor"),
+			expected("minecraft:armor_toughness", "add_value", 3.0D, "+3 armor toughness")));
+		assertModifierProfile(lang, "hammerward_focus", List.of(
+			expected("minecraft:max_health", "add_value", 4.0D, "2 extra hearts"),
+			expected("minecraft:knockback_resistance", "add_value", 0.3D, "30% knockback resistance"),
+			expected("minecraft:attack_damage", "add_value", 2.0D, "+2 attack damage")));
+	}
+
+	@Test
 	void creativeInventorySplitsAffinityAndUtilityContentIntoReadableTabs() throws IOException {
 		String content = Files.readString(CONTENT_SOURCE, StandardCharsets.UTF_8);
 		String source = Files.readString(CREATIVE_TABS_SOURCE, StandardCharsets.UTF_8);
@@ -367,6 +442,24 @@ class FocusDataConsistencyTest {
 			"Creative tab sorting should use a stable faction key between affinity and cost");
 		assertTrue(source.contains("ALTAR_OF_REWEAVING"),
 			"Utility tab should keep the Altar of Reweaving reachable");
+		int coreItems = source.indexOf("if (includeCoreItems) {");
+		int neutralFoci = source.indexOf("for (Item focus : fociInDisplayOrder");
+		int customPlaceholders = source.indexOf("for (Item customFocus : AttunedContent.CUSTOM_FOCI)");
+		assertTrue(coreItems >= 0 && neutralFoci >= 0 && customPlaceholders >= 0,
+			"Utility tab source should contain core tools, synced Foci, and custom placeholders.");
+		assertTrue(coreItems < neutralFoci,
+			"Utility tab should show onboarding tools before the neutral Focus roster.");
+		assertTrue(neutralFoci < customPlaceholders,
+			"Blank custom Focus placeholders should stay after the real neutral Focus roster.");
+		assertTrue(source.indexOf("output.accept(AttunedContent.ATTUNEMENT_JOURNAL);")
+				< source.indexOf("output.accept(AttunedContent.ATTUNEMENT_SHARD);"),
+			"Journal should lead the utility tab as the onboarding item.");
+		assertTrue(source.indexOf("output.accept(AttunedContent.ATTUNEMENT_SHARD_FRAGMENT);")
+				< source.indexOf("output.accept(AttunedContent.ATTUNEMENT_ALTAR);"),
+			"Shards and fragments should appear before altar blocks.");
+		assertTrue(source.indexOf("output.accept(AttunedContent.ALTAR_OF_REWEAVING);")
+				< source.indexOf("output.accept(AttunedContent.SATCHEL_OF_FOCI);"),
+			"Altars should appear before reliquaries in the utility tab.");
 		assertTrue(!source.contains("AttunedContent.FOCI"),
 			"Creative tabs should display Foci from the synced FocusDefinition registry, not the static shipped-Foci list");
 		assertTrue(!source.contains("definition == null"),
@@ -493,17 +586,13 @@ class FocusDataConsistencyTest {
 		assertEquals(REVENANT_FOCUS_ITEMS, revenantItems,
 			"The Revenant release should declare its planned Foci and Gravebind anchor");
 		assertLanguageKey(lang, "faction.attuned.revenant");
-		assertTrue(Files.isRegularFile(REVENANT_SOURCE),
-			"Revenant art should keep its concept source sheet");
-		assertTrue(Files.isRegularFile(REVENANT_REPORT),
-			"Revenant art should keep a reproducible texture build report");
-		String report = Files.readString(REVENANT_REPORT, StandardCharsets.UTF_8);
 		for (String item : REVENANT_FOCUS_ITEMS) {
 			String name = attunedPath(item);
-			if (!"gravebind_focus".equals(name)) {
-				assertTrue(report.contains(name),
-					"Revenant report should list each generated texture: " + name);
-			}
+			assertTrue(Files.isRegularFile(ITEM_TEXTURE_DIR.resolve(name + ".png")),
+				"Revenant Focus should ship a texture: " + name);
+			assertTrue(Files.isRegularFile(ITEM_TEXTURE_DIR.resolve(name + ".png.mcmeta")),
+				"Revenant Focus should ship animation metadata: " + name);
+			assertAnimatedFocusTexture(name);
 		}
 	}
 
@@ -579,6 +668,28 @@ class FocusDataConsistencyTest {
 			}
 		}
 		throw new AssertionError("Missing Focus modifier for " + attribute + ": " + root);
+	}
+
+	private static ExpectedModifier expected(String attribute, String operation, double amount, String tooltipToken) {
+		return new ExpectedModifier(attribute, operation, amount, tooltipToken);
+	}
+
+	private static void assertModifierProfile(JsonObject lang, String focusName,
+			List<ExpectedModifier> expectedModifiers) throws IOException {
+		JsonObject root = focusDefinitionRoot(FOCUS_DATA_DIR.resolve(focusName + ".json"));
+		String effectKey = "item.attuned." + focusName + ".effect";
+		assertLanguageKey(lang, effectKey);
+		String effect = lang.get(effectKey).getAsString().toLowerCase(Locale.ROOT);
+
+		for (ExpectedModifier expected : expectedModifiers) {
+			JsonObject modifier = modifierFor(root, expected.attribute());
+			assertEquals(expected.operation(), modifier.get("operation").getAsString(),
+				"Modifier operation should stay synced for " + focusName + " " + expected.attribute());
+			assertEquals(expected.amount(), modifier.get("amount").getAsDouble(), 0.0001D,
+				"Modifier amount should stay synced for " + focusName + " " + expected.attribute());
+			assertTrue(effect.contains(expected.tooltipToken().toLowerCase(Locale.ROOT)),
+				"Tooltip should mention '" + expected.tooltipToken() + "' for " + focusName);
+		}
 	}
 
 	private static void assertSeafarersLuckModifier(JsonObject root, String itemId, Path file) {

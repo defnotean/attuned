@@ -10,10 +10,11 @@ from generate_umbral_eclipse_focus_assets import alpha_bounds, remove_key_backgr
 
 
 ROOT = Path(__file__).resolve().parents[1]
-DOCS_DIR = ROOT / "docs" / "superpowers" / "assets" / "custom-foci"
-SOURCE_PATH = DOCS_DIR / "custom-foci-source.png"
-PREVIEW_PATH = DOCS_DIR / "custom-foci-preview.png"
-REPORT_PATH = DOCS_DIR / "asset-verification.json"
+SOURCE_DIR = ROOT / ".attuned-art-sources" / "custom-foci"
+OUTPUT_DIR = ROOT / "build" / "asset-previews" / "custom-foci"
+SOURCE_PATH = SOURCE_DIR / "custom-foci-source.png"
+PREVIEW_PATH = OUTPUT_DIR / "custom-foci-preview.png"
+REPORT_PATH = OUTPUT_DIR / "asset-verification.json"
 TEXTURE_DIR = ROOT / "src" / "main" / "resources" / "assets" / "attuned" / "textures" / "item"
 ITEM_MODEL_DIR = ROOT / "src" / "main" / "resources" / "assets" / "attuned" / "models" / "item"
 ITEM_DEFINITION_DIR = ROOT / "src" / "main" / "resources" / "assets" / "attuned" / "items"
@@ -116,8 +117,7 @@ def generate_assets() -> dict[str, object]:
 	save_preview(icons)
 	report = {
 		"source": relative(SOURCE_PATH),
-		"generated_by": "OpenAI built-in image_gen",
-		"purpose": "Image-generated default art for the resource-pack-skinnable custom Focus pool.",
+		"workflow": "private local source sheet normalized into default Focus textures",
 		"source_grid": [COLS, ROWS],
 		"operations": [
 			"crop generated source grid cells",

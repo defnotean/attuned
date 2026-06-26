@@ -1,0 +1,12 @@
+{
+	"type": "attuned:marked_target",
+	"prime_trigger": "charged_melee_hit",
+	"consume_trigger": "charged_melee_hit",
+	"mark_duration_ticks": 100,
+	"cooldown_ticks": 200,
+	"effect_on_consume": {
+		"effect": "minecraft:weakness",
+		"amplifier": 0,
+		"duration_ticks": 100
+	}
+}

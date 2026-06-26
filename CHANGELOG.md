@@ -2,6 +2,9 @@
 
 ## Attuned 1.5.2 - Minecraft 26.2 Chaos Cubed
 
+### Added
+- **Deep Lanterns faction** - four exploration-support Foci bring the shipped roster to 99 Foci: Cavewick rewards placed lantern routes with gentle Night Vision, Glowline follows same-dimension Circle pings, Rescueflame helps drowning Circle members breathe, and Depthglass reads held lodestone compass targets for restrained navigation hints.
+
 ### Changed
 - **Minecraft 26.2 Chaos Cubed support** - the `latest` line now targets Minecraft 26.2 with Fabric Loader 0.19.3, Fabric API 0.152.1+26.2, Loom 1.17.11, and Gradle 9.5.1. The port updates 26.2 entity/knockback APIs, client render submit nodes, and screen/toast hooks so server and client dev runtimes launch cleanly.
 - **Release line split** - Minecraft 26.1.2 remains preserved on `maintenance/minecraft-26.1.2`, while `latest` carries the current Minecraft 26.2 release train.

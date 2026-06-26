@@ -10,10 +10,11 @@ from PIL import Image, ImageEnhance
 
 
 ROOT = Path(__file__).resolve().parents[1]
-DOCS_DIR = ROOT / "docs" / "superpowers" / "assets" / "umbral-eclipse"
-SOURCE_PATH = DOCS_DIR / "umbral-eclipse-foci-source.png"
-PREVIEW_PATH = DOCS_DIR / "umbral-eclipse-foci-preview.png"
-REPORT_PATH = DOCS_DIR / "umbral-eclipse-foci-report.json"
+SOURCE_DIR = ROOT / ".attuned-art-sources" / "umbral-eclipse"
+OUTPUT_DIR = ROOT / "build" / "asset-previews" / "umbral-eclipse"
+SOURCE_PATH = SOURCE_DIR / "umbral-eclipse-foci-source.png"
+PREVIEW_PATH = OUTPUT_DIR / "umbral-eclipse-foci-preview.png"
+REPORT_PATH = OUTPUT_DIR / "umbral-eclipse-foci-report.json"
 TEXTURE_DIR = ROOT / "src" / "main" / "resources" / "assets" / "attuned" / "textures" / "item"
 
 ICON_SIZE = 64
@@ -208,8 +209,7 @@ def generate_assets() -> dict[str, object]:
 	save_preview(icons)
 	report = {
 		"source": relative(SOURCE_PATH),
-		"generated_by": "OpenAI built-in image_gen",
-		"purpose": "Image-generated source sheet for the Umbral Eclipse Focus texture pass.",
+		"workflow": "private local source sheet normalized into Umbral Eclipse Focus textures",
 		"source_grid": [5, 1],
 		"operations": [
 			"crop generated source grid cells",

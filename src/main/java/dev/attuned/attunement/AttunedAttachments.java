@@ -1,16 +1,15 @@
 package dev.attuned.attunement;
 
 import com.mojang.serialization.Codec;
-import dev.attuned.Attuned;
 import dev.attuned.AttunedConfig;
 import dev.attuned.pacts.Pact;
 import dev.attuned.pacts.PactTrialProgress;
 import dev.attuned.pacts.PactTrials;
+import dev.attuned.platform.AttunedPlayerStateKey;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentRegistry;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentSyncPredicate;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentType;
 import net.minecraft.network.codec.ByteBufCodecs;
-import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 
@@ -30,7 +29,7 @@ public final class AttunedAttachments {
 	public static final int MAX_PRESETS = 9;
 
 	public static final AttachmentType<Integer> CAPACITY = AttachmentRegistry.create(
-		Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "capacity"),
+		AttunedPlayerStateKey.CAPACITY.id(),
 		builder -> builder
 			.initializer(() -> AttunedConfig.get().startingCapacity())
 			.persistent(Codec.INT)
@@ -39,7 +38,7 @@ public final class AttunedAttachments {
 	);
 
 	public static final AttachmentType<AttunedInv> INVENTORY = AttachmentRegistry.create(
-		Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "inventory"),
+		AttunedPlayerStateKey.INVENTORY.id(),
 		builder -> builder
 			.initializer(AttunedInv::empty)
 			.persistent(AttunedInv.CODEC)
@@ -49,7 +48,7 @@ public final class AttunedAttachments {
 
 	/** The first synced list attachment: named Focus loadouts for the owning client. */
 	public static final AttachmentType<List<FocusPreset>> PRESETS = AttachmentRegistry.create(
-		Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "presets"),
+		AttunedPlayerStateKey.PRESETS.id(),
 		builder -> builder
 			.initializer(() -> List.of())
 			.persistent(FocusPreset.CODEC.listOf())
@@ -59,7 +58,7 @@ public final class AttunedAttachments {
 
 	/** Ids of the progression milestones a player has already claimed. */
 	public static final AttachmentType<List<String>> MILESTONES = AttachmentRegistry.create(
-		Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "milestones"),
+		AttunedPlayerStateKey.MILESTONES.id(),
 		builder -> builder
 			.initializer(() -> List.of())
 			.persistent(Codec.STRING.listOf())
@@ -73,7 +72,7 @@ public final class AttunedAttachments {
 	 * fight would silently strip the capstone the player just earned.
 	 */
 	public static final AttachmentType<Float> RESONANCE = AttachmentRegistry.create(
-		Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "resonance"),
+		AttunedPlayerStateKey.RESONANCE.id(),
 		builder -> builder
 			.initializer(() -> 0.0F)
 			.persistent(Codec.FLOAT)
@@ -83,7 +82,7 @@ public final class AttunedAttachments {
 
 	/** Ids of one-time onboarding toasts a player has already seen. */
 	public static final AttachmentType<List<String>> ONBOARDING = AttachmentRegistry.create(
-		Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "onboarding"),
+		AttunedPlayerStateKey.ONBOARDING.id(),
 		builder -> builder
 			.initializer(() -> List.of())
 			.persistent(Codec.STRING.listOf())
@@ -92,7 +91,7 @@ public final class AttunedAttachments {
 
 	/** Per-pact trial counters and permanent Tier 4 completions. Synced for the journal. */
 	public static final AttachmentType<PactTrialProgress> PACT_TRIAL_PROGRESS = AttachmentRegistry.create(
-		Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "pact_trial_progress"),
+		AttunedPlayerStateKey.PACT_TRIAL_PROGRESS.id(),
 		builder -> builder
 			.initializer(() -> PactTrialProgress.EMPTY)
 			.persistent(PactTrialProgress.CODEC)
@@ -102,7 +101,7 @@ public final class AttunedAttachments {
 
 	/** Confluence ids this player has discovered (each first activation). Synced for the journal. */
 	public static final AttachmentType<List<String>> DISCOVERED_CONFLUENCES = AttachmentRegistry.create(
-		Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "discovered_confluences"),
+		AttunedPlayerStateKey.DISCOVERED_CONFLUENCES.id(),
 		builder -> builder
 			.initializer(() -> List.of())
 			.persistent(Codec.STRING.listOf())
@@ -186,7 +185,7 @@ public final class AttunedAttachments {
 		for (int i = 0; i < Math.min(MAX_PRESETS, presets.size()); i++) {
 			FocusPreset preset = presets.get(i);
 			if (preset != null) {
-				normalized.add(new FocusPreset(preset.name(), preset.slots()));
+				normalized.add(new FocusPreset(preset.name(), preset.slots(), preset.metadata()));
 			}
 		}
 		return List.copyOf(normalized);
