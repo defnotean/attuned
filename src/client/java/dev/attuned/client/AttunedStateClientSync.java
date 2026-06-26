@@ -22,6 +22,7 @@ public final class AttunedStateClientSync {
 				LocalPlayer local = Minecraft.getInstance().player;
 				if (local != null) {
 					AttunedAttachments.applySync(local, payload.tag());
+					AttunementReadout.invalidate(local);
 				}
 			}));
 	}
