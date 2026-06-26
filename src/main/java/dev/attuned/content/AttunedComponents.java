@@ -2,9 +2,8 @@ package dev.attuned.content;
 
 import dev.attuned.Attuned;
 import dev.attuned.attunement.FocusHolder;
-import net.minecraft.core.Registry;
+import dev.attuned.platform.NeoForgeDeferredRegistries;
 import net.minecraft.core.component.DataComponentType;
-import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Unit;
@@ -40,19 +39,19 @@ public final class AttunedComponents {
 			return;
 		}
 		initialized = true;
-		SATCHEL_CONTENTS = Registry.register(BuiltInRegistries.DATA_COMPONENT_TYPE,
+		SATCHEL_CONTENTS = NeoForgeDeferredRegistries.dataComponent(
 			ResourceLocation.fromNamespaceAndPath(Attuned.MOD_ID, "satchel_contents"),
 			DataComponentType.<FocusHolder>builder()
 				.persistent(FocusHolder.codec(SATCHEL_SIZE, 1))
 				.networkSynchronized(FocusHolder.streamCodec(SATCHEL_SIZE, 1))
 				.build());
-		GRAND_SATCHEL_CONTENTS = Registry.register(BuiltInRegistries.DATA_COMPONENT_TYPE,
+		GRAND_SATCHEL_CONTENTS = NeoForgeDeferredRegistries.dataComponent(
 			ResourceLocation.fromNamespaceAndPath(Attuned.MOD_ID, "grand_satchel_contents"),
 			DataComponentType.<FocusHolder>builder()
 				.persistent(FocusHolder.codec(GRAND_SATCHEL_SIZE, 1))
 				.networkSynchronized(FocusHolder.streamCodec(GRAND_SATCHEL_SIZE, 1))
 				.build());
-		TEMPERED = Registry.register(BuiltInRegistries.DATA_COMPONENT_TYPE,
+		TEMPERED = NeoForgeDeferredRegistries.dataComponent(
 			ResourceLocation.fromNamespaceAndPath(Attuned.MOD_ID, "tempered"),
 			DataComponentType.<Unit>builder()
 				.persistent(Unit.CODEC)

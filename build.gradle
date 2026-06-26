@@ -1,5 +1,5 @@
 plugins {
-	id 'net.fabricmc.fabric-loom-remap' version "${loom_version}"
+	id 'net.neoforged.moddev' version "${moddevgradle_version}"
 	id 'maven-publish'
 	id 'com.modrinth.minotaur' version '2.9.0'
 }
@@ -27,8 +27,10 @@ String currentChangelogSection(String changelog, String releaseVersion) {
 }
 
 repositories {
-	// Loom adds the Minecraft/Fabric repositories automatically; Maven Central
-	// is declared here for ordinary library dependencies such as JUnit.
+	maven {
+		name = 'NeoForge'
+		url = 'https://maven.neoforged.net/releases'
+	}
 	mavenCentral()
 }
 
@@ -36,27 +38,34 @@ dependencyLocking {
 	lockAllConfigurations()
 }
 
-// Loom resolves these launch/runtime classpaths with OS-specific native variants
-// (for example Netty epoll on Linux and kqueue on macOS). A single shared
-// lockfile cannot represent every platform at once without breaking another
-// platform's smoke run, so keep version locks on compile/test/release classpaths
-// while relying on dependency verification checksums for these launch-only
-// runtime configurations.
-def platformNativeRuntimeConfigurations = [
-	"minecraftClientLibraries",
-	"minecraftClientRuntimeLibraries",
-	"minecraftTestClientRuntimeLibraries",
-	"minecraftNatives"
-] as Set
-
-configurations.configureEach {
-	if (platformNativeRuntimeConfigurations.contains(name)) {
-		resolutionStrategy.deactivateDependencyLocking()
+sourceSets {
+	client {
+		java.setSrcDirs(['src/client/java'])
+		resources.setSrcDirs(['src/client/resources'])
+		compileClasspath += sourceSets.main.output + sourceSets.main.compileClasspath
+		runtimeClasspath += output + compileClasspath
+	}
+	test {
+		compileClasspath += sourceSets.main.output + sourceSets.main.compileClasspath
+		runtimeClasspath += output + compileClasspath
 	}
 }
 
-loom {
-	splitEnvironmentSourceSets()
+neoForge {
+	version = project.neo_version
+	validateAccessTransformers = true
+
+	runs {
+		client {
+			client()
+		}
+		server {
+			server()
+		}
+		data {
+			data()
+		}
+	}
 
 	mods {
 		"attuned" {
@@ -64,20 +73,10 @@ loom {
 			sourceSet sourceSets.client
 		}
 	}
-
 }
 
 dependencies {
-	// To change the versions see the gradle.properties file
-	minecraft "com.mojang:minecraft:${project.minecraft_version}"
-	mappings loom.officialMojangMappings()
-
-	modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
-
-	// Fabric API. This is technically optional, but you probably want it anyway.
-	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
-
-	// JUnit 5 — unit tests for the Minecraft-free logic (run by the `test` task).
+	// JUnit 5 - unit tests for the Minecraft-free logic (run by the `test` task).
 	testImplementation platform("org.junit:junit-bom:5.11.4")
 	testImplementation "org.junit.jupiter:junit-jupiter"
 	testRuntimeOnly "org.junit.platform:junit-platform-launcher"
@@ -87,8 +86,20 @@ processResources {
 	def version = project.version
 	inputs.property "version", version
 
-	filesMatching("fabric.mod.json") {
-		expand "version": version
+	filesMatching("META-INF/neoforge.mods.toml") {
+		expand([
+			"mod_id": project.mod_id,
+			"mod_name": project.mod_name,
+			"mod_license": project.mod_license,
+			"mod_version": version,
+			"mod_group_id": project.mod_group_id,
+			"mod_authors": project.mod_authors,
+			"mod_description": project.mod_description,
+			"loader_version_range": project.loader_version_range,
+			"minecraft_version_range": project.minecraft_version_range,
+			"neoforge_version_range": project.neoforge_version_range,
+			"java_version": targetJavaVersion.toString()
+		])
 	}
 }
 
@@ -105,9 +116,6 @@ java {
 		languageVersion = JavaLanguageVersion.of(targetJavaVersion)
 	}
 
-	// Loom will automatically attach sourcesJar to a RemapSourcesJar task and to the "build" task
-	// if it is present.
-	// If you remove this line, sources will not be generated.
 	withSourcesJar()
 
 	sourceCompatibility = JavaVersion.toVersion(targetJavaVersion)
@@ -119,11 +127,10 @@ jar {
 	inputs.property "projectName", projectName
 
 	from("LICENSE") {
-		rename { "${it}_$projectName"}
+		rename { "${it}_$projectName" }
 	}
 }
 
-// configure the maven publication
 publishing {
 	publications {
 		create("mavenJava", MavenPublication) {
@@ -131,17 +138,10 @@ publishing {
 		}
 	}
 
-	// See https://docs.gradle.org/current/userguide/publishing_maven.html for information on how to set up publishing.
 	repositories {
-		// Add repositories to publish to here.
-		// Notice: This block does NOT have the same function as the block in the top level.
-		// The repositories here will be used for publishing your artifact, not for
-		// retrieving dependencies.
 	}
 }
 
-// Modrinth publishing. Run `./gradlew modrinth` with a MODRINTH_TOKEN environment
-// variable set; the Modrinth project must already exist under the slug below.
 modrinth {
 	token = providers.environmentVariable("MODRINTH_TOKEN")
 	projectId = "attuned-mod"
@@ -154,13 +154,9 @@ modrinth {
 	}.get()
 	uploadFile = file("build/libs/${project.name}-${project.version}.jar")
 	gameVersions = [project.minecraft_version.toString()]
-	loaders = ["fabric"]
-	dependencies {
-		required.project "fabric-api"
-	}
+	loaders = ["neoforge"]
 }
 
-// `./gradlew modrinth` builds the remapped jar first, then uploads it.
 tasks.named("modrinth") {
 	dependsOn tasks.named("build")
 }

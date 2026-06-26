@@ -30,8 +30,8 @@ class AttunedLootCompatibilityTest {
 		Path.of("src/main/java/dev/attuned/content/AttunedLoot.java");
 	private static final Path FOCUS_DATA_DIR =
 		Path.of("src/main/resources/data/attuned/attuned/focus");
-	private static final Path FABRIC_MOD_JSON =
-		Path.of("src/main/resources/fabric.mod.json");
+	private static final Path NEOFORGE_MODS_TOML =
+		Path.of("src/main/resources/META-INF/neoforge.mods.toml");
 	private static final float EPSILON = 0.00001F;
 
 	@Test
@@ -163,12 +163,11 @@ class AttunedLootCompatibilityTest {
 				"Unseen-themed tables should bias Unseen Foci without excluding other Foci");
 		}
 
-		JsonObject manifest = JsonParser.parseString(Files.readString(FABRIC_MOD_JSON, StandardCharsets.UTF_8))
-			.getAsJsonObject();
-		assertTrue(!manifest.getAsJsonObject("depends").has("lootr"),
-			"Lootr should remain optional because Attuned uses vanilla loot-table injection");
-		assertEquals("*", manifest.getAsJsonObject("suggests").get("lootr").getAsString(),
-			"Lootr should stay suggested for modpack discovery");
+		String metadata = Files.readString(NEOFORGE_MODS_TOML, StandardCharsets.UTF_8);
+		assertTrue(metadata.contains("modId=\"lootr\""),
+			"Lootr should stay listed for modpack discovery.");
+		assertTrue(metadata.contains("type=\"optional\""),
+			"Lootr should remain optional because Attuned uses vanilla loot-table injection.");
 	}
 
 	@Test

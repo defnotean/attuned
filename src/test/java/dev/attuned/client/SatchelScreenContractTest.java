@@ -34,7 +34,7 @@ class SatchelScreenContractTest {
 			"SatchelScreen must use the active label render hook.");
 		assertTrue(screen.contains("textures/gui/satchel.png"),
 			"SatchelScreen must reference its background texture.");
-		assertTrue(read(SCREENS).contains("MenuScreens.register(SatchelMenuType.TYPE, SatchelScreen::new)"),
+		assertTrue(read(SCREENS).contains("event.register(SatchelMenuType.TYPE, SatchelScreen::new)"),
 			"The satchel screen must be registered against its menu type.");
 	}
 

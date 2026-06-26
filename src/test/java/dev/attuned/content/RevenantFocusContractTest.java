@@ -49,10 +49,10 @@ class RevenantFocusContractTest {
 
 		for (String name : NEW_REVENANT_FOCI) {
 			String field = name.substring(0, name.length() - "_focus".length()).toUpperCase() + "_FOCUS";
-			assertTrue(content.contains("public static final Item " + field + " = registerFocus(\"" + name + "\")"),
+			assertTrue(content.contains("public static final DeferredItem<Item> " + field + " = registerFocus(\"" + name + "\")"),
 				"AttunedContent should register " + name);
 		}
-		assertTrue(content.contains("public static final List<Item> FOCI = List.copyOf(REGISTERED_FOCI);"),
+		assertTrue(content.contains("public static final List<DeferredItem<Item>> FOCI = List.copyOf(REGISTERED_FOCI);"),
 			"AttunedContent.FOCI should follow Focus registration order");
 		assertTrue(registrations.contains("register(\"epitaph\", new RevenantFocusBehaviors.Epitaph())"),
 			"Epitaph behavior should be registered");

@@ -251,12 +251,12 @@ public final class Onboarding {
 
 	/** Whether the player is carrying at least one Attunement Shard in their main inventory. */
 	private static boolean carriesShard(ServerPlayer player) {
-		return carries(player, AttunedContent.ATTUNEMENT_SHARD);
+		return carries(player, AttunedContent.ATTUNEMENT_SHARD.get());
 	}
 
 	/** Whether the player is carrying at least one Attunement Shard Fragment. */
 	private static boolean carriesFragment(ServerPlayer player) {
-		return carries(player, AttunedContent.ATTUNEMENT_SHARD_FRAGMENT);
+		return carries(player, AttunedContent.ATTUNEMENT_SHARD_FRAGMENT.get());
 	}
 
 	private static boolean carries(ServerPlayer player, Item item) {
@@ -272,7 +272,8 @@ public final class Onboarding {
 	private static boolean holdsShard(ServerPlayer player) {
 		ItemStack main = player.getMainHandItem();
 		ItemStack off = player.getOffhandItem();
-		return main.is(AttunedContent.ATTUNEMENT_SHARD) || off.is(AttunedContent.ATTUNEMENT_SHARD);
+		return AttunedContent.is(main, AttunedContent.ATTUNEMENT_SHARD)
+			|| AttunedContent.is(off, AttunedContent.ATTUNEMENT_SHARD);
 	}
 
 	/**
@@ -288,7 +289,7 @@ public final class Onboarding {
 			return false;
 		}
 		BlockPos pos = ((BlockHitResult) hit).getBlockPos();
-		return player.level().getBlockState(pos).is(AttunedContent.ATTUNEMENT_ALTAR);
+		return player.level().getBlockState(pos).is(AttunedContent.ATTUNEMENT_ALTAR.get());
 	}
 
 	private static String confluencePath(String confluenceId) {

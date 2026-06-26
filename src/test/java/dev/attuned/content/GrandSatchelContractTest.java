@@ -60,8 +60,8 @@ class GrandSatchelContractTest {
 		assertTrue(content.contains("grand_satchel_of_foci"),
 			"The grand reliquary registry path should be grand_satchel_of_foci.");
 		String tabs = read(TABS);
-		int satchel = tabs.indexOf("output.accept(AttunedContent.SATCHEL_OF_FOCI)");
-		int grand = tabs.indexOf("output.accept(AttunedContent.GRAND_SATCHEL_OF_FOCI)");
+		int satchel = tabs.indexOf("output.accept(AttunedContent.SATCHEL_OF_FOCI.get())");
+		int grand = tabs.indexOf("output.accept(AttunedContent.GRAND_SATCHEL_OF_FOCI.get())");
 		assertTrue(satchel >= 0 && grand >= 0 && Math.abs(satchel - grand) < 400,
 			"The grand reliquary should be accepted in the utility tab next to the small satchel.");
 	}
@@ -100,9 +100,9 @@ class GrandSatchelContractTest {
 	@Test
 	void bothReliquariesNestingIsRejectedInBothMenusMayPlace() throws IOException {
 		String menu = read(MENU);
-		assertTrue(menu.contains("!= AttunedContent.SATCHEL_OF_FOCI"),
+		assertTrue(menu.contains("!AttunedContent.is(stack, AttunedContent.SATCHEL_OF_FOCI)"),
 			"Reliquary slots must still reject the small satchel item (no nested-bag duplication).");
-		assertTrue(menu.contains("!= AttunedContent.GRAND_SATCHEL_OF_FOCI"),
+		assertTrue(menu.contains("!AttunedContent.is(stack, AttunedContent.GRAND_SATCHEL_OF_FOCI)"),
 			"Reliquary slots must also reject the grand reliquary item (no nested-bag duplication).");
 	}
 
@@ -119,9 +119,9 @@ class GrandSatchelContractTest {
 		assertTrue(menuType.contains("GRAND_TYPE"),
 			"A second menu type should back the grand reliquary so the client builds a 54-slot grid.");
 		String screens = read(SCREENS);
-		assertTrue(screens.contains("MenuScreens.register(SatchelMenuType.TYPE, SatchelScreen::new)"),
+		assertTrue(screens.contains("event.register(SatchelMenuType.TYPE, SatchelScreen::new)"),
 			"The small reliquary must still map to SatchelScreen.");
-		assertTrue(screens.contains("MenuScreens.register(SatchelMenuType.GRAND_TYPE, SatchelScreen::new)"),
+		assertTrue(screens.contains("event.register(SatchelMenuType.GRAND_TYPE, SatchelScreen::new)"),
 			"The grand reliquary must open the same SatchelScreen class.");
 	}
 

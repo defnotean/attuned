@@ -59,7 +59,7 @@ class PresetNetworkingContractTest {
 		// item check (small satchel or Grand Reliquary) is centralized in isReliquary().
 		assertTrue(net.contains("isReliquary(player.getItemInHand(menu.hand()))"),
 			"Preset mutation packets should re-read the held reliquary from the menu hand before mutating.");
-		assertTrue(net.contains("stack.getItem() == AttunedContent.SATCHEL_OF_FOCI"),
+		assertTrue(net.contains("AttunedContent.is(stack, AttunedContent.SATCHEL_OF_FOCI)"),
 			"isReliquary should still recognize the small Focus Reliquary item.");
 		assertEquals(4, countOccurrences(net, "if (!hasOpenLiveSatchel(player))"),
 			"Save, apply, delete, and import should all reject spoofed/out-of-menu preset packets.");

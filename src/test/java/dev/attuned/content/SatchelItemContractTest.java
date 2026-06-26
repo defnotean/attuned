@@ -41,11 +41,11 @@ class SatchelItemContractTest {
 	@Test
 	void satchelIsRegisteredAsAStandardPublicItemInTheUtilityTab() throws IOException {
 		String content = read(CONTENT);
-		assertTrue(content.contains("public static final Item SATCHEL_OF_FOCI = register(\"satchel_of_foci\", SatchelItem::new);"),
+		assertTrue(content.contains("public static final DeferredItem<Item> SATCHEL_OF_FOCI = register(\"satchel_of_foci\", SatchelItem::new);"),
 			"Satchel should be a public field using the plain register helper, never registerFocus.");
 		String tabs = read(TABS);
-		int journal = tabs.indexOf("output.accept(AttunedContent.ATTUNEMENT_JOURNAL)");
-		int satchel = tabs.indexOf("output.accept(AttunedContent.SATCHEL_OF_FOCI)");
+		int journal = tabs.indexOf("output.accept(AttunedContent.ATTUNEMENT_JOURNAL.get())");
+		int satchel = tabs.indexOf("output.accept(AttunedContent.SATCHEL_OF_FOCI.get())");
 		assertTrue(journal >= 0 && satchel >= 0 && Math.abs(journal - satchel) < 400,
 			"Satchel should appear in the utility tab's includeCoreItems block, near the journal.");
 	}

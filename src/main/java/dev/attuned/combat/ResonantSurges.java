@@ -166,7 +166,7 @@ public final class ResonantSurges {
 			return;
 		}
 		int count = 1 + player.getRandom().nextInt(2);
-		ItemStack stack = new ItemStack(AttunedContent.ATTUNEMENT_SHARD_FRAGMENT, count);
+		ItemStack stack = new ItemStack(AttunedContent.ATTUNEMENT_SHARD_FRAGMENT.get(), count);
 		if (player.getInventory().add(stack)) {
 			PlayerMessages.overlay(player, Component.translatable("surge.attuned.kill_reward", count));
 			return;

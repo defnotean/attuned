@@ -55,11 +55,11 @@ class GenericFocusItemContractTest {
 	void poolIsSnapshotBeforeTheFociListFreezes() throws IOException {
 		String source = Files.readString(CONTENT_SOURCE, StandardCharsets.UTF_8);
 		int poolIndex = source.indexOf("registerCustomFocusPool()");
-		int fociFreezeIndex = source.indexOf("public static final List<Item> FOCI = List.copyOf(REGISTERED_FOCI);");
+		int fociFreezeIndex = source.indexOf("public static final List<DeferredItem<Item>> FOCI = List.copyOf(REGISTERED_FOCI);");
 		assertTrue(poolIndex >= 0, "The generic Focus pool must be registered via registerCustomFocusPool()");
 		assertTrue(fociFreezeIndex >= 0, "AttunedContent must keep the FOCI snapshot");
 		assertTrue(poolIndex < fociFreezeIndex,
-			"The generic Focus pool must register before the FOCI/FOCI_SET snapshots freeze so isFocus() includes them");
+			"The generic Focus pool must register before the FOCI/FOCUS_IDS snapshots freeze so isFocus() includes them");
 	}
 
 	@Test
@@ -149,7 +149,7 @@ class GenericFocusItemContractTest {
 		// are not forced to ship a FocusDefinition or animated 64x512 texture. Pin both halves so a
 		// future rename cannot silently drag the pool back into the shipped-Focus gate.
 		Pattern shippedFocus = Pattern.compile(
-			"public\\s+static\\s+final\\s+Item\\s+([A-Z0-9_]+_FOCUS)\\s*=\\s*registerFocus\\(\"([a-z0-9_]+_focus)\"\\);");
+			"public\\s+static\\s+final\\s+DeferredItem<Item>\\s+([A-Z0-9_]+_FOCUS)\\s*=\\s*registerFocus\\(\"([a-z0-9_]+_focus)\"\\);");
 		String source = Files.readString(CONTENT_SOURCE, StandardCharsets.UTF_8);
 		Matcher matcher = shippedFocus.matcher(source);
 		while (matcher.find()) {

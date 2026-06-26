@@ -196,20 +196,20 @@ public final class PresetNetworking {
 
 	/** True for either reliquary tier: the small satchel or the Grand Focus Reliquary. */
 	private static boolean isReliquary(ItemStack stack) {
-		return stack.getItem() == AttunedContent.SATCHEL_OF_FOCI
-			|| stack.getItem() == AttunedContent.GRAND_SATCHEL_OF_FOCI;
+		return AttunedContent.is(stack, AttunedContent.SATCHEL_OF_FOCI)
+			|| AttunedContent.is(stack, AttunedContent.GRAND_SATCHEL_OF_FOCI);
 	}
 
 	/** Contents component type for the reliquary tier of this stack. */
 	private static DataComponentType<FocusHolder> contentsTypeOf(ItemStack stack) {
-		return stack.getItem() == AttunedContent.GRAND_SATCHEL_OF_FOCI
+		return AttunedContent.is(stack, AttunedContent.GRAND_SATCHEL_OF_FOCI)
 			? AttunedComponents.GRAND_SATCHEL_CONTENTS
 			: AttunedComponents.SATCHEL_CONTENTS;
 	}
 
 	/** Grid size for the reliquary tier of this stack. */
 	private static int sizeOf(ItemStack stack) {
-		return stack.getItem() == AttunedContent.GRAND_SATCHEL_OF_FOCI
+		return AttunedContent.is(stack, AttunedContent.GRAND_SATCHEL_OF_FOCI)
 			? AttunedComponents.GRAND_SATCHEL_SIZE
 			: AttunedComponents.SATCHEL_SIZE;
 	}

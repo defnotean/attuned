@@ -53,7 +53,7 @@ class ConfluenceDiscoveryContractTest {
 			"markConfluenceDiscovered must normalize the id like markOnboarding.");
 		assertTrue(body.contains("List.copyOf(updated)"),
 			"markConfluenceDiscovered must store an immutable snapshot.");
-		assertTrue(body.contains("setAttached(DISCOVERED_CONFLUENCES,"),
+		assertTrue(body.contains("set(player, DISCOVERED_CONFLUENCES,"),
 			"markConfluenceDiscovered must write the discovery attachment.");
 	}
 

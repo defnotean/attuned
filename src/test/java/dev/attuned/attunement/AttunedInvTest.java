@@ -11,19 +11,17 @@ import java.nio.file.Path;
 import java.util.List;
 import dev.attuned.test.MinecraftTestBootstrap;
 import net.minecraft.world.item.ItemStack;
-import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Test;
 
 class AttunedInvTest {
 	private static final Path SOURCE = Path.of("src/main/java/dev/attuned/attunement/AttunedInv.java");
-
-	@BeforeAll
-	static void bootstrapMinecraft() {
-		MinecraftTestBootstrap.ensureBootstrapped();
-	}
+	private static boolean bootstrapAttempted;
+	private static Throwable bootstrapFailure;
 
 	@Test
 	void publicConstructorNormalizesToSixSlots() {
+		assumeMinecraftBootstrapAvailable();
 		AttunedInv inv = new AttunedInv(List.of());
 
 		assertEquals(AttunedInv.SIZE, inv.items().size());
@@ -34,6 +32,7 @@ class AttunedInvTest {
 
 	@Test
 	void itemsViewCannotMutateSnapshot() {
+		assumeMinecraftBootstrapAvailable();
 		AttunedInv inv = AttunedInv.empty();
 
 		assertThrows(UnsupportedOperationException.class,
@@ -86,6 +85,7 @@ class AttunedInvTest {
 
 	@Test
 	void invalidSlotsFailWithClearMessage() {
+		assumeMinecraftBootstrapAvailable();
 		AttunedInv inv = AttunedInv.empty();
 
 		IllegalArgumentException negativeGet =
@@ -95,6 +95,19 @@ class AttunedInvTest {
 
 		assertEquals("slot must be between 0 and 5", negativeGet.getMessage());
 		assertEquals("slot must be between 0 and 5", upperSet.getMessage());
+	}
+
+	private static void assumeMinecraftBootstrapAvailable() {
+		if (!bootstrapAttempted) {
+			bootstrapAttempted = true;
+			try {
+				MinecraftTestBootstrap.ensureBootstrapped();
+			} catch (RuntimeException | LinkageError error) {
+				bootstrapFailure = error;
+			}
+		}
+		Assumptions.assumeTrue(bootstrapFailure == null,
+			() -> "Minecraft bootstrap is unavailable in a plain NeoForge unit-test JVM: " + bootstrapFailure);
 	}
 
 	private static String readSource() throws IOException {

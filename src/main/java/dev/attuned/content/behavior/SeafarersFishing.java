@@ -15,6 +15,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.neoforged.neoforge.registries.DeferredItem;
 
 /** Catch-time hooks for the peaceful Seafarers fishing Foci. */
 public final class SeafarersFishing {
@@ -84,10 +85,10 @@ public final class SeafarersFishing {
 			&& (readyAt == null || player.level().getGameTime() >= readyAt);
 	}
 
-	private static boolean hasActive(Player player, Item focus) {
+	private static boolean hasActive(Player player, DeferredItem<? extends Item> focus) {
 		AttunedInv inv = AttunedAttachments.getInventory(player);
 		for (int slot : Attunement.activeSlots(player)) {
-			if (inv.get(slot).is(focus)) {
+			if (AttunedContent.is(inv.get(slot), focus)) {
 				return true;
 			}
 		}
