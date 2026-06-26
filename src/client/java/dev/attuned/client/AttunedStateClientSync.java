@@ -23,6 +23,7 @@ public final class AttunedStateClientSync {
 				LocalPlayer local = client.player;
 				if (local != null) {
 					AttunedAttachments.applySync(local, payload.tag());
+					AttunementReadout.invalidate(local);
 				}
 			});
 		});
