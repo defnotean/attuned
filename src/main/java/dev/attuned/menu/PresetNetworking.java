@@ -24,7 +24,7 @@ import java.util.UUID;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.ChatFormatting;
-import net.minecraft.core.Registry;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.core.component.DataComponentType;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
@@ -127,8 +127,8 @@ public final class PresetNetworking {
 			return;
 		}
 
-		Registry<FocusDefinition> registry =
-			player.level().registryAccess().registryOrThrow(AttunedRegistries.FOCUS_DEFINITIONS);
+		HolderLookup.RegistryLookup<FocusDefinition> registry =
+			player.level().registryAccess().lookupOrThrow(AttunedRegistries.FOCUS_DEFINITIONS);
 		Set<String> registeredFocusIds = registeredFocusIds(registry);
 		Map<String, Integer> inventoryCounts = inventoryFocusCounts(player, registeredFocusIds);
 		PresetApplicationResolver.Result result = PresetApplicationResolver.apply(
@@ -196,28 +196,28 @@ public final class PresetNetworking {
 
 	/** True for either reliquary tier: the small satchel or the Grand Focus Reliquary. */
 	private static boolean isReliquary(ItemStack stack) {
-		return stack.getItem() == AttunedContent.SATCHEL_OF_FOCI
-			|| stack.getItem() == AttunedContent.GRAND_SATCHEL_OF_FOCI;
+		return AttunedContent.is(stack, AttunedContent.SATCHEL_OF_FOCI)
+			|| AttunedContent.is(stack, AttunedContent.GRAND_SATCHEL_OF_FOCI);
 	}
 
 	/** Contents component type for the reliquary tier of this stack. */
 	private static DataComponentType<FocusHolder> contentsTypeOf(ItemStack stack) {
-		return stack.getItem() == AttunedContent.GRAND_SATCHEL_OF_FOCI
+		return AttunedContent.is(stack, AttunedContent.GRAND_SATCHEL_OF_FOCI)
 			? AttunedComponents.GRAND_SATCHEL_CONTENTS
 			: AttunedComponents.SATCHEL_CONTENTS;
 	}
 
 	/** Grid size for the reliquary tier of this stack. */
 	private static int sizeOf(ItemStack stack) {
-		return stack.getItem() == AttunedContent.GRAND_SATCHEL_OF_FOCI
+		return AttunedContent.is(stack, AttunedContent.GRAND_SATCHEL_OF_FOCI)
 			? AttunedComponents.GRAND_SATCHEL_SIZE
 			: AttunedComponents.SATCHEL_SIZE;
 	}
 
-	private static Set<String> registeredFocusIds(Registry<FocusDefinition> registry) {
+	private static Set<String> registeredFocusIds(HolderLookup.RegistryLookup<FocusDefinition> registry) {
 		Set<String> ids = new HashSet<>();
-		registry.stream()
-			.map(def -> BuiltInRegistries.ITEM.getKey(def.item().value()).toString())
+		registry.listElements()
+			.map(holder -> BuiltInRegistries.ITEM.getKey(holder.value().item().value()).toString())
 			.forEach(ids::add);
 		return ids;
 	}

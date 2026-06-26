@@ -49,10 +49,10 @@ class RevenantFocusContractTest {
 
 		for (String name : NEW_REVENANT_FOCI) {
 			String field = name.substring(0, name.length() - "_focus".length()).toUpperCase() + "_FOCUS";
-			assertTrue(content.contains("public static final Item " + field + " = registerFocus(\"" + name + "\")"),
+			assertTrue(content.contains("public static final DeferredItem<Item> " + field + " = registerFocus(\"" + name + "\")"),
 				"AttunedContent should register " + name);
 		}
-		assertTrue(content.contains("public static final List<Item> FOCI = List.copyOf(REGISTERED_FOCI);"),
+		assertTrue(content.contains("public static final List<DeferredItem<Item>> FOCI = List.copyOf(REGISTERED_FOCI);"),
 			"AttunedContent.FOCI should follow Focus registration order");
 		assertTrue(registrations.contains("register(\"epitaph\", new RevenantFocusBehaviors.Epitaph())"),
 			"Epitaph behavior should be registered");
@@ -74,7 +74,7 @@ class RevenantFocusContractTest {
 			"Ashen Debt should keep its revenge window short");
 		assertTrue(combat.contains("DEBT_MULTIPLIER = 1.25F"),
 			"Ashen Debt should keep the revenge hit controlled");
-		assertTrue(combat.contains("MobEffects.MOVEMENT_SLOWDOWN"),
+		assertTrue(combat.contains("MobEffects.SLOWNESS") || combat.contains("MobEffects.MOVEMENT_SLOWDOWN"),
 			"Bonechill should apply a real vanilla slow effect");
 		assertTrue(combat.contains("CombatTargets.isHostileOrPvpOpponent(attacker, player)"),
 			"Bonechill should respect PvP and hostile target rules");
@@ -82,7 +82,8 @@ class RevenantFocusContractTest {
 			"Last Rites should respect PvP and hostile target rules");
 		assertTrue(combat.contains("removeEffect(MobEffects.POISON)")
 				&& combat.contains("removeEffect(MobEffects.WITHER)")
-				&& combat.contains("removeEffect(MobEffects.MOVEMENT_SLOWDOWN)")
+				&& (combat.contains("removeEffect(MobEffects.SLOWNESS)")
+					|| combat.contains("removeEffect(MobEffects.MOVEMENT_SLOWDOWN)"))
 				&& combat.contains("player.clearFire()"),
 			"Last Rites should cleanse the intended harmful states");
 	}

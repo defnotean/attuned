@@ -17,8 +17,8 @@ class BootstrapRegistrationContractTest {
 	private static final List<String> BOOTSTRAP_REGISTRATION_MARKERS = List.of(
 		"CommandRegistrationCallback.EVENT.register",
 		"LootTableEvents.MODIFY.register",
-		"Registry.register(BuiltInRegistries.CREATIVE_MODE_TAB",
-		"Registry.register(BuiltInRegistries.MENU"
+		"NeoForgeDeferredRegistries.creativeTab",
+		"NeoForgeDeferredRegistries.menu"
 	);
 
 	@Test

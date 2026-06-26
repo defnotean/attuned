@@ -96,7 +96,18 @@ public class ReweavingMenu extends AbstractContainerMenu {
 				return false;
 			}
 		});
-		this.addStandardInventorySlots(inventory, INVENTORY_X, INVENTORY_Y);
+		addPlayerInventorySlots(inventory, INVENTORY_X, INVENTORY_Y);
+	}
+
+	private void addPlayerInventorySlots(Inventory inventory, int x, int y) {
+		for (int row = 0; row < 3; row++) {
+			for (int column = 0; column < 9; column++) {
+				addSlot(new Slot(inventory, column + row * 9 + 9, x + column * 18, y + row * 18));
+			}
+		}
+		for (int column = 0; column < 9; column++) {
+			addSlot(new Slot(inventory, column, x + column * 18, y + 58));
+		}
 	}
 
 	public Container container() {
@@ -204,21 +215,9 @@ public class ReweavingMenu extends AbstractContainerMenu {
 		return this.container.getItem(OUTPUT_SLOT);
 	}
 
-	private void addStandardInventorySlots(Inventory inventory, int x, int y) {
-		for (int row = 0; row < 3; row++) {
-			for (int col = 0; col < 9; col++) {
-				this.addSlot(new Slot(inventory, col + row * 9 + 9,
-					x + col * 18, y + row * 18));
-			}
-		}
-		for (int col = 0; col < 9; col++) {
-			this.addSlot(new Slot(inventory, col, x + col * 18, y + 58));
-		}
-	}
-
 	@Override
 	public boolean stillValid(Player player) {
-		return stillValid(this.access, player, AttunedContent.ALTAR_OF_REWEAVING);
+		return stillValid(this.access, player, AttunedContent.ALTAR_OF_REWEAVING.get());
 	}
 
 	@Override

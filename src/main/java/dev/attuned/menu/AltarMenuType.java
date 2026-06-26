@@ -1,9 +1,8 @@
 package dev.attuned.menu;
 
 import dev.attuned.Attuned;
+import dev.attuned.platform.NeoForgeDeferredRegistries;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.Registry;
-import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.MenuProvider;
@@ -28,7 +27,7 @@ public final class AltarMenuType {
 
 	private AltarMenuType() {}
 
-	/** The Altar menu's registered type — populated by {@link #init()}. */
+	/** The Altar menu's registered type â€” populated by {@link #init()}. */
 	public static MenuType<AltarMenu> TYPE;
 
 	/** Window title shown above the slot. */
@@ -44,7 +43,7 @@ public final class AltarMenuType {
 		ResourceLocation id = new ResourceLocation(Attuned.MOD_ID, "attunement_altar");
 		// The MenuType constructor is widened by fabric-menu-api-v1; vanilla also
 		// instantiates its menu types this way (see net.minecraft.world.inventory.MenuType).
-		TYPE = Registry.register(BuiltInRegistries.MENU, id,
+		TYPE = NeoForgeDeferredRegistries.menu(id,
 			new MenuType<>(AltarMenu::new, FeatureFlags.VANILLA_SET));
 	}
 
@@ -52,8 +51,8 @@ public final class AltarMenuType {
 	 * A {@link MenuProvider} the Altar block uses to open the menu for a player.
 	 * The Altar holds no per-block state, so a {@link SimpleMenuProvider} that
 	 * builds a fresh menu on demand is enough; we close over the block's level
-	 * and position via a {@link ContainerLevelAccess} so the bind handler — and
-	 * the menu's own reachability check — resolve against the right dimension.
+	 * and position via a {@link ContainerLevelAccess} so the bind handler â€” and
+	 * the menu's own reachability check â€” resolve against the right dimension.
 	 */
 	public static MenuProvider provider(Level level, BlockPos pos) {
 		ContainerLevelAccess access = ContainerLevelAccess.create(level, pos);

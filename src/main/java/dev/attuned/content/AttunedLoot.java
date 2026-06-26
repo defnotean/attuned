@@ -143,7 +143,7 @@ public final class AttunedLoot {
 	}
 
 	static boolean modifiesExistingPools(ResourceLocation table) {
-		return table.getNamespace().equals("minecraft") && table.getPath().startsWith("archaeology/");
+		return false;
 	}
 
 	/** Registers the loot-table injection. Called from the mod initializer. */
@@ -213,7 +213,7 @@ public final class AttunedLoot {
 	/** Focus items for the 1.20.6 loot callback, which does not expose dynamic registries. */
 	private static List<FocusEntry> focusEntries() {
 		return AttunedContent.FOCI.stream()
-			.map(item -> new FocusEntry(item, new FocusMeta(null, null)))
+			.map(item -> new FocusEntry(item.get(), new FocusMeta(null, null)))
 			.sorted(Comparator.comparing(focus ->
 				BuiltInRegistries.ITEM.getKey(focus.item()).toString()))
 			.toList();

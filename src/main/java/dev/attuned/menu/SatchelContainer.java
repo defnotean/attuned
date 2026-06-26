@@ -26,7 +26,7 @@ public final class SatchelContainer implements Container {
 
 	/** Small Focus Reliquary view (27 slots). */
 	public SatchelContainer(Player player, InteractionHand hand) {
-		this(player, hand, AttunedContent.SATCHEL_OF_FOCI,
+		this(player, hand, AttunedContent.SATCHEL_OF_FOCI.get(),
 			AttunedComponents.SATCHEL_CONTENTS, AttunedComponents.SATCHEL_SIZE);
 	}
 

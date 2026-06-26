@@ -1,6 +1,6 @@
 package dev.attuned.pacts;
 
-import dev.attuned.compat.ParticleCompat;
+import dev.attuned.compat.DustParticles;
 
 import dev.attuned.compat.PlayerMessages;
 import dev.attuned.Milestones;
@@ -138,7 +138,7 @@ public final class PactTrials {
 		double py = player.getY() + player.getBbHeight() * 0.65;
 		double pz = player.getZ();
 		level.sendParticles(ParticleTypes.END_ROD, px, py, pz, 14, 0.5, 0.4, 0.5, 0.02);
-		level.sendParticles(ParticleCompat.dust(pact.argb() & 0x00FFFFFF, 0.9F),
+		level.sendParticles(DustParticles.color(pact.argb() & 0x00FFFFFF, 0.9F),
 			px, py, pz, 6, 0.4, 0.3, 0.4, 0.0);
 		Onboarding.tryPactTrialCompleteHint(player);
 		Milestones.onPactTrialComplete(player);
@@ -253,7 +253,7 @@ public final class PactTrials {
 	}
 
 	private static PactTrialProgress get(Player player) {
-		return player.getAttachedOrElse(AttunedAttachments.PACT_TRIAL_PROGRESS, PactTrialProgress.EMPTY);
+		return AttunedAttachments.getPactTrialProgressValue(player);
 	}
 
 	static String pactId(Pact pact) {

@@ -88,8 +88,8 @@ public class SatchelMenu extends AbstractContainerMenu {
 					@Override
 					public boolean mayPlace(ItemStack stack) {
 						return Attunement.definitionFor(inventory.player, stack).isPresent()
-							&& stack.getItem() != AttunedContent.SATCHEL_OF_FOCI
-							&& stack.getItem() != AttunedContent.GRAND_SATCHEL_OF_FOCI;
+							&& !AttunedContent.is(stack, AttunedContent.SATCHEL_OF_FOCI)
+							&& !AttunedContent.is(stack, AttunedContent.GRAND_SATCHEL_OF_FOCI);
 					}
 				});
 			}
@@ -104,7 +104,18 @@ public class SatchelMenu extends AbstractContainerMenu {
 				EQUIPPED_X + (i % EQUIPPED_COLS) * 18, EQUIPPED_Y + (i / EQUIPPED_COLS) * 18));
 		}
 
-		this.addStandardInventorySlots(inventory, INVENTORY_X, inventoryY());
+		addPlayerInventorySlots(inventory, INVENTORY_X, inventoryY());
+	}
+
+	private void addPlayerInventorySlots(Inventory inventory, int x, int y) {
+		for (int row = 0; row < 3; row++) {
+			for (int column = 0; column < 9; column++) {
+				addSlot(new Slot(inventory, column + row * 9 + 9, x + column * 18, y + row * 18));
+			}
+		}
+		for (int column = 0; column < 9; column++) {
+			addSlot(new Slot(inventory, column, x + column * 18, y + 58));
+		}
 	}
 
 	/** Menu index of the first equipped Focus slot (the reliquary grid takes 0..satchelSize-1). */
@@ -136,18 +147,6 @@ public class SatchelMenu extends AbstractContainerMenu {
 		return hand;
 	}
 
-	private void addStandardInventorySlots(Inventory inventory, int x, int y) {
-		for (int row = 0; row < 3; row++) {
-			for (int col = 0; col < 9; col++) {
-				this.addSlot(new Slot(inventory, col + row * 9 + 9,
-					x + col * 18, y + row * 18));
-			}
-		}
-		for (int col = 0; col < 9; col++) {
-			this.addSlot(new Slot(inventory, col, x + col * 18, y + 58));
-		}
-	}
-
 	@Override
 	public boolean stillValid(Player player) {
 		return player == owner && hasLiveSatchel(player);
@@ -162,8 +161,8 @@ public class SatchelMenu extends AbstractContainerMenu {
 	}
 
 	private static boolean isReliquary(ItemStack stack) {
-		return stack.getItem() == AttunedContent.SATCHEL_OF_FOCI
-			|| stack.getItem() == AttunedContent.GRAND_SATCHEL_OF_FOCI;
+		return AttunedContent.is(stack, AttunedContent.SATCHEL_OF_FOCI)
+			|| AttunedContent.is(stack, AttunedContent.GRAND_SATCHEL_OF_FOCI);
 	}
 
 	@Override

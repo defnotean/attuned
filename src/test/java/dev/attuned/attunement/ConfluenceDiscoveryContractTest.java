@@ -27,9 +27,7 @@ class ConfluenceDiscoveryContractTest {
 	void discoveryAttachmentIsPersistentSyncedCopyOnDeath() throws IOException {
 		String attachments = read(ATTACHMENTS);
 		assertTrue(attachments.contains(
-				"public static final AttachmentType<List<String>> DISCOVERED_CONFLUENCES = AttachmentRegistry.create(")
-				|| attachments.contains("public static final AttachmentType<List<String>> DISCOVERED_CONFLUENCES")
-				&& attachments.contains("AttachmentRegistry.<List<String>>builder()"),
+				"public static final AttachmentType<List<String>> DISCOVERED_CONFLUENCES = AttachmentRegistry.create("),
 			"Discoveries must be a synced list attachment.");
 		assertTrue(attachments.contains(
 				"new ResourceLocation(Attuned.MOD_ID, \"discovered_confluences\")"),
@@ -37,15 +35,11 @@ class ConfluenceDiscoveryContractTest {
 		assertTrue(attachments.contains(".persistent(Codec.STRING.listOf())"),
 			"Discovered confluences must persist across restart.");
 		assertTrue(attachments.contains(
-				".syncWith(ByteBufCodecs.STRING_UTF8.apply(ByteBufCodecs.list()), AttachmentSyncPredicate.targetOnly())")
-				|| attachments.contains(".buildAndRegister(new ResourceLocation(Attuned.MOD_ID, \"discovered_confluences\"))"),
-			"Discovered confluences must sync to the owning client only when the active Fabric attachment API supports sync hooks.");
+				".syncWith(ByteBufCodecs.STRING_UTF8.apply(ByteBufCodecs.list()), AttachmentSyncPredicate.targetOnly())"),
+			"Discovered confluences must sync to the owning client only.");
 
 		String block = methodRegion(attachments,
-			attachments.contains("DISCOVERED_CONFLUENCES = AttachmentRegistry.create(")
-				? "DISCOVERED_CONFLUENCES = AttachmentRegistry.create("
-				: "DISCOVERED_CONFLUENCES =\n\t\tAttachmentRegistry.<List<String>>builder()",
-			"public static void init()");
+			"DISCOVERED_CONFLUENCES = AttachmentRegistry.create(", "public static void init()");
 		assertTrue(block.contains(".copyOnDeath()"), "Discoveries must survive death.");
 
 		assertTrue(attachments.contains("public static List<String> getDiscoveredConfluences(Player player)"),
@@ -59,7 +53,7 @@ class ConfluenceDiscoveryContractTest {
 			"markConfluenceDiscovered must normalize the id like markOnboarding.");
 		assertTrue(body.contains("List.copyOf(updated)"),
 			"markConfluenceDiscovered must store an immutable snapshot.");
-		assertTrue(body.contains("setAttached(DISCOVERED_CONFLUENCES,"),
+		assertTrue(body.contains("set(player, DISCOVERED_CONFLUENCES,"),
 			"markConfluenceDiscovered must write the discovery attachment.");
 	}
 

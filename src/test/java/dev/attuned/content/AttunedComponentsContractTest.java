@@ -23,9 +23,9 @@ class AttunedComponentsContractTest {
 			"Component registration should set its init guard.");
 		assertTrue(components.contains("public static DataComponentType<FocusHolder> SATCHEL_CONTENTS;"),
 			"SATCHEL_CONTENTS should be an assignable (non-final) field populated in init(), like AltarMenuType.TYPE.");
-		assertTrue(components.contains("Registry.register(BuiltInRegistries.DATA_COMPONENT_TYPE"),
-			"The component should register into the DATA_COMPONENT_TYPE registry.");
-		assertBefore(components, "initialized = true;", "Registry.register(BuiltInRegistries.DATA_COMPONENT_TYPE");
+		assertTrue(components.contains("NeoForgeDeferredRegistries.dataComponent"),
+			"The component should register into the DATA_COMPONENT_TYPE deferred registry.");
+		assertBefore(components, "initialized = true;", "NeoForgeDeferredRegistries.dataComponent");
 		assertTrue(components.contains("\"satchel_contents\""),
 			"The component id path should be satchel_contents.");
 		assertTrue(components.contains(".persistent(FocusHolder.codec(SATCHEL_SIZE, 1))"),
