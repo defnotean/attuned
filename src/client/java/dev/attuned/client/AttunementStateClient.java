@@ -20,8 +20,10 @@ public final class AttunementStateClient {
 		initialized = true;
 		ClientPlayNetworking.registerGlobalReceiver(AttunementStatePayload.TYPE, (payload, context) ->
 			context.client().execute(() -> {
-				if (context.client().player != null) {
-					AttunedAttachments.applySyncedState(context.client().player, payload);
+				var local = context.client().player;
+				if (local != null) {
+					AttunedAttachments.applySyncedState(local, payload);
+					AttunementReadout.invalidate(local);
 				}
 			}));
 	}
