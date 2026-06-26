@@ -13,12 +13,13 @@ public final class AttachmentRegistry {
 	public static <T> AttachmentType<T> create(Identifier id, Consumer<Builder<T>> consumer) {
 		Builder<T> builder = new Builder<>();
 		consumer.accept(builder);
-		return new AttachmentType<>(id, builder.initializer, builder.copyOnDeath);
+		return new AttachmentType<>(id, builder.initializer, builder.copyOnDeath, builder.persistentCodec);
 	}
 
 	public static final class Builder<T> {
 		private Supplier<T> initializer = () -> null;
 		private boolean copyOnDeath;
+		private Codec<T> persistentCodec;
 
 		public Builder<T> initializer(Supplier<T> initializer) {
 			this.initializer = Objects.requireNonNull(initializer, "initializer");
@@ -26,6 +27,7 @@ public final class AttachmentRegistry {
 		}
 
 		public Builder<T> persistent(Codec<T> codec) {
+			this.persistentCodec = Objects.requireNonNull(codec, "codec");
 			return this;
 		}
 

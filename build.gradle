@@ -2,7 +2,7 @@ plugins {
 	id 'java'
 	id 'idea'
 	id 'eclipse'
-	id 'net.minecraftforge.gradle' version '[7.0.17,8)'
+	id 'net.minecraftforge.gradle' version '7.0.29'
 	id 'maven-publish'
 	id 'com.modrinth.minotaur' version '2.9.0'
 }
