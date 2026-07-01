@@ -270,11 +270,12 @@ class HarpoonBehaviorContractTest {
 		assertTrue(mixin.contains("method = \"tick\""),
 			"Mixin should discard expired projectiles before vanilla tick work");
 		assertTrue(mixin.contains("method = \"tryPickup\""),
-			"Mixin should block expired pickup");
-		assertTrue(mixin.contains("method = \"onHitEntity\""),
-			"Mixin should discard the temporary harpoon after entity hits");
-		assertTrue(mixin.contains("method = \"hitBlockEnchantmentEffects\""),
-			"Mixin should discard the temporary harpoon after block hits");
+			"Mixin should intercept pickup attempts");
+		assertFalse(mixin.contains("onHitEntity") || mixin.contains("hitBlockEnchantmentEffects"),
+			"A thrown harpoon should stay stuck where it lands, not be discarded on impact");
+		assertTrue(mixin.contains("AttunedAttachments.TEMPORARY_HARPOON"),
+			"Mixin should mark the harpoon with a Fabric synced entity attachment so the renderer can swap "
+				+ "in the custom mesh without relying on fragile SynchedEntityData id ordering");
 	}
 
 	private static String read(Path file) throws IOException {
