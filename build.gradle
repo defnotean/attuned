@@ -1,5 +1,5 @@
 plugins {
-	id 'net.fabricmc.fabric-loom-remap' version "${loom_version}"
+	id 'org.quiltmc.loom' version "${quilt_loom_version}"
 	id 'maven-publish'
 	id 'com.modrinth.minotaur' version '2.9.0'
 }
@@ -26,9 +26,34 @@ String currentChangelogSection(String changelog, String releaseVersion) {
 	return section
 }
 
+void mirrorResourceDirectories(File outputDir) {
+	def resourceRoots = [file("src/main/resources"), file("src/client/resources")]
+
+	["assets", "data"].each { namespace ->
+		def outputNamespace = new File(outputDir, namespace)
+		outputNamespace.mkdirs()
+
+		resourceRoots.findAll { it.exists() }.each { root ->
+			def inputNamespace = new File(root, namespace)
+			if (inputNamespace.exists()) {
+				java.nio.file.Files.walk(inputNamespace.toPath()).withCloseable { paths ->
+					paths.filter { java.nio.file.Files.isDirectory(it) }.forEach { sourcePath ->
+						def relative = inputNamespace.toPath().relativize(sourcePath).toString()
+						new File(outputNamespace, relative).mkdirs()
+					}
+				}
+			}
+		}
+	}
+}
+
 repositories {
-	// Loom adds the Minecraft/Fabric repositories automatically; Maven Central
-	// is declared here for ordinary library dependencies such as JUnit.
+	// Loom adds the Minecraft/Fabric repositories automatically; Quilt Maven
+	// is declared for Quilt Loader while Maven Central is for JUnit.
+	maven {
+		name = 'Quilt'
+		url = 'https://maven.quiltmc.org/repository/release'
+	}
 	mavenCentral()
 }
 
@@ -55,8 +80,15 @@ configurations.configureEach {
 	}
 }
 
+def fabricApiRuntime = configurations.create("fabricApiRuntime") {
+	canBeConsumed = false
+	canBeResolved = true
+	transitive = false
+}
+
 loom {
 	splitEnvironmentSourceSets()
+	accessWidenerPath = file("src/main/resources/attuned.accesswidener")
 
 	mods {
 		"attuned" {
@@ -72,12 +104,17 @@ dependencies {
 	minecraft "com.mojang:minecraft:${project.minecraft_version}"
 	mappings loom.officialMojangMappings()
 
-	modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
+	modImplementation "org.quiltmc:quilt-loader:${project.quilt_loader_version}"
 
-	// Fabric API. This is technically optional, but you probably want it anyway.
+	// Quilt Loader can run Fabric API mods. Compile against Fabric API here, then
+	// launch the original aggregate jar via fabric.addMods below. Quilt Loom's
+	// remapped aggregate keeps nested jars but strips their manifest list, and its
+	// split common/client dev module graph does not resolve all Fabric IDs under
+	// Quilt Loader 0.17.x.
 	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
+	add("fabricApiRuntime", "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}")
 
-	// JUnit 5 — unit tests for the Minecraft-free logic (run by the `test` task).
+	// JUnit 5 ΓÇö unit tests for the Minecraft-free logic (run by the `test` task).
 	testImplementation platform("org.junit:junit-bom:5.11.4")
 	testImplementation "org.junit.jupiter:junit-jupiter"
 	testRuntimeOnly "org.junit.platform:junit-platform-launcher"
@@ -87,17 +124,22 @@ processResources {
 	def version = project.version
 	inputs.property "version", version
 
-	exclude "assets/attuned/blockbench/**"
-	exclude "assets/attuned/textures/item/ocean_relic_trident_blockbench.png"
-	exclude "assets/attuned/textures/item/ocean_relic_trident_blockbench.png.mcmeta"
-
-	filesMatching("fabric.mod.json") {
+	filesMatching("quilt.mod.json") {
 		expand "version": version
 	}
 }
 
 tasks.withType(JavaCompile).configureEach {
 	it.options.release = targetJavaVersion
+	doLast {
+		mirrorResourceDirectories(destinationDirectory.get().asFile)
+	}
+}
+
+tasks.withType(ProcessResources).configureEach {
+	doLast {
+		mirrorResourceDirectories(destinationDir)
+	}
 }
 
 test {
@@ -116,6 +158,18 @@ java {
 
 	sourceCompatibility = JavaVersion.toVersion(targetJavaVersion)
 	targetCompatibility = JavaVersion.toVersion(targetJavaVersion)
+}
+
+tasks.withType(Jar).configureEach {
+	duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
+
+tasks.withType(JavaExec).configureEach {
+	if (name == "runServer" || name == "runClient") {
+		doFirst {
+			jvmArgs "-Dloader.addMods=${fabricApiRuntime.singleFile.absolutePath}"
+		}
+	}
 }
 
 jar {
@@ -151,14 +205,14 @@ modrinth {
 	projectId = "attuned-mod"
 	versionNumber = project.version
 	versionType = "release"
-	versionName = "Fabric: Minecraft ${project.minecraft_version} - Attuned ${project.version}"
+	versionName = "Attuned ${project.version}"
 	def changelogFile = layout.projectDirectory.file("CHANGELOG.md")
 	changelog = providers.provider {
 		currentChangelogSection(changelogFile.asFile.getText("UTF-8"), project.version.toString())
 	}.get()
 	uploadFile = file("build/libs/${project.name}-${project.version}.jar")
 	gameVersions = [project.minecraft_version.toString()]
-	loaders = ["fabric"]
+	loaders = ["quilt"]
 	dependencies {
 		required.project "fabric-api"
 	}

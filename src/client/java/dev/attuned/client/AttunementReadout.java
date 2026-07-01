@@ -91,8 +91,17 @@ public final class AttunementReadout {
 		return cachedSnapshot;
 	}
 
+	public static void invalidate(Player player) {
+		if (player != null && player.getUUID().equals(cachedPlayerId)) {
+			cachedPlayerId = null;
+			cachedTick = -1;
+			cachedSnapshot = null;
+		}
+	}
+
+
 	/**
-	 * Resonance fill for HUD bars — eases toward the synced server value so the
+	 * Resonance fill for HUD bars â€” eases toward the synced server value so the
 	 * gauge flows instead of stepping on batched decay ticks.
 	 */
 	public static float displayResonance(Player player) {
@@ -207,7 +216,7 @@ public final class AttunementReadout {
 		if (snapshot.discord()) {
 			lines.add(Component.literal("Stance: ").withStyle(ChatFormatting.GRAY)
 				.append(Component.literal("Discord").withStyle(ChatFormatting.LIGHT_PURPLE)));
-			lines.add(Component.literal("Clashing affinities — you deal and take extra damage.")
+			lines.add(Component.literal("Clashing affinities â€” you deal and take extra damage.")
 				.withStyle(ChatFormatting.GRAY));
 			lines.add(Component.literal("Discord: half Resonance from surge fields.")
 				.withStyle(ChatFormatting.DARK_GRAY));
