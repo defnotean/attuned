@@ -37,6 +37,16 @@ public final class VeilBehavior implements FocusBehavior {
 		AttunedServerCleanup.onStopServer(VeilBehavior::forgetAllPlayers);
 	}
 
+	/**
+	 * Drops the veiled flag when the player dies (driven by UnseenCombat's death
+	 * hook): the respawned entity is not invisible, and a stale flag would grant
+	 * a free Needle opener on the first post-respawn swing before the next tick
+	 * self-corrects.
+	 */
+	public static void forgetDeath(UUID id) {
+		STATES.remove(id);
+	}
+
 	@Override
 	public void onTick(ServerPlayer player, ItemStack focus) {
 		UUID id = player.getUUID();

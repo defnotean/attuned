@@ -76,9 +76,13 @@ public final class CircleSnapshotSync {
 	}
 
 	private static void tick(MinecraftServer server) {
-		if (server.overworld().getGameTime() % REFRESH_INTERVAL_TICKS != 0L) {
+		long now = server.overworld().getGameTime();
+		if (now % REFRESH_INTERVAL_TICKS != 0L) {
 			return;
 		}
+		// Drop invites whose TTL elapsed without an accept so they do not linger
+		// in circle state until the invitee accepts or disconnects.
+		CircleRuntime.manager().pruneExpiredInvites(now);
 		for (ServerPlayer player : server.getPlayerList().getPlayers()) {
 			if (CircleRuntime.manager().circleOf(player.getUUID()).isPresent()) {
 				sync(player);
