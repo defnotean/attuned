@@ -67,7 +67,10 @@ public final class AttunedNetworking {
 
 		ServerPlayNetworking.registerGlobalReceiver(UpdraftLiftPayload.TYPE, (payload, player, sender) -> {
 			player.level().getServer().execute(() -> {
-				if (!UpdraftBehavior.isActive(player) || !UpdraftBehavior.hasFunctionalElytra(player)) {
+				// Also require an actual glide: lift controls from a client that is
+				// not fall-flying must never arm the fall-damage mitigation path.
+				if (!UpdraftBehavior.isActive(player) || !UpdraftBehavior.hasFunctionalElytra(player)
+						|| !player.isFallFlying()) {
 					UpdraftBehavior.setControls(player.getUUID(), false, false);
 					return;
 				}
