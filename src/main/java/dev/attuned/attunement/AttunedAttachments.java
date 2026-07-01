@@ -110,6 +110,21 @@ public final class AttunedAttachments {
 			.copyOnDeath()
 	);
 
+	/**
+	 * Marks a {@code ThrownTrident} entity as a temporary Offshore Harpoon so the
+	 * client renderer can swap in the custom mesh. Stored as a Fabric entity
+	 * attachment — synced to every tracking client and persisted with the entity —
+	 * rather than a mixin-defined {@code SynchedEntityData} accessor, which would
+	 * rely on fragile class-load ordering of the entity-data id space.
+	 */
+	public static final AttachmentType<Boolean> TEMPORARY_HARPOON = AttachmentRegistry.create(
+		Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "temporary_harpoon"),
+		builder -> builder
+			.initializer(() -> Boolean.FALSE)
+			.persistent(Codec.BOOL)
+			.syncWith(ByteBufCodecs.BOOL, AttachmentSyncPredicate.all())
+	);
+
 	/** Per-pact trial progress surfaced in the journal; trials runtime fills this in. */
 	public record PactTrialState(int progress, int goal, boolean tier4Complete) {}
 
