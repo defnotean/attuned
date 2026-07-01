@@ -1,0 +1,50 @@
+{
+    "schema_version":  1,
+    "quilt_loader":  {
+                         "group":  "dev.attuned",
+                         "id":  "attuned",
+                         "version":  "${version}",
+                         "metadata":  {
+                                          "name":  "Attuned",
+                                          "description":  "An attunement-economy accessory framework. Equip Foci into inventory slots and spend a limited attunement budget on their effects.",
+                                          "contributors":  {
+                                                               "defnotean":  "Owner"
+                                                           },
+                                          "contact":  {
+                                                          "homepage":  "https://github.com/defnotean/attuned",
+                                                          "sources":  "https://github.com/defnotean/attuned",
+                                                          "issues":  "https://github.com/defnotean/attuned/issues"
+                                                      },
+                                          "license":  "MIT",
+                                          "icon":  "assets/attuned/icon.png"
+                                      },
+                         "intermediate_mappings":  "net.fabricmc:intermediary",
+                         "access_widener":  "attuned.accesswidener",
+                         "entrypoints":  {
+                                             "main":  "dev.attuned.quilt.AttunedQuilt",
+                                             "client":  "dev.attuned.quilt.AttunedQuiltClient"
+                                         },
+                         "depends":  [
+                                         {
+                                             "id":  "quilt_loader",
+                                             "versions":  "\u003e=0.17.8"
+                                         },
+                                         {
+                                             "id":  "fabric-api",
+                                             "versions":  "\u003e=0.77.0"
+                                         },
+                                         {
+                                             "id":  "minecraft",
+                                             "versions":  "~1.18.2"
+                                         },
+                                         {
+                                             "id":  "java",
+                                             "versions":  "\u003e=17"
+                                         }
+                                     ]
+                     },
+    "mixin":  [
+                  "attuned.mixins.json",
+                  "attuned.client.mixins.json"
+              ]
+}
