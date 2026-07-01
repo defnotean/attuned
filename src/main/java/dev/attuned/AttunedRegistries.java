@@ -94,6 +94,13 @@ public final class AttunedRegistries {
 			.map(Holder.Reference::value)
 			.orElse(null);
 		if (def == null) {
+			// Cache the miss: without this, every tick of a focus with a dangling
+			// behavior id re-enters this synchronized method and re-queries the
+			// registry. Warn once so pack authors can spot the typo.
+			perAccess.put(id, null);
+			Attuned.LOGGER.warn(
+				"Attuned focus behavior '{}' is not registered in code or the focus_behavior registry; "
+					+ "the focus will have no behavior until the id is fixed.", id);
 			return null;
 		}
 		FocusBehavior built = DataFocusBehaviors.build(id, def);

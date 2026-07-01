@@ -63,18 +63,25 @@ class FocusAbilityStateTest {
 	}
 
 	@Test
-	void cooldownsClearAfterSuccessfulDatapackReload() throws IOException {
+	void reloadKeepsCooldownsButForcesResync() throws IOException {
 		String state = Files.readString(STATE, StandardCharsets.UTF_8);
 
 		assertTrue(state.contains("ServerLifecycleEvents.END_DATA_PACK_RELOAD.register"),
-			"Datapack reload can replace ability behavior ids; stale cooldown keys should be dropped.");
+			"Datapack reload should still be observed so clients get a fresh cooldown sync.");
 		assertTrue(state.contains("if (success)"),
 			"Failed reloads should keep the previous behavior/cooldown state intact.");
-		assertTrue(state.contains("clearCooldownState();"),
-			"Reload and server-stop cleanup should share one cooldown-state reset helper.");
+		assertTrue(state.contains("FocusAbilityState::clearCooldownState"),
+			"Server-stop cleanup should keep the shared cooldown-state reset helper.");
 		assertTrue(state.contains("COOLDOWNS.clear();"),
-			"Reload cleanup should clear ability cooldown tombstones.");
+			"Server stop should clear ability cooldown tombstones.");
 		assertTrue(state.contains("LAST_SENT.clear();"),
 			"Reload cleanup should force a fresh client cooldown sync after definitions rebuild.");
+		int reloadIndex = state.indexOf("END_DATA_PACK_RELOAD.register");
+		int reloadBlockEnd = state.indexOf("});", reloadIndex);
+		String reloadBlock = state.substring(reloadIndex, reloadBlockEnd);
+		assertTrue(!reloadBlock.contains("clearCooldownState()")
+				&& !reloadBlock.contains("COOLDOWNS.clear()"),
+			"/reload must not hand every player a free ability cooldown reset; "
+				+ "stale ability ids expire naturally via pruneExpiredCooldowns.");
 	}
 }
