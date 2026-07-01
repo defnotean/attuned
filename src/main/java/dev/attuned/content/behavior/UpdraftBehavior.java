@@ -22,8 +22,8 @@ import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.item.ElytraItem;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
 import net.minecraft.world.phys.Vec3;
 
 /**
@@ -108,8 +108,15 @@ public final class UpdraftBehavior implements FocusBehavior {
 
 	public static boolean hasFunctionalElytra(ServerPlayer player) {
 		ItemStack chest = player.getItemBySlot(EquipmentSlot.CHEST);
-		if (!chest.is(Items.ELYTRA)) {
+		// Any chest item that can glide (vanilla elytra or a modded elytra
+		// subclass); 1.20.1 has no glider data component, so detect by item type.
+		if (!(chest.getItem() instanceof ElytraItem)) {
 			return false;
+		}
+		// Only damageable gliders can wear out; non-damageable modded gliders are
+		// always "functional" (getMaxDamage() is 0 for them).
+		if (!chest.isDamageableItem()) {
+			return true;
 		}
 		return chest.getDamageValue() < chest.getMaxDamage() - 1;
 	}
@@ -133,10 +140,16 @@ public final class UpdraftBehavior implements FocusBehavior {
 			return;
 		}
 
+		// The gliding check must run BEFORE the fall-distance reset: a modified
+		// client resending the lift payload every tick with the elytra merely
+		// equipped (never opened) must not get free fall-damage immunity.
 		if (!player.isFallFlying()) {
 			setControls(player.getUUID(), false, false);
 			return;
 		}
+
+		player.resetFallDistance();
+		player.fallDistance = 0.0F;
 		applyFlightControls(player, controls);
 	}
 
