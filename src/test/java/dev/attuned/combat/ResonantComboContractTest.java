@@ -39,10 +39,9 @@ class ResonantComboContractTest {
 			"The HEAD damage-shaping path should not apply the combo effect.");
 		assertTrue(afterDamage.contains("dealtDamage > 0.0F"),
 			"The combo should inherit Needle's landed-hit guard.");
-		assertTrue(afterDamage.contains("PENDING_NEEDLE.remove(attacker.getUUID())"),
-			"The combo should use Needle's pending opener confirmation.");
-		assertTrue(afterDamage.contains("pending.target().equals(defender.getUUID())"),
-			"The combo should only fire for the target Needle actually shaped.");
+		assertTrue(afterDamage.contains("pendingForAttacker.remove(defender.getUUID())"),
+			"The combo should use Needle's pending opener confirmation, keyed by the actual victim "
+				+ "so sweep hits cannot cross-credit targets.");
 		assertTrue(afterDamage.contains("pending.gameTime() == attacker.level().getGameTime()"),
 			"The combo should only fire on the same tick as the shaped opener.");
 

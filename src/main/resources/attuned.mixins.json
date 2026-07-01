@@ -9,7 +9,6 @@
 		"FishingRodItemMixin",
 		"LivingEntityHurtMixin",
 		"LivingEntityKnockbackMixin",
-		"LivingEntityUpdraftFallMixin",
 		"PlayerUpdraftMixin",
 		"PlayerAttackMixin",
 		"CommandsMixin",
