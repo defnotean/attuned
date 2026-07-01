@@ -49,7 +49,22 @@ public record FocusPreset(String name, List<String> slots) {
 	}
 
 	public static FocusPreset read(FriendlyByteBuf buf) {
-		return new FocusPreset(buf.readUtf(MAX_NAME_LENGTH), buf.readList(FriendlyByteBuf::readUtf));
+		// Bounded: serverbound via ImportPresetPayload — a hacked client must
+		// not be able to force allocation of an arbitrarily long slots list.
+		return new FocusPreset(buf.readUtf(MAX_NAME_LENGTH), readBoundedStringList(buf, AttunedInv.SIZE));
+	}
+
+	static List<String> readBoundedStringList(FriendlyByteBuf buf, int maxSize) {
+		int size = buf.readVarInt();
+		if (size < 0 || size > maxSize) {
+			throw new io.netty.handler.codec.DecoderException(
+				"Preset list length " + size + " exceeds bound " + maxSize);
+		}
+		List<String> list = new ArrayList<>(size);
+		for (int i = 0; i < size; i++) {
+			list.add(buf.readUtf());
+		}
+		return list;
 	}
 
 	public CompoundTag toTag() {

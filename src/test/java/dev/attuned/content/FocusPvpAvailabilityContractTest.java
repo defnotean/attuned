@@ -80,8 +80,9 @@ class FocusPvpAvailabilityContractTest {
 
 		assertTrue(adjustDamage.contains("!CombatTargets.isHostileOrPvpOpponent(defender, attacker)"),
 			"Ashen Debt should not spend a debt bonus against pets, passive mobs, spectators, or friendly-fire-blocked players.");
-		assertTrue(afterDamage.contains("!CombatTargets.isHostileOrPvpOpponent(attacker, player)"),
-			"Ashen Debt should only record debts when the wearer is hurt by a hostile mob or valid PvP opponent.");
+		assertTrue(afterDamage.contains("&& CombatTargets.isHostileOrPvpOpponent(attacker, player)"),
+			"Ashen Debt should only record debts when the wearer is hurt by a hostile mob or valid PvP opponent, "
+				+ "without an early return that would skip the Bonechill branches for the same damage event.");
 	}
 
 	@Test

@@ -31,6 +31,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
+import net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.minecraft.ChatFormatting;
@@ -181,6 +182,14 @@ public final class Pacts {
 			if (joined.filter(p -> p == Pact.WINDRUNNER).isPresent()) {
 				applyWindrunnerStepHeight(player);
 			}
+		});
+		// A respawned player is a fresh entity with fresh attributes, but
+		// pactState survives keyed by UUID — without this reset the next tick
+		// sees "no transition" and never re-applies the Windrunner step-height
+		// or Stoneheart Tier-4 toughness modifiers.
+		ServerPlayerEvents.AFTER_RESPAWN.register((oldPlayer, newPlayer, alive) -> {
+			pactState.remove(newPlayer.getUUID());
+			windrunnerRuns.remove(newPlayer.getUUID());
 		});
 		AttunedServerCleanup.onStopServer(server -> {
 			for (ServerPlayer player : server.getPlayerList().getPlayers()) {
