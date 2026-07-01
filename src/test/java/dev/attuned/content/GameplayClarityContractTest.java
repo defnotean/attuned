@@ -29,7 +29,7 @@ class GameplayClarityContractTest {
 	private static final Path REFERENCE = Path.of("docs/reference.md");
 	private static final Path QA_CHECKLIST = Path.of("docs/platform/attuned-gameplay-polish-qa.md");
 	private static final Path DOCS_PLATFORM = Path.of("docs/platform");
-	private static final Path FABRIC_MOD = Path.of("src/main/resources/fabric.mod.json");
+	private static final Path FABRIC_MOD = Path.of("src/main/resources/quilt.mod.json");
 
 	@Test
 	void pactTrialDescriptionsMatchCurrentCodeGoals() throws IOException {
