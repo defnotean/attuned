@@ -54,7 +54,9 @@ public record FocusPreset(String name, List<String> slots, FocusPreset.SetupMeta
 	public static final StreamCodec<RegistryFriendlyByteBuf, FocusPreset> STREAM_CODEC =
 		StreamCodec.composite(
 			ByteBufCodecs.STRING_UTF8, FocusPreset::name,
-			ByteBufCodecs.STRING_UTF8.apply(ByteBufCodecs.list()), FocusPreset::slots,
+			// Bounded: serverbound via ImportPresetPayload — a hacked client must
+			// not be able to force allocation of an arbitrarily long slots list.
+			ByteBufCodecs.STRING_UTF8.apply(ByteBufCodecs.list(AttunedInv.SIZE)), FocusPreset::slots,
 			SetupMetadata.STREAM_CODEC, FocusPreset::metadata,
 			FocusPreset::new).cast();
 
@@ -214,12 +216,15 @@ public record FocusPreset(String name, List<String> slots, FocusPreset.SetupMeta
 			new StreamCodec<>() {
 				@Override
 				public SetupMetadata decode(RegistryFriendlyByteBuf buf) {
+					// Bounded list decode: this payload arrives serverbound from
+					// ImportPresetPayload, so oversized attacker-controlled lists
+					// must be rejected at the frame instead of after allocation.
 					return new SetupMetadata(
 						ByteBufCodecs.STRING_UTF8.decode(buf),
 						ByteBufCodecs.STRING_UTF8.decode(buf),
 						ByteBufCodecs.VAR_INT.decode(buf),
-						ByteBufCodecs.STRING_UTF8.apply(ByteBufCodecs.list()).decode(buf),
-						ByteBufCodecs.STRING_UTF8.apply(ByteBufCodecs.list()).decode(buf),
+						ByteBufCodecs.STRING_UTF8.apply(ByteBufCodecs.list(MAX_METADATA_LIST_SIZE)).decode(buf),
+						ByteBufCodecs.STRING_UTF8.apply(ByteBufCodecs.list(MAX_METADATA_LIST_SIZE)).decode(buf),
 						ByteBufCodecs.STRING_UTF8.decode(buf),
 						ByteBufCodecs.STRING_UTF8.decode(buf));
 				}
