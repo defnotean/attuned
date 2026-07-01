@@ -74,8 +74,10 @@ public abstract class InventoryMenuMixin extends AbstractContainerMenu {
 				? attuned$moveStack(player, slot, ATTUNED_INV_START, ATTUNED_INV_END, true)
 				: ItemStack.EMPTY;
 			cir.setReturnValue(moved);
-		} else if (slot != null && slot.hasItem()
+		} else if (slot != null && slot.hasItem() && index != 0 && slot.mayPickup(player)
 				&& Attunement.definitionFor(player, slot.getItem()).isPresent()) {
+			// index 0 is the crafting result slot: taking over there would bypass
+			// onQuickCraft (stats, recipe unlocks, multi-craft ingredient use).
 			// A Focus item in the inventory — equip it into the first free Focus
 			// slot. If every Focus slot is full, fall through to vanilla untouched.
 			ItemStack moved = attuned$moveStack(player, slot, FocusLayout.MENU_START, FocusLayout.MENU_END, false);
