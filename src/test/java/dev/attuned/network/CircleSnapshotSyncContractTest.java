@@ -134,8 +134,11 @@ class CircleSnapshotSyncContractTest {
 			"Snapshot sync should register one periodic refresh hook during init.");
 		assertTrue(sync.contains("private static void tick(MinecraftServer server)"),
 			"The periodic refresh should live in one named server-tick helper.");
-		assertTrue(sync.contains("server.overworld().getGameTime() % REFRESH_INTERVAL_TICKS != 0L"),
+		assertTrue(sync.contains("now % REFRESH_INTERVAL_TICKS != 0L")
+				&& sync.contains("long now = server.overworld().getGameTime();"),
 			"Circle snapshot refresh should skip most ticks instead of scanning every server tick.");
+		assertTrue(sync.contains("CircleRuntime.manager().pruneExpiredInvites(now)"),
+			"The throttled tick should also prune invites whose TTL elapsed without an accept.");
 		assertTrue(sync.contains("server.getPlayerList().getPlayers()"),
 			"Periodic refresh should inspect online players only.");
 		assertTrue(sync.contains("CircleRuntime.manager().circleOf(player.getUUID()).isPresent()"),

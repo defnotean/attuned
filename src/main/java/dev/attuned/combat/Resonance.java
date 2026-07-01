@@ -210,6 +210,11 @@ public final class Resonance {
 
 	/** AFTER_DEATH: large gain when a player finishes off a matchup-favoured mob. */
 	private static void afterDeath(LivingEntity entity, DamageSource source) {
+		// The player's own death is the strongest "streak over" signal: end the
+		// rolling kill-streak window rather than letting it survive a respawn.
+		if (entity instanceof ServerPlayer died) {
+			resetKillStreak(died.getUUID());
+		}
 		LivingEntity attacker = AttunedCombat.attackerOf(source);
 		if (!(attacker instanceof Player player) || entity == player) {
 			return;
