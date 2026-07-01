@@ -1,5 +1,5 @@
 plugins {
-	id 'net.fabricmc.fabric-loom-remap' version "${loom_version}"
+	id 'org.quiltmc.loom' version "${quilt_loom_version}"
 	id 'maven-publish'
 	id 'com.modrinth.minotaur' version '2.9.0'
 }
@@ -27,7 +27,13 @@ String currentChangelogSection(String changelog, String releaseVersion) {
 }
 
 repositories {
-	// Loom adds the Minecraft/Fabric repositories automatically; Maven Central
+	// Loom adds the Minecraft/Fabric repositories automatically; Quilt Maven
+	// is declared for Quilt Loader and API deps while Maven Central is for JUnit.
+	maven {
+		name = 'Quilt'
+		url = 'https://maven.quiltmc.org/repository/release'
+	}
+	// Maven Central
 	// is declared here for ordinary library dependencies such as JUnit.
 	mavenCentral()
 }
@@ -67,14 +73,24 @@ loom {
 
 }
 
+// Quilt Loom split sources do not inherit client/common Minecraft deps into the
+// unit-test classpath; extend explicitly so contract tests can reference client helpers.
+configurations {
+	testCompileClasspath.extendsFrom(minecraftCommonNamedCompile)
+	testRuntimeClasspath.extendsFrom(minecraftCommonNamedRuntime)
+	testCompileClasspath.extendsFrom(minecraftClientOnlyNamedCompile)
+	testRuntimeClasspath.extendsFrom(minecraftClientOnlyNamedRuntime)
+	testRuntimeClasspath.extendsFrom(modRuntimeClasspathClientMapped)
+}
+
 dependencies {
+	testImplementation sourceSets.client.output
 	// To change the versions see the gradle.properties file
 	minecraft "com.mojang:minecraft:${project.minecraft_version}"
 	mappings loom.officialMojangMappings()
 
-	modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
+	modImplementation "org.quiltmc:quilt-loader:${project.quilt_loader_version}"
 
-	// Fabric API. This is technically optional, but you probably want it anyway.
 	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
 
 	// JUnit 5 — unit tests for the Minecraft-free logic (run by the `test` task).
@@ -91,7 +107,7 @@ processResources {
 	exclude "assets/attuned/textures/item/ocean_relic_trident_blockbench.png"
 	exclude "assets/attuned/textures/item/ocean_relic_trident_blockbench.png.mcmeta"
 
-	filesMatching("fabric.mod.json") {
+	filesMatching("quilt.mod.json") {
 		expand "version": version
 	}
 }
@@ -158,7 +174,7 @@ modrinth {
 	}.get()
 	uploadFile = file("build/libs/${project.name}-${project.version}.jar")
 	gameVersions = [project.minecraft_version.toString()]
-	loaders = ["fabric"]
+	loaders = ["quilt"]
 	dependencies {
 		required.project "fabric-api"
 	}

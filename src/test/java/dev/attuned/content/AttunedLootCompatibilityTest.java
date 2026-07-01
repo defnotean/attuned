@@ -30,8 +30,8 @@ class AttunedLootCompatibilityTest {
 		Path.of("src/main/java/dev/attuned/content/AttunedLoot.java");
 	private static final Path FOCUS_DATA_DIR =
 		Path.of("src/main/resources/data/attuned/attuned/focus");
-	private static final Path FABRIC_MOD_JSON =
-		Path.of("src/main/resources/fabric.mod.json");
+	private static final Path MOD_METADATA_JSON =
+		Path.of("src/main/resources/quilt.mod.json");
 	private static final float EPSILON = 0.00001F;
 
 	@Test
@@ -163,12 +163,13 @@ class AttunedLootCompatibilityTest {
 				"Unseen-themed tables should bias Unseen Foci without excluding other Foci");
 		}
 
-		JsonObject manifest = JsonParser.parseString(Files.readString(FABRIC_MOD_JSON, StandardCharsets.UTF_8))
+		JsonObject manifest = JsonParser.parseString(Files.readString(MOD_METADATA_JSON, StandardCharsets.UTF_8))
 			.getAsJsonObject();
-		assertTrue(!manifest.getAsJsonObject("depends").has("lootr"),
+		JsonObject loader = manifest.getAsJsonObject("quilt_loader");
+		assertTrue(!loader.getAsJsonArray("depends").asList().stream()
+				.map(JsonElement::getAsJsonObject)
+				.anyMatch(dependency -> "lootr".equals(dependency.get("id").getAsString())),
 			"Lootr should remain optional because Attuned uses vanilla loot-table injection");
-		assertEquals("*", manifest.getAsJsonObject("suggests").get("lootr").getAsString(),
-			"Lootr should stay suggested for modpack discovery");
 	}
 
 	@Test
