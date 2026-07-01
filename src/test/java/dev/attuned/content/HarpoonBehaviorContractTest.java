@@ -295,8 +295,11 @@ class HarpoonBehaviorContractTest {
 			"A temporary harpoon should never be collectable, so pickup always returns false");
 		assertFalse(mixin.contains("onHitEntity") || mixin.contains("hitBlockEnchantmentEffects"),
 			"A thrown harpoon should stay stuck where it lands, not be discarded on impact");
-		assertTrue(mixin.contains("ATTUNED_TEMPORARY_HARPOON") && mixin.contains("method = \"defineSynchedData\""),
-			"Mixin should sync a temporary-harpoon flag to clients (mirroring vanilla ID_FOIL) so the renderer can swap in the custom mesh");
+		assertTrue(mixin.contains("AttunedAttachments.TEMPORARY_HARPOON"),
+			"Mixin should mark the harpoon with a Fabric synced entity attachment so the renderer can swap "
+				+ "in the custom mesh without relying on fragile SynchedEntityData id ordering");
+		assertFalse(mixin.contains("SynchedEntityData.defineId"),
+			"Mixin should not define entity-data accessors on the vanilla ThrownTrident class");
 		assertTrue(mixin.contains("attuned$isTemporaryHarpoon()"),
 			"Mixin should expose the synced harpoon flag to the client renderer");
 	}

@@ -1,11 +1,8 @@
 package dev.attuned.mixin;
 
 import dev.attuned.AttunedThrownHarpoonEntity;
+import dev.attuned.attunement.AttunedAttachments;
 import dev.attuned.content.behavior.HarpoonBehavior;
-import net.minecraft.network.syncher.EntityDataAccessor;
-import net.minecraft.network.syncher.EntityDataSerializers;
-import net.minecraft.network.syncher.SynchedEntityData;
-import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.projectile.arrow.AbstractArrow;
@@ -24,20 +21,14 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
  *
  * <p>Unlike an ordinary trident it stays stuck wherever it lands (never discarded on impact) and is
  * never collectable; it only leaves the world once its cooldown-bound lifetime expires. The
- * temporary-harpoon marker lives in the server-only pickup {@code ItemStack}, so a dedicated flag is
- * synced to clients the same way vanilla syncs {@code ID_FOIL}/{@code ID_LOYALTY}, letting the
- * renderer swap in the custom mesh.</p>
+ * temporary-harpoon marker lives in the server-only pickup {@code ItemStack}; a
+ * {@link AttunedAttachments#TEMPORARY_HARPOON} entity attachment (persistent + synced to every
+ * tracking client) mirrors it so the renderer can swap in the custom mesh. Using a Fabric
+ * attachment instead of a mixin-defined {@code SynchedEntityData} accessor avoids depending on the
+ * fragile entity-data id ordering between client and server (or with other trident mods).</p>
  */
 @Mixin(ThrownTrident.class)
 public abstract class ThrownTridentMixin implements AttunedThrownHarpoonEntity {
-	@Unique
-	private static final EntityDataAccessor<Boolean> ATTUNED_TEMPORARY_HARPOON =
-		SynchedEntityData.defineId(ThrownTrident.class, EntityDataSerializers.BOOLEAN);
-
-	@Inject(method = "defineSynchedData", at = @At("TAIL"))
-	private void attuned$defineHarpoonFlag(SynchedEntityData.Builder builder, CallbackInfo ci) {
-		builder.define(ATTUNED_TEMPORARY_HARPOON, false);
-	}
 
 	@Inject(
 		method = "<init>(Lnet/minecraft/world/level/Level;Lnet/minecraft/world/entity/LivingEntity;Lnet/minecraft/world/item/ItemStack;)V",
@@ -81,13 +72,14 @@ public abstract class ThrownTridentMixin implements AttunedThrownHarpoonEntity {
 
 	@Override
 	public boolean attuned$isTemporaryHarpoon() {
-		return ((Entity) (Object) this).getEntityData().get(ATTUNED_TEMPORARY_HARPOON);
+		return ((ThrownTrident) (Object) this)
+			.getAttachedOrElse(AttunedAttachments.TEMPORARY_HARPOON, Boolean.FALSE);
 	}
 
 	@Unique
 	private void attuned$setHarpoonFlag(ItemStack tridentItem) {
-		((Entity) (Object) this).getEntityData().set(
-			ATTUNED_TEMPORARY_HARPOON, HarpoonBehavior.isTemporaryHarpoon(tridentItem));
+		((ThrownTrident) (Object) this).setAttached(
+			AttunedAttachments.TEMPORARY_HARPOON, HarpoonBehavior.isTemporaryHarpoon(tridentItem));
 	}
 
 	@Unique
