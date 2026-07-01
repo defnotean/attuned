@@ -188,7 +188,9 @@ public final class Apex {
 			apexState.remove(uuid);
 			armedState.remove(uuid);
 			stillpointPulses.remove(uuid);
-			identityCooldowns.remove(uuid);
+			// identityCooldowns is deliberately kept across disconnect so a
+			// relog cannot reset the Maelstrom/Stillpoint ability cooldown;
+			// entries expire naturally when the cooldown elapses.
 			maelstromScrambles.keySet().removeIf(key ->
 				key.playerId().equals(uuid) || key.targetId().equals(uuid));
 		});
