@@ -32,6 +32,8 @@ class AttunedLootCompatibilityTest {
 		Path.of("src/main/resources/data/attuned/attuned/focus");
 	private static final Path FABRIC_MOD_JSON =
 		Path.of("src/main/resources/fabric.mod.json");
+	private static final Path QUILT_MOD_JSON =
+		Path.of("src/main/resources/quilt.mod.json");
 	private static final float EPSILON = 0.00001F;
 
 	@Test
@@ -174,12 +176,7 @@ class AttunedLootCompatibilityTest {
 				"Unseen-themed tables should bias Unseen Foci without excluding other Foci");
 		}
 
-		JsonObject manifest = JsonParser.parseString(Files.readString(FABRIC_MOD_JSON, StandardCharsets.UTF_8))
-			.getAsJsonObject();
-		assertTrue(!manifest.getAsJsonObject("depends").has("lootr"),
-			"Lootr should remain optional because Attuned uses vanilla loot-table injection");
-		assertEquals("*", manifest.getAsJsonObject("suggests").get("lootr").getAsString(),
-			"Lootr should stay suggested for modpack discovery");
+		assertLootrIsOptionalAndSuggested(loaderMetadata());
 	}
 
 	@Test
@@ -228,6 +225,41 @@ class AttunedLootCompatibilityTest {
 		return foci;
 	}
 
+	private static JsonObject loaderMetadata() throws IOException {
+		Path manifest = Files.exists(FABRIC_MOD_JSON) ? FABRIC_MOD_JSON : QUILT_MOD_JSON;
+		return JsonParser.parseString(Files.readString(manifest, StandardCharsets.UTF_8))
+			.getAsJsonObject();
+	}
+
+	private static void assertLootrIsOptionalAndSuggested(JsonObject manifest) {
+		if (manifest.has("quilt_loader")) {
+			JsonObject quiltLoader = manifest.getAsJsonObject("quilt_loader");
+			assertTrue(!quiltModArrayHasId(quiltLoader.get("depends"), "lootr"),
+				"Lootr should remain optional because Attuned uses vanilla loot-table injection");
+			assertTrue(!quiltLoader.has("suggests"),
+				"Quilt Loader strict metadata rejects Fabric-style suggests; keep Lootr optional by omitting a hard dependency");
+			return;
+		}
+
+		assertTrue(!manifest.getAsJsonObject("depends").has("lootr"),
+			"Lootr should remain optional because Attuned uses vanilla loot-table injection");
+		assertEquals("*", manifest.getAsJsonObject("suggests").get("lootr").getAsString(),
+			"Lootr should stay suggested for modpack discovery");
+	}
+
+	private static boolean quiltModArrayHasId(JsonElement array, String id) {
+		if (array == null || !array.isJsonArray()) {
+			return false;
+		}
+		for (JsonElement element : array.getAsJsonArray()) {
+			if (element.isJsonObject()
+					&& element.getAsJsonObject().has("id")
+					&& id.equals(element.getAsJsonObject().get("id").getAsString())) {
+				return true;
+			}
+		}
+		return false;
+	}
 	private static AttunedLoot.Drop drop(AttunedLoot.Tier tier) {
 		return new AttunedLoot.Drop(tier, null, false, false);
 	}
