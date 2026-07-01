@@ -40,7 +40,9 @@ class HarpoonBehaviorContractTest {
 		assertTrue(behavior.contains("static final int COOLDOWN_TICKS = 1200"),
 			"Harpoon cooldown should be 60 seconds");
 		assertTrue(behavior.contains("static final int LIFETIME_TICKS = COOLDOWN_TICKS"),
-			"Temporary harpoon lifetime should stay tied to its cooldown");
+			"A summoned harpoon should live exactly one cooldown so it despawns when the ability is ready again");
+		assertTrue(behavior.contains("now + LIFETIME_TICKS"),
+			"Harpoon expiry and the active-harpoon gate should both follow the cooldown-bound lifetime");
 		assertTrue(behavior.contains("public boolean hasActiveAbility()"),
 			"Harpoon should opt into the single active ability slot");
 		assertTrue(behavior.contains("public int abilityCooldownTicks()"),
@@ -90,6 +92,8 @@ class HarpoonBehaviorContractTest {
 		Path gltfModel = Path.of("src/main/resources/assets/attuned/gltf/ocean_relic_trident.glb");
 		Path blockbenchTexture = Path.of("src/main/resources/assets/attuned/textures/item/ocean_relic_trident_blockbench.png");
 		Path blockbenchTextureMeta = Path.of("src/main/resources/assets/attuned/textures/item/ocean_relic_trident_blockbench.png.mcmeta");
+		Path meshTexture = Path.of("src/main/resources/assets/attuned/textures/item/ocean_relic_trident_mesh.png");
+		Path meshTextureMeta = Path.of("src/main/resources/assets/attuned/textures/item/ocean_relic_trident_mesh.png.mcmeta");
 		Path itemTexture = Path.of("src/main/resources/assets/attuned/textures/item/ocean_relic_trident.png");
 		Path itemPalette = Path.of("src/main/resources/assets/attuned/textures/item/ocean_relic_trident_voxel_palette.png");
 
@@ -109,6 +113,10 @@ class HarpoonBehaviorContractTest {
 			"Temporary harpoon should ship the texture used by the actual held/thrown harpoon");
 		assertTrue(Files.isRegularFile(blockbenchTextureMeta),
 			"Temporary harpoon should clamp the texture used by the custom mesh renderer");
+		assertTrue(Files.isRegularFile(meshTexture),
+			"Temporary harpoon should ship a compact runtime mesh texture");
+		assertTrue(Files.isRegularFile(meshTextureMeta),
+			"Temporary harpoon runtime mesh texture should keep clamped custom-mesh sampling");
 		assertTrue(Files.isRegularFile(itemTexture),
 			"Temporary harpoon should keep a custom flat inventory texture");
 		assertTrue(Files.isRegularFile(itemPalette),
@@ -174,6 +182,14 @@ class HarpoonBehaviorContractTest {
 			"Blockbench harpoon texture should be downsampled to a game-scale atlas size");
 		assertTrue((blockbenchImage.getRGB(0, 0) & 0x00FFFFFF) != 0,
 			"Blockbench harpoon texture should pad unused UV space so atlas filtering does not bleed black into the mesh");
+		BufferedImage meshImage = ImageIO.read(meshTexture.toFile());
+		assertNotNull(meshImage, "Runtime mesh texture should decode as a PNG");
+		assertEquals(512, meshImage.getWidth(),
+			"Runtime mesh texture should stay compact for released jars");
+		assertEquals(512, meshImage.getHeight(),
+			"Runtime mesh texture should stay compact for released jars");
+		assertTrue((meshImage.getRGB(0, 0) & 0x00FFFFFF) != 0,
+			"Runtime mesh texture should preserve padded UV space for atlas filtering");
 	}
 
 	@Test
@@ -274,11 +290,18 @@ class HarpoonBehaviorContractTest {
 		assertTrue(mixin.contains("method = \"tick\""),
 			"Mixin should discard expired projectiles before vanilla tick work");
 		assertTrue(mixin.contains("method = \"tryPickup\""),
-			"Mixin should block expired pickup");
-		assertTrue(mixin.contains("method = \"onHitEntity\""),
-			"Mixin should discard the temporary harpoon after entity hits");
-		assertTrue(mixin.contains("method = \"hitBlockEnchantmentEffects\""),
-			"Mixin should discard the temporary harpoon after block hits");
+			"Mixin should intercept pickup attempts");
+		assertTrue(mixin.contains("cir.setReturnValue(false)"),
+			"A temporary harpoon should never be collectable, so pickup always returns false");
+		assertFalse(mixin.contains("onHitEntity") || mixin.contains("hitBlockEnchantmentEffects"),
+			"A thrown harpoon should stay stuck where it lands, not be discarded on impact");
+		assertTrue(mixin.contains("AttunedAttachments.TEMPORARY_HARPOON"),
+			"Mixin should mark the harpoon with a Fabric synced entity attachment so the renderer can swap "
+				+ "in the custom mesh without relying on fragile SynchedEntityData id ordering");
+		assertFalse(mixin.contains("SynchedEntityData.defineId"),
+			"Mixin should not define entity-data accessors on the vanilla ThrownTrident class");
+		assertTrue(mixin.contains("attuned$isTemporaryHarpoon()"),
+			"Mixin should expose the synced harpoon flag to the client renderer");
 	}
 
 	private static String read(Path file) throws IOException {
