@@ -3,8 +3,8 @@ package dev.attuned.client.mixin;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
 import dev.attuned.Attuned;
+import dev.attuned.AttunedThrownHarpoonEntity;
 import dev.attuned.client.AttunedThrownHarpoonRenderState;
-import dev.attuned.content.behavior.HarpoonBehavior;
 import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.ThrownTridentRenderer;
@@ -43,7 +43,9 @@ public abstract class ThrownTridentRendererMixin {
 			ThrownTrident trident, ThrownTridentRenderState state, float tickProgress, CallbackInfo ci) {
 		AttunedThrownHarpoonRenderState harpoonState = (AttunedThrownHarpoonRenderState) state;
 		ItemStack pickupStack = trident.getPickupItemStackOrigin();
-		boolean temporaryHarpoon = HarpoonBehavior.isTemporaryHarpoon(pickupStack);
+		// The temporary-harpoon marker lives in the server-only pickup stack, so read the synced
+		// flag mirrored from vanilla's ID_FOIL pattern instead of the (client-default) trident stack.
+		boolean temporaryHarpoon = ((AttunedThrownHarpoonEntity) (Object) trident).attuned$isTemporaryHarpoon();
 		harpoonState.attuned$setTemporaryHarpoon(temporaryHarpoon);
 		harpoonState.attuned$item().clear();
 		if (!temporaryHarpoon) {

@@ -147,6 +147,7 @@ public final class CircleManager {
 		pruneInvitesTo(player);
 		senderInviteReadyAt.remove(player);
 		recipientInviteReadyAt.remove(player);
+		createReadyAt.remove(player);
 	}
 
 	public void clear() {
@@ -197,6 +198,31 @@ public final class CircleManager {
 		circles.remove(circle.id());
 		for (UUID member : circle.members()) {
 			circleByMember.remove(member, circle.id());
+		}
+	}
+
+	/**
+	 * Drops every invite whose TTL has elapsed as of {@code nowTick}. Without this
+	 * an invite to a player who never accepts (and stays online) lingers in the
+	 * circle's invite map until an accept or a disconnect; a periodic call from the
+	 * snapshot tick keeps the invite state bounded.
+	 */
+	public void pruneExpiredInvites(long nowTick) {
+		List<CirclePolicy.Circle> current = new ArrayList<>(circles.values());
+		for (CirclePolicy.Circle circle : current) {
+			if (circle.invites().isEmpty()) {
+				continue;
+			}
+			Map<UUID, CirclePolicy.Invite> retained = new LinkedHashMap<>();
+			for (Map.Entry<UUID, CirclePolicy.Invite> entry : circle.invites().entrySet()) {
+				if (!entry.getValue().expiredAt(nowTick)) {
+					retained.put(entry.getKey(), entry.getValue());
+				}
+			}
+			if (retained.size() != circle.invites().size()) {
+				replace(circle, new CirclePolicy.Circle(circle.id(), circle.leader(),
+					circle.members(), circle.name(), retained));
+			}
 		}
 	}
 
