@@ -42,7 +42,10 @@ public final class FocusAbilityState {
 		ServerTickEvents.END_SERVER_TICK.register(FocusAbilityState::tick);
 		ServerLifecycleEvents.END_DATA_PACK_RELOAD.register((server, resourceManager, success) -> {
 			if (success) {
-				clearCooldownState();
+				// Force a resync but keep running cooldowns: /reload must not
+				// hand every player a free cooldown reset. Stale ability ids
+				// simply expire via pruneExpiredCooldowns.
+				LAST_SENT.clear();
 			}
 		});
 		AttunedServerCleanup.onStop(FocusAbilityState::clearCooldownState);
@@ -57,6 +60,11 @@ public final class FocusAbilityState {
 	}
 
 	public static void trigger(ServerPlayer player) {
+		// Guard against forged/late packets: dead, removed, or spectating
+		// players must never fire server-side ability effects.
+		if (player.isRemoved() || player.isDeadOrDying() || player.isSpectator()) {
+			return;
+		}
 		AbilitySelection selection = firstActiveAbility(player);
 		if (selection == null) {
 			// No active ability Focus: pact tactical, then an armed Apex capstone identity ability.

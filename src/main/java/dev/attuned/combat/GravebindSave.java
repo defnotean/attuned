@@ -1,7 +1,6 @@
 package dev.attuned.combat;
 
 import dev.attuned.AttunedConfig;
-import dev.attuned.AttunedPlayerCleanup;
 import dev.attuned.AttunedServerCleanup;
 import dev.attuned.attunement.AttunedAttachments;
 import dev.attuned.attunement.AttunedInv;
@@ -16,6 +15,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
+import net.minecraft.tags.DamageTypeTags;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 
@@ -45,6 +45,11 @@ public final class GravebindSave {
 			if (!(entity instanceof ServerPlayer player) || !hasGravebindActive(player)) {
 				return true;
 			}
+			// Mirror vanilla totems: never refuse /kill or other
+			// invulnerability-bypassing damage, so admin tooling still works.
+			if (source.is(DamageTypeTags.BYPASSES_INVULNERABILITY)) {
+				return true;
+			}
 			long now = player.getLevel().getGameTime();
 			Long last = lastSave.get(player.getUUID());
 			if (last != null && now - last < AttunedConfig.get().gravebindCooldownTicks()) {
@@ -54,7 +59,9 @@ public final class GravebindSave {
 			rescue(player);
 			return false;
 		});
-		AttunedPlayerCleanup.onForget(lastSave::remove);
+		// Deliberately NOT cleared on disconnect: relogging must not grant a
+		// fresh save while the cooldown is still running. Entries are bounded
+		// by the online-player count and cleared on server stop.
 		AttunedServerCleanup.onStop(lastSave::clear);
 	}
 
