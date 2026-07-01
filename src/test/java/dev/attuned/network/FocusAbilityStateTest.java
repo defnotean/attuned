@@ -39,4 +39,43 @@ class FocusAbilityStateTest {
 		assertTrue(state.contains("COOLDOWNS.remove(selection.cooldownKey(player.getUUID()))"),
 			"Zero-cooldown successful abilities should clear only their own selected-ability key.");
 	}
+
+	@Test
+	void cooldownsSurviveDisconnectAndPruneAfterExpiry() throws IOException {
+		String state = Files.readString(STATE, StandardCharsets.UTF_8);
+
+		assertTrue(!state.contains("COOLDOWNS.keySet().removeIf(key -> key.playerId().equals(uuid))"),
+			"Disconnect/relog should not reset active ability cooldowns.");
+		assertTrue(state.contains("LAST_SENT.remove(uuid)"),
+			"Disconnect should still drop stale client sync mirrors.");
+		assertTrue(state.contains("pruneExpiredCooldowns(now)"),
+			"Server ticks should prune expired offline cooldown tombstones.");
+		assertTrue(state.contains("private static void pruneExpiredCooldowns(long now)"),
+			"Expired cooldown pruning should be centralized.");
+		assertTrue(state.contains("COOLDOWNS.entrySet().removeIf(entry -> entry.getValue().endsAt() <= now)"),
+			"Cooldown tombstones should disappear once their server-time end has passed.");
+	}
+
+	@Test
+	void reloadKeepsCooldownsButForcesResync() throws IOException {
+		String state = Files.readString(STATE, StandardCharsets.UTF_8);
+
+		assertTrue(state.contains("ServerLifecycleEvents.END_DATA_PACK_RELOAD.register"),
+			"Datapack reload should still be observed so clients get a fresh cooldown sync.");
+		assertTrue(state.contains("if (success)"),
+			"Failed reloads should keep the previous behavior/cooldown state intact.");
+		assertTrue(state.contains("FocusAbilityState::clearCooldownState"),
+			"Server-stop cleanup should keep the shared cooldown-state reset helper.");
+		assertTrue(state.contains("COOLDOWNS.clear();"),
+			"Server stop should clear ability cooldown tombstones.");
+		assertTrue(state.contains("LAST_SENT.clear();"),
+			"Reload cleanup should force a fresh client cooldown sync after definitions rebuild.");
+		int reloadIndex = state.indexOf("END_DATA_PACK_RELOAD.register");
+		int reloadBlockEnd = state.indexOf("});", reloadIndex);
+		String reloadBlock = state.substring(reloadIndex, reloadBlockEnd);
+		assertTrue(!reloadBlock.contains("clearCooldownState()")
+				&& !reloadBlock.contains("COOLDOWNS.clear()"),
+			"/reload must not hand every player a free ability cooldown reset; "
+				+ "stale ability ids expire naturally via pruneExpiredCooldowns.");
+	}
 }

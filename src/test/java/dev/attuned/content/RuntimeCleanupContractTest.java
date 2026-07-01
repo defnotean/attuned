@@ -238,7 +238,7 @@ class RuntimeCleanupContractTest {
 		assertContains(pacts, "removeWindrunnerStepHeight(player);");
 		assertContains(pacts, "AttunedPlayerCleanup.onForgetPlayer(player -> {");
 		assertContains(pacts, "windrunnerRuns.clear();");
-		assertContains(read(FOCUS_ABILITY_STATE), "AttunedServerCleanup.onStop(() -> {");
+		assertContains(read(FOCUS_ABILITY_STATE), "AttunedServerCleanup.onStop(FocusAbilityState::clearCooldownState)");
 		assertContains(read(FOCUS_ABILITY_STATE), "COOLDOWNS.clear();");
 		assertContains(read(ALTAR_ANIMATIONS), "AttunedServerCleanup.onStop(() -> {");
 		assertContains(read(ALTAR_ANIMATIONS), "serverTick = 0;");

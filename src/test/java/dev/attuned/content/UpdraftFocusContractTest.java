@@ -40,7 +40,9 @@ class UpdraftFocusContractTest {
 			"Updraft boost must not force the player into elytra flight from a normal jump.");
 		assertFalse(behavior.contains("canStartGlide("),
 			"Updraft should only control an already active elytra flight state.");
-		assertTrue(behavior.contains("Items.ELYTRA"));
+		assertTrue(behavior.contains("instanceof ElytraItem"),
+			"Functional-glider check should accept any ElytraItem (vanilla or modded subclass), "
+				+ "not a hardcoded elytra item id; 1.20.6 has no glider data component.");
 		assertTrue(behavior.contains("BOOST_THRUST"));
 		assertTrue(behavior.contains("BRAKE_FACTOR"));
 		assertTrue(behavior.contains("MAX_SPEED"));
@@ -86,7 +88,8 @@ class UpdraftFocusContractTest {
 
 		String mixins = read(Path.of("src/main/resources/attuned.mixins.json"));
 		assertTrue(mixins.contains("PlayerUpdraftMixin"));
-		assertTrue(mixins.contains("LivingEntityUpdraftFallMixin"));
+		assertFalse(mixins.contains("LivingEntityUpdraftFallMixin"),
+			"Updraft fall mitigation now runs inside the ordered LivingEntityHurtMixin pipeline.");
 
 		String focus = read(FOCUS);
 		assertTrue(focus.contains("\"behavior\": \"attuned:updraft\""));
