@@ -1,4 +1,8 @@
 plugins {
+	// Quilt Loom (latest release 1.15.1) cannot build Minecraft 26.x: those versions
+	// ship unobfuscated without official mapping files, which Quilt Loom requires.
+	// Fabric Loom is kept as the build toolchain while the artifact targets Quilt
+	// Loader via quilt.mod.json metadata and the dev.attuned.quilt entrypoints.
 	id 'net.fabricmc.fabric-loom' version "${loom_version}"
 	id 'maven-publish'
 	id 'com.modrinth.minotaur' version '2.9.0'
@@ -27,7 +31,13 @@ String currentChangelogSection(String changelog, String releaseVersion) {
 }
 
 repositories {
-	// Loom adds the Minecraft/Fabric repositories automatically; Maven Central
+	// Loom adds the Minecraft/Fabric repositories automatically; Quilt Maven
+	// is declared for Quilt Loader and API deps while Maven Central is for JUnit.
+	maven {
+		name = 'Quilt'
+		url = 'https://maven.quiltmc.org/repository/release'
+	}
+	// Maven Central
 	// is declared here for ordinary library dependencies such as JUnit.
 	mavenCentral()
 }
@@ -71,9 +81,12 @@ dependencies {
 	// To change the versions see the gradle.properties file
 	minecraft "com.mojang:minecraft:${project.minecraft_version}"
 
+	// Quilt Loader is the runtime loader target; it is compileOnly because the
+	// entrypoint adapters only need the Fabric API interfaces that Quilt re-exposes.
+	compileOnly "org.quiltmc:quilt-loader:${project.quilt_loader_version}"
+
 	implementation "net.fabricmc:fabric-loader:${project.loader_version}"
 
-	// Fabric API. This is technically optional, but you probably want it anyway.
 	implementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
 
 	// JUnit 5 — unit tests for the Minecraft-free logic (run by the `test` task).
@@ -90,7 +103,7 @@ processResources {
 	exclude "assets/attuned/textures/item/ocean_relic_trident_blockbench.png"
 	exclude "assets/attuned/textures/item/ocean_relic_trident_blockbench.png.mcmeta"
 
-	filesMatching("fabric.mod.json") {
+	filesMatching("quilt.mod.json") {
 		expand "version": version
 	}
 }
@@ -157,7 +170,7 @@ modrinth {
 	}.get()
 	uploadFile = file("build/libs/${project.name}-${project.version}.jar")
 	gameVersions = [project.minecraft_version.toString()]
-	loaders = ["fabric"]
+	loaders = ["quilt"]
 	dependencies {
 		required.project "fabric-api"
 	}
