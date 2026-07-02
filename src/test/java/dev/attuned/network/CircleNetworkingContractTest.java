@@ -105,6 +105,10 @@ class CircleNetworkingContractTest {
 			"Ping validation should require current server-owned Circle membership.");
 		assertTrue(networking.contains("player.level().hasChunkAt(pos)"),
 			"Ping validation should reject unloaded target chunks.");
+		assertTrue(networking.contains("pingVisible(player, payload.x(), payload.y(), payload.z())"),
+			"Ping validation should compute target visibility from the sender's line of sight.");
+		assertTrue(!networking.contains("targetLoaded, true, distanceSquared"),
+			"Ping validation must not trust a hardcoded targetVisible=true flag.");
 		assertTrue(networking.contains("CirclePingPolicy.allowed("),
 			"Ping validation should route through the shared pure policy.");
 		assertBefore(networking, "CirclePingPolicy.allowed(", "LAST_PING.put(player.getUUID(), now)");
