@@ -68,7 +68,9 @@ public final class UpdraftLiftClient {
 		if (!Minecraft.getInstance().options.keyJump.isDown()) {
 			return false;
 		}
-		return player.isFallFlying() || (!player.onGround() && !player.isInWater() && !player.isPassenger());
+		// Only control an already active glide; boost packets must not be sent
+		// merely because the player is airborne.
+		return player.isFallFlying();
 	}
 
 	private static boolean wantsBrake(Player player) {

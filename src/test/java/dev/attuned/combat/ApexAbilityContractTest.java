@@ -58,8 +58,8 @@ class ApexAbilityContractTest {
 			"Identity ability cooldowns should be tracked per player.");
 		assertTrue(apex.contains("identityCooldowns.clear()"),
 			"Identity cooldowns must be cleared on server stop.");
-		assertTrue(apex.contains("identityCooldowns.remove(uuid)"),
-			"Identity cooldowns must drop forgotten players.");
+		assertTrue(!apex.contains("identityCooldowns.remove(uuid)"),
+			"Identity cooldowns must survive relog so disconnecting cannot reset the ability cooldown.");
 	}
 
 	@Test

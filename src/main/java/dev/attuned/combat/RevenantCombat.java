@@ -119,10 +119,10 @@ public final class RevenantCombat {
 				&& pendingDebt.gameTime() == attacker.level().getGameTime()) {
 			DEBTS.remove(attacker.getUUID());
 		}
-		if (defender instanceof ServerPlayer player && hasActiveFocus(player, ASHEN_DEBT_FOCUS)) {
-			if (!CombatTargets.isHostileOrPvpOpponent(attacker, player)) {
-				return;
-			}
+		if (defender instanceof ServerPlayer player && hasActiveFocus(player, ASHEN_DEBT_FOCUS)
+				&& CombatTargets.isHostileOrPvpOpponent(attacker, player)) {
+			// Guard only skips recording the debt; the Bonechill branches below
+			// must still run for this damage event.
 			DEBTS.put(player.getUUID(), new Debt(attacker.getUUID(),
 				player.level().getGameTime() + DEBT_WINDOW_TICKS));
 		}

@@ -1,11 +1,11 @@
 package dev.attuned.combat;
 
-import dev.attuned.compat.PlayerMessages;
 import dev.attuned.AttunedPlayerCleanup;
 import dev.attuned.AttunedServerCleanup;
 import dev.attuned.attunement.AttunedAttachments;
 import dev.attuned.attunement.AttunedInv;
 import dev.attuned.attunement.Attunement;
+import dev.attuned.compat.PlayerMessages;
 import dev.attuned.content.behavior.VeilBehavior;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.minecraft.core.particles.ParticleTypes;
@@ -49,12 +49,14 @@ public final class UnseenCombat {
 
 	private static final Map<UUID, Long> LAST_NEEDLE = new HashMap<>();
 	/**
-	 * Pending Needle consumptions recorded at the HEAD damage stage. The cooldown
-	 * is only burned (and the Veil only broken) once the hit actually lands in
-	 * {@link #afterDamage}, so a dodged or invulnerability-framed hit wastes the
-	 * multiplier but keeps the opener available.
+	 * Pending Needle consumptions recorded at the HEAD damage stage, keyed by
+	 * attacker and then by victim so a sword sweep (several HEAD-stage calls in
+	 * one tick, before any after-damage runs) cannot overwrite earlier victims'
+	 * records. The cooldown is only burned (and the Veil only broken) once the
+	 * hit actually lands in {@link #afterDamage}, so a dodged or
+	 * invulnerability-framed hit wastes the multiplier but keeps the opener.
 	 */
-	private static final Map<UUID, PendingProc> PENDING_NEEDLE = new HashMap<>();
+	private static final Map<UUID, Map<UUID, PendingProc>> PENDING_NEEDLE = new HashMap<>();
 	private static boolean initialized;
 
 	public static void init() {
@@ -71,6 +73,10 @@ public final class UnseenCombat {
 		ServerLivingEntityEvents.AFTER_DEATH.register((entity, source) -> {
 			LAST_NEEDLE.remove(entity.getUUID());
 			PENDING_NEEDLE.remove(entity.getUUID());
+			PENDING_NEEDLE.values().forEach(pending -> pending.remove(entity.getUUID()));
+			if (entity instanceof ServerPlayer) {
+				VeilBehavior.forgetDeath(entity.getUUID());
+			}
 		});
 	}
 
@@ -82,16 +88,19 @@ public final class UnseenCombat {
 			return amount;
 		}
 		boolean wasVeiled = VeilBehavior.isVeiled(attacker);
-		if (!hasActiveFocus(attacker, NEEDLE_FOCUS) || !canNeedle(attacker, defender, wasVeiled)) {
+		Map<UUID, PendingProc> pendingForAttacker =
+			PENDING_NEEDLE.computeIfAbsent(attacker.getUUID(), id -> new HashMap<>());
+		if (!hasActiveFocus(attacker, NEEDLE_FOCUS)
+				|| !canNeedle(attacker, defender, wasVeiled, pendingForAttacker)) {
 			// No proc this swing: still break the Veil, but only once the hit lands
 			// (recorded so a dodged hit cannot strip stealth for free).
-			PENDING_NEEDLE.put(attacker.getUUID(),
+			pendingForAttacker.put(defender.getUUID(),
 				new PendingProc(defender.getUUID(), attacker.level().getGameTime(), false));
 			return amount;
 		}
 		// Shape the damage now (it cannot be retro-multiplied) but defer burning the
 		// cooldown to the after-damage stage so a dodged hit keeps the opener.
-		PENDING_NEEDLE.put(attacker.getUUID(),
+		pendingForAttacker.put(defender.getUUID(),
 			new PendingProc(defender.getUUID(), attacker.level().getGameTime(), true));
 		needleFeedback(attacker, defender);
 		return amount * NEEDLE_MULTIPLIER;
@@ -105,11 +114,20 @@ public final class UnseenCombat {
 			&& !source.is(DamageTypeTags.IS_EXPLOSION);
 	}
 
-	private static boolean canNeedle(ServerPlayer attacker, LivingEntity defender, boolean wasVeiled) {
+	private static boolean canNeedle(ServerPlayer attacker, LivingEntity defender,
+			boolean wasVeiled, Map<UUID, PendingProc> pendingForAttacker) {
 		long now = attacker.level().getGameTime();
 		Long last = LAST_NEEDLE.get(attacker.getUUID());
 		if (last != null && now - last < NEEDLE_COOLDOWN_TICKS) {
 			return false;
+		}
+		// A sword sweep hits several victims in the same tick before any
+		// after-damage stage burns the cooldown: only the first candidate of the
+		// tick may proc, all later ones are ordinary swings.
+		for (PendingProc pending : pendingForAttacker.values()) {
+			if (pending.consumes() && pending.gameTime() == now) {
+				return false;
+			}
 		}
 		return wasVeiled || isBehind(attacker, defender);
 	}
@@ -135,14 +153,18 @@ public final class UnseenCombat {
 		if (entity instanceof ServerPlayer attacker && dealtDamage > 0.0F) {
 			// The hit landed: spend the deferred opener resources now. A dodged or
 			// invulnerability-framed hit (dealtDamage <= 0) leaves these intact.
-			PendingProc pending = PENDING_NEEDLE.remove(attacker.getUUID());
-			if (pending != null
-					&& pending.target().equals(defender.getUUID())
-					&& pending.gameTime() == attacker.level().getGameTime()) {
-				VeilBehavior.breakVeil(attacker);
-				if (pending.consumes()) {
-					LAST_NEEDLE.put(attacker.getUUID(), attacker.level().getGameTime());
-					applyNeedleSoftstepCombo(attacker, defender);
+			Map<UUID, PendingProc> pendingForAttacker = PENDING_NEEDLE.get(attacker.getUUID());
+			if (pendingForAttacker != null) {
+				PendingProc pending = pendingForAttacker.remove(defender.getUUID());
+				if (pendingForAttacker.isEmpty()) {
+					PENDING_NEEDLE.remove(attacker.getUUID());
+				}
+				if (pending != null && pending.gameTime() == attacker.level().getGameTime()) {
+					VeilBehavior.breakVeil(attacker);
+					if (pending.consumes()) {
+						LAST_NEEDLE.put(attacker.getUUID(), attacker.level().getGameTime());
+						applyNeedleSoftstepCombo(attacker, defender);
+					}
 				}
 			}
 		}
