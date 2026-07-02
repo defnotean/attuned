@@ -113,35 +113,33 @@ class CircleContributionsContractTest {
 	}
 
 	@Test
-	void contributionRuntimeExposesSameDimensionContributionWindowTargetsForPartyAssist() throws IOException {
+	void contributionRuntimeExposesProximityBasedAssistTargetsWithoutContributionWindow() throws IOException {
 		String source = read(CONTRIBUTIONS);
 		String helper = methodBody(source,
 			"public static java.util.List<ServerPlayer> eligibleAssistTargets(ServerPlayer player, double radius)");
+		String nearby = methodBody(source,
+			"public static java.util.List<ServerPlayer> nearbyCircleMembersForAssist(ServerPlayer player, double radius)");
 
-		assertTrue(helper.contains("if (!AttunedConfig.get().partySharedCreditEnabled())"),
-			"Party assists should honor the shared-credit server toggle.");
-		assertTrue(helper.contains("CircleRuntime.manager().circleOf(player.getUUID())"),
+		assertTrue(helper.contains("if (!AttunedConfig.get().partyEffectsEnabled())"),
+			"Party assists should honor the party-effects server toggle, not shared-credit.");
+		assertTrue(helper.contains("nearbyCircleMembersForAssist(player, radius)"),
+			"Party assists should delegate to the proximity-only assist helper.");
+		assertTrue(nearby.contains("CircleRuntime.manager().circleOf(player.getUUID())"),
 			"Party assists should require current server-owned Circle membership.");
-		assertTrue(helper.contains("server.getPlayerList().getPlayer(memberId)"),
+		assertTrue(nearby.contains("server.getPlayerList().getPlayer(memberId)"),
 			"Party assists should only consider online Circle members.");
-		assertTrue(helper.contains("member.getLevel() == player.getLevel()"),
+assertTrue(nearby.contains("member.getLevel() != player.getLevel()"),
 			"Party assists should require same-dimension members.");
-		assertTrue(helper.contains("member.isAlive()") && helper.contains("member.isSpectator()"),
-			"Party assists should reject dead members and spectators through the shared context.");
-		assertTrue(helper.contains("TRACKER.lastContributionTick(memberId)"),
-			"Party assists should require recent member contribution.");
-		assertTrue(helper.contains("CircleContributionPolicy.eligibleMembers("),
-			"Party assists should delegate eligibility to the pure shared-credit policy.");
-		assertTrue(helper.contains("AttunedConfig.get().partySharedCreditWindowTicks()"),
-			"Party assists should reuse the configured contribution window.");
-		assertTrue(helper.contains("Math.max(0.0D, radius)"),
+		assertTrue(nearby.contains("member.isAlive()") && nearby.contains("member.isSpectator()"),
+			"Party assists should reject dead members and spectators.");
+		assertTrue(nearby.contains("Math.max(0.0D, radius)"),
 			"Party assists should use the data-defined radius defensively.");
-		assertTrue(helper.contains("false)"),
-			"Party assists should force same-dimension checks instead of using cross-dimension shared-credit config.");
-		assertFalse(helper.contains("AttunedConfig.get().partyCrossDimensionCreditEnabled()"),
-			"Party assists should not be widened by the cross-dimension shared-credit opt-in.");
-		assertFalse(helper.contains("AttunedConfig.get().partySharedCreditRadius()"),
-			"Party assists should use their behavior data radius, not the global shared-credit radius.");
+		assertFalse(nearby.contains("TRACKER.lastContributionTick"),
+			"Assist targeting should not require recent combat contribution.");
+		assertFalse(nearby.contains("CircleContributionPolicy.eligibleMembers("),
+			"Assist targeting should not reuse the contribution-window policy.");
+		assertFalse(helper.contains("partySharedCreditEnabled"),
+			"Assist eligibility should not be coupled to the shared-credit toggle.");
 	}
 
 	private static String read(Path path) throws IOException {

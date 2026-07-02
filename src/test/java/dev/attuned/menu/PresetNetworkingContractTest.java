@@ -365,6 +365,34 @@ class PresetNetworkingContractTest {
 			"The cooldown stamp should be written by the same core after a successful materialized mutation.");
 	}
 
+	@Test
+	void applyWarnsWhenBuildIsOverCapacityOrLacksActiveAbility() throws IOException {
+		String net = read(NET);
+		String lang = read(LANG);
+		String applyCore = methodBody(net,
+			"private static void applyPresetCore(ServerPlayer player, int index, SatchelState satchel)");
+		String warn = methodBody(net, "private static void warnApplyResolutionIssues(ServerPlayer player)");
+
+		assertTrue(applyCore.contains("warnApplyResolutionIssues(player)"),
+			"Successful apply should check the post-apply budget resolution.");
+		assertBefore(applyCore, "Component.translatable(\"screen.attuned.preset.applied\"",
+			"warnApplyResolutionIssues(player)");
+		assertTrue(warn.contains("Attunement.resolution(player)"),
+			"Apply warnings should use the same budget resolution as gameplay.");
+		assertTrue(warn.contains("PresetMetadataResolver.infer(facts).warnings()"),
+			"Apply warnings should reuse the shared setup metadata warning policy.");
+		assertTrue(warn.contains("ActionBarMessages.Priority.WARNING"),
+			"Over-capacity and missing-ability warnings should use the warning priority gate.");
+		assertTrue(warn.contains("\"screen.attuned.preset.apply_over_capacity\""),
+			"Over-capacity apply feedback should be translatable.");
+		assertTrue(warn.contains("\"screen.attuned.preset.apply_no_active_ability\""),
+			"Missing active-ability apply feedback should be translatable.");
+		assertTrue(lang.contains("\"screen.attuned.preset.apply_over_capacity\""),
+			"Over-capacity apply warning should have English copy.");
+		assertTrue(lang.contains("\"screen.attuned.preset.apply_no_active_ability\""),
+			"Missing active-ability apply warning should have English copy.");
+	}
+
 	private static void assertBefore(String source, String earlier, String later) {
 		int e = source.indexOf(earlier);
 		int l = source.indexOf(later);

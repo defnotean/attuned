@@ -63,6 +63,12 @@ class AbilityCooldownStateContractTest {
 			"The ability key should explain when no active ability Focus can fire.");
 		assertTrue(state.contains("item.attuned.focus_ability.cooldown"),
 			"The ability key should explain when the selected ability is still cooling down.");
+		assertTrue(state.contains("ABILITY_TRIGGER_RATE_LIMIT_TICKS"),
+			"Ability triggers should be rate-limited to reject forged packet spam.");
+		assertTrue(state.contains("FAILED_ABILITY_THROTTLE_TICKS"),
+			"Failed ability attempts should enforce a retry throttle before the next trigger.");
+		assertTrue(state.contains("FAILED_RETRY_UNTIL"),
+			"Failed ability throttles should be tracked per player.");
 		assertTrue(payload.contains("record FocusAbilityStatusPayload(int slot, int remainingTicks, int totalTicks)"),
 			"The payload should carry selected ability slot and cooldown progress.");
 		assertTrue(networking.contains("FocusAbilityState.trigger(player)"),
