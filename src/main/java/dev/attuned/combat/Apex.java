@@ -128,7 +128,8 @@ public final class Apex {
 	private static final float DODGE_NORMAL = 0.40F;
 	private static final float DODGE_EMPOWERED = 0.65F;
 	private static final float JUDGMENT_THRESHOLD = 0.30F;
-	private static final float JUDGMENT_DAMAGE_BONUS = 0.40F;
+	private static final float JUDGMENT_DAMAGE_BONUS_NORMAL = 0.20F;
+	private static final float JUDGMENT_DAMAGE_BONUS_EMPOWERED = 0.40F;
 	private static final float MAELSTROM_DAMAGE_BONUS = 0.10F;
 	private static final int MAELSTROM_SCRAMBLE_TICKS = 60;
 	private static final int STILLPOINT_ABSORPTION_TICKS = 60;
@@ -296,7 +297,8 @@ public final class Apex {
 			Matchup matchup = matchupAgainst(Affinity.FURY, defender, context);
 			if (matchup != Matchup.NEUTRALIZED) {
 				float threshold = matchup == Matchup.EMPOWERED ? EXECUTE_EMPOWERED : EXECUTE_NORMAL;
-				if (defender.getHealth() / defender.getMaxHealth() <= threshold) {
+				float projectedHealth = defender.getHealth() - amount;
+				if (projectedHealth / defender.getMaxHealth() <= threshold) {
 					amount = DamageFormula.floor(amount, EXECUTE_DAMAGE);
 					if (attackerPlayer instanceof ServerPlayer serverPlayer) {
 						CombatFeedback.executeFinisher(serverPlayer, defender);
@@ -311,11 +313,16 @@ public final class Apex {
 				&& attackerAtApex
 				&& isApexMeleeTarget(defender, attackerPlayer, source)) {
 			Matchup matchup = matchupAgainst(Affinity.HOLY, defender, context);
-			if (matchup == Matchup.EMPOWERED
-					&& defender.getHealth() / defender.getMaxHealth() <= JUDGMENT_THRESHOLD) {
-				amount = DamageFormula.amplify(amount, JUDGMENT_DAMAGE_BONUS);
-				if (attackerPlayer instanceof ServerPlayer serverPlayer) {
-					CombatFeedback.judgmentStrike(serverPlayer, defender);
+			if (matchup != Matchup.NEUTRALIZED) {
+				float projectedHealth = defender.getHealth() - amount;
+				if (projectedHealth / defender.getMaxHealth() <= JUDGMENT_THRESHOLD) {
+					float bonus = matchup == Matchup.EMPOWERED
+						? JUDGMENT_DAMAGE_BONUS_EMPOWERED
+						: JUDGMENT_DAMAGE_BONUS_NORMAL;
+					amount = DamageFormula.amplify(amount, bonus);
+					if (attackerPlayer instanceof ServerPlayer serverPlayer) {
+						CombatFeedback.judgmentStrike(serverPlayer, defender);
+					}
 				}
 			}
 		}
