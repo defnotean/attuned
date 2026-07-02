@@ -6,6 +6,7 @@ import dev.attuned.party.CircleRuntime;
 import java.util.Optional;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.entity.OwnableEntity;
 import net.minecraft.world.entity.player.Player;
@@ -38,7 +39,8 @@ public final class CombatTargets {
 
 	/** Whether the entity is either a hostile mob or a valid PvP opponent. */
 	public static boolean isHostileOrPvpOpponent(LivingEntity target, Player player) {
-		return (!isOwnedOrAllied(target, player) && isHostile(target)) || isPvpOpponent(target, player);
+		return (!isOwnedOrAllied(target, player) && isHostile(target, player))
+			|| isPvpOpponent(target, player);
 	}
 
 	/** The single combat affinity carried by the entity, if it has one. */
@@ -66,8 +68,14 @@ public final class CombatTargets {
 			.orElse(false);
 	}
 
-	private static boolean isHostile(LivingEntity entity) {
-		return entity.getType().getCategory() == MobCategory.MONSTER;
+	private static boolean isHostile(LivingEntity entity, Player player) {
+		if (entity.getType().getCategory() == MobCategory.MONSTER) {
+			return true;
+		}
+		if (entity.getLastHurtByMob() == player) {
+			return true;
+		}
+		return entity instanceof Mob mob && mob.getTarget() == player;
 	}
 
 	private static boolean isOwnedOrAllied(LivingEntity target, Player player) {
