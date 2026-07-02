@@ -33,6 +33,18 @@ class ResolutionCacheContractTest {
 	}
 
 	@Test
+	void reloadClearsStaleResolutionCache() throws IOException {
+		String source = Files.readString(SOURCE, StandardCharsets.UTF_8);
+
+		assertTrue(source.contains("ServerLifecycleEvents.END_DATA_PACK_RELOAD.register"),
+			"Datapack reload should invalidate stale attunement resolution cache entries.");
+		assertTrue(source.contains("if (success)"),
+			"Failed reloads should keep the previous resolution cache intact.");
+		assertTrue(source.contains("RESOLUTION_CACHE.clear()"),
+			"Successful reload should drop every cached resolution so Focus definitions are re-read.");
+	}
+
+	@Test
 	void cacheIsThreadSafeAndServerOnlyInSingleplayer() throws IOException {
 		String source = Files.readString(SOURCE, StandardCharsets.UTF_8);
 

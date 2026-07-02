@@ -6,6 +6,7 @@ import dev.attuned.attunement.AttunedAttachments;
 import dev.attuned.attunement.AttunedInv;
 import dev.attuned.attunement.Attunement;
 import dev.attuned.content.AttunedContent;
+import dev.attuned.combat.Resonance;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -76,8 +77,8 @@ public final class GravebindSave {
 	}
 
 	private static void rescue(ServerPlayer player) {
+		Resonance.resetKillStreak(player);
 		player.setHealth(player.getMaxHealth() * 0.5F);
-		player.removeAllEffects();
 		player.clearFire();
 		player.addEffect(new MobEffectInstance(MobEffects.REGENERATION, 100, 1));
 		player.addEffect(new MobEffectInstance(MobEffects.RESISTANCE, 100, 1));
