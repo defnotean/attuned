@@ -202,8 +202,23 @@ public record FocusPreset(String name, List<String> slots, FocusPreset.SetupMeta
 	public static FocusPreset read(FriendlyByteBuf buf) {
 		return new FocusPreset(
 			buf.readUtf(MAX_NAME_LENGTH),
-			buf.readList(FriendlyByteBuf::readUtf),
+			// Bounded: serverbound via ImportPresetPayload — a hacked client must
+			// not be able to force allocation of an arbitrarily long slots list.
+			readBoundedStringList(buf, AttunedInv.SIZE),
 			SetupMetadata.read(buf));
+	}
+
+	static List<String> readBoundedStringList(FriendlyByteBuf buf, int maxSize) {
+		int size = buf.readVarInt();
+		if (size < 0 || size > maxSize) {
+			throw new io.netty.handler.codec.DecoderException(
+				"Preset list length " + size + " exceeds bound " + maxSize);
+		}
+		List<String> list = new ArrayList<>(size);
+		for (int i = 0; i < size; i++) {
+			list.add(buf.readUtf());
+		}
+		return list;
 	}
 
 	public CompoundTag toTag() {
@@ -266,8 +281,11 @@ public record FocusPreset(String name, List<String> slots, FocusPreset.SetupMeta
 				buf.readUtf(MAX_ROLE_LENGTH),
 				buf.readUtf(MAX_NOTE_LENGTH),
 				buf.readVarInt(),
-				buf.readList(FriendlyByteBuf::readUtf),
-				buf.readList(FriendlyByteBuf::readUtf),
+				// Bounded list decode: this payload arrives serverbound from
+				// ImportPresetPayload, so oversized attacker-controlled lists
+				// must be rejected at the frame instead of after allocation.
+				readBoundedStringList(buf, MAX_METADATA_LIST_SIZE),
+				readBoundedStringList(buf, MAX_METADATA_LIST_SIZE),
 				buf.readUtf(MAX_VERSION_LENGTH),
 				buf.readUtf(MAX_VERSION_LENGTH));
 		}

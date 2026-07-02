@@ -32,8 +32,9 @@ class ConsumableProcTimingContractTest {
 			"Unseen should track a pending-consumption map so HEAD shaping does not burn the cooldown.");
 		assertTrue(!adjustDamage.contains("LAST_NEEDLE.put"),
 			"The HEAD stage must not set the Needle cooldown; a dodged hit should not burn it.");
-		assertTrue(adjustDamage.contains("PENDING_NEEDLE.put"),
-			"The HEAD stage should record a pending Needle consumption instead of spending it.");
+		assertTrue(adjustDamage.contains("pendingForAttacker.put(defender.getUUID()"),
+			"The HEAD stage should record a per-victim pending Needle consumption instead of spending it, "
+				+ "so sweep hits in the same tick cannot overwrite earlier victims' records.");
 		assertTrue(afterDamage.contains("LAST_NEEDLE.put"),
 			"The after-damage stage should set the Needle cooldown only when damage actually lands.");
 		assertTrue(afterDamage.contains("dealtDamage > 0.0F"),
