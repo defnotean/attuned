@@ -1,5 +1,6 @@
 package dev.attuned.content;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
@@ -35,8 +36,15 @@ class UpdraftFocusContractTest {
 		assertTrue(behavior.contains("mitigatesFallDamage("));
 		assertTrue(behavior.contains("setControls("));
 		assertTrue(behavior.contains("LAST_FLIGHT_TICK"));
-		assertTrue(behavior.contains("startFallFlying()"));
-		assertTrue(behavior.contains("Items.ELYTRA"));
+		assertFalse(behavior.contains("startFallFlying()"),
+			"Updraft boost must not force the player into elytra flight from a normal jump.");
+		assertFalse(behavior.contains("canStartGlide("),
+			"Updraft should only control an already active elytra flight state.");
+		assertTrue(behavior.contains("instanceof ElytraItem"),
+			"Functional-glider check should accept any ElytraItem (vanilla or modded subclass), "
+				+ "not a hardcoded elytra item id; 1.21.1 has no glider data component.");
+		assertFalse(behavior.contains("Items.ELYTRA"),
+			"Updraft should not hardcode the vanilla elytra item.");
 		assertTrue(behavior.contains("BOOST_THRUST"));
 		assertTrue(behavior.contains("BRAKE_FACTOR"));
 		assertTrue(behavior.contains("MAX_SPEED"));
@@ -77,7 +85,11 @@ class UpdraftFocusContractTest {
 
 		String mixins = read(Path.of("src/main/resources/attuned.mixins.json"));
 		assertTrue(mixins.contains("PlayerUpdraftMixin"));
-		assertTrue(mixins.contains("LivingEntityUpdraftFallMixin"));
+		assertFalse(mixins.contains("LivingEntityUpdraftFallMixin"),
+			"Fall mitigation should live in the single ordered LivingEntityHurtMixin pipeline, "
+				+ "not a separate mixin whose ordering is left to class-name sort.");
+		assertTrue(read(HURT_MIXIN).contains("UpdraftBehavior.mitigatesFallDamage(player)"),
+			"The ordered damage pipeline should apply Updraft fall-damage mitigation as an explicit stage.");
 
 		String focus = read(FOCUS);
 		assertTrue(focus.contains("\"behavior\": \"attuned:updraft\""));
