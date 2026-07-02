@@ -29,9 +29,15 @@ import net.minecraft.world.item.ItemStack;
 /** Server-authoritative state for the single active Focus Ability and cooldown. */
 public final class FocusAbilityState {
 	private static final int SYNC_INTERVAL_TICKS = 5;
+	/** Minimum ticks between accepted ability-trigger attempts per player. */
+	private static final int ABILITY_TRIGGER_RATE_LIMIT_TICKS = 3;
+	/** Cooldown before retrying after onAbility returns false (e.g. Voidstep raycast miss). */
+	private static final int FAILED_ABILITY_THROTTLE_TICKS = 10;
 
 	private static final Map<AbilityCooldownKey, Cooldown> COOLDOWNS = new HashMap<>();
 	private static final Map<UUID, FocusAbilityStatusPayload> LAST_SENT = new HashMap<>();
+	private static final Map<UUID, Long> LAST_ABILITY_TRIGGER = new HashMap<>();
+	private static final Map<UUID, Long> FAILED_RETRY_UNTIL = new HashMap<>();
 	private static boolean initialized;
 
 	private FocusAbilityState() {}
@@ -53,12 +59,16 @@ public final class FocusAbilityState {
 		AttunedServerCleanup.onStop(FocusAbilityState::clearCooldownState);
 		AttunedPlayerCleanup.onForget(uuid -> {
 			LAST_SENT.remove(uuid);
+			LAST_ABILITY_TRIGGER.remove(uuid);
+			FAILED_RETRY_UNTIL.remove(uuid);
 		});
 	}
 
 	private static void clearCooldownState() {
 		COOLDOWNS.clear();
 		LAST_SENT.clear();
+		LAST_ABILITY_TRIGGER.clear();
+		FAILED_RETRY_UNTIL.clear();
 	}
 
 	public static void trigger(ServerPlayer player) {
@@ -67,6 +77,17 @@ public final class FocusAbilityState {
 		if (player.isRemoved() || player.isDeadOrDying() || player.isSpectator()) {
 			return;
 		}
+		long now = player.level().getGameTime();
+		Long retryUntil = FAILED_RETRY_UNTIL.get(player.getUUID());
+		if (retryUntil != null && now < retryUntil) {
+			return;
+		}
+		Long lastTrigger = LAST_ABILITY_TRIGGER.get(player.getUUID());
+		if (lastTrigger != null && now - lastTrigger < ABILITY_TRIGGER_RATE_LIMIT_TICKS) {
+			return;
+		}
+		LAST_ABILITY_TRIGGER.put(player.getUUID(), now);
+
 		AbilitySelection selection = firstActiveAbility(player);
 		if (selection == null) {
 			// No active ability Focus: pact tactical, then an armed Apex capstone identity ability.
@@ -95,9 +116,11 @@ public final class FocusAbilityState {
 
 		boolean fired = runAbility(selection.behavior(), player, selection.stack());
 		if (!fired) {
+			FAILED_RETRY_UNTIL.put(player.getUUID(), now + FAILED_ABILITY_THROTTLE_TICKS);
 			sync(player, selection.slot(), 0, abilityCooldownTicks(selection.behavior(), player, selection.stack()));
 			return;
 		}
+		FAILED_RETRY_UNTIL.remove(player.getUUID());
 
 		Onboarding.tryAbilityHint(player);
 
