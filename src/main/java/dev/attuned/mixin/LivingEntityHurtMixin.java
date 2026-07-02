@@ -8,7 +8,9 @@ import dev.attuned.combat.UnseenCombat;
 import dev.attuned.content.behavior.UpdraftBehavior;
 import dev.attuned.pacts.Pacts;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.damagesource.DamageTypes;
 import net.minecraft.world.entity.LivingEntity;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -37,6 +39,15 @@ public abstract class LivingEntityHurtMixin {
 		}
 		LivingEntity self = (LivingEntity) (Object) this;
 		UpdraftBehavior.recordPvpDamage(self, source);
+		// Updraft fall-damage mitigation is the first stage of the single ordered
+		// pipeline (previously a separate LivingEntityUpdraftFallMixin whose
+		// relative order with this mixin was left to Mixin's class-name sort). It
+		// short-circuits before the matchup/apex/pact/stealth stages, which do not
+		// apply to fall damage anyway.
+		if (source.is(DamageTypes.FALL) && self instanceof ServerPlayer player
+				&& UpdraftBehavior.mitigatesFallDamage(player)) {
+			return 0.0F;
+		}
 		CombatContext context = CombatContext.of(self, source);
 		// Confluence or party role damage hooks must join this ordered pipeline,
 		// consuming the previous stage's output so independent bonuses compound.
