@@ -40,7 +40,11 @@ class UpdraftFocusContractTest {
 			"Updraft boost must not force the player into elytra flight from a normal jump.");
 		assertFalse(behavior.contains("canStartGlide("),
 			"Updraft should only control an already active elytra flight state.");
-		assertTrue(behavior.contains("Items.ELYTRA"));
+		assertTrue(behavior.contains("instanceof ElytraItem"),
+			"Functional-glider check should accept any ElytraItem (vanilla or modded subclass), "
+				+ "not a hardcoded elytra item id; 1.18.2 has no glider data component.");
+		assertFalse(behavior.contains("Items.ELYTRA"),
+			"Updraft should not hardcode the vanilla elytra item.");
 		assertTrue(behavior.contains("BOOST_THRUST"));
 		assertTrue(behavior.contains("BRAKE_FACTOR"));
 		assertTrue(behavior.contains("MAX_SPEED"));
@@ -64,6 +68,10 @@ class UpdraftFocusContractTest {
 		String networking = read(NETWORKING);
 		assertTrue(networking.contains("UpdraftLiftPayload.TYPE"));
 		assertTrue(networking.contains("UpdraftBehavior.setControls"));
+		assertTrue(networking.contains("LAST_LIFT"),
+			"Updraft lift packets should be rate-limited per player on the server.");
+		assertTrue(networking.contains("LIFT_HEARTBEAT_TICKS"),
+			"Updraft lift throttling should align with the client heartbeat cadence.");
 
 		String hurtMixin = read(HURT_MIXIN);
 		assertTrue(hurtMixin.contains("UpdraftBehavior.recordPvpDamage(self, source)"));
@@ -85,6 +93,10 @@ class UpdraftFocusContractTest {
 		assertTrue(client.contains("heartbeat % 10"));
 		assertTrue(client.contains("applyLocalPrediction("));
 		assertTrue(client.contains("UpdraftBehavior.controlledMotion("));
+		assertTrue(client.contains("ElytraItem"),
+			"Client glider check should match the server ElytraItem probe on pre-glider MC versions.");
+		assertFalse(client.contains("Items.ELYTRA"),
+			"Client glider check must not hardcode the vanilla elytra item id.");
 
 		String mixins = read(Path.of("src/main/resources/attuned.mixins.json"));
 		assertTrue(mixins.contains("PlayerUpdraftMixin"));
