@@ -281,6 +281,11 @@ public final class Resonance {
 		return KILL_STREAK.getOrDefault(player.getUUID(), 0);
 	}
 
+	/** Clears the rolling kill streak, e.g. on death or a Gravebind refusal. */
+	public static void resetKillStreak(Player player) {
+		resetKillStreak(player.getUUID());
+	}
+
 	private static void resetKillStreak(UUID id) {
 		LAST_KILL_TICK.remove(id);
 		KILL_STREAK.remove(id);
