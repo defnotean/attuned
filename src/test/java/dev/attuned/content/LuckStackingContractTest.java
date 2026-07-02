@@ -18,6 +18,8 @@ class LuckStackingContractTest {
 		Path.of("src/main/java/dev/attuned/effect/AttunedEffects.java");
 	private static final Path RADIANT_BEHAVIORS =
 		Path.of("src/main/java/dev/attuned/content/behavior/RadiantFocusBehaviors.java");
+	private static final Path DATA_FOCUS_BEHAVIORS =
+		Path.of("src/main/java/dev/attuned/content/behavior/DataFocusBehaviors.java");
 	private static final Path SEAFARERS_FISHING =
 		Path.of("src/main/java/dev/attuned/content/behavior/SeafarersFishing.java");
 
@@ -52,6 +54,16 @@ class LuckStackingContractTest {
 				&& radiant.contains("if (amount <= 0.0D)")
 				&& radiant.contains("new AttributeModifier(\n\t\t\t\tLUCK_ID, amount, AttributeModifier.Operation.ADD_VALUE)"),
 			"Namesake's conditional Luck should share the same cap as static Focus Luck.");
+
+		String dataBehaviors = read(DATA_FOCUS_BEHAVIORS);
+		int attributeWhileIndex = dataBehaviors.indexOf("static final class AttributeWhileBehavior");
+		assertTrue(attributeWhileIndex >= 0, "Missing AttributeWhileBehavior implementation.");
+		String attributeWhile = dataBehaviors.substring(attributeWhileIndex);
+		assertTrue(attributeWhile.contains("AttunedLuck.isPositiveAddLuck(modifier)")
+				&& attributeWhile.contains("AttunedLuck.cappedPositiveAddLuck(ai, amount)"),
+			"Palette attribute_while Luck modifiers should pass through the shared Attuned Luck cap.");
+		assertTrue(attributeWhile.contains("if (amount <= 0.0D)"),
+			"Fully capped attribute_while Luck modifiers should not install zero-value leftovers.");
 	}
 
 	@Test

@@ -58,6 +58,35 @@ class ApexSourceContractTest {
 	}
 
 	@Test
+	void executeUsesProjectedPostHitHealthForThreshold() throws IOException {
+		String adjustDamage = methodBody(read(),
+			"public static float adjustDamage(LivingEntity defender, DamageSource source, float amount,\n"
+				+ "\t\t\tCombatContext context)");
+
+		assertTrue(adjustDamage.contains("float projectedHealth = defender.getHealth() - amount"),
+			"Execute should compare the post-hit health ratio, not pre-hit health.");
+		assertTrue(adjustDamage.contains("projectedHealth / defender.getMaxHealth() <= threshold"),
+			"Execute threshold should gate on projected health after this hit lands.");
+	}
+
+	@Test
+	void judgmentAllowsNormalAndEmpoweredMatchups() throws IOException {
+		String adjustDamage = methodBody(read(),
+			"public static float adjustDamage(LivingEntity defender, DamageSource source, float amount,\n"
+				+ "\t\t\tCombatContext context)");
+
+		assertTrue(adjustDamage.contains("matchup != Matchup.NEUTRALIZED"),
+			"Judgment should fire on NORMAL and EMPOWERED matchups like promoted capstones.");
+		assertTrue(adjustDamage.contains("JUDGMENT_DAMAGE_BONUS_EMPOWERED"),
+			"Judgment should use a stronger bonus on EMPOWERED matchups.");
+		assertTrue(adjustDamage.contains("JUDGMENT_DAMAGE_BONUS_NORMAL"),
+			"Judgment should use a reduced bonus on NORMAL matchups.");
+		assertTrue(!adjustDamage.contains("matchup == Matchup.EMPOWERED\n"
+				+ "\t\t\t\t\t&& defender.getHealth()"),
+			"Judgment should not be gated to EMPOWERED-only matchups.");
+	}
+
+	@Test
 	void promotedAffinityCapstonesProcTheirEffectsOnLandedApexHits() throws IOException {
 		String apex = read();
 
