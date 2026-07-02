@@ -10,6 +10,7 @@ import dev.attuned.attunement.Attunement;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
@@ -22,7 +23,6 @@ import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
 import net.minecraft.world.phys.Vec3;
 
 /**
@@ -107,8 +107,15 @@ public final class UpdraftBehavior implements FocusBehavior {
 
 	public static boolean hasFunctionalElytra(ServerPlayer player) {
 		ItemStack chest = player.getItemBySlot(EquipmentSlot.CHEST);
-		if (!chest.is(Items.ELYTRA)) {
+		// Any chest item that can glide (vanilla elytra or a modded glider),
+		// detected by the glider data component rather than a hardcoded item id.
+		if (!chest.has(DataComponents.GLIDER)) {
 			return false;
+		}
+		// Only damageable gliders can wear out; non-damageable modded gliders are
+		// always "functional" (getMaxDamage() is 0 for them).
+		if (!chest.isDamageableItem()) {
+			return true;
 		}
 		return chest.getDamageValue() < chest.getMaxDamage() - 1;
 	}
@@ -132,21 +139,22 @@ public final class UpdraftBehavior implements FocusBehavior {
 			return;
 		}
 
-		player.resetFallDistance();
-		player.fallDistance = 0.0F;
-
-		if (controls.boosting() && !player.isFallFlying() && canStartGlide(player)) {
-			player.startFallFlying();
-		}
+		// The gliding check must run BEFORE the fall-distance reset: a modified
+		// client resending the lift payload every tick with the elytra merely
+		// equipped (never opened) must not get free fall-damage immunity.
 		if (!player.isFallFlying()) {
+			setControls(player.getUUID(), false, false);
 			return;
 		}
+
+		player.resetFallDistance();
+		player.fallDistance = 0.0F;
 		applyFlightControls(player, controls);
 	}
 
 	public static boolean mitigatesFallDamage(ServerPlayer player) {
 		return isActive(player) && hasFunctionalElytra(player)
-			&& controlsFor(player).active() && !isPvpExhausted(player);
+			&& player.isFallFlying() && controlsFor(player).active() && !isPvpExhausted(player);
 	}
 
 	public static void recordPvpDamage(LivingEntity defender, DamageSource source) {
@@ -331,14 +339,6 @@ public final class UpdraftBehavior implements FocusBehavior {
 			level.playSound(null, player.blockPosition(),
 				SoundEvents.WOOL_STEP, SoundSource.PLAYERS, 0.45F, 0.65F);
 		}
-	}
-
-	private static boolean canStartGlide(ServerPlayer player) {
-		return !player.onGround()
-			&& !player.isInWater()
-			&& !player.isPassenger()
-			&& !player.isFallFlying()
-			&& hasFunctionalElytra(player);
 	}
 
 	private static Vec3 horizontalLook(ServerPlayer player) {

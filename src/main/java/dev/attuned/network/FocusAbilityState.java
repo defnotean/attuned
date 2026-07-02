@@ -15,6 +15,7 @@ import dev.attuned.onboarding.Onboarding;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -39,17 +40,31 @@ public final class FocusAbilityState {
 		}
 		initialized = true;
 		ServerTickEvents.END_SERVER_TICK.register(FocusAbilityState::tick);
-		AttunedServerCleanup.onStop(() -> {
-			COOLDOWNS.clear();
-			LAST_SENT.clear();
+		ServerLifecycleEvents.END_DATA_PACK_RELOAD.register((server, resourceManager, success) -> {
+			if (success) {
+				// Force a resync but keep running cooldowns: /reload must not
+				// hand every player a free cooldown reset. Stale ability ids
+				// simply expire via pruneExpiredCooldowns.
+				LAST_SENT.clear();
+			}
 		});
+		AttunedServerCleanup.onStop(FocusAbilityState::clearCooldownState);
 		AttunedPlayerCleanup.onForget(uuid -> {
-			COOLDOWNS.keySet().removeIf(key -> key.playerId().equals(uuid));
 			LAST_SENT.remove(uuid);
 		});
 	}
 
+	private static void clearCooldownState() {
+		COOLDOWNS.clear();
+		LAST_SENT.clear();
+	}
+
 	public static void trigger(ServerPlayer player) {
+		// Guard against forged/late packets: dead, removed, or spectating
+		// players must never fire server-side ability effects.
+		if (player.isRemoved() || player.isDeadOrDying() || player.isSpectator()) {
+			return;
+		}
 		AbilitySelection selection = firstActiveAbility(player);
 		if (selection == null) {
 			// No active ability Focus: pact tactical, then an armed Apex capstone identity ability.
@@ -136,6 +151,7 @@ public final class FocusAbilityState {
 
 	private static void tick(MinecraftServer server) {
 		long now = server.overworld().getGameTime();
+		pruneExpiredCooldowns(now);
 		if (now % SYNC_INTERVAL_TICKS != 0) {
 			return;
 		}
@@ -161,6 +177,10 @@ public final class FocusAbilityState {
 			}
 			sync(player, selection.slot(), remaining, total);
 		}
+	}
+
+	private static void pruneExpiredCooldowns(long now) {
+		COOLDOWNS.entrySet().removeIf(entry -> entry.getValue().endsAt() <= now);
 	}
 
 	private static boolean hasActiveAbility(FocusBehavior behavior, ServerPlayer player, ItemStack stack) {
