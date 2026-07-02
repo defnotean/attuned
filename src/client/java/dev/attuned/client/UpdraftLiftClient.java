@@ -13,8 +13,8 @@ import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.client.Minecraft;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ElytraItem;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
 
 /** Relays jump-hold while gliding to the server for {@link dev.attuned.content.behavior.UpdraftBehavior}. */
 @Environment(EnvType.CLIENT)
@@ -98,10 +98,13 @@ public final class UpdraftLiftClient {
 		return false;
 	}
 
-	private static boolean hasFunctionalElytra(Player player) {
+		private static boolean hasFunctionalElytra(Player player) {
 		ItemStack chest = player.getItemBySlot(EquipmentSlot.CHEST);
-		if (!chest.is(Items.ELYTRA)) {
+		if (!(chest.getItem() instanceof ElytraItem)) {
 			return false;
+		}
+		if (!chest.isDamageableItem()) {
+			return true;
 		}
 		return chest.getDamageValue() < chest.getMaxDamage() - 1;
 	}

@@ -4,6 +4,7 @@ import dev.attuned.api.focus.FocusBehaviorDef;
 import dev.attuned.api.focus.FocusDefinition;
 import dev.attuned.api.synergy.SynergyDefinition;
 import dev.attuned.attunement.AttunedAttachments;
+import dev.attuned.attunement.Attunement;
 import dev.attuned.combat.Apex;
 import dev.attuned.combat.AttunedCombat;
 import dev.attuned.combat.GravebindSave;
@@ -60,6 +61,7 @@ public class Attuned {
 		DynamicRegistries.registerSynced(AttunedRegistries.SYNERGY_DEFINITIONS, SynergyDefinition.CODEC);
 		DynamicRegistries.registerSynced(AttunedRegistries.FOCUS_BEHAVIORS, FocusBehaviorDef.CODEC);
 		AttunedAttachments.init();
+		Attunement.init();
 		AttunedPlayerCleanup.init();
 		AttunedServerCleanup.init();
 		LastDeathPositions.init();

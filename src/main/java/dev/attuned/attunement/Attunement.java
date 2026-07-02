@@ -8,6 +8,7 @@ import dev.attuned.api.focus.FocusDefinition;
 import dev.attuned.content.AttunedComponents;
 import dev.attuned.content.TemperingResolver;
 import dev.attuned.menu.PresetMetadataResolver;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.minecraft.core.Registry;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
@@ -38,6 +39,7 @@ public final class Attunement {
 	// the same player UUID — a plain HashMap would race and the entries would
 	// thrash. Client lookups bypass the cache entirely.
 	private static final Map<UUID, CachedResolution> RESOLUTION_CACHE = new ConcurrentHashMap<>();
+	private static boolean initialized;
 
 	static {
 		AttunedPlayerCleanup.onForget(RESOLUTION_CACHE::remove);
@@ -45,6 +47,18 @@ public final class Attunement {
 	}
 
 	private Attunement() {}
+
+	public static void init() {
+		if (initialized) {
+			return;
+		}
+		initialized = true;
+		ServerLifecycleEvents.END_DATA_PACK_RELOAD.register((server, resourceManager, success) -> {
+			if (success) {
+				RESOLUTION_CACHE.clear();
+			}
+		});
+	}
 
 	private record CachedResolution(AttunedInv inv, int capacity, BudgetResolver.Resolution resolution) {}
 
