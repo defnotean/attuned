@@ -739,8 +739,15 @@ public final class DataFocusBehaviors {
 			boolean present = ai.getModifier(modifierId) != null;
 			if (def.condition().test(player)) {
 				if (!present) {
+					double amount = modifier.amount();
+					if (AttunedLuck.isPositiveAddLuck(modifier)) {
+						amount = AttunedLuck.cappedPositiveAddLuck(ai, amount);
+						if (amount <= 0.0D) {
+							return;
+						}
+					}
 					ai.addTransientModifier(new AttributeModifier(
-						modifierId, modifier.amount(), modifier.operation()));
+						modifierId, amount, modifier.operation()));
 				}
 			} else if (present) {
 				ai.removeModifier(modifierId);

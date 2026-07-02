@@ -10,6 +10,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.WeakHashMap;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.minecraft.core.Holder;
 import net.minecraft.core.Registry;
 import net.minecraft.core.RegistryAccess;
@@ -45,6 +46,11 @@ public final class AttunedRegistries {
 
 	static {
 		AttunedServerCleanup.onStop(AttunedRegistries::clearDataBehaviorCache);
+		ServerLifecycleEvents.END_DATA_PACK_RELOAD.register((server, resourceManager, success) -> {
+			if (success) {
+				clearDataBehaviorCache();
+			}
+		});
 	}
 
 	/** Registers a code behaviour under an id that a {@link FocusDefinition} can reference. */

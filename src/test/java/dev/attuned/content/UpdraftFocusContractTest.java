@@ -66,6 +66,10 @@ class UpdraftFocusContractTest {
 		String networking = read(NETWORKING);
 		assertTrue(networking.contains("UpdraftLiftPayload.TYPE"));
 		assertTrue(networking.contains("UpdraftBehavior.setControls"));
+		assertTrue(networking.contains("LAST_LIFT"),
+			"Updraft lift packets should be rate-limited per player on the server.");
+		assertTrue(networking.contains("LIFT_HEARTBEAT_TICKS"),
+			"Updraft lift throttling should align with the client heartbeat cadence.");
 
 		String hurtMixin = read(HURT_MIXIN);
 		assertTrue(hurtMixin.contains("UpdraftBehavior.recordPvpDamage(self, source)"));
@@ -87,6 +91,10 @@ class UpdraftFocusContractTest {
 		assertTrue(client.contains("heartbeat % 10"));
 		assertTrue(client.contains("applyLocalPrediction("));
 		assertTrue(client.contains("UpdraftBehavior.controlledMotion("));
+		assertTrue(client.contains("ElytraItem"),
+			"Client glider check should match the server ElytraItem probe on 1.21.1.");
+		assertFalse(client.contains("Items.ELYTRA"),
+			"Client glider check must not hardcode the vanilla elytra item id.");
 
 		String mixins = read(Path.of("src/main/resources/attuned.mixins.json"));
 		assertTrue(mixins.contains("PlayerUpdraftMixin"));

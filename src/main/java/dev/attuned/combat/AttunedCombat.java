@@ -93,7 +93,7 @@ public final class AttunedCombat {
 	/** Last game-time a mob affinity spark was shown for an entity. */
 	private static final Map<UUID, Long> LAST_AFFINITY_SPARK = new HashMap<>();
 	private static final Map<UUID, MeleeChargeSnapshot> MELEE_CHARGE_SNAPSHOTS = new HashMap<>();
-	private static final long MELEE_CHARGE_SNAPSHOT_TTL_TICKS = 2L;
+	private static final long MELEE_CHARGE_SNAPSHOT_TTL_TICKS = 5L;
 	private static long lastAffinitySparkPrune;
 	private static boolean initialized;
 
