@@ -12,7 +12,7 @@ INVENTORY_MODEL_PATH = Path("src/main/resources/assets/attuned/models/item/ocean
 ITEM_DEFINITION_PATH = Path("src/main/resources/assets/attuned/items/ocean_relic_trident.json")
 PROJECTILE_ITEM_DEFINITION_PATH = Path("src/main/resources/assets/attuned/items/ocean_relic_trident_projectile.json")
 REPORT_PATH = Path("docs/superpowers/assets/ocean-relic-trident/ocean_relic_trident_voxel_report.json")
-SPRITE_PATH = Path("src/main/resources/assets/attuned/textures/item/ocean_relic_trident.png")
+SPRITE_PATH = Path("src/main/resources/assets/attuned/textures/item/ocean_relic_trident_inventory.png")
 OFFSHORE_SPRITE_PATH = Path("src/main/resources/assets/attuned/textures/item/offshore_harpoon.png")
 PALETTE_PATH = Path("src/main/resources/assets/attuned/textures/item/ocean_relic_trident_voxel_palette.png")
 TEXTURE_ID = "attuned:item/ocean_relic_trident_voxel_palette"
@@ -98,7 +98,10 @@ def main() -> None:
 	ITEM_DEFINITION_PATH.write_text(json.dumps(item_definition, indent="	") + "\n", encoding="utf-8")
 	PROJECTILE_ITEM_DEFINITION_PATH.write_text(json.dumps(projectile_definition, indent="	") + "\n", encoding="utf-8")
 	write_palette(PALETTE_PATH)
-	write_sprite(SPRITE_PATH)
+	# Keep the curated image-generated GUI sprite instead of replacing it with
+	# the older procedural palette sketch whenever this model builder runs.
+	if not SPRITE_PATH.is_file():
+		raise FileNotFoundError(f"Missing curated Ocean Relic inventory sprite: {SPRITE_PATH}")
 	write_sprite(OFFSHORE_SPRITE_PATH)
 	REPORT_PATH.write_text(json.dumps(build_report(elements), indent=2) + "\n", encoding="utf-8")
 	print(json.dumps(build_report(elements), indent=2))
@@ -121,11 +124,11 @@ def build_inventory_model() -> dict[str, Any]:
 	return {
 		"parent": "minecraft:item/generated",
 		"textures": {
-			"layer0": "attuned:item/ocean_relic_trident",
-			"particle": "attuned:item/ocean_relic_trident",
+			"layer0": "attuned:item/ocean_relic_trident_inventory",
+			"particle": "attuned:item/ocean_relic_trident_inventory",
 		},
 		"display": {
-			"gui": transform([0, 0, -18], [0, 0, 0], [0.95, 0.95, 0.95]),
+			"gui": transform([0, 0, 0], [0, 0, 0], [1.08, 1.08, 1.08]),
 			"ground": transform([0, 0, -18], [0, 2, 0], [0.5, 0.5, 0.5]),
 			"fixed": transform([0, 0, -18], [0, 0, 0], [0.85, 0.85, 0.85]),
 		},

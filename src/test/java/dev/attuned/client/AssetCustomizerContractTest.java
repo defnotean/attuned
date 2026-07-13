@@ -389,8 +389,10 @@ class AssetCustomizerContractTest {
 		assertNotNull(texture, "Frostbound Trident texture should decode");
 		assertNotNull(oceanRelic, "Ocean Relic Trident texture should decode");
 		assertNotNull(oceanPalette, "Ocean Relic Trident palette should decode");
-		assertTrue(!Files.exists(OCEAN_RELIC_TRIDENT_INVENTORY_TEXTURE),
-			"Ocean Relic inventory should reuse the richer existing trident sprite instead of shipping a separate inventory icon");
+		BufferedImage oceanRelicInventory = ImageIO.read(OCEAN_RELIC_TRIDENT_INVENTORY_TEXTURE.toFile());
+		assertNotNull(oceanRelicInventory, "Curated Ocean Relic inventory texture should decode");
+		assertEquals(64, oceanRelicInventory.getWidth(), "Ocean Relic inventory sprite should be 64px wide");
+		assertEquals(64, oceanRelicInventory.getHeight(), "Ocean Relic inventory sprite should be 64px tall");
 		assertEquals(64, texture.getWidth(), "Frostbound Trident should be a 64px item sprite");
 		assertEquals(64, texture.getHeight(), "Frostbound Trident should be a 64px item sprite");
 		assertEquals(64, oceanRelic.getWidth(), "Ocean Relic Trident should be a 64px item sprite");
@@ -461,9 +463,16 @@ class AssetCustomizerContractTest {
 			"Voxel model should use the generated palette texture");
 		assertEquals("minecraft:item/generated", inventoryModel.get("parent").getAsString(),
 			"Inventory model should use a flat item sprite instead of the bulky cuboid model");
-		assertEquals("attuned:item/ocean_relic_trident",
+		assertEquals("attuned:item/ocean_relic_trident_inventory",
 			inventoryModel.getAsJsonObject("textures").get("layer0").getAsString(),
-			"Inventory model should reuse the richer existing flat trident sprite instead of the separate inventory icon");
+			"Inventory model should use the curated sprite derived from the actual relic mesh");
+		JsonObject inventoryGui = inventoryModel.getAsJsonObject("display").getAsJsonObject("gui");
+		assertEquals(0.0D, inventoryGui.getAsJsonArray("rotation").get(2).getAsDouble(), 0.0001D,
+			"The curated diagonal sprite should not receive the old extra GUI rotation");
+		assertEquals(1.08D, inventoryGui.getAsJsonArray("scale").get(0).getAsDouble(), 0.0001D,
+			"The curated inventory sprite should fill the item slot clearly");
+		assertTrue(!read(Path.of("tools/build_ocean_relic_trident_model.py")).contains("write_sprite(SPRITE_PATH)"),
+			"Model regeneration must preserve the curated image-generated inventory sprite");
 		String itemDefinitionText = itemDefinition.toString();
 		assertTrue(itemDefinitionText.contains("minecraft:display_context"),
 			"Item definition should select a separate GUI model by display context");
