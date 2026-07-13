@@ -421,20 +421,23 @@ class AssetCustomizerContractTest {
 
 		BufferedImage texture = ImageIO.read(FROSTBOUND_TEXTURE.toFile());
 		BufferedImage oceanRelic = ImageIO.read(OCEAN_RELIC_TRIDENT_TEXTURE.toFile());
+		BufferedImage oceanRelicInventory = ImageIO.read(OCEAN_RELIC_TRIDENT_INVENTORY_TEXTURE.toFile());
 		BufferedImage oceanPalette = ImageIO.read(OCEAN_RELIC_TRIDENT_PALETTE.toFile());
 		assertNotNull(texture, "Frostbound Trident texture should decode");
 		assertNotNull(oceanRelic, "Ocean Relic Trident texture should decode");
+		assertNotNull(oceanRelicInventory, "Curated Ocean Relic inventory texture should decode");
 		assertNotNull(oceanPalette, "Ocean Relic Trident palette should decode");
-		assertTrue(!Files.exists(OCEAN_RELIC_TRIDENT_INVENTORY_TEXTURE),
-			"Ocean Relic inventory should reuse the richer existing trident sprite instead of shipping a separate inventory icon");
 		assertEquals(64, texture.getWidth(), "Frostbound Trident should be a 64px item sprite");
 		assertEquals(64, texture.getHeight(), "Frostbound Trident should be a 64px item sprite");
 		assertEquals(64, oceanRelic.getWidth(), "Ocean Relic Trident should be a 64px item sprite");
 		assertEquals(64, oceanRelic.getHeight(), "Ocean Relic Trident should be a 64px item sprite");
+		assertEquals(64, oceanRelicInventory.getWidth(), "Ocean Relic inventory sprite should be 64px wide");
+		assertEquals(64, oceanRelicInventory.getHeight(), "Ocean Relic inventory sprite should be 64px tall");
 		assertEquals(16, oceanPalette.getWidth(), "Ocean Relic Trident palette should be compact");
 		assertEquals(16, oceanPalette.getHeight(), "Ocean Relic Trident palette should be compact");
 		assertTransparentCorners(texture);
 		assertTransparentCorners(oceanRelic);
+		assertTransparentCorners(oceanRelicInventory);
 		assertVisibleFootprint(texture, 52, 32);
 		assertVisibleFootprint(oceanRelic, 52, 32);
 	}
@@ -494,9 +497,14 @@ class AssetCustomizerContractTest {
 			"Customizer throwing preview should use the same editable Blockbench source");
 		assertEquals("minecraft:item/generated", inventoryModel.get("parent").getAsString(),
 			"Inventory model should use a flat item sprite instead of the bulky Blockbench held mesh");
-		assertEquals("attuned:item/ocean_relic_trident",
+		assertEquals("attuned:item/ocean_relic_trident_inventory",
 			inventoryModel.getAsJsonObject("textures").get("layer0").getAsString(),
-			"Inventory model should reuse the richer existing flat trident sprite instead of the separate inventory icon");
+			"Inventory model should use the curated sprite derived from the actual relic mesh");
+		JsonObject inventoryGui = inventoryModel.getAsJsonObject("display").getAsJsonObject("gui");
+		assertEquals(0.0D, inventoryGui.getAsJsonArray("rotation").get(2).getAsDouble(), 0.0001D,
+			"The curated diagonal sprite should not receive the old extra GUI rotation");
+		assertEquals(1.08D, inventoryGui.getAsJsonArray("scale").get(0).getAsDouble(), 0.0001D,
+			"The curated inventory sprite should fill the item slot clearly");
 		String itemDefinitionText = itemDefinition.toString();
 		assertTrue(itemDefinitionText.contains("minecraft:display_context"),
 			"Item definition should select a separate GUI model by display context");
@@ -511,6 +519,17 @@ class AssetCustomizerContractTest {
 			"attuned:item/ocean_relic_trident_throwing");
 		assertTrue(model.has("display") && throwingModel.has("display"),
 			"Special renderer base models should keep the hand-tuned display transforms");
+		JsonObject heldRight = model.getAsJsonObject("display").getAsJsonObject("thirdperson_righthand");
+		JsonObject heldLeft = model.getAsJsonObject("display").getAsJsonObject("thirdperson_lefthand");
+		JsonObject throwingRight = throwingModel.getAsJsonObject("display").getAsJsonObject("thirdperson_righthand");
+		JsonObject throwingLeft = throwingModel.getAsJsonObject("display").getAsJsonObject("thirdperson_lefthand");
+		assertEquals(0.0718D, heldRight.getAsJsonArray("translation").get(0).getAsDouble(), 0.0001D);
+		assertEquals(0.9282D, heldRight.getAsJsonArray("translation").get(2).getAsDouble(), 0.0001D);
+		assertEquals(1.0718D, heldLeft.getAsJsonArray("translation").get(2).getAsDouble(), 0.0001D);
+		assertEquals(1.0D, heldRight.getAsJsonArray("scale").get(0).getAsDouble(), 0.0001D);
+		assertEquals(1.0D, throwingRight.getAsJsonArray("translation").get(2).getAsDouble(), 0.0001D);
+		assertEquals(1.0D, throwingLeft.getAsJsonArray("translation").get(2).getAsDouble(), 0.0001D);
+		assertEquals(1.0D, throwingRight.getAsJsonArray("scale").get(0).getAsDouble(), 0.0001D);
 		assertTrue(Files.isRegularFile(OCEAN_RELIC_TRIDENT_GLTF_MODEL),
 			"Actual temporary harpoon should ship a compact GLB runtime mesh");
 		byte[] glb = Files.readAllBytes(OCEAN_RELIC_TRIDENT_GLTF_MODEL);
@@ -520,6 +539,27 @@ class AssetCustomizerContractTest {
 			"Runtime GLB should keep the glTF binary magic");
 		assertEquals(2, littleEndianInt(glb, 4),
 			"Runtime GLB should be a glTF 2.0 binary");
+		int gltfJsonLength = littleEndianInt(glb, 12);
+		JsonObject gltf = JsonParser.parseString(
+			new String(glb, 20, gltfJsonLength, StandardCharsets.UTF_8).trim()).getAsJsonObject();
+		assertEquals("minecraft_front_face",
+			gltf.getAsJsonObject("asset").getAsJsonObject("extras").get("attuned_winding").getAsString(),
+			"Packaged GLB should record the corrected Minecraft-facing triangle winding");
+		JsonArray nodeTranslation = gltf.getAsJsonArray("nodes").get(0).getAsJsonObject()
+			.getAsJsonArray("translation");
+		assertEquals(0.4975D, nodeTranslation.get(0).getAsDouble(), 0.0001D);
+		assertEquals(-0.619D, nodeTranslation.get(1).getAsDouble(), 0.0001D);
+		assertEquals(0.4809D, nodeTranslation.get(2).getAsDouble(), 0.0001D);
+		String gltfTool = read(Path.of("tools/prepare_ocean_relic_gltf.py"));
+		assertTrue(gltfTool.contains("reverse_triangle_winding")
+				&& gltfTool.contains("--fix-packaged-winding")
+				&& gltfTool.contains("MODEL_ORIGIN_TRANSLATION"),
+			"Reusable GLB preparation should preserve winding and grip-origin corrections");
+		String renderPreview = read(MINECRAFT_RENDER_PREVIEW_SCRIPT);
+		assertTrue(renderPreview.contains("model.translation[0]")
+				&& renderPreview.contains("endsWith(\"lefthand\")")
+				&& renderPreview.contains("new THREE.Vector3(-0.5, -0.5, -0.5)"),
+			"Offline preview should reproduce node translation, left-hand mirroring, and Minecraft's model origin");
 
 		assertEquals("free", blockbench.getAsJsonObject("meta").get("model_format").getAsString(),
 			"Blockbench source should stay available as the editable source mesh");
