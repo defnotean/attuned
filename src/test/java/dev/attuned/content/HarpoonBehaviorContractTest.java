@@ -94,7 +94,7 @@ class HarpoonBehaviorContractTest {
 		Path blockbenchTextureMeta = Path.of("src/main/resources/assets/attuned/textures/item/ocean_relic_trident_blockbench.png.mcmeta");
 		Path meshTexture = Path.of("src/main/resources/assets/attuned/textures/item/ocean_relic_trident_mesh.png");
 		Path meshTextureMeta = Path.of("src/main/resources/assets/attuned/textures/item/ocean_relic_trident_mesh.png.mcmeta");
-		Path itemTexture = Path.of("src/main/resources/assets/attuned/textures/item/ocean_relic_trident.png");
+		Path itemTexture = Path.of("src/main/resources/assets/attuned/textures/item/ocean_relic_trident_inventory.png");
 		Path itemPalette = Path.of("src/main/resources/assets/attuned/textures/item/ocean_relic_trident_voxel_palette.png");
 
 		assertTrue(Files.isRegularFile(focusDefinition),
@@ -136,6 +136,10 @@ class HarpoonBehaviorContractTest {
 			"Item definition should split GUI/held contexts like a vanilla trident");
 		assertEquals("minecraft:display_context", definitionModel.get("property").getAsString(),
 			"Item definition should preserve inventory rendering while allowing held state switching");
+		String flatIconContexts = definitionModel.getAsJsonArray("cases").get(0)
+			.getAsJsonObject().getAsJsonArray("when").toString();
+		assertFalse(flatIconContexts.contains("ground"),
+			"A dropped temporary harpoon should render its actual GLB mesh, not the flat inventory sprite");
 		JsonObject fallback = definitionModel.getAsJsonObject("fallback");
 		assertEquals("minecraft:condition", fallback.get("type").getAsString(),
 			"Held temporary trident should switch models while the player is using it");
