@@ -96,48 +96,34 @@ public final class CircleContributions {
 	}
 
 	public static java.util.List<ServerPlayer> eligibleAssistTargets(ServerPlayer player, double radius) {
-		if (!AttunedConfig.get().partySharedCreditEnabled()) {
+		if (!AttunedConfig.get().partyEffectsEnabled()) {
 			return List.of();
 		}
+		return nearbyCircleMembersForAssist(player, radius);
+	}
+
+	public static java.util.List<ServerPlayer> nearbyCircleMembersForAssist(ServerPlayer player, double radius) {
 		Optional<CirclePolicy.Circle> maybeCircle = CircleRuntime.manager().circleOf(player.getUUID());
 		MinecraftServer server = player.getLevel().getServer();
 		if (maybeCircle.isEmpty() || server == null) {
 			return List.of();
 		}
-		CirclePolicy.Circle circle = maybeCircle.orElseThrow();
 		double effectiveRadius = Math.max(0.0D, radius);
-		List<CircleContributionPolicy.MemberContext> contexts = new ArrayList<>();
-		List<ServerPlayer> onlineMembers = new ArrayList<>();
-		for (UUID memberId : circle.members()) {
+		double radiusSquared = effectiveRadius * effectiveRadius;
+		List<ServerPlayer> members = new ArrayList<>();
+		for (UUID memberId : maybeCircle.orElseThrow().members()) {
 			ServerPlayer member = server.getPlayerList().getPlayer(memberId);
-			if (member == null) {
+			if (member == null || !member.isAlive() || member.isSpectator()) {
 				continue;
 			}
-			onlineMembers.add(member);
-			boolean sameDimension = member.getLevel() == player.getLevel();
-			double distanceSquared = sameDimension ? member.distanceToSqr(player) : 0.0D;
-			contexts.add(new CircleContributionPolicy.MemberContext(
-				memberId,
-				true,
-				true,
-				sameDimension,
-				member.isAlive(),
-				member.isSpectator(),
-				distanceSquared,
-				TRACKER.lastContributionTick(memberId)));
+			if (member.getLevel() != player.getLevel()) {
+				continue;
+			}
+			if (member.distanceToSqr(player) <= radiusSquared) {
+				members.add(member);
+			}
 		}
-		List<UUID> eligibleIds = CircleContributionPolicy.eligibleMembers(
-			contexts,
-			player.getLevel().getGameTime(),
-			AttunedConfig.get().partySharedCreditWindowTicks(),
-			effectiveRadius,
-			false)
-			.stream()
-			.map(CircleContributionPolicy.MemberContext::member)
-			.toList();
-		return onlineMembers.stream()
-			.filter(member -> eligibleIds.contains(member.getUUID()))
-			.toList();
+		return List.copyOf(members);
 	}
 
 	public static java.util.List<ServerPlayer> nearbyCircleMembers(ServerPlayer player) {

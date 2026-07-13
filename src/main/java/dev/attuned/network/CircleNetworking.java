@@ -19,6 +19,9 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.level.ClipContext;
+import net.minecraft.world.phys.HitResult;
+import net.minecraft.world.phys.Vec3;
 
 /** Server-authoritative request handlers for transient Attuned Circles. */
 public final class CircleNetworking {
@@ -147,11 +150,12 @@ public final class CircleNetworking {
 		CirclePolicy.Circle circle = maybeCircle.orElseThrow();
 		BlockPos pos = new BlockPos(payload.x(), payload.y(), payload.z());
 		boolean targetLoaded = player.getLevel().hasChunkAt(pos);
+		boolean targetVisible = pingVisible(player, payload.x(), payload.y(), payload.z());
 		long now = nowTick(player);
 		long lastPing = LAST_PING.getOrDefault(player.getUUID(), now - PING_COOLDOWN_TICKS);
 		double distanceSquared = distanceSquared(player, payload);
 		CirclePingPolicy.PingContext ping = new CirclePingPolicy.PingContext(
-			player.getUUID(), true, true, targetLoaded, true, distanceSquared, lastPing);
+			player.getUUID(), true, true, targetLoaded, targetVisible, distanceSquared, lastPing);
 		if (!CirclePingPolicy.allowed(ping, now, PING_COOLDOWN_TICKS, PING_RANGE_BLOCKS)) {
 			return;
 		}
@@ -180,6 +184,21 @@ public final class CircleNetworking {
 		double y = payload.y() - player.getY();
 		double z = payload.z() - player.getZ();
 		return x * x + y * y + z * z;
+	}
+
+	private static boolean pingVisible(ServerPlayer player, double x, double y, double z) {
+		Vec3 eye = player.getEyePosition();
+		Vec3 target = new Vec3(x, y, z);
+		HitResult hit = player.getLevel().clip(new ClipContext(
+			eye,
+			target,
+			ClipContext.Block.COLLIDER,
+			ClipContext.Fluid.NONE,
+			player));
+		if (hit.getType() != HitResult.Type.BLOCK) {
+			return true;
+		}
+		return hit.getLocation().distanceToSqr(target) < 1.0D;
 	}
 
 	private static void sendResult(ServerPlayer player, CirclePolicy.Status status) {

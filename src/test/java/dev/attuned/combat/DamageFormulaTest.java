@@ -82,7 +82,7 @@ class DamageFormulaTest {
 			"Focus damage bonuses should use the shared amplify helper.");
 		assertTrue(apex.contains("DamageFormula.cap(amount, cap)")
 				&& apex.contains("DamageFormula.floor(amount, EXECUTE_DAMAGE)")
-				&& apex.contains("DamageFormula.amplify(amount, JUDGMENT_DAMAGE_BONUS)")
+				&& apex.contains("JUDGMENT_DAMAGE_BONUS_EMPOWERED")
 				&& apex.contains("DamageFormula.amplify(amount, MAELSTROM_DAMAGE_BONUS)"),
 			"Apex should name its caps, execute floor, and multipliers through the shared helper.");
 		assertTrue(pacts.contains("DamageFormula.dampen(amount, STONEHEART_DAMPEN)")
