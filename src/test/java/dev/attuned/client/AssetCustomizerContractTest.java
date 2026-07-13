@@ -528,6 +528,16 @@ class AssetCustomizerContractTest {
 			"Runtime GLB should keep the glTF binary magic");
 		assertEquals(2, littleEndianInt(glb, 4),
 			"Runtime GLB should be a glTF 2.0 binary");
+		int gltfJsonLength = littleEndianInt(glb, 12);
+		JsonObject gltf = JsonParser.parseString(
+			new String(glb, 20, gltfJsonLength, StandardCharsets.UTF_8).trim()).getAsJsonObject();
+		assertEquals("minecraft_front_face",
+			gltf.getAsJsonObject("asset").getAsJsonObject("extras").get("attuned_winding").getAsString(),
+			"Packaged GLB should record the corrected Minecraft-facing triangle winding");
+		String gltfTool = read(Path.of("tools/prepare_ocean_relic_gltf.py"));
+		assertTrue(gltfTool.contains("reverse_triangle_winding")
+				&& gltfTool.contains("--fix-packaged-winding"),
+			"Reusable GLB preparation should preserve the winding correction");
 
 		assertEquals("free", blockbench.getAsJsonObject("meta").get("model_format").getAsString(),
 			"Blockbench source should stay available as the editable source mesh");
