@@ -274,6 +274,50 @@ public final class PresetNetworking {
 		}
 		ActionBarMessages.send(player, ActionBarMessages.Priority.PROGRESS,
 			Component.translatable("screen.attuned.preset.applied", presets.get(index).name()));
+		warnApplyResolutionIssues(player);
+	}
+
+	private static void warnApplyResolutionIssues(ServerPlayer player) {
+		BudgetResolver.Resolution resolution = Attunement.resolution(player);
+		AttunedInv inv = AttunedAttachments.getInventory(player);
+		List<ResolvedFocus> facts = new ArrayList<>(AttunedInv.SIZE);
+		for (int slot : resolution.activeSlots()) {
+			ItemStack stack = inv.get(slot);
+			Optional<FocusDefinition> definition = Attunement.definitionFor(player, stack);
+			if (definition.isEmpty()) {
+				continue;
+			}
+			facts.add(new ResolvedFocus(
+				definition.get().affinity(),
+				definition.get().faction(),
+				hasActiveAbility(player, definition.get(), stack),
+				Optional.empty()));
+		}
+		for (Map.Entry<Integer, BudgetResolver.DormantReason> entry : resolution.dormantReasons().entrySet()) {
+			if (entry.getValue() != BudgetResolver.DormantReason.NOT_ENOUGH_CAPACITY) {
+				continue;
+			}
+			ItemStack stack = inv.get(entry.getKey());
+			Optional<FocusDefinition> definition = Attunement.definitionFor(player, stack);
+			if (definition.isEmpty()) {
+				continue;
+			}
+			facts.add(new ResolvedFocus(
+				definition.get().affinity(),
+				definition.get().faction(),
+				false,
+				Optional.of(entry.getValue())));
+		}
+		List<String> warnings = PresetMetadataResolver.infer(facts).warnings();
+		for (String warning : warnings) {
+			if (warning.startsWith("Over capacity:")) {
+				ActionBarMessages.send(player, ActionBarMessages.Priority.WARNING,
+					Component.translatable("screen.attuned.preset.apply_over_capacity"));
+			} else if (warning.equals("No active Focus Ability.")) {
+				ActionBarMessages.send(player, ActionBarMessages.Priority.WARNING,
+					Component.translatable("screen.attuned.preset.apply_no_active_ability"));
+			}
+		}
 	}
 
 	private static void deletePreset(ServerPlayer player, DeletePresetPayload payload) {

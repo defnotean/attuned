@@ -73,6 +73,10 @@ class FocusBehaviorResolutionContractTest {
 			"The data behaviour cache should be cleared when a server lifetime ends.");
 		assertTrue(source.contains("DATA_BEHAVIOR_CACHE.clear()"),
 			"Server-stop cleanup should empty every cached data-built Focus behavior.");
+		assertTrue(source.contains("ServerLifecycleEvents.END_DATA_PACK_RELOAD.register"),
+			"Datapack reload should invalidate stale data-built Focus behavior cache entries.");
+		assertTrue(source.contains("if (success)"),
+			"Failed reloads should keep the previous data behavior cache intact.");
 	}
 
 	@Test
