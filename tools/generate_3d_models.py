@@ -347,9 +347,29 @@ def update_voxel_report(elements):
 	print(f"wrote {report_path.relative_to(ROOT)}")
 
 
+def cuboid_trident_display():
+	"""Display transforms for Minecraft-JSON cuboids, not the shorter GLB mesh."""
+	return {
+		"gui": {"rotation": [15, -25, -5], "translation": [2, 1, 0], "scale": [0.48, 0.48, 0.48]},
+		"firstperson_righthand": {
+			"rotation": [0, -90, 25], "translation": [1.5, 5.5, 1], "scale": [0.57, 0.57, 0.57],
+		},
+		"firstperson_lefthand": {
+			"rotation": [0, 90, -25], "translation": [8.5, 5.5, 1], "scale": [0.57, 0.57, 0.57],
+		},
+		"thirdperson_righthand": {
+			"rotation": [0, 60, 0], "translation": [-0.25, 1.25, -2.25], "scale": [0.54, 0.54, 0.54],
+		},
+		"thirdperson_lefthand": {
+			"rotation": [0, 60, 0], "translation": [14.75, 1.25, 10.55], "scale": [0.54, 0.54, 0.54],
+		},
+		"ground": {"rotation": [0, 0, 0], "translation": [4, 4, 2], "scale": [0.32, 0.32, 0.32]},
+		"fixed": {"rotation": [0, 180, 0], "translation": [-2, 4, -5], "scale": [0.42, 0.42, 0.42]},
+	}
+
+
 def regenerate_frostbound():
 	write_frost_palette()
-	source = json.loads((MODELS_ITEM / "ocean_relic_trident.json").read_text(encoding="utf-8"))
 	model = {
 		"credit": "Attuned deterministic model generator (tools/generate_3d_models.py)",
 		"gui_light": "front",
@@ -358,9 +378,9 @@ def regenerate_frostbound():
 			"particle": "attuned:item/frostbound_trident_voxel_palette",
 		},
 		"elements": frostbound_elements(),
-		# The Ocean Relic display transforms are hand-tuned for this fork's
-		# trident-sized models; reuse them so the frost trident holds correctly.
-		"display": source["display"],
+		# Frostbound is a 47-model-unit cuboid. Do not inherit Ocean Relic's
+		# glTF-specific scales: its packaged mesh has a different 1.91-block span.
+		"display": cuboid_trident_display(),
 	}
 	write_json(MODELS_ITEM / "frostbound_trident.json", model)
 
