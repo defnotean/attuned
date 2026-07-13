@@ -39,9 +39,13 @@ public final class AttunedNetworking {
 	private static final double INSPECT_RANGE_BLOCKS = 24.0;
 	/** Minimum ticks between accepted inspect requests from one requester. */
 	private static final int INSPECT_COOLDOWN_TICKS = 20;
+	/** Maximum accepted Updraft lift heartbeats per player, in ticks. */
+	private static final int LIFT_HEARTBEAT_TICKS = 10;
 
 	/** Per-requester game-time of the last accepted inspect, for rate limiting. */
 	private static final Map<UUID, Long> LAST_INSPECT = new HashMap<>();
+	/** Per-player game-time of the last accepted Updraft lift packet. */
+	private static final Map<UUID, Long> LAST_LIFT = new HashMap<>();
 	private static boolean initialized;
 
 	private AttunedNetworking() {}
@@ -64,21 +68,32 @@ public final class AttunedNetworking {
 
 		AttunedServerCleanup.onStop(LAST_INSPECT::clear);
 		AttunedPlayerCleanup.onForget(LAST_INSPECT::remove);
+		AttunedServerCleanup.onStop(LAST_LIFT::clear);
+		AttunedPlayerCleanup.onForget(LAST_LIFT::remove);
 
 		ServerPlayNetworking.registerGlobalReceiver(UpdraftLiftPayload.TYPE, (payload, player, sender) -> {
-			player.level().getServer().execute(() -> {
-				// Also require an actual glide: lift controls from a client that is
-				// not fall-flying must never arm the fall-damage mitigation path.
-				if (!UpdraftBehavior.isActive(player) || !UpdraftBehavior.hasFunctionalElytra(player)
-						|| !player.isFallFlying()) {
-					UpdraftBehavior.setControls(player.getUUID(), false, false);
-					return;
-				}
-				UpdraftBehavior.setControls(player.getUUID(), payload.boosting(), payload.braking());
-			});
+			player.level().getServer().execute(() -> handleUpdraftLift(player, payload));
 		});
 
 		FocusAbilityState.init();
+	}
+
+	private static void handleUpdraftLift(ServerPlayer player, UpdraftLiftPayload payload) {
+		long now = player.level().getGameTime();
+		boolean deactivating = !payload.boosting() && !payload.braking();
+		Long lastLift = LAST_LIFT.get(player.getUUID());
+		if (!deactivating && lastLift != null && now - lastLift < LIFT_HEARTBEAT_TICKS) {
+			return;
+		}
+		// Also require an actual glide: lift controls from a client that is
+		// not fall-flying must never arm the fall-damage mitigation path.
+		if (!UpdraftBehavior.isActive(player) || !UpdraftBehavior.hasFunctionalElytra(player)
+				|| !player.isFallFlying()) {
+			UpdraftBehavior.setControls(player.getUUID(), false, false);
+			return;
+		}
+		LAST_LIFT.put(player.getUUID(), now);
+		UpdraftBehavior.setControls(player.getUUID(), payload.boosting(), payload.braking());
 	}
 
 	// Resolves the inspected target on the server thread, validates range + line of

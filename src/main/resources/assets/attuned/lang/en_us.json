@@ -416,6 +416,8 @@
 	"screen.attuned.preset.missing": "Missing Foci: %s",
 	"screen.attuned.preset.cooldown": "Build apply is cooling down.",
 	"screen.attuned.preset.applied": "Applied build: %s",
+	"screen.attuned.preset.apply_over_capacity": "Applied build is over capacity — some Foci are dormant.",
+	"screen.attuned.preset.apply_no_active_ability": "Applied build has no active Focus Ability.",
 	"screen.attuned.equipped": "Equipped",
 	"screen.attuned.builds": "Builds",
 	"screen.attuned.builds.empty": "No builds yet",
