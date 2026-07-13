@@ -29,8 +29,23 @@ class CombatTargetsContractTest {
 			"public static boolean isHostileOrPvpOpponent(LivingEntity target, Player player)");
 		assertTrue(gate.contains("!isOwnedOrAllied(target, player)"),
 			"Hostile-only Attuned rewards should suppress owner-linked or allied summons before the monster gate.");
-		assertTrue(gate.contains("isHostile(target)"),
+		assertTrue(gate.contains("isHostile(target, player)"),
 			"Natural monster targets should still be allowed after the summon/alliance guard.");
+	}
+
+	@Test
+	void hostileDetectionIncludesProvokedNeutrals() throws IOException {
+		String source = read();
+
+		assertTrue(source.contains("import net.minecraft.world.entity.Mob;"),
+			"CombatTargets should inspect mob aggro when expanding hostile detection.");
+		String isHostile = methodBody(source, "private static boolean isHostile(LivingEntity entity, Player player)");
+		assertTrue(isHostile.contains("MobCategory.MONSTER"),
+			"Monster-category mobs should still count as hostile.");
+		assertTrue(isHostile.contains("getLastHurtByMob() == player"),
+			"Neutrals provoked by the player should count as hostile.");
+		assertTrue(isHostile.contains("mob.getTarget() == player"),
+			"Mobs actively targeting the player should count as hostile.");
 	}
 
 	private static String read() throws IOException {

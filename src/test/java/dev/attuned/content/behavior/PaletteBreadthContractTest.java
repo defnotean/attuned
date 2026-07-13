@@ -329,9 +329,9 @@ class PaletteBreadthContractTest {
 		assertTrue(data.contains("partyAssistCooldowns.ready(circle, behaviorId.toString(), now)"),
 			"party_assist should fail closed while the Circle behavior cooldown is active.");
 		assertTrue(data.contains("CircleContributions.eligibleAssistTargets(player, def.radius())"),
-			"party_assist should use the data-defined radius while preserving contribution-window checks.");
+			"party_assist should use the data-defined radius for nearby Circle member targeting.");
 		assertTrue(data.contains(".anyMatch(member -> member.getUUID().equals(player.getUUID()))"),
-			"party_assist should require the wearer to be inside the recent contribution window too.");
+			"party_assist should require the wearer to be a nearby Circle member.");
 		assertTrue(data.contains("target.getUUID().equals(player.getUUID())"),
 			"party_assist should assist nearby Circle members, not self-buff the wearer.");
 		assertTrue(data.contains("CombatTargets.canAffectPlayer(player, target) || CombatTargets.canAffectPlayer(target, player)"),
@@ -359,12 +359,10 @@ class PaletteBreadthContractTest {
 
 		assertTrue(contributions.contains("public static java.util.List<ServerPlayer> eligibleAssistTargets(ServerPlayer player, double radius)"),
 			"Circle contributions should expose a party-assist helper with a data-defined radius.");
-		assertTrue(contributions.contains("CircleContributionPolicy.eligibleMembers("),
-			"The party-assist helper should delegate to the shared contribution-window policy.");
-		assertTrue(contributions.contains("AttunedConfig.get().partySharedCreditWindowTicks()"),
-			"The party-assist helper should use the configured contribution window.");
-		assertTrue(contributions.contains("false)"),
-			"The party-assist helper should force same-dimension assists rather than honoring cross-dimension credit.");
+		assertTrue(contributions.contains("public static java.util.List<ServerPlayer> nearbyCircleMembersForAssist(ServerPlayer player, double radius)"),
+			"Circle contributions should expose a proximity-only assist helper without contribution windows.");
+		assertTrue(contributions.contains("AttunedConfig.get().partyEffectsEnabled()"),
+			"The party-assist helper should honor the party-effects toggle instead of shared-credit.");
 	}
 
 	@Test
