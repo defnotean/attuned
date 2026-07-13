@@ -20,6 +20,7 @@ JSON_CHUNK = 0x4E4F534A
 BIN_CHUNK = 0x004E4942
 FLOAT = 5126
 UNSIGNED_SHORT = 5123
+MINECRAFT_WINDING_MARKER = "minecraft_front_face"
 
 
 def main() -> None:
@@ -36,16 +37,36 @@ def main() -> None:
 		default="src/main/resources/assets/attuned/gltf/ocean_relic_trident.glb",
 		help="Normalized output GLB inside the Attuned resource tree.",
 	)
+	parser.add_argument(
+		"--fix-packaged-winding",
+		action="store_true",
+		help="Reverse the packaged triangle winding after the handedness-changing axis conversion.",
+	)
 	args = parser.parse_args()
 
 	source = Path(args.source)
 	output = Path(args.output)
+	if args.fix_packaged_winding:
+		root, bin_chunk = read_glb(output)
+		asset_extras = root.setdefault("asset", {}).setdefault("extras", {})
+		if asset_extras.get("attuned_winding") == MINECRAFT_WINDING_MARKER:
+			print(f"Winding already normalized in {output}")
+			return
+		primitive = root["meshes"][0]["primitives"][0]
+		indices = reverse_triangle_winding(read_indices(root, bin_chunk, primitive["indices"]))
+		bin_chunk = replace_indices(root, bin_chunk, primitive["indices"], indices)
+		asset_extras["attuned_winding"] = MINECRAFT_WINDING_MARKER
+		write_glb(output, root, bin_chunk)
+		print(f"Fixed triangle winding in {output} ({output.stat().st_size:,} bytes)")
+		return
 	root, bin_chunk = read_glb(source)
 	mesh = root["meshes"][0]["primitives"][0]
 	positions = read_float_vectors(root, bin_chunk, mesh["attributes"]["POSITION"], 3)
 	normals = read_float_vectors(root, bin_chunk, mesh["attributes"]["NORMAL"], 3)
 	uvs = read_float_vectors(root, bin_chunk, mesh["attributes"]["TEXCOORD_0"], 2)
-	indices = read_indices(root, bin_chunk, mesh["indices"])
+	# (x, y, z) -> (z, -x, y) changes handedness (determinant -1), so swap two
+	# vertices per triangle to keep exterior faces aligned with their normals.
+	indices = reverse_triangle_winding(read_indices(root, bin_chunk, mesh["indices"]))
 
 	normalized_positions = [
 		(vertex[2] + 0.0032424, -vertex[0] + 0.92233, vertex[1] + 0.0205741)
@@ -66,6 +87,7 @@ def main() -> None:
 		"asset": {
 			"version": "2.0",
 			"generator": "Attuned tools/prepare_ocean_relic_gltf.py; inspired by ModularMods/MCglTF",
+			"extras": {"attuned_winding": MINECRAFT_WINDING_MARKER},
 		},
 		"scene": 0,
 		"scenes": [{"nodes": [0]}],
@@ -165,6 +187,28 @@ def read_indices(root: dict, bin_chunk: bytes, accessor_index: int) -> list[int]
 		struct.unpack_from("<H", bin_chunk, offset + index * stride)[0]
 		for index in range(accessor_data["count"])
 	]
+
+
+def reverse_triangle_winding(indices: list[int]) -> list[int]:
+	if len(indices) % 3:
+		raise ValueError("Triangle index count must be divisible by three")
+	result = list(indices)
+	for offset in range(0, len(result), 3):
+		result[offset + 1], result[offset + 2] = result[offset + 2], result[offset + 1]
+	return result
+
+
+def replace_indices(root: dict, bin_chunk: bytes, accessor_index: int, values: list[int]) -> bytes:
+	accessor_data = root["accessors"][accessor_index]
+	if accessor_data["componentType"] != UNSIGNED_SHORT or accessor_data["count"] != len(values):
+		raise ValueError("Packaged Ocean Relic indices must stay unsigned-short and keep their count")
+	view = root["bufferViews"][accessor_data["bufferView"]]
+	offset = view.get("byteOffset", 0) + accessor_data.get("byteOffset", 0)
+	stride = view.get("byteStride", 2)
+	updated = bytearray(bin_chunk)
+	for index, value in enumerate(values):
+		struct.pack_into("<H", updated, offset + index * stride, value)
+	return bytes(updated)
 
 
 def append_float_vectors(buffer_bytes: bytearray, values: list[tuple[float, ...]]) -> int:
