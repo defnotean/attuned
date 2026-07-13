@@ -80,7 +80,7 @@ public final class AttunedNetworking {
 
 
 	private static void handleUpdraftLift(ServerPlayer player, UpdraftLiftPayload payload) {
-		long now = player.getLevel().getGameTime();
+		long now = player.level().getGameTime();
 		boolean deactivating = !payload.boosting() && !payload.braking();
 		Long lastLift = LAST_LIFT.get(player.getUUID());
 		if (!deactivating && lastLift != null && now - lastLift < LIFT_HEARTBEAT_TICKS) {

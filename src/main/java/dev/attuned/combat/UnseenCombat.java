@@ -74,7 +74,6 @@ public final class UnseenCombat {
 		ServerLivingEntityEvents.AFTER_DEATH.register((entity, source) -> {
 			LAST_NEEDLE.remove(entity.getUUID());
 			PENDING_NEEDLE.remove(entity.getUUID());
-			PENDING_NEEDLE.values().forEach(pending -> pending.remove(entity.getUUID()));
 			if (entity instanceof ServerPlayer) {
 				VeilBehavior.forgetDeath(entity.getUUID());
 			}
