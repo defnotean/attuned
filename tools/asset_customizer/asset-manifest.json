@@ -23,7 +23,7 @@
 		"kind": "voxel",
 		"model": "../../src/main/resources/assets/attuned/models/item/ocean_relic_trident.json",
 		"texture": "../../src/main/resources/assets/attuned/textures/item/ocean_relic_trident_voxel_palette.png",
-		"sprite": "../../src/main/resources/assets/attuned/textures/item/ocean_relic_trident.png",
+		"sprite": "../../src/main/resources/assets/attuned/textures/item/ocean_relic_trident_inventory.png",
 		"definition": "../../src/main/resources/assets/attuned/items/ocean_relic_trident.json",
 		"data": "../../src/main/resources/data/attuned/attuned/focus/harpoon_focus.json"
 	},
@@ -33,7 +33,7 @@
 		"kind": "voxel",
 		"model": "../../src/main/resources/assets/attuned/models/item/ocean_relic_trident_throwing.json",
 		"texture": "../../src/main/resources/assets/attuned/textures/item/ocean_relic_trident_voxel_palette.png",
-		"sprite": "../../src/main/resources/assets/attuned/textures/item/ocean_relic_trident.png",
+		"sprite": "../../src/main/resources/assets/attuned/textures/item/ocean_relic_trident_inventory.png",
 		"definition": "../../src/main/resources/assets/attuned/items/ocean_relic_trident_projectile.json",
 		"data": "../../src/main/resources/data/attuned/attuned/focus/harpoon_focus.json"
 	},

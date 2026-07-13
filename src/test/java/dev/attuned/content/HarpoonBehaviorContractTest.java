@@ -83,7 +83,7 @@ class HarpoonBehaviorContractTest {
 		Path itemDefinition = Path.of("src/main/resources/assets/attuned/items/ocean_relic_trident.json");
 		Path itemModel = Path.of("src/main/resources/assets/attuned/models/item/ocean_relic_trident.json");
 		Path throwingModel = Path.of("src/main/resources/assets/attuned/models/item/ocean_relic_trident_throwing.json");
-		Path itemTexture = Path.of("src/main/resources/assets/attuned/textures/item/ocean_relic_trident.png");
+		Path itemTexture = Path.of("src/main/resources/assets/attuned/textures/item/ocean_relic_trident_inventory.png");
 		Path itemPalette = Path.of("src/main/resources/assets/attuned/textures/item/ocean_relic_trident_voxel_palette.png");
 
 		assertTrue(Files.isRegularFile(itemDefinition),
@@ -104,6 +104,10 @@ class HarpoonBehaviorContractTest {
 			"Item definition should split GUI/held contexts like a vanilla trident");
 		assertEquals("minecraft:display_context", definitionModel.get("property").getAsString(),
 			"Item definition should preserve inventory rendering while allowing held state switching");
+		String flatIconContexts = definitionModel.getAsJsonArray("cases").get(0)
+			.getAsJsonObject().getAsJsonArray("when").toString();
+		assertFalse(flatIconContexts.contains("ground"),
+			"A dropped temporary harpoon should render its actual cuboid model, not the flat inventory sprite");
 		JsonObject fallback = definitionModel.getAsJsonObject("fallback");
 		assertEquals("minecraft:condition", fallback.get("type").getAsString(),
 			"Held temporary trident should switch models while the player is using it");
