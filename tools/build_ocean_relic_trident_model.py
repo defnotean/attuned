@@ -12,7 +12,7 @@ INVENTORY_MODEL_PATH = Path("src/main/resources/assets/attuned/models/item/ocean
 ITEM_DEFINITION_PATH = Path("src/main/resources/assets/attuned/items/ocean_relic_trident.json")
 PROJECTILE_ITEM_DEFINITION_PATH = Path("src/main/resources/assets/attuned/items/ocean_relic_trident_projectile.json")
 REPORT_PATH = Path("build/asset-previews/ocean-relic-trident/ocean_relic_trident_voxel_report.json")
-SPRITE_PATH = Path("src/main/resources/assets/attuned/textures/item/ocean_relic_trident.png")
+SPRITE_PATH = Path("src/main/resources/assets/attuned/textures/item/ocean_relic_trident_inventory.png")
 OFFSHORE_SPRITE_PATH = Path("src/main/resources/assets/attuned/textures/item/offshore_harpoon.png")
 PALETTE_PATH = Path("src/main/resources/assets/attuned/textures/item/ocean_relic_trident_voxel_palette.png")
 TEXTURE_ID = "attuned:item/ocean_relic_trident_voxel_palette"
@@ -98,7 +98,11 @@ def main() -> None:
 	ITEM_DEFINITION_PATH.write_text(json.dumps(item_definition, indent="	") + "\n", encoding="utf-8")
 	PROJECTILE_ITEM_DEFINITION_PATH.write_text(json.dumps(projectile_definition, indent="	") + "\n", encoding="utf-8")
 	write_palette(PALETTE_PATH)
-	write_sprite(SPRITE_PATH)
+	# The GUI sprite is curated pixel art derived from the final GLB appearance.
+	# Keep it as an authored asset instead of replacing it with the older
+	# procedural palette sketch whenever this model builder runs.
+	if not SPRITE_PATH.is_file():
+		raise FileNotFoundError(f"Missing curated Ocean Relic inventory sprite: {SPRITE_PATH}")
 	write_sprite(OFFSHORE_SPRITE_PATH)
 	REPORT_PATH.parent.mkdir(parents=True, exist_ok=True)
 	REPORT_PATH.write_text(json.dumps(build_report(elements), indent=2) + "\n", encoding="utf-8")
@@ -122,11 +126,12 @@ def build_inventory_model() -> dict[str, Any]:
 	return {
 		"parent": "minecraft:item/generated",
 		"textures": {
-			"layer0": "attuned:item/ocean_relic_trident",
-			"particle": "attuned:item/ocean_relic_trident",
+			"layer0": "attuned:item/ocean_relic_trident_inventory",
+			"particle": "attuned:item/ocean_relic_trident_inventory",
 		},
 		"display": {
-			"gui": transform([0, 0, -18], [0, 0, 0], [0.95, 0.95, 0.95]),
+			# The sprite already has the intended Minecraft diagonal.
+			"gui": transform([0, 0, 0], [0, 0, 0], [1.08, 1.08, 1.08]),
 			"ground": transform([0, 0, -18], [0, 2, 0], [0.5, 0.5, 0.5]),
 			"fixed": transform([0, 0, -18], [0, 0, 0], [0.85, 0.85, 0.85]),
 		},
@@ -136,11 +141,11 @@ def build_inventory_model() -> dict[str, Any]:
 def base_display() -> dict[str, Any]:
 	return {
 		"gui": transform([15, -25, -5], [2, 1, 0], [0.48, 0.48, 0.48]),
-		"firstperson_righthand": transform([0, -90, 25], [1.5, 5.5, 1], [0.57, 0.57, 0.57]),
-		"firstperson_lefthand": transform([0, 90, -25], [8.5, 5.5, 1], [0.57, 0.57, 0.57]),
-		"thirdperson_righthand": transform([0, 60, 0], [-0.25, 1.25, -2.25], [0.54, 0.54, 0.54]),
-		"thirdperson_lefthand": transform([0, 60, 0], [14.75, 1.25, 10.55], [0.54, 0.54, 0.54]),
-		"ground": transform([0, 0, 0], [4, 4, 2], [0.32, 0.32, 0.32]),
+		"firstperson_righthand": transform([0, -90, 25], [1.5, 5.5, 1], [0.88, 0.88, 0.88]),
+		"firstperson_lefthand": transform([0, 90, -25], [1.5, 5.5, 1], [0.88, 0.88, 0.88]),
+		"thirdperson_righthand": transform([0, 60, 0], [0.0718, 0, 0.9282], [1, 1, 1]),
+		"thirdperson_lefthand": transform([0, 60, 0], [0.0718, 0, 1.0718], [1, 1, 1]),
+		"ground": transform([0, 0, 0], [4, 4, 2], [0.49, 0.49, 0.49]),
 		"fixed": transform([0, 180, 0], [-2, 4, -5], [0.42, 0.42, 0.42]),
 	}
 
@@ -148,11 +153,11 @@ def base_display() -> dict[str, Any]:
 def throwing_display() -> dict[str, Any]:
 	return {
 		"gui": transform([15, -25, -5], [2, 1, 0], [0.48, 0.48, 0.48]),
-		"firstperson_righthand": transform([0, -90, 25], [1.5, 5.5, 1], [0.57, 0.57, 0.57]),
-		"firstperson_lefthand": transform([0, 90, -25], [8.5, 5.5, 1], [0.57, 0.57, 0.57]),
-		"thirdperson_righthand": transform([0, 90, 180], [9.5, -5.25, 0.75], [0.54, 0.54, 0.54]),
-		"thirdperson_lefthand": transform([0, 90, 180], [9.5, -5.25, -14.25], [0.54, 0.54, 0.54]),
-		"ground": transform([0, 0, 0], [4, 4, 2], [0.32, 0.32, 0.32]),
+		"firstperson_righthand": transform([0, -90, 25], [1.5, 5.5, 1], [0.88, 0.88, 0.88]),
+		"firstperson_lefthand": transform([0, 90, -25], [1.5, 5.5, 1], [0.88, 0.88, 0.88]),
+		"thirdperson_righthand": transform([0, 90, 180], [0, 0, 1], [1, 1, 1]),
+		"thirdperson_lefthand": transform([0, 90, 180], [0, 0, 1], [1, 1, 1]),
+		"ground": transform([0, 0, 0], [4, 4, 2], [0.49, 0.49, 0.49]),
 		"fixed": transform([0, 180, 0], [-2, 4, -5], [0.42, 0.42, 0.42]),
 	}
 
@@ -298,17 +303,17 @@ def assert_hand_anchored_display_contracts(base_model: dict[str, Any], throwing_
 	"""Fail fast if held/throwing transforms drift back to floating vanilla offsets."""
 	display = base_model["display"]
 	held = display["thirdperson_righthand"]
-	assert_translation_between(held, 0, -0.75, 0.25, "held third-person X tucked visible-hand anchor")
-	assert_translation_between(held, 1, 0.75, 2.25, "held third-person Y gripped-hand anchor")
-	assert_translation_between(held, 2, -3.25, -1.75, "held third-person Z hand plane")
+	assert_translation_between(held, 0, 0.0, 0.15, "held third-person X grip-centred anchor")
+	assert_translation_between(held, 1, -0.05, 0.05, "held third-person Y grip-centred anchor")
+	assert_translation_between(held, 2, 0.85, 1.0, "held third-person Z hand plane")
 	assert_translation_between(display["firstperson_righthand"], 1, 5.0, 7.0, "held first-person Y hand anchor")
-	assert_scale_between(held, 0.5, 0.6, "held third-person compact cuboid scale")
+	assert_scale_between(held, 0.99, 1.01, "held third-person vanilla-length GLB scale")
 
 	throwing = throwing_model["display"]["thirdperson_righthand"]
-	assert_translation_between(throwing, 0, 8.5, 10.5, "throwing third-person X extended-hand anchor")
-	assert_translation_between(throwing, 1, -6.25, -4.25, "throwing third-person Y lowered hand plane")
-	assert_translation_between(throwing, 2, 0.0, 1.5, "throwing third-person Z forward hand plane")
-	assert_scale_between(throwing, 0.5, 0.6, "throwing third-person compact cuboid scale")
+	assert_translation_between(throwing, 0, -0.05, 0.05, "throwing third-person X raised-hand pivot")
+	assert_translation_between(throwing, 1, -0.05, 0.05, "throwing third-person Y raised-hand pivot")
+	assert_translation_between(throwing, 2, 0.95, 1.05, "throwing third-person Z hand plane")
+	assert_scale_between(throwing, 0.99, 1.01, "throwing third-person vanilla-length GLB scale")
 
 
 def assert_translation_between(display: dict[str, list[float]], index: int, minimum: float, maximum: float, label: str) -> None:
@@ -414,7 +419,7 @@ def build_report(elements: list[dict[str, Any]]) -> dict[str, Any]:
 		"palette_texture": str(PALETTE_PATH).replace("\\", "/"),
 		"strategy": "curated_trident_silhouette_from_concept_palette",
 		"enhancement_strategy": "material_separated_curated_trident_silhouette",
-		"reason": "The raw concept-sprite voxelization and first curated pass had weak material separation and vanilla trident hand transforms made the oversized cuboid geometry float beside the player; this pass adds explicit material colors, face-aware shading, brighter readable prongs, driftwood grip, copper/verdigris bands, an amethyst focus core, a stronger dark silhouette, compact hand-anchored held/throwing transforms, GUI inventory routing that reuses the richer existing flat trident sprite, and a projectile item definition used by the custom thrown-harpoon renderer.",
+		"reason": "The raw concept-sprite voxelization and first curated pass had weak material separation and vanilla trident hand transforms made the oversized cuboid geometry float beside the player; this pass adds explicit material colors, face-aware shading, brighter readable prongs, driftwood grip, copper/verdigris bands, an amethyst focus core, a stronger dark silhouette, grip-centred GLB held/throwing transforms, a curated inventory sprite derived from the mesh, and a projectile item definition used by the custom thrown-harpoon renderer.",
 		"palette_colors": len(PALETTE),
 		"cuboids": len(elements),
 		"bbox_min": mins,
