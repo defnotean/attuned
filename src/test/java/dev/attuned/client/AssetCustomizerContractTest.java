@@ -1,6 +1,7 @@
 package dev.attuned.client;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -389,8 +390,8 @@ class AssetCustomizerContractTest {
 		assertNotNull(texture, "Frostbound Trident texture should decode");
 		assertNotNull(oceanRelic, "Ocean Relic Trident texture should decode");
 		assertNotNull(oceanPalette, "Ocean Relic Trident palette should decode");
-		assertTrue(!Files.exists(OCEAN_RELIC_TRIDENT_INVENTORY_TEXTURE),
-			"Ocean Relic inventory should reuse the richer existing trident sprite instead of shipping a separate inventory icon");
+		assertTrue(Files.isRegularFile(OCEAN_RELIC_TRIDENT_INVENTORY_TEXTURE),
+			"Ocean Relic inventory should ship the dedicated image-generated inventory sprite");
 		assertEquals(64, texture.getWidth(), "Frostbound Trident should be a 64px item sprite");
 		assertEquals(64, texture.getHeight(), "Frostbound Trident should be a 64px item sprite");
 		assertEquals(64, oceanRelic.getWidth(), "Ocean Relic Trident should be a 64px item sprite");
@@ -461,16 +462,21 @@ class AssetCustomizerContractTest {
 			"Voxel model should use the generated palette texture");
 		assertEquals("minecraft:item/generated", inventoryModel.get("parent").getAsString(),
 			"Inventory model should use a flat item sprite instead of the bulky cuboid model");
-		assertEquals("attuned:item/ocean_relic_trident",
+		assertEquals("attuned:item/ocean_relic_trident_inventory",
 			inventoryModel.getAsJsonObject("textures").get("layer0").getAsString(),
-			"Inventory model should reuse the richer existing flat trident sprite instead of the separate inventory icon");
+			"Inventory model should explicitly use the dedicated image-generated sprite");
 		String itemDefinitionText = itemDefinition.toString();
 		assertTrue(itemDefinitionText.contains("minecraft:display_context"),
 			"Item definition should select a separate GUI model by display context");
 		assertTrue(itemDefinitionText.contains("ocean_relic_trident_inventory"),
 			"GUI display context should use the flat inventory icon");
-		assertTrue(itemDefinitionText.contains("ground") && itemDefinitionText.contains("fixed"),
-			"Inventory-style display contexts should use the flat icon instead of the bulky held cuboid model");
+		String flatIconContexts = itemDefinition.getAsJsonObject("model")
+			.getAsJsonArray("cases").get(0).getAsJsonObject().getAsJsonArray("when").toString();
+		assertTrue(flatIconContexts.contains("gui") && flatIconContexts.contains("fixed")
+				&& flatIconContexts.contains("on_shelf"),
+			"Presentation-only display contexts should keep the readable flat icon");
+		assertFalse(flatIconContexts.contains("ground"),
+			"Dropped harpoons should fall through to the actual cuboid model instead of the flat item sprite");
 		assertEquals("attuned:item/ocean_relic_trident_throwing",
 			projectileDefinition.getAsJsonObject("model").get("model").getAsString(),
 			"Thrown harpoon renderer should resolve a custom projectile model instead of vanilla trident art");
@@ -526,8 +532,8 @@ class AssetCustomizerContractTest {
 		String generator = read(Path.of("tools/build_ocean_relic_trident_model.py"));
 		assertTrue(generator.contains("build_elements"),
 			"Voxel item pipeline should be reusable instead of hand-edited JSON only");
-		assertTrue(!generator.contains("write_inventory_sprite"),
-			"Pipeline should not redraw a lower-quality inventory icon when the richer existing trident sprite is available");
+		assertFalse(generator.contains("write_sprite(SPRITE_PATH)"),
+			"Pipeline should preserve the curated image-generated inventory sprite");
 		assertTrue(generator.contains("build_projectile_item_definition"),
 			"Generator should emit a projectile item definition for the custom thrown harpoon renderer");
 	}
@@ -549,6 +555,15 @@ class AssetCustomizerContractTest {
 			"Custom projectile renderer should cancel vanilla trident model submission");
 		assertTrue(rendererMixin.contains("ItemDisplayContext.NONE"),
 			"Projectile renderer should render the custom cuboid spear directly instead of GUI/ground inventory transforms");
+		assertTrue(rendererMixin.contains("ATTUNED_CUBOID_TIP_Y = 31.0F / 16.0F")
+				&& rendererMixin.contains("VANILLA_TRIDENT_TIP_REACH = 0.25F"),
+			"Projectile depth should be derived from the cuboid model's measured tip and vanilla's four-pixel reach");
+		assertTrue(rendererMixin.contains("0.5F - ATTUNED_CUBOID_TIP_Y + VANILLA_TRIDENT_TIP_REACH")
+				&& rendererMixin.contains("0.5F - ATTUNED_CUBOID_CENTER_X")
+				&& rendererMixin.contains("0.5F - ATTUNED_CUBOID_CENTER_Z"),
+			"NONE's half-block origin shift should be compensated while the cuboid tip is aligned to the entity pivot");
+		assertTrue(rendererMixin.contains("OverlayTexture.NO_OVERLAY"),
+			"Thrown and embedded harpoons should use the neutral entity overlay");
 		assertTrue(stateMixin.contains("ItemStackRenderState"),
 			"Thrown trident render state should carry an item render state for the custom cuboid spear");
 	}
