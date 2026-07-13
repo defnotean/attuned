@@ -1,15 +1,15 @@
 {
-	"parent": "minecraft:item/generated",
+	"parent": "builtin/entity",
 	"textures": {
-		"layer0": "attuned:item/ocean_relic_trident",
-		"particle": "attuned:item/ocean_relic_trident"
+		"layer0": "attuned:item/ocean_relic_trident_inventory",
+		"particle": "attuned:item/ocean_relic_trident_inventory"
 	},
 	"display": {
 		"gui": {
 			"rotation": [
 				0,
 				0,
-				-18
+				0
 			],
 			"translation": [
 				0,
@@ -17,26 +17,26 @@
 				0
 			],
 			"scale": [
-				0.95,
-				0.95,
-				0.95
+				1.08,
+				1.08,
+				1.08
 			]
 		},
 		"ground": {
 			"rotation": [
 				0,
 				0,
-				-18
-			],
-			"translation": [
-				0,
-				2,
 				0
 			],
+			"translation": [
+				4,
+				4,
+				2
+			],
 			"scale": [
-				0.5,
-				0.5,
-				0.5
+				0.49,
+				0.49,
+				0.49
 			]
 		},
 		"fixed": {

@@ -104,7 +104,7 @@ class HarpoonBehaviorContractTest {
 		Path itemDefinition = Path.of("src/main/resources/assets/attuned/items/ocean_relic_trident.json");
 		Path itemModel = Path.of("src/main/resources/assets/attuned/models/item/ocean_relic_trident.json");
 		Path throwingModel = Path.of("src/main/resources/assets/attuned/models/item/ocean_relic_trident_throwing.json");
-		Path itemTexture = Path.of("src/main/resources/assets/attuned/textures/item/ocean_relic_trident.png");
+		Path itemTexture = Path.of("src/main/resources/assets/attuned/textures/item/ocean_relic_trident_inventory.png");
 		Path itemPalette = Path.of("src/main/resources/assets/attuned/textures/item/ocean_relic_trident_voxel_palette.png");
 
 		assertTrue(Files.isRegularFile(itemDefinition),

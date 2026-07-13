@@ -14,6 +14,7 @@ import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.entity.ItemRenderer;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 
@@ -36,6 +37,8 @@ public final class GltfMeshSpecialRenderer implements GltfModelReceiver {
 		ResourceLocation.fromNamespaceAndPath(Attuned.MOD_ID, "gltf/ocean_relic_trident.glb");
 	private static final ResourceLocation TEXTURE =
 		ResourceLocation.fromNamespaceAndPath(Attuned.MOD_ID, "textures/item/ocean_relic_trident_mesh.png");
+	private static final ResourceLocation INVENTORY_TEXTURE =
+		ResourceLocation.fromNamespaceAndPath(Attuned.MOD_ID, "textures/item/ocean_relic_trident_inventory.png");
 	private static boolean initialized;
 
 	private final ResourceLocation model;
@@ -58,7 +61,7 @@ public final class GltfMeshSpecialRenderer implements GltfModelReceiver {
 		GltfMeshSpecialRenderer renderer = new GltfMeshSpecialRenderer(MODEL, Optional.of(TEXTURE));
 		BuiltinItemRendererRegistry.INSTANCE.register(Items.TRIDENT,
 			(stack, mode, matrices, vertexConsumers, light, overlay) ->
-				renderer.renderItem(stack, matrices, vertexConsumers, light, overlay));
+				renderer.renderItem(stack, mode, matrices, vertexConsumers, light, overlay));
 	}
 
 	@Override
@@ -71,13 +74,46 @@ public final class GltfMeshSpecialRenderer implements GltfModelReceiver {
 		this.renderedModel = renderedModel;
 	}
 
-	private void renderItem(ItemStack stack, PoseStack poseStack, MultiBufferSource bufferSource,
+	private void renderItem(ItemStack stack, ItemDisplayContext mode, PoseStack poseStack, MultiBufferSource bufferSource,
 			int light, int overlay) {
 		if (isTemporaryHarpoon(stack)) {
-			renderMesh(poseStack, bufferSource, light, overlay, stack.hasFoil());
+			if (mode == ItemDisplayContext.GUI || mode == ItemDisplayContext.FIXED) {
+				renderInventoryIcon(poseStack, bufferSource, light, overlay, stack.hasFoil());
+			} else {
+				// GROUND deliberately stays on the GLB path so dropped harpoons are
+				// the actual model instead of the flat inventory sprite.
+				renderMesh(poseStack, bufferSource, light, overlay, stack.hasFoil());
+			}
 		} else {
 			renderVanillaTrident(stack, poseStack, bufferSource, light, overlay);
 		}
+	}
+
+	private static void renderInventoryIcon(PoseStack poseStack, MultiBufferSource bufferSource,
+			int light, int overlay, boolean foil) {
+		PoseStack.Pose pose = poseStack.last();
+		VertexConsumer consumer = bufferSource.getBuffer(RenderType.entityCutoutNoCull(INVENTORY_TEXTURE));
+		emitIconQuad(consumer, pose, light, overlay);
+		if (foil) {
+			emitIconQuad(bufferSource.getBuffer(RenderType.entityGlintDirect()), pose, light, overlay);
+		}
+	}
+
+	private static void emitIconQuad(VertexConsumer consumer, PoseStack.Pose pose, int light, int overlay) {
+		emitIconVertex(consumer, pose, 0.0F, 0.0F, 0.0F, 1.0F, light, overlay);
+		emitIconVertex(consumer, pose, 1.0F, 0.0F, 1.0F, 1.0F, light, overlay);
+		emitIconVertex(consumer, pose, 1.0F, 1.0F, 1.0F, 0.0F, light, overlay);
+		emitIconVertex(consumer, pose, 0.0F, 1.0F, 0.0F, 0.0F, light, overlay);
+	}
+
+	private static void emitIconVertex(VertexConsumer consumer, PoseStack.Pose pose,
+			float x, float y, float u, float v, int light, int overlay) {
+		consumer.addVertex(pose, x, y, 0.5F)
+			.setColor(255, 255, 255, 255)
+			.setUv(u, v)
+			.setOverlay(overlay)
+			.setLight(light)
+			.setNormal(pose, 0.0F, 0.0F, 1.0F);
 	}
 
 	private void renderMesh(PoseStack poseStack, MultiBufferSource bufferSource,
