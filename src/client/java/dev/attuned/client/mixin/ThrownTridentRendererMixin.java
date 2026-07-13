@@ -11,6 +11,7 @@ import net.minecraft.client.renderer.entity.ThrownTridentRenderer;
 import net.minecraft.client.renderer.entity.state.ThrownTridentRenderState;
 import net.minecraft.client.renderer.item.ItemModelResolver;
 import net.minecraft.client.renderer.state.CameraRenderState;
+import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.projectile.arrow.ThrownTrident;
@@ -27,6 +28,17 @@ public abstract class ThrownTridentRendererMixin {
 	@Unique
 	private static final Identifier ATTUNED_PROJECTILE_MODEL =
 		Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "ocean_relic_trident_projectile");
+
+	@Unique
+	private static final float ATTUNED_PROJECTILE_SCALE = 0.62F;
+	@Unique
+	private static final float ATTUNED_CUBOID_CENTER_X = 0.5F;
+	@Unique
+	private static final float ATTUNED_CUBOID_TIP_Y = 31.0F / 16.0F;
+	@Unique
+	private static final float ATTUNED_CUBOID_CENTER_Z = 8.55F / 16.0F;
+	@Unique
+	private static final float VANILLA_TRIDENT_TIP_REACH = 0.25F;
 
 	@Unique
 	private ItemModelResolver attuned$itemModelResolver;
@@ -74,13 +86,19 @@ public abstract class ThrownTridentRendererMixin {
 		poseStack.pushPose();
 		poseStack.mulPose(Axis.YP.rotationDegrees(state.yRot - 90.0F));
 		poseStack.mulPose(Axis.ZP.rotationDegrees(state.xRot + 90.0F));
-		poseStack.scale(0.62F, 0.62F, 0.62F);
-		poseStack.translate(-0.5D, -0.5D, -0.5D);
+		// NONE already applies Minecraft's half-block item-origin shift. Compensate for
+		// that shift while centring the cuboid model on X/Z, then position its measured
+		// 31-pixel prong tip only four pixels ahead of the entity pivot like vanilla.
+		poseStack.scale(ATTUNED_PROJECTILE_SCALE, ATTUNED_PROJECTILE_SCALE, ATTUNED_PROJECTILE_SCALE);
+		poseStack.translate(
+			0.5F - ATTUNED_CUBOID_CENTER_X,
+			0.5F - ATTUNED_CUBOID_TIP_Y + VANILLA_TRIDENT_TIP_REACH / ATTUNED_PROJECTILE_SCALE,
+			0.5F - ATTUNED_CUBOID_CENTER_Z);
 		harpoonState.attuned$item().submit(
 			poseStack,
 			submitNodeCollector,
 			state.lightCoords,
-			0,
+			OverlayTexture.NO_OVERLAY,
 			state.outlineColor);
 		poseStack.popPose();
 		ci.cancel();
