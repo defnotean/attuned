@@ -11,6 +11,7 @@ import net.minecraft.client.renderer.entity.ThrownTridentRenderer;
 import net.minecraft.client.renderer.entity.state.ThrownTridentRenderState;
 import net.minecraft.client.renderer.item.ItemModelResolver;
 import net.minecraft.client.renderer.state.level.CameraRenderState;
+import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.projectile.arrow.ThrownTrident;
@@ -27,16 +28,22 @@ public abstract class ThrownTridentRendererMixin {
 	@Unique
 	private static final Identifier ATTUNED_PROJECTILE_MODEL =
 		Identifier.fromNamespaceAndPath(Attuned.MOD_ID, "ocean_relic_trident_projectile");
-	// The Ocean Relic GLB is about 1.9 blocks tall (origin at the butt). Scale it down to a
-	// trident-sized projectile and recentre it on the mesh centroid; tuned to match the hand mesh.
+
+	// The Ocean Relic GLB is 1.91 blocks long, within 1.4% of vanilla's 1.94-block
+	// TridentModel, so it uses the same scale as the corrected held/charging model.
 	@Unique
-	private static final float ATTUNED_PROJECTILE_SCALE = 0.54F;
+	private static final float ATTUNED_PROJECTILE_SCALE = 1.0F;
 	@Unique
-	private static final float ATTUNED_MESH_CENTER_X = 0.003F;
+	private static final float ATTUNED_MESH_CENTER_X = 0.500F;
 	@Unique
-	private static final float ATTUNED_MESH_CENTER_Y = 0.923F;
+	private static final float ATTUNED_MESH_TIP_Y = 1.25932F;
 	@Unique
-	private static final float ATTUNED_MESH_CENTER_Z = 0.019F;
+	// Vanilla's forwardmost trident tip is 4 model pixels (0.25 blocks) ahead
+	// of the projectile entity pivot. Matching that distance prevents an
+	// embedded harpoon from being centred halfway through the struck block.
+	private static final float VANILLA_TRIDENT_TIP_REACH = 0.25F;
+	@Unique
+	private static final float ATTUNED_MESH_CENTER_Z = 0.500F;
 
 	@Unique
 	private ItemModelResolver attuned$itemModelResolver;
@@ -88,13 +95,19 @@ public abstract class ThrownTridentRendererMixin {
 		// Vanilla expects the trident tip at -Y. The Ocean Relic mesh is authored prongs-up (+Y),
 		// so flip it to keep the temporary harpoon flying point-first.
 		poseStack.mulPose(Axis.XP.rotationDegrees(180.0F));
+		// NONE applies Minecraft's built-in (-0.5, -0.5, -0.5) item-origin shift.
+		// Centre X/Z on the projectile axis, but deliberately do not centre Y:
+		// place the prong tip 0.25 blocks ahead of the entity pivot like vanilla.
 		poseStack.scale(ATTUNED_PROJECTILE_SCALE, ATTUNED_PROJECTILE_SCALE, ATTUNED_PROJECTILE_SCALE);
-		poseStack.translate(-ATTUNED_MESH_CENTER_X, -ATTUNED_MESH_CENTER_Y, -ATTUNED_MESH_CENTER_Z);
+		poseStack.translate(
+			0.5F - ATTUNED_MESH_CENTER_X,
+			0.5F - ATTUNED_MESH_TIP_Y + VANILLA_TRIDENT_TIP_REACH / ATTUNED_PROJECTILE_SCALE,
+			0.5F - ATTUNED_MESH_CENTER_Z);
 		harpoonState.attuned$item().submit(
 			poseStack,
 			submitNodeCollector,
 			state.lightCoords,
-			0,
+			OverlayTexture.NO_OVERLAY,
 			state.outlineColor);
 		poseStack.popPose();
 		ci.cancel();

@@ -12,6 +12,7 @@ import net.minecraft.world.entity.projectile.arrow.AbstractArrow;
 import net.minecraft.world.entity.projectile.arrow.ThrownTrident;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.storage.ValueInput;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -51,6 +52,13 @@ public abstract class ThrownTridentMixin implements AttunedThrownHarpoonEntity {
 	private void attuned$markSpawnedHarpoon(
 			Level level, double x, double y, double z, ItemStack tridentItem, CallbackInfo ci) {
 		attuned$setHarpoonFlag(tridentItem);
+	}
+
+	@Inject(method = "readAdditionalSaveData", at = @At("TAIL"))
+	private void attuned$restoreLoadedHarpoonFlag(ValueInput input, CallbackInfo ci) {
+		// The attachment is persistent, but deriving it again from the authoritative
+		// pickup stack keeps old saves and command-spawned render fixtures correct.
+		attuned$setHarpoonFlag(attuned$pickupStack());
 	}
 
 	@Inject(method = "tick", at = @At("HEAD"), cancellable = true)
