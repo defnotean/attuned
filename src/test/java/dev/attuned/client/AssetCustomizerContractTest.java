@@ -1,6 +1,7 @@
 package dev.attuned.client;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
@@ -11,6 +12,8 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -197,6 +200,9 @@ class AssetCustomizerContractTest {
 		assertTrue(script.contains("parseGlbModel") && script.contains("readIndexAccessor")
 				&& script.contains("uvMode"),
 			"Minecraft render preview should let us compare GLB mesh buffers and UV conventions");
+		assertTrue(script.contains("new THREE.Vector3(-0.5, -0.5, -0.5)")
+				&& script.contains("leftHand ? -(sourceTranslation[0]"),
+			"Render preview should reproduce Minecraft's item origin and left-hand mirroring");
 		assertTrue(server.contains("ThreadingHTTPServer") && server.contains("tools/minecraft_render_preview"),
 			"Minecraft render preview should launch on localhost from the repo root");
 	}
@@ -429,8 +435,8 @@ class AssetCustomizerContractTest {
 		assertNotNull(texture, "Frostbound Trident texture should decode");
 		assertNotNull(oceanRelic, "Ocean Relic Trident texture should decode");
 		assertNotNull(oceanPalette, "Ocean Relic Trident palette should decode");
-		assertTrue(!Files.exists(OCEAN_RELIC_TRIDENT_INVENTORY_TEXTURE),
-			"Ocean Relic inventory should reuse the richer existing trident sprite instead of shipping a separate inventory icon");
+		assertTrue(Files.isRegularFile(OCEAN_RELIC_TRIDENT_INVENTORY_TEXTURE),
+			"Ocean Relic inventory should ship the dedicated image-generated inventory sprite");
 		assertEquals(64, texture.getWidth(), "Frostbound Trident should be a 64px item sprite");
 		assertEquals(64, texture.getHeight(), "Frostbound Trident should be a 64px item sprite");
 		assertEquals(64, oceanRelic.getWidth(), "Ocean Relic Trident should be a 64px item sprite");
@@ -498,16 +504,21 @@ class AssetCustomizerContractTest {
 			"Customizer throwing preview should use the same editable Blockbench source");
 		assertEquals("minecraft:item/generated", inventoryModel.get("parent").getAsString(),
 			"Inventory model should use a flat item sprite instead of the bulky Blockbench held mesh");
-		assertEquals("attuned:item/ocean_relic_trident",
+		assertEquals("attuned:item/ocean_relic_trident_inventory",
 			inventoryModel.getAsJsonObject("textures").get("layer0").getAsString(),
-			"Inventory model should reuse the richer existing flat trident sprite instead of the separate inventory icon");
+			"Inventory model should explicitly use the dedicated image-generated sprite");
 		String itemDefinitionText = itemDefinition.toString();
 		assertTrue(itemDefinitionText.contains("minecraft:display_context"),
 			"Item definition should select a separate GUI model by display context");
 		assertTrue(itemDefinitionText.contains("ocean_relic_trident_inventory"),
 			"GUI display context should use the flat inventory icon");
-		assertTrue(itemDefinitionText.contains("ground") && itemDefinitionText.contains("fixed"),
-			"Inventory-style display contexts should use the flat icon instead of the bulky held GLB mesh");
+		String flatIconContexts = itemDefinition.getAsJsonObject("model")
+			.getAsJsonArray("cases").get(0).getAsJsonObject().getAsJsonArray("when").toString();
+		assertTrue(flatIconContexts.contains("gui") && flatIconContexts.contains("fixed")
+				&& flatIconContexts.contains("on_shelf"),
+			"Presentation-only display contexts should keep the readable flat icon");
+		assertFalse(flatIconContexts.contains("ground"),
+			"Dropped harpoons should fall through to the actual GLB mesh instead of the flat item sprite");
 		JsonObject fallback = itemDefinition.getAsJsonObject("model").getAsJsonObject("fallback");
 		assertGltfSpecial(fallback.getAsJsonObject("on_false"), "attuned:item/ocean_relic_trident");
 		assertGltfSpecial(fallback.getAsJsonObject("on_true"), "attuned:item/ocean_relic_trident_throwing");
@@ -515,6 +526,52 @@ class AssetCustomizerContractTest {
 			"attuned:item/ocean_relic_trident_throwing");
 		assertTrue(model.has("display") && throwingModel.has("display"),
 			"Special renderer base models should keep the hand-tuned display transforms");
+		JsonObject heldDisplay = model.getAsJsonObject("display");
+		JsonObject throwingDisplay = throwingModel.getAsJsonObject("display");
+		assertScaleBetween(heldDisplay.getAsJsonObject("firstperson_righthand"), 0.8D, 0.9D,
+			"Held glTF first-person scale should match the cuboid model's apparent size");
+		assertScaleBetween(heldDisplay.getAsJsonObject("thirdperson_righthand"), 0.99D, 1.01D,
+			"Held glTF third-person scale should match vanilla's nearly identical trident length");
+		assertScaleBetween(heldDisplay.getAsJsonObject("ground"), 0.45D, 0.55D,
+			"Dropped glTF should preserve the old cuboid model's readable apparent size");
+		assertEquals(60,
+			heldDisplay.getAsJsonObject("thirdperson_righthand").getAsJsonArray("rotation").get(1).getAsInt(),
+			"Right-hand pose should use Minecraft's mirrored-hand rotation so the shaft stays at the hand");
+		assertEquals(
+			heldDisplay.getAsJsonObject("firstperson_righthand").getAsJsonArray("translation"),
+			heldDisplay.getAsJsonObject("firstperson_lefthand").getAsJsonArray("translation"),
+			"Centered GLB first-person poses should not retain vanilla's asymmetric model-origin offset");
+		assertEquals(0.0D,
+			heldDisplay.getAsJsonObject("thirdperson_righthand").getAsJsonArray("translation").get(1).getAsDouble(),
+			1.0E-4D, "Held GLB grip should stay on the hand's vertical pivot");
+		assertEquals(0.9282D,
+			heldDisplay.getAsJsonObject("thirdperson_righthand").getAsJsonArray("translation").get(2).getAsDouble(),
+			1.0E-4D, "Held right-hand GLB should use the vanilla-equivalent hand plane");
+		assertEquals(1.0718D,
+			heldDisplay.getAsJsonObject("thirdperson_lefthand").getAsJsonArray("translation").get(2).getAsDouble(),
+			1.0E-4D, "Held left-hand GLB should use the mirrored vanilla-equivalent hand plane");
+		assertEquals(
+			throwingDisplay.getAsJsonObject("thirdperson_righthand").getAsJsonArray("translation"),
+			throwingDisplay.getAsJsonObject("thirdperson_lefthand").getAsJsonArray("translation"),
+			"Charging left-hand pose should mirror the right-hand grip without a Z displacement");
+		assertEquals(0.0D,
+			throwingDisplay.getAsJsonObject("thirdperson_righthand").getAsJsonArray("translation").get(0).getAsDouble(),
+			1.0E-4D, "Charging GLB should rotate around the raised hand instead of the old cuboid offset");
+		assertEquals(0.0D,
+			throwingDisplay.getAsJsonObject("thirdperson_righthand").getAsJsonArray("translation").get(1).getAsDouble(),
+			1.0E-4D, "Charging GLB should remain vertically attached to the raised hand");
+		assertEquals(1.0D,
+			throwingDisplay.getAsJsonObject("thirdperson_righthand").getAsJsonArray("translation").get(2).getAsDouble(),
+			1.0E-4D, "Charging GLB should use the vanilla-equivalent hand plane");
+		assertScaleBetween(throwingDisplay.getAsJsonObject("thirdperson_righthand"), 0.99D, 1.01D,
+			"Charging glTF third-person scale should match vanilla's trident length");
+		String modelGenerator = read(Path.of("tools/generate_3d_models.py"));
+		assertTrue(modelGenerator.contains("cuboid_trident_display()")
+				&& !modelGenerator.contains("\"display\": source[\"display\"]"),
+			"Frostbound cuboids must not inherit Ocean Relic's glTF-specific scales");
+		String oceanRelicGenerator = read(Path.of("tools/build_ocean_relic_trident_model.py"));
+		assertFalse(oceanRelicGenerator.contains("write_sprite(SPRITE_PATH)"),
+			"Model regeneration must preserve the curated image-generated inventory sprite");
 		assertTrue(Files.isRegularFile(OCEAN_RELIC_TRIDENT_GLTF_MODEL),
 			"Actual temporary harpoon should ship a compact GLB runtime mesh");
 		byte[] glb = Files.readAllBytes(OCEAN_RELIC_TRIDENT_GLTF_MODEL);
@@ -524,6 +581,7 @@ class AssetCustomizerContractTest {
 			"Runtime GLB should keep the glTF binary magic");
 		assertEquals(2, littleEndianInt(glb, 4),
 			"Runtime GLB should be a glTF 2.0 binary");
+		assertGltfWindingMatchesVertexNormals(glb);
 
 		assertEquals("free", blockbench.getAsJsonObject("meta").get("model_format").getAsString(),
 			"Blockbench source should stay available as the editable source mesh");
@@ -613,6 +671,7 @@ class AssetCustomizerContractTest {
 		assumeTrue(clientMixins.contains("ThrownTridentRendererMixin"),
 			"Older maintenance builds can use the vanilla thrown-trident renderer.");
 		String rendererMixin = read(Path.of("src/client/java/dev/attuned/client/mixin/ThrownTridentRendererMixin.java"));
+		String entityMixin = read(Path.of("src/main/java/dev/attuned/mixin/ThrownTridentMixin.java"));
 		String stateMixin = read(Path.of("src/client/java/dev/attuned/client/mixin/ThrownTridentRenderStateMixin.java"));
 		assertTrue(clientMixins.contains("ThrownTridentRendererMixin"),
 			"Client mixins should replace vanilla thrown-trident rendering for temporary harpoons");
@@ -626,6 +685,21 @@ class AssetCustomizerContractTest {
 			"Custom projectile renderer should cancel vanilla trident model submission");
 		assertTrue(rendererMixin.contains("ItemDisplayContext.NONE"),
 			"Projectile renderer should render the Blockbench harpoon directly instead of GUI/ground inventory transforms");
+		assertTrue(rendererMixin.contains("ATTUNED_PROJECTILE_SCALE = 1.0F"),
+			"Thrown harpoon should keep the same apparent size as the held/charging GLB mesh");
+		assertTrue(rendererMixin.contains("OverlayTexture.NO_OVERLAY"),
+			"Thrown and landed harpoons should use the neutral entity overlay instead of a red damage texel");
+		assertTrue(rendererMixin.contains("0.5F - ATTUNED_MESH_CENTER_X")
+				&& rendererMixin.contains("0.5F - ATTUNED_MESH_CENTER_Z"),
+			"Projectile X/Z centering should compensate for NONE's built-in half-block item-origin shift");
+		assertTrue(rendererMixin.contains("0.5F - ATTUNED_MESH_TIP_Y + VANILLA_TRIDENT_TIP_REACH")
+				&& rendererMixin.contains("VANILLA_TRIDENT_TIP_REACH = 0.25F"),
+			"Embedded harpoon tip should reach only as far into a block as vanilla's four-pixel prongs");
+		assertTrue(!rendererMixin.contains("poseStack.translate(-ATTUNED_MESH_CENTER_X"),
+			"Projectile centering should not subtract the full mesh centre a second time");
+		assertTrue(entityMixin.contains("readAdditionalSaveData")
+				&& entityMixin.contains("attuned$setHarpoonFlag(attuned$pickupStack())"),
+			"Loaded temporary harpoons should restore their synced custom-render flag from the pickup stack");
 		assertTrue(stateMixin.contains("ItemStackRenderState"),
 			"Thrown trident render state should carry an item render state for the custom Blockbench harpoon");
 	}
@@ -882,6 +956,79 @@ class AssetCustomizerContractTest {
 			| ((bytes[offset + 1] & 0xFF) << 8)
 			| ((bytes[offset + 2] & 0xFF) << 16)
 			| ((bytes[offset + 3] & 0xFF) << 24);
+	}
+
+	private static void assertGltfWindingMatchesVertexNormals(byte[] glb) {
+		int jsonLength = littleEndianInt(glb, 12);
+		JsonObject root = JsonParser.parseString(
+			new String(glb, 20, jsonLength, StandardCharsets.UTF_8).trim()).getAsJsonObject();
+		assertEquals("minecraft_front_face",
+			root.getAsJsonObject("asset").getAsJsonObject("extras").get("attuned_winding").getAsString(),
+			"Packaged GLB should record its Minecraft-facing winding conversion");
+
+		int binStart = 20 + jsonLength + 8;
+		JsonObject primitive = root.getAsJsonArray("meshes").get(0).getAsJsonObject()
+			.getAsJsonArray("primitives").get(0).getAsJsonObject();
+		JsonObject attributes = primitive.getAsJsonObject("attributes");
+		JsonArray accessors = root.getAsJsonArray("accessors");
+		JsonArray views = root.getAsJsonArray("bufferViews");
+		JsonObject positions = accessors.get(attributes.get("POSITION").getAsInt()).getAsJsonObject();
+		JsonObject normals = accessors.get(attributes.get("NORMAL").getAsInt()).getAsJsonObject();
+		JsonObject indices = accessors.get(primitive.get("indices").getAsInt()).getAsJsonObject();
+		JsonObject positionView = views.get(positions.get("bufferView").getAsInt()).getAsJsonObject();
+		JsonObject normalView = views.get(normals.get("bufferView").getAsInt()).getAsJsonObject();
+		JsonObject indexView = views.get(indices.get("bufferView").getAsInt()).getAsJsonObject();
+		int positionStart = binStart + jsonInt(positionView, "byteOffset", 0) + jsonInt(positions, "byteOffset", 0);
+		int normalStart = binStart + jsonInt(normalView, "byteOffset", 0) + jsonInt(normals, "byteOffset", 0);
+		int indexStart = binStart + jsonInt(indexView, "byteOffset", 0) + jsonInt(indices, "byteOffset", 0);
+		int positionStride = jsonInt(positionView, "byteStride", 12);
+		int normalStride = jsonInt(normalView, "byteStride", 12);
+		int indexStride = jsonInt(indexView, "byteStride", 2);
+		ByteBuffer bytes = ByteBuffer.wrap(glb).order(ByteOrder.LITTLE_ENDIAN);
+
+		int aligned = 0;
+		int considered = 0;
+		for (int offset = 0; offset < indices.get("count").getAsInt(); offset += 3) {
+			int aIndex = Short.toUnsignedInt(bytes.getShort(indexStart + offset * indexStride));
+			int bIndex = Short.toUnsignedInt(bytes.getShort(indexStart + (offset + 1) * indexStride));
+			int cIndex = Short.toUnsignedInt(bytes.getShort(indexStart + (offset + 2) * indexStride));
+			float[] a = vec3(bytes, positionStart + aIndex * positionStride);
+			float[] b = vec3(bytes, positionStart + bIndex * positionStride);
+			float[] c = vec3(bytes, positionStart + cIndex * positionStride);
+			float abX = b[0] - a[0];
+			float abY = b[1] - a[1];
+			float abZ = b[2] - a[2];
+			float acX = c[0] - a[0];
+			float acY = c[1] - a[1];
+			float acZ = c[2] - a[2];
+			float faceX = abY * acZ - abZ * acY;
+			float faceY = abZ * acX - abX * acZ;
+			float faceZ = abX * acY - abY * acX;
+			float[] aNormal = vec3(bytes, normalStart + aIndex * normalStride);
+			float[] bNormal = vec3(bytes, normalStart + bIndex * normalStride);
+			float[] cNormal = vec3(bytes, normalStart + cIndex * normalStride);
+			float dot = faceX * (aNormal[0] + bNormal[0] + cNormal[0])
+				+ faceY * (aNormal[1] + bNormal[1] + cNormal[1])
+				+ faceZ * (aNormal[2] + bNormal[2] + cNormal[2]);
+			if (Math.abs(dot) <= 1.0E-8F) {
+				continue;
+			}
+			considered++;
+			if (dot > 0.0F) {
+				aligned++;
+			}
+		}
+		assertTrue(considered > 0 && aligned >= considered * 0.95D,
+			"GLB triangle winding should agree with vertex normals for Minecraft face lighting: "
+				+ aligned + "/" + considered);
+	}
+
+	private static int jsonInt(JsonObject object, String key, int fallback) {
+		return object.has(key) ? object.get(key).getAsInt() : fallback;
+	}
+
+	private static float[] vec3(ByteBuffer bytes, int offset) {
+		return new float[] { bytes.getFloat(offset), bytes.getFloat(offset + 4), bytes.getFloat(offset + 8) };
 	}
 
 	private static String read(Path file) throws IOException {
