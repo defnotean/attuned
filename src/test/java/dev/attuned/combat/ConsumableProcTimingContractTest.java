@@ -66,20 +66,21 @@ class ConsumableProcTimingContractTest {
 			"Revenant should track a pending-consumption map so HEAD shaping does not spend the debt.");
 		assertTrue(!adjustDamage.contains("DEBTS.remove"),
 			"The HEAD stage must not spend the Ashen Debt; a dodged hit should not consume it.");
-		assertTrue(adjustDamage.contains("PENDING_DEBT.put"),
-			"The HEAD stage should record a pending debt consumption instead of spending it.");
+		assertTrue(adjustDamage.contains("pendingForAttacker.put(defender.getUUID()"),
+			"The HEAD stage should record a per-victim pending debt consumption instead of spending it, "
+				+ "so sweep hits in the same tick cannot overwrite earlier victims' records.");
 		assertTrue(afterDamage.contains("DEBTS.remove"),
 			"The after-damage stage should spend the Ashen Debt only when damage actually lands.");
-		assertTrue(afterDamage.contains("PENDING_DEBT.remove"),
-			"The after-damage stage should consume (and clear) the matching pending debt entry.");
+		assertTrue(afterDamage.contains("pendingForAttacker.remove(defender.getUUID())"),
+			"The after-damage stage should consume (and clear) the matching per-victim pending debt entry.");
 	}
 
 	@Test
 	void ashenDebtPendingMapRegistersCleanup() throws IOException {
 		String revenant = read(REVENANT);
-		assertTrue(revenant.contains("PENDING_DEBT.clear();"),
+		assertTrue(revenant.contains("AttunedServerCleanup.onStop(PENDING_DEBT::clear)"),
 			"The pending debt map must clear on server stop.");
-		assertTrue(revenant.contains("PENDING_DEBT.remove(uuid)"),
+		assertTrue(revenant.contains("AttunedPlayerCleanup.onForget(PENDING_DEBT::remove)"),
 			"The pending debt map must drop per-player state on forget.");
 		assertTrue(revenant.contains("DEBTS.clear();"),
 			"The Ashen Debt map cleanup must be preserved.");

@@ -53,7 +53,7 @@ public final class RevenantCombat {
 	 * removed once the hit actually lands in {@link #afterDamage}, so a dodged or
 	 * invulnerability-framed hit wastes the multiplier but keeps the debt charged.
 	 */
-	private static final Map<UUID, PendingProc> PENDING_DEBT = new HashMap<>();
+	private static final Map<UUID, Map<UUID, PendingProc>> PENDING_DEBT = new HashMap<>();
 	private static boolean initialized;
 
 	private RevenantCombat() {}
@@ -70,12 +70,12 @@ public final class RevenantCombat {
 		AttunedPlayerCleanup.onForget(uuid -> {
 			DEBTS.remove(uuid);
 			LAST_RITES.remove(uuid);
-			PENDING_DEBT.remove(uuid);
 		});
+		AttunedPlayerCleanup.onForget(PENDING_DEBT::remove);
+		AttunedServerCleanup.onStop(PENDING_DEBT::clear);
 		AttunedServerCleanup.onStop(() -> {
 			DEBTS.clear();
 			LAST_RITES.clear();
-			PENDING_DEBT.clear();
 		});
 	}
 
@@ -98,7 +98,9 @@ public final class RevenantCombat {
 		}
 		// Shape the damage now (it cannot be retro-multiplied) but defer spending the
 		// debt to the after-damage stage so a dodged hit keeps the charge.
-		PENDING_DEBT.put(attacker.getUUID(),
+		Map<UUID, PendingProc> pendingForAttacker =
+			PENDING_DEBT.computeIfAbsent(attacker.getUUID(), id -> new HashMap<>());
+		pendingForAttacker.put(defender.getUUID(),
 			new PendingProc(defender.getUUID(), attacker.getLevel().getGameTime()));
 		ashenDebtFeedback(attacker, defender);
 		return DamageFormula.multiply(amount, DEBT_MULTIPLIER);
@@ -115,11 +117,19 @@ public final class RevenantCombat {
 		}
 		// The hit landed: spend the deferred Ashen Debt now. A dodged or
 		// invulnerability-framed hit (dealtDamage <= 0, handled above) left it charged.
-		PendingProc pendingDebt = PENDING_DEBT.remove(attacker.getUUID());
-		if (pendingDebt != null
-				&& pendingDebt.target().equals(defender.getUUID())
-				&& pendingDebt.gameTime() == attacker.getLevel().getGameTime()) {
-			DEBTS.remove(attacker.getUUID());
+		if (attacker instanceof ServerPlayer serverAttacker) {
+			Map<UUID, PendingProc> pendingForAttacker = PENDING_DEBT.get(serverAttacker.getUUID());
+			if (pendingForAttacker != null) {
+				PendingProc pendingDebt = pendingForAttacker.remove(defender.getUUID());
+				if (pendingForAttacker.isEmpty()) {
+					PENDING_DEBT.remove(serverAttacker.getUUID());
+				}
+				if (pendingDebt != null
+						&& pendingDebt.target().equals(defender.getUUID())
+						&& pendingDebt.gameTime() == serverAttacker.getLevel().getGameTime()) {
+					DEBTS.remove(serverAttacker.getUUID());
+				}
+			}
 		}
 		if (defender instanceof ServerPlayer player && hasActiveFocus(player, ASHEN_DEBT_FOCUS)
 				&& CombatTargets.isHostileOrPvpOpponent(attacker, player)) {
@@ -141,7 +151,7 @@ public final class RevenantCombat {
 	private static void afterDeath(LivingEntity entity, DamageSource source) {
 		DEBTS.values().removeIf(debt -> debt.target().equals(entity.getUUID()));
 		PENDING_DEBT.remove(entity.getUUID());
-		PENDING_DEBT.values().removeIf(pending -> pending.target().equals(entity.getUUID()));
+		PENDING_DEBT.values().forEach(pending -> pending.remove(entity.getUUID()));
 		if (!(source.getEntity() instanceof ServerPlayer player)
 				|| !hasActiveFocus(player, LAST_RITES_FOCUS)
 				|| !CombatTargets.isHostileOrPvpOpponent(entity, player)) {
