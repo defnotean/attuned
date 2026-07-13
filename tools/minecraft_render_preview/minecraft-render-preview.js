@@ -325,9 +325,9 @@ function buildGltfGeometry(model, options) {
 		const positionOffset = index * 3;
 		const uvOffset = index * 2;
 		positions.push(
-			model.positions[positionOffset],
-			model.positions[positionOffset + 1],
-			model.positions[positionOffset + 2]
+			model.positions[positionOffset] + model.translation[0],
+			model.positions[positionOffset + 1] + model.translation[1],
+			model.positions[positionOffset + 2] + model.translation[2]
 		);
 		const rawV = model.uvs[uvOffset + 1];
 		uvs.push(model.uvs[uvOffset], options.uvMode === "three" ? 1 - rawV : rawV);
@@ -385,8 +385,11 @@ function extractGltfMesh(root, bin) {
 	if (!primitive) {
 		throw new Error("Preview GLB does not contain triangle primitives");
 	}
+	const scene = root.scenes?.[root.scene || 0];
+	const node = root.nodes?.[scene?.nodes?.[0] || 0];
 	return {
 		kind: "gltf",
+		translation: node?.translation || [0, 0, 0],
 		positions: readFloatAccessor(root, bin, primitive.attributes.POSITION, 3),
 		normals: readFloatAccessor(root, bin, primitive.attributes.NORMAL, 3),
 		uvs: readFloatAccessor(root, bin, primitive.attributes.TEXCOORD_0, 2),
@@ -559,19 +562,35 @@ function applyDisplayTransform() {
 	if (!preset) {
 		return;
 	}
-	const rotation = preset.rotation || [0, 0, 0];
-	const translation = preset.translation || [0, 0, 0];
+	const leftHand = controls.displayPreset.value.endsWith("lefthand");
+	const sourceRotation = preset.rotation || [0, 0, 0];
+	const sourceTranslation = preset.translation || [0, 0, 0];
+	// Match ItemTransform.apply(leftHand): Minecraft mirrors translation X and
+	// rotations Y/Z before applying the selected display transform.
+	const rotation = [
+		sourceRotation[0] || 0,
+		leftHand ? -(sourceRotation[1] || 0) : sourceRotation[1] || 0,
+		leftHand ? -(sourceRotation[2] || 0) : sourceRotation[2] || 0
+	];
+	const translation = [
+		leftHand ? -(sourceTranslation[0] || 0) : sourceTranslation[0] || 0,
+		sourceTranslation[1] || 0,
+		sourceTranslation[2] || 0
+	];
 	const scale = preset.scale || [1, 1, 1];
 	meshGroup.rotation.set(
 		THREE.MathUtils.degToRad(rotation[0] || 0),
 		THREE.MathUtils.degToRad(rotation[1] || 0),
 		THREE.MathUtils.degToRad(rotation[2] || 0)
 	);
+	const modelOrigin = new THREE.Vector3(-0.5, -0.5, -0.5)
+		.multiply(new THREE.Vector3(scale[0] || 1, scale[1] || 1, scale[2] || 1))
+		.applyEuler(meshGroup.rotation);
 	meshGroup.position.set(
 		(translation[0] || 0) / 16,
 		(translation[1] || 0) / 16,
 		(translation[2] || 0) / 16
-	);
+	).add(modelOrigin);
 	meshGroup.scale.set(scale[0] || 1, scale[1] || 1, scale[2] || 1);
 }
 
