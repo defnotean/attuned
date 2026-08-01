@@ -1,0 +1,37 @@
+﻿[
+    {
+        "branch":  "neoforge/1.20.6",
+        "status":  "pass",
+        "detail":  "backport_commit_exists",
+        "error":  null,
+        "retry":  false
+    },
+    {
+        "branch":  "neoforge/1.21.1",
+        "status":  "pass",
+        "detail":  "backport_commit_exists",
+        "error":  null,
+        "retry":  false
+    },
+    {
+        "branch":  "neoforge/1.21.11",
+        "status":  "pass",
+        "detail":  "backport_commit_exists",
+        "error":  null,
+        "retry":  false
+    },
+    {
+        "branch":  "neoforge/26.1.2",
+        "status":  "pass",
+        "detail":  "backport_commit_exists",
+        "error":  null,
+        "retry":  false
+    },
+    {
+        "branch":  "neoforge/26.2",
+        "status":  "pass",
+        "detail":  "backport_commit_exists",
+        "error":  null,
+        "retry":  false
+    }
+]

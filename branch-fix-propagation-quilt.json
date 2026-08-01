@@ -1,0 +1,74 @@
+﻿[
+    {
+        "branch":  "quilt/1.18.2",
+        "status":  "pass",
+        "detail":  "backport_commit_on_origin",
+        "fix_commit_1fcddbb_in_history":  [
+
+                                          ]
+    },
+    {
+        "branch":  "quilt/1.19.2",
+        "status":  "pass",
+        "detail":  "backport_commit_on_origin",
+        "fix_commit_1fcddbb_in_history":  [
+
+                                          ]
+    },
+    {
+        "branch":  "quilt/1.19.4",
+        "status":  "pass",
+        "detail":  "backport_commit_on_origin",
+        "fix_commit_1fcddbb_in_history":  [
+
+                                          ]
+    },
+    {
+        "branch":  "quilt/1.20.1",
+        "status":  "pass",
+        "detail":  "backport_commit_on_origin",
+        "fix_commit_1fcddbb_in_history":  [
+
+                                          ]
+    },
+    {
+        "branch":  "quilt/1.20.6",
+        "status":  "pass",
+        "detail":  "backport_commit_on_origin",
+        "fix_commit_1fcddbb_in_history":  [
+
+                                          ]
+    },
+    {
+        "branch":  "quilt/1.21.1",
+        "status":  "pass",
+        "detail":  "backport_commit_on_origin",
+        "fix_commit_1fcddbb_in_history":  [
+
+                                          ]
+    },
+    {
+        "branch":  "quilt/1.21.11",
+        "status":  "pass",
+        "detail":  "backport_commit_on_origin",
+        "fix_commit_1fcddbb_in_history":  [
+
+                                          ]
+    },
+    {
+        "branch":  "quilt/26.1.2",
+        "status":  "pass",
+        "detail":  "backport_commit_on_origin",
+        "fix_commit_1fcddbb_in_history":  [
+
+                                          ]
+    },
+    {
+        "branch":  "quilt/26.2",
+        "status":  "pass",
+        "detail":  "backport_commit_on_origin",
+        "fix_commit_1fcddbb_in_history":  [
+
+                                          ]
+    }
+]
