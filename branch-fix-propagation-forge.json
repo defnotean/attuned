@@ -1,0 +1,56 @@
+﻿[
+    {
+        "branch":  "forge/1.18.2",
+        "status":  "pass",
+        "detail":  "651b3f50 equivalent 38f7500e pushed",
+        "retry":  false
+    },
+    {
+        "branch":  "forge/1.19.2",
+        "status":  "pass",
+        "detail":  "651b3f50 pushed",
+        "retry":  false
+    },
+    {
+        "branch":  "forge/1.19.4",
+        "status":  "fail",
+        "detail":  "networking API mismatch vs 1.19.2 template; compile errors in CircleNetworking/RevenantCombat",
+        "retry":  true
+    },
+    {
+        "branch":  "forge/1.20.1",
+        "status":  "fail",
+        "detail":  "not completed; worktree had partial pick",
+        "retry":  true
+    },
+    {
+        "branch":  "forge/1.20.6",
+        "status":  "fail",
+        "detail":  "not completed; worktree had partial pick",
+        "retry":  true
+    },
+    {
+        "branch":  "forge/1.21.1",
+        "status":  "fail",
+        "detail":  "not completed; worktree had partial pick",
+        "retry":  true
+    },
+    {
+        "branch":  "forge/1.21.11",
+        "status":  "skip",
+        "detail":  "1fcddbb content already on origin (warnApplyResolutionIssues present)",
+        "retry":  false
+    },
+    {
+        "branch":  "forge/26.1.2",
+        "status":  "skip",
+        "detail":  "1fcddbb content already on origin",
+        "retry":  false
+    },
+    {
+        "branch":  "forge/26.2",
+        "status":  "skip",
+        "detail":  "1fcddbb content already on origin",
+        "retry":  false
+    }
+]

@@ -1,0 +1,205 @@
+﻿[
+    {
+        "branch":  "fabric/minecraft-1.18.2",
+        "status":  "pass",
+        "testsPassed":  null,
+        "testsFailed":  null,
+        "error":  null
+    },
+    {
+        "branch":  "fabric/minecraft-1.19.2",
+        "status":  "pass",
+        "testsPassed":  null,
+        "testsFailed":  null,
+        "error":  null
+    },
+    {
+        "branch":  "fabric/minecraft-1.19.4",
+        "status":  "pass",
+        "testsPassed":  null,
+        "testsFailed":  null,
+        "error":  null
+    },
+    {
+        "branch":  "fabric/minecraft-1.20.1",
+        "status":  "pass",
+        "testsPassed":  null,
+        "testsFailed":  null,
+        "error":  null
+    },
+    {
+        "branch":  "fabric/minecraft-1.20.6",
+        "status":  "pass",
+        "testsPassed":  null,
+        "testsFailed":  null,
+        "error":  null
+    },
+    {
+        "branch":  "fabric/minecraft-1.21.1",
+        "status":  "pass",
+        "testsPassed":  null,
+        "testsFailed":  null,
+        "error":  null
+    },
+    {
+        "branch":  "fabric/minecraft-1.21.11",
+        "status":  "pass",
+        "testsPassed":  null,
+        "testsFailed":  null,
+        "error":  null
+    },
+    {
+        "branch":  "fabric/minecraft-26.1.2",
+        "status":  "pass",
+        "testsPassed":  null,
+        "testsFailed":  null,
+        "error":  null
+    },
+    {
+        "branch":  "fabric/minecraft-26.2",
+        "status":  "pass",
+        "testsPassed":  null,
+        "testsFailed":  null,
+        "error":  null
+    },
+    {
+        "branch":  "forge/1.18.2",
+        "status":  "fail",
+        "testsPassed":  827,
+        "testsFailed":  3,
+        "error":  "\u003e Task :test FAILED\r\nFAILURE: Build failed with an exception.\r\n* What went wrong:\r\nExecution failed for task \u0027:test\u0027.\r\nBUILD FAILED in 10s\r"
+    },
+    {
+        "branch":  "forge/1.19.2",
+        "status":  "fail",
+        "testsPassed":  828,
+        "testsFailed":  3,
+        "error":  "\u003e Task :test FAILED\r\nFAILURE: Build failed with an exception.\r\n* What went wrong:\r\nExecution failed for task \u0027:test\u0027.\r\nBUILD FAILED in 9s\r"
+    },
+    {
+        "branch":  "forge/1.19.4",
+        "status":  "fail",
+        "testsPassed":  null,
+        "testsFailed":  null,
+        "error":  "FAILURE: Build failed with an exception.\r\n* What went wrong:\r"
+    },
+    {
+        "branch":  "forge/1.20.1",
+        "status":  "fail",
+        "testsPassed":  null,
+        "testsFailed":  null,
+        "error":  "FAILURE: Build failed with an exception.\r\n* What went wrong:\r"
+    },
+    {
+        "branch":  "forge/1.20.6",
+        "status":  "pass",
+        "testsPassed":  null,
+        "testsFailed":  null,
+        "error":  null
+    },
+    {
+        "branch":  "forge/1.21.1",
+        "status":  "pass",
+        "testsPassed":  null,
+        "testsFailed":  null,
+        "error":  null
+    },
+    {
+        "branch":  "forge/1.21.11",
+        "status":  "pass",
+        "testsPassed":  null,
+        "testsFailed":  null,
+        "error":  null
+    },
+    {
+        "branch":  "forge/26.1.2",
+        "status":  "pass",
+        "testsPassed":  null,
+        "testsFailed":  null,
+        "error":  null
+    },
+    {
+        "branch":  "forge/26.2",
+        "status":  "pass",
+        "testsPassed":  null,
+        "testsFailed":  null,
+        "error":  null
+    },
+    {
+        "branch":  "neoforge/1.20.6",
+        "status":  "fail",
+        "testsPassed":  null,
+        "testsFailed":  null,
+        "error":  "FAILURE: Build failed with an exception.\r\n* What went wrong:\r\n\u003e Dependency verification failed for configuration \u0027classpath\u0027\r\n  8 artifacts failed verification:\r\nBUILD FAILED in 2s\r"
+    },
+    {
+        "branch":  "neoforge/1.21.1",
+        "status":  "pass",
+        "testsPassed":  null,
+        "testsFailed":  null,
+        "error":  null
+    },
+    {
+        "branch":  "neoforge/1.21.11",
+        "status":  "pass",
+        "testsPassed":  null,
+        "testsFailed":  null,
+        "error":  null
+    },
+    {
+        "branch":  "neoforge/26.1.2",
+        "status":  "pass",
+        "testsPassed":  null,
+        "testsFailed":  null,
+        "error":  null
+    },
+    {
+        "branch":  "neoforge/26.2",
+        "status":  "pass",
+        "testsPassed":  null,
+        "testsFailed":  null,
+        "error":  null
+    },
+    {
+        "branch":  "quilt/1.19.2",
+        "status":  "pass",
+        "testsPassed":  null,
+        "testsFailed":  null,
+        "error":  null
+    },
+    {
+        "branch":  "quilt/1.20.6",
+        "status":  "pass",
+        "testsPassed":  null,
+        "testsFailed":  null,
+        "error":  null
+    },
+    {
+        "branch":  "quilt/1.18.2",
+        "status":  "pass",
+        "testsPassed":  null,
+        "testsFailed":  null,
+        "error":  null
+    },
+    {
+        "branch":  "quilt/1.19.4",
+        "status":  "pass",
+        "testsPassed":  null,
+        "testsFailed":  null,
+        "error":  null
+    },
+    {
+        "branch":  "quilt/1.20.1",
+        "status":  "pass",
+        "testsPassed":  null,
+        "testsFailed":  null,
+        "error":  null
+    },
+    {
+        "branch":  "latest",
+        "status":  "pass",
+        "testsPassed":  null,
+        "testsFailed":  null,
+        "error":  null
+    }
+]

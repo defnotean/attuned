@@ -1,0 +1,233 @@
+﻿[
+    {
+        "branch":  "fabric/minecraft-1.18.2",
+        "status":  "pass",
+        "testsPassed":  null,
+        "testsFailed":  null,
+        "error":  null
+    },
+    {
+        "branch":  "fabric/minecraft-1.19.2",
+        "status":  "pass",
+        "testsPassed":  null,
+        "testsFailed":  null,
+        "error":  null
+    },
+    {
+        "branch":  "fabric/minecraft-1.19.4",
+        "status":  "pass",
+        "testsPassed":  null,
+        "testsFailed":  null,
+        "error":  null
+    },
+    {
+        "branch":  "fabric/minecraft-1.20.1",
+        "status":  "pass",
+        "testsPassed":  null,
+        "testsFailed":  null,
+        "error":  null
+    },
+    {
+        "branch":  "fabric/minecraft-1.20.6",
+        "status":  "pass",
+        "testsPassed":  null,
+        "testsFailed":  null,
+        "error":  null
+    },
+    {
+        "branch":  "fabric/minecraft-1.21.1",
+        "status":  "pass",
+        "testsPassed":  null,
+        "testsFailed":  null,
+        "error":  null
+    },
+    {
+        "branch":  "fabric/minecraft-1.21.11",
+        "status":  "pass",
+        "testsPassed":  null,
+        "testsFailed":  null,
+        "error":  null
+    },
+    {
+        "branch":  "fabric/minecraft-26.1.2",
+        "status":  "pass",
+        "testsPassed":  null,
+        "testsFailed":  null,
+        "error":  null
+    },
+    {
+        "branch":  "fabric/minecraft-26.2",
+        "status":  "pass",
+        "testsPassed":  null,
+        "testsFailed":  null,
+        "error":  null
+    },
+    {
+        "branch":  "forge/1.18.2",
+        "status":  "pass",
+        "testsPassed":  null,
+        "testsFailed":  null,
+        "error":  null
+    },
+    {
+        "branch":  "forge/1.19.2",
+        "status":  "pass",
+        "testsPassed":  null,
+        "testsFailed":  null,
+        "error":  null
+    },
+    {
+        "branch":  "forge/1.19.4",
+        "status":  "pass",
+        "testsPassed":  null,
+        "testsFailed":  null,
+        "error":  null
+    },
+    {
+        "branch":  "forge/1.20.1",
+        "status":  "pass",
+        "testsPassed":  null,
+        "testsFailed":  null,
+        "error":  null
+    },
+    {
+        "branch":  "forge/1.20.6",
+        "status":  "pass",
+        "testsPassed":  null,
+        "testsFailed":  null,
+        "error":  null
+    },
+    {
+        "branch":  "forge/1.21.1",
+        "status":  "pass",
+        "testsPassed":  null,
+        "testsFailed":  null,
+        "error":  null
+    },
+    {
+        "branch":  "forge/1.21.11",
+        "status":  "pass",
+        "testsPassed":  null,
+        "testsFailed":  null,
+        "error":  null
+    },
+    {
+        "branch":  "forge/26.1.2",
+        "status":  "pass",
+        "testsPassed":  null,
+        "testsFailed":  null,
+        "error":  null
+    },
+    {
+        "branch":  "forge/26.2",
+        "status":  "pass",
+        "testsPassed":  null,
+        "testsFailed":  null,
+        "error":  null
+    },
+    {
+        "branch":  "neoforge/1.20.6",
+        "status":  "pass",
+        "testsPassed":  null,
+        "testsFailed":  null,
+        "error":  null
+    },
+    {
+        "branch":  "neoforge/1.21.1",
+        "status":  "pass",
+        "testsPassed":  null,
+        "testsFailed":  null,
+        "error":  null
+    },
+    {
+        "branch":  "neoforge/1.21.11",
+        "status":  "pass",
+        "testsPassed":  null,
+        "testsFailed":  null,
+        "error":  null
+    },
+    {
+        "branch":  "neoforge/26.1.2",
+        "status":  "pass",
+        "testsPassed":  null,
+        "testsFailed":  null,
+        "error":  null
+    },
+    {
+        "branch":  "neoforge/26.2",
+        "status":  "pass",
+        "testsPassed":  null,
+        "testsFailed":  null,
+        "error":  null
+    },
+    {
+        "branch":  "quilt/1.19.2",
+        "status":  "pass",
+        "testsPassed":  null,
+        "testsFailed":  null,
+        "error":  null
+    },
+    {
+        "branch":  "quilt/1.20.6",
+        "status":  "pass",
+        "testsPassed":  null,
+        "testsFailed":  null,
+        "error":  null
+    },
+    {
+        "branch":  "quilt/1.18.2",
+        "status":  "pass",
+        "testsPassed":  null,
+        "testsFailed":  null,
+        "error":  null
+    },
+    {
+        "branch":  "quilt/1.19.4",
+        "status":  "pass",
+        "testsPassed":  null,
+        "testsFailed":  null,
+        "error":  null
+    },
+    {
+        "branch":  "quilt/1.20.1",
+        "status":  "pass",
+        "testsPassed":  null,
+        "testsFailed":  null,
+        "error":  null
+    },
+    {
+        "branch":  "quilt/1.21.1",
+        "status":  "pass",
+        "testsPassed":  null,
+        "testsFailed":  null,
+        "error":  null
+    },
+    {
+        "branch":  "quilt/1.21.11",
+        "status":  "pass",
+        "testsPassed":  null,
+        "testsFailed":  null,
+        "error":  null
+    },
+    {
+        "branch":  "quilt/26.1.2",
+        "status":  "pass",
+        "testsPassed":  null,
+        "testsFailed":  null,
+        "error":  null
+    },
+    {
+        "branch":  "quilt/26.2",
+        "status":  "pass",
+        "testsPassed":  null,
+        "testsFailed":  null,
+        "error":  null
+    },
+    {
+        "branch":  "latest",
+        "status":  "pass",
+        "testsPassed":  null,
+        "testsFailed":  null,
+        "error":  null
+    }
+]

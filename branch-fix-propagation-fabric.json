@@ -1,0 +1,50 @@
+﻿[
+    {
+        "branch":  "fabric/minecraft-1.18.2",
+        "status":  "fail",
+        "detail":  "Tests failed after conflict resolution (7 failures: ConsumableProcTiming, LuckStacking, UpdraftFocus, PaletteBreadth, PresetNetworking, CircleNetworking contract tests). Worktree has unstaged port; not pushed.",
+        "attempts":  2
+    },
+    {
+        "branch":  "fabric/minecraft-1.19.2",
+        "status":  "fail",
+        "detail":  "Worktree left in partial cherry-pick/merge state from parallel port; pick blocked (SWITCH-FAILED).",
+        "attempts":  1
+    },
+    {
+        "branch":  "fabric/minecraft-1.19.4",
+        "status":  "fail",
+        "detail":  "Worktree left in partial cherry-pick/merge state; pick blocked (SWITCH-FAILED).",
+        "attempts":  1
+    },
+    {
+        "branch":  "fabric/minecraft-1.20.1",
+        "status":  "fail",
+        "detail":  "Worktree left in partial cherry-pick/merge state; pick blocked (SWITCH-FAILED).",
+        "attempts":  1
+    },
+    {
+        "branch":  "fabric/minecraft-1.20.6",
+        "status":  "fail",
+        "detail":  "Worktree left in partial cherry-pick/merge state; pick blocked (SWITCH-FAILED).",
+        "attempts":  1
+    },
+    {
+        "branch":  "fabric/minecraft-1.21.11",
+        "status":  "skip",
+        "detail":  "Fix already present: cherry-pick applies cleanly, tests pass, nothing to commit (origin up to date).",
+        "attempts":  1
+    },
+    {
+        "branch":  "fabric/minecraft-26.1.2",
+        "status":  "skip",
+        "detail":  "Fix already present: PICK-CLEAN, tests pass, nothing to commit.",
+        "attempts":  1
+    },
+    {
+        "branch":  "latest",
+        "status":  "skip",
+        "detail":  "Fix already present on origin/latest (git cherry equivalent); pick clean, tests pass, nothing to commit.",
+        "attempts":  1
+    }
+]
