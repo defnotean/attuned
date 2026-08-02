@@ -1565,7 +1565,21 @@ def release_jar_path(root: Path = ROOT) -> Path:
 
 def release_jar_expected_entries(root: Path = ROOT) -> list[str]:
     focus_dir = root / FOCUS_DEFINITION_RELATIVE_DIR
-    entries = {"fabric.mod.json"}
+    resources = root / "src" / "main" / "resources"
+    loader_metadata_candidates = (
+        "fabric.mod.json",
+        "quilt.mod.json",
+        "META-INF/mods.toml",
+        "META-INF/neoforge.mods.toml",
+    )
+    entries = {
+        entry for entry in loader_metadata_candidates
+        if (resources / Path(entry)).is_file()
+    }
+    if not entries:
+        # Keep the historical Fabric expectation for synthetic test fixtures
+        # and malformed repositories that ship no loader metadata at all.
+        entries.add("fabric.mod.json")
     if focus_dir.is_dir():
         for path in sorted(focus_dir.glob("*.json")):
             data = json.loads(path.read_text(encoding="utf-8"))

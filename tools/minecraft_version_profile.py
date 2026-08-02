@@ -17,6 +17,10 @@ VERSION_KEYS = (
     "fabric_api_version",
     "java_version",
 )
+COMMON_VERSION_KEYS = (
+    "minecraft_version",
+    "java_version",
+)
 MINIMUM_BUILD_JAVA_VERSION = 21
 REQUIRED_PROFILE_FIELDS = VERSION_KEYS + (
     "fabric_loader_range",
@@ -154,7 +158,16 @@ def validate_repository(root: Path = ROOT) -> list[str]:
     except (OSError, ProfileError) as exc:
         return [str(exc)]
 
-    for key in VERSION_KEYS:
+    # The shared profile catalog carries Fabric coordinates because Fabric is
+    # the source release line. Forge/NeoForge branches intentionally replace
+    # those properties with their own loader toolchain, so only compare the
+    # cross-loader Minecraft and Java coordinates there. Fabric branches still
+    # require every Fabric version key, including missing ones.
+    loader_specific_keys = VERSION_KEYS
+    if "forge_version" in props or "neo_version" in props or "neoforge_version" in props:
+        loader_specific_keys = COMMON_VERSION_KEYS
+
+    for key in loader_specific_keys:
         expected = str(active.get(key, ""))
         actual = props.get(key)
         if actual != expected:
