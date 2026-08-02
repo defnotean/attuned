@@ -1,5 +1,18 @@
 # Changelog
 
+## Attuned 1.5.8+forge.mc26.2 - Forge Clean Build Stability Patch
+
+### Fixed
+- **Fresh setup builds** - Gradle dependency verification now safely trusts only the exact Forge and Minecraft Mavenizer outputs that are generated locally from checksum-verified inputs, preventing clean environments from aborting before compilation.
+- **Forge release verification** - repository checks now recognize Forge loader metadata and validate Forge version profiles without requiring Fabric-only coordinates.
+
+### Verification
+- `.\\gradlew.bat clean test build --no-daemon --console=plain`
+- `python -m unittest discover -s tests`
+- `python -m pytest -c tmp\\pytest.ini --rootdir=. tests`
+- `python tools\\verify_repository.py`
+- Forge client startup through Attuned initialization and resource loading
+
 ## Attuned 1.5.7+forge.mc26.2 - Forge Updraft Flight Patch
 
 ### Fixed
