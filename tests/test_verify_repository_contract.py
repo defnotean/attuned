@@ -908,6 +908,19 @@ public final class WrecksignBehavior implements FocusBehavior {
 
             self.assertEqual([], problems)
 
+    def test_release_jar_expected_entries_use_the_present_loader_metadata(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            resources = root / "src" / "main" / "resources"
+            forge_metadata = resources / "META-INF" / "mods.toml"
+            forge_metadata.parent.mkdir(parents=True)
+            forge_metadata.write_text('modLoader="javafml"\n', encoding="utf-8")
+
+            entries = verify_repository.release_jar_expected_entries(root)
+
+            self.assertIn("META-INF/mods.toml", entries)
+            self.assertNotIn("fabric.mod.json", entries)
+
     def test_release_jar_problems_report_missing_shipped_focus_entries(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
             root = Path(temp_dir)

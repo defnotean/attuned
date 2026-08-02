@@ -134,6 +134,35 @@ class MinecraftVersionProfileContractTest(unittest.TestCase):
             self.assertIn(key, active)
         self.assertIn(active_id, minecraft_version_profile.load_profiles(ROOT)["profiles"])
 
+    def test_forge_repository_validation_uses_only_cross_loader_profile_keys(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            write_profile_config(root)
+            (root / "gradle.properties").write_text(
+                "minecraft_version=26.2\n"
+                "forge_version=65.0.0\n"
+                "java_version=25\n",
+                encoding="utf-8",
+            )
+
+            self.assertEqual([], minecraft_version_profile.validate_repository(root))
+
+    def test_fabric_repository_validation_still_reports_missing_fabric_coordinates(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            write_profile_config(root)
+            (root / "gradle.properties").write_text(
+                "minecraft_version=26.2\n"
+                "java_version=25\n",
+                encoding="utf-8",
+            )
+
+            problems = minecraft_version_profile.validate_repository(root)
+
+            self.assertTrue(any("loader_version=None" in problem for problem in problems))
+            self.assertTrue(any("loom_version=None" in problem for problem in problems))
+            self.assertTrue(any("fabric_api_version=None" in problem for problem in problems))
+
     def test_repository_profiles_cover_latest_and_four_maintenance_targets(self) -> None:
         profiles = minecraft_version_profile.load_profiles(ROOT)["profiles"]
 
